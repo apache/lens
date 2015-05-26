@@ -46,6 +46,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   @BeforeClass
   public void beforeClassFieldsCannotBeQueriedTogetherTest() {
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
+    conf.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, false);
   }
 
   @Test
@@ -59,6 +60,45 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
 
     testFieldsCannotBeQueriedTogetherError("select dim2, SUM(msr1) from basecube where " + TWO_DAYS_RANGE,
         Arrays.asList("dim2", "msr1"));
+  }
+
+  @Test
+  public void testQueryWithDimensionAndMeasureInExpression() throws SemanticException, ParseException, LensException {
+
+    /* If all the queried dimensions are present in a derived cube, and one of the queried measure is not present in
+    the same derived cube, then query shall be disallowed.
+
+    dim2 and roundedmsr1 (expression over msr1) are not present in the same derived cube, hence query shall be
+    disallowed with appropriate exception. */
+
+    testFieldsCannotBeQueriedTogetherError("select dim2, sum(roundedmsr1) from basecube where " + TWO_DAYS_RANGE,
+        Arrays.asList("dim2", "msr1"));
+  }
+
+  @Test
+  public void testQueryWithDimensionInExpressionAndMeasure() throws SemanticException, ParseException, LensException {
+
+    /* If all the queried dimensions are present in a derived cube, and one of the queried measure is not present in
+    the same derived cube, then query shall be disallowed.
+
+    substrexprdim2( an expresison over dim2) and msr1 are not present in the same derived cube, hence query shall be
+    disallowed with appropriate exception. */
+
+    testFieldsCannotBeQueriedTogetherError("select substrexprdim2, SUM(msr1) from basecube where " + TWO_DAYS_RANGE,
+        Arrays.asList("dim2", "msr1"));
+  }
+
+  @Test
+  public void testQueryWithDimensionAndMeasureInExpressions() throws SemanticException, ParseException, LensException {
+
+    /* If all the queried dimensions are present in a derived cube, and one of the queried measure is not present in
+    the same derived cube, then query shall be disallowed.
+
+    substrexprdim2( an expresison over dim2) and roundedmsr1 (an expression over msr1) are not present in the same
+    derived cube, hence query shall be disallowed with appropriate exception. */
+
+    testFieldsCannotBeQueriedTogetherError("select substrexprdim2, sum(roundedmsr1) from basecube where "
+      + TWO_DAYS_RANGE, Arrays.asList("dim2", "msr1"));
   }
 
   @Test
@@ -78,6 +118,38 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
+  public void testQueryWithChainReferencedDimensionAttributeAndExprMeasure() throws SemanticException, ParseException,
+      LensException {
+
+    /* In this query a dimension attribute referenced through join chain name is used in select. If the
+    source column for such a dimension attribute and the  queried measure are not present in the same derived cube,
+    then query shall be disallowed.
+
+    cityState.name is a dimension attribute used in select statement and referenced through join chain name citystate.
+    It is queryable through chain source column cityid. cityid and roundedmsr1 (an expression over msr1) are not present
+    in the same derived cube, hence query shall be disallowed with appropriate exception. */
+
+    testFieldsCannotBeQueriedTogetherError("select citystate.name, sum(roundedmsr1) from basecube where "
+      + TWO_DAYS_RANGE, Arrays.asList("citystate.name", "msr1"));
+  }
+
+  @Test
+  public void testQueryWithDimExprWithChainRefAndExprMeasure() throws SemanticException, ParseException,
+      LensException {
+
+    /* In this query a dimension attribute referenced through join chain name is used in select. If the
+    source column for such a dimension attribute and the  queried measure are not present in the same derived cube,
+    then query shall be disallowed.
+
+    cubestate.name is a dimension attribute used in select statement and referenced through join chain name citystate.
+    It is queryable through chain source column cityid. cityid and roundedmsr1 (an expression over msr1) are not present
+    in the same derived cube, hence query shall be disallowed with appropriate exception. */
+
+    testFieldsCannotBeQueriedTogetherError("select cubestateName, sum(roundedmsr1) from basecube where "
+      + TWO_DAYS_RANGE, Arrays.asList("cubestate.name", "msr1"));
+  }
+
+  @Test
   public void testQueryWithMeasureAndChainReferencedDimAttributeInFilter() throws SemanticException, ParseException,
       LensException {
 
@@ -90,7 +162,39 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
     shall be disallowed with appropriate exception. */
 
     testFieldsCannotBeQueriedTogetherError("select SUM(msr1) from basecube where cityState.name = 'foo' and "
+      + TWO_DAYS_RANGE, Arrays.asList("citystate.name", "msr1"));
+  }
+
+  @Test
+  public void testQueryWithExprMeasureAndChainReferencedDimAttributeInFilter() throws SemanticException, ParseException,
+      LensException {
+
+    /* In this query a dimension attribute referenced through join chain name is used in filter. If the
+    source column for such a dimension attribute and the  queried measure are not present in the same derived cube,
+    then query shall be disallowed.
+
+    cityState.name is a dimension attribute used in where clause(filter) and referenced through join chain name. It is
+    queryable through chain source column cityid. cityid and roundedmsr1( expression over msr1) are not present in the
+    same derived cube, hence query shall be disallowed with appropriate exception. */
+
+    testFieldsCannotBeQueriedTogetherError("select sum(roundedmsr1) from basecube where cityState.name = 'foo' and "
             + TWO_DAYS_RANGE, Arrays.asList("citystate.name", "msr1"));
+  }
+
+  @Test
+  public void testQueryWithExprMeasureAndDimExprWithChainRefInFilter() throws SemanticException, ParseException,
+      LensException {
+
+    /* In this query a dimension attribute referenced through join chain name is used in filter. If the
+    source column for such a dimension attribute and the  queried measure are not present in the same derived cube,
+    then query shall be disallowed.
+
+    cubestate.name is a dimension attribute used in where clause(filter) and referenced through join chain name. It is
+    queryable through chain source column cityid. cityid and roundedmsr1( expression over msr1) are not present in the
+    same derived cube, hence query shall be disallowed with appropriate exception. */
+
+    testFieldsCannotBeQueriedTogetherError("select sum(roundedmsr1) from basecube where cubestatename = 'foo' and "
+            + TWO_DAYS_RANGE, Arrays.asList("cubestate.name", "msr1"));
   }
 
   @Test
@@ -100,6 +204,16 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
     msr1 is present in one of the derived cubes, hence query shall pass without any exception. */
 
     rewrite("select SUM(msr1) from basecube where " + TWO_DAYS_RANGE, conf);
+  }
+
+  @Test
+  public void testQueryWithOnlyExprMeasure() throws ParseException, SemanticException, LensException {
+
+    /* A query which contains only measure should pass, if the measure is present in some derived cube.
+    roundedmsr1 ( an expression over msr1) is present in one of the derived cubes, hence query shall pass without
+     any exception. */
+
+    rewrite("select sum(roundedmsr1) from basecube where " + TWO_DAYS_RANGE, conf);
   }
 
   @Test
@@ -127,11 +241,31 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
+  public void testQueryWithDimExpressionssNotInSameDerviedCube()
+    throws ParseException, SemanticException, LensException {
+
+    /* dim2, source columns of cubestate and countryid are not present in the same derived cube, hence query should be
+     *  disallowed */
+
+    testFieldsCannotBeQueriedTogetherError("select substrexprdim2, cubeStateName, countryid, SUM(msr2) from basecube"
+      + " where " + TWO_DAYS_RANGE, Arrays.asList("countryid", "dim2", "cubestate.name"));
+  }
+
+  @Test
   public void testQueryWithMeasureNotInAnyDerviedCube() throws ParseException, SemanticException, LensException {
 
     /* newmeasure is not present in any derived cube, hence the query should be disallowed. */
 
     testFieldsCannotBeQueriedTogetherError("select newmeasure from basecube where "
+        + TWO_DAYS_RANGE, Arrays.asList("newmeasure"));
+  }
+
+  @Test
+  public void testQueryWithExprMeasureNotInAnyDerviedCube() throws ParseException, SemanticException, LensException {
+
+    /* newexpr : expression over newmeasure is not present in any derived cube, hence the query should be disallowed. */
+
+    testFieldsCannotBeQueriedTogetherError("select newexpr from basecube where "
         + TWO_DAYS_RANGE, Arrays.asList("newmeasure"));
   }
 
@@ -157,8 +291,8 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
 
     try {
 
-      rewrite(testQuery, conf);
-      fail("Expected FieldsCannotBeQueriedTogetherException but it didn't come");
+      String hqlQuery = rewrite(testQuery, conf);
+      fail("Expected FieldsCannotBeQueriedTogetherException but it didn't come, rewrittenQuery:" + hqlQuery);
     } catch(FieldsCannotBeQueriedTogetherException actualException) {
 
       SortedSet<String> expectedFields = new TreeSet<String>(conflictingFields);

@@ -142,7 +142,7 @@ public class ExprColumn extends CubeColumn {
       this.endTime = endTime;
     }
 
-    synchronized ASTNode getASTNode() {
+    public synchronized ASTNode getASTNode() {
       if (astNode == null) {
         try {
           if (StringUtils.isNotBlank(expr)) {

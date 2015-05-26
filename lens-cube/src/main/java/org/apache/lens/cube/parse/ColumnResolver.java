@@ -28,7 +28,6 @@ import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
@@ -60,27 +59,24 @@ class ColumnResolver implements ContextRewriter {
     }
     getColsForSelectTree(cubeql);
     getColsForWhereTree(cubeql);
-    getColsForTree(cubeql, cubeql.getJoinTree());
-    getColsForTree(cubeql, cubeql.getGroupByAST());
-    getColsForTree(cubeql, cubeql.getHavingAST());
-    getColsForTree(cubeql, cubeql.getOrderByAST());
+    getColsForTree(cubeql, cubeql.getJoinTree(), cubeql);
+    getColsForTree(cubeql, cubeql.getGroupByAST(), cubeql);
+    getColsForTree(cubeql, cubeql.getHavingAST(), cubeql);
+    getColsForTree(cubeql, cubeql.getOrderByAST(), cubeql);
 
     // Update join dimension tables
     for (String table : cubeql.getTblAliasToColumns().keySet()) {
-      try {
-        if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table)) {
-          if (!cubeql.addQueriedTable(table)) {
-            throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
-          }
+      if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table)) {
+        if (!cubeql.addQueriedTable(table)) {
+          throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
         }
-      } catch (HiveException e) {
-        throw new SemanticException(e);
       }
     }
   }
 
   // finds columns in AST passed.
-  private void getColsForTree(final CubeQueryContext cubeql, ASTNode tree) throws SemanticException {
+  static void getColsForTree(final CubeQueryContext cubeql, ASTNode tree, final TrackQueriedColumns tqc)
+    throws SemanticException {
     if (tree == null) {
       return;
     }
@@ -104,7 +100,7 @@ class ColumnResolver implements ContextRewriter {
             // column is an existing alias
             return;
           }
-          cubeql.addColumnsQueried(CubeQueryContext.DEFAULT_TABLE, column);
+          tqc.addColumnsQueried(CubeQueryContext.DEFAULT_TABLE, column);
         } else if (node.getToken().getType() == DOT) {
           // This is for the case where column name is prefixed by table name
           // or table alias
@@ -116,7 +112,7 @@ class ColumnResolver implements ContextRewriter {
           String column = colIdent.getText().toLowerCase();
           String table = tabident.getText().toLowerCase();
 
-          cubeql.addColumnsQueried(table, column);
+          tqc.addColumnsQueried(table, column);
         }
       }
     });

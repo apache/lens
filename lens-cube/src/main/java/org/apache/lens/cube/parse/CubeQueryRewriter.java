@@ -132,15 +132,15 @@ public class CubeQueryRewriter {
    * removed.
    */
   private void setupRewriters() {
-    // Rewrite base trees with expressions expanded
-    rewriters.add(new ExpressionResolver(conf));
     // Resolve columns - the column alias and table alias
     rewriters.add(new ColumnResolver(conf));
     // Rewrite base trees (groupby, having, orderby, limit) using aliases
     rewriters.add(new AliasReplacer(conf));
+    ExpressionResolver exprResolver = new ExpressionResolver(conf);
     DenormalizationResolver denormResolver = new DenormalizationResolver(conf);
     CandidateTableResolver candidateTblResolver = new CandidateTableResolver(conf);
     StorageTableResolver storageTableResolver = new StorageTableResolver(conf);
+    rewriters.add(exprResolver);
     // De-normalized columns resolved
     rewriters.add(denormResolver);
     // Resolve candidate fact tables and dimension tables for columns queried
@@ -160,18 +160,21 @@ public class CubeQueryRewriter {
     // Phase 1: resolve fact tables.
     rewriters.add(storageTableResolver);
     if (lightFactFirst) {
+      // Prune candidate tables for which denorm column references do not exist
+      rewriters.add(denormResolver);
+      // Prune candidate facts without any valid expressions
+      rewriters.add(exprResolver);
       rewriters.add(new LightestFactResolver(conf));
     }
     // Phase 2: resolve fact table partitions.
     rewriters.add(storageTableResolver);
     rewriters.add(new MaxCoveringFactResolver(conf));
-    if (!lightFactFirst) {
-      rewriters.add(new LightestFactResolver(conf));
-    }
     // Phase 3: resolve dimension tables and partitions.
     rewriters.add(storageTableResolver);
-    // Check for candidate tables using de-normalized columns
+    // Prune candidate tables for which denorm column references do not exist
     rewriters.add(denormResolver);
+    // Prune candidate facts without any valid expressions
+    rewriters.add(exprResolver);
     rewriters.add(new LeastPartitionResolver(conf));
     if (!lightFactFirst) {
       rewriters.add(new LightestFactResolver(conf));

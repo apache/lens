@@ -125,7 +125,7 @@ class AggregateResolver implements ContextRewriter {
   }
 
   private void transform(CubeQueryContext cubeql, ASTNode parent, ASTNode node, int nodePos) throws SemanticException {
-    if (parent == null || node == null) {
+    if (node == null) {
       return;
     }
     int nodeType = node.getToken().getType();
@@ -135,16 +135,18 @@ class AggregateResolver implements ContextRewriter {
         // Leaf node
         ASTNode wrapped = wrapAggregate(cubeql, node);
         if (wrapped != node) {
-          parent.setChild(nodePos, wrapped);
-          // Check if this node has an alias
-          ASTNode sibling = HQLParser.findNodeByPath(parent, Identifier);
-          String expr;
-          if (sibling != null) {
-            expr = HQLParser.getString(parent);
-          } else {
-            expr = HQLParser.getString(wrapped);
+          if (parent != null) {
+            parent.setChild(nodePos, wrapped);
+            // Check if this node has an alias
+            ASTNode sibling = HQLParser.findNodeByPath(parent, Identifier);
+            String expr;
+            if (sibling != null) {
+              expr = HQLParser.getString(parent);
+            } else {
+              expr = HQLParser.getString(wrapped);
+            }
+            cubeql.addAggregateExpr(expr.trim());
           }
-          cubeql.addAggregateExpr(expr.trim());
         }
       } else {
         // Dig deeper in non-leaf nodes
@@ -176,23 +178,31 @@ class AggregateResolver implements ContextRewriter {
     String msrname = StringUtils.isBlank(tabname) ? colname : tabname + "." + colname;
 
     if (cubeql.isCubeMeasure(msrname)) {
-      CubeMeasure measure = cubeql.getCube().getMeasureByName(colname);
-      String aggregateFn = measure.getAggregate();
+      if (cubeql.getQueriedExprs().contains(colname)) {
+        String alias = cubeql.getAliasForTableName(cubeql.getCube().getName());
+        for (ASTNode exprNode : cubeql.getExprCtx().getExpressionContext(colname, alias).getAllASTNodes()) {
+          transform(cubeql, null, exprNode, 0);
+        }
+        return node;
+      } else {
+        CubeMeasure measure = cubeql.getCube().getMeasureByName(colname);
+        String aggregateFn = measure.getAggregate();
 
-      if (StringUtils.isBlank(aggregateFn)) {
-        throw new SemanticException(ErrorMsg.NO_DEFAULT_AGGREGATE, colname);
+        if (StringUtils.isBlank(aggregateFn)) {
+          throw new SemanticException(ErrorMsg.NO_DEFAULT_AGGREGATE, colname);
+        }
+        ASTNode fnroot = new ASTNode(new CommonToken(HiveParser.TOK_FUNCTION));
+        fnroot.setParent(node.getParent());
+
+        ASTNode fnIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, aggregateFn));
+        fnIdentNode.setParent(fnroot);
+        fnroot.addChild(fnIdentNode);
+
+        node.setParent(fnroot);
+        fnroot.addChild(node);
+
+        return fnroot;
       }
-      ASTNode fnroot = new ASTNode(new CommonToken(HiveParser.TOK_FUNCTION));
-      fnroot.setParent(node.getParent());
-
-      ASTNode fnIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, aggregateFn));
-      fnIdentNode.setParent(fnroot);
-      fnroot.addChild(fnIdentNode);
-
-      node.setParent(fnroot);
-      fnroot.addChild(node);
-
-      return fnroot;
     } else {
       return node;
     }
@@ -208,7 +218,7 @@ class AggregateResolver implements ContextRewriter {
       if (node.getChild(0).getType() == HiveParser.Identifier) {
         function = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
       }
-    } else if (isMeasure(cubeql, node)) {
+    } else if (cubeql.isMeasure(node)) {
       // Exit for the recursion
 
       String colname;
@@ -219,16 +229,27 @@ class AggregateResolver implements ContextRewriter {
         ASTNode colIdent = (ASTNode) node.getChild(1);
         colname = colIdent.getText();
       }
-      CubeMeasure measure = cubeql.getCube().getMeasureByName(colname);
-      if (function != null && !function.isEmpty()) {
-        // Get the cube measure object and check if the passed function is the
-        // default one set for this measure
-        return !function.equalsIgnoreCase(measure.getAggregate());
-      } else if (!aggregateResolverDisabled && measure.getAggregate() != null) {
-        // not inside any aggregate, but default aggregate exists
+      colname = colname.toLowerCase();
+      if (cubeql.getQueriedExprs().contains(colname)) {
+        String cubeAlias = cubeql.getAliasForTableName(cubeql.getCube().getName());
+        for (ASTNode exprNode : cubeql.getExprCtx().getExpressionContext(colname, cubeAlias).getAllASTNodes()) {
+          if (hasMeasuresNotInDefaultAggregates(cubeql, exprNode, function, aggregateResolverDisabled)) {
+            return true;
+          }
+        }
         return false;
+      } else {
+        CubeMeasure measure = cubeql.getCube().getMeasureByName(colname);
+        if (function != null && !function.isEmpty()) {
+          // Get the cube measure object and check if the passed function is the
+          // default one set for this measure
+          return !function.equalsIgnoreCase(measure.getAggregate());
+        } else if (!aggregateResolverDisabled && measure.getAggregate() != null) {
+          // not inside any aggregate, but default aggregate exists
+          return false;
+        }
+        return true;
       }
-      return true;
     }
 
     for (int i = 0; i < node.getChildCount(); i++) {
@@ -270,7 +291,7 @@ class AggregateResolver implements ContextRewriter {
     boolean isDistinct = hasDistinct;
     if (exprTokenType == HiveParser.TOK_FUNCTIONDI || exprTokenType == HiveParser.TOK_SELECTDI) {
       isDistinct = true;
-    } else if (isMeasure(cubeql, node) && isDistinct) {
+    } else if (cubeql.isMeasure(node) && isDistinct) {
       // Exit for the recursion
       return true;
     }
@@ -289,7 +310,7 @@ class AggregateResolver implements ContextRewriter {
       return false;
     }
 
-    if (isMeasure(cubeql, node)) {
+    if (cubeql.isMeasure(node)) {
       return true;
     }
 
@@ -300,30 +321,6 @@ class AggregateResolver implements ContextRewriter {
     }
 
     return false;
-  }
-
-  private boolean isMeasure(CubeQueryContext cubeql, ASTNode node) {
-    String tabname = null;
-    String colname;
-    int nodeType = node.getToken().getType();
-    if (!(nodeType == HiveParser.TOK_TABLE_OR_COL || nodeType == HiveParser.DOT)) {
-      return false;
-    }
-
-    if (nodeType == HiveParser.TOK_TABLE_OR_COL) {
-      colname = ((ASTNode) node.getChild(0)).getText();
-    } else {
-      // node in 'alias.column' format
-      ASTNode tabident = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier);
-      ASTNode colIdent = (ASTNode) node.getChild(1);
-
-      colname = colIdent.getText();
-      tabname = tabident.getText();
-    }
-
-    String msrname = StringUtils.isBlank(tabname) ? colname : tabname + "." + colname;
-
-    return cubeql.isCubeMeasure(msrname);
   }
 
   static void updateAggregates(ASTNode root, CubeQueryContext cubeql) {

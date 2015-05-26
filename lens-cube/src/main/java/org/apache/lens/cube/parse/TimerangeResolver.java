@@ -225,7 +225,6 @@ class TimerangeResolver implements ContextRewriter {
         }
       } // End time range loop
     } // End column loop
-
   }
 
 

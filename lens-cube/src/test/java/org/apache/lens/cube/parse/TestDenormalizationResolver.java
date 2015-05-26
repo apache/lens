@@ -83,7 +83,6 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
 
     hqlQuery =
       rewrite("select testdim3.name, dim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
-    System.out.println("HQL query:" + hqlQuery);
     String expected =
       getExpectedQuery(cubeName,
         "select testdim3.name, testcube.dim2big1, max(testcube.msr3), sum(testcube.msr2) FROM ", " JOIN "
@@ -109,7 +108,6 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
     String hqlQuery = rewrite("select dim2big1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE,
       tconf);
-    System.out.println("HQL query:" + hqlQuery);
     String expected =
       getExpectedQuery(cubeName, "select testdim2.bigid1, max(testcube.msr3), sum(testcube.msr2) FROM ", " JOIN "
           + getDbName() + "c1_testdim2tbl2 testdim2 ON testcube.dim2 = "
@@ -119,7 +117,6 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
 
     hqlQuery =
       rewrite("select testdim2.name, dim2big1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
-    System.out.println("HQL query:" + hqlQuery);
     expected =
       getExpectedQuery(cubeName,
         "select testdim2.name, testdim2.bigid1, max(testcube.msr3), sum(testcube.msr2) FROM ", " JOIN "
@@ -131,7 +128,6 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     hqlQuery =
       rewrite("select testdim2.name, dim2big1, max(msr3)," + " msr2 from testCube left outer join testdim2"
         + " where " + TWO_DAYS_RANGE, tconf);
-    System.out.println("HQL query:" + hqlQuery);
     expected =
       getExpectedQuery(cubeName,
         "select testdim2.name, testdim2.bigid1, max(testcube.msr3), sum(testcube.msr2) FROM ", " left outer JOIN "
@@ -142,7 +138,6 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
 
     hqlQuery =
       rewrite("select testdim3.name, dim2big1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
-    System.out.println("HQL query:" + hqlQuery);
     expected =
       getExpectedQuery(cubeName,
         "select testdim3.name, testdim2.bigid1, max(testcube.msr3), sum(testcube.msr2) FROM ", " JOIN "
@@ -174,6 +169,34 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       }
     ));
   }
+  @Test
+  public void testCubeQueryWithExpressionHavingDenormColumnComingAsDirectColumn() throws Exception {
+    String twoDaysITRange =
+      "time_range_in(it, '" + CubeTestSetup.getDateUptoHours(TWODAYS_BACK) + "','"
+        + CubeTestSetup.getDateUptoHours(NOW) + "')";
+    String hqlQuery = rewrite("select substrdim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange,
+      conf);
+    String expecteddim2big1 =
+      getExpectedQuery(cubeName, "select substr(testcube.dim2big1, 5), max(testcube.msr3), sum(testcube.msr2) FROM ",
+        null, " group by substr(testcube.dim2big1, 5)",
+        getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
+        null);
+    TestCubeRewriter.compareQueries(expecteddim2big1, hqlQuery);
+  }
+
+  @Test
+  public void testCubeQueryWithExpressionHavingDenormColumnResultingJoin() throws Exception {
+    Configuration tconf = new Configuration(this.conf);
+    tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    String hqlQuery = rewrite("select substrdim2big1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE,
+      tconf);
+    String expected =
+      getExpectedQuery(cubeName, "select substr(testdim2.bigid1, 5), max(testcube.msr3), sum(testcube.msr2) FROM ",
+        " JOIN " + getDbName() + "c1_testdim2tbl2 testdim2 ON testcube.dim2 = "
+          + " testdim2.id and (testdim2.dt = 'latest') ", null, "group by substr(testdim2.bigid1, 5)", null,
+        getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
+  }
 
   @Test
   public void testDimensionQuery() throws Exception {
@@ -199,6 +222,18 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       "select citydim.name, citydim.statename, citydim.nocandidatecol from citydim", conf);
     Assert.assertEquals(e.getMessage(),
       "No dimension table has the queried columns for citydim, columns: [name, statename, nocandidatecol]");
+  }
+
+  @Test
+  public void testDimensionQueryWithExpressionHavingDenormColumn() throws Exception {
+    String hqlQuery = rewrite("select citydim.name, citydim.citystate from" + " citydim", conf);
+    String joinExpr =
+      " join " + getDbName() + "c1_statetable statedim on"
+        + " citydim.stateid = statedim.id and (statedim.dt = 'latest')";
+    String expected =
+      getExpectedQuery("citydim", "SELECT citydim.name, concat(citydim.name, \":\", statedim.name) FROM ",
+        joinExpr, null, null, "c1_citytable", true);
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
   }
 
   @Test

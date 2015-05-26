@@ -25,6 +25,7 @@ import org.apache.lens.cube.error.FieldsCannotBeQueriedTogetherException;
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.DerivedCube;
 import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
+import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -59,6 +60,7 @@ public class FieldValidator implements ContextRewriter {
       // dim attributes and chained source columns should only come from WHERE and GROUP BY ASTs
       Set<String> queriedDimAttrs = new LinkedHashSet<String>();
       Set<String> queriedMsrs = new LinkedHashSet<String>(cubeql.getQueriedMsrs());
+      queriedMsrs.addAll(getMeasuresFromExprMeasures(cubeql));
       Set<String> chainedSrcColumns = new HashSet<String>();
       Set<String> nonQueryableFields = new LinkedHashSet<String>();
 
@@ -102,6 +104,22 @@ public class FieldValidator implements ContextRewriter {
       }
     }
   }
+  private Set<String> getMeasuresFromExprMeasures(CubeQueryContext cubeql) {
+    Set<String> exprMeasures = new HashSet<String>();
+    String cubeAlias = cubeql.getAliasForTableName(cubeql.getCube().getName());
+    for (String expr : cubeql.getQueriedExprsWithMeasures()) {
+      for (ExprSpecContext esc : cubeql.getExprCtx().getExpressionContext(expr, cubeAlias).getAllExprs()) {
+        if (esc.getTblAliasToColumns().get(cubeAlias) != null) {
+          for (String cubeCol : esc.getTblAliasToColumns().get(cubeAlias)) {
+            if (cubeql.getCube().getMeasureByName(cubeCol) != null) {
+              exprMeasures.add(cubeCol);
+            }
+          }
+        }
+      }
+    }
+    return exprMeasures;
+  }
 
   // Traverse parse tree to figure out dimension attributes of the cubes and join chains
   // present in the AST.
@@ -132,21 +150,30 @@ public class FieldValidator implements ContextRewriter {
             // this 'tabName' is a join chain, so add all source columns
             chainSourceColumns.addAll(cubeql.getJoinchains().get(tabName).getSourceColumns());
             nonQueryableColumns.add(tabName + "." + colName);
-          } else if (tabName.equalsIgnoreCase(cubeql.getAliasForTableName(cube.getName()))
-            && cube.getDimAttributeNames().contains(colName)) {
-            // Alternatively, check if this is a dimension attribute, if yes add it to the dim attribute set
-            // and non queryable fields set
-            nonQueryableColumns.add(colName);
+          } else if (tabName.equalsIgnoreCase(cubeql.getAliasForTableName(cube.getName()))) {
+            if (cube.getDimAttributeNames().contains(colName)) {
+              // Alternatively, check if this is a dimension attribute, if yes add it to the dim attribute set
+              // and non queryable fields set
+              nonQueryableColumns.add(colName);
 
-            // If this is a referenced dim attribute leading to a chain, then instead of adding this
-            // column, we add the source columns of the chain.
-            if (cube.getDimAttributeByName(colName) instanceof ReferencedDimAtrribute
-              && ((ReferencedDimAtrribute) cube.getDimAttributeByName(colName)).isChainedColumn()) {
-              ReferencedDimAtrribute rdim = (ReferencedDimAtrribute) cube.getDimAttributeByName(colName);
-              chainSourceColumns.addAll(cube.getChainByName(rdim.getChainName()).getSourceColumns());
-            } else {
-              // This is a dim attribute, needs to be validated
-              dimAttributes.add(colName);
+              // If this is a referenced dim attribute leading to a chain, then instead of adding this
+              // column, we add the source columns of the chain.
+              if (cube.getDimAttributeByName(colName) instanceof ReferencedDimAtrribute
+                && ((ReferencedDimAtrribute) cube.getDimAttributeByName(colName)).isChainedColumn()) {
+                ReferencedDimAtrribute rdim = (ReferencedDimAtrribute) cube.getDimAttributeByName(colName);
+                chainSourceColumns.addAll(cube.getChainByName(rdim.getChainName()).getSourceColumns());
+              } else {
+                // This is a dim attribute, needs to be validated
+                dimAttributes.add(colName);
+              }
+            } else if (cube.getExpressionNames().contains(colName)) {
+              if (cubeql.getQueriedExprs().contains(colName)) {
+                for (ASTNode exprNode : cubeql.getExprCtx().getExpressionContext(colName,
+                  cubeql.getAliasForTableName(cubeql.getCube().getName())).getAllASTNodes()) {
+                  findDimAttrsAndChainSourceColumns(cubeql, exprNode, dimAttributes, chainSourceColumns,
+                    nonQueryableColumns);
+                }
+              }
             }
           }
         }

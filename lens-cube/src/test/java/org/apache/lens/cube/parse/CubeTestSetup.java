@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
@@ -648,17 +649,43 @@ public class CubeTestSetup {
     paths.add(new TableReference("hourdim", "id"));
     timeChain.addPath(paths);
     joinchains.add(timeChain);
+    joinchains.add(new JoinChain("cubeState", "cube-state", "state thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "stateid"));
+            add(new TableReference("statedim", "id"));
+          }
+        });
+      }
+    });
 
     exprs = new HashSet<ExprColumn>();
     exprs.add(new ExprColumn(new FieldSchema("avgmsr", "double", "avg measure"), "Avg Msr", "avg(msr1 + msr2)"));
+    exprs.add(new ExprColumn(new FieldSchema("msr5", "double", "materialized in some facts"), "Fifth Msr",
+      "msr2 + msr3"));
+    exprs.add(new ExprColumn(new FieldSchema("equalsums", "double", "sums are equals"), "equalsums",
+      new ExprSpec("msr3 + msr4", null, null), new ExprSpec("(msr3 + msr2)/100", null, null)));
+    exprs.add(new ExprColumn(new FieldSchema("roundedmsr1", "double", "rounded measure1"), "Rounded msr1",
+      "round(msr1/1000)"));
     exprs.add(new ExprColumn(new FieldSchema("roundedmsr2", "double", "rounded measure2"), "Rounded msr2",
       "round(msr2/1000)"));
+    exprs.add(new ExprColumn(new FieldSchema("nestedexpr", "double", "nested expr"), "Nested expr",
+      new ExprSpec("avg(roundedmsr2)", null, null), new ExprSpec("avg(equalsums)", null, null),
+      new ExprSpec("case when substrexpr = 'xyz' then avg(msr5) when substrexpr = 'abc' then avg(msr4)/100 end",
+        null, null)));
+    exprs.add(new ExprColumn(new FieldSchema("nestedExprWithTimes", "double", "nested expr"), "Nested expr",
+      new ExprSpec("avg(roundedmsr2)", null, null), new ExprSpec("avg(equalsums)", null, null),
+      new ExprSpec("case when substrexpr = 'xyz' then avg(msr5) when substrexpr = 'abc' then avg(msr4)/100 end",
+        NOW, null), new ExprSpec("avg(newmeasure)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("msr6", "bigint", "sixth measure"), "Measure6",
       "sum(msr2) + max(msr3)/ count(msr4)"));
     exprs.add(new ExprColumn(new FieldSchema("booleancut", "boolean", "a boolean expression"), "Boolean cut",
       "dim1 != 'x' AND dim2 != 10 "));
     exprs.add(new ExprColumn(new FieldSchema("substrexpr", "string", "a sub-string expression"), "Substr expr",
-      "substr(dim1, 3)"));
+      new ExprSpec("substr(dim1, 3))", null, null), new ExprSpec("substr(ascii(testdim2.name), 3)", null, null)));
+    exprs.add(new ExprColumn(new FieldSchema("substrexprdim2", "string", "a sub-string expression"), "Substr expr",
+      new ExprSpec("substr(dim2, 3))", null, null), new ExprSpec("substr(ascii(testdim2.name), 3)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("indiasubstr", "boolean", "nested sub string expression"), "Nested expr",
       "substrexpr = 'INDIA'"));
     exprs.add(new ExprColumn(new FieldSchema("refexpr", "string", "expression which facts and dimensions"),
@@ -669,6 +696,12 @@ public class CubeTestSetup {
       "new measure expr", "myfun(newmeasure)"));
     exprs.add(new ExprColumn(new FieldSchema("cityAndState", "String", "city and state together"), "City and State",
       "concat(citydim.name, \":\", statedim.name)"));
+    exprs.add(new ExprColumn(new FieldSchema("cityStateName", "String", "city state"), "City State",
+      "concat('CityState:', citydim.statename)"));
+    exprs.add(new ExprColumn(new FieldSchema("cubeStateName", "String", "statename from cubestate"), "CubeState Name",
+      "substr(cubestate.name, 5)"));
+    exprs.add(new ExprColumn(new FieldSchema("substrdim2big1", "String", "substr of dim2big1"), "dim2big1 substr",
+      "substr(dim2big1, 5)"));
 
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(TEST_CUBE_NAME),
@@ -996,6 +1029,7 @@ public class CubeTestSetup {
     for (CubeMeasure measure : cubeMeasures) {
       factColumns.add(measure.getColumn());
     }
+    factColumns.add(new FieldSchema("msr5", "double", "msr5"));
 
     // add dimensions of the cube
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
@@ -1252,7 +1286,9 @@ public class CubeTestSetup {
     String factName = "testFact2";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(cubeMeasures.size());
     for (CubeMeasure measure : cubeMeasures) {
-      factColumns.add(measure.getColumn());
+      if (!measure.getName().equals("msr4")) {
+        factColumns.add(measure.getColumn());
+      }
     }
 
     // add dimensions of the cube
@@ -1427,7 +1463,11 @@ public class CubeTestSetup {
     dimProps.put(MetastoreUtil.getDimTimedDimensionKey("citydim"), TestCubeMetastoreClient.getDatePartitionKey());
     Set<ExprColumn> exprs = new HashSet<ExprColumn>();
     exprs.add(new ExprColumn(new FieldSchema("CityAddress", "string", "city with state and city and zip"),
-      "City Address", "concat(citydim.name, \":\", statedim.name, \":\", countrydim.name, \":\", zipdim.code)"));
+      "City Address",
+      new ExprSpec("concat(citydim.name, \":\", statedim.name, \":\", countrydim.name, \":\", zipdim.code)", null,
+        null), new ExprSpec("concat(citydim.name, \":\", statedim.name)", null, null)));
+    exprs.add(new ExprColumn(new FieldSchema("CityState", "string", "city's state"),
+      "City State", new ExprSpec("concat(citydim.name, \":\", citydim.statename)", null, null)));
     Dimension cityDim = new Dimension("citydim", cityAttrs, exprs, dimProps, 0L);
     client.createDimension(cityDim);
 

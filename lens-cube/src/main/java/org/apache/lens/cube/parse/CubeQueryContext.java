@@ -19,6 +19,9 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
 
 import java.io.ByteArrayOutputStream;
@@ -45,7 +48,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-public class CubeQueryContext {
+public class CubeQueryContext implements TrackQueriedColumns {
   public static final String TIME_RANGE_FUNC = "time_range_in";
   public static final String NOW = "now";
   public static final String DEFAULT_TABLE = "_default_";
@@ -77,6 +80,16 @@ public class CubeQueryContext {
 
   @Getter
   private final Set<String> queriedMsrs = new HashSet<String>();
+
+  @Getter
+  private final Set<String> queriedExprs = new HashSet<String>();
+
+  @Getter
+  private final Set<String> queriedExprsWithMeasures = new HashSet<String>();
+
+  @Getter
+  // Mapping of a qualified column name to its table alias
+  private final Map<String, String> colToTableAlias = new HashMap<String, String>();
 
   @Getter()
   private final Set<Set<CandidateFact>> candidateFactSets = new HashSet<Set<CandidateFact>>();
@@ -132,6 +145,9 @@ public class CubeQueryContext {
   @Getter
   @Setter
   private JoinResolver.AutoJoinContext autoJoinCtx;
+  @Getter
+  @Setter
+  private ExpressionResolver.ExpressionResolverContext exprCtx;
   @Getter
   @Setter
   private DenormalizationResolver.DenormalizationContext deNormCtx;
@@ -341,7 +357,7 @@ public class CubeQueryContext {
     boolean isRequiredInJoinChain = false;
   }
 
-  public void addOptionalDimTable(String alias, String col, CandidateTable candidate, boolean isRequiredInJoin)
+  public void addOptionalDimTable(String alias, CandidateTable candidate, boolean isRequiredInJoin, String... cols)
     throws SemanticException {
     alias = alias.toLowerCase();
     try {
@@ -354,8 +370,10 @@ public class CubeQueryContext {
         optDim = new OptionalDimCtx();
         optionalDimensions.put(dim, optDim);
       }
-      if (col != null && candidate != null) {
-        optDim.colQueried.add(col);
+      if (cols != null && candidate != null) {
+        for (String col : cols) {
+          optDim.colQueried.add(col);
+        }
         optDim.requiredForCandidates.add(candidate);
       }
       if (!optDim.isRequiredInJoinChain) {
@@ -413,7 +431,7 @@ public class CubeQueryContext {
         return cubeTblEntry.getKey();
       }
     }
-    return tableName;
+    return tableName.toLowerCase();
   }
 
   public void print() {
@@ -784,6 +802,22 @@ public class CubeQueryContext {
       }
     }
 
+    // pick dimension tables required during expression expansion for the picked fact and dimensions
+    Set<Dimension> exprDimTables = new HashSet<Dimension>();
+    if (cfacts != null) {
+      for (CandidateFact cfact : cfacts) {
+        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(cfact, dimsToQuery, cfacts.size() > 1);
+        exprDimTables.addAll(factExprDimTables);
+        if (cfacts.size() > 1) {
+          factDimMap.get(cfact).addAll(factExprDimTables);
+        }
+      }
+    } else {
+      // dim only query
+      exprDimTables.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, false));
+    }
+    dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimTables));
+
     // pick denorm tables for the picked fact and dimensions
     Set<Dimension> denormTables = new HashSet<Dimension>();
     if (cfacts != null) {
@@ -891,17 +925,49 @@ public class CubeQueryContext {
 
     String[] split = StringUtils.split(col, ".");
     if (split.length <= 1) {
-      return cube.getMeasureNames().contains(col.trim().toLowerCase());
+      col = col.trim().toLowerCase();
+      if (queriedExprs.contains(col)) {
+        return exprCtx.getExpressionContext(col, getAliasForTableName(cube.getName())).isHasMeasures();
+      } else {
+        return cube.getMeasureNames().contains(col);
+      }
     } else {
-      String cubeName = split[0].trim();
-      String colName = split[1].trim();
-      if (cubeName.equalsIgnoreCase(cube.getName())
-        || cubeName.equalsIgnoreCase(getAliasForTableName(cube.getName()))) {
-        return cube.getMeasureNames().contains(colName.toLowerCase());
+      String cubeName = split[0].trim().toLowerCase();
+      String colName = split[1].trim().toLowerCase();
+      if (cubeName.equalsIgnoreCase(cube.getName()) || cubeName.equals(getAliasForTableName(cube.getName()))) {
+        if (queriedExprs.contains(colName)) {
+          return exprCtx.getExpressionContext(colName, cubeName).isHasMeasures();
+        } else {
+          return cube.getMeasureNames().contains(colName.toLowerCase());
+        }
       } else {
         return false;
       }
     }
+  }
+
+  boolean isMeasure(ASTNode node) {
+    String tabname = null;
+    String colname;
+    int nodeType = node.getToken().getType();
+    if (!(nodeType == HiveParser.TOK_TABLE_OR_COL || nodeType == HiveParser.DOT)) {
+      return false;
+    }
+
+    if (nodeType == HiveParser.TOK_TABLE_OR_COL) {
+      colname = ((ASTNode) node.getChild(0)).getText();
+    } else {
+      // node in 'alias.column' format
+      ASTNode tabident = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier);
+      ASTNode colIdent = (ASTNode) node.getChild(1);
+
+      colname = colIdent.getText();
+      tabname = tabident.getText();
+    }
+
+    String msrname = StringUtils.isBlank(tabname) ? colname : tabname + "." + colname;
+
+    return isCubeMeasure(msrname);
   }
 
   public boolean isAggregateExpr(String expr) {
@@ -909,7 +975,7 @@ public class CubeQueryContext {
   }
 
   public boolean hasAggregates() {
-    return !aggregateExprs.isEmpty();
+    return !aggregateExprs.isEmpty() || getExprCtx().hasAggregates();
   }
 
   public String getAlias(String expr) {
@@ -1033,6 +1099,14 @@ public class CubeQueryContext {
 
   public void addQueriedMsrs(Set<String> msrs) {
     queriedMsrs.addAll(msrs);
+  }
+
+  public void addQueriedExprs(Set<String> exprs) {
+    queriedExprs.addAll(exprs);
+  }
+
+  public void addQueriedExprsWithMeasures(Set<String> exprs) {
+    queriedExprsWithMeasures.addAll(exprs);
   }
 
   /**

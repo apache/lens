@@ -58,6 +58,16 @@ public class CandidateTablePruneCause {
     MORE_PARTITIONS("Picked table has more partitions than minimum"),
     // invalid cube table
     INVALID("Invalid cube table provided in query"),
+    // expression is not evaluable in the candidate
+    EXPRESSION_NOT_EVALUABLE("%s expressions not evaluable") {
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        List<String> columns = new ArrayList<String>();
+        for (CandidateTablePruneCause cause : causes) {
+          columns.addAll(cause.getMissingExpressions());
+        }
+        return new String[]{columns.toString()};
+      }
+    },
     // column not valid in cube table
     COLUMN_NOT_VALID("Column not valid in cube table"),
     // column not found in cube table
@@ -206,6 +216,8 @@ public class CandidateTablePruneCause {
   private List<String> missingUpdatePeriods;
   // populated in case of missing columns
   private List<String> missingColumns;
+  // populated in case of expressions not evaluable
+  private List<String> missingExpressions;
   // populated in case of no column part of a join path
   private List<String> joinColumns;
   // the columns that are missing default aggregate. only set in case of MISSING_DEFAULT_AGGREGATE
@@ -227,9 +239,11 @@ public class CandidateTablePruneCause {
     return cause;
   }
 
-  public static CandidateTablePruneCause columnNotFound(Collection<String> missingColumns) {
+  public static CandidateTablePruneCause columnNotFound(Collection<String>... missingColumns) {
     List<String> colList = new ArrayList<String>();
-    colList.addAll(missingColumns);
+    for (Collection<String> missing : missingColumns) {
+      colList.addAll(missing);
+    }
     CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.COLUMN_NOT_FOUND);
     cause.setMissingColumns(colList);
     return cause;
@@ -241,6 +255,16 @@ public class CandidateTablePruneCause {
       colList.add(column);
     }
     return columnNotFound(colList);
+  }
+
+  public static CandidateTablePruneCause expressionNotEvaluable(String... exprs) {
+    List<String> colList = new ArrayList<String>();
+    for (String column : exprs) {
+      colList.add(column);
+    }
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.EXPRESSION_NOT_EVALUABLE);
+    cause.setMissingExpressions(colList);
+    return cause;
   }
 
   public static CandidateTablePruneCause missingPartitions(Set<String> nonExistingParts) {

@@ -25,6 +25,8 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
+import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -150,11 +152,11 @@ public class DenormalizationResolver implements ContextRewriter {
             refCols.add(refer);
             // Add to optional tables
             if (refer.col.isChainedColumn()) {
-              cubeql.addOptionalDimTable(refer.col.getChainName(), refer.col.getRefColumn(), table, false);
+              cubeql.addOptionalDimTable(refer.col.getChainName(), table, false, refer.col.getRefColumn());
 
             } else {
               for (TableReference reference : refer.col.getReferences()) {
-                cubeql.addOptionalDimTable(reference.getDestTable(), reference.getDestColumn(), table, false);
+                cubeql.addOptionalDimTable(reference.getDestTable(), table, false, reference.getDestColumn());
               }
             }
             return true;
@@ -317,6 +319,32 @@ public class DenormalizationResolver implements ContextRewriter {
     }
   }
 
+  private void addRefColsQueried(CubeQueryContext cubeql, TrackQueriedColumns tqc, DenormalizationContext denormCtx) {
+    for (Map.Entry<String, Set<String>> entry : tqc.getTblAliasToColumns().entrySet()) {
+      // skip default alias
+      if (entry.getKey() == CubeQueryContext.DEFAULT_TABLE) {
+        continue;
+      }
+      // skip join chain aliases
+      if (cubeql.getJoinchains().keySet().contains(entry.getKey().toLowerCase())) {
+        continue;
+      }
+      AbstractCubeTable tbl = cubeql.getCubeTableForAlias(entry.getKey());
+      Set<String> columns = entry.getValue();
+      for (String column : columns) {
+        CubeColumn col;
+        if (tbl instanceof CubeInterface) {
+          col = ((CubeInterface) tbl).getColumnByName(column);
+        } else {
+          col = ((Dimension) tbl).getColumnByName(column);
+        }
+        if (col instanceof ReferencedDimAtrribute) {
+          // considering all referenced dimensions to be denormalized columns
+          denormCtx.addReferencedCol(column, new ReferencedQueriedColumn((ReferencedDimAtrribute) col, tbl));
+        }
+      }
+    }
+  }
   /**
    * Find all de-normalized columns, if these columns are not directly available in candidate tables, query will be
    * replaced with the corresponding table reference
@@ -328,27 +356,13 @@ public class DenormalizationResolver implements ContextRewriter {
       // Adds all the reference dimensions as eligible for denorm fields
       denormCtx = new DenormalizationContext(cubeql);
       cubeql.setDeNormCtx(denormCtx);
-      for (Map.Entry<String, Set<String>> entry : cubeql.getTblAliasToColumns().entrySet()) {
-        // skip default alias
-        if (entry.getKey() == CubeQueryContext.DEFAULT_TABLE) {
-          continue;
-        }
-        // skip join chain aliases
-        if (cubeql.getJoinchains().keySet().contains(entry.getKey().toLowerCase())) {
-          continue;
-        }
-        AbstractCubeTable tbl = cubeql.getCubeTableForAlias(entry.getKey());
-        Set<String> columns = entry.getValue();
-        for (String column : columns) {
-          CubeColumn col;
-          if (tbl instanceof CubeInterface) {
-            col = ((CubeInterface) tbl).getColumnByName(column);
-          } else {
-            col = ((Dimension) tbl).getColumnByName(column);
-          }
-          if (col instanceof ReferencedDimAtrribute) {
-            // considering all referenced dimensions to be denormalized columns
-            denormCtx.addReferencedCol(column, new ReferencedQueriedColumn((ReferencedDimAtrribute) col, tbl));
+      // add ref columns in cube
+      addRefColsQueried(cubeql, cubeql, denormCtx);
+      // add ref columns from expressions
+      for (Set<ExpressionContext> ecSet : cubeql.getExprCtx().getAllExprsQueried().values()) {
+        for (ExpressionContext ec : ecSet) {
+          for (ExprSpecContext esc : ec.getAllExprs()) {
+            addRefColsQueried(cubeql, esc, denormCtx);
           }
         }
       }

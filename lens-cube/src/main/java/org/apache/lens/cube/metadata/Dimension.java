@@ -171,7 +171,11 @@ public class Dimension extends AbstractBaseTable {
   }
 
   public CubeColumn getColumnByName(String column) {
-    return getAttributeByName(column);
+    CubeColumn cubeCol = super.getExpressionByName(column);
+    if (cubeCol == null) {
+      cubeCol = getAttributeByName(column);
+    }
+    return cubeCol;
   }
 
   /**

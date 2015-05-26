@@ -67,6 +67,7 @@ public class CandidateFact implements CandidateTable {
   private ASTNode whereAST;
   private ASTNode groupbyAST;
   private ASTNode havingAST;
+  private ASTNode joinTree;
   private List<TimeRangeNode> timenodes = Lists.newArrayList();
   private final List<Integer> selectIndices = Lists.newArrayList();
   private final List<Integer> dimFieldIndices = Lists.newArrayList();
@@ -140,6 +141,9 @@ public class CandidateFact implements CandidateTable {
   public void copyASTs(CubeQueryContext cubeql) throws SemanticException {
     this.selectAST = HQLParser.copyAST(cubeql.getSelectAST());
     this.whereAST = HQLParser.copyAST(cubeql.getWhereAST());
+    if (cubeql.getJoinTree() != null) {
+      this.joinTree = HQLParser.copyAST(cubeql.getJoinTree());
+    }
     if (cubeql.getGroupByAST() != null) {
       this.groupbyAST = HQLParser.copyAST(cubeql.getGroupByAST());
     }
@@ -180,13 +184,13 @@ public class CandidateFact implements CandidateTable {
    * @throws SemanticException
    */
   public void updateASTs(CubeQueryContext cubeql) throws SemanticException {
-    Set<String> cubeColsQueried = cubeql.getColumnsQueried(cubeql.getCube().getName());
+    Set<String> cubeCols = cubeql.getCube().getAllFieldNames();
 
     // update select AST with selected fields
     int currentChild = 0;
     for (int i = 0; i < cubeql.getSelectAST().getChildCount(); i++) {
       ASTNode selectExpr = (ASTNode) this.selectAST.getChild(currentChild);
-      Set<String> exprCols = getColsInExpr(cubeColsQueried, selectExpr);
+      Set<String> exprCols = getColsInExpr(cubeCols, selectExpr);
       if (getColumns().containsAll(exprCols)) {
         selectIndices.add(i);
         if (cubeql.getQueriedDimAttrs().containsAll(exprCols)) {
@@ -418,5 +422,9 @@ public class CandidateFact implements CandidateTable {
       }
     }
     return timePartDimensions;
+  }
+
+  public ASTNode getJoinTree() {
+    return joinTree;
   }
 }

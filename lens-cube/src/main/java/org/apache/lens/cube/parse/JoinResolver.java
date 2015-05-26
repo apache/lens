@@ -1016,7 +1016,7 @@ class JoinResolver implements ContextRewriter {
 
     for (JoinChain chain : cubeql.getJoinchains().values()) {
       for (String dimName : chain.getIntermediateDimensions()) {
-        cubeql.addOptionalDimTable(dimName, null, null, true);
+        cubeql.addOptionalDimTable(dimName, null, true, null);
       }
     }
 
@@ -1122,7 +1122,7 @@ class JoinResolver implements ContextRewriter {
       for (TableRelationship rel : joinPath.getEdges()) {
         // Add the joined tables to the queries table sets so that they are
         // resolved in candidate resolver
-        cubeql.addOptionalDimTable(rel.getToTable().getName(), null, null, required);
+        cubeql.addOptionalDimTable(rel.getToTable().getName(), null, required, null);
       }
     }
   }

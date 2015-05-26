@@ -21,18 +21,14 @@ package org.apache.lens.cube.parse;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.Dimension;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -50,20 +46,19 @@ import org.antlr.runtime.CommonToken;
  */
 class AliasReplacer implements ContextRewriter {
 
-  private static final Log LOG = LogFactory.getLog(AliasReplacer.class.getName());
-
-  // Mapping of a qualified column name to its table alias
-  private Map<String, String> colToTableAlias;
-
   public AliasReplacer(Configuration conf) {
   }
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
-    colToTableAlias = new HashMap<String, String>();
+    Map<String, String> colToTableAlias = cubeql.getColToTableAlias();
 
     extractTabAliasForCol(cubeql);
     findDimAttributesAndMeasures(cubeql);
+
+    if (colToTableAlias.isEmpty()) {
+      return;
+    }
 
     // Rewrite the all the columns in the query with table alias prefixed.
     // If col1 of table tab1 is accessed, it would be changed as tab1.col1.
@@ -76,10 +71,6 @@ class AliasReplacer implements ContextRewriter {
     // 2: (TOK_SELECT (TOK_SELEXPR (. (TOK_TABLE_OR_COL src) key))
     // (TOK_SELEXPR (TOK_FUNCTION count (. (TOK_TABLE_OR_COL src) value))))
     // 3: (TOK_SELECT (TOK_SELEXPR (. (TOK_TABLE_OR_COL src) key) srckey))))
-    if (colToTableAlias == null) {
-      return;
-    }
-
     replaceAliases(cubeql.getSelectAST(), 0, colToTableAlias);
 
     replaceAliases(cubeql.getHavingAST(), 0, colToTableAlias);
@@ -92,13 +83,11 @@ class AliasReplacer implements ContextRewriter {
 
     replaceAliases(cubeql.getJoinTree(), 0, colToTableAlias);
 
-
     // Update the aggregate expression set
     AggregateResolver.updateAggregates(cubeql.getSelectAST(), cubeql);
     AggregateResolver.updateAggregates(cubeql.getHavingAST(), cubeql);
     // Update alias map as well
     updateAliasMap(cubeql.getSelectAST(), cubeql);
-
   }
 
   /**
@@ -112,22 +101,31 @@ class AliasReplacer implements ContextRewriter {
       Set<String> cubeColsQueried = cubeql.getColumnsQueried(cube.getName());
       Set<String> queriedDimAttrs = new HashSet<String>();
       Set<String> queriedMsrs = new HashSet<String>();
+      Set<String> queriedExprs = new HashSet<String>();
       if (cubeColsQueried != null && !cubeColsQueried.isEmpty()) {
         for (String col : cubeColsQueried) {
           if (cube.getMeasureNames().contains(col)) {
             queriedMsrs.add(col);
           } else if (cube.getDimAttributeNames().contains(col)) {
             queriedDimAttrs.add(col);
+          } else if (cube.getExpressionNames().contains(col)) {
+            queriedExprs.add(col);
           }
         }
       }
       cubeql.addQueriedDimAttrs(queriedDimAttrs);
       cubeql.addQueriedMsrs(queriedMsrs);
+      cubeql.addQueriedExprs(queriedExprs);
     }
   }
 
   private void extractTabAliasForCol(CubeQueryContext cubeql) throws SemanticException {
-    Set<String> columns = cubeql.getTblAliasToColumns().get(CubeQueryContext.DEFAULT_TABLE);
+    extractTabAliasForCol(cubeql.getColToTableAlias(), cubeql, cubeql);
+  }
+
+  static void extractTabAliasForCol(Map<String, String> colToTableAlias, CubeQueryContext cubeql,
+    TrackQueriedColumns tqc) throws SemanticException {
+    Set<String> columns = tqc.getTblAliasToColumns().get(CubeQueryContext.DEFAULT_TABLE);
     if (columns == null) {
       return;
     }
@@ -136,8 +134,9 @@ class AliasReplacer implements ContextRewriter {
       if (cubeql.getCube() != null) {
         Set<String> cols = cubeql.getCube().getAllFieldNames();
         if (cols.contains(col.toLowerCase())) {
-          colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTableName(cubeql.getCube().getName()));
-          cubeql.addColumnsQueried((AbstractCubeTable) cubeql.getCube(), col.toLowerCase());
+          String cubeAlias = cubeql.getAliasForTableName(cubeql.getCube().getName());
+          colToTableAlias.put(col.toLowerCase(), cubeAlias);
+          tqc.addColumnsQueried(cubeAlias, col.toLowerCase());
           inCube = true;
         }
       }
@@ -148,8 +147,9 @@ class AliasReplacer implements ContextRewriter {
             if (prevDim != null && !prevDim.equals(dim.getName())) {
               throw new SemanticException(ErrorMsg.AMBIGOUS_DIM_COLUMN, col, prevDim, dim.getName());
             }
-            colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTableName(dim.getName()));
-            cubeql.addColumnsQueried(dim, col.toLowerCase());
+            String dimAlias = cubeql.getAliasForTableName(dim.getName());
+            colToTableAlias.put(col.toLowerCase(), dimAlias);
+            tqc.addColumnsQueried(dimAlias, col.toLowerCase());
           } else {
             // throw error because column is in both cube and dimension table
             throw new SemanticException(ErrorMsg.AMBIGOUS_CUBE_COLUMN, col, cubeql.getCube().getName(), dim.getName());
@@ -162,7 +162,7 @@ class AliasReplacer implements ContextRewriter {
     }
   }
 
-  private void replaceAliases(ASTNode node, int nodePos, Map<String, String> colToTableAlias) {
+  static void replaceAliases(ASTNode node, int nodePos, Map<String, String> colToTableAlias) {
     if (node == null) {
       return;
     }
@@ -211,7 +211,7 @@ class AliasReplacer implements ContextRewriter {
     }
   }
 
-  private void updateAliasMap(ASTNode root, CubeQueryContext cubeql) {
+  static void updateAliasMap(ASTNode root, CubeQueryContext cubeql) {
     if (root == null) {
       return;
     }
