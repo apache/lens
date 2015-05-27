@@ -19,6 +19,23 @@
 
 Getting started with Lens
 
+*
+
+** Subscribe to mailing lists
+
+*----------+----------------------------------------------+-------------------------------------------------+
+|          | Subscribe                                    | Unsubscribe                                     |
+*----------+----------------------------------------------+-------------------------------------------------+
+| User     | user-subscribe@lens.incubator.apache.org     | user-unsubscribe@lens.incubator.apache.org      |
+*----------+----------------------------------------------+-------------------------------------------------+
+| Dev      | dev-subscribe@lens.incubator.apache.org      | dev-unsubscribe@lens.incubator.apache.org       |
+*----------+----------------------------------------------+-------------------------------------------------+
+| Commits  | commits-subscribe@lens.incubator.apache.org  | commits-unsubscribe@lens.incubator.apache.org   |
+*----------+----------------------------------------------+-------------------------------------------------+
+
+
+** Try out Lens
+
   Start with installation steps described {{{./install-and-run.html}here}} and try out
   {{{./pseudo-distributed-setup.html}pseudo distributed setup}}. Refer to 
   {{{../admin/index.html} Admin documentation}} for more information on server components
