@@ -33,6 +33,9 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public abstract class TestTimeRangeWriter {
 
   public abstract TimeRangeWriter getTimerangeWriter();
@@ -59,7 +62,7 @@ public abstract class TestTimeRangeWriter {
     try {
       whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
     } catch (SemanticException e) {
-      e.printStackTrace();
+      log.error("Semantic exception while testing disjoint parts.", e);
       th = e;
     }
 

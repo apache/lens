@@ -31,6 +31,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
@@ -103,7 +104,7 @@ public abstract class TestQueryRewrite {
       // unreachable
       return null;
     } catch (SemanticException e) {
-      e.printStackTrace();
+      log.error("Semantic exception in Rewrite.", e);
       return e;
     }
   }

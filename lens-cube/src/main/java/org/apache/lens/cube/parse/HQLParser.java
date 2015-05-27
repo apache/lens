@@ -40,7 +40,12 @@ import org.antlr.runtime.tree.Tree;
 
 import com.google.common.base.Optional;
 
+import lombok.extern.slf4j.Slf4j;
+
+
+@Slf4j
 public final class HQLParser {
+
   private HQLParser() {
 
   }
@@ -168,7 +173,7 @@ public final class HQLParser {
     try {
       printAST(getHiveTokenMapping(), node, 0, 0);
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error in printing AST.", e);
     }
     System.out.println();
   }

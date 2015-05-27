@@ -27,9 +27,12 @@ import org.apache.lens.server.api.metrics.MetricsService;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Event listener used for metrics in errors.
  */
+@Slf4j
 public class LensRequestListener implements RequestEventListener {
 
   /** The Constant HTTP_REQUESTS_STARTED. */
@@ -108,7 +111,7 @@ public class LensRequestListener implements RequestEventListener {
             metrics.incrCounter(LensRequestListener.class, HTTP_CLIENT_ERROR);
           } else {
             metrics.incrCounter(LensRequestListener.class, HTTP_UNKOWN_ERROR);
-            error.printStackTrace();
+            log.error("Encountered HTTP exception", error);
           }
         }
       }

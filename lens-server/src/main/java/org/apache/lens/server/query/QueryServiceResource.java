@@ -42,21 +42,19 @@ import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.error.UnSupportedQuerySubmitOpException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * queryapi resource
  * <p/>
  * This provides api for all things query.
  */
+@Slf4j
 @Path("/queryapi")
 public class QueryServiceResource {
-
-  /** The Constant LOG. */
-  public static final Logger LOG = LogManager.getLogger(QueryServiceResource.class);
 
   /** The query server. */
   private QueryExecutionService queryServer;
@@ -269,7 +267,7 @@ public class QueryServiceResource {
         }
       }
     } catch (Exception e) {
-      LOG.error("Error canceling queries", e);
+      log.error("Error canceling queries", e);
       failed = true;
     }
     String msgString = (StringUtils.isBlank(state) ? "" : " in state" + state)
@@ -342,7 +340,7 @@ public class QueryServiceResource {
       try {
         sop = SubmitOp.valueOf(operation.toUpperCase());
       } catch (IllegalArgumentException e) {
-        LOG.error("Illegal argument for submitop: " + operation);
+        log.error("Illegal argument for submitop: " + operation, e);
       }
       if (sop == null) {
         throw new BadRequestException("Invalid operation type: " + operation + prepareClue);
@@ -391,7 +389,7 @@ public class QueryServiceResource {
         }
       }
     } catch (Exception e) {
-      LOG.error("Error destroying prepared queries", e);
+      log.error("Error destroying prepared queries", e);
       failed = true;
     }
     String msgString = (StringUtils.isBlank(user) ? "" : " for user " + user);
@@ -637,7 +635,7 @@ public class QueryServiceResource {
       try {
         sop = SubmitOp.valueOf(operation.toUpperCase());
       } catch (IllegalArgumentException e) {
-        LOG.warn("illegal argument for submit operation: " + operation, e);
+        log.warn("illegal argument for submit operation: " + operation, e);
       }
       if (sop == null) {
         throw new BadRequestException("Invalid operation type: " + operation + submitPreparedClue);

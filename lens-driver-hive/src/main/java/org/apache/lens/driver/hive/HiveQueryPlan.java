@@ -34,9 +34,12 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class HiveQueryPlan.
  */
+@Slf4j
 public class HiveQueryPlan extends DriverQueryPlan {
 
   /** The explain output. */
@@ -164,7 +167,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
               Table tbl = metastore.getTable(table, false);
               if (tbl == null) {
                 // table not found, possible case if query is create table
-                HiveDriver.LOG.info("Table " + table + " not found while extracting plan details");
+                log.info("Table " + table + " not found while extracting plan details");
                 continue;
               }
               tablesQueried.add(table);

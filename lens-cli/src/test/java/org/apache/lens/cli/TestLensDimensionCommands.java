@@ -25,18 +25,16 @@ import java.net.URL;
 import org.apache.lens.cli.commands.LensDimensionCommands;
 import org.apache.lens.client.LensClient;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class TestLensDimensionCommands.
  */
+@Slf4j
 public class TestLensDimensionCommands extends LensCliApplicationTest {
-
-  /** The Constant LOG. */
-  private static final Logger LOG = LoggerFactory.getLogger(TestLensDimensionCommands.class);
 
   /** The command. */
   private static LensDimensionCommands command = null;
@@ -69,7 +67,7 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
    */
   @Test
   public void testDimensionCommands() throws Exception {
-    LOG.debug("Starting to test dimension commands");
+    log.debug("Starting to test dimension commands");
     URL dimensionSpec = TestLensDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
     String dimensionList = getCommand().showDimensions();
     Assert.assertFalse(dimensionList.contains("test_dim"));
@@ -114,14 +112,14 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
       writer.close();
 
       String desc = command.describeDimension("test_dim");
-      LOG.debug(desc);
+      log.debug(desc);
       String propString = "name : test_dim.prop  value : test";
       String propString1 = "name : test_dim.prop1  value : test1";
       Assert.assertTrue(desc.contains(propString));
 
       command.updateDimension("test_dim", "/tmp/test_dim1.xml");
       desc = command.describeDimension("test_dim");
-      LOG.debug(desc);
+      log.debug(desc);
       Assert.assertTrue(desc.contains(propString));
 
       Assert.assertTrue(desc.contains(propString1));
@@ -129,7 +127,7 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
       newFile.delete();
 
     } catch (Throwable t) {
-      t.printStackTrace();
+      log.error("Testing update dimension failed with exception", t);
       Assert.fail("Testing update dimension failed with exception" + t.getMessage());
     }
   }

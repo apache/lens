@@ -23,16 +23,20 @@ import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Top level JDBC driver for Lens.
  */
+@Slf4j
 public class LensJdbcDriver implements Driver {
+
 
   static {
     try {
       DriverManager.registerDriver(new LensJdbcDriver());
     } catch (SQLException e) {
-      e.printStackTrace();
+      log.error("Error in registering jdbc driver", e);
     }
   }
 

@@ -31,7 +31,11 @@ import org.apache.lens.api.metastore.ObjectFactory;
 import org.apache.lens.client.LensClientSingletonWrapper;
 import org.apache.lens.client.LensMetadataClient;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class SampleMetastore {
+
   private LensMetadataClient metaClient;
   public static final Unmarshaller JAXB_UNMARSHALLER;
   private APIResult result;
@@ -117,7 +121,7 @@ public class SampleMetastore {
       System.out.println("Created DB storages");
     } catch (Exception e) {
       retCode = 1;
-      e.printStackTrace();
+      log.error("Creating DB storage failed", e);
       System.err.println("Creating DB storage failed");
     }
   }

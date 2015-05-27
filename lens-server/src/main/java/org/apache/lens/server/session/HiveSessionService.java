@@ -45,8 +45,6 @@ import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -61,14 +59,13 @@ import org.apache.hive.service.cli.OperationHandle;
 import lombok.AccessLevel;
 import lombok.Getter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class HiveSessionService.
  */
+@Slf4j
 public class HiveSessionService extends LensService implements SessionService {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(HiveSessionService.class);
-
 
   /** The restorable sessions. */
   private List<LensSessionImpl.LensSessionPersistInfo> restorableSessions;
@@ -103,7 +100,7 @@ public class HiveSessionService extends LensService implements SessionService {
         service.addResource(sessionid, type, path);
         numAdded++;
       } catch (LensException e) {
-        LOG.error("Failed to add resource type:" + type + " path:" + path + " in service:" + service, e);
+        log.error("Failed to add resource type:" + type + " path:" + path + " in service:" + service, e);
         error = true;
         break;
       }
@@ -205,7 +202,7 @@ public class HiveSessionService extends LensService implements SessionService {
                                        Map<String, String> configuration)
     throws LensException {
     LensSessionHandle sessionid = super.openSession(username, password, configuration);
-    LOG.info("Opened session " + sessionid + " for user " + username);
+    log.info("Opened session " + sessionid + " for user " + username);
     notifyEvent(new SessionOpened(System.currentTimeMillis(), sessionid, username));
 
     // Set current database
@@ -213,7 +210,7 @@ public class HiveSessionService extends LensService implements SessionService {
       try {
         if (!Hive.get(getSession(sessionid).getHiveConf()).databaseExists(database)) {
           closeSession(sessionid);
-          LOG.info("Closed session " + sessionid.getPublicId().toString() + " as db " + database + " does not exist");
+          log.info("Closed session " + sessionid.getPublicId().toString() + " as db " + database + " does not exist");
           throw new NotFoundException("Database " + database + " does not exist");
         }
       } catch (Exception e) {
@@ -221,10 +218,10 @@ public class HiveSessionService extends LensService implements SessionService {
           try {
             closeSession(sessionid);
           } catch (LensException e2) {
-            LOG.error("Error closing session " + sessionid.getPublicId().toString(), e2);
+            log.error("Error closing session " + sessionid.getPublicId().toString(), e2);
           }
 
-          LOG.error("Error in checking if database exists " + database, e);
+          log.error("Error in checking if database exists " + database, e);
           throw new LensException("Error in checking if database exists" + database, e);
         } else {
           throw (NotFoundException) e;
@@ -232,7 +229,7 @@ public class HiveSessionService extends LensService implements SessionService {
       }
 
       getSession(sessionid).setCurrentDatabase(database);
-      LOG.info("Set database to " + database + " for session " + sessionid.getPublicId());
+      log.info("Set database to " + database + " for session " + sessionid.getPublicId());
     }
 
     // add auxuiliary jars
@@ -240,7 +237,7 @@ public class HiveSessionService extends LensService implements SessionService {
 
     if (auxJars != null) {
       for (String jar : auxJars) {
-        LOG.info("Adding aux jar:" + jar);
+        log.info("Adding aux jar:" + jar);
         addResourceToAllServices(sessionid, "jar", jar);
       }
     }
@@ -301,7 +298,7 @@ public class HiveSessionService extends LensService implements SessionService {
    * @param addToSession the add to session
    */
   protected void setSessionParameter(LensSessionHandle sessionid, String key, String value, boolean addToSession) {
-    LOG.info("Request to Set param key:" + key + " value:" + value);
+    log.info("Request to Set param key:" + key + " value:" + value);
     String command = "set" + " " + key + "= " + value;
     try {
       acquire(sessionid);
@@ -320,7 +317,7 @@ public class HiveSessionService extends LensService implements SessionService {
       if (addToSession) {
         getSession(sessionid).setConfig(key, value);
       }
-      LOG.info("Set param key:" + key + " value:" + value);
+      log.info("Set param key:" + key + " value:" + value);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } finally {
@@ -354,7 +351,7 @@ public class HiveSessionService extends LensService implements SessionService {
 
     // Restore sessions if any
     if (restorableSessions == null || restorableSessions.size() <= 0) {
-      LOG.info("No sessions to restore");
+      log.info("No sessions to restore");
       return;
     }
 
@@ -373,7 +370,7 @@ public class HiveSessionService extends LensService implements SessionService {
           try {
             addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation());
           } catch (Exception e) {
-            LOG.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry);
+            log.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry, e);
           }
         }
 
@@ -382,16 +379,17 @@ public class HiveSessionService extends LensService implements SessionService {
           try {
             setSessionParameter(sessionHandle, cfg.getKey(), cfg.getValue(), false);
           } catch (Exception e) {
-            LOG.error("Error setting parameter " + cfg.getKey() + "=" + cfg.getValue() + " for session: " + session);
+            log.error("Error setting parameter " + cfg.getKey() + "=" + cfg.getValue()
+                    + " for session: " + session, e);
           }
         }
-        LOG.info("Restored session " + persistInfo.getSessionHandle().getPublicId());
+        log.info("Restored session " + persistInfo.getSessionHandle().getPublicId());
         notifyEvent(new SessionRestored(System.currentTimeMillis(), sessionHandle));
       } catch (LensException e) {
         throw new RuntimeException(e);
       }
     }
-    LOG.info("Session service restoed " + restorableSessions.size() + " sessions");
+    log.info("Session service restoed " + restorableSessions.size() + " sessions");
   }
 
   /*
@@ -420,7 +418,7 @@ public class HiveSessionService extends LensService implements SessionService {
       LensSessionImpl session = getSession(sessionHandle);
       session.getLensSessionPersistInfo().writeExternal(out);
     }
-    LOG.info("Session service pesristed " + SESSION_MAP.size() + " sessions");
+    log.info("Session service pesristed " + SESSION_MAP.size() + " sessions");
   }
 
   /*
@@ -439,7 +437,7 @@ public class HiveSessionService extends LensService implements SessionService {
       restorableSessions.add(persistInfo);
       SESSION_MAP.put(persistInfo.getSessionHandle().getPublicId().toString(), persistInfo.getSessionHandle());
     }
-    LOG.info("Session service recovered " + SESSION_MAP.size() + " sessions");
+    log.info("Session service recovered " + SESSION_MAP.size() + " sessions");
   }
 
   /**
@@ -474,7 +472,7 @@ public class HiveSessionService extends LensService implements SessionService {
       try {
         getCliService().closeOperation(op);
       } catch (HiveSQLException e) {
-        LOG.error("Error closing operation " + op.getHandleIdentifier(), e);
+        log.error("Error closing operation " + op.getHandleIdentifier(), e);
       }
     }
   }
@@ -511,13 +509,13 @@ public class HiveSessionService extends LensService implements SessionService {
         try {
           long lastAccessTime = getSession(sessionHandle).getLastAccessTime();
           closeInternal(sessionHandle);
-          LOG.info("Closed inactive session " + sessionHandle.getPublicId() + " last accessed at "
+          log.info("Closed inactive session " + sessionHandle.getPublicId() + " last accessed at "
             + new Date(lastAccessTime));
           notifyEvent(new SessionExpired(System.currentTimeMillis(), sessionHandle));
         } catch (ClientErrorException nfe) {
           // Do nothing
         } catch (LensException e) {
-          LOG.error("Error closing session " + sessionHandle.getPublicId() + " reason " + e.getMessage());
+          log.error("Error closing session " + sessionHandle.getPublicId() + " reason " + e.getMessage(), e);
         }
       }
     }
@@ -532,7 +530,7 @@ public class HiveSessionService extends LensService implements SessionService {
       try {
         runInternal();
       } catch (Exception e) {
-        LOG.warn("Unknown error while checking for inactive sessions - " + e.getMessage());
+        log.warn("Unknown error while checking for inactive sessions - " + e.getMessage());
       }
     }
   }

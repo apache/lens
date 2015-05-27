@@ -40,16 +40,17 @@ import org.apache.lens.ml.api.TestReport;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Client side implementation of LensML
  */
+@Slf4j
 public class LensMLClient implements LensML, Closeable {
-  private static final Log LOG = LogFactory.getLog(LensMLClient.class);
 
   /** The client. */
   private LensMLJerseyClient client;
@@ -179,7 +180,7 @@ public class LensMLClient implements LensML, Closeable {
         try {
           in.close();
         } catch (IOException e) {
-          e.printStackTrace();
+          log.error("Error closing stream.", e);
         }
       }
     }

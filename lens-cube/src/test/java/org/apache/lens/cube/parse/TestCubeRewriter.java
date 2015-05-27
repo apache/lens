@@ -44,6 +44,9 @@ import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class TestCubeRewriter extends TestQueryRewrite {
 
   private final String cubeName = CubeTestSetup.TEST_CUBE_NAME;
@@ -1451,7 +1454,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       assertTrue(hql.contains("`a measure`"));
       System.out.println("@@ hql: " + hql);
     } catch (NullPointerException npe) {
-      npe.printStackTrace();
+      log.error("Not expecting null pointer exception", npe);
       fail("Not expecting null pointer exception");
     }
   }
@@ -1502,7 +1505,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       System.out.println("@@HQL " + hql);
     } catch (NullPointerException npe) {
       fail(npe.getMessage());
-      npe.printStackTrace();
+      log.error("Not expecting null pointer exception", npe);
     }
   }
 

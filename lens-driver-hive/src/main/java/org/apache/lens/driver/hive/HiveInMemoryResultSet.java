@@ -30,9 +30,12 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hive.service.cli.*;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class HiveInMemoryResultSet.
  */
+@Slf4j
 public class HiveInMemoryResultSet extends InMemoryResultSet {
 
   /** The client. */
@@ -120,7 +123,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
         noMoreResults = rowSet.numRows() == 0;
         if (noMoreResults) {
           if (closeAfterFecth) {
-            HiveDriver.LOG.info("No more results closing the query");
+            log.info("No more results closing the query");
             client.closeOperation(opHandle);
           }
           return false;

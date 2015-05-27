@@ -38,20 +38,20 @@ import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import com.google.common.base.Optional;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Utilities for converting to and from JAXB types to hive.ql.metadata.cube types
  */
+@Slf4j
 public final class JAXBUtils {
   private JAXBUtils() {
 
   }
 
-  public static final Logger LOG = LogManager.getLogger(JAXBUtils.class);
   private static final ObjectFactory XCF = new ObjectFactory();
 
   /**
@@ -223,7 +223,7 @@ public final class JAXBUtils {
     try {
       return DatatypeFactory.newInstance().newXMLGregorianCalendar(c1);
     } catch (DatatypeConfigurationException e) {
-      LOG.warn("Error converting date " + d, e);
+      log.warn("Error converting date " + d, e);
       return null;
     }
   }
@@ -322,7 +322,7 @@ public final class JAXBUtils {
         xcc.setChainName(rd.getChainName());
         xcc.setRefCol(rd.getRefColumn());
         if (baseTable.getChainByName(rd.getChainName()) == null) {
-          LOG.error("Missing chain definition for " + rd.getChainName());
+          log.error("Missing chain definition for " + rd.getChainName());
         } else {
           xcc.setDestTable(baseTable.getChainByName(rd.getChainName()).getDestTable());
         }
@@ -568,7 +568,7 @@ public final class JAXBUtils {
       storage.addProperties(mapFromXProperties(xs.getProperties()));
       return storage;
     } catch (Exception e) {
-      LOG.error("Could not create storage class" + xs.getClassname() + "with name:" + xs.getName());
+      log.error("Could not create storage class" + xs.getClassname() + "with name:" + xs.getName(), e);
       throw new WebApplicationException(e);
     }
   }

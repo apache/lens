@@ -27,8 +27,6 @@ import java.util.List;
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 
@@ -37,9 +35,11 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class TestDatabaseResourceService {
   private static final String DB_PFX = TestDatabaseResourceService.class.getSimpleName();
-  public static final Log LOG = LogFactory.getLog(TestDatabaseResourceService.class);
   public static final String TEST_CLASS = "ClassLoaderTestClass";
 
 
@@ -85,7 +85,7 @@ public class TestDatabaseResourceService {
     for (URL url :  db1Loader.getURLs()) {
       String jarFile = url.getPath();
       if (jarFile.endsWith(db + ".jar")) {
-        LOG.info("Found jar url " + url.toString());
+        log.info("Found jar url " + url.toString());
         return true;
       }
     }
@@ -132,7 +132,7 @@ public class TestDatabaseResourceService {
       Class clz = Class.forName("ClassLoaderTestClass", true, getClass().getClassLoader());
       Assert.fail("Expected class loading to fail");
     } catch (Throwable th) {
-      LOG.error("Expected error " + th + " msg = "+th.getMessage());
+      log.error("Expected error " + th + " msg = "+th.getMessage(), th);
     }
 
     // Should pass now

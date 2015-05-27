@@ -42,8 +42,6 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.query.QueryServiceResource;
 import org.apache.lens.server.session.SessionResource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -59,11 +57,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 @Test
 public class TestMLResource extends LensJerseyTest {
-  private static final Log LOG = LogFactory.getLog(TestMLResource.class);
+
   private static final String TEST_DB = "default";
 
   private WebTarget mlTarget;
@@ -113,7 +112,7 @@ public class TestMLResource extends LensJerseyTest {
       hive.dropDatabase(TEST_DB);
     } catch (Exception exc) {
       // Ignore drop db exception
-      exc.printStackTrace();
+      log.error("Exception while dropping database.", exc);
     }
     mlClient.close();
   }
@@ -158,13 +157,13 @@ public class TestMLResource extends LensJerseyTest {
     Assert.assertFalse(params.isEmpty());
 
     for (String key : params.keySet()) {
-      LOG.info("## Param " + key + " help = " + params.get(key));
+      log.info("## Param " + key + " help = " + params.get(key));
     }
   }
 
   @Test
   public void trainAndEval() throws Exception {
-    LOG.info("Starting train & eval");
+    log.info("Starting train & eval");
     final String algoName = MLUtils.getAlgoName(NaiveBayesAlgo.class);
     HiveConf conf = new HiveConf();
     String tableName = "naivebayes_training_table";
@@ -177,7 +176,7 @@ public class TestMLResource extends LensJerseyTest {
     String[] features = { "feature_1", "feature_2", "feature_3" };
     String outputTable = "naivebayes_eval_table";
 
-    LOG.info("Creating training table from file "
+    log.info("Creating training table from file "
         + sampleDataFileURI.toString());
 
     Map<String, String> tableParams = new HashMap<String, String>();
@@ -185,7 +184,7 @@ public class TestMLResource extends LensJerseyTest {
       ExampleUtils.createTable(conf, TEST_DB, tableName,
           sampleDataFileURI.toString(), labelColumn, tableParams, features);
     } catch (HiveException exc) {
-      exc.printStackTrace();
+      log.error("Hive exception encountered.", exc);
     }
     MLTask.Builder taskBuilder = new MLTask.Builder();
 
@@ -198,7 +197,7 @@ public class TestMLResource extends LensJerseyTest {
 
     MLTask task = taskBuilder.build();
 
-    LOG.info("Created task " + task.toString());
+    log.info("Created task " + task.toString());
     task.run();
     Assert.assertEquals(task.getTaskState(), MLTask.State.SUCCESSFUL);
 
@@ -216,7 +215,7 @@ public class TestMLResource extends LensJerseyTest {
 
     MLTask anotherTask = taskBuilder.build();
 
-    LOG.info("Created second task " + anotherTask.toString());
+    log.info("Created second task " + anotherTask.toString());
     anotherTask.run();
 
     String secondModelID = anotherTask.getModelID();
@@ -233,7 +232,7 @@ public class TestMLResource extends LensJerseyTest {
     int i = 0;
     Set<String> partReports = new HashSet<String>();
     for (Partition part : partitions) {
-      LOG.info("@@PART#" + i + " " + part.getSpec().toString());
+      log.info("@@PART#" + i + " " + part.getSpec().toString());
       partReports.add(part.getSpec().get("part_testid"));
     }
 
@@ -243,7 +242,7 @@ public class TestMLResource extends LensJerseyTest {
     Assert.assertTrue(partReports.contains(secondReportID), secondReportID
         + " second partition not there");
 
-    LOG.info("Completed task run");
+    log.info("Completed task run");
 
   }
 

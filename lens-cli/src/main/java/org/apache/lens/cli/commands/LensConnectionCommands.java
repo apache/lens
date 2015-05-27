@@ -32,9 +32,13 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.base.Joiner;
 
+import lombok.extern.slf4j.Slf4j;
+
+
 /**
  * The Class LensConnectionCommands.
  */
+@Slf4j
 @Component
 @UserDocumentation(title = "Session management",
   description = "Opening the lens CLI shell is equivalent to open a session with lens server."
@@ -159,8 +163,7 @@ public class LensConnectionCommands extends BaseLensCommand {
       closeClientConnection();
       return ExitShellRequest.NORMAL_EXIT;
     } catch (ProcessingException e) {
-      System.out.println(e.getMessage());
-      LOG.error(e);
+      log.error("Error while closing client connection.", e);
       return ExitShellRequest.FATAL_EXIT;
     }
   }

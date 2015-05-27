@@ -45,7 +45,6 @@ import org.apache.lens.server.api.session.SessionService;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
-import org.apache.log4j.Logger;
 
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -63,13 +62,13 @@ import info.ganglia.gmetric4j.gmetric.GMetric;
 import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
 import lombok.Getter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class MetricsServiceImpl.
  */
+@Slf4j
 public class MetricsServiceImpl extends AbstractService implements MetricsService {
-
-  /** The Constant LOG. */
-  public static final Logger LOG = Logger.getLogger(MetricsService.class);
 
   /** The query status listener. */
   private AsyncEventListener<StatusChange> queryStatusListener;
@@ -132,7 +131,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private boolean enableResourceMethodMetering;
 
   public void setEnableResourceMethodMetering(boolean enableResourceMethodMetering) {
-    LOG.info("setEnableResourceMethodMetering: " + enableResourceMethodMetering);
+    log.info("setEnableResourceMethodMetering: " + enableResourceMethodMetering);
     this.enableResourceMethodMetering = enableResourceMethodMetering;
     if (!enableResourceMethodMetering) {
       methodMetricsFactory.clear();
@@ -273,7 +272,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
         reporters.add(greporter);
       } catch (IOException e) {
-        LOG.error("Could not start ganglia reporter", e);
+        log.error("Could not start ganglia reporter", e);
       }
     }
     if (hiveConf.getBoolean(LensConfConstants.ENABLE_GRAPHITE_METRICS, false)) {
@@ -289,10 +288,10 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
           .build(graphite);
         reporters.add(reporter);
       } catch (UnknownHostException e) {
-        LOG.error("Couldn't get localhost. So couldn't setup graphite reporting");
+        log.error("Couldn't get localhost. So couldn't setup graphite reporting", e);
       }
     }
-    LOG.info("Started metrics service");
+    log.info("Started metrics service");
     super.init(hiveConf);
   }
 
@@ -416,7 +415,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
       }
     }
 
-    LOG.info("Stopped metrics service");
+    log.info("Stopped metrics service");
     super.stop();
   }
 

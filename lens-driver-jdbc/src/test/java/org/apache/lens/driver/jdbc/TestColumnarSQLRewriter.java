@@ -46,9 +46,12 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class TestColumnarSQLRewriter.
  */
+@Slf4j
 public class TestColumnarSQLRewriter {
 
   HiveConf hconf = new HiveConf();
@@ -186,7 +189,7 @@ public class TestColumnarSQLRewriter {
       createHiveTable("default", "branch_dim", branchdimColumns);
       createHiveTable("default", "location_dim", locationdimColumns);
     } catch (HiveException e) {
-      e.printStackTrace();
+      log.error("Encountered hive exception.", e);
     }
   }
 
@@ -204,7 +207,7 @@ public class TestColumnarSQLRewriter {
       Hive.get().dropTable("default.branch_dim");
       Hive.get().dropTable("default.location_dim");
     } catch (HiveException e) {
-      e.printStackTrace();
+      log.error("Encountered hive exception", e);
     }
   }
 

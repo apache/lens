@@ -52,8 +52,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -66,14 +64,13 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class LensMLImpl.
  */
+@Slf4j
 public class LensMLImpl implements LensML {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(LensMLImpl.class);
 
   /** The drivers. */
   protected List<MLDriver> drivers;
@@ -144,7 +141,7 @@ public class LensMLImpl implements LensML {
 
     String modelId = UUID.randomUUID().toString();
 
-    LOG.info("Begin training model " + modelId + ", algo=" + algorithm + ", table=" + table + ", params="
+    log.info("Begin training model " + modelId + ", algo=" + algorithm + ", table=" + table + ", params="
       + Arrays.toString(args));
 
     String database = null;
@@ -156,7 +153,7 @@ public class LensMLImpl implements LensML {
 
     MLModel model = algo.train(toLensConf(conf), database, table, modelId, args);
 
-    LOG.info("Done training model: " + modelId);
+    log.info("Done training model: " + modelId);
 
     model.setCreatedAt(new Date());
     model.setAlgoName(algorithm);
@@ -164,7 +161,7 @@ public class LensMLImpl implements LensML {
     Path modelLocation = null;
     try {
       modelLocation = persistModel(model);
-      LOG.info("Model saved: " + modelId + ", algo: " + algorithm + ", path: " + modelLocation);
+      log.info("Model saved: " + modelId + ", algo: " + algorithm + ", path: " + modelLocation);
       return model.getId();
     } catch (IOException e) {
       throw new LensException("Error saving model " + modelId + " for algo " + algorithm, e);
@@ -207,7 +204,7 @@ public class LensMLImpl implements LensML {
       outputStream.writeObject(model);
       outputStream.flush();
     } catch (IOException io) {
-      LOG.error("Error saving model " + model.getId() + " reason: " + io.getMessage());
+      log.error("Error saving model " + model.getId() + " reason: " + io.getMessage(), io);
       throw io;
     } finally {
       IOUtils.closeQuietly(outputStream);
@@ -272,7 +269,7 @@ public class LensMLImpl implements LensML {
       throw new RuntimeException("No ML Drivers specified in conf");
     }
 
-    LOG.info("Loading drivers " + Arrays.toString(driverClasses));
+    log.info("Loading drivers " + Arrays.toString(driverClasses));
     drivers = new ArrayList<MLDriver>(driverClasses.length);
 
     for (String driverClass : driverClasses) {
@@ -280,12 +277,12 @@ public class LensMLImpl implements LensML {
       try {
         cls = Class.forName(driverClass);
       } catch (ClassNotFoundException e) {
-        LOG.error("Driver class not found " + driverClass);
+        log.error("Driver class not found " + driverClass, e);
         continue;
       }
 
       if (!MLDriver.class.isAssignableFrom(cls)) {
-        LOG.warn("Not a driver class " + driverClass);
+        log.warn("Not a driver class " + driverClass);
         continue;
       }
 
@@ -294,16 +291,16 @@ public class LensMLImpl implements LensML {
         MLDriver driver = mlDriverClass.newInstance();
         driver.init(toLensConf(conf));
         drivers.add(driver);
-        LOG.info("Added driver " + driverClass);
+        log.info("Added driver " + driverClass);
       } catch (Exception e) {
-        LOG.error("Failed to create driver " + driverClass + " reason: " + e.getMessage(), e);
+        log.error("Failed to create driver " + driverClass + " reason: " + e.getMessage(), e);
       }
     }
     if (drivers.isEmpty()) {
       throw new RuntimeException("No ML drivers loaded");
     }
 
-    LOG.info("Inited ML service");
+    log.info("Inited ML service");
   }
 
   /**
@@ -317,14 +314,14 @@ public class LensMLImpl implements LensML {
         }
         driver.start();
       } catch (LensException e) {
-        LOG.error("Failed to start driver " + driver, e);
+        log.error("Failed to start driver " + driver, e);
       }
     }
 
     udfStatusExpirySvc = Executors.newSingleThreadScheduledExecutor();
     udfStatusExpirySvc.scheduleAtFixedRate(new UDFStatusExpiryRunnable(), 60, 60, TimeUnit.SECONDS);
 
-    LOG.info("Started ML service");
+    log.info("Started ML service");
   }
 
   /**
@@ -335,12 +332,12 @@ public class LensMLImpl implements LensML {
       try {
         driver.stop();
       } catch (LensException e) {
-        LOG.error("Failed to stop driver " + driver, e);
+        log.error("Failed to stop driver " + driver, e);
       }
     }
     drivers.clear();
     udfStatusExpirySvc.shutdownNow();
-    LOG.info("Stopped ML service");
+    log.info("Stopped ML service");
   }
 
   public synchronized HiveConf getHiveConf() {
@@ -455,18 +452,18 @@ public class LensMLImpl implements LensML {
     }
 
     if (!spec.isOutputTableExists()) {
-      LOG.info("Output table '" + testTable + "' does not exist for test algorithm = " + algorithm + " modelid="
+      log.info("Output table '" + testTable + "' does not exist for test algorithm = " + algorithm + " modelid="
         + modelID + ", Creating table using query: " + spec.getCreateOutputTableQuery());
       // create the output table
       String createOutputTableQuery = spec.getCreateOutputTableQuery();
       queryRunner.runQuery(createOutputTableQuery);
-      LOG.info("Table created " + testTable);
+      log.info("Table created " + testTable);
     }
 
     // Check if ML UDF is registered in this session
     registerPredictUdf(sessionHandle, queryRunner);
 
-    LOG.info("Running evaluation query " + testQuery);
+    log.info("Running evaluation query " + testQuery);
     queryRunner.setQueryName("model_test_" + modelID);
     QueryHandle testQueryHandle = queryRunner.runQuery(testQuery);
 
@@ -483,7 +480,7 @@ public class LensMLImpl implements LensML {
 
     // Save test report
     persistTestReport(testReport);
-    LOG.info("Saved test report " + testReport.getReportID());
+    log.info("Saved test report " + testReport.getReportID());
     return testReport;
   }
 
@@ -494,12 +491,12 @@ public class LensMLImpl implements LensML {
    * @throws LensException the lens exception
    */
   private void persistTestReport(MLTestReport testReport) throws LensException {
-    LOG.info("saving test report " + testReport.getReportID());
+    log.info("saving test report " + testReport.getReportID());
     try {
       ModelLoader.saveTestReport(conf, testReport);
-      LOG.info("Saved report " + testReport.getReportID());
+      log.info("Saved report " + testReport.getReportID());
     } catch (IOException e) {
-      LOG.error("Error saving report " + testReport.getReportID() + " reason: " + e.getMessage());
+      log.error("Error saving report " + testReport.getReportID() + " reason: " + e.getMessage(), e);
     }
   }
 
@@ -529,7 +526,7 @@ public class LensMLImpl implements LensML {
       }
       return reports;
     } catch (IOException e) {
-      LOG.error("Error reading report list for " + algorithm, e);
+      log.error("Error reading report list for " + algorithm, e);
       return null;
     }
   }
@@ -566,9 +563,9 @@ public class LensMLImpl implements LensML {
   public void deleteModel(String algorithm, String modelID) throws LensException {
     try {
       ModelLoader.deleteModel(conf, algorithm, modelID);
-      LOG.info("DELETED model " + modelID + " algorithm=" + algorithm);
+      log.info("DELETED model " + modelID + " algorithm=" + algorithm);
     } catch (IOException e) {
-      LOG.error(
+      log.error(
         "Error deleting model file. algorithm=" + algorithm + " model=" + modelID + " reason: " + e.getMessage(), e);
       throw new LensException("Unable to delete model " + modelID + " for algorithm " + algorithm, e);
     }
@@ -582,9 +579,9 @@ public class LensMLImpl implements LensML {
   public void deleteTestReport(String algorithm, String reportID) throws LensException {
     try {
       ModelLoader.deleteTestReport(conf, algorithm, reportID);
-      LOG.info("DELETED report=" + reportID + " algorithm=" + algorithm);
+      log.info("DELETED report=" + reportID + " algorithm=" + algorithm);
     } catch (IOException e) {
-      LOG.error("Error deleting report " + reportID + " algorithm=" + algorithm + " reason: " + e.getMessage(), e);
+      log.error("Error deleting report " + reportID + " algorithm=" + algorithm + " reason: " + e.getMessage(), e);
       throw new LensException("Unable to delete report " + reportID + " for algorithm " + algorithm, e);
     }
   }
@@ -599,7 +596,7 @@ public class LensMLImpl implements LensML {
     try {
       algo = getAlgoForName(algorithm);
     } catch (LensException e) {
-      LOG.error("Error getting algo description : " + algorithm, e);
+      log.error("Error getting algo description : " + algorithm, e);
       return null;
     }
     if (algo instanceof BaseSparkAlgo) {
@@ -693,15 +690,15 @@ public class LensMLImpl implements LensML {
       return;
     }
 
-    LOG.info("Registering UDF for session " + sessionHandle.getPublicId().toString());
+    log.info("Registering UDF for session " + sessionHandle.getPublicId().toString());
 
     String regUdfQuery = "CREATE TEMPORARY FUNCTION " + HiveMLUDF.UDF_NAME + " AS '" + HiveMLUDF.class
       .getCanonicalName() + "'";
     queryRunner.setQueryName("register_predict_udf_" + sessionHandle.getPublicId().toString());
     QueryHandle udfQuery = queryRunner.runQuery(regUdfQuery);
-    LOG.info("udf query handle is " + udfQuery);
+    log.info("udf query handle is " + udfQuery);
     predictUdfStatus.put(sessionHandle, true);
-    LOG.info("Predict UDF registered for session " + sessionHandle.getPublicId().toString());
+    log.info("Predict UDF registered for session " + sessionHandle.getPublicId().toString());
   }
 
   protected boolean isUdfRegisterd(LensSessionHandle sessionHandle) {
@@ -719,12 +716,12 @@ public class LensMLImpl implements LensML {
         List<LensSessionHandle> sessions = new ArrayList<LensSessionHandle>(predictUdfStatus.keySet());
         for (LensSessionHandle sessionHandle : sessions) {
           if (!sessionService.isOpen(sessionHandle)) {
-            LOG.info("Session closed, removing UDF status: " + sessionHandle);
+            log.info("Session closed, removing UDF status: " + sessionHandle);
             predictUdfStatus.remove(sessionHandle);
           }
         }
       } catch (Exception exc) {
-        LOG.warn("Error clearing UDF statuses", exc);
+        log.warn("Error clearing UDF statuses", exc);
       }
     }
   }

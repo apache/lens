@@ -31,17 +31,15 @@ import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensFactCommands;
 import org.apache.lens.client.LensClient;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class TestLensFactCommands.
  */
+@Slf4j
 public class TestLensFactCommands extends LensCliApplicationTest {
-
-  /** The Constant LOG. */
-  private static final Logger LOG = LoggerFactory.getLogger(TestLensFactCommands.class);
 
   /** The Constant FACT_LOCAL. */
   public static final String FACT_LOCAL = "fact_local";
@@ -119,13 +117,13 @@ public class TestLensFactCommands extends LensCliApplicationTest {
       assertEquals(command.showFacts("blah"), factList);
       fail();
     } catch (NotFoundException e) {
-      LOG.info("blah is not a table", e);
+      log.info("blah is not a table", e);
     }
     try {
       assertEquals(command.showFacts("fact1"), factList);
       fail();
     } catch (NotFoundException e) {
-      LOG.info("fact1 is a table, but not a cube table", e);
+      log.info("fact1 is a table, but not a cube table", e);
     }
     assertEquals("fact1", factList, "Fact1 table should be found");
   }
@@ -157,7 +155,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
       writer.close();
 
       String desc = command.describeFactTable("fact1");
-      LOG.debug(desc);
+      log.debug(desc);
       String propString = "name : fact1.prop  value : f1";
       String propString1 = "name : fact1.prop1  value : f2";
 
@@ -165,15 +163,14 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
       command.updateFactTable("fact1", "/tmp/local-fact1.xml");
       desc = command.describeFactTable("fact1");
-      LOG.debug(desc);
+      log.debug(desc);
       assertTrue(desc.contains(propString), "The sample property value is not set");
-
       assertTrue(desc.contains(propString1), "The sample property value is not set");
 
       newFile.delete();
 
     } catch (Throwable t) {
-      t.printStackTrace();
+      log.error("Updating of the fact1 table failed with ", t);
       fail("Updating of the fact1 table failed with " + t.getMessage());
     }
 
@@ -208,7 +205,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     try {
       command.addNewFactStorage("fact1", new File(resource.toURI()).getAbsolutePath());
     } catch (Throwable t) {
-      t.printStackTrace();
+      log.error("Unable to locate the storage part file for adding new storage to fact table fact1", t);
       fail("Unable to locate the storage part file for adding new storage to fact table fact1");
     }
     result = command.getFactStorages("fact1");
@@ -233,15 +230,15 @@ public class TestLensFactCommands extends LensCliApplicationTest {
       command.addPartitionToFact("fact1", FACT_LOCAL, new File(
         TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
-      t.printStackTrace();
+      log.error("Unable to locate the storage part file for adding new storage to fact table fact1", t);
       fail("Unable to locate the storage part file for adding new storage to fact table fact1");
     }
     verifyAndDeletePartitions();
     try {
       command.addPartitionsToFact("fact1", FACT_LOCAL, new File(
-        TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath());
+          TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
-      t.printStackTrace();
+      log.error("Unable to locate the storage part file for adding new storage to fact table fact1", t);
       fail("Unable to locate the storage part file for adding new storage to fact table fact1");
     }
     verifyAndDeletePartitions();

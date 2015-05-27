@@ -27,12 +27,12 @@ import java.util.Map;
 import org.apache.lens.ml.algo.api.AlgoParam;
 import org.apache.lens.ml.algo.api.MLAlgo;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class AlgoArgParser.
  */
+@Slf4j
 public final class AlgoArgParser {
   private AlgoArgParser() {
   }
@@ -52,9 +52,6 @@ public final class AlgoArgParser {
      */
     public abstract E parse(String value);
   }
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(AlgoArgParser.class);
 
   /**
    * Extracts feature names. If the algo has any parameters associated with @AlgoParam annotation, those are set
@@ -104,12 +101,12 @@ public final class AlgoArgParser {
               CustomArgParser<?> parser = clz.newInstance();
               f.set(algo, parser.parse(value));
             } else {
-              LOG.warn("Ignored param " + key + "=" + value + " as no parser found");
+              log.warn("Ignored param " + key + "=" + value + " as no parser found");
             }
           }
         }
       } catch (Exception exc) {
-        LOG.error("Error while setting param " + key + " to " + value + " for algo " + algo);
+        log.error("Error while setting param " + key + " to " + value + " for algo " + algo, exc);
       }
     }
     return featureColumns;

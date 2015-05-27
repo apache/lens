@@ -45,10 +45,14 @@ import org.testng.annotations.Test;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Unit tests for cube DateUtil class TestDateUtil.
  */
+@Slf4j
 public class TestDateUtil {
+
   public static final String[] TEST_PAIRS = {
     "2013-Jan-01", "2013-Jan-31", "2013-Jan-01", "2013-May-31",
     "2013-Jan-01", "2013-Dec-31", "2013-Feb-01", "2013-Apr-25",
@@ -67,7 +71,7 @@ public class TestDateUtil {
       try {
         pairs[i] = DATE_FMT.parse(TEST_PAIRS[i]);
       } catch (ParseException e) {
-        e.printStackTrace();
+        log.error("Parsing exception while setup.", e);
       }
     }
   }

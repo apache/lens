@@ -28,18 +28,17 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class TestDataSourceConnectionProvider.
  */
+@Slf4j
 public class TestDataSourceConnectionProvider {
-
-  /** The Constant LOG. */
-  public static final Logger LOG = Logger.getLogger(TestDataSourceConnectionProvider.class);
 
   /**
    * Test get connection hsql.
@@ -75,20 +74,20 @@ public class TestDataSourceConnectionProvider {
             Assert.assertNotNull(st);
             passed.incrementAndGet();
           } catch (SQLException e) {
-            LOG.error("error getting connection to db!", e);
+            log.error("error getting connection to db!", e);
           } finally {
             if (st != null) {
               try {
                 st.close();
               } catch (SQLException e) {
-                e.printStackTrace();
+                log.error("Encountered SQL ecxception", e);
               }
             }
             if (conn != null) {
               try {
                 conn.close();
               } catch (SQLException e) {
-                e.printStackTrace();
+                log.error("Encountered SQL exception", e);
               }
             }
           }
@@ -134,7 +133,7 @@ public class TestDataSourceConnectionProvider {
         }
       } catch (SQLException sqlEx) {
         if (i != MAX_CONNECTIONS) {
-          LOG.error("Unexpected getConnection error", sqlEx);
+          log.error("Unexpected getConnection error", sqlEx);
         }
         assertEquals(i, MAX_CONNECTIONS, "Failed before last getConnection call: " + sqlEx.getMessage());
       }

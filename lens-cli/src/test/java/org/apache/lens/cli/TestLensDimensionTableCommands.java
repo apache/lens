@@ -28,18 +28,16 @@ import org.apache.lens.cli.commands.LensDimensionCommands;
 import org.apache.lens.cli.commands.LensDimensionTableCommands;
 import org.apache.lens.client.LensClient;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class TestLensDimensionTableCommands.
  */
+@Slf4j
 public class TestLensDimensionTableCommands extends LensCliApplicationTest {
-
-  /** The Constant LOG. */
-  private static final Logger LOG = LoggerFactory.getLogger(TestLensDimensionTableCommands.class);
 
   /** The Constant DIM_LOCAL. */
   public static final String DIM_LOCAL = "dim_local";
@@ -116,7 +114,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     try {
       command.createDimensionTable(new File(dimSpec.toURI()).getAbsolutePath());
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Unable to create dimtable", e);
       Assert.fail("Unable to create dimtable" + e.getMessage());
     }
 
@@ -126,13 +124,13 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
       Assert.assertEquals(command.showDimensionTables("blah"), dimList);
       Assert.fail();
     } catch (NotFoundException e) {
-      LOG.info("blah is not a table", e);
+      log.info("blah is not a table", e);
     }
     try {
       Assert.assertEquals(command.showDimensionTables("dim_table2"), dimList);
       Assert.fail();
     } catch (NotFoundException e) {
-      LOG.info("dim_table2 is a table, but not a dimension", e);
+      log.info("dim_table2 is a table, but not a dimension", e);
     }
     Assert.assertTrue(dimList.contains(tableName), "dim_table table should be found");
   }
@@ -166,7 +164,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
       writer.close();
 
       String desc = command.describeDimensionTable("dim_table2");
-      LOG.debug(desc);
+      log.debug(desc);
       String propString = "name : dim2.prop  value : d2";
       String propString1 = "name : dim2.prop  value : d1";
       String propString2 = "name : dim2.prop1  value : d2";
@@ -174,7 +172,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
       command.updateDimensionTable("dim_table2", "/tmp/local-dim1.xml");
       desc = command.describeDimensionTable("dim_table2");
-      LOG.debug(desc);
+      log.debug(desc);
       Assert.assertTrue(desc.contains(propString1));
       Assert.assertTrue(desc.contains(propString2));
 
@@ -234,7 +232,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
       command.addPartitionToDimtable("dim_table2", DIM_LOCAL, new File(
         TestLensFactCommands.class.getClassLoader().getResource("dim1-local-part.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
-      t.printStackTrace();
+      log.error("Unable to locate the storage part file for adding new storage to dim table dim_table2", t);
       Assert.fail("Unable to locate the storage part file for adding new storage to dim table dim_table2");
     }
     verifyAndDeletePartition();
@@ -242,7 +240,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
       command.addPartitionsToDimtable("dim_table2", DIM_LOCAL, new File(
         TestLensFactCommands.class.getClassLoader().getResource("dim1-local-parts.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
-      t.printStackTrace();
+      log.error("Unable to locate the storage part file for adding new storage to dim table dim_table2", t);
       Assert.fail("Unable to locate the storage part file for adding new storage to dim table dim_table2");
     }
     verifyAndDeletePartition();
@@ -270,7 +268,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     try {
       command.addPartitionToDimtable(tableName, storageName, new File(resource.toURI()).getAbsolutePath());
     } catch (Throwable t) {
-      t.printStackTrace();
+      log.error("Unable to locate the storage part file for adding new storage to dim table dim_table2", t);
       Assert.fail("Unable to locate the storage part file for adding new storage to dim table dim_table2");
     }
   }

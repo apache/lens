@@ -30,7 +30,11 @@ import org.testng.annotations.Test;
 
 import com.beust.jcommander.internal.Lists;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class TestPartitionTimelines {
+
   private static final String TABLE_NAME = "storage_fact";
   public static final UpdatePeriod PERIOD = UpdatePeriod.HOURLY;
   private static final String PART_COL = "pt";
@@ -103,7 +107,7 @@ public class TestPartitionTimelines {
       return clz.getConstructor(String.class, UpdatePeriod.class, String.class)
         .newInstance(TABLE_NAME, PERIOD, PART_COL);
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error while getting instance.", e);
     }
     return null;
   }

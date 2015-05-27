@@ -34,9 +34,13 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import lombok.Getter;
 import lombok.Setter;
 
+import lombok.extern.slf4j.Slf4j;
+
+
 /**
  * Statistics class used to capture query information.
  */
+@Slf4j
 public class QueryExecutionStatistics extends LoggableLensStatistics {
 
   /** The handle. */
@@ -147,7 +151,7 @@ public class QueryExecutionStatistics extends LoggableLensStatistics {
     try {
       table.setInputFormatClass(TextInputFormat.class.getName());
     } catch (HiveException e) {
-      e.printStackTrace();
+      log.error("Encountered hive exception.", e);
     }
     return table;
   }

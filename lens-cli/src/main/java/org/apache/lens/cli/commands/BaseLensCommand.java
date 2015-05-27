@@ -27,8 +27,6 @@ import java.util.Date;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientSingletonWrapper;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
@@ -41,9 +39,12 @@ import org.springframework.shell.event.ParseResult;
 
 import com.google.common.collect.Sets;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class BaseLensCommand.
  */
+@Slf4j
 public class BaseLensCommand implements ExecutionProcessor {
 
   /** The mapper. */
@@ -51,9 +52,6 @@ public class BaseLensCommand implements ExecutionProcessor {
 
   /** The pp. */
   protected DefaultPrettyPrinter pp;
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(BaseLensCommand.class);
 
   /** The is connection active. */
   protected static boolean isConnectionActive;
@@ -84,7 +82,7 @@ public class BaseLensCommand implements ExecutionProcessor {
    */
   protected static synchronized void closeClientConnection() {
     if (isConnectionActive) {
-      LOG.debug("Request for stopping lens cli received");
+      log.debug("Request for stopping lens cli received");
       getClient().closeConnection();
       isConnectionActive = false;
     }

@@ -31,7 +31,11 @@ import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class TestHQLParser {
+
   HiveConf conf = new HiveConf();
   @Test
   public void testGroupByOrderByGetString() throws Exception {
@@ -238,7 +242,7 @@ public class TestHQLParser {
     try {
       ASTNode tree = HQLParser.parseHQL(query, conf);
     } catch (NullPointerException exc) {
-      exc.printStackTrace();
+      log.error("should not have thrown npe", exc);
       Assert.fail("should not have thrown npe");
     }
   }

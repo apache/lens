@@ -39,6 +39,7 @@ import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.io.FileUtils;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -52,9 +53,12 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.testng.Assert;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class LensTestUtil.
  */
+@Slf4j
 public final class LensTestUtil {
 
   public static final String DB_WITH_JARS = "test_db_static_jars";
@@ -283,7 +287,7 @@ public final class LensTestUtil {
         FileUtils.copyFile(testJarFile, new File(dbDir, jarOrder[2]));
         FileUtils.copyFile(serdeJarFile, new File(dbDir, jarOrder[3]));
       } catch (FileNotFoundException fnf) {
-        fnf.printStackTrace();
+        log.error("File not found.", fnf);
       }
     }
   }

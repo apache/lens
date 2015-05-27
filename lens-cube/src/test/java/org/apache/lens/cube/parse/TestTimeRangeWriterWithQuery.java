@@ -36,6 +36,10 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+
+@Slf4j
 public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
 
   private Configuration conf;
@@ -76,7 +80,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
       rewrite("cube select" + " SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
     } catch (SemanticException e) {
       th = e;
-      e.printStackTrace();
+      log.error("Semantic exception while testing cube query.", e);
     }
     if (!CubeTestSetup.isZerothHour()) {
       Assert.assertNotNull(th);

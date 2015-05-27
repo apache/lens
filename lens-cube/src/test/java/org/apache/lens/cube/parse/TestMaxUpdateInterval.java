@@ -32,10 +32,14 @@ import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
 /*
  * Unit test for maxUpdateIntervalIn method in CubeFactTable
  */
+@Slf4j
 public class TestMaxUpdateInterval {
+
   public static final String[] TEST_PAIRS = {
     "2013-Jan-01", "2013-Jan-31", "2013-Jan-01", "2013-May-31",
     "2013-Jan-01", "2013-Dec-31", "2013-Feb-01", "2013-Apr-25",
@@ -54,7 +58,7 @@ public class TestMaxUpdateInterval {
         pairs[i] = DATE_FMT.parse(TEST_PAIRS[i]);
         System.out.println(pairs[i].toString());
       } catch (ParseException e) {
-        e.printStackTrace();
+        log.error("Parsing exception while testing max update interval.", e);
       }
     }
   }

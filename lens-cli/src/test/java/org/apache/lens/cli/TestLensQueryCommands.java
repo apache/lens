@@ -43,17 +43,15 @@ import org.apache.lens.driver.hive.TestHiveDriver;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class TestLensQueryCommands.
  */
+@Slf4j
 public class TestLensQueryCommands extends LensCliApplicationTest {
-
-  /** The Constant LOG. */
-  private static final Logger LOG = LoggerFactory.getLogger(TestLensQueryCommands.class);
 
   /** The client. */
   private LensClient client;
@@ -130,29 +128,29 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     result = qCom.executePreparedQuery(qh, false, "testPrepQuery1");
 
-    LOG.warn("XXXXXX Prepared query sync result is  " + result);
+    log.warn("XXXXXX Prepared query sync result is  " + result);
     assertTrue(result.contains("1\tfirst"));
 
     String handle = qCom.executePreparedQuery(qh, true, "testPrepQuery2");
-    LOG.debug("Perpared query handle is   " + handle);
+    log.debug("Perpared query handle is   " + handle);
     while (!client.getQueryStatus(handle).finished()) {
       Thread.sleep(5000);
     }
     String status = qCom.getStatus(handle);
-    LOG.debug("Prepared Query Status is  " + status);
+    log.debug("Prepared Query Status is  " + status);
     assertTrue(status.contains("Status : SUCCESSFUL"));
 
     result = qCom.getQueryResults(handle, null);
-    LOG.debug("Prepared Query Result is  " + result);
+    log.debug("Prepared Query Result is  " + result);
     assertTrue(result.contains("1\tfirst"));
     // Fetch again.
     result = qCom.getQueryResults(handle, null);
-    LOG.debug("Prepared Query Result is  " + result);
+    log.debug("Prepared Query Result is  " + result);
     assertTrue(result.contains("1\tfirst"));
 
     result = qCom.destroyPreparedQuery(qh);
 
-    LOG.debug("destroy result is " + result);
+    log.debug("destroy result is " + result);
     assertEquals("Successfully destroyed " + qh, result);
     result = qCom.getAllPreparedQueries("testPreparedName", "all", submitTime, Long.MAX_VALUE);
 
@@ -195,9 +193,8 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String sql = "cube select id, name from test_dim";
     String result = qCom.explainQuery(sql, "");
 
-    LOG.debug(result);
+    log.debug(result);
     assertTrue(result.contains(explainPlan));
-
   }
 
   /**
@@ -210,7 +207,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String sql = "cube select id2, name from test_dim";
     String result = qCom.explainQuery(sql, "");
 
-    LOG.debug(result);
+    log.debug(result);
     assertTrue(result.contains("Explain FAILED:"));
 
     result = qCom.explainAndPrepare(sql, "");
@@ -318,7 +315,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     LensCubeCommands command = new LensCubeCommands();
     command.setClient(client);
 
-    LOG.debug("Starting to test cube commands");
+    log.debug("Starting to test cube commands");
     URL cubeSpec = TestLensQueryCommands.class.getClassLoader().getResource("sample-cube.xml");
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
     TestLensDimensionCommands.createDimension();
@@ -367,7 +364,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
       assertNotNull(result);
       assertFalse(result.contains("Failed to get resultset"));
     } catch (Exception exc) {
-      exc.printStackTrace();
+      log.error("Exception not expected while getting resultset.", exc);
       fail("Exception not expected: " + exc.getMessage());
     }
     System.out.println("@@END_PERSISTENT_RESULT_TEST-------------");
@@ -397,7 +394,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
       // This is to check for positive processing time
       assertFalse(result.contains("(-"));
     } catch (Exception exc) {
-      exc.printStackTrace();
+      log.error("Exception not expected while purging resultset.", exc);
       fail("Exception not expected: " + exc.getMessage());
     }
     System.out.println("@@END_FINISHED_PURGED_RESULT_TEST-------------");

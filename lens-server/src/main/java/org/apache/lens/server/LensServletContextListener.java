@@ -26,11 +26,14 @@ import org.apache.hive.service.CompositeService;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Initialize the webapp.
  *
  * @see LensServletContextEvent
  */
+@Slf4j
 public class LensServletContextListener implements ServletContextListener {
 
   /** The Constant LOG_PROPERTIES_FILE_KEY. */
@@ -58,7 +61,7 @@ public class LensServletContextListener implements ServletContextListener {
     } catch (Exception exc) {
       // Try basic configuration
       System.err.println("WARNING - log4j property configurator gave error, falling back to basic configurator");
-      exc.printStackTrace();
+      log.error("WARNING - log4j property configurator gave error, falling back to basic configurator", exc);
       BasicConfigurator.configure();
     }
 

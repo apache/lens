@@ -63,8 +63,6 @@ import org.apache.lens.server.error.LensExceptionMapper;
 import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.LensSessionImpl;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -85,14 +83,14 @@ import org.testng.annotations.Test;
 
 import com.codahale.metrics.MetricRegistry;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class TestQueryService.
  */
+@Slf4j
 @Test(groups = "unit-test")
 public class TestQueryService extends LensJerseyTest {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(TestQueryService.class);
 
   /** The query service. */
   QueryExecutionServiceImpl queryService;
@@ -736,7 +734,7 @@ public class TestQueryService extends LensJerseyTest {
     }
 
     // Test http download end point
-    LOG.info("Starting httpendpoint test");
+    log.info("Starting httpendpoint test");
     final FormDataMultiPart mp3 = new FormDataMultiPart();
     mp3.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
@@ -894,7 +892,7 @@ public class TestQueryService extends LensJerseyTest {
    */
   static void validateHttpEndPoint(WebTarget parent, LensSessionHandle lensSessionId, QueryHandle handle,
     String redirectUrl) throws IOException {
-    LOG.info("@@@ validateHttpEndPoint sessionid " + lensSessionId);
+    log.info("@@@ validateHttpEndPoint sessionid " + lensSessionId);
     Response response = parent.path("queryapi/queries/" + handle.toString() + "/httpresultset")
       .queryParam("sessionid", lensSessionId).request().get();
 
@@ -933,7 +931,7 @@ public class TestQueryService extends LensJerseyTest {
       Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
     } catch (NotFoundException e) {
       // expected
-      e.printStackTrace();
+      log.error("Resource not found.", e);
     }
 
   }
@@ -1348,7 +1346,7 @@ public class TestQueryService extends LensJerseyTest {
     File testJarFile = new File("testdata/test2.jar");
     sessionService.addResourceToAllServices(sessionHandle, "jar", "file://" + testJarFile.getAbsolutePath());
 
-    LOG.info("@@@ Opened session " + sessionHandle.getPublicId() + " with database " + LensTestUtil.DB_WITH_JARS);
+    log.info("@@@ Opened session " + sessionHandle.getPublicId() + " with database " + LensTestUtil.DB_WITH_JARS);
     LensSessionImpl session = sessionService.getSession(sessionHandle);
 
     // Jars should be pending until query is run
@@ -1373,7 +1371,7 @@ public class TestQueryService extends LensJerseyTest {
       Assert.assertTrue(addedToHiveDriver);
 
       // Switch database
-      LOG.info("@@@# database switch test");
+      log.info("@@@# database switch test");
       session.setCurrentDatabase(LensTestUtil.DB_WITH_JARS_2);
       LensTestUtil.createTable(tableInDBWithJars + "_2", target(), sessionHandle, "(ID INT, IDSTR STRING) "
         + "ROW FORMAT SERDE \"DatabaseJarSerde\"");
@@ -1393,12 +1391,12 @@ public class TestQueryService extends LensJerseyTest {
       Assert.assertTrue(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS_2).isEmpty());
 
     } finally {
-      LOG.info("@@@ TEST_OVER");
+      log.info("@@@ TEST_OVER");
       try {
         LensTestUtil.dropTable(tableInDBWithJars, target(), sessionHandle);
         LensTestUtil.dropTable(tableInDBWithJars + "_2", target(), sessionHandle);
       } catch (Throwable th) {
-        th.printStackTrace();
+        log.error("Exception while dropping table.", th);
       }
       sessionService.closeSession(sessionHandle);
     }

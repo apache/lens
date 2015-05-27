@@ -54,8 +54,6 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -67,9 +65,11 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Test(groups = "unit-test")
 public class TestMetastoreService extends LensJerseyTest {
-  public static final Logger LOG = LogManager.getLogger(TestMetastoreService.class);
   private ObjectFactory cubeObjectFactory;
   protected String mediaType = MediaType.APPLICATION_XML;
   protected MediaType medType = MediaType.APPLICATION_XML_TYPE;
@@ -152,7 +152,7 @@ public class TestMetastoreService extends LensJerseyTest {
     result = dbTarget.queryParam("sessionid", lensSessionId).queryParam("ignoreIfExisting", false)
       .request(mediaType).post(Entity.xml(newDb), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.FAILED);
-    LOG.info(">> Result message " + result.getMessage());
+    log.info(">> Result message " + result.getMessage());
 
     // Drop
     dbTarget.path(newDb).queryParam("sessionid", lensSessionId).request().delete();
@@ -768,7 +768,7 @@ public class TestMetastoreService extends LensJerseyTest {
             .get(new GenericType<JAXBElement<XCube>>() {});
         fail("Should have thrown 404, got:" + got);
       } catch (NotFoundException ex) {
-        ex.printStackTrace();
+        log.error("Resource not found.", ex);
       }
 
       target = target().path("metastore").path("cubes").path("test_drop_cube");
@@ -782,7 +782,7 @@ public class TestMetastoreService extends LensJerseyTest {
             .get(new GenericType<JAXBElement<XCube>>() {});
         fail("Should have thrown 404, got :" + got);
       } catch (NotFoundException ex) {
-        ex.printStackTrace();
+        log.error("Resource not found.", ex);
       }
     } finally {
       dropDatabase(DB);
@@ -1222,7 +1222,7 @@ public class TestMetastoreService extends LensJerseyTest {
             mediaType).get(new GenericType<JAXBElement<XDimension>>() {});
         fail("Should have thrown 404, but got" + got.getValue().getName());
       } catch (NotFoundException ex) {
-        ex.printStackTrace();
+        log.error("Resource not found.", ex);
       }
 
       try {
@@ -1230,7 +1230,7 @@ public class TestMetastoreService extends LensJerseyTest {
           .queryParam("sessionid", lensSessionId).request(mediaType).delete(APIResult.class);
         fail("Should have thrown 404, but got" + result.getStatus());
       } catch (NotFoundException ex) {
-        ex.printStackTrace();
+        log.error("Resource not found.", ex);
       }
     } finally {
       dropDatabase(DB);
@@ -1264,7 +1264,7 @@ public class TestMetastoreService extends LensJerseyTest {
           .queryParam("sessionid", lensSessionId).request(mediaType).delete(APIResult.class);
         fail("Should have got 404");
       } catch (NotFoundException e404) {
-        LOG.info("correct");
+        log.info("correct");
       }
 
     } finally {

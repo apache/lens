@@ -35,8 +35,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.Service;
@@ -47,13 +45,13 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class TestRemoteHiveDriver.
  */
+@Slf4j
 public class TestRemoteHiveDriver extends TestHiveDriver {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(TestRemoteHiveDriver.class);
 
   /** The Constant HS2_HOST. */
   static final String HS2_HOST = "localhost";
@@ -121,7 +119,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     try {
       server.stop();
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error stopping hive service", e);
     }
   }
 
@@ -151,7 +149,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
    */
   @Test
   public void testMultiThreadClient() throws Exception {
-    LOG.info("@@ Starting multi thread test");
+    log.info("@@ Starting multi thread test");
     // Launch two threads
     createTestTable("test_multithreads");
     HiveConf thConf = new HiveConf(conf, TestRemoteHiveDriver.class);
@@ -175,10 +173,10 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
         thrDriver.executeAsync(qctx);
       } catch (LensException e) {
         errCount.incrementAndGet();
-        LOG.info(q + " executeAsync error: " + e.getCause());
+        log.info(q + " executeAsync error: " + e.getCause());
         continue;
       }
-      LOG.info("@@ Launched query: " + q + " " + qctx.getQueryHandle());
+      log.info("@@ Launched query: " + q + " " + qctx.getQueryHandle());
       launchedQueries++;
       // Launch many threads to poll for status
       final QueryHandle handle = qctx.getQueryHandle();
@@ -192,18 +190,17 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
               try {
                 thrDriver.updateStatus(qctx);
                 if (qctx.getDriverStatus().isFinished()) {
-                  LOG.info("@@ " + handle.getHandleId() + " >> " + qctx.getDriverStatus().getState());
+                  log.info("@@ " + handle.getHandleId() + " >> " + qctx.getDriverStatus().getState());
                   thrDriver.closeQuery(handle);
                   break;
                 }
                 Thread.sleep(POLL_DELAY);
               } catch (LensException e) {
-                LOG.error("Got Exception", e.getCause());
-                e.printStackTrace();
+                log.error("Got Exception " +e.getCause(), e);
                 errCount.incrementAndGet();
                 break;
               } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("Encountred Interrupted exception", e);
                 break;
               }
             }
@@ -219,11 +216,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       try {
         th.join(10000);
       } catch (InterruptedException e) {
-        LOG.warn("Not ended yet: " + th.getName());
+        log.warn("Not ended yet: " + th.getName());
       }
     }
     Assert.assertEquals(0, thrDriver.getHiveHandleSize());
-    LOG.info("@@ Completed all pollers. Total thrift errors: " + errCount.get());
+    log.info("@@ Completed all pollers. Total thrift errors: " + errCount.get());
     assertEquals(launchedQueries, QUERIES);
     assertEquals(thrs.size(), QUERIES * THREADS);
     assertEquals(errCount.get(), 0);

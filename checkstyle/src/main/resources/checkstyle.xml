@@ -245,6 +245,13 @@
         <property name="checkFormat" value="ParameterNumberCheck|VisibilityModifierCheck|HiddenFieldCheck|MethodName|HideUtilityClassConstructorCheck|DoubleCheckedLockingCheck|InnerAssignmentCheck"/>
     </module>
 
+    <module name="RegexpSingleline">
+        <property name="severity" value="error" />
+        <property name="format" value="\w*.printStackTrace\w*"  />
+        <property name="message" value="Print stack trace not allowed. Use Logger." />
+        <property name="fileExtensions" value="java" />
+    </module>
+
     <!--module name="SuppressionFilter">
       <property name="file" value="checkstyle/src/main/resources/suppressions.xml"/>
     </module-->

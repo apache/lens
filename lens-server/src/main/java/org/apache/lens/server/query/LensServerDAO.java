@@ -37,16 +37,13 @@ import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Top level class which logs and retrieves finished query from Database.
  */
+@Slf4j
 public class LensServerDAO {
-
-  /** The Constant LOG. */
-  private static final Logger LOG = LoggerFactory.getLogger(LensServerDAO.class);
 
   /** The ds. */
   private DataSource ds;
@@ -83,7 +80,7 @@ public class LensServerDAO {
     try {
       runner.update("drop table finished_queries");
     } catch (SQLException e) {
-      e.printStackTrace();
+      log.error("SQL exception while dropping finished queries table.", e);
     }
   }
 
@@ -102,9 +99,9 @@ public class LensServerDAO {
     try {
       createTable(sql);
       ds.getConnection().commit();
-      LOG.info("Created finished queries table");
+      log.info("Created finished queries table");
     } catch (SQLException e) {
-      LOG.warn("Unable to create finished queries table", e);
+      log.warn("Unable to create finished queries table", e);
     }
   }
 
@@ -128,10 +125,10 @@ public class LensServerDAO {
         query.getErrorMessage(), query.getDriverStartTime(), query.getDriverEndTime(), query.getMetadataClass(),
         query.getQueryName(), query.getSubmissionTime());
     } else {
-      LOG.warn("Re insert happening in purge: " + Thread.currentThread().getStackTrace());
+      log.warn("Re insert happening in purge: " + Thread.currentThread().getStackTrace());
       if (alreadyExisting.equals(query)) {
         // This is also okay
-        LOG.warn("Skipping Re-insert. Finished Query found in DB while trying to insert, handle=" + query.getHandle());
+        log.warn("Skipping Re-insert. Finished Query found in DB while trying to insert, handle=" + query.getHandle());
       } else {
         String msg = "Found different value pre-existing in DB while trying to insert finished query. "
           + "Old = " + alreadyExisting + "\nNew = " + query;
@@ -155,7 +152,7 @@ public class LensServerDAO {
     try {
       return runner.query(sql, rsh, handle);
     } catch (SQLException e) {
-      e.printStackTrace();
+      log.error("SQL exception while executing query.", e);
     }
     return null;
   }
@@ -212,7 +209,7 @@ public class LensServerDAO {
           try {
             queryHandleList.add(QueryHandle.fromString(handle));
           } catch (IllegalArgumentException exc) {
-            LOG.warn("Warning invalid query handle found in DB " + handle);
+            log.warn("Warning invalid query handle found in DB " + handle);
           }
         }
         return queryHandleList;

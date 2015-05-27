@@ -37,9 +37,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class TestStatisticsLogFileScannerTask.
  */
+@Slf4j
 @Test(groups = "unit-test")
 public class TestStatisticsLogFileScannerTask {
 
@@ -100,7 +103,7 @@ public class TestStatisticsLogFileScannerTask {
         }
       }).when(service).notifyEvent(Mockito.any(PartitionEvent.class));
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error while running test.", e);
     }
     task.setService(service);
     task.run();

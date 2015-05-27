@@ -1331,9 +1331,9 @@ public class CubeTestSetup {
       try {
         client.addPartition(sPartSpec, c1);
       } catch (HiveException e) {
-        e.printStackTrace();
+        log.error("Encountered Hive exception.", e);
       } catch (LensException e) {
-        e.printStackTrace();
+        log.error("Encountered Lens exception.", e);
       }
       cal.add(Calendar.HOUR_OF_DAY, 1);
       temp = cal.getTime();
@@ -2047,7 +2047,7 @@ public class CubeTestSetup {
       createStateTable(client);
       createCubeFactsWithValidColumns(client);
     } catch (Exception exc) {
-      exc.printStackTrace();
+      log.error("Exception while creating sources.", exc);
       throw exc;
     }
   }
