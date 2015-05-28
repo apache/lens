@@ -27,6 +27,8 @@ import java.util.UUID;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang.StringUtils;
+
 import lombok.*;
 
 /**
@@ -74,6 +76,13 @@ public class QueryHandle extends QuerySubmitResult implements Serializable {
     return new QueryHandle(UUID.fromString(handle));
   }
 
+  public String getHandleIdString() {
+    if (handleId == null) {
+      return StringUtils.EMPTY;
+    }
+    return handleId.toString();
+  }
+
   /*
    * (non-Javadoc)
    *
@@ -81,6 +90,6 @@ public class QueryHandle extends QuerySubmitResult implements Serializable {
    */
   @Override
   public String toString() {
-    return handleId.toString();
+    return getHandleIdString();
   }
 }

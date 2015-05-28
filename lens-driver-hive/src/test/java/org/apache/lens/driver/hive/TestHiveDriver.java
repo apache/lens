@@ -160,7 +160,8 @@ public class TestHiveDriver {
   }
 
   protected ExplainQueryContext createExplainContext(final String query, Configuration conf) {
-    ExplainQueryContext ectx = new ExplainQueryContext(query, "testuser", null, conf, drivers);
+    ExplainQueryContext ectx = new ExplainQueryContext(UUID.randomUUID().toString(), query, "testuser", null, conf,
+        drivers);
     ectx.setLensSessionIdentifier(sessionid);
     return ectx;
   }

@@ -18,6 +18,9 @@
  */
 package org.apache.lens.server;
 
+import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -28,9 +31,11 @@ import org.testng.Assert;
 public class TestStartupOnMetastoreDown {
   private static final Log LOG = LogFactory.getLog(TestStartupOnMetastoreDown.class);
 
+  private final LogSegregationContext logSegregationContext = new MappedDiagnosticLogSegregationContext();
+
   // @Test
   public void testServicesStartOnMetastoreDown() throws Exception {
-    LensServices services = new LensServices(LensServices.LENS_SERVICES_NAME);
+    LensServices services = new LensServices(LensServices.LENS_SERVICES_NAME, logSegregationContext);
     HiveConf hiveConf = new HiveConf();
 
     // Set metastore uri to an invalid location

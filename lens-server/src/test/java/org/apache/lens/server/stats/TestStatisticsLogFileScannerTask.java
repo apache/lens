@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.stats.store.log.PartitionEvent;
 import org.apache.lens.server.stats.store.log.StatisticsLogFileScannerTask;
 
@@ -51,6 +53,8 @@ public class TestStatisticsLogFileScannerTask {
 
   /** The hidden. */
   private File hidden;
+
+  private final LogSegregationContext logSegregationContext = new MappedDiagnosticLogSegregationContext();
 
   /**
    * Creates the test log file.
@@ -90,7 +94,7 @@ public class TestStatisticsLogFileScannerTask {
     appender.setName(TestStatisticsLogFileScannerTask.class.getSimpleName());
     l.addAppender(appender);
 
-    StatisticsLogFileScannerTask task = new StatisticsLogFileScannerTask();
+    StatisticsLogFileScannerTask task = new StatisticsLogFileScannerTask(this.logSegregationContext);
     task.addLogFile(TestStatisticsLogFileScannerTask.class.getName());
     LensEventService service = Mockito.mock(LensEventService.class);
     final List<PartitionEvent> events = new ArrayList<PartitionEvent>();

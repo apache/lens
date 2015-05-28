@@ -25,6 +25,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import org.apache.lens.server.LensApplicationListener;
+import org.apache.lens.server.LensRequestContextInitFilter;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -40,6 +41,7 @@ public class QueryApp extends Application {
     // register root resource
     classes.add(QueryServiceResource.class);
     classes.add(MultiPartFeature.class);
+    classes.add(LensRequestContextInitFilter.class);
     classes.add(LoggingFilter.class);
     classes.add(LensApplicationListener.class);
     return classes;

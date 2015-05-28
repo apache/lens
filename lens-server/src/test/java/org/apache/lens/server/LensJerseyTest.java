@@ -30,6 +30,8 @@ import org.apache.lens.driver.hive.TestRemoteHiveDriver;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.LensMetricsUtil;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +51,8 @@ public abstract class LensJerseyTest extends JerseyTest {
   public static final Log LOG = LogFactory.getLog(LensJerseyTest.class);
 
   private int port = -1;
+
+  private final LogSegregationContext logSegregationContext = new MappedDiagnosticLogSegregationContext();
 
   protected URI getUri() {
     return UriBuilder.fromUri("http://localhost/").port(getTestPort()).build();
@@ -195,7 +199,7 @@ public abstract class LensJerseyTest extends JerseyTest {
     LensServices.get().stop();
     LensMetricsUtil.clearRegistry();
     System.out.println("Lens services stopped!");
-    LensServices.setInstance(new LensServices(LensServices.LENS_SERVICES_NAME));
+    LensServices.setInstance(new LensServices(LensServices.LENS_SERVICES_NAME, this.logSegregationContext));
     LensServices.get().init(conf);
     LensServices.get().start();
     System.out.println("Lens services restarted!");

@@ -20,10 +20,7 @@ package org.apache.lens.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
@@ -33,6 +30,7 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.error.LensExceptionMapper;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.ui.UIApp;
 
 import org.apache.commons.logging.Log;
@@ -113,6 +111,7 @@ public class LensServer {
   }
 
   private ResourceConfig getApp() {
+
     ResourceConfig app = ResourceConfig.forApplicationClass(LensApplication.class);
     app.register(new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".request"), true));
     app.register(LensExceptionMapper.class);
@@ -184,6 +183,9 @@ public class LensServer {
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
+
+    final String runId = UUID.randomUUID().toString();
+    new MappedDiagnosticLogSegregationContext().set(runId);
 
     printStartupMessage();
     try {

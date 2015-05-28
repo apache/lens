@@ -22,10 +22,13 @@ import java.util.Timer;
 
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.hadoop.conf.Configuration;
 
 import org.eclipse.jetty.util.ConcurrentHashSet;
+
+import lombok.NonNull;
 
 /**
  * Class which handles the log4j rolled file.
@@ -44,13 +47,18 @@ public class StatisticsLogRollupHandler {
   /** The scan set. */
   private final ConcurrentHashSet<String> scanSet = new ConcurrentHashSet<String>();
 
+  private final LogSegregationContext logSegregationContext;
+
+  public StatisticsLogRollupHandler(@NonNull final LogSegregationContext logSegregationContext) {
+    this.logSegregationContext = logSegregationContext;
+  }
   /**
    * Initalize the handler.
    *
    * @param conf configuration to be used while initialization.
    */
   public void initialize(Configuration conf) {
-    task = new StatisticsLogFileScannerTask();
+    task = new StatisticsLogFileScannerTask(this.logSegregationContext);
     timer = new Timer();
     rate = conf.getLong(LensConfConstants.STATS_ROLLUP_SCAN_RATE, LensConfConstants.DEFAULT_STATS_ROLLUP_SCAN_RATE);
   }

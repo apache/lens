@@ -368,12 +368,12 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
 
   public boolean getCompressOutput() {
     return conf.getBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION,
-      LensConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
+        LensConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
   }
 
   public long getMaxResultSplitRows() {
     return conf.getLong(LensConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS,
-      LensConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
+        LensConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
   }
 
   /**
@@ -383,7 +383,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    */
   public boolean splitResultIntoMultipleFiles() {
     return conf.getBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE,
-      LensConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
+        LensConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
   }
 
   public String getClusterUser() {
@@ -397,6 +397,10 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    */
   @Override
   public String getLogHandle() {
-    return queryHandle.getHandleId().toString();
+    return getQueryHandleString();
+  }
+
+  public String getQueryHandleString() {
+    return queryHandle.getHandleIdString();
   }
 }

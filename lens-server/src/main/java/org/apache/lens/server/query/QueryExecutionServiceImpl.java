@@ -51,6 +51,8 @@ import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.util.UtilityMethods;
@@ -229,6 +231,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    */
   private ExecutorService estimatePool;
 
+  private final LogSegregationContext logSegregationContext;
+
   /**
    * The driver event listener.
    */
@@ -250,8 +254,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @param cliService the cli service
    * @throws LensException the lens exception
    */
-  public QueryExecutionServiceImpl(CLIService cliService) throws LensException {
+  public QueryExecutionServiceImpl(CLIService cliService)
+    throws LensException {
     super(NAME, cliService);
+    this.logSegregationContext = new MappedDiagnosticLogSegregationContext();
   }
 
   /**
@@ -280,10 +286,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       log.info("Registered query state logger");
     }
     // Add result formatter
-    getEventService().addListenerForType(new ResultFormatter(this), QueryExecuted.class);
+    getEventService().addListenerForType(new ResultFormatter(this, this.logSegregationContext), QueryExecuted.class);
     getEventService().addListenerForType(new QueryExecutionStatisticsGenerator(this, getEventService()),
       QueryEnded.class);
-    getEventService().addListenerForType(new QueryEndNotifier(this, getCliService().getHiveConf()), QueryEnded.class);
+    getEventService().addListenerForType(
+        new QueryEndNotifier(this, getCliService().getHiveConf(), this.logSegregationContext), QueryEnded.class);
     log.info("Registered query result formatter");
   }
 
@@ -456,6 +463,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     public QueryContext getCtx() {
       return ctx;
     }
+
+    public String getQueryHandleString() {
+      return ctx.getQueryHandleString();
+    }
   }
 
   /**
@@ -479,6 +490,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       while (!pausedForTest && !stopped && !querySubmitter.isInterrupted()) {
         try {
           QueryContext ctx = queuedQueries.take();
+
+          /* Setting log segregation id */
+          logSegregationContext.set(ctx.getQueryHandleString());
+
           synchronized (ctx) {
             if (ctx.getStatus().getStatus().equals(Status.QUEUED)) {
               log.info("Launching query:" + ctx.getUserQuery());
@@ -553,6 +568,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             if (stopped || statusPoller.isInterrupted()) {
               return;
             }
+
+            logSegregationContext.set(ctx.getQueryHandleString());
             log.info("Polling status for " + ctx.getQueryHandle());
             try {
               // session is not required to update status of the query
@@ -762,6 +779,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         FinishedQuery finished = null;
         try {
           finished = finishedQueries.take();
+          logSegregationContext.set(finished.getQueryHandleString());
         } catch (InterruptedException e) {
           log.info("QueryPurger has been interrupted, exiting");
           return;
@@ -835,6 +853,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       while (!stopped && !prepareQueryPurger.isInterrupted()) {
         try {
           PreparedQueryContext prepared = preparedQueryQueue.take();
+          logSegregationContext.set(prepared.getQueryHandleString());
           destroyPreparedQuery(prepared);
           log.info("Purged prepared query: " + prepared.getPrepareHandle());
         } catch (LensException e) {
@@ -1005,6 +1024,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       }
     };
 
+    LOG.debug("starting estimate pool");
     ThreadPoolExecutor estimatePool = new ThreadPoolExecutor(minPoolSize, maxPoolSize, keepAlive, TimeUnit.MILLISECONDS,
       new LinkedBlockingQueue<Runnable>(), threadFactory);
     estimatePool.allowCoreThreadTimeOut(true);
@@ -1163,6 +1183,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     @Override
     public void run() {
       try {
+        logSegregationContext.set(ctx.getLogHandle());
         acquire(ctx.getLensSessionIdentifier());
         MethodMetricsContext rewriteGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
           REWRITE_GAUGE);
@@ -2021,13 +2042,13 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * java.lang.String, org.apache.lens.api.LensConf)
    */
   @Override
-  public QueryCost estimate(LensSessionHandle sessionHandle, String query, LensConf lensConf)
+  public QueryCost estimate(final String requestId, LensSessionHandle sessionHandle, String query, LensConf lensConf)
     throws LensException {
     try {
       log.info("Estimate: " + sessionHandle.toString() + " query:" + query);
       acquire(sessionHandle);
       Configuration qconf = getLensConf(sessionHandle, lensConf);
-      ExplainQueryContext estimateQueryContext = new ExplainQueryContext(query,
+      ExplainQueryContext estimateQueryContext = new ExplainQueryContext(requestId, query,
         getSession(sessionHandle).getLoggedInUser(), lensConf, qconf, drivers.values());
       estimateQueryContext.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
       accept(query, qconf, SubmitOp.ESTIMATE);
@@ -2045,12 +2066,13 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * java.lang.String, org.apache.lens.api.LensConf)
    */
   @Override
-  public QueryPlan explain(LensSessionHandle sessionHandle, String query, LensConf lensConf) throws LensException {
+  public QueryPlan explain(final String requestId, LensSessionHandle sessionHandle, String query, LensConf lensConf)
+    throws LensException {
     try {
       log.info("Explain: " + sessionHandle.toString() + " query:" + query);
       acquire(sessionHandle);
       Configuration qconf = getLensConf(sessionHandle, lensConf);
-      ExplainQueryContext explainQueryContext = new ExplainQueryContext(query,
+      ExplainQueryContext explainQueryContext = new ExplainQueryContext(requestId, query,
         getSession(sessionHandle).getLoggedInUser(), lensConf, qconf, drivers.values());
       explainQueryContext.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
       accept(query, qconf, SubmitOp.EXPLAIN);

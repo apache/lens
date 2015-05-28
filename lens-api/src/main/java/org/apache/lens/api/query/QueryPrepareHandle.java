@@ -75,6 +75,10 @@ public class QueryPrepareHandle extends QuerySubmitResult {
    */
   @Override
   public String toString() {
+    return getQueryHandleString();
+  }
+
+  public String getQueryHandleString() {
     return prepareHandleId.toString();
   }
 }

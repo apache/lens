@@ -28,12 +28,15 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ReflectionUtils;
+
+import lombok.NonNull;
 
 /**
  * The Class ResultFormatter.
@@ -46,13 +49,16 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
+  private final LogSegregationContext logSegregationContext;
+
   /**
    * Instantiates a new result formatter.
    *
    * @param queryService the query service
    */
-  public ResultFormatter(QueryExecutionServiceImpl queryService) {
+  public ResultFormatter(QueryExecutionServiceImpl queryService, @NonNull LogSegregationContext logSegregationContext) {
     this.queryService = queryService;
+    this.logSegregationContext = logSegregationContext;
   }
 
   /*
@@ -73,6 +79,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
   private void formatOutput(QueryExecuted event) {
     QueryHandle queryHandle = event.getQueryHandle();
     QueryContext ctx = queryService.getQueryContext(queryHandle);
+    this.logSegregationContext.set(ctx.getQueryHandleString());
     try {
       if (!ctx.isPersistent()) {
         LOG.info("No result formatting required for query " + queryHandle);

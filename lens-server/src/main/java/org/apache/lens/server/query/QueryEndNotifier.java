@@ -37,6 +37,7 @@ import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryEnded;
+import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -44,6 +45,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import lombok.Data;
+import lombok.NonNull;
 
 /**
  * The Class QueryEndNotifier.
@@ -77,23 +79,26 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
   /** The mail smtp connection timeout. */
   private final int mailSmtpConnectionTimeout;
 
+  private final LogSegregationContext logSegregationContext;
+
   /**
    * Instantiates a new query end notifier.
    *
    * @param queryService the query service
    * @param hiveConf     the hive conf
    */
-  public QueryEndNotifier(QueryExecutionServiceImpl queryService, HiveConf hiveConf) {
+  public QueryEndNotifier(QueryExecutionServiceImpl queryService, HiveConf hiveConf,
+      @NonNull final LogSegregationContext logSegregationContext) {
     this.queryService = queryService;
     this.conf = hiveConf;
     from = conf.get(LensConfConstants.MAIL_FROM_ADDRESS);
     host = conf.get(LensConfConstants.MAIL_HOST);
     port = conf.get(LensConfConstants.MAIL_PORT);
-    mailSmtpTimeout = Integer.parseInt(conf.get(LensConfConstants.MAIL_SMTP_TIMEOUT,
-      LensConfConstants.MAIL_DEFAULT_SMTP_TIMEOUT));
+    mailSmtpTimeout = Integer.parseInt(
+        conf.get(LensConfConstants.MAIL_SMTP_TIMEOUT, LensConfConstants.MAIL_DEFAULT_SMTP_TIMEOUT));
     mailSmtpConnectionTimeout = Integer.parseInt(conf.get(LensConfConstants.MAIL_SMTP_CONNECTIONTIMEOUT,
       LensConfConstants.MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
-
+    this.logSegregationContext = logSegregationContext;
   }
 
   /*
@@ -112,6 +117,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
         + ". No email generated");
       return;
     }
+    this.logSegregationContext.set(queryContext.getQueryHandleString());
 
     boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(LensConfConstants.QUERY_MAIL_NOTIFY,
       LensConfConstants.WHETHER_MAIL_NOTIFY_DEFAULT));

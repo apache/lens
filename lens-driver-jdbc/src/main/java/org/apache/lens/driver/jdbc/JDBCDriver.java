@@ -47,6 +47,8 @@ import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryRewriter;
+import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -56,6 +58,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.log4j.Logger;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 /**
@@ -88,6 +91,8 @@ public class JDBCDriver implements LensDriver {
   private Configuration estimateConf;
   /** Estimate connection provider */
   private ConnectionProvider estimateConnectionProvider;
+
+  private LogSegregationContext logSegregationContext;
 
   /**
    * Data related to a query submitted to JDBCDriver.
@@ -142,12 +147,15 @@ public class JDBCDriver implements LensDriver {
     @Setter
     private long endTime;
 
+    private final LogSegregationContext logSegregationContext;
+
     /**
      * Instantiates a new jdbc query context.
      *
      * @param context the context
      */
-    public JdbcQueryContext(QueryContext context) {
+    public JdbcQueryContext(QueryContext context, @NonNull final LogSegregationContext logSegregationContext) {
+      this.logSegregationContext = logSegregationContext;
       this.lensContext = context;
     }
 
@@ -181,6 +189,10 @@ public class JDBCDriver implements LensDriver {
         queryResult.close();
       }
       isClosed = true;
+    }
+
+    public String getQueryHandleString() {
+      return this.lensContext.getQueryHandleString();
     }
   }
 
@@ -261,14 +273,16 @@ public class JDBCDriver implements LensDriver {
 
     /** The query context. */
     private final JdbcQueryContext queryContext;
+    private final LogSegregationContext logSegregationContext;
 
     /**
      * Instantiates a new query callable.
      *
      * @param queryContext the query context
      */
-    public QueryCallable(JdbcQueryContext queryContext) {
+    public QueryCallable(JdbcQueryContext queryContext, @NonNull LogSegregationContext logSegregationContext) {
       this.queryContext = queryContext;
+      this.logSegregationContext = logSegregationContext;
       queryContext.setStartTime(System.currentTimeMillis());
     }
 
@@ -279,6 +293,9 @@ public class JDBCDriver implements LensDriver {
      */
     @Override
     public QueryResult call() {
+
+      logSegregationContext.set(this.queryContext.getQueryHandleString());
+
       Statement stmt = null;
       Connection conn = null;
       QueryResult result = new QueryResult();
@@ -432,6 +449,7 @@ public class JDBCDriver implements LensDriver {
       LOG.error("Error initializing connection provider: " + e.getMessage(), e);
       throw new LensException(e);
     }
+    this.logSegregationContext = new MappedDiagnosticLogSegregationContext();
   }
 
   /**
@@ -494,8 +512,6 @@ public class JDBCDriver implements LensDriver {
   /**
    * Rewrite query.
    *
-   * @param query the query
-   * @param conf  the conf
    * @return the string
    * @throws LensException the lens exception
    */
@@ -850,10 +866,10 @@ public class JDBCDriver implements LensDriver {
    */
 
   private QueryResult executeInternal(QueryContext context, String rewrittenQuery) throws LensException {
-    JdbcQueryContext queryContext = new JdbcQueryContext(context);
+    JdbcQueryContext queryContext = new JdbcQueryContext(context, logSegregationContext);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
-    QueryResult result = new QueryCallable(queryContext).call();
+    QueryResult result = new QueryCallable(queryContext, logSegregationContext).call();
     return result;
     // LOG.info("Execute " + context.getQueryHandle());
   }
@@ -870,10 +886,10 @@ public class JDBCDriver implements LensDriver {
     // Always use the driver rewritten query not user query. Since the
     // conf we are passing here is query context conf, we need to add jdbc xml in resource path
     String rewrittenQuery = rewriteQuery(context);
-    JdbcQueryContext jdbcCtx = new JdbcQueryContext(context);
+    JdbcQueryContext jdbcCtx = new JdbcQueryContext(context, logSegregationContext);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
     try {
-      Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx));
+      Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx, logSegregationContext));
       jdbcCtx.setResultFuture(future);
     } catch (RejectedExecutionException e) {
       LOG.error("Query execution rejected: " + context.getQueryHandle() + " reason:" + e.getMessage(), e);

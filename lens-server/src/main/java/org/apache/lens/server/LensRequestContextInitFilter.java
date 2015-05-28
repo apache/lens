@@ -19,32 +19,41 @@
 package org.apache.lens.server;
 
 import java.io.IOException;
+import java.util.UUID;
 
+import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.SecurityContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * The Class AuthenticationFilter.
+ * LensRequestContextInitFilter is expected to be called before all other request filters.
+ * Priority value of 1 is to ensure the same.
+ *
  */
-public class AuthenticationFilter implements ContainerRequestFilter {
+@Slf4j
+@Priority(1)
+public class LensRequestContextInitFilter implements ContainerRequestFilter {
 
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(AuthenticationFilter.class);
+  private static final String REQUEST_ID = "requestId";
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
-   */
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
 
-    final SecurityContext securityContext = requestContext.getSecurityContext();
-    String user = securityContext.getUserPrincipal() != null ? securityContext.getUserPrincipal().getName() : null;
-    LOG.info("Request from user: " + user + ", path=" + requestContext.getUriInfo().getPath());
+    log.debug("Entering {}", getClass().getName());
+
+    /* Create a unique identifier for request */
+    String uniqueRequesId = UUID.randomUUID().toString();
+
+    /* Add request id for appearing in every log line */
+    new MappedDiagnosticLogSegregationContext().set(uniqueRequesId);
+
+    /* Add request id to headers */
+    requestContext.getHeaders().add(REQUEST_ID, uniqueRequesId);
+
+    log.debug("Leaving {}", getClass().getName());
   }
 }

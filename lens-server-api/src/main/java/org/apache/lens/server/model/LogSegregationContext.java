@@ -16,36 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.query;
+package org.apache.lens.server.model;
 
-import java.util.Collection;
+public interface LogSegregationContext {
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.server.api.driver.LensDriver;
-
-import org.apache.hadoop.conf.Configuration;
-
-/**
- * The class ExplainQueryContext
- */
-public class ExplainQueryContext extends AbstractQueryContext {
-  private static final long serialVersionUID = 1L;
-
-  private final String requestId;
   /**
-   * Constructor. Only needs user query and conf.
+   * Sets an id to be used by current thread in every log line for log segregation
    *
-   * @param query
-   * @param qconf
+   * @param id the id to be added to every log line of current thread
    */
-  public ExplainQueryContext(final String requestId, String query, final String user, LensConf conf,
-      Configuration qconf, Collection<LensDriver> drivers) {
-    super(query, user, conf, qconf, drivers, true);
-    this.requestId = requestId;
-  }
+  void set(final String id);
 
-  @Override
-  public String getLogHandle() {
-    return this.requestId;
-  }
+  /**
+   *
+   * @return the id being used by the current thread for log segregation
+   */
+  String get();
 }

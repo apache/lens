@@ -21,6 +21,8 @@ package org.apache.lens.server.stats.store.log;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.lens.server.stats.store.StatisticsStore;
 
@@ -53,11 +55,14 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
   /** The rollup handler. */
   private StatisticsLogRollupHandler rollupHandler;
 
+  private final LogSegregationContext logSegregationContext;
+
   /**
    * Instantiates a new log statistics store.
    */
   public LogStatisticsStore() {
     this.mapper = new ObjectMapper();
+    this.logSegregationContext = new MappedDiagnosticLogSegregationContext();
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }
 
@@ -71,7 +76,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
     handler = new StatisticsLogPartitionHandler();
     handler.initialize(conf);
     LOG.info("Creating new rollup handler");
-    rollupHandler = new StatisticsLogRollupHandler();
+    rollupHandler = new StatisticsLogRollupHandler(this.logSegregationContext);
     rollupHandler.initialize(conf);
   }
 

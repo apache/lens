@@ -18,10 +18,14 @@
  */
 package org.apache.lens.api.response;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.annotation.*;
 
 import org.apache.lens.api.query.QuerySubmitResult;
+
+import org.apache.commons.lang.StringUtils;
 
 import lombok.*;
 
@@ -78,12 +82,12 @@ public class LensResponse<DATA, PAYLOAD> {
   private LensResponse(final String apiVersion, final String id, final DATA data,
       final LensErrorTO lensErrorTO, @NonNull final Status httpStatusCode) {
 
-    /* The checks commented below should be enabled in future, once story of apiVersion and id to be used for log
-    tracing is clear. Right now there could be REST APIs throwing LensException without initializing apiVersion
-    and id.
+    /* The check commented below should be enabled in future, once story of apiVersion is clear. Right now there could
+    be REST APIs throwing LensException without initializing apiVersion
 
-    checkArgument(StringUtils.isNotBlank(apiVersion));
-    checkArgument(StringUtils.isNotBlank(id)); */
+    checkArgument(StringUtils.isNotBlank(apiVersion)); */
+
+    checkArgument(StringUtils.isNotBlank(id));
 
     this.apiVersion = apiVersion;
     this.id = id;

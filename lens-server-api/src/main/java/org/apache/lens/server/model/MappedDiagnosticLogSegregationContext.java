@@ -16,36 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.query;
+package org.apache.lens.server.model;
 
-import java.util.Collection;
+import org.slf4j.MDC;
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.server.api.driver.LensDriver;
+public class MappedDiagnosticLogSegregationContext implements LogSegregationContext {
 
-import org.apache.hadoop.conf.Configuration;
+  private static final String LOG_SEGREGATION_ID = "logSegregationId";
 
-/**
- * The class ExplainQueryContext
- */
-public class ExplainQueryContext extends AbstractQueryContext {
-  private static final long serialVersionUID = 1L;
-
-  private final String requestId;
-  /**
-   * Constructor. Only needs user query and conf.
-   *
-   * @param query
-   * @param qconf
-   */
-  public ExplainQueryContext(final String requestId, String query, final String user, LensConf conf,
-      Configuration qconf, Collection<LensDriver> drivers) {
-    super(query, user, conf, qconf, drivers, true);
-    this.requestId = requestId;
+  @Override
+  public void set(String id) {
+    MDC.put(LOG_SEGREGATION_ID, id);
   }
 
   @Override
-  public String getLogHandle() {
-    return this.requestId;
+  public String get() {
+    return MDC.get(LOG_SEGREGATION_ID);
   }
 }

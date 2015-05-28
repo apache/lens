@@ -40,6 +40,7 @@ import org.apache.lens.server.api.annotations.MultiPurposeResource;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.error.UnSupportedQuerySubmitOpException;
+import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -60,6 +61,8 @@ public class QueryServiceResource {
   private QueryExecutionService queryServer;
 
   private final ErrorCollection errorCollection;
+
+  private final LogSegregationContext logSegregationContext;
 
   /**
    * Check session id.
@@ -123,6 +126,7 @@ public class QueryServiceResource {
   public QueryServiceResource() throws LensException {
     queryServer = (QueryExecutionService) LensServices.get().getService("query");
     errorCollection = LensServices.get().getErrorCollection();
+    logSegregationContext = LensServices.get().getLogSegregationContext();
   }
 
   QueryExecutionService getQueryServer() {
@@ -201,8 +205,9 @@ public class QueryServiceResource {
       @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
       @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
 
-    try {
+    final String requestId = this.logSegregationContext.get();
 
+    try {
       validateSessionId(sessionid);
       SubmitOp sop = checkAndGetQuerySubmitOperation(operation);
       validateQuery(query);
@@ -210,13 +215,13 @@ public class QueryServiceResource {
       QuerySubmitResult result;
       switch (sop) {
       case ESTIMATE:
-        result = queryServer.estimate(sessionid, query, conf);
+        result = queryServer.estimate(requestId, sessionid, query, conf);
         break;
       case EXECUTE:
         result = queryServer.executeAsync(sessionid, query, conf, queryName);
         break;
       case EXPLAIN:
-        result = queryServer.explain(sessionid, query, conf);
+        result = queryServer.explain(requestId, sessionid, query, conf);
         break;
       case EXECUTE_WITH_TIMEOUT:
         result = queryServer.execute(sessionid, query, timeoutmillis, conf, queryName);
@@ -224,9 +229,10 @@ public class QueryServiceResource {
       default:
         throw new UnSupportedQuerySubmitOpException();
       }
-      return LensResponse.composedOf(null, null, result);
+
+      return LensResponse.composedOf(null, requestId, result);
     } catch (LensException e) {
-      e.buildLensErrorResponse(errorCollection, null, null);
+      e.buildLensErrorResponse(errorCollection, null, requestId);
       throw e;
     }
   }

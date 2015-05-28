@@ -24,10 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -131,7 +128,8 @@ public class TestJdbcDriver {
   }
 
   protected ExplainQueryContext createExplainContext(final String query, Configuration conf) {
-    ExplainQueryContext ectx = new ExplainQueryContext(query, "testuser", null, conf, drivers);
+    ExplainQueryContext ectx = new ExplainQueryContext(UUID.randomUUID().toString(), query, "testuser", null, conf,
+        drivers);
     return ectx;
   }
 

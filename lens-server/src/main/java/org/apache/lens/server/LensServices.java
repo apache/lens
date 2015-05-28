@@ -33,6 +33,8 @@ import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
+import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
@@ -49,6 +51,7 @@ import org.apache.hive.service.Service;
 import org.apache.hive.service.cli.CLIService;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 
@@ -68,7 +71,8 @@ public class LensServices extends CompositeService implements ServiceProvider {
   private static final String FS_IO_FILE_BUFFER_SIZE = "io.file.buffer.size";
 
   /** The instance. */
-  private static LensServices instance = new LensServices(LENS_SERVICES_NAME);
+  private static LensServices instance = new LensServices(LENS_SERVICES_NAME,
+      new MappedDiagnosticLogSegregationContext());
 
   /** The conf. */
   private HiveConf conf;
@@ -108,6 +112,9 @@ public class LensServices extends CompositeService implements ServiceProvider {
   @Getter
   private ErrorCollection errorCollection;
 
+  @Getter
+  private final LogSegregationContext logSegregationContext;
+
   /**
    * The Enum SERVICE_MODE.
    */
@@ -129,8 +136,9 @@ public class LensServices extends CompositeService implements ServiceProvider {
    *
    * @param name the name
    */
-  public LensServices(String name) {
+  public LensServices(String name, @NonNull final LogSegregationContext logSegregationContext) {
     super(name);
+    this.logSegregationContext = logSegregationContext;
   }
 
   // This is only for test, to simulate a restart of the server
@@ -244,6 +252,8 @@ public class LensServices extends CompositeService implements ServiceProvider {
       @Override
       public void run() {
         try {
+          final String runId = UUID.randomUUID().toString();
+          logSegregationContext.set(runId);
           persistLensServiceState();
           LOG.info("SnapShot of Lens Services created");
         } catch (IOException e) {

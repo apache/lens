@@ -40,6 +40,7 @@ public interface QueryExecutionService {
   /**
    * Estimate the cost of given query.
    *
+   * @param requestId     the request Id of request used to start estimate operation
    * @param sessionHandle the session handle
    * @param query         The query should be in HiveQL(SQL like)
    * @param conf          The query configuration
@@ -48,18 +49,21 @@ public interface QueryExecutionService {
    *
    * @throws LensException thrown in case of failure
    */
-  QueryCost estimate(LensSessionHandle sessionHandle, String query, LensConf conf) throws LensException;
+  QueryCost estimate(final String requestId, LensSessionHandle sessionHandle, String query, LensConf conf)
+    throws LensException;
 
   /**
    * Explain the given query.
    *
+   * @param requestId     the request Id of request used to start explain operation
    * @param sessionHandle the session handle
    * @param query         The query should be in HiveQL(SQL like)
    * @param conf          The query configuration
    * @return The query plan;
    * @throws LensException the lens exception
    */
-  QueryPlan explain(LensSessionHandle sessionHandle, String query, LensConf conf) throws LensException;
+  QueryPlan explain(final String requestId, LensSessionHandle sessionHandle, String query, LensConf conf)
+    throws LensException;
 
   /**
    * Prepare the query.
