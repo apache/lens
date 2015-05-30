@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
 import java.util.Date;
 
 import org.apache.lens.client.LensClient;
@@ -57,6 +58,8 @@ public class BaseLensCommand implements ExecutionProcessor {
   protected static boolean isConnectionActive;
   public static final String DATE_FMT = "yyyy-MM-dd'T'HH:mm:ss:SSS";
 
+  private LensClient lensClient = null;
+
   public static final ThreadLocal<DateFormat> DATE_PARSER =
     new ThreadLocal<DateFormat>() {
       @Override
@@ -83,7 +86,7 @@ public class BaseLensCommand implements ExecutionProcessor {
   protected static synchronized void closeClientConnection() {
     if (isConnectionActive) {
       log.debug("Request for stopping lens cli received");
-      getClient().closeConnection();
+      getClientWrapper().getClient().closeConnection();
       isConnectionActive = false;
     }
   }
@@ -92,7 +95,6 @@ public class BaseLensCommand implements ExecutionProcessor {
    * Instantiates a new base lens command.
    */
   public BaseLensCommand() {
-    getClient();
     mapper = new ObjectMapper();
     mapper.setSerializationInclusion(Inclusion.NON_NULL);
     mapper.setSerializationInclusion(Inclusion.NON_DEFAULT);
@@ -112,15 +114,18 @@ public class BaseLensCommand implements ExecutionProcessor {
         return false;
       }
     });
-    isConnectionActive = true;
   }
 
   public void setClient(LensClient client) {
-    getClientWrapper().setClient(client);
+    lensClient = client;
   }
 
-  public static LensClient getClient() {
-    return getClientWrapper().getClient();
+  public LensClient getClient() {
+    if (lensClient == null) {
+      setClient(getClientWrapper().getClient());
+      isConnectionActive = true;
+    }
+    return lensClient;
   }
 
   public static LensClientSingletonWrapper getClientWrapper() {
