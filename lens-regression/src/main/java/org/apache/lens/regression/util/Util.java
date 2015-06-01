@@ -18,10 +18,20 @@
  */
 package org.apache.lens.regression.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
+import java.util.StringTokenizer;
+
+import javax.ws.rs.core.Response;
+import javax.xml.bind.*;
+
+import org.apache.lens.api.APIResult;
+import org.apache.lens.api.StringList;
+import org.apache.lens.api.metastore.ObjectFactory;
 
 import org.apache.log4j.Logger;
 
@@ -30,15 +40,16 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
+
 public class Util {
-
-  private Util() {
-
-  }
 
   private static final Logger LOGGER = Logger.getLogger(Util.class);
   private static final String PROPERTY_FILE = "lens.properties";
   private static Properties properties;
+
+  private Util() {
+
+  }
 
   public static synchronized Properties getPropertiesObj(String filename) {
     try {
@@ -114,6 +125,94 @@ public class Util {
     } catch (IOException e) {
       LOGGER.info("File Exception : " + e);
     }
+  }
+
+  public static APIResult getApiResult(Response response) {
+    APIResult result = response.readEntity(APIResult.class);
+    return result;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> Object extractObject(String queryString, Class<T> c) throws
+      InstantiationException, IllegalAccessException {
+    JAXBContext jaxbContext = null;
+    Unmarshaller unmarshaller = null;
+    StringReader reader = new StringReader(queryString);
+    try {
+      jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
+      unmarshaller = jaxbContext.createUnmarshaller();
+      return (T) ((JAXBElement<?>) unmarshaller.unmarshal(reader)).getValue();
+    } catch (JAXBException e) {
+      System.out.println("Exception : " + e);
+      return null;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> Object getObject(String queryString, Class<T> c) throws
+      InstantiationException, IllegalAccessException {
+    JAXBContext jaxbContext = null;
+    Unmarshaller unmarshaller = null;
+    StringReader reader = new StringReader(queryString);
+    try {
+      jaxbContext = JAXBContext.newInstance(c);
+      unmarshaller = jaxbContext.createUnmarshaller();
+      return (T) unmarshaller.unmarshal(reader);
+    } catch (JAXBException e) {
+      System.out.println("Exception : " + e);
+      return null;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> String convertObjectToXml(T object, Class<T> clazz, String functionName) throws
+      SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException,
+      InvocationTargetException {
+    JAXBElement<T> root = null;
+    StringWriter stringWriter = new StringWriter();
+    ObjectFactory methodObject = new ObjectFactory();
+
+    Method method = methodObject.getClass().getMethod(functionName, clazz);
+    root = (JAXBElement<T>) method.invoke(methodObject, object);
+    try {
+      getMarshaller(clazz).marshal(root, stringWriter);
+    } catch (JAXBException e) {
+      LOGGER.error("Not able to marshall", e);
+    }
+    return stringWriter.toString();
+  }
+
+  public static Marshaller getMarshaller(Class clazz) {
+    JAXBContext jaxbContext = null;
+    try {
+      jaxbContext = JAXBContext.newInstance(clazz);
+      Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+      jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+      return jaxbMarshaller;
+    } catch (JAXBException e) {
+      LOGGER.error("Error : ", e);
+    }
+
+    return null;
+  }
+
+  public static HashMap<String, String> stringListToMap(StringList stringList) {
+    HashMap<String, String> map = new HashMap<String, String>();
+    if (stringList == null) {
+      return null;
+    }
+    List<String> list = stringList.getElements();
+    for (String element : list) {
+      StringTokenizer tk = new StringTokenizer(element, "=");
+      map.put(tk.nextToken(), tk.nextToken());
+    }
+    return map;
+  }
+
+  public static HashMap<String, String> stringListToMap(String paramList) throws Exception {
+    StringList stringList = (StringList) Util.getObject(paramList, StringList.class);
+    return stringListToMap(stringList);
   }
 
 }

@@ -24,6 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
+
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
 import org.apache.lens.regression.util.Util;
 
@@ -49,7 +50,7 @@ public class ITSmokeTest extends BaseTestClass {
     LOGGER.info("Test Name: " + method.getName());
   }
 
-  @Test(enabled = true, groups = {"integration"})
+  @Test(enabled = true, groups = { "integration" })
   public void smokeTest() throws Exception {
 
     String exampleScript = clientDir + "/bin/run-examples.sh";
