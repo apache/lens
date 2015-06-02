@@ -21,6 +21,7 @@ package org.apache.lens.client;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -33,10 +34,13 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.APIResult.Status;
@@ -51,6 +55,8 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+
+import org.xml.sax.SAXException;
 
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
@@ -67,10 +73,17 @@ public class LensMetadataClient {
 
   static {
     try {
+      ClassLoader classLoader = LensMetadataClient.class.getClassLoader();
+      SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+      URI uri = classLoader.getResource("cube-0.1.xsd").toURI();
+      LOG.info("URI for cube schema: " + uri.toString());
+      Schema schema = sf.newSchema(uri.toURL());
       JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
       JAXB_UNMARSHALLER = jaxbContext.createUnmarshaller();
-    } catch (JAXBException e) {
-      throw new RuntimeException("Could not initialize JAXBCOntext");
+      JAXB_UNMARSHALLER.setSchema(schema);
+    } catch (JAXBException | URISyntaxException | MalformedURLException | SAXException e) {
+      LOG.error("Could not initialize JAXBContext. ", e);
+      throw new RuntimeException("Could not initialize JAXBContext. ", e);
     }
   }
 

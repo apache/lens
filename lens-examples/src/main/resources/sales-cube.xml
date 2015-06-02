@@ -21,6 +21,13 @@
 -->
 <x_base_cube name="sales" xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
+  <properties>
+    <property name="cube.sales.timed.dimensions.list" value="order_time,delivery_time" />
+    <property name="cube.timedim.partition.order_time" value="ot" />
+    <property name="cube.timedim.partition.delivery_time" value="dt" />
+    <property name="cube.timedim.relation.order_time" value="delivery_time+[-20 days,-1 hour]" />
+    <!-- means dt-20days <= ot <= dt-1hour -->
+  </properties>
   <measures>
     <measure name="unit_sales" type="BIGINT" default_aggr="SUM" display_string="Unit Sales" format_string="#,###"/>
     <measure name="store_sales" type="DOUBLE" default_aggr="SUM" display_string="Store Sales" format_string="#,###.##"/>
@@ -36,16 +43,6 @@
     <measure name="rating" type="FLOAT" default_aggr="AVG"
       display_string="Rating"/>
   </measures>
-  <expressions>
-    <expression name="profit" type="DOUBLE" display_string="Profit">
-      <expr_spec expr="store_sales - store_cost"/>
-    </expression>
-    <expression name="promotion_sales" type="DOUBLE" display_string="Promotion sales">
-      <expr_spec expr="sum(case when promotion_id = 0 then 0 else store_sales end)" start_time='2015-04-12T00:00:00'/>
-      <expr_spec expr="sum(case when promotion_id = -1 then 0 when promotion_id = -1 then 0 else store_sales end)"
-       end_time="2015-04-12T00:00:00"/>
-    </expression>
-  </expressions>
   <dim_attributes>
     <dim_attribute name="customer_id" type="INT" />
     <dim_attribute name="product_id" type="INT" />
@@ -58,24 +55,34 @@
     <dim_attribute name="production_city_id" type="INT" />
     <dim_attribute name="delivery_city_id" type="INT" />
     <dim_attribute name="customer_city_name" type="string" description="City name to which the customer belongs"
-      display_string="Customer City">
+                   display_string="Customer City">
       <ref_spec>
         <chain_ref_column chain_name="customer_city" ref_col="name" />
       </ref_spec>
     </dim_attribute>
     <dim_attribute name="production_city_name" type="STRING" description="City name in which the product was produced"
-      display_string="Production City">
+                   display_string="Production City">
       <ref_spec>
         <chain_ref_column chain_name="production_city" ref_col="name" />
       </ref_spec>
     </dim_attribute>
     <dim_attribute name="delivery_city_name" type="STRING" description="City name to which the product was delivered"
-      display_string="Delivery City">
+                   display_string="Delivery City">
       <ref_spec>
         <chain_ref_column chain_name="delivery_city" ref_col="name" />
       </ref_spec>
     </dim_attribute>
   </dim_attributes>
+  <expressions>
+    <expression name="profit" type="DOUBLE" display_string="Profit">
+      <expr_spec expr="store_sales - store_cost"/>
+    </expression>
+    <expression name="promotion_sales" type="DOUBLE" display_string="Promotion sales">
+      <expr_spec expr="sum(case when promotion_id = 0 then 0 else store_sales end)" start_time='2015-04-12T00:00:00'/>
+      <expr_spec expr="sum(case when promotion_id = -1 then 0 when promotion_id = -1 then 0 else store_sales end)"
+       end_time="2015-04-12T00:00:00"/>
+    </expression>
+  </expressions>
   <join_chains>
     <join_chain name="customer_details">
       <paths>
@@ -150,11 +157,4 @@
       </paths>
     </join_chain>
   </join_chains>
-  <properties>
-    <property name="cube.sales.timed.dimensions.list" value="order_time,delivery_time" />
-    <property name="cube.timedim.partition.order_time" value="ot" />
-    <property name="cube.timedim.partition.delivery_time" value="dt" />
-    <property name="cube.timedim.relation.order_time" value="delivery_time+[-20 days,-1 hour]" />
-    <!-- means dt-20days <= ot <= dt-1hour -->
-  </properties>
 </x_base_cube>

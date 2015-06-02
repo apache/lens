@@ -626,13 +626,18 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="weight" type="xs:double">
+    <xs:attribute name="weight" use="required" >
       <xs:annotation>
         <xs:documentation>
           The weight of the dimension table. LENS will use this attribute to determine the lightest
           table when there are more than one eligible table for answering a query.
         </xs:documentation>
       </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:double">
+          <xs:minExclusive value="0"></xs:minExclusive>
+        </xs:restriction>
+      </xs:simpleType>
     </xs:attribute>
   </xs:complexType>
 
@@ -1157,13 +1162,18 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="weight" type="xs:double">
+    <xs:attribute name="weight" use="required" >
       <xs:annotation>
         <xs:documentation>
           The weight of the fact table. LENS will use this attribute to decide the lightest table to
           query when there are more than one eligible tables.
         </xs:documentation>
       </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:double">
+          <xs:minExclusive value="0"></xs:minExclusive>
+        </xs:restriction>
+      </xs:simpleType>
     </xs:attribute>
   </xs:complexType>
 

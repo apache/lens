@@ -19,7 +19,7 @@
   under the License.
 
 -->
-<x_dimension_table dimension_name="sample_db_dim" table_name="dim_table3" weight="0.0" xmlns="uri:lens:cube:0.1"
+<x_dimension_table dimension_name="sample_db_dim" table_name="dim_table3" weight="100.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
     <column comment="ID" name="id" type="INT"/>

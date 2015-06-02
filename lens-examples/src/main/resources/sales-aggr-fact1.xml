@@ -64,14 +64,14 @@
       <storage_name>mydb</storage_name>
       <table_desc external="true" field_delimiter="," table_location="/tmp/db-storage.db"
         storage_handler_name="org.apache.lens.storage.db.DBStorageHandler">
-        <table_parameters>
-          <property name="lens.metastore.native.db.name" value="default"/>
-        </table_parameters>
         <part_cols>
           <column comment="Process time partition" name="pt" type="STRING"/>
           <column comment="Order time partition" name="ot" type="STRING"/>
           <column comment="Delivery time partition" name="dt" type="STRING"/>
         </part_cols>
+        <table_parameters>
+          <property name="lens.metastore.native.db.name" value="default"/>
+        </table_parameters>
         <time_part_cols>pt</time_part_cols>
         <time_part_cols>ot</time_part_cols>
         <time_part_cols>dt</time_part_cols>

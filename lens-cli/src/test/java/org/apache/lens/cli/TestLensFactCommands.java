@@ -69,6 +69,8 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     String cubeList = getCubeCommand().showCubes();
     assertFalse(cubeList.contains("sample_cube"), cubeList);
     getCubeCommand().createCube(new File(cubeSpec.toURI()).getAbsolutePath());
+    cubeList = getCubeCommand().showCubes();
+    assertTrue(cubeList.contains("sample_cube"), cubeList);
   }
 
   private void dropSampleCube() {
