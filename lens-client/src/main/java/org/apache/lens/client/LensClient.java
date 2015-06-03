@@ -133,7 +133,10 @@ public class LensClient {
     return new LensClientResultSetWithStats(result, statement.getQuery());
   }
 
-  private LensClientResultSetWithStats getResultsFromHandle(QueryHandle q) {
+  private LensClientResultSetWithStats getResultsFromHandle(QueryHandle q, boolean async) {
+    if (!async) {
+      statement.waitForQueryToComplete(q);
+    }
     LensQuery query = statement.getQuery(q);
     if (query.getStatus().getStatus()
       == QueryStatus.Status.FAILED) {
@@ -148,7 +151,11 @@ public class LensClient {
   }
 
   public LensClientResultSetWithStats getAsyncResults(QueryHandle q) {
-    return getResultsFromHandle(q);
+    return getResultsFromHandle(q, true);
+  }
+
+  public LensClientResultSetWithStats getSyncResults(QueryHandle q) {
+    return getResultsFromHandle(q, false);
   }
 
   public Response getHttpResults() {
@@ -524,7 +531,7 @@ public class LensClient {
 
   public LensClientResultSetWithStats getResultsFromPrepared(QueryPrepareHandle phandle, String queryName) {
     QueryHandle qh = statement.executeQuery(phandle, true, queryName);
-    return getResultsFromHandle(qh);
+    return getResultsFromHandle(qh, true);
   }
 
   public QueryHandle executePrepared(QueryPrepareHandle phandle, String queryName) {

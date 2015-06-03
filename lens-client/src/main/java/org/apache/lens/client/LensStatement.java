@@ -30,9 +30,12 @@ import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.query.*;
+import org.apache.lens.api.query.QueryStatus.Status;
+
 import org.apache.lens.api.response.LensJAXBContextResolver;
 import org.apache.lens.api.response.LensResponse;
 import org.apache.lens.api.response.NoErrorPayload;
+
 
 import org.apache.commons.lang.StringUtils;
 
@@ -187,9 +190,10 @@ public class LensStatement {
    *
    * @param handle the handle
    */
-  private void waitForQueryToComplete(QueryHandle handle) {
+  public void waitForQueryToComplete(QueryHandle handle) {
     query = getQuery(handle);
-    while (!query.getStatus().finished()) {
+    while (!query.getStatus().finished()
+      && !(query.getStatus().toString().equals(Status.CLOSED.toString()))) {
       query = getQuery(handle);
       try {
         Thread.sleep(connection.getLensConnectionParams().getQueryPollInterval());

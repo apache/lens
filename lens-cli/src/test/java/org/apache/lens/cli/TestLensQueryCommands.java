@@ -83,6 +83,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     assertTrue(resDir.exists() || resDir.mkdirs());
     testExecuteSyncQuery(qCom);
     testExecuteAsyncQuery(qCom);
+    testSyncResults(qCom);
     testExplainQuery(qCom);
     testExplainFailQuery(qCom);
     testPreparedQuery(qCom);
@@ -98,6 +99,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     assertEquals(result, "No prepared queries");
     testExecuteSyncQuery(qCom);
     testExecuteAsyncQuery(qCom);
+    testSyncResults(qCom);
     testExplainQuery(qCom);
     testExplainFailQuery(qCom);
     testPreparedQuery(qCom);
@@ -140,11 +142,11 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     log.debug("Prepared Query Status is  " + status);
     assertTrue(status.contains("Status : SUCCESSFUL"));
 
-    result = qCom.getQueryResults(handle, null);
+    result = qCom.getQueryResults(handle, null, true);
     log.debug("Prepared Query Result is  " + result);
     assertTrue(result.contains("1\tfirst"));
     // Fetch again.
-    result = qCom.getQueryResults(handle, null);
+    result = qCom.getQueryResults(handle, null, true);
     log.debug("Prepared Query Result is  " + result);
     assertTrue(result.contains("1\tfirst"));
 
@@ -248,7 +250,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     details = qCom.getDetails(qh);
     assertTrue(details.contains("driverQuery"));
 
-    result = qCom.getQueryResults(qh, null);
+    result = qCom.getQueryResults(qh, null, true);
     assertTrue(result.contains("1\tfirst"));
 
     downloadResult(qCom, qh, result);
@@ -298,7 +300,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   }
 
   private void downloadResult(LensQueryCommands qCom, String qh, String expected) throws IOException {
-    assertTrue(qCom.getQueryResults(qh, resDir.getAbsolutePath()).contains("Saved"));
+    assertTrue(qCom.getQueryResults(qh, resDir.getAbsolutePath(), true).contains("Saved"));
     assertEquals(readFile(resDir.getAbsolutePath() + File.separator + qh + ".csv").trim(), expected.trim());
   }
   private String readFile(String path) throws FileNotFoundException {
@@ -371,6 +373,17 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   }
 
   /**
+   * Test execute sync results.
+   *
+   * @param qCom the q com
+   */
+  private void testSyncResults(LensQueryCommands qCom) {
+    String sql = "cube select id,name from test_dim";
+    String qh = qCom.executeQuery(sql, true, "testQuery4");
+    String result = qCom.getQueryResults(qh, null, false);
+    assertTrue(result.contains("1\tfirst"), result);
+  }
+  /**
    * Test purged finished result set.
    *
    * @param qCom the q com
@@ -387,7 +400,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
       }
       assertTrue(qCom.getStatus(qh).contains("Status : SUCCESSFUL"));
 
-      String result = qCom.getQueryResults(qh, null);
+      String result = qCom.getQueryResults(qh, null, true);
       System.out.println("@@ RESULT " + result);
       assertNotNull(result);
 

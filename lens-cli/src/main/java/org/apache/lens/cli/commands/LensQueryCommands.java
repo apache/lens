@@ -264,12 +264,16 @@ public class LensQueryCommands extends BaseLensCommand {
    * @return the query results
    */
   @CliCommand(value = "query results",
-    help = "get results of async query with query handle <query_handle>. Can "
-      + "optionally save the results to a file by providing <save_location>")
+    help = "get results of query with query handle <query_handle>. If async is false "
+      + "then wait till the query execution is completed, it's by default true. "
+      + "Can optionally save the results to a file by providing <save_location>.")
   public String getQueryResults(
     @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh,
-    @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") String location) {
+    @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") String location,
+    @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "true",
+    help = "<async>") boolean async) {
     QueryHandle queryHandle = new QueryHandle(UUID.fromString(qh));
+    LensClient.LensClientResultSetWithStats results;
     try {
       String prefix = "";
       if (StringUtils.isNotBlank(location)) {
@@ -285,8 +289,14 @@ public class LensQueryCommands extends BaseLensCommand {
           }
           return "Saved to " + location;
         } else {
-          LensClient.LensClientResultSetWithStats results = getClient().getAsyncResults(queryHandle);
-          if (results.getResultSet().getResult() instanceof InMemoryQueryResult) {
+          if (async) {
+            results = getClient().getAsyncResults(queryHandle);
+          } else {
+            results = getClient().getSyncResults(queryHandle);
+          }
+          if (results.getResultSet() == null) {
+            return "Resultset not yet available";
+          } else if (results.getResultSet().getResult() instanceof InMemoryQueryResult) {
             location = getValidPath(location + File.separator + qh + ".csv", false, false);
             try (OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(location),
               Charset.defaultCharset())) {
@@ -298,8 +308,10 @@ public class LensQueryCommands extends BaseLensCommand {
               + formatResultSet(results);
           }
         }
-      } else {
+      } else if (async) {
         return formatResultSet(getClient().getAsyncResults(queryHandle));
+      } else {
+        return formatResultSet(getClient().getSyncResults(queryHandle));
       }
     } catch (Throwable t) {
       return t.getMessage();
