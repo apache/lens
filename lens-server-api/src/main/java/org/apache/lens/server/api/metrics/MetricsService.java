@@ -149,6 +149,8 @@ public interface MetricsService {
 
   long getTotalFailedQueries();
 
+  long getTotalServerStatePersistenceErrors();
+
   /**
    * Publish report.
    */

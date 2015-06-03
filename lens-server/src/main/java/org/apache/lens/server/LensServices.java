@@ -98,6 +98,16 @@ public class LensServices extends CompositeService implements ServiceProvider {
   /** The snap shot interval. */
   private long snapShotInterval;
 
+  /**
+   * The metrics service.
+   */
+  private MetricsService metricsService;
+
+  /**
+   * The Constant SERVER_STATE_PERSISTENCE_ERRORS.
+   */
+  public static final String SERVER_STATE_PERSISTENCE_ERRORS = "total-server-state-persistence-errors";
+
   /** The service mode. */
   @Getter
   @Setter
@@ -114,6 +124,24 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   @Getter
   private final LogSegregationContext logSegregationContext;
+
+  /**
+   * Incr counter.
+   *
+   * @param counter the counter
+   */
+  private void incrCounter(String counter) {
+    getMetricService().incrCounter(LensServices.class, counter);
+  }
+
+  /**
+   * Gets counter value.
+   *
+   * @param counter the counter
+   */
+  private long getCounter(String counter) {
+    return getMetricService().getCounter(LensServices.class, counter);
+  }
 
   /**
    * The Enum SERVICE_MODE.
@@ -257,6 +285,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
           persistLensServiceState();
           LOG.info("SnapShot of Lens Services created");
         } catch (IOException e) {
+          incrCounter(SERVER_STATE_PERSISTENCE_ERRORS);
           LOG.warn("Unable to persist lens server state", e);
         }
       }
@@ -326,6 +355,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
               }
             }
             if (!persistenceFS.rename(serviceWritePath, servicePath)) {
+              incrCounter(SERVER_STATE_PERSISTENCE_ERRORS);
               LOG.error("Failed to persist " + service.getName() + " to [" + servicePath + "]");
             } else {
               LOG.info("Persisted service " + service.getName() + " to [" + servicePath + "]");
@@ -372,6 +402,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
         persistenceFS.close();
         LOG.info("Persistence File system object close complete");
       } catch (IOException e) {
+        incrCounter(SERVER_STATE_PERSISTENCE_ERRORS);
         LOG.error("Could not persist server state", e);
         throw new IllegalStateException(e);
       } finally {
@@ -418,5 +449,16 @@ public class LensServices extends CompositeService implements ServiceProvider {
     } catch (ClassNotFoundException e) {
       throw new RuntimeException("Could not create error collection.", e);
     }
+  }
+
+
+  private MetricsService getMetricService() {
+    if (metricsService == null) {
+      metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      if (metricsService == null) {
+        throw new NullPointerException("Could not get metrics service");
+      }
+    }
+    return metricsService;
   }
 }

@@ -96,6 +96,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   /** The total expired sessions*/
   private Counter totalExpiredSessions;
 
+  /** The total errors while persisting server state */
+  private Counter totalServerStatePersistenceErrors;
+
   /** The total accepted queries. */
   private Counter totalAcceptedQueries;
 
@@ -355,6 +358,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     totalExpiredSessions = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
         + EXPIRED_SESSIONS));
 
+    totalServerStatePersistenceErrors = metricRegistry.counter(MetricRegistry.name(LensServices.class,
+        LensServices.SERVER_STATE_PERSISTENCE_ERRORS));
+
     metricRegistry.register("gc", new GarbageCollectorMetricSet());
     metricRegistry.register("memory", new MemoryUsageGaugeSet());
     metricRegistry.register("threads", new ThreadStatesGaugeSet());
@@ -534,11 +540,16 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     return totalExpiredSessions.getCount();
   }
 
+  @Override
+  public long getTotalServerStatePersistenceErrors() {
+    return totalServerStatePersistenceErrors.getCount();
+  }
+
   /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.api.metrics.MetricsService#publishReport()
-   */
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.server.api.metrics.MetricsService#publishReport()
+     */
   @Override
   public void publishReport() {
     if (reporters != null) {
