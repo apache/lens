@@ -42,6 +42,7 @@ import org.apache.lens.server.api.session.SessionEvent;
 import org.apache.lens.server.api.session.SessionExpired;
 import org.apache.lens.server.api.session.SessionOpened;
 import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.session.DatabaseResourceService;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
@@ -113,6 +114,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /** The total cancelled queries. */
   private Counter totalCancelledQueries;
+
+  /** The total errors while loading database resources */
+  private Counter totalDatabaseResourceLoadErrors;
 
   /** The opened sessions */
   private Gauge<Integer> activeSessions;
@@ -334,6 +338,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         }
       });
 
+    totalDatabaseResourceLoadErrors = metricRegistry.counter(MetricRegistry.name(DatabaseResourceService.class,
+        DatabaseResourceService.LOAD_RESOURCES_ERRORS));
+
     totalAcceptedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
       + ACCEPTED_QUERIES));
 
@@ -483,6 +490,11 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public long getCounter(Class<?> cls, String counter) {
     return metricRegistry.counter(MetricRegistry.name(cls, counter)).getCount();
+  }
+
+  @Override
+  public long getTotalDatabaseResourceLoadErrors() {
+    return totalDatabaseResourceLoadErrors.getCount();
   }
 
   @Override

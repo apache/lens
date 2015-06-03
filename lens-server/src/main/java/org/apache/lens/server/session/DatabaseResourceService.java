@@ -26,8 +26,10 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.metrics.MetricsService;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -47,6 +49,36 @@ public class DatabaseResourceService extends AbstractService {
   public static final String NAME = "database-resources";
   private Map<String, ClassLoader> classLoaderCache;
   private Map<String, List<LensSessionImpl.ResourceEntry>> dbResEntryMap;
+
+  /**
+   * The metrics service.
+   */
+  private MetricsService metricsService;
+
+  /**
+   * The Constant LOAD_RESOURCES_ERRORS.
+   */
+  public static final String LOAD_RESOURCES_ERRORS = "total-load-resources-errors";
+
+  /**
+   * Incr counter.
+   *
+   * @param counter the counter
+   */
+  private void incrCounter(String counter) {
+    getMetrics().incrCounter(DatabaseResourceService.class, counter);
+  }
+
+  /**
+   * Gets counter value.
+   *
+   * @param counter the counter
+   */
+  private long getCounter(String counter) {
+    return getMetrics().getCounter(DatabaseResourceService.class, counter);
+  }
+
+
 
   public DatabaseResourceService(String name) {
     super(name);
@@ -68,7 +100,8 @@ public class DatabaseResourceService extends AbstractService {
       loadDbResourceEntries();
       loadResources();
     } catch (LensException e) {
-      LOG.warn("Failed to load DB resource mapping, resources must be added explicitly to session");
+      incrCounter(LOAD_RESOURCES_ERRORS);
+      LOG.warn("Failed to load DB resource mapping, resources must be added explicitly to session.");
     }
   }
 
@@ -92,6 +125,7 @@ public class DatabaseResourceService extends AbstractService {
       Path resTopDirPath = new Path(resTopDir);
       serverFs = FileSystem.newInstance(resTopDirPath.toUri(), getHiveConf());
       if (!serverFs.exists(resTopDirPath)) {
+        incrCounter(LOAD_RESOURCES_ERRORS);
         LOG.warn("Database resource location does not exist - " + resTopDir + ". Database jars will not be available");
         return;
       }
@@ -190,15 +224,15 @@ public class DatabaseResourceService extends AbstractService {
 
   /**
    * Load DB specific resources
-   * @throws LensException
    */
-  public void loadResources() throws LensException {
+  public void loadResources() {
     for (String db : dbResEntryMap.keySet()) {
       try {
         createClassLoader(db);
         loadDBJars(db, dbResEntryMap.get(db), true);
         LOG.info("Loaded resources for db " + db + " resources: " + dbResEntryMap.get(db));
       } catch (LensException exc) {
+        incrCounter(LOAD_RESOURCES_ERRORS);
         LOG.warn("Failed to load resources for db " + db, exc);
         classLoaderCache.remove(db);
       }
@@ -245,6 +279,7 @@ public class DatabaseResourceService extends AbstractService {
         try {
           newUrls.add(new URL(res.getLocation()));
         } catch (MalformedURLException e) {
+          incrCounter(LOAD_RESOURCES_ERRORS);
           LOG.error("Invalid URL " + res.getLocation() + " adding to db " + database, e);
         }
       }
@@ -291,5 +326,15 @@ public class DatabaseResourceService extends AbstractService {
    */
   public Collection<LensSessionImpl.ResourceEntry> getResourcesForDatabase(String database) {
     return dbResEntryMap.get(database);
+  }
+
+  private MetricsService getMetrics() {
+    if (metricsService == null) {
+      metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      if (metricsService == null) {
+        throw new NullPointerException("Could not get metrics service");
+      }
+    }
+    return metricsService;
   }
 }
