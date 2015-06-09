@@ -715,7 +715,14 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     case CLOSED:
       return new QueryClosed(ctx.getClosedTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
     case FAILED:
-      return new QueryFailed(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
+      StringBuilder msgBuilder = new StringBuilder();
+      msgBuilder.append(ctx.getStatus().getStatusMessage());
+      if (!StringUtils.isBlank(ctx.getStatus().getErrorMessage())) {
+        msgBuilder.append("\n Reason:\n");
+        msgBuilder.append(ctx.getStatus().getErrorMessage());
+      }
+      return new QueryFailed(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(),
+        msgBuilder.toString());
     case LAUNCHED:
       return new QueryLaunched(ctx.getLaunchTime(), prevState, currState, query);
     case QUEUED:

@@ -23,6 +23,8 @@ import java.util.EnumSet;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 
+import org.apache.commons.lang.StringUtils;
+
 import lombok.Getter;
 
 /**
@@ -68,4 +70,14 @@ public class QueryEnded extends StatusChange {
       throw new IllegalStateException("Not a valid end state: " + current + " query: " + handle);
     }
   }
+
+  public String toString() {
+    StringBuilder buf = new StringBuilder(super.toString());
+    if (StringUtils.isNotBlank(cause)) {
+      buf.append(" cause:").append(cause);
+    }
+    return buf.toString();
+  }
+
+
 }
