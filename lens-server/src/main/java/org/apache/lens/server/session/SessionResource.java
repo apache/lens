@@ -19,6 +19,7 @@
 package org.apache.lens.server.session;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,7 @@ import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.util.ScannedPaths;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -141,10 +143,24 @@ public class SessionResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult addResource(@FormDataParam("sessionid") LensSessionHandle sessionid,
     @FormDataParam("type") String type, @FormDataParam("path") String path) {
-    int numAdded = sessionService.addResourceToAllServices(sessionid, type, path);
+    Iterator<String> foundFiles = new ScannedPaths(path, type).iterator();
+    String matchedPath = null;
+    int matchedPathsCount = 0;
+
+    if (foundFiles == null) {
+      return new APIResult(Status.FAILED, "No matching resources found for provided path.");
+    }
+
+    int numAdded = 0;
+    while (foundFiles.hasNext()) {
+      matchedPath = foundFiles.next();
+      numAdded += sessionService.addResourceToAllServices(sessionid, type, matchedPath);
+      matchedPathsCount++;
+    }
+
     if (numAdded == 0) {
-      return new APIResult(Status.FAILED, "Add resource has failed ");
-    } else if (numAdded != LensServices.get().getLensServices().size()) {
+      return new APIResult(Status.FAILED, "Add resource has failed");
+    } else if ((numAdded / matchedPathsCount) != LensServices.get().getLensServices().size()) {
       return new APIResult(Status.PARTIAL, "Add resource is partial");
     }
     return new APIResult(Status.SUCCEEDED, "Add resource succeeded");
@@ -182,21 +198,34 @@ public class SessionResource {
    */
   @PUT
   @Path("resources/delete")
+
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult deleteResource(@FormDataParam("sessionid") LensSessionHandle sessionid,
     @FormDataParam("type") String type, @FormDataParam("path") String path) {
+    Iterator<String> foundFiles = new ScannedPaths(path, type).iterator();
+    String matchedPath = null;
+
+    if (foundFiles == null) {
+      return new APIResult(Status.PARTIAL, "No matching resources found for provided path.");
+    }
+
     int numDeleted = 0;
-    for (LensService service : LensServices.get().getLensServices()) {
-      try {
-        service.deleteResource(sessionid, type, path);
-        numDeleted++;
-      } catch (LensException e) {
-        LOG.error("Failed to delete resource in service:" + service, e);
-        if (numDeleted != 0) {
-          return new APIResult(Status.PARTIAL, "Delete resource is partial, failed for service:" + service.getName());
-        } else {
-          return new APIResult(Status.PARTIAL, "Delete resource has failed");
+
+    while(foundFiles.hasNext()) {
+      matchedPath = foundFiles.next();
+
+      for (LensService service : LensServices.get().getLensServices()) {
+        try {
+          service.deleteResource(sessionid, type, matchedPath);
+          numDeleted++;
+        } catch (LensException e) {
+          LOG.error("Failed to delete resource in service:" + service, e);
+          if (numDeleted != 0) {
+            return new APIResult(Status.PARTIAL, "Delete resource is partial, failed for service:" + service.getName());
+          } else {
+            return new APIResult(Status.FAILED, "Delete resource has failed");
+          }
         }
       }
     }
@@ -245,4 +274,5 @@ public class SessionResource {
     sessionService.setSessionParameter(sessionid, key, value);
     return new APIResult(Status.SUCCEEDED, "Set param succeeded");
   }
+
 }

@@ -409,7 +409,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     Assert.assertEquals(session.getLensSessionPersistInfo().getResources().size(), 1);
     LensSessionImpl.ResourceEntry resourceEntry = session.getLensSessionPersistInfo().getResources().get(0);
     Assert.assertEquals(resourceEntry.getType(), "file");
-    Assert.assertEquals(resourceEntry.getLocation(), "target/test-classes/lens-site.xml");
+    Assert.assertTrue(resourceEntry.getLocation().contains("target/test-classes/lens-site.xml"));
 
     // close session
     result = sessionTarget.queryParam("sessionid", restartTestSession).request().delete(APIResult.class);
