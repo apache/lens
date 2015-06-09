@@ -422,6 +422,7 @@
             </excludes>
             <failIfNoTests>false</failIfNoTests>
             <forkedProcessTimeoutInSeconds>2400</forkedProcessTimeoutInSeconds>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
           </configuration>
         </plugin>
         <plugin>
