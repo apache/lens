@@ -21,7 +21,6 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
-
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
 
 import java.io.ByteArrayOutputStream;
@@ -803,20 +802,20 @@ public class CubeQueryContext implements TrackQueriedColumns {
     }
 
     // pick dimension tables required during expression expansion for the picked fact and dimensions
-    Set<Dimension> exprDimTables = new HashSet<Dimension>();
+    Set<Dimension> exprDimensions = new HashSet<Dimension>();
     if (cfacts != null) {
       for (CandidateFact cfact : cfacts) {
         Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(cfact, dimsToQuery, cfacts.size() > 1);
-        exprDimTables.addAll(factExprDimTables);
+        exprDimensions.addAll(factExprDimTables);
         if (cfacts.size() > 1) {
           factDimMap.get(cfact).addAll(factExprDimTables);
         }
       }
     } else {
       // dim only query
-      exprDimTables.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, false));
+      exprDimensions.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, false));
     }
-    dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimTables));
+    dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimensions));
 
     // pick denorm tables for the picked fact and dimensions
     Set<Dimension> denormTables = new HashSet<Dimension>();
@@ -927,7 +926,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     if (split.length <= 1) {
       col = col.trim().toLowerCase();
       if (queriedExprs.contains(col)) {
-        return exprCtx.getExpressionContext(col, getAliasForTableName(cube.getName())).isHasMeasures();
+        return exprCtx.getExpressionContext(col, getAliasForTableName(cube.getName())).hasMeasures();
       } else {
         return cube.getMeasureNames().contains(col);
       }
@@ -936,7 +935,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       String colName = split[1].trim().toLowerCase();
       if (cubeName.equalsIgnoreCase(cube.getName()) || cubeName.equals(getAliasForTableName(cube.getName()))) {
         if (queriedExprs.contains(colName)) {
-          return exprCtx.getExpressionContext(colName, cubeName).isHasMeasures();
+          return exprCtx.getExpressionContext(colName, cubeName).hasMeasures();
         } else {
           return cube.getMeasureNames().contains(colName.toLowerCase());
         }
@@ -946,7 +945,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     }
   }
 
-  boolean isMeasure(ASTNode node) {
+  boolean isCubeMeasure(ASTNode node) {
     String tabname = null;
     String colname;
     int nodeType = node.getToken().getType();

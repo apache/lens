@@ -120,11 +120,11 @@ class AliasReplacer implements ContextRewriter {
   }
 
   private void extractTabAliasForCol(CubeQueryContext cubeql) throws SemanticException {
-    extractTabAliasForCol(cubeql.getColToTableAlias(), cubeql, cubeql);
+    extractTabAliasForCol(cubeql, cubeql);
   }
 
-  static void extractTabAliasForCol(Map<String, String> colToTableAlias, CubeQueryContext cubeql,
-    TrackQueriedColumns tqc) throws SemanticException {
+  static void extractTabAliasForCol(CubeQueryContext cubeql, TrackQueriedColumns tqc) throws SemanticException {
+    Map<String, String> colToTableAlias = cubeql.getColToTableAlias();
     Set<String> columns = tqc.getTblAliasToColumns().get(CubeQueryContext.DEFAULT_TABLE);
     if (columns == null) {
       return;

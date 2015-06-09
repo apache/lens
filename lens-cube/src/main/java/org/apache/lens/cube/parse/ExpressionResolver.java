@@ -70,8 +70,11 @@ class ExpressionResolver implements ContextRewriter {
     private Set<CandidateTable> directlyAvailableIn = new HashSet<CandidateTable>();
     private Map<CandidateTable, Set<ExprSpecContext>> evaluableExpressions =
       new HashMap<CandidateTable, Set<ExprSpecContext>>();
-    @Getter
     private boolean hasMeasures = false;
+
+    public boolean hasMeasures() {
+      return hasMeasures;
+    }
 
     ExpressionContext(CubeQueryContext cubeql, ExprColumn exprCol, AbstractBaseTable srcTable, String srcAlias)
       throws SemanticException {
@@ -82,13 +85,12 @@ class ExpressionResolver implements ContextRewriter {
         allExprs.add(new ExprSpecContext(es, cubeql));
       }
       resolveColumnsAndAlias(cubeql);
+      log.debug("All exprs for {} are {}", exprCol.getName(), allExprs);
     }
     private void resolveColumnsAndAlias(CubeQueryContext cubeql) throws SemanticException {
       for (ExprSpecContext esc : allExprs) {
         esc.resolveColumns(cubeql);
-        esc.replaceAliasInAST(cubeql, cubeql.getColToTableAlias());
-      }
-      for (ExprSpecContext esc : allExprs) {
+        esc.replaceAliasInAST(cubeql);
         for (String table : esc.getTblAliasToColumns().keySet()) {
           try {
             if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
@@ -101,21 +103,18 @@ class ExpressionResolver implements ContextRewriter {
           }
         }
       }
-      resolveColumnsAndReplaceAlias(cubeql, allExprs, cubeql.getColToTableAlias());
+      resolveColumnsAndReplaceAlias(cubeql, allExprs);
     }
 
-    private void resolveColumnsAndReplaceAlias(CubeQueryContext cubeql, Set<ExprSpecContext> exprs,
-      Map<String, String> colToTableAlias) throws SemanticException {
+    private void resolveColumnsAndReplaceAlias(CubeQueryContext cubeql, Set<ExprSpecContext> exprs)
+      throws SemanticException {
       Set<ExprSpecContext> nestedExpressions = new LinkedHashSet<ExprSpecContext>();
       for (ExprSpecContext esc : exprs) {
-        for (Map.Entry<String, Set<String>> entry : esc.tblAliasToColumns.entrySet()) {
+        for (Map.Entry<String, Set<String>> entry : esc.getTblAliasToColumns().entrySet()) {
           if (entry.getKey().equals(CubeQueryContext.DEFAULT_TABLE)) {
             continue;
           }
           AbstractBaseTable baseTable = (AbstractBaseTable)cubeql.getCubeTableForAlias(entry.getKey());
-         // if (baseTable == null) {
-         //   continue;
-         // }
           Set<String> exprCols = new HashSet<String>();
           for (String col : entry.getValue()) {
             // col is an expression
@@ -129,11 +128,11 @@ class ExpressionResolver implements ContextRewriter {
       }
       for (ExprSpecContext esc : nestedExpressions) {
         esc.resolveColumns(cubeql);
-        esc.replaceAliasInAST(cubeql, colToTableAlias);
+        esc.replaceAliasInAST(cubeql);
         for (String table : esc.getTblAliasToColumns().keySet()) {
           try {
             if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
-              cubeql.addOptionalDimTable(table, null, true,
+              cubeql.addOptionalDimTable(table, null, false,
                 esc.getTblAliasToColumns().get(table).toArray(new String[0]));
               esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
             }
@@ -217,10 +216,10 @@ class ExpressionResolver implements ContextRewriter {
       exprSpecs.add(current);
       finalAST = replaceAlias(node, cubeql);
     }
-    public void replaceAliasInAST(CubeQueryContext cubeql, Map<String, String> colToTableAlias)
+    public void replaceAliasInAST(CubeQueryContext cubeql)
       throws SemanticException {
-      AliasReplacer.extractTabAliasForCol(colToTableAlias, cubeql, this);
-      AliasReplacer.replaceAliases(finalAST, 0, colToTableAlias);
+      AliasReplacer.extractTabAliasForCol(cubeql, this);
+      AliasReplacer.replaceAliases(finalAST, 0, cubeql.getColToTableAlias());
     }
     public void addColumnsQueried(String alias, String column) {
       Set<String> cols = tblAliasToColumns.get(alias.toLowerCase());
@@ -368,12 +367,14 @@ class ExpressionResolver implements ContextRewriter {
             if (!cTable.getColumns().contains(col.toLowerCase())) {
               if (!cubeql.getDeNormCtx().addRefUsage(cTable, col, cTable.getBaseTable().getName())) {
                 // check if it is available as reference, if not expression is not evaluable
+                log.debug("{} = {} is not evaluable in {}", expr, esc, cTable);
                 isEvaluable = false;
                 break;
               }
             }
           }
           if (isEvaluable) {
+            log.debug("{} = {} is evaluable in {}", expr, esc, cTable);
             ec.addEvaluable(cubeql, cTable, esc);
           }
         }

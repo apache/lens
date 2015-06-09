@@ -218,7 +218,7 @@ class AggregateResolver implements ContextRewriter {
       if (node.getChild(0).getType() == HiveParser.Identifier) {
         function = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
       }
-    } else if (cubeql.isMeasure(node)) {
+    } else if (cubeql.isCubeMeasure(node)) {
       // Exit for the recursion
 
       String colname;
@@ -291,7 +291,7 @@ class AggregateResolver implements ContextRewriter {
     boolean isDistinct = hasDistinct;
     if (exprTokenType == HiveParser.TOK_FUNCTIONDI || exprTokenType == HiveParser.TOK_SELECTDI) {
       isDistinct = true;
-    } else if (cubeql.isMeasure(node) && isDistinct) {
+    } else if (cubeql.isCubeMeasure(node) && isDistinct) {
       // Exit for the recursion
       return true;
     }
@@ -310,7 +310,7 @@ class AggregateResolver implements ContextRewriter {
       return false;
     }
 
-    if (cubeql.isMeasure(node)) {
+    if (cubeql.isCubeMeasure(node)) {
       return true;
     }
 
