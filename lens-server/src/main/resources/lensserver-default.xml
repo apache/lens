@@ -695,4 +695,9 @@
     </description>
   </property>
 
+  <property>
+    <name>lens.server.session.expiry.service.interval.secs</name>
+    <value>3600</value>
+    <description>Interval at which lens session expiry service runs</description>
+  </property>
 </configuration>

@@ -29,14 +29,18 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.MetricsService;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+
 import org.apache.hive.service.cli.CLIService;
 
 import org.testng.annotations.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class TestSessionExpiry.
  */
 @Test(groups = "unit-test")
+@Slf4j
 public class TestSessionExpiry {
 
   /**
@@ -45,7 +49,7 @@ public class TestSessionExpiry {
    * @throws Exception the exception
    */
   public void testSessionExpiry() throws Exception {
-    HiveConf conf = LensServerConf.getHiveConf();
+    HiveConf conf = LensServerConf.createHiveConf();
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
     conf.setLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
     CLIService cliService = new CLIService();
@@ -64,6 +68,45 @@ public class TestSessionExpiry {
       assertFalse(session.isActive());
       // run the expiry thread
       lensService.getSessionExpiryRunnable().run();
+      log.info("Keeping a sleep of 3 seconds to make sure SessionExpiryService gets enough time to close"
+          + " inactive sessions");
+      Thread.sleep(3000);
+      assertTrue(metricSvc.getTotalExpiredSessions() >= 1);
+      assertTrue(metricSvc.getTotalClosedSessions() >= 1);
+
+      try {
+        lensService.getSession(sessionHandle);
+        // should throw exception since session should be expired by now
+        fail("Expected get session to fail for session " + sessionHandle.getPublicId());
+      } catch (Exception e) {
+        // pass
+      }
+    } finally {
+      lensService.stop();
+    }
+  }
+
+  public void testSessionExpiryInterval() throws Exception {
+    HiveConf conf = LensServerConf.createHiveConf();
+    conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
+    conf.setLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
+    conf.setInt(LensConfConstants.SESSION_EXPIRY_SERVICE_INTERVAL_IN_SECS, 1);
+    CLIService cliService = new CLIService();
+    cliService.init(conf);
+    HiveSessionService lensService = new HiveSessionService(cliService);
+    lensService.init(conf);
+    lensService.start();
+    MetricsService metricSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+    try {
+      LensSessionHandle sessionHandle = lensService.openSession("foo", "bar", new HashMap<String, String>());
+      LensSessionImpl session = lensService.getSession(sessionHandle);
+      assertTrue(session.isActive());
+      session.setLastAccessTime(session.getLastAccessTime() - 2000
+        * conf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
+      assertFalse(session.isActive());
+      log.info("Keeping a sleep of 3 seconds to make sure SessionExpiryService is running and gets enough time to"
+          + "close inactive sessions");
+      Thread.sleep(3000);
       assertTrue(metricSvc.getTotalExpiredSessions() >= 1);
       assertTrue(metricSvc.getTotalClosedSessions() >= 1);
 
