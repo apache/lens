@@ -98,7 +98,7 @@
     <war.plugin.version>2.1.1</war.plugin.version>
     <license.plugin.version>2.6</license.plugin.version>
     <buildnumber.plugin.version>1.0</buildnumber.plugin.version>
-    <findbugs.plugin.version>2.5.5</findbugs.plugin.version>
+    <findbugs.plugin.version>3.0.1</findbugs.plugin.version>
 
     <!-- debian -->
     <mvn.deb.build.dir>${project.build.directory}/debian</mvn.deb.build.dir>
