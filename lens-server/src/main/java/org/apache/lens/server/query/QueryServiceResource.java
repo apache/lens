@@ -33,8 +33,7 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.query.*;
-import org.apache.lens.api.response.LensResponse;
-import org.apache.lens.api.response.NoErrorPayload;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.annotations.MultiPurposeResource;
 import org.apache.lens.server.api.error.LensException;
@@ -190,7 +189,7 @@ public class QueryServiceResource {
    * @param timeoutmillis The timeout for the query, honored only in case of value {@value
    *                      SubmitOp#EXECUTE_WITH_TIMEOUT} operation
    * @param queryName     human readable query name set by user (optional parameter)
-   * @return {@link LensResponse} with DATA as {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
+   * @return {@link LensAPIResult} with DATA as {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
    * {@link QueryPlan} in case of {@value SubmitOp#EXPLAIN} operation. {@link QueryHandleWithResultSet} in case
    * {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation. {@link QueryCost} in case of
    * {@value SubmitOp#ESTIMATE} operation.
@@ -200,7 +199,7 @@ public class QueryServiceResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
-  public LensResponse<QuerySubmitResult, NoErrorPayload> query(@FormDataParam("sessionid") LensSessionHandle sessionid,
+  public LensAPIResult<QuerySubmitResult> query(@FormDataParam("sessionid") LensSessionHandle sessionid,
       @FormDataParam("query") String query, @FormDataParam("operation") String operation,
       @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
       @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
@@ -230,7 +229,7 @@ public class QueryServiceResource {
         throw new UnSupportedQuerySubmitOpException();
       }
 
-      return LensResponse.composedOf(null, requestId, result);
+      return LensAPIResult.composedOf(null, requestId, result);
     } catch (LensException e) {
       e.buildLensErrorResponse(errorCollection, null, requestId);
       throw e;

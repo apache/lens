@@ -26,8 +26,14 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.query.*;
+import org.apache.lens.api.result.PrettyPrintable;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
 import org.apache.lens.client.LensClient;
+import org.apache.lens.client.exceptions.LensAPIException;
+import org.apache.lens.client.exceptions.LensBriefErrorException;
+import org.apache.lens.client.model.BriefError;
+import org.apache.lens.client.model.IdBriefErrorTemplate;
+import org.apache.lens.client.model.IdBriefErrorTemplateKey;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -74,17 +80,26 @@ public class LensQueryCommands extends BaseLensCommand {
     @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
       specifiedDefaultValue = "true", help = "<async>") boolean async,
     @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName) {
-    if (async) {
-      QueryHandle handle = getClient().executeQueryAsynch(sql, queryName);
-      return handle.getHandleId().toString();
-    } else {
-      try {
-        LensClient.LensClientResultSetWithStats result = getClient().getResults(sql, queryName);
-        return formatResultSet(result);
-      } catch (Throwable t) {
-        return t.getMessage();
+
+    PrettyPrintable cliOutput;
+
+    try {
+      if (async) {
+        QueryHandle queryHandle = getClient().executeQueryAsynch(sql, queryName).getData();
+        return queryHandle.getHandleIdString();
+      } else {
+        return formatResultSet(getClient().getResults(sql, queryName));
       }
+    } catch (final LensAPIException e) {
+
+      BriefError briefError = new BriefError(e.getLensAPIErrorCode(), e.getLensAPIErrorMessage());
+      cliOutput = new IdBriefErrorTemplate(IdBriefErrorTemplateKey.REQUEST_ID, e.getLensAPIRequestId(), briefError);
+
+    } catch (final LensBriefErrorException e) {
+      cliOutput = e.getIdBriefErrorTemplate();
     }
+
+    return cliOutput.toPrettyString();
   }
 
   /**

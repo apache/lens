@@ -81,7 +81,7 @@
 
     <!-- test -->
     <testng.version>6.8</testng.version>
-    <mockito.version>1.8.5</mockito.version>
+    <mockito.version>1.9.5</mockito.version>
     <powermock.version>1.4.12</powermock.version>
     <test.tmp.dir>${basedir}/target/tmp</test.tmp.dir>
 

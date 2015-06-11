@@ -141,7 +141,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
       metricsService.incrCounter(ResultFormatter.class, "formatting-errors");
       LOG.warn("Exception while formatting result for " + queryHandle, e);
       try {
-        queryService.setFailedStatus(ctx, "Result formatting failed!", e.getMessage());
+        queryService.setFailedStatus(ctx, "Result formatting failed!", e.getMessage(), null);
       } catch (LensException e1) {
         LOG.error("Exception while setting failure for " + queryHandle, e1);
       }

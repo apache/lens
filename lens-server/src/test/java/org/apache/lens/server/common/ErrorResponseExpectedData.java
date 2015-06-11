@@ -24,8 +24,9 @@ import static org.testng.Assert.assertTrue;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.lens.api.response.LensErrorTO;
-import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.api.result.LensErrorTO;
+
 
 public class ErrorResponseExpectedData {
 
@@ -44,14 +45,14 @@ public class ErrorResponseExpectedData {
     /* Assert Equal Http Status Code */
     assertEquals(response.getStatus(), expectedStatus.getStatusCode());
 
-    LensResponse lensResponse = response.readEntity(LensResponse.class);
+    LensAPIResult lensAPIResult = response.readEntity(LensAPIResult.class);
 
     /* Assert Equal LensErrorTO (stack trace gets excluded in equality check) */
-    final LensErrorTO actualLensErrorTO = lensResponse.getLensErrorTO();
+    final LensErrorTO actualLensErrorTO = lensAPIResult.getLensErrorTO();
     assertEquals(actualLensErrorTO, expectedLensErrorTO);
 
     /* Assert receipt of valid stacktraces */
-    assertTrue(lensResponse.areValidStackTracesPresent(), "Received Lens Response:" + lensResponse);
+    assertTrue(lensAPIResult.areValidStackTracesPresent(), "Received Lens Response:" + lensAPIResult);
   }
 
 }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.api.response;
+package org.apache.lens.api.result;
 
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +51,7 @@ public class LensJAXBContextResolver implements ContextResolver<JAXBContext> {
 
       log.debug("JAXB instance to be created for {}", type);
       try {
-        if (type.equals(LensResponse.class)) {
+        if (type.equals(LensAPIResult.class)) {
 
           ErrorCollection errorCollection = new ErrorCollectionFactory().createErrorCollection();
           Set<Class> classesToBeBound = Sets.newHashSet(errorCollection.getErrorPayloadClasses());

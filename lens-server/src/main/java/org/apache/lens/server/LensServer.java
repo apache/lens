@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.lens.api.response.LensJAXBContextResolver;
+import org.apache.lens.api.result.LensJAXBContextResolver;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.error.LensExceptionMapper;

@@ -16,22 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.error;
+package org.apache.lens.client.exceptions;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import static com.google.common.base.Preconditions.checkState;
 
 import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.server.api.error.LensException;
 
-@Provider
-public class LensExceptionMapper implements ExceptionMapper<LensException> {
+import lombok.ToString;
 
-  @Override
-  public Response toResponse(LensException exception) {
+@ToString
+public class LensAPIException extends Exception {
 
-    final LensAPIResult lensAPIResult = exception.getLensAPIResult();
-    return Response.status(lensAPIResult.getHttpStatusCode()).entity(lensAPIResult).build();
+  private LensAPIResult errorResult;
+
+  public LensAPIException(final LensAPIResult lensAPIErrorResult) {
+    checkState(lensAPIErrorResult.isErrorResult());
+    this.errorResult = lensAPIErrorResult;
+  }
+
+  public int getLensAPIErrorCode() {
+    return this.errorResult.getErrorCode();
+  }
+
+  public String getLensAPIErrorMessage() {
+    return this.errorResult.getErrorMessage();
+  }
+
+  public String getLensAPIRequestId() {
+    return this.errorResult.getId();
   }
 }

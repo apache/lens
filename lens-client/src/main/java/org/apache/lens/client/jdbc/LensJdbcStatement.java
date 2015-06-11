@@ -21,10 +21,14 @@ package org.apache.lens.client.jdbc;
 import java.sql.*;
 
 import org.apache.lens.client.LensStatement;
+import org.apache.lens.client.exceptions.LensAPIException;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class LensJdbcStatement.
  */
+@Slf4j
 public class LensJdbcStatement implements Statement {
 
   /** The connection. */
@@ -53,7 +57,11 @@ public class LensJdbcStatement implements Statement {
    */
   @Override
   public ResultSet executeQuery(String s) throws SQLException {
-    statement.execute(s, null);
+    try {
+      statement.execute(s, null);
+    } catch (LensAPIException e) {
+      log.error("Execution Failed for Statement:{}", s, e);
+    }
     return new LensJdbcResultSet(statement.getResultSet(), statement.getResultSetMetaData(), this);
   }
 

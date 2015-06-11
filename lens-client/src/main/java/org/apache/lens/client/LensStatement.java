@@ -32,10 +32,8 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 
-import org.apache.lens.api.response.LensJAXBContextResolver;
-import org.apache.lens.api.response.LensResponse;
-import org.apache.lens.api.response.NoErrorPayload;
-
+import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.client.exceptions.LensAPIException;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -71,9 +69,11 @@ public class LensStatement {
    * @param waitForQueryToComplete the wait for query to complete
    * @param queryName              the query name
    */
-  public void execute(String sql, boolean waitForQueryToComplete, String queryName) {
-    QueryHandle handle = executeQuery(sql, waitForQueryToComplete, queryName);
-    this.query = getQuery(handle);
+  public LensAPIResult<QueryHandle> execute(String sql, boolean waitForQueryToComplete,
+      String queryName) throws LensAPIException {
+    LensAPIResult<QueryHandle> lensAPIResult = executeQuery(sql, waitForQueryToComplete, queryName);
+    this.query = getQuery(lensAPIResult.getData());
+    return lensAPIResult;
   }
 
   /**
@@ -82,8 +82,8 @@ public class LensStatement {
    * @param sql       the sql
    * @param queryName the query name
    */
-  public void execute(String sql, String queryName) {
-    QueryHandle handle = executeQuery(sql, true, queryName);
+  public void execute(String sql, String queryName) throws LensAPIException {
+    QueryHandle handle = executeQuery(sql, true, queryName).getData();
     this.query = getQuery(handle);
   }
 
@@ -95,13 +95,15 @@ public class LensStatement {
    * @param queryName              the query name
    * @return the query handle
    */
-  public QueryHandle executeQuery(String sql, boolean waitForQueryToComplete, String queryName) {
-    QueryHandle handle = executeQuery(sql, queryName);
+  public LensAPIResult<QueryHandle> executeQuery(String sql, boolean waitForQueryToComplete,
+      String queryName) throws LensAPIException {
+
+    LensAPIResult<QueryHandle> lensAPIResult = executeQuery(sql, queryName);
 
     if (waitForQueryToComplete) {
-      waitForQueryToComplete(handle);
+      waitForQueryToComplete(lensAPIResult.getData());
     }
-    return handle;
+    return lensAPIResult;
   }
 
   /**
@@ -137,8 +139,8 @@ public class LensStatement {
     WebTarget target = getPreparedQueriesWebTarget(client);
 
     QueryPrepareHandle handle = target.request().post(
-      Entity.entity(prepareForm(sql, "PREPARE", queryName), MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryPrepareHandle.class);
+        Entity.entity(prepareForm(sql, "PREPARE", queryName), MediaType.MULTIPART_FORM_DATA_TYPE),
+        QueryPrepareHandle.class);
     getPreparedQuery(handle);
     return handle;
   }
@@ -288,14 +290,12 @@ public class LensStatement {
    * @param queryName the query name
    * @return the query handle
    */
-  private QueryHandle executeQuery(String sql, String queryName) {
+  private LensAPIResult<QueryHandle> executeQuery(String sql, String queryName) throws LensAPIException {
     if (!connection.isOpen()) {
       throw new IllegalStateException("Lens Connection has to be " + "established before querying");
     }
 
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).register(LensJAXBContextResolver.class)
-      .build();
-
+    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), connection
       .getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
@@ -306,8 +306,13 @@ public class LensStatement {
 
     WebTarget target = getQueryWebTarget(client);
 
-    return target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+    Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+
+    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+      return response.readEntity(new GenericType<LensAPIResult<QueryHandle>>() {});
+    }
+
+    throw new LensAPIException(response.readEntity(LensAPIResult.class));
   }
 
   /**
@@ -358,7 +363,7 @@ public class LensStatement {
     WebTarget target = getQueryWebTarget(client);
 
     QueryPlan handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      new GenericType<LensResponse<QueryPlan, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryPlan>>() {}).getData();
     return handle;
   }
 
@@ -396,8 +401,7 @@ public class LensStatement {
     WebTarget target = getPreparedQueriesWebTarget(client);
     List<QueryPrepareHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
       .queryParam("user", userName).queryParam("queryName", queryName).queryParam("fromDate", fromDate)
-      .queryParam("toDate", toDate).request().get(new GenericType<List<QueryPrepareHandle>>() {
-      });
+      .queryParam("toDate", toDate).request().get(new GenericType<List<QueryPrepareHandle>>() {});
     return handles;
   }
 
@@ -560,5 +564,17 @@ public class LensStatement {
 
   public LensQuery getQuery() {
     return this.query;
+  }
+
+  public int getErrorCode() {
+    return this.query.getErrorCode();
+  }
+
+  public String getErrorMessage() {
+    return this.query.getErrorMessage();
+  }
+
+  public String getQueryHandleString() {
+    return this.query.getQueryHandleString();
   }
 }

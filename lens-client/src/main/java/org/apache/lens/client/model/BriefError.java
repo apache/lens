@@ -16,22 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.error;
+package org.apache.lens.client.model;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import static com.google.common.base.Preconditions.checkArgument;
 
-import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.api.result.PrettyPrintable;
 
-@Provider
-public class LensExceptionMapper implements ExceptionMapper<LensException> {
+import org.apache.commons.lang.StringUtils;
+
+public class BriefError implements PrettyPrintable {
+
+  private final int errorCode;
+  private final String errorMsg;
+
+  public BriefError(final int errorCode, final String errorMsg) {
+
+    checkArgument(errorCode > 0);
+    checkArgument(StringUtils.isNotBlank(errorMsg));
+    this.errorCode = errorCode;
+    this.errorMsg = errorMsg;
+  }
 
   @Override
-  public Response toResponse(LensException exception) {
+  public String toPrettyString() {
 
-    final LensAPIResult lensAPIResult = exception.getLensAPIResult();
-    return Response.status(lensAPIResult.getHttpStatusCode()).entity(lensAPIResult).build();
+    StringBuilder sb = new StringBuilder("Error Code: ").append(this.errorCode).append("\n").append("Error Message: ")
+        .append(this.errorMsg);
+    return sb.toString();
   }
 }

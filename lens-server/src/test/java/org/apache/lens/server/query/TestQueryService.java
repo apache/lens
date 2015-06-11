@@ -39,10 +39,9 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.error.LensCommonErrorCode;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.api.response.LensErrorTO;
-import org.apache.lens.api.response.LensJAXBContextResolver;
-import org.apache.lens.api.response.LensResponse;
-import org.apache.lens.api.response.NoErrorPayload;
+import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.api.result.LensErrorTO;
+import org.apache.lens.api.result.LensJAXBContextResolver;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.driver.hive.TestHiveDriver;
 import org.apache.lens.server.LensJerseyTest;
@@ -236,7 +235,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {
+        new GenericType<LensAPIResult<QueryHandle>>() {
         }).getData();
 
     Assert.assertNotNull(handle);
@@ -287,7 +286,7 @@ public class TestQueryService extends LensJerseyTest {
     long finishedQueries = metricsSvc.getFinishedQueries();
 
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {
+        new GenericType<LensAPIResult<QueryHandle>>() {
         }).getData();
 
     Assert.assertNotNull(handle);
@@ -379,7 +378,7 @@ public class TestQueryService extends LensJerseyTest {
 
     final QueryPlan plan = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensResponse<QueryPlan, NoErrorPayload>>() {}).getData();
+          new GenericType<LensAPIResult<QueryPlan>>() {}).getData();
     Assert.assertEquals(plan.getTablesQueried().size(), 1);
     Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     Assert.assertNull(plan.getPrepareHandle());
@@ -425,7 +424,7 @@ public class TestQueryService extends LensJerseyTest {
 
     final QueryPlan plan = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensResponse<QueryPlan, NoErrorPayload>>() {}).getData();
+          new GenericType<LensAPIResult<QueryPlan>>() {}).getData();
     Assert.assertTrue(plan.isError());
     Assert.assertNotNull(plan.getErrorMsg());
     Assert.assertTrue(plan.getErrorMsg()
@@ -676,7 +675,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle);
 
@@ -715,7 +714,7 @@ public class TestQueryService extends LensJerseyTest {
 
     // test cancel query
     final QueryHandle handle2 = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle2);
     APIResult result = target.path(handle2.toString()).queryParam("sessionid", lensSessionId).request()
@@ -747,7 +746,7 @@ public class TestQueryService extends LensJerseyTest {
     mp3.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle3 = target.request().post(Entity.entity(mp3, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     // Get query
     ctx = target.path(handle3.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
@@ -961,7 +960,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle);
 
@@ -1016,7 +1015,7 @@ public class TestQueryService extends LensJerseyTest {
     drop.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle dropHandle = target.request().post(Entity.entity(drop, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(dropHandle);
 
@@ -1047,7 +1046,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle);
 
@@ -1075,7 +1074,7 @@ public class TestQueryService extends LensJerseyTest {
     fetch.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle2 = target.request().post(Entity.entity(fetch, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle2);
 
@@ -1184,7 +1183,7 @@ public class TestQueryService extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
 
     QueryHandleWithResultSet result = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandleWithResultSet, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandleWithResultSet>>() {}).getData();
     Assert.assertNotNull(result.getQueryHandle());
     Assert.assertNotNull(result.getResult());
     validatePersistentResult((PersistentQueryResult) result.getResult(), result.getQueryHandle(), true);
@@ -1203,7 +1202,7 @@ public class TestQueryService extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
 
     result = target.request().post(Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandleWithResultSet, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandleWithResultSet>>() {}).getData();
     Assert.assertNotNull(result.getQueryHandle());
     Assert.assertNotNull(result.getResult());
     validateInmemoryResult((InMemoryQueryResult) result.getResult());
@@ -1230,7 +1229,7 @@ public class TestQueryService extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
 
     QueryHandleWithResultSet result = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandleWithResultSet, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandleWithResultSet>>() {}).getData();
     Assert.assertNotNull(result.getQueryHandle());
     Assert.assertNull(result.getResult());
 
@@ -1322,7 +1321,7 @@ public class TestQueryService extends LensJerseyTest {
 
     final QueryCost result = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensResponse<QueryCost, NoErrorPayload>>() {}).getData();
+          new GenericType<LensAPIResult<QueryCost>>() {}).getData();
     Assert.assertNotNull(result);
     Assert.assertEquals(result.getEstimatedExecTimeMillis(), 1L);
     Assert.assertEquals(result.getEstimatedResourceUsage(), 1.0);
@@ -1477,7 +1476,7 @@ public class TestQueryService extends LensJerseyTest {
 
     final QueryCost queryCost = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensResponse<QueryCost, NoErrorPayload>>() {
+          new GenericType<LensAPIResult<QueryCost>>() {
           }).getData();
     Assert.assertNotNull(queryCost);
 

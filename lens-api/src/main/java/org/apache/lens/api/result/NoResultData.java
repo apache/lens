@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.api.response;
+package org.apache.lens.api.result;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * NoSuccessResponseData type is to be used while creating LensResponse for error responses.
- * Error Responses will not have any data related to successful execution of API.
+ * NoResultData type is to be used while creating LensAPIResult for error scenarios.
+ * Error scenarios will not have any data related to successful execution of API.
  *
  */
 @XmlRootElement
-public final class NoSuccessResponseData {
+public final class NoResultData {
 }

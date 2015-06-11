@@ -62,21 +62,16 @@ public class TestDataUtils {
     return "dimfield" + getRandomName();
   }
 
-  public static XCube createXCube(final String cubeName, final XDimAttribute... dimensions) {
-
-    return createXCube(cubeName, Optional.<String>absent(), dimensions);
-  }
-
-  public static XCube createXCube(final String cubeName, final Optional<String> dtColName,
+  public static XCube createXCubeWithDummyMeasure(final String cubeName, final Optional<String> dtColName,
       final XDimAttribute... dimensions) {
 
     XDimAttributes xDimAttributes = createXDimAttributes(dimensions);
     XMeasures xMeasures = createXMeasures(createDummyXMeasure());
 
-    return createXCube(cubeName, dtColName, xDimAttributes, xMeasures);
+    return createXCubeWithDummyMeasure(cubeName, dtColName, xDimAttributes, xMeasures);
   }
 
-  public static XCube createXCube(final String cubeName, final Optional<String> dtColName,
+  public static XCube createXCubeWithDummyMeasure(final String cubeName, final Optional<String> dateColName,
       final XDimAttributes xDimAttributes, final XMeasures xMeasures) {
 
     XBaseCube cube = new XBaseCube();
@@ -84,11 +79,11 @@ public class TestDataUtils {
     cube.setDimAttributes(xDimAttributes);
     cube.setMeasures(xMeasures);
 
-    if (dtColName.isPresent()) {
+    if (dateColName.isPresent()) {
 
       XProperty xp = new XProperty();
       xp.setName("cube."+cubeName+".timed.dimensions.list");
-      xp.setValue(dtColName.get());
+      xp.setValue(dateColName.get());
 
       XProperties xProperties = new XProperties();
       xProperties.getProperty().add(xp);

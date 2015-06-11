@@ -29,7 +29,7 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
-import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.regression.core.constants.QueryURL;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
@@ -83,7 +83,7 @@ public class QueryHelper extends ServiceManagerHelper {
     AssertUtil.assertSucceededResponse(response);
     String queryHandleString = response.readEntity(String.class);
     logger.info(queryHandleString);
-    LensResponse successResponse = (LensResponse) Util.getObject(queryHandleString, LensResponse.class);
+    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
     QueryHandle queryHandle = (QueryHandle) successResponse.getData();
     if (queryHandle == null) {
       throw new LensException("Query Execute Failed");
@@ -138,7 +138,7 @@ public class QueryHelper extends ServiceManagerHelper {
     AssertUtil.assertSucceededResponse(response);
     String queryHandleString = response.readEntity(String.class);
     logger.info(queryHandleString);
-    LensResponse successResponse = (LensResponse) Util.getObject(queryHandleString, LensResponse.class);
+    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
     QueryHandleWithResultSet queryHandleWithResultSet = (QueryHandleWithResultSet) successResponse.getData();
     if (queryHandleWithResultSet==null) {
       throw new LensException("Query Execute Failed");
@@ -200,7 +200,7 @@ public class QueryHelper extends ServiceManagerHelper {
     AssertUtil.assertSucceededResponse(response);
     String queryHandleString = response.readEntity(String.class);
     logger.info(queryHandleString);
-    LensResponse successResponse = (LensResponse) Util.getObject(queryHandleString, LensResponse.class);
+    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
     QueryHandle queryHandle = (QueryHandle) successResponse.getData();
     return queryHandle;
   }
@@ -228,7 +228,7 @@ public class QueryHelper extends ServiceManagerHelper {
     AssertUtil.assertSucceededResponse(response);
     String queryPlanString = response.readEntity(String.class);
     logger.info(queryPlanString);
-    LensResponse successResponse = (LensResponse) Util.getObject(queryPlanString, LensResponse.class);
+    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryPlanString, LensAPIResult.class);
     QueryPlan queryPlan = (QueryPlan) successResponse.getData();
     return queryPlan;
   }
@@ -265,7 +265,7 @@ public class QueryHelper extends ServiceManagerHelper {
     AssertUtil.assertSucceededResponse(response);
     String queryCostString = response.readEntity(String.class);
     logger.info(queryCostString);
-    LensResponse successResponse = (LensResponse) Util.getObject(queryCostString, LensResponse.class);
+    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryCostString, LensAPIResult.class);
     QueryCost queryCost = (QueryCost) successResponse.getData();
     if (queryCost == null) {
       throw new LensException("Estimate Failed");

@@ -34,8 +34,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.api.response.LensResponse;
-import org.apache.lens.api.response.NoErrorPayload;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.io.FileUtils;
@@ -94,7 +93,7 @@ public final class LensTestUtil {
 
     final QueryHandle handle = target.request()
         .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-            new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+            new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
@@ -135,7 +134,7 @@ public final class LensTestUtil {
         MediaType.APPLICATION_XML_TYPE));
 
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
@@ -204,7 +203,7 @@ public final class LensTestUtil {
       MediaType.APPLICATION_XML_TYPE));
 
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()

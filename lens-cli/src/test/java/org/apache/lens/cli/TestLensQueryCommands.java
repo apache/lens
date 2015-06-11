@@ -225,7 +225,8 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String sql = "cube select id,name from test_dim";
     long submitTime = System.currentTimeMillis();
     String qh = qCom.executeQuery(sql, true, "testQuery1");
-    String user = qCom.getClient().getLensStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
+    String user = qCom.getClient().getLensStatement(new QueryHandle(UUID.fromString(qh)))
+        .getQuery().getSubmittedUser();
     String result = qCom.getAllQueries("", "testQuery1", user, -1, Long.MAX_VALUE);
     // this is because previous query has run two query handle will be there
     assertTrue(result.contains(qh), result);

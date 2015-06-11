@@ -26,6 +26,8 @@ import java.io.Serializable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.lens.api.result.LensErrorTO;
+
 import lombok.*;
 
 /**
@@ -153,6 +155,9 @@ public class QueryStatus implements Serializable {
   @Setter
   private String errorMessage;
 
+  @XmlElement
+  private LensErrorTO lensErrorTO;
+
   /*
    * (non-Javadoc)
    *
@@ -253,4 +258,11 @@ public class QueryStatus implements Serializable {
     return isValidTransition(this.status, newState);
   }
 
+  public Integer getErrorCode() {
+    return (this.lensErrorTO != null) ? this.lensErrorTO.getCode() : null;
+  }
+
+  public String getLensErrorTOErrorMsg() {
+    return (this.lensErrorTO != null) ? this.lensErrorTO.getMessage() : null;
+  }
 }

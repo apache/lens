@@ -29,8 +29,8 @@ import java.util.Arrays;
 
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.LensError;
-import org.apache.lens.api.response.LensErrorTO;
-import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.api.result.LensErrorTO;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -53,7 +53,7 @@ public class LensException extends Exception {
    * The lensResponse prepared by {@link #buildLensErrorResponse(ErrorCollection, String, String)}
    * */
   @Getter
-  private LensResponse lensResponse;
+  private LensAPIResult lensAPIResult;
 
   /**
    * Constructs a new Lens Exception.
@@ -138,7 +138,7 @@ public class LensException extends Exception {
 
     final LensError lensError = errorCollection.getLensError(errorCode);
     final LensErrorTO lensErrorTO = buildLensErrorTO(errorCollection, lensError);
-    lensResponse = LensResponse.composedOf(apiVersion, id, lensErrorTO, lensError.getHttpStatusCode());
+    lensAPIResult = LensAPIResult.composedOf(apiVersion, id, lensErrorTO, lensError.getHttpStatusCode());
   }
 
   public final LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection) {

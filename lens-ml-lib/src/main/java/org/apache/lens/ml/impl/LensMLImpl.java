@@ -38,8 +38,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.api.response.LensResponse;
-import org.apache.lens.api.response.NoErrorPayload;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLDriver;
 import org.apache.lens.ml.algo.api.MLModel;
@@ -647,7 +646,7 @@ public class LensMLImpl implements LensML {
         MediaType.APPLICATION_XML_TYPE));
 
       final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+          new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
       LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", sessionHandle).request()
         .get(LensQuery.class);

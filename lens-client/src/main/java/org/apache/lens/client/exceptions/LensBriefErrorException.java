@@ -16,22 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.error;
+package org.apache.lens.client.exceptions;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import org.apache.lens.client.model.IdBriefErrorTemplate;
 
-import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.server.api.error.LensException;
+import lombok.Getter;
+import lombok.NonNull;
 
-@Provider
-public class LensExceptionMapper implements ExceptionMapper<LensException> {
+public class LensBriefErrorException extends RuntimeException {
 
-  @Override
-  public Response toResponse(LensException exception) {
+  @Getter
+  private final IdBriefErrorTemplate idBriefErrorTemplate;
 
-    final LensAPIResult lensAPIResult = exception.getLensAPIResult();
-    return Response.status(lensAPIResult.getHttpStatusCode()).entity(lensAPIResult).build();
+  public LensBriefErrorException(@NonNull final IdBriefErrorTemplate idBriefErrorTemplate) {
+    this.idBriefErrorTemplate = idBriefErrorTemplate;
   }
 }

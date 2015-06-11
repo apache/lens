@@ -38,8 +38,7 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.response.LensResponse;
-import org.apache.lens.api.response.NoErrorPayload;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.LensApplication;
 import org.apache.lens.server.LensServices;
@@ -242,7 +241,7 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle);
   }

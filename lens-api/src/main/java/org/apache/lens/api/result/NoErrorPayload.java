@@ -16,22 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.error;
+package org.apache.lens.api.result;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.server.api.error.LensException;
+import lombok.EqualsAndHashCode;
 
-@Provider
-public class LensExceptionMapper implements ExceptionMapper<LensException> {
-
-  @Override
-  public Response toResponse(LensException exception) {
-
-    final LensAPIResult lensAPIResult = exception.getLensAPIResult();
-    return Response.status(lensAPIResult.getHttpStatusCode()).entity(lensAPIResult).build();
-  }
+/**
+ * NoErrorPayload type is to be used while creating LensResponse for success responses.
+ * Success Responses will not have any error payload.
+ *
+ */
+@XmlRootElement
+@EqualsAndHashCode
+public final class NoErrorPayload {
 }

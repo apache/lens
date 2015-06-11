@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.api.response;
+package org.apache.lens.api.result;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.annotation.*;
@@ -30,23 +31,23 @@ import org.apache.commons.lang.StringUtils;
 import lombok.*;
 
 /**
- * Transport object for LensResponse
+ * Transport object for results returned by Lens APIs
  *
- * DATA represents type of data transferred in success response.
- * PAYLOAD represents type of error payload transferred in error response.
+ * DATA represents type of data in success result.
  *
  */
 @XmlRootElement
-@XmlSeeAlso({NoSuccessResponseData.class, NoErrorPayload.class, QuerySubmitResult.class})
+@XmlSeeAlso({NoResultData.class, NoErrorPayload.class, QuerySubmitResult.class})
 @NoArgsConstructor(access=AccessLevel.PACKAGE)
 @ToString
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LensResponse<DATA, PAYLOAD> {
+public class LensAPIResult<DATA> {
 
   @XmlElement
   private String apiVersion;
 
   @XmlElement
+  @Getter
   private String id;
 
   @XmlElement(name = "data")
@@ -55,32 +56,32 @@ public class LensResponse<DATA, PAYLOAD> {
 
   @XmlElement(name = "error")
   @Getter
-  private LensErrorTO<PAYLOAD> lensErrorTO;
+  private LensErrorTO lensErrorTO;
 
   @XmlTransient
   private Status httpStatusCode;
 
-  public static <DATA> LensResponse<DATA, NoErrorPayload> composedOf(final String apiVersion,
+  public static <DATA> LensAPIResult<DATA> composedOf(final String apiVersion,
       final String id, @NonNull final DATA data) {
 
-    return new LensResponse<DATA, NoErrorPayload>(apiVersion, id, data, null, Status.OK);
+    return new LensAPIResult<DATA>(apiVersion, id, data, null, Status.OK);
   }
 
-  public static <DATA> LensResponse<DATA, NoErrorPayload> composedOf(final String apiVersion,
+  public static <DATA> LensAPIResult<DATA> composedOf(final String apiVersion,
       final String id, @NonNull final DATA data, @NonNull final Status httpStatusCode) {
 
-    return new LensResponse<DATA, NoErrorPayload>(apiVersion, id, data, null, httpStatusCode);
+    return new LensAPIResult<DATA>(apiVersion, id, data, null, httpStatusCode);
   }
 
-  public static <PAYLOAD> LensResponse<NoSuccessResponseData, PAYLOAD> composedOf(
-      final String apiVersion, final String id, @NonNull final LensErrorTO<PAYLOAD> lensErrorTO,
+  public static <PAYLOAD> LensAPIResult<NoResultData> composedOf(
+      final String apiVersion, final String id, @NonNull final LensErrorTO lensErrorTO,
       @NonNull final Status httpStatusCode) {
 
-    return new LensResponse<NoSuccessResponseData, PAYLOAD>(apiVersion, id, null, lensErrorTO, httpStatusCode);
+    return new LensAPIResult<NoResultData>(apiVersion, id, null, lensErrorTO, httpStatusCode);
   }
 
-  private LensResponse(final String apiVersion, final String id, final DATA data,
-      final LensErrorTO lensErrorTO, @NonNull final Status httpStatusCode) {
+  private LensAPIResult(final String apiVersion, final String id, final DATA data, final LensErrorTO lensErrorTO,
+      @NonNull final Status httpStatusCode) {
 
     /* The check commented below should be enabled in future, once story of apiVersion is clear. Right now there could
     be REST APIs throwing LensException without initializing apiVersion
@@ -104,7 +105,21 @@ public class LensResponse<DATA, PAYLOAD> {
     return this.httpStatusCode;
   }
 
-  public boolean isSuccessResponse() {
+  public boolean isSuccessResult() {
     return lensErrorTO == null;
+  }
+
+  public boolean isErrorResult() {
+    return !isSuccessResult();
+  }
+
+  public int getErrorCode() {
+    checkState(isErrorResult());
+    return lensErrorTO.getCode();
+  }
+
+  public String getErrorMessage() {
+    checkState(isErrorResult());
+    return lensErrorTO.getMessage();
   }
 }

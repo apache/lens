@@ -22,9 +22,9 @@ import static org.apache.lens.server.error.LensServerErrorCode.UNSUPPORTED_QUERY
 
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.LensError;
-import org.apache.lens.api.response.LensErrorTO;
+import org.apache.lens.api.query.SupportedQuerySubmitOperations;
+import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.query.SupportedQuerySubmitOperations;
 
 public class UnSupportedQuerySubmitOpException extends LensException {
 

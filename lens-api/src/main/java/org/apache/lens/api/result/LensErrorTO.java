@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.api.response;
+package org.apache.lens.api.result;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.Serializable;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -41,12 +42,14 @@ import lombok.*;
 @ToString
 @NoArgsConstructor(access =  AccessLevel.PACKAGE)
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LensErrorTO<PAYLOAD> {
+public class LensErrorTO<PAYLOAD> implements Serializable {
 
   @XmlElement
+  @Getter
   private int code;
 
   @XmlElement
+  @Getter
   private String message;
 
   @XmlElement

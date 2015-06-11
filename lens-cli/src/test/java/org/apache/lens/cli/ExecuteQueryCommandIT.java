@@ -16,22 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.error;
+package org.apache.lens.cli;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import static org.testng.Assert.assertTrue;
 
-import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.cli.commands.LensQueryCommands;
+import org.apache.lens.client.LensClient;
 
-@Provider
-public class LensExceptionMapper implements ExceptionMapper<LensException> {
+import org.testng.annotations.Test;
 
-  @Override
-  public Response toResponse(LensException exception) {
+public class ExecuteQueryCommandIT extends LensCliApplicationTest {
 
-    final LensAPIResult lensAPIResult = exception.getLensAPIResult();
-    return Response.status(lensAPIResult.getHttpStatusCode()).entity(lensAPIResult).build();
+  @Test
+  public void testExecuteSyncQueryWithSyntaxError() {
+
+    LensQueryCommands lensQueryCommands = new LensQueryCommands();
+    lensQueryCommands.setClient(new LensClient());
+
+    final String actualResult = lensQueryCommands.executeQuery("mock-query", false, "testQuery");
+
+    assertTrue(actualResult.contains("Query Id: "));
+    assertTrue(actualResult.contains("\n" + "Error Code: 3001\n"
+        + "Error Message: Syntax Error: line 1:0 cannot recognize input near 'mock' '-' 'query'"));
   }
 }

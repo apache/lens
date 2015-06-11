@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.lens.api.error.ErrorCollection;
-import org.apache.lens.api.response.LensErrorTO;
+import org.apache.lens.api.result.LensErrorTO;
 
 import com.google.common.collect.ImmutableList;
 import lombok.AccessLevel;

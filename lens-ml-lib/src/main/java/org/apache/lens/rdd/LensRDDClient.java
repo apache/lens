@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.apache.lens.api.query.*;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientResultSet;
+import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.ml.algo.spark.HiveTableRDD;
 import org.apache.lens.server.api.error.LensException;
 
@@ -169,8 +170,8 @@ public class LensRDDClient {
    * @return the query handle
    * @throws LensException the lens exception
    */
-  public QueryHandle createLensRDDAsync(String query) throws LensException {
-    return getClient().executeQueryAsynch(query, "");
+  public QueryHandle createLensRDDAsync(String query) throws LensAPIException {
+    return getClient().executeQueryAsynch(query, "").getData();
   }
 
   /**
@@ -305,7 +306,7 @@ public class LensRDDClient {
    * @return the lens rdd result
    * @throws LensException the lens exception
    */
-  public LensRDDResult createLensRDD(String query) throws LensException {
+  public LensRDDResult createLensRDD(String query) throws LensAPIException, LensException {
     QueryHandle queryHandle = createLensRDDAsync(query);
     while (!isReadyForRDD(queryHandle)) {
       try {

@@ -22,7 +22,7 @@ import static org.apache.lens.cube.error.LensCubeErrorCode.FIELDS_CANNOT_BE_QUER
 
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.LensError;
-import org.apache.lens.api.response.LensErrorTO;
+import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.server.api.error.LensException;
 
 import lombok.EqualsAndHashCode;

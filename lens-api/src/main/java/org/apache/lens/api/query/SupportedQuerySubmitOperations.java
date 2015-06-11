@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.query;
+package org.apache.lens.api.query;
 
 import static org.apache.lens.api.query.SubmitOp.*;
 
@@ -24,8 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.xml.bind.annotation.*;
-
-import org.apache.lens.api.query.SubmitOp;
 
 import org.apache.commons.lang.StringUtils;
 

@@ -35,8 +35,7 @@ import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.api.response.LensResponse;
-import org.apache.lens.api.response.NoErrorPayload;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
@@ -214,7 +213,7 @@ public class TestResultFormatting extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
     QueryHandle handle = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+          new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle);
 

@@ -16,18 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.api.response;
+package org.apache.lens.client.model;
 
-import javax.xml.bind.annotation.XmlRootElement;
+public enum IdBriefErrorTemplateKey {
 
-import lombok.EqualsAndHashCode;
+  REQUEST_ID("Request Id"),
+  QUERY_ID("Query Id");
 
-/**
- * NoErrorPayload type is to be used while creating LensResponse for success responses.
- * Success Responses will not have any error payload.
- *
- */
-@XmlRootElement
-@EqualsAndHashCode
-public final class NoErrorPayload {
+  IdBriefErrorTemplateKey(final String key) {
+    this.key = key;
+  }
+
+  public String getConstant() {
+    return this.key;
+  }
+
+  private final String key;
 }

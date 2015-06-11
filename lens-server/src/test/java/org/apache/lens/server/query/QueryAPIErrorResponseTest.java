@@ -41,8 +41,9 @@ import org.apache.lens.api.metastore.XColumn;
 import org.apache.lens.api.metastore.XCube;
 import org.apache.lens.api.metastore.XDimAttribute;
 import org.apache.lens.api.metastore.XFactTable;
-import org.apache.lens.api.response.LensErrorTO;
-import org.apache.lens.api.response.LensJAXBContextResolver;
+import org.apache.lens.api.query.SupportedQuerySubmitOperations;
+import org.apache.lens.api.result.LensErrorTO;
+import org.apache.lens.api.result.LensJAXBContextResolver;
 import org.apache.lens.cube.error.ColUnAvailableInTimeRange;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensRequestContextInitFilter;
@@ -264,13 +265,13 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
       /* Create a test cube with test dimension field having a start Date and end Date */
       XDimAttribute testXDim = createXDimAttribute(testDimensionField, colStartDate, colEndDate);
-      XCube xcube = createXCube(testCube, Optional.of("dt"), testXDim);
+      XCube xcube = createXCubeWithDummyMeasure(testCube, Optional.of("dt"), testXDim);
       createCubeFailFast(target, sessionId, xcube);
 
       /* Create a fact with test dimension field */
       XColumn xColumn = createXColumn(testDimensionField);
       XFactTable xFactTable = createXFactTableWithColumns(testFact, testCube, xColumn);
-      createFact(target, sessionId, xFactTable);
+      createFactFailFast(target, sessionId, xFactTable);
 
       /* Setup: End */
 

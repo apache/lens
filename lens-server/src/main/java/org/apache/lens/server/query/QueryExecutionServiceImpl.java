@@ -35,8 +35,10 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
+import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensServerConf;
@@ -78,6 +80,8 @@ import org.codehaus.jackson.map.module.SimpleModule;
 import com.google.common.collect.ImmutableList;
 
 import lombok.Getter;
+import lombok.NonNull;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -165,7 +169,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   /**
    * The query submitter runnable.
    */
-  private final QuerySubmitter querySubmitterRunnable = new QuerySubmitter();
+  private final QuerySubmitter querySubmitterRunnable = new QuerySubmitter(LensServices.get().getErrorCollection());
 
   /**
    * The query submitter.
@@ -233,6 +237,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   private ExecutorService estimatePool;
 
   private final LogSegregationContext logSegregationContext;
+
+  private final ErrorCollection errorCollection = LensServices.get().getErrorCollection();
 
   /**
    * The driver event listener.
@@ -480,6 +486,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
      */
     private boolean pausedForTest = false;
 
+    private final ErrorCollection errorCollection;
+
+    public QuerySubmitter(@NonNull final ErrorCollection errorCollection) {
+      this.errorCollection = errorCollection;
+    }
     /*
      * (non-Javadoc)
      *
@@ -510,10 +521,17 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
                 // Check if we need to pass session's effective resources to selected driver
                 addSessionResourcesToDriver(ctx);
                 ctx.getSelectedDriver().executeAsync(ctx);
+              } catch (LensException e) {
+
+                LOG.error("Error launching query " + ctx.getQueryHandle(), e);
+                String reason = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+                setFailedStatus(ctx, "Launching query failed", reason, e.buildLensErrorTO(this.errorCollection));
+                continue;
+
               } catch (Exception e) {
                 log.error("Error launching query " + ctx.getQueryHandle(), e);
                 String reason = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-                setFailedStatus(ctx, "Launching query failed", reason);
+                setFailedStatus(ctx, "Launching query failed", reason, null);
                 continue;
               } finally {
                 release(ctx.getLensSessionIdentifier());
@@ -601,9 +619,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @param reason    the reason
    * @throws LensException the lens exception
    */
-  void setFailedStatus(QueryContext ctx, String statusMsg, String reason) throws LensException {
+  void setFailedStatus(QueryContext ctx, String statusMsg, String reason, final LensErrorTO lensErrorTO)
+    throws LensException {
+
     QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(0.0f, QueryStatus.Status.FAILED, statusMsg, false, null, reason));
+    ctx.setStatus(new QueryStatus(0.0f, QueryStatus.Status.FAILED, statusMsg, false, null, reason, lensErrorTO));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
@@ -611,7 +631,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   private void setLaunchedStatus(QueryContext ctx) throws LensException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(ctx.getStatus().getProgress(), QueryStatus.Status.LAUNCHED, "launched on the driver",
-      false, null, null));
+      false, null, null, null));
     launchedQueries.add(ctx);
     ctx.setLaunchTime(System.currentTimeMillis());
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
@@ -627,7 +647,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    */
   private void setCancelledStatus(QueryContext ctx, String statusMsg) throws LensException {
     QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(0.0f, QueryStatus.Status.CANCELED, statusMsg, false, null, null));
+    ctx.setStatus(new QueryStatus(0.0f, QueryStatus.Status.CANCELED, statusMsg, false, null, null, null));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
@@ -654,7 +674,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   void setSuccessState(QueryContext ctx) throws LensException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(1.0f, QueryStatus.Status.SUCCESSFUL, "Query is successful!", ctx
-      .isResultAvailableInDriver(), null, null));
+      .isResultAvailableInDriver(), null, null, null));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
@@ -678,8 +698,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
           } catch (LensException exc) {
             // Driver gave exception while updating status
-            setFailedStatus(ctx, "Status update failed", exc.getMessage());
+
+            setFailedStatus(ctx, "Status update failed", exc.getMessage(), exc.buildLensErrorTO(this.errorCollection));
             log.error("Status update failed for " + handle, exc);
+
           }
           // query is successfully executed by driver and
           // if query result need not be persisted or there is no result available in driver, move the query to
@@ -831,8 +853,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             resultSets.remove(finished.getCtx().getQueryHandle());
           }
           fireStatusChangeEvent(finished.getCtx(),
-            new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null), finished.getCtx().getStatus());
+            new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null, null), finished.getCtx().getStatus());
           log.info("Query purged: " + finished.getCtx().getQueryHandle());
+
         } catch (LensException e) {
           incrCounter(QUERY_PURGER_COUNTER);
           log.error("Error closing  query ", e);
@@ -1546,7 +1569,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   private QueryHandle executeAsyncInternal(LensSessionHandle sessionHandle, QueryContext ctx) throws LensException {
     ctx.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
     QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(0.0, QueryStatus.Status.QUEUED, "Query is queued", false, null, null));
+    ctx.setStatus(new QueryStatus(0.0, QueryStatus.Status.QUEUED, "Query is queued", false, null, null, null));
     queuedQueries.add(ctx);
     allQueries.put(ctx.getQueryHandle(), ctx);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);

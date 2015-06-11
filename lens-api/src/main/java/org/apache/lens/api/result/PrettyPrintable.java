@@ -16,22 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.error;
+package org.apache.lens.api.result;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+/**
+ * Contents of a class which implements this interface can be represented in a pretty formatted string.
+ */
+public interface PrettyPrintable {
 
-import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.server.api.error.LensException;
-
-@Provider
-public class LensExceptionMapper implements ExceptionMapper<LensException> {
-
-  @Override
-  public Response toResponse(LensException exception) {
-
-    final LensAPIResult lensAPIResult = exception.getLensAPIResult();
-    return Response.status(lensAPIResult.getHttpStatusCode()).entity(lensAPIResult).build();
-  }
+  /**
+   * Returns the contents of this object in the form of a pretty formatted string.
+   *
+   * @return
+   */
+  String toPrettyString();
 }
