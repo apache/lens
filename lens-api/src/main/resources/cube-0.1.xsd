@@ -448,7 +448,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute type="xs:boolean" name="join_key" default="false">
+        <xs:attribute type="xs:boolean" name="join_key" default="true">
           <xs:annotation>
             <xs:documentation>
               This flag will tell whether the attribute can be used as a join key or not

@@ -493,19 +493,30 @@ class CandidateTableResolver implements ContextRewriter {
       return;
     }
     // check for source columns for denorm columns
-    Map<CandidateTable, List<String>> removedCandidates = new HashMap<CandidateTable, List<String>>();
+    Map<CandidateTable, Collection<String>> removedCandidates = new HashMap<CandidateTable, Collection<String>>();
     for (Map.Entry<Dimension, OptionalDimCtx> optdimEntry : cubeql.getOptionalDimensionMap().entrySet()) {
       Dimension dim = optdimEntry.getKey();
       OptionalDimCtx optdim = optdimEntry.getValue();
       Iterator<CandidateTable> iter = optdim.requiredForCandidates.iterator();
       while (iter.hasNext()) {
         CandidateTable candidate = iter.next();
-        List<String> colSet = cubeql.getAutoJoinCtx().getJoinPathFromColumns().get(dim).get(candidate.getBaseTable());
-        if (!checkForColumnExists(candidate, colSet)) {
-          LOG.info("Removing candidate" + candidate + " from requiredForCandidates of" + dim + ", as columns:" + colSet
-            + " do not exist");
+        boolean remove = false;
+        if (cubeql.getAutoJoinCtx().getJoinPathFromColumns().get(dim) == null) {
+          LOG.info("Removing candidate" + candidate + " from requiredForCandidates of" + dim + ", as no join paths"
+            + " exist");
+          remove = true;
+          removedCandidates.put(candidate, optdim.colQueried);
+        } else {
+          List<String> colSet = cubeql.getAutoJoinCtx().getJoinPathFromColumns().get(dim).get(candidate.getBaseTable());
+          if (!checkForColumnExists(candidate, colSet)) {
+            LOG.info("Removing candidate" + candidate + " from requiredForCandidates of" + dim + ", as columns:"
+              + colSet + " do not exist");
+            remove = true;
+            removedCandidates.put(candidate, colSet);
+          }
+        }
+        if (remove) {
           iter.remove();
-          removedCandidates.put(candidate, colSet);
         }
       }
     }

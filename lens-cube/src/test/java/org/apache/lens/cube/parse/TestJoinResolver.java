@@ -21,6 +21,8 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
+import static org.testng.Assert.*;
+
 import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
@@ -30,6 +32,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -738,5 +741,16 @@ public class TestJoinResolver extends TestQueryRewrite {
     Assert.assertTrue(cdimTables.contains("citytable2"));
     Assert.assertFalse(cdimTables.contains("citytable3"));
     Assert.assertFalse(cdimTables.contains("citytable4"));
+  }
+
+  @Test
+  public void testUnreachableDim() throws ParseException, LensException {
+    SemanticException e1 = getSemanticExceptionInRewrite("select urdimid from testdim2", hconf);
+    assertNotNull(e1);
+    assertEquals(e1.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_DIM_HAS_COLUMN.getErrorCode());
+
+    SemanticException e2 = getSemanticExceptionInRewrite("select urdimid from testcube where " + TWO_DAYS_RANGE, hconf);
+    assertNotNull(e2);
+    assertEquals(e2.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
   }
 }

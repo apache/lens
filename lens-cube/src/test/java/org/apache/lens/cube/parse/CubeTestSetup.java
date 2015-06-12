@@ -616,6 +616,8 @@ public class CubeTestSetup {
       new TableReference("testdim2", "id")));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("cdim2", "int", "ref dim"), "Dim2 refer",
       new TableReference("cycledim1", "id"), NOW, null, null));
+    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("urdimid", "int", "ref dim"), "urdim refer",
+      new TableReference("unreachableDim", "id"), null, null, null, false, 10L));
 
     // denormalized reference
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2big1", "bigint", "ref dim"), "Dim2 refer",
@@ -1573,6 +1575,8 @@ public class CubeTestSetup {
       new TableReference("citydim", "id")));
     dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("cityname", "string", "name"), "cityid",
       new TableReference("citydim", "name"), null, null, 0.0, false));
+    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("urdimid", "int", "ref dim"), "urdim refer",
+      new TableReference("unreachableDim", "id"), null, null, null, false, 10L));
 
     // add ref dim through chain
     dimAttrs.add(new ReferencedDimAtrribute(
@@ -1909,6 +1913,40 @@ public class CubeTestSetup {
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
 
+  private void createUnReachabletable(CubeMetastoreClient client) throws Exception {
+    String dimName = "unreachableDim";
+
+    Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "int", "code")));
+    Map<String, String> dimProps = new HashMap<String, String>();
+    dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
+    Dimension urDim = new Dimension(dimName, dimAttrs, dimProps, 0L);
+    client.createDimension(urDim);
+
+    String dimTblName = "unreachableDimTable";
+    List<FieldSchema> dimColumns = new ArrayList<FieldSchema>();
+    dimColumns.add(new FieldSchema("id", "int", "code"));
+    dimColumns.add(new FieldSchema("name", "string", "field1"));
+
+    Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
+    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    List<String> timePartCols = new ArrayList<String>();
+    partCols.add(TestCubeMetastoreClient.getDatePartition());
+    timePartCols.add(TestCubeMetastoreClient.getDatePartitionKey());
+    StorageTableDesc s1 = new StorageTableDesc();
+    s1.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    s1.setPartCols(partCols);
+    s1.setTimePartCols(timePartCols);
+    dumpPeriods.put(c1, HOURLY);
+
+    Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.put(c1, s1);
+
+    client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+  }
+
   private void createCountryTable(CubeMetastoreClient client) throws Exception {
     String dimName = "countrydim";
 
@@ -2050,6 +2088,7 @@ public class CubeTestSetup {
       createCountryTable(client);
       createStateTable(client);
       createCubeFactsWithValidColumns(client);
+      createUnReachabletable(client);
     } catch (Exception exc) {
       log.error("Exception while creating sources.", exc);
       throw exc;
