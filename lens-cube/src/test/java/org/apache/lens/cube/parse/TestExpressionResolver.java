@@ -167,6 +167,20 @@ public class TestExpressionResolver extends TestQueryRewrite {
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
   }
+
+  @Test
+  public void testExpressionInSelectToGroupbyWithComplexExpression() throws Exception {
+    String hqlQuery =
+      rewrite("select booleancut, summsrs from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'",
+        conf);
+    String expected =
+      getExpectedQuery(cubeName, "select testCube.dim1 != 'x' AND testCube.dim2 != 10 ,"
+        + " ((1000 + sum(testCube.msr1) + sum(testCube.msr2))/100) FROM ", null,
+        " and substr(testCube.dim1, 3) != 'XYZ' group by testCube.dim1 != 'x' AND testCube.dim2 != 10",
+        getWhereForHourly2days("C1_testfact2_raw"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
   @Test
   public void testExpressionToJoin() throws Exception {
     // expression which results in join
@@ -395,6 +409,15 @@ public class TestExpressionResolver extends TestQueryRewrite {
       getExpectedQuery("ct", "SELECT ct.name, concat((ct.name), \":\", (statedim.name ),"
         + " \":\",(countrydim.name),  \":\" , ( zipdim . code )) FROM ", joinExpr, null, null, "c1_citytable", true);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
+  @Test
+  public void testDimensionQueryExpressionInSelectToGroupby() throws Exception {
+    String hqlQuery = rewrite("select id, AggrExpr from citydim", conf);
+    String expected = getExpectedQuery("citydim", "select citydim.id, count(citydim.name) FROM ", null, null,
+      " group by citydim.id", "c1_citytable", true);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+
   }
 
   @Test

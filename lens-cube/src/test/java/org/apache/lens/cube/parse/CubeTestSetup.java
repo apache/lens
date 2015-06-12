@@ -662,6 +662,8 @@ public class CubeTestSetup {
 
     exprs = new HashSet<ExprColumn>();
     exprs.add(new ExprColumn(new FieldSchema("avgmsr", "double", "avg measure"), "Avg Msr", "avg(msr1 + msr2)"));
+    exprs.add(new ExprColumn(new FieldSchema("summsrs", "double", "sum measures"), "Sum Msrs",
+      "(1000 + sum(msr1) + sum(msr2))/100"));
     exprs.add(new ExprColumn(new FieldSchema("msr5", "double", "materialized in some facts"), "Fifth Msr",
       "msr2 + msr3"));
     exprs.add(new ExprColumn(new FieldSchema("equalsums", "double", "sums are equals"), "equalsums",
@@ -1468,6 +1470,8 @@ public class CubeTestSetup {
         null), new ExprSpec("concat(citydim.name, \":\", statedim.name)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("CityState", "string", "city's state"),
       "City State", new ExprSpec("concat(citydim.name, \":\", citydim.statename)", null, null)));
+    exprs.add(new ExprColumn(new FieldSchema("AggrExpr", "int", "count(name)"), "city count",
+      new ExprSpec("count(name)", null, null)));
     Dimension cityDim = new Dimension("citydim", cityAttrs, exprs, dimProps, 0L);
     client.createDimension(cityDim);
 

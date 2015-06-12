@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.lens.cube.metadata.AbstractBaseTable;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -244,7 +246,7 @@ class GroupbyResolver implements ContextRewriter {
 
     for (int i = 0; i < selectASTNode.getChildCount(); i++) {
       ASTNode childNode = (ASTNode) selectASTNode.getChild(i);
-      if (hasMeasure(childNode, cubeQueryCtx) || HQLParser.hasAggregate(childNode)) {
+      if (hasMeasure(childNode, cubeQueryCtx) || hasAggregate(childNode, cubeQueryCtx)) {
         continue;
       }
       nonMsrNonAggSelASTChildren.add(childNode);
@@ -266,13 +268,50 @@ class GroupbyResolver implements ContextRewriter {
       if (hasMeasure(child, cubeql)) {
         continue;
       }
-      if (HQLParser.hasAggregate(child)) {
+      if (hasAggregate(child, cubeql)) {
         continue;
       }
       list.add(HQLParser.getString((ASTNode) node.getChild(i)));
     }
 
     return list;
+  }
+
+  boolean hasAggregate(ASTNode node, CubeQueryContext cubeql) {
+    int nodeType = node.getToken().getType();
+    if (nodeType == TOK_TABLE_OR_COL || nodeType == DOT) {
+      String colname;
+      String alias = "";
+
+      if (node.getToken().getType() == TOK_TABLE_OR_COL) {
+        colname = ((ASTNode) node.getChild(0)).getText().toLowerCase();
+      } else {
+        // node in 'alias.column' format
+        ASTNode tabident = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier);
+        ASTNode colIdent = (ASTNode) node.getChild(1);
+
+        colname = colIdent.getText().toLowerCase();
+        alias = tabident.getText().toLowerCase();
+      }
+      // by the time Groupby resolver is looking for aggregate, all columns should be aliased with correct
+      // alias name.
+      if (cubeql.getCubeTableForAlias(alias) instanceof AbstractBaseTable) {
+        if (((AbstractBaseTable)cubeql.getCubeTableForAlias(alias)).getExpressionByName(colname) != null) {
+          return cubeql.getExprCtx().getExpressionContext(colname, alias).hasAggregates();
+        }
+      }
+    } else {
+      if (HQLParser.isAggregateAST(node)) {
+        return true;
+      }
+
+      for (int i = 0; i < node.getChildCount(); i++) {
+        if (hasAggregate((ASTNode) node.getChild(i), cubeql)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   boolean hasMeasure(ASTNode node, CubeQueryContext cubeql) {

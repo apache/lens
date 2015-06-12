@@ -186,12 +186,22 @@ class ExpressionResolver implements ContextRewriter {
       }
       evalSet.add(esc);
     }
+
     Set<ASTNode> getAllASTNodes() {
       Set<ASTNode> allAST = new HashSet<ASTNode>();
       for (ExprSpecContext esc : allExprs) {
         allAST.add(esc.finalAST);
       }
       return allAST;
+    }
+
+    boolean hasAggregates() {
+      for (ExprSpecContext esc : allExprs) {
+        if (HQLParser.hasAggregate(esc.finalAST)) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 
@@ -311,10 +321,8 @@ class ExpressionResolver implements ContextRewriter {
     boolean hasAggregates() {
       for (Set<ExpressionContext> ecSet : allExprsQueried.values()) {
         for (ExpressionContext ec : ecSet) {
-          for (ExprSpecContext esc : ec.allExprs) {
-            if (HQLParser.isAggregateAST(esc.finalAST)) {
-              return true;
-            }
+          if (ec.hasAggregates()) {
+            return true;
           }
         }
       }
