@@ -41,6 +41,10 @@ class LeastPartitionResolver implements ContextRewriter {
     if (cubeql.getCube() != null && !cubeql.getCandidateFactSets().isEmpty()) {
       Map<Set<CandidateFact>, Integer> factPartCount = new HashMap<Set<CandidateFact>, Integer>();
 
+      //The number of partitions being calculated is not the actual number of partitions,
+      // they are number of time values now instead of partitions.
+      // This seems fine, as the less number of time values actually represent the rollups on time. And with
+      // MaxCoveringFactResolver facts with less partitions which are not covering the range would be removed.
       for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
         factPartCount.put(facts, getPartCount(facts));
       }

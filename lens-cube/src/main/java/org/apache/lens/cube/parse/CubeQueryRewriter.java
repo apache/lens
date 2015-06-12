@@ -175,10 +175,13 @@ public class CubeQueryRewriter {
     rewriters.add(denormResolver);
     // Prune candidate facts without any valid expressions
     rewriters.add(exprResolver);
-    rewriters.add(new LeastPartitionResolver(conf));
+    // We can have LightestFactResolver before LeastPartitionResolver - that says
+    // "if two facts have the same least weight, then the fact with least number of time partitions queried will be
+    // picked". This will be useful, if users did not set fact weights.
     if (!lightFactFirst) {
       rewriters.add(new LightestFactResolver(conf));
     }
+    rewriters.add(new LeastPartitionResolver(conf));
     rewriters.add(new LightestDimensionResolver(conf));
   }
 
