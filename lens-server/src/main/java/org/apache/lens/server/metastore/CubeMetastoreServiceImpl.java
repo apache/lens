@@ -26,6 +26,7 @@ import javax.ws.rs.NotFoundException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.api.error.LensException;
@@ -34,8 +35,7 @@ import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.*;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -44,7 +44,6 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.thrift.TException;
 
 import com.google.common.collect.Lists;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -1282,14 +1281,31 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
 
   private void addAllDirectExpressionsToFlattenedList(ObjectFactory objectFactory, AbstractBaseTable baseTbl,
     List<XFlattenedColumn> columnList, String chainName) {
-    for (ExprColumn expr : baseTbl.getExpressions()) {
-      XFlattenedColumn fcol = objectFactory.createXFlattenedColumn();
-      fcol.setExpression(JAXBUtils.xExprColumnFromHiveExprColumn(expr));
-      fcol.setTableName(baseTbl.getName());
-      if (chainName != null) {
-        fcol.setChainName(chainName);
+    if (baseTbl.getExpressions() != null) {
+      for (ExprColumn expr : baseTbl.getExpressions()) {
+        XFlattenedColumn fcol = objectFactory.createXFlattenedColumn();
+        fcol.setExpression(JAXBUtils.xExprColumnFromHiveExprColumn(expr));
+        fcol.setTableName(baseTbl.getName());
+        if (chainName != null) {
+          fcol.setChainName(chainName);
+        }
+        columnList.add(fcol);
       }
-      columnList.add(fcol);
+    }
+  }
+
+  private void addAllDirectExpressionsToFlattenedList(ObjectFactory objectFactory, CubeInterface baseTbl,
+    List<XFlattenedColumn> columnList, String chainName) {
+    if (baseTbl.getExpressions() != null) {
+      for (ExprColumn expr : baseTbl.getExpressions()) {
+        XFlattenedColumn fcol = objectFactory.createXFlattenedColumn();
+        fcol.setExpression(JAXBUtils.xExprColumnFromHiveExprColumn(expr));
+        fcol.setTableName(baseTbl.getName());
+        if (chainName != null) {
+          fcol.setChainName(chainName);
+        }
+        columnList.add(fcol);
+      }
     }
   }
 
@@ -1311,7 +1327,8 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public XFlattenedColumns getFlattenedColumns(LensSessionHandle sessionHandle, String tableName) throws LensException {
+  public XFlattenedColumns getFlattenedColumns(LensSessionHandle sessionHandle, String tableName, boolean addChains)
+    throws LensException {
     try {
       acquire(sessionHandle);
       CubeMetastoreClient client = getClient(sessionHandle);
@@ -1324,13 +1341,17 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
         CubeInterface cube = client.getCube(tableName);
         addAllMeasuresToFlattenedList(objectFactory, cube, columnList);
         addAllDirectAttributesToFlattenedListFromCube(objectFactory, cube, columnList);
-        addAllDirectExpressionsToFlattenedList(objectFactory, (AbstractBaseTable) cube, columnList, null);
-        addAllChainedColsToFlattenedListFromCube(client, objectFactory, cube, columnList);
+        addAllDirectExpressionsToFlattenedList(objectFactory, cube, columnList, null);
+        if (addChains) {
+          addAllChainedColsToFlattenedListFromCube(client, objectFactory, cube, columnList);
+        }
       } else if (client.isDimension(tableName)) {
         Dimension dimension = client.getDimension(tableName);
         addAllDirectAttributesToFlattenedListFromDimension(objectFactory, dimension, columnList, null);
-        addAllDirectExpressionsToFlattenedList(objectFactory, (AbstractBaseTable) dimension, columnList, null);
-        addAllChainedColsToFlattenedList(client, objectFactory, dimension, columnList);
+        addAllDirectExpressionsToFlattenedList(objectFactory, dimension, columnList, null);
+        if (addChains) {
+          addAllChainedColsToFlattenedList(client, objectFactory, dimension, columnList);
+        }
       } else {
         throw new BadRequestException("Can't get reachable columns. '"
           + tableName + "' is neither a cube nor a dimension");
@@ -1369,5 +1390,34 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       ret.add(timeline.toString());
     }
     return ret;
+  }
+
+  @Override
+  public XJoinChains getAllJoinChains(LensSessionHandle sessionHandle, String tableName) throws LensException {
+    try {
+      acquire(sessionHandle);
+      CubeMetastoreClient client = getClient(sessionHandle);
+      Set<JoinChain> chains;
+      if (client.isCube(tableName)) {
+        chains = client.getCube(tableName).getJoinChains();
+      } else if (client.isDimension(tableName)) {
+        chains = client.getDimension(tableName).getJoinChains();
+      } else {
+        throw new BadRequestException("Can't get join chains. '"
+          + tableName + "' is neither a cube nor a dimension");
+      }
+      XJoinChains xJoinChains= new XJoinChains();
+      List<XJoinChain> joinChains = xJoinChains.getJoinChain();
+      if (chains != null) {
+        for (JoinChain chain : chains) {
+          joinChains.add(JAXBUtils.getXJoinChainFromJoinChain(chain));
+        }
+      }
+      return xJoinChains;
+    } catch (HiveException e) {
+      throw new LensException(e);
+    } finally {
+      release(sessionHandle);
+    }
   }
 }

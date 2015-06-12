@@ -534,10 +534,12 @@ public interface CubeMetastoreService {
    *
    * @param sessionHandle The session handle
    * @param tableName     The table name - cube name or dimension name
+   * @param addChains
    * @return {@link XFlattenedColumns}
    * @throws LensException
    */
-  XFlattenedColumns getFlattenedColumns(LensSessionHandle sessionHandle, String tableName) throws LensException;
+  XFlattenedColumns getFlattenedColumns(LensSessionHandle sessionHandle, String tableName, boolean addChains)
+    throws LensException;
 
   /**
    * Get the latest available date upto which data is available for the base cubes, for the time dimension
@@ -553,4 +555,6 @@ public interface CubeMetastoreService {
 
   List<String> getPartitionTimelines(LensSessionHandle sessionid, String factName, String storage,
     String updatePeriod, String timeDimension) throws LensException, HiveException;
+
+  XJoinChains getAllJoinChains(LensSessionHandle sessionid, String table) throws LensException;
 }

@@ -16,32 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cli.skel;
+package org.apache.lens.cli.commands;
 
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.shell.plugin.support.DefaultPromptProvider;
-import org.springframework.stereotype.Component;
+import org.apache.lens.cli.table.XFlattenedColumnTable;
+import org.apache.lens.cli.table.XJoinChainTable;
 
-/**
- * The Class LensPromptProvider.
- */
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
-public class LensPromptProvider extends DefaultPromptProvider {
-
-  @Override
-  public String getPrompt() {
-    return "lens-shell>";
+public abstract class LogicalTableCrudCommand<T> extends LensCRUDCommand<T> {
+  public String getAllFields(String table, boolean flattened) {
+    return new XFlattenedColumnTable(getClient().getQueryableFields(table, flattened), table).toString();
   }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.springframework.shell.plugin.support.DefaultPromptProvider#name()
-   */
-  @Override
-  public String getProviderName() {
-    return "lens prompt provider";
+  public String getAllJoinChains(String table) {
+    return new XJoinChainTable(getClient().getJoinChains(table)).toString();
   }
 }

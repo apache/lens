@@ -18,11 +18,18 @@
  */
 package org.apache.lens.cli;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 
+import org.apache.lens.api.metastore.XJoinChains;
 import org.apache.lens.cli.commands.LensDimensionCommands;
+import org.apache.lens.cli.table.XJoinChainTable;
 import org.apache.lens.client.LensClient;
 
 import org.testng.Assert;
@@ -74,11 +81,24 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
     createDimension();
     dimensionList = getCommand().showDimensions();
     Assert.assertTrue(dimensionList.contains("test_dim"));
-
+    testFields(getCommand());
+    testJoinChains(getCommand());
     testUpdateCommand(new File(dimensionSpec.toURI()), getCommand());
     getCommand().dropDimension("test_dim");
     dimensionList = getCommand().showDimensions();
     Assert.assertFalse(dimensionList.contains("test_dim"));
+  }
+
+  private void testJoinChains(LensDimensionCommands command) {
+    assertEquals(command.showJoinChains("test_dim"), new XJoinChainTable(new XJoinChains()).toString());
+  }
+
+  private void testFields(LensDimensionCommands qCom) {
+    String testDimFields = qCom.showQueryableFields("test_dim", true);
+    for (String field : Arrays.asList("detail", "id", "d2id", "name")) {
+      assertTrue(testDimFields.contains(field));
+    }
+    assertFalse(testDimFields.contains("measure"));
   }
 
   /**
@@ -103,8 +123,8 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
       String xmlContent = sb.toString();
 
       xmlContent = xmlContent.replace("<property name=\"test_dim.prop\" value=\"test\" />\n",
-          "<property name=\"test_dim.prop\" value=\"test\" />"
-              + "\n<property name=\"test_dim.prop1\" value=\"test1\" />\n");
+        "<property name=\"test_dim.prop\" value=\"test\" />"
+          + "\n<property name=\"test_dim.prop1\" value=\"test1\" />\n");
 
       File newFile = new File("/tmp/test_dim1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));

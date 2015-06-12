@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 @Component
 @UserDocumentation(title = "Management of Facts",
   description = "These command provide CRUD for facts, associated storages, and fact partitions")
-public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable> {
+public class LensFactCommands extends PhysicalTableCrudCommand<XFactTable> {
 
   /**
    * Show facts.

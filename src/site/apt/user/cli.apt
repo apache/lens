@@ -157,7 +157,11 @@ User CLI Commands
 *--+--+
 |create cube [--path] \<path-to-cube-spec-file\>|Create a new Cube, taking spec from <<<path-to-cube-spec-file>>>|
 *--+--+
-|cube latestdate [--cube] \<cube_name\> [--time_dimension] \<time_dimension\>|get latest date of data available in cube <<<cube_name>>> for time dimension <<<time_dimension_name>>>.  Instead of time dimension, partition column can be directly passed as <<<time_dimension>>>|
+|cube latestdate [--name] \<cube_name\> [--time_dimension] \<time_dimension\>|get latest date of data available in cube <<<cube_name>>> for time dimension <<<time_dimension_name>>>.  Instead of time dimension, partition column can be directly passed as <<<time_dimension>>>|
+*--+--+
+|cube show fields [--name] \<cube_name\> [--flattened \<flattened\>]|Show queryable fields of the given cube <<<cube_name>>>. Optionally specify <<<flattened>>> to include chained fields|
+*--+--+
+|cube show joinchains [--name] \<cube_name\>|Show joinchains of the given cube <<<cube_name>>>. |
 *--+--+
 |describe cube [--name] \<cube_name\>|describe cube with name <<<cube_name>>>|
 *--+--+
@@ -181,6 +185,10 @@ User CLI Commands
 |create dimension [--path] \<path-to-dimension-spec file\>|Create a new Dimension, taking spec from <<<path-to-dimension-spec file>>>|
 *--+--+
 |describe dimension [--name] \<dimension_name\>|describe dimension <<<dimension_name>>>|
+*--+--+
+|dimension show fields [--name] \<dimension_name\> [--flattened \<flattened\>]|Show queryable fields of the given dimension <<<dimension_name>>>. Optionally specify <<<flattened>>> to include chained fields|
+*--+--+
+|dimension show joinchains [--name] \<dimension_name\>|Show joinchains of the given dimension <<<dimension_name>>>. |
 *--+--+
 |drop dimension [--name] \<dimension_name\>|drop dimension <<<dimension_name>>>|
 *--+--+

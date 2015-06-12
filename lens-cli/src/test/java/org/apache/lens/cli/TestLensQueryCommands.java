@@ -20,20 +20,17 @@ package org.apache.lens.cli;
 
 import static org.testng.Assert.*;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
-import java.util.GregorianCalendar;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.metastore.XPartition;
-import org.apache.lens.api.metastore.XTimePartSpec;
-import org.apache.lens.api.metastore.XTimePartSpecElement;
-import org.apache.lens.api.metastore.XUpdatePeriod;
+import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensQueryCommands;
@@ -107,6 +104,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     testPurgedFinishedResultSet(qCom);
     testFailPreparedQuery(qCom);
   }
+
 
   /**
    * Test prepared query.
@@ -303,6 +301,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     assertTrue(qCom.getQueryResults(qh, resDir.getAbsolutePath(), true).contains("Saved"));
     assertEquals(readFile(resDir.getAbsolutePath() + File.separator + qh + ".csv").trim(), expected.trim());
   }
+
   private String readFile(String path) throws FileNotFoundException {
     return new Scanner(new File(path)).useDelimiter("\\Z").next();
   }

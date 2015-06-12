@@ -40,7 +40,7 @@ public class LensHistoryFileProvider extends DefaultHistoryFileNameProvider {
    * @see org.springframework.shell.plugin.support.DefaultHistoryFileNameProvider#name()
    */
   @Override
-  public String name() {
+  public String getProviderName() {
     return "lens client history provider";
   }
 }

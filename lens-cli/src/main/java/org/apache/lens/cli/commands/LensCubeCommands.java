@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 @Component
 @UserDocumentation(title = "OLAP Data cube metadata management",
   description = "These commands provide CRUD for cubes")
-public class LensCubeCommands extends LensCRUDCommand<XCube> {
+public class LensCubeCommands extends LogicalTableCrudCommand<XCube> {
 
   /**
    * Show cubes.
@@ -106,10 +106,27 @@ public class LensCubeCommands extends LensCRUDCommand<XCube> {
     help = "get latest date of data available in cube <cube_name> for time dimension <time_dimension_name>. "
       + " Instead of time dimension, partition column can be directly passed as <time_dimension>")
   public String getLatest(
-    @CliOption(key = {"", "cube"}, mandatory = true, help = "<cube_name>") String cube,
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<cube_name>") String cube,
     @CliOption(key = {"", "time_dimension"}, mandatory = true, help = "<time_dimension>") String timeDim) {
     Date dt = getClient().getLatestDateOfCube(cube, timeDim);
     return dt == null ? "No Data Available" : formatDate(dt);
+  }
+
+  @CliCommand(value = "cube show fields",
+    help = "Show queryable fields of the given cube <cube_name>. "
+      + "Optionally specify <flattened> to include chained fields")
+  public String showQueryableFields(
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<cube_name>") String table,
+    @CliOption(key = {"flattened"}, mandatory = false, unspecifiedDefaultValue = "false",
+      specifiedDefaultValue = "true", help = "<flattened>") boolean flattened) {
+    return getAllFields(table, flattened);
+  }
+
+  @CliCommand(value = "cube show joinchains",
+    help = "Show joinchains of the given cube <cube_name>. ")
+  public String showJoinChains(
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<cube_name>") String table) {
+    return getAllJoinChains(table);
   }
 
   @Override

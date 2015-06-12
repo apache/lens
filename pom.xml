@@ -71,7 +71,7 @@
     <metrics.version>3.0.2</metrics.version>
     <subethasmtp.version>3.1.7</subethasmtp.version>
     <liquibase.version>3.0.7</liquibase.version>
-    <spring.shell.version>1.0.0.RELEASE</spring.shell.version>
+    <spring.shell.version>1.1.0.RELEASE</spring.shell.version>
 
     <c3p0.version>0.9.5</c3p0.version>
     <hsqldb.version>2.2.9</hsqldb.version>
@@ -907,6 +907,11 @@
         <groupId>com.typesafe</groupId>
         <artifactId>config</artifactId>
         <version>${typesafe.config.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jvnet.jaxb2_commons</groupId>
+        <artifactId>jaxb2-basics-runtime</artifactId>
+        <version>${jaxb2.basics.plugin.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>

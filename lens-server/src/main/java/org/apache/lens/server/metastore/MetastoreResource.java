@@ -24,11 +24,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBElement;
 
-import org.apache.lens.api.APIResult;
+import org.apache.lens.api.*;
 import org.apache.lens.api.APIResult.Status;
-import org.apache.lens.api.DateTime;
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.StringList;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
@@ -1515,20 +1512,43 @@ public class MetastoreResource {
   /**
    * Get flattened list of columns reachable from a cube or a dimension
    *
-   * @param sessionid session id
-   * @param tableName name of the table
+   * @param sessionid  session id
+   * @param tableName  name of the table
+   * @param addChains whether columns accessed via chains should also be returned
    * @return list of measures, expressions or dimension attributes
    */
   @GET
   @Path("flattened/{tableName}")
   public JAXBElement<XFlattenedColumns> getFlattenedColumns(
     @QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("tableName") String tableName) {
+    @PathParam("tableName") String tableName, @QueryParam("add_chains") @DefaultValue("true") boolean addChains) {
     checkSessionId(sessionid);
     try {
-      return X_CUBE_OBJECT_FACTORY.createXFlattenedColumns(getSvc().getFlattenedColumns(sessionid, tableName));
+      return X_CUBE_OBJECT_FACTORY.createXFlattenedColumns(
+        getSvc().getFlattenedColumns(sessionid, tableName, addChains));
     } catch (LensException exc) {
       throw new WebApplicationException(exc);
+    }
+  }
+
+  /**
+   * Get all chains that belong to a table(cube or dimension) in the metastore
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param tableName name of the table. can be either cube or dimension
+   * @return {@link XJoinChains} object
+   */
+  @GET
+  @Path("/chains/{tableName}")
+  public JAXBElement<XJoinChains> getAllJoinChains(
+    @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("tableName") String tableName)
+    throws LensException {
+    checkSessionId(sessionid);
+    try {
+      return X_CUBE_OBJECT_FACTORY.createXJoinChains(getSvc().getAllJoinChains(sessionid, tableName));
+    } catch (LensException exc) {
+      checkTableNotFound(exc, tableName);
+      throw exc;
     }
   }
 

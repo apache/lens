@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @UserDocumentation(title = "Dimension Management", description = "These commands provide CRUD for Dimensions")
-public class LensDimensionCommands extends LensCRUDCommand<XDimension> {
+public class LensDimensionCommands extends LogicalTableCrudCommand<XDimension> {
 
   /**
    * Show dimensions.
@@ -101,6 +101,23 @@ public class LensDimensionCommands extends LensCRUDCommand<XDimension> {
   public String dropDimension(
     @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension_name>") String name) {
     return drop(name, false);
+  }
+
+  @CliCommand(value = "dimension show fields",
+    help = "Show queryable fields of the given dimension <dimension_name>. "
+      + "Optionally specify <flattened> to include chained fields")
+  public String showQueryableFields(
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension_name>") String table,
+    @CliOption(key = {"flattened"}, mandatory = false, unspecifiedDefaultValue = "false",
+      specifiedDefaultValue = "true", help = "<flattened>") boolean flattened) {
+    return getAllFields(table, flattened);
+  }
+
+  @CliCommand(value = "dimension show joinchains",
+    help = "Show joinchains of the given dimension <dimension_name>. ")
+  public String showJoinChains(
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension_name>") String table) {
+    return getAllJoinChains(table);
   }
 
   @Override

@@ -28,17 +28,11 @@ import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.*;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.*;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
@@ -51,11 +45,7 @@ import org.apache.lens.api.metastore.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-
+import org.glassfish.jersey.media.multipart.*;
 import org.xml.sax.SAXException;
 
 import com.google.common.base.Joiner;
@@ -254,6 +244,25 @@ public class LensMetadataClient {
       .request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XCube>>() {
       });
     return cube.getValue();
+  }
+
+  public XFlattenedColumns getQueryableFields(String tableName, boolean flattened) {
+    WebTarget target = getMetastoreWebTarget();
+    JAXBElement<XFlattenedColumns> fields = target.path("flattened").path(tableName)
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .queryParam("add_chains", flattened)
+      .request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XFlattenedColumns>>() {
+      });
+    return fields.getValue();
+  }
+
+  public XJoinChains getJoinChains(String tableName) {
+    WebTarget target = getMetastoreWebTarget();
+    JAXBElement<XJoinChains> fields = target.path("chains").path(tableName)
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XJoinChains>>() {
+      });
+    return fields.getValue();
   }
 
   public APIResult dropCube(String cubeName) {

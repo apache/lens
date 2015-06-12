@@ -271,7 +271,7 @@ public class LensQueryCommands extends BaseLensCommand {
     @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh,
     @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") String location,
     @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "true",
-    help = "<async>") boolean async) {
+      help = "<async>") boolean async) {
     QueryHandle queryHandle = new QueryHandle(UUID.fromString(qh));
     LensClient.LensClientResultSetWithStats results;
     try {
@@ -459,5 +459,4 @@ public class LensQueryCommands extends BaseLensCommand {
     planStr.append("\n").append("Prepare handle:").append(plan.getPrepareHandle());
     return planStr.toString();
   }
-
 }

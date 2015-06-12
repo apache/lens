@@ -397,6 +397,13 @@ public class LensClient {
     return mc.getCube(cubeName);
   }
 
+  public XFlattenedColumns getQueryableFields(String table, boolean flattened) {
+    return mc.getQueryableFields(table, flattened);
+  }
+  public XJoinChains getJoinChains(String table) {
+    return mc.getJoinChains(table);
+  }
+
   public XDimension getDimension(String dimName) {
     return mc.getDimension(dimName);
   }

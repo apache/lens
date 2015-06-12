@@ -27,7 +27,7 @@ import org.apache.lens.api.metastore.XStorageTableElement;
 
 import com.google.common.base.Joiner;
 
-public abstract class LensCRUDStoragePartitionCommand<T> extends LensCRUDCommand<T> {
+public abstract class PhysicalTableCrudCommand<T> extends LensCRUDCommand<T> {
   public String showAll(String filter) {
     List<String> all = getAll(filter);
     if (all == null || all.isEmpty()) {

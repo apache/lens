@@ -18,15 +18,19 @@
  */
 package org.apache.lens.cli;
 
+import static org.testng.Assert.*;
+
 import java.io.*;
 import java.net.URL;
+import java.util.Arrays;
 
+import org.apache.lens.api.metastore.XJoinChains;
 import org.apache.lens.cli.commands.LensCubeCommands;
+import org.apache.lens.cli.table.XJoinChainTable;
 import org.apache.lens.client.LensClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
@@ -51,22 +55,38 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
     LOG.debug("Starting to test cube commands");
     URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
     String cubeList = command.showCubes();
-    Assert.assertFalse(cubeList.contains("sample_cube"));
+    assertFalse(cubeList.contains("sample_cube"));
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
     cubeList = command.showCubes();
-    Assert.assertEquals(command.getLatest("sample_cube", "dt"), "No Data Available");
-    Assert.assertTrue(cubeList.contains("sample_cube"));
-
+    assertEquals(command.getLatest("sample_cube", "dt"), "No Data Available");
+    assertTrue(cubeList.contains("sample_cube"));
+    testJoinChains(command);
+    testFields(command);
     testUpdateCommand(new File(cubeSpec.toURI()), command);
     command.dropCube("sample_cube");
     try {
       command.getLatest("sample_cube", "dt");
-      Assert.fail("should have failed as cube doesn't exist");
+      fail("should have failed as cube doesn't exist");
     } catch (Exception e) {
       //pass
     }
     cubeList = command.showCubes();
-    Assert.assertFalse(cubeList.contains("sample_cube"));
+    assertFalse(cubeList.contains("sample_cube"));
+  }
+
+  private void testJoinChains(LensCubeCommands command) {
+    String joinChains = command.showJoinChains("sample_cube");
+    assertEquals(joinChains, new XJoinChainTable(new XJoinChains()).toString());
+  }
+
+  private void testFields(LensCubeCommands command) {
+    String fields = command.showQueryableFields("sample_cube", true);
+    for (String field : Arrays
+      .asList("dim1", "dim2", "dim3", "measure1", "measure2", "measure3", "measure4", "expr_msr5")) {
+      assertTrue(fields.contains(field));
+    }
+    assertTrue(fields.contains("measure3 + measure4 + 0.01"));
+    assertTrue(fields.replace("measure3 + measure4 + 0.01", "blah").contains("measure3 + measure4"));
   }
 
   /**
@@ -105,13 +125,13 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
       String propString = "name : sample_cube.prop  value : sample";
       String propString1 = "name : sample_cube.prop1  value : sample1";
 
-      Assert.assertTrue(desc.contains(propString));
+      assertTrue(desc.contains(propString));
 
       command.updateCube("sample_cube", "/tmp/sample_cube1.xml");
       desc = command.describeCube("sample_cube");
       LOG.debug(desc);
-      Assert.assertTrue(desc.contains(propString));
-      Assert.assertTrue(desc.contains(propString1));
+      assertTrue(desc.contains(propString));
+      assertTrue(desc.contains(propString1));
     } finally {
       newFile.delete();
     }
