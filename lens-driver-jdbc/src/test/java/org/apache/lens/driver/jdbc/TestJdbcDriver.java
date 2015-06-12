@@ -18,6 +18,8 @@
  */
 package org.apache.lens.driver.jdbc;
 
+import static org.apache.lens.server.api.user.MockUserConfigLoader.*;
+
 import static org.testng.Assert.*;
 
 import java.sql.Connection;
@@ -41,6 +43,7 @@ import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.user.MockUserConfigLoader;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
@@ -91,6 +94,7 @@ public class TestJdbcDriver {
 
     driver = new JDBCDriver();
     driver.configure(baseConf);
+    driver.registerUserConfigLoader(new MockUserConfigLoader(hConf));
     assertNotNull(driver);
     assertTrue(driver.configured);
 
@@ -556,7 +560,7 @@ public class TestJdbcDriver {
       }
     };
 
-    driver.executeAsync(context);
+    executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
     driver.registerForCompletionNotification(handle, 0, listener);
 
@@ -633,7 +637,7 @@ public class TestJdbcDriver {
     QueryContext ctx = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
 
     for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
-      driver.executeAsync(ctx);
+      executeAsync(ctx);
       driver.updateStatus(ctx);
       System.out.println("@@@@ QUERY " + (i + 1));
     }
@@ -641,7 +645,7 @@ public class TestJdbcDriver {
     String validQuery = "SELECT * FROM invalid_conn_close";
     QueryContext validCtx = createQueryContext(validQuery);
     System.out.println("@@@ Submitting valid query");
-    driver.executeAsync(validCtx);
+    executeAsync(validCtx);
 
     // Wait for query to finish
     while (true) {
@@ -653,6 +657,11 @@ public class TestJdbcDriver {
     }
 
     driver.closeQuery(validCtx.getQueryHandle());
+  }
+
+  private void executeAsync(QueryContext ctx) throws LensException {
+    driver.executeAsync(ctx);
+    assertEquals(ctx.getSelectedDriverConf().get(KEY), VALUE);
   }
 
   /**
@@ -706,7 +715,7 @@ public class TestJdbcDriver {
     final String query = "SELECT * FROM cancel_query_test";
     QueryContext context = createQueryContext(query);
     System.out.println("@@@ test_cancel:" + context.getQueryHandle());
-    driver.executeAsync(context);
+    executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
     boolean isCancelled = driver.cancelQuery(handle);
     driver.updateStatus(context);
@@ -753,7 +762,7 @@ public class TestJdbcDriver {
       }
     };
 
-    driver.executeAsync(ctx);
+    executeAsync(ctx);
     QueryHandle handle = ctx.getQueryHandle();
     driver.registerForCompletionNotification(handle, 0, listener);
 

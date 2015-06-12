@@ -34,6 +34,7 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.user.UserConfigLoaderException;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.hadoop.hive.conf.HiveConf;

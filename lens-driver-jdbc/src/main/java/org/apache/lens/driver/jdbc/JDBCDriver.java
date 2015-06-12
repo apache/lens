@@ -43,10 +43,8 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
-import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.lens.server.api.query.PreparedQueryContext;
-import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryRewriter;
+import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.user.UserConfigLoader;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
@@ -93,6 +91,7 @@ public class JDBCDriver implements LensDriver {
   private ConnectionProvider estimateConnectionProvider;
 
   private LogSegregationContext logSegregationContext;
+  private UserConfigLoader userConfigLoader;
 
   /**
    * Data related to a query submitted to JDBCDriver.
@@ -545,6 +544,7 @@ public class JDBCDriver implements LensDriver {
   }
 
   private static final QueryCost JDBC_DRIVER_COST = new QueryCost(0, 0);
+
   /**
    * Dummy JDBC query Plan class to get min cost selector working.
    */
@@ -741,9 +741,9 @@ public class JDBCDriver implements LensDriver {
    * @throws LensException
    */
   private PreparedStatement prepareInternal(AbstractQueryContext pContext,
-                                            boolean calledForEstimate,
-                                            boolean checkConfigured,
-                                            String metricCallStack) throws LensException {
+    boolean calledForEstimate,
+    boolean checkConfigured,
+    String metricCallStack) throws LensException {
     // Caller might have already verified configured status and driver query, so we don't have
     // to do this check twice. Caller must set checkConfigured to false in that case.
     if (checkConfigured) {
@@ -888,6 +888,9 @@ public class JDBCDriver implements LensDriver {
     String rewrittenQuery = rewriteQuery(context);
     JdbcQueryContext jdbcCtx = new JdbcQueryContext(context, logSegregationContext);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
+    if (userConfigLoader != null) {
+      userConfigLoader.preSubmit(context);
+    }
     try {
       Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx, logSegregationContext));
       jdbcCtx.setResultFuture(future);
@@ -1057,7 +1060,7 @@ public class JDBCDriver implements LensDriver {
             throw new LensException();
           }
         } catch (LensException e) {
-          LOG.warn("Error closing prapared query : " + query , e);
+          LOG.warn("Error closing prapared query : " + query, e);
         }
       }
     } finally {
@@ -1074,6 +1077,13 @@ public class JDBCDriver implements LensDriver {
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
 
   }
+
+
+  @Override
+  public void registerUserConfigLoader(UserConfigLoader userConfigLoader) {
+    this.userConfigLoader = userConfigLoader;
+  }
+
 
   /*
    * (non-Javadoc)

@@ -191,7 +191,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       serviceMode = conf.getEnum(SERVER_MODE,
         SERVICE_MODE.valueOf(DEFAULT_SERVER_MODE));
       cliService = new CLIService();
-
+      UserConfigLoaderFactory.init(conf);
       // Add default services
       addService(cliService);
       addService(new EventServiceImpl(LensEventService.NAME));
@@ -262,7 +262,6 @@ public class LensServices extends CompositeService implements ServiceProvider {
       snapShotInterval = conf.getLong(SERVER_SNAPSHOT_INTERVAL,
         DEFAULT_SERVER_SNAPSHOT_INTERVAL);
       LOG.info("Initialized services: " + services.keySet().toString());
-      UserConfigLoaderFactory.init(conf);
       timer = new Timer("lens-server-snapshotter", true);
     }
   }

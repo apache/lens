@@ -55,6 +55,7 @@ import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
+import org.apache.lens.server.user.UserConfigLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -307,7 +308,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
           Class<?> clazz = Class.forName(driverClass);
           LensDriver driver = (LensDriver) clazz.newInstance();
           driver.configure(LensServerConf.getConf());
-
+          driver.registerUserConfigLoader(UserConfigLoaderFactory.getUserConfigLoader());
           if (driver instanceof HiveDriver) {
             driver.registerDriverEventListener(driverEventListener);
           }
@@ -895,7 +896,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     try {
       loadDriversAndSelector();
     } catch (LensException e) {
-      throw new IllegalStateException("Could not load drivers");
+      LOG.error(e);
+      throw new IllegalStateException("Could not load drivers", e);
     }
     maxFinishedQueries = conf.getInt(LensConfConstants.MAX_NUMBER_OF_FINISHED_QUERY,
       LensConfConstants.DEFAULT_FINISHED_QUERIES);

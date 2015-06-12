@@ -26,6 +26,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.user.UserConfigLoader;
+import org.apache.lens.server.api.user.UserConfigLoaderException;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.dbcp.BasicDataSource;

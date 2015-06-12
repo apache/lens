@@ -18,18 +18,9 @@
  */
 package org.apache.lens.driver.hive;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.TimeUnit;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -49,6 +40,7 @@ import org.apache.lens.server.api.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -135,6 +127,7 @@ public class HiveDriver implements LensDriver {
 
   // package-local. Test case can change.
   boolean whetherCalculatePriority;
+  private UserConfigLoader userConfigLoader;
 
 
   private String sessionDbKey(String sessionHandle, String database) {
@@ -511,6 +504,9 @@ public class HiveDriver implements LensDriver {
             + "User query: " + ctx.getUserQuery(), e);
         }
       }
+      if (userConfigLoader != null) {
+        userConfigLoader.preSubmit(ctx);
+      }
       OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.getSelectedDriverQuery(),
         qdconf.getValByRegex(".*"));
       ctx.setDriverOpHandle(op.toString());
@@ -727,7 +723,7 @@ public class HiveDriver implements LensDriver {
         } catch (Exception e) {
           checkInvalidSession(e);
           log.warn("Error closing session for lens session: " + lensSessionDbKey + ", hive session: "
-              + lensToHiveSession.get(lensSessionDbKey), e);
+            + lensToHiveSession.get(lensSessionDbKey), e);
         }
       }
       lensToHiveSession.clear();
@@ -744,6 +740,11 @@ public class HiveDriver implements LensDriver {
   @Override
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
     driverListeners.add(driverEventListener);
+  }
+
+  @Override
+  public void registerUserConfigLoader(UserConfigLoader userConfigLoader) {
+    this.userConfigLoader = userConfigLoader;
   }
 
   protected CLIServiceClient getClient() throws LensException {

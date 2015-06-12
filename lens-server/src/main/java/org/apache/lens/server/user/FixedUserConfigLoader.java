@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 

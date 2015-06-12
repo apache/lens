@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.user.UserConfigLoader;
+import org.apache.lens.server.api.user.UserConfigLoaderException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 

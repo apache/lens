@@ -16,51 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.user;
+package org.apache.lens.server.api.user;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
-/**
- * The Class FooBarConfigLoader.
- */
-public class FooBarConfigLoader extends UserConfigLoader {
+import com.beust.jcommander.internal.Maps;
 
-  /** The const hash map. */
-  public static final HashMap<String, String> CONST_HASH_MAP = new HashMap<String, String>() {
-    {
-      put("key", "value");
-    }
-  };
+public class MockUserConfigLoader extends UserConfigLoader {
+  public static final String KEY = "TEST_KEY";
+  public static final String VALUE = "TEST_VALUE";
 
-  /**
-   * Instantiates a new foo bar config loader.
-   *
-   * @param conf the conf
-   */
-  public FooBarConfigLoader(HiveConf conf) {
+  public MockUserConfigLoader(HiveConf conf) {
     super(conf);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
-   */
   @Override
-  public Map<String, String> getUserConfig(String loggedInUser) {
-    return CONST_HASH_MAP;
+  public Map<String, String> getUserConfig(String loggedInUser) throws UserConfigLoaderException {
+    return Maps.newHashMap();
   }
 
   @Override
   public void preSubmit(QueryContext ctx) throws LensException {
-    super.preSubmit(ctx);
-    ctx.getSelectedDriverConf().set("random.conf.key", "random.conf.value");
+    ctx.getSelectedDriverConf().set(KEY, VALUE);
   }
 }

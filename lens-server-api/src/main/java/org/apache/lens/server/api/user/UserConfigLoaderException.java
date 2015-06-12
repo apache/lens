@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.user;
+package org.apache.lens.server.api.user;
 
 /**
  * The Class UserConfigLoaderException.

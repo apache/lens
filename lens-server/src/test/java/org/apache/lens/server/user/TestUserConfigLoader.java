@@ -25,6 +25,7 @@ import java.util.HashMap;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.user.UserConfigLoader;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.dbcp.BasicDataSource;

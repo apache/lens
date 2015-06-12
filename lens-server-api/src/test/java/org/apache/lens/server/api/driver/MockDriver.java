@@ -35,6 +35,7 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
@@ -182,7 +183,10 @@ public class MockDriver implements LensDriver {
    */
   @Override
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
+  }
 
+  @Override
+  public void registerUserConfigLoader(UserConfigLoader userConfigLoader) {
   }
 
   /*

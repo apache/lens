@@ -28,6 +28,7 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -182,4 +183,10 @@ public interface LensDriver extends Externalizable {
    * @param driverEventListener the driver event listener
    */
   void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener);
+
+  /**
+   * Add the user config loader to driver for use
+   * @param userConfigLoader
+   */
+  void registerUserConfigLoader(UserConfigLoader userConfigLoader);
 }

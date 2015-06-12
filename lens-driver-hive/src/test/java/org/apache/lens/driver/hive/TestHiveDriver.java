@@ -18,6 +18,8 @@
  */
 package org.apache.lens.driver.hive;
 
+import static org.apache.lens.server.api.user.MockUserConfigLoader.*;
+
 import static org.testng.Assert.*;
 
 import java.io.*;
@@ -42,6 +44,7 @@ import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.user.MockUserConfigLoader;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
@@ -126,6 +129,7 @@ public class TestHiveDriver {
     conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
     driver = new HiveDriver();
     driver.configure(conf);
+    driver.registerUserConfigLoader(new MockUserConfigLoader(conf));
     drivers = new ArrayList<LensDriver>() {
       {
         add(driver);
@@ -483,6 +487,7 @@ public class TestHiveDriver {
    */
   protected void validateExecuteAsync(QueryContext ctx, DriverQueryState finalState, boolean isPersistent,
     boolean formatNulls) throws Exception {
+    assertEquals(ctx.getSelectedDriverConf().get(KEY), VALUE);
     validateExecuteAsync(ctx, finalState, isPersistent, formatNulls, driver);
   }
 

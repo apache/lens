@@ -33,6 +33,7 @@ import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.user.MockUserConfigLoader;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -134,6 +135,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     driver = new HiveDriver();
     conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
     driver.configure(conf);
+    driver.registerUserConfigLoader(new MockUserConfigLoader(conf));
     drivers = new ArrayList<LensDriver>() {
       {
         add(driver);
