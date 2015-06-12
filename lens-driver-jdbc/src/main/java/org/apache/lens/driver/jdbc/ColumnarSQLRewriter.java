@@ -537,7 +537,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           // dim_table.key2 = 'abc' and dim_table.key3 = 'xyz'"
           subquery = queryphase1.concat(factFilters.toString().substring(0, factFilters.toString().lastIndexOf("and")))
             .concat(")");
-          allSubQueries.append(subquery).append(" and ");
+          // include subqueries which are applicable only to filter records from fact
+          if (subquery.matches("(.*)" + getFactAlias() + "(.*)")) {
+            allSubQueries.append(subquery).append(" and ");
+          }
         }
       }
     }

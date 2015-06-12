@@ -126,7 +126,7 @@ public class TestColumnarSQLRewriter {
    *
    * create table item_dim ( item_key integer, item_name varchar(500) );
    *
-   * create table branch_dim ( branch_key integer, branch_key varchar(100));
+   * create table branch_dim ( branch_key integer, branch_name varchar(100));
    *
    * create table location_dim (location_key integer,location_name varchar(100));
    */
@@ -592,6 +592,45 @@ public class TestColumnarSQLRewriter {
       + "between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  limit 10";
     compareQueries(expected, actual);
 
+  }
+
+  @Test
+  public void testFilter() throws ParseException, SemanticException, LensException {
+
+    String query = "select max(fact.dollars_sold) from sales_fact fact "
+        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+        + "inner join item_dim item_dim on fact.item_key = item_dim.item_key and "
+        + "inner join branch_dim branch_dim on branch_dim.branch_key = location_dim.location_key "
+        + "and location_dim.location_name = 'test123'  "
+        + "where time_dim.time_key between date_add('2013-01-01', 1) and date_sub('2013-01-31',3) "
+        + "and item_dim.item_name = 'item_1'  group by fact.time_key,time_dim.day_of_week,time_dim.day,"
+        + "item_dim.item_key " + "order by dollars_sold";
+
+    SessionState.start(hconf);
+
+    String actual = qtest.rewrite(query, conf, hconf);
+    String expected = "select max(max_sales_fact___fact_dollars_sold) from  (select sales_fact___fact.time_key, "
+        + "sales_fact___fact.location_key, sales_fact___fact.item_key,max(( sales_fact___fact . dollars_sold )) "
+        + "as max_sales_fact___fact_dollars_sold from sales_fact sales_fact___fact where sales_fact___fact.time_key "
+        + "in  (  select time_dim .time_key from time_dim where ( time_dim. time_key ) "
+        + "between date_add( '2013-01-01' , interval 1  day) and date_sub( '2013-01-31' , interval 3  day) ) "
+        + "and sales_fact___fact.location_key in  (  select location_dim .location_key from location_dim where "
+        + "(( location_dim. location_name ) =  'test123' ) ) and sales_fact___fact.item_key in  "
+        + "(  select item_dim .item_key from item_dim where (( item_dim. item_name ) =  'item_1' ) )  "
+        + "group by sales_fact___fact.time_key, sales_fact___fact.location_key, sales_fact___fact.item_key) "
+        + "sales_fact___fact  inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = "
+        + "( time_dim___time_dim . time_key ))  inner join location_dim location_dim___location_dim on "
+        + "(( sales_fact___fact . location_key ) = ( location_dim___location_dim . location_key ))  "
+        + "inner join item_dim item_dim___item_dim on ((( sales_fact___fact . item_key ) = "
+        + "( item_dim___item_dim . item_key )) and  inner )  inner join branch_dim branch_dim___branch_dim "
+        + "on ((( branch_dim___branch_dim . branch_key ) = ( location_dim___location_dim . location_key )) "
+        + "and (( location_dim___location_dim . location_name ) =  'test123' ))  "
+        + "where (( time_dim___time_dim . time_key ) between date_add( '2013-01-01' , interval 1  day) "
+        + "and date_sub( '2013-01-31' , interval 3  day) and (( item_dim___item_dim . item_name ) =  'item_1' )) "
+        + "group by ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
+        + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) order by dollars_sold  asc";
+    compareQueries(expected, actual);
   }
 
   @Test
