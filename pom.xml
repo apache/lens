@@ -334,9 +334,6 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>${javadoc.plugin.version}</version>
         <inherited>false</inherited>
-        <configuration>
-          <additionalparam>-Xdoclint:none</additionalparam>
-        </configuration>
         <reportSets>
           <reportSet>
             <id>aggregate</id>
