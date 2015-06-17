@@ -905,7 +905,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
   public void addColumnsQueried(String alias, String column) {
     Set<String> cols = tblAliasToColumns.get(alias.toLowerCase());
     if (cols == null) {
-      cols = new HashSet<String>();
+      cols = new LinkedHashSet<String>();
       tblAliasToColumns.put(alias.toLowerCase(), cols);
     }
     cols.add(column);
