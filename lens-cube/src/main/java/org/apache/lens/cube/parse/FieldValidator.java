@@ -32,6 +32,8 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Validate fields based on cube queryability
  */
@@ -57,23 +59,28 @@ public class FieldValidator implements ContextRewriter {
         throw new SemanticException(e);
       }
 
-      // dim attributes and chained source columns should only come from WHERE and GROUP BY ASTs
-      Set<String> queriedDimAttrs = new LinkedHashSet<String>();
+      ImmutableSet<String> queriedTimeDimCols = cubeql.getQueriedTimeDimCols();
+
+      Set<String> queriedDimAttrs = new LinkedHashSet<String>(queriedTimeDimCols);
+      Set<String> nonQueryableFields = new LinkedHashSet<String>(queriedTimeDimCols);
+
       Set<String> queriedMsrs = new LinkedHashSet<String>(cubeql.getQueriedMsrs());
       queriedMsrs.addAll(getMeasuresFromExprMeasures(cubeql));
       Set<String> chainedSrcColumns = new HashSet<String>();
-      Set<String> nonQueryableFields = new LinkedHashSet<String>();
 
-      findDimAttrsAndChainSourceColumns(cubeql, cubeql.getGroupByAST(), queriedDimAttrs,
-        chainedSrcColumns, nonQueryableFields);
+      // dim attributes and chained source columns should only come from WHERE and GROUP BY ASTs
+      findDimAttrsAndChainSourceColumns(cubeql, cubeql.getGroupByAST(), queriedDimAttrs, chainedSrcColumns,
+          nonQueryableFields);
       findDimAttrsAndChainSourceColumns(cubeql, cubeql.getWhereAST(), queriedDimAttrs,
         chainedSrcColumns, nonQueryableFields);
 
       // do validation
       // Find atleast one derived cube which contains all the dimensions
       // queried.
+
       boolean derivedCubeFound = false;
       for (DerivedCube dcube : dcubes) {
+
         if (dcube.getDimAttributeNames().containsAll(chainedSrcColumns)
           && dcube.getDimAttributeNames().containsAll(queriedDimAttrs)) {
           // remove all the measures that are covered

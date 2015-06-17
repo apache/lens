@@ -833,9 +833,9 @@ public class CubeTestSetup {
     };
 
     // add ref dim through chain
-    cubeDimensions2.add(new ReferencedDimAtrribute(
-      new FieldSchema("cityStateCapital", "string", "State's capital thru city"), "State's capital thru city",
-      "cityState", "capital", null, null, null));
+    cubeDimensions2.add(
+        new ReferencedDimAtrribute(new FieldSchema("cityStateCapital", "string", "State's capital thru city"),
+            "State's capital thru city", "cityState", "capital", null, null, null));
     client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, exprs, joinchains, cubeProperties);
 
     Map<String, String> derivedProperties = new HashMap<String, String>();
@@ -846,6 +846,7 @@ public class CubeTestSetup {
     Set<String> dimensions = new HashSet<String>();
     dimensions.add("dim1");
     dimensions.add("dim11");
+    dimensions.add("d_time");
     client.createDerivedCube(BASE_CUBE_NAME, DERIVED_CUBE_NAME1, measures, dimensions, derivedProperties, 5L);
 
     measures = new HashSet<String>();
@@ -860,6 +861,8 @@ public class CubeTestSetup {
     dimensions.add("dim2");
     dimensions.add("dim11");
     dimensions.add("dim12");
+    dimensions.add("d_time");
+    dimensions.add("test_time_dim");
     client.createDerivedCube(BASE_CUBE_NAME, DERIVED_CUBE_NAME2, measures, dimensions, derivedProperties, 10L);
     measures = new HashSet<String>();
     measures.add("msr3");
@@ -867,6 +870,7 @@ public class CubeTestSetup {
     dimensions = new HashSet<String>();
     dimensions.add("dim1");
     dimensions.add("location");
+    dimensions.add("d_time");
     client.createDerivedCube(BASE_CUBE_NAME, DERIVED_CUBE_NAME3, measures, dimensions, derivedProperties, 20L);
 
     // create base cube facts

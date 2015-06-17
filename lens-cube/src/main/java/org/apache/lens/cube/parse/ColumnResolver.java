@@ -31,6 +31,8 @@ import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
+import com.google.common.base.Optional;
+
 class ColumnResolver implements ContextRewriter {
 
   public ColumnResolver(Configuration conf) {
@@ -111,7 +113,6 @@ class ColumnResolver implements ContextRewriter {
 
           String column = colIdent.getText().toLowerCase();
           String table = tabident.getText().toLowerCase();
-
           tqc.addColumnsQueried(table, column);
         }
       }
@@ -188,7 +189,9 @@ class ColumnResolver implements ContextRewriter {
         // column is an existing alias
         return;
       }
-      cubeql.addColumnsQueried(CubeQueryContext.DEFAULT_TABLE, column);
+
+      addColumnQueriedWithTimeRangeFuncCheck(cubeql, parent, CubeQueryContext.DEFAULT_TABLE, column);
+
     } else if (node.getToken().getType() == DOT) {
       // This is for the case where column name is prefixed by table name
       // or table alias
@@ -200,15 +203,12 @@ class ColumnResolver implements ContextRewriter {
       String column = colIdent.getText().toLowerCase();
       String table = tabident.getText().toLowerCase();
 
-      cubeql.addColumnsQueried(table, column);
+      addColumnQueriedWithTimeRangeFuncCheck(cubeql, parent, table, column);
+
     } else if (node.getToken().getType() == TOK_FUNCTION) {
       ASTNode fname = HQLParser.findNodeByPath(node, Identifier);
       if (fname != null && CubeQueryContext.TIME_RANGE_FUNC.equalsIgnoreCase(fname.getText())) {
-        if (!cubeql.shouldReplaceTimeDimWithPart()) {
-          // Skip columns in timerange clause if replace timedimension with part
-          // column is on
-          addColumnsForWhere(cubeql, (ASTNode) node.getChild(1), node);
-        }
+        addColumnsForWhere(cubeql, (ASTNode) node.getChild(1), node);
       } else {
         for (int i = 0; i < node.getChildCount(); i++) {
           addColumnsForWhere(cubeql, (ASTNode) node.getChild(i), node);
@@ -221,6 +221,35 @@ class ColumnResolver implements ContextRewriter {
     }
   }
 
+  private static void addColumnQueriedWithTimeRangeFuncCheck(final CubeQueryContext cubeql, final ASTNode parent,
+      final String table, final String column) {
+
+    if (isTimeRangeFunc(parent)) {
+      cubeql.addQueriedTimeDimensionCols(column);
+      cubeql.addColumnsQueriedWithTimeDimCheck(CubeQueryContext.DEFAULT_TABLE, column);
+    } else {
+      cubeql.addColumnsQueried(table, column);
+    }
+  }
+
+  private static boolean isTimeRangeFunc(final ASTNode node) {
+
+    Optional<String> funcNameOp =  getNameIfFunc(node);
+    final String funcName = funcNameOp.isPresent() ? funcNameOp.get() : null;
+    return CubeQueryContext.TIME_RANGE_FUNC.equalsIgnoreCase(funcName);
+  }
+
+  private static Optional<String> getNameIfFunc(final ASTNode node) {
+
+    String funcName = null;
+    if (node.getToken().getType() == TOK_FUNCTION) {
+      ASTNode foundNode = HQLParser.findNodeByPath(node, Identifier);
+      if (foundNode != null) {
+        funcName = foundNode.getText();
+      }
+    }
+    return Optional.fromNullable(funcName);
+  }
   private static void addColumnsForSelectExpr(final CubeQueryContext cubeql, ASTNode node, ASTNode parent,
     Set<String> cols) {
     if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() != DOT)) {
@@ -243,7 +272,6 @@ class ColumnResolver implements ContextRewriter {
 
       String column = colIdent.getText().toLowerCase();
       String table = tabident.getText().toLowerCase();
-
       cubeql.addColumnsQueried(table, column);
       cols.add(column);
     } else {
@@ -252,5 +280,4 @@ class ColumnResolver implements ContextRewriter {
       }
     }
   }
-
 }

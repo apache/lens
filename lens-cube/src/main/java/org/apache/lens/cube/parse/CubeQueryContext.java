@@ -23,6 +23,8 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
@@ -42,6 +44,7 @@ import org.apache.hadoop.hive.ql.parse.*;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
@@ -82,6 +85,8 @@ public class CubeQueryContext implements TrackQueriedColumns {
 
   @Getter
   private final Set<String> queriedExprs = new HashSet<String>();
+
+  private final Set<String> queriedTimeDimCols = new LinkedHashSet<String>();
 
   @Getter
   private final Set<String> queriedExprsWithMeasures = new HashSet<String>();
@@ -902,7 +907,15 @@ public class CubeQueryContext implements TrackQueriedColumns {
     addColumnsQueried(getAliasForTableName(table.getName()), column);
   }
 
+  public void addColumnsQueriedWithTimeDimCheck(String alias, String timeDimColumn) {
+
+    if (!shouldReplaceTimeDimWithPart()) {
+      addColumnsQueried(alias, timeDimColumn);
+    }
+  }
+
   public void addColumnsQueried(String alias, String column) {
+
     Set<String> cols = tblAliasToColumns.get(alias.toLowerCase());
     if (cols == null) {
       cols = new LinkedHashSet<String>();
@@ -1153,5 +1166,15 @@ public class CubeQueryContext implements TrackQueriedColumns {
         i.remove();
       }
     }
+  }
+
+  public void addQueriedTimeDimensionCols(final String timeDimColName) {
+
+    checkArgument(StringUtils.isNotBlank(timeDimColName));
+    this.queriedTimeDimCols.add(timeDimColName);
+  }
+
+  public ImmutableSet<String> getQueriedTimeDimCols() {
+    return ImmutableSet.copyOf(this.queriedTimeDimCols);
   }
 }
