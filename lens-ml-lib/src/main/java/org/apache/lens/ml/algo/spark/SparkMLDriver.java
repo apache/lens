@@ -172,7 +172,14 @@ public class SparkMLDriver implements MLDriver {
         throw new IllegalArgumentException("Spark home is not set");
       }
 
+      // set spark.yarn.jar
+      String yarnJars = System.getenv("SPARK_YARN_JAR");
+      if (StringUtils.isNotBlank(yarnJars)) {
+        sparkConf.set("spark.yarn.jar", yarnJars);
+      }
+
       LOG.info("Spark home is set to " + sparkConf.get("spark.home"));
+      LOG.info("spark.yarn.jar is set to " + yarnJars);
     }
 
     sparkConf.setAppName("lens-ml");

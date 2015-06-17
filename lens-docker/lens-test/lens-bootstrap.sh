@@ -28,7 +28,11 @@ echo "SPARK_HOME " $SPARK_HOME
 LENS_EXT_CLASSPATH=$LENS_EXT_CLASSPATH:`$LENS_ML/bin/lens-ml-classpath.sh`
 export LENS_EXT_CLASSPATH
 
-HIVE_AUX_JARS_PATH=$LENS_ML/lib/lens-ml-lib-2.2.0-beta-incubating-SNAPSHOT.jar,$SPARK_HOME/lib/spark-assembly-1.3.0-hadoop2.4.0.jar
+SPARK_YARN_JAR=$SPARK_HOME/lib/spark-assembly-1.3.0-hadoop2.4.0.jar
+export SPARK_YARN_JAR
+echo "SPARK_YARN_JAR " $SPARK_YARN_JAR
+
+HIVE_AUX_JARS_PATH=$LENS_ML/lib/lens-ml-lib-2.2.0-beta-incubating-SNAPSHOT.jar,$SPARK_YARN_JAR
 export HIVE_AUX_JARS_PATH
 
 echo "HIVE_AUX_JARS_PATH " $HIVE_AUX_JARS_PATH

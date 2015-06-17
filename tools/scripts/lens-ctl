@@ -116,7 +116,9 @@ start() {
     MAPRED_JARS=$MAPRED_JARS:`ls ${HADOOP_HOME}/../hadoop-mapreduce/aws-java-sdk-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     MAPRED_JARS=$MAPRED_JARS:`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
-    HADOOP_JARPATH=$CORE_JARS:$LIB_JARS:$COMMON_JARS:$HDFS_JARS:$MAPRED_JARS
+    YARN_JARS=`ls ${HADOOP_HOME}/share/hadoop/yarn/hadoop-yarn*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+    HADOOP_JARPATH=$CORE_JARS:$LIB_JARS:$COMMON_JARS:$HDFS_JARS:$MAPRED_JARS:$YARN_JARS
     LENSCPPATH=${LENSCPPATH}:$HADOOP_JARPATH
   fi
 

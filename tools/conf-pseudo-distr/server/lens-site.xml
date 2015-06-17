@@ -76,7 +76,7 @@
 
 <property>
   <name>lens.ml.sparkdriver.spark.master</name>
-  <value>local</value>
+  <value>yarn-client</value>
 </property>
 
 <property>
