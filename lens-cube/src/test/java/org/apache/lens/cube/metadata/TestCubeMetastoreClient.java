@@ -1209,7 +1209,6 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(timeline1Temp.getClass(), EndsAndHolesPartitionTimeline.class);
     Assert.assertEquals(timeline2Temp.getClass(), StoreAllPartitionTimeline.class);
 
-
     Assert.assertEquals(client.getAllParts(c1TableName).size(), 3);
     Assert.assertEquals(client.getAllParts(c2TableName).size(), 3);
 
@@ -1297,9 +1296,21 @@ public class TestCubeMetastoreClient {
     assertTimeline(timelineEt, timelineEtC2, UpdatePeriod.HOURLY, nowMinus5, nowPlus1, nowMinus4, nowMinus3);
     assertTimeline(timelineIt, timelineItC2, UpdatePeriod.HOURLY, nowMinus5, nowPlus1, nowMinus4, nowMinus3, nowMinus2);
 
-
     assertNoPartitionNamedLatest(c1TableName, partColNames);
     assertSameTimelines(factName, storages, UpdatePeriod.HOURLY, partColNames);
+    Assert.assertEquals(Hive.get(client.getConf()).getTable(c1TableName).getParameters().get(
+      MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
+    Assert.assertEquals(Hive.get(client.getConf()).getTable(c2TableName).getParameters().get(
+      MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
+
+    // alter tables and see timeline still exists
+    client.alterCubeFactTable(factName, cubeFact, storageTables);
+    assertSameTimelines(factName, storages, UpdatePeriod.HOURLY, partColNames);
+    Assert.assertEquals(Hive.get(client.getConf()).getTable(c1TableName).getParameters().get(
+      MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
+    Assert.assertEquals(Hive.get(client.getConf()).getTable(c2TableName).getParameters().get(
+      MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
+
 
     client.dropPartition(cubeFact.getName(), c1, timeParts5, null, UpdatePeriod.HOURLY);
     client.dropPartition(cubeFact.getName(), c2, timeParts5, null, UpdatePeriod.HOURLY);

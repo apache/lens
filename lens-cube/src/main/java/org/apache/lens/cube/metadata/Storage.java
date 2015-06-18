@@ -129,7 +129,10 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    */
   public Table getStorageTable(Hive client, Table parent, StorageTableDesc crtTbl) throws HiveException {
     String storageTableName = MetastoreUtil.getStorageTableName(parent.getTableName(), this.getPrefix());
-    Table tbl = client.newTable(storageTableName);
+    Table tbl = client.getTable(storageTableName, false);
+    if (tbl == null) {
+      tbl = client.newTable(storageTableName);
+    }
     tbl.getTTable().setSd(new StorageDescriptor(parent.getTTable().getSd()));
 
     if (crtTbl.getTblProps() != null) {
