@@ -85,9 +85,9 @@ case $type in
     fi
     LENS_OPTS="$LENS_OPTS $LENS_CLIENT_OPTS $LENS_CLIENT_HEAP"
     LENS_LOG_DIR="${LENS_LOG_DIR:-$BASEDIR/logs}"
-    export LENS_LOG_DIR    
+    export LENS_LOG_DIR
     LENS_HOME_DIR="${LENS_HOME_DIR:-$BASEDIR}"
-    export LENS_HOME_DIR    
+    export LENS_HOME_DIR
   ;;
   server)
     if test -z "$LENS_SERVER_HEAP"
@@ -95,7 +95,7 @@ case $type in
       LENS_SERVER_HEAP=$DEFAULT_JAVA_HEAP_MAX
     fi
     LENS_OPTS="$LENS_OPTS $LENS_SERVER_OPTS $LENS_SERVER_HEAP"
-    LENSCPPATH="$LENS_CONF" 
+    LENSCPPATH="${LENS_CONF}:${LENSCPPATH}"
     LENS_EXPANDED_WEBAPP_DIR=${LENS_EXPANDED_WEBAPP_DIR:-${BASEDIR}/webapp}
     export LENS_EXPANDED_WEBAPP_DIR
     # set the server classpath
@@ -111,7 +111,7 @@ case $type in
 
     HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${LENSCPPATH}
     export HADOOP_CLASSPATH
-    
+
     # log and pid dirs for applications
     LENS_LOG_DIR="${LENS_LOG_DIR:-$BASEDIR/logs}"
     export LENS_LOG_DIR
