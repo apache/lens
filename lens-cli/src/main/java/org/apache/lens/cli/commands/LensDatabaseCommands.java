@@ -86,9 +86,9 @@ public class LensDatabaseCommands extends LensCRUDCommand {
    * @return the string
    */
   @CliCommand(value = "drop database", help = "drop a database with specified name")
-  public String dropDatabase(@CliOption(key = {"", "db"}, mandatory = true,
-    help = "<database-name>") String database) {
-    return drop(database, false);
+  public String dropDatabase(@CliOption(key = {"", "db"}, mandatory = true, help = "<database-name>") String database,
+    @CliOption(key = "cascade", specifiedDefaultValue = "true", unspecifiedDefaultValue = "false") boolean cascade) {
+    return drop(database, cascade);
   }
 
   @Override
@@ -116,6 +116,6 @@ public class LensDatabaseCommands extends LensCRUDCommand {
 
   @Override
   protected APIResult doDelete(String name, boolean cascade) {
-    return getClient().dropDatabase(name);
+    return getClient().dropDatabase(name, cascade);
   }
 }

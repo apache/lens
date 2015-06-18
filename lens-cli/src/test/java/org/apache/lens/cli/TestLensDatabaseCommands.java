@@ -18,12 +18,17 @@
  */
 package org.apache.lens.cli;
 
+import static org.testng.Assert.*;
+
+import java.io.File;
+import java.net.URISyntaxException;
+
+import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensDatabaseCommands;
 import org.apache.lens.client.LensClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
@@ -38,28 +43,44 @@ public class TestLensDatabaseCommands extends LensCliApplicationTest {
    * Test database commands.
    */
   @Test
-  public void testDatabaseCommands() {
+  public void testDatabaseCommands() throws URISyntaxException {
     LensClient client = new LensClient();
     LensDatabaseCommands command = new LensDatabaseCommands();
+    LensCubeCommands cubeCommand = new LensCubeCommands();
     command.setClient(client);
-
-    String myDatabase = "my_db";
-    String databaseList = command.showAllDatabases();
-    Assert.assertFalse(databaseList.contains(myDatabase));
-    String result;
-    command.createDatabase(myDatabase, false);
-
-    databaseList = command.showAllDatabases();
-    Assert.assertTrue(databaseList.contains(myDatabase));
-
-    result = command.switchDatabase(myDatabase);
-    Assert.assertEquals("Successfully switched to my_db", result);
-
-    result = command.switchDatabase("default");
-    Assert.assertEquals("Successfully switched to default", result);
-
-    result = command.dropDatabase(myDatabase);
-    Assert.assertEquals(result, "succeeded");
+    cubeCommand.setClient(client);
+    boolean cascade = true;
+    for(int i = 0; i < 4; i++, cascade = !cascade) {
+      testDrop(command, cubeCommand, cascade);
+    }
   }
 
+  private void testDrop(LensDatabaseCommands command, LensCubeCommands cubeCommand, boolean cascade)
+    throws URISyntaxException {
+    String myDatabase = "my_db";
+    assertFalse(command.showAllDatabases().contains(myDatabase));
+    assertFalse(cubeCommand.showCubes().contains("sample_cube"));
+    String result;
+    command.createDatabase(myDatabase, false);
+    assertTrue(command.showAllDatabases().contains(myDatabase));
+    result = command.switchDatabase(myDatabase);
+    assertEquals(result, "Successfully switched to my_db");
+    if (cascade) {
+      String createOutput = cubeCommand.createCube(
+        new File(TestLensDatabaseCommands.class.getClassLoader().getResource("sample-cube.xml").toURI())
+          .getAbsolutePath());
+      assertEquals(createOutput, "succeeded");
+      assertTrue(cubeCommand.showCubes().contains("sample_cube"));
+    }
+    result = command.switchDatabase("default");
+    assertEquals(result, "Successfully switched to default");
+    assertFalse(cubeCommand.showCubes().contains("sample_cube"));
+    if (cascade) {
+      assertEquals(command.dropDatabase(myDatabase, false), "failed");
+    }
+    result = command.dropDatabase(myDatabase, cascade);
+    assertEquals(result, "succeeded");
+    assertFalse(command.showAllDatabases().contains(myDatabase));
+    assertFalse(cubeCommand.showCubes().contains("sample_cube"));
+  }
 }

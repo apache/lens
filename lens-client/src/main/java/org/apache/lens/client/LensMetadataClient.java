@@ -138,11 +138,10 @@ public class LensMetadataClient {
 
   public APIResult dropDatabase(String database, boolean cascade) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("databases").path(database)
+    return target.path("databases").path(database)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("cascade", cascade)
       .request().delete(APIResult.class);
-    return result;
   }
 
   public APIResult dropDatabase(String database) {

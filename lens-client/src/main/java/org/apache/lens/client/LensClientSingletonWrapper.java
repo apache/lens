@@ -72,25 +72,24 @@ public class LensClientSingletonWrapper {
   }
 
   public LensClient getClient() {
-    if (client != null) {
-      return client;
-    }
-    try {
-      client = new LensClient();
-    } catch (LensClientServerConnectionException e) {
-      if (e.getErrorCode() != 401) {
-        explainFailedAttempt(e);
-        throw e;
-      }
-      // Connecting without password prompt failed.
-      for (int i = 0; i < MAX_RETRIES; i++) {
-        try {
-          client = new LensClient(Credentials.prompt());
-          break;
-        } catch (LensClientServerConnectionException lensClientServerConnectionException) {
-          explainFailedAttempt(lensClientServerConnectionException);
-          if (i == MAX_RETRIES - 1) {
-            throw lensClientServerConnectionException;
+    if (client == null) {
+      try {
+        client = new LensClient();
+      } catch (LensClientServerConnectionException e) {
+        if (e.getErrorCode() != 401) {
+          explainFailedAttempt(e);
+          throw e;
+        }
+        // Connecting without password prompt failed.
+        for (int i = 0; i < MAX_RETRIES; i++) {
+          try {
+            client = new LensClient(Credentials.prompt());
+            break;
+          } catch (LensClientServerConnectionException lensClientServerConnectionException) {
+            explainFailedAttempt(lensClientServerConnectionException);
+            if (i == MAX_RETRIES - 1) {
+              throw lensClientServerConnectionException;
+            }
           }
         }
       }

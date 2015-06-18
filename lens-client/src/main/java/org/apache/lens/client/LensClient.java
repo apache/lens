@@ -76,6 +76,10 @@ public class LensClient {
     this(cred.getUsername(), cred.getPassword());
   }
 
+  public LensMetadataClient getMetadataClient() {
+    return mc;
+  }
+
   public QueryHandle executeQueryAsynch(String sql, String queryName) {
     LOG.debug("Executing query " + sql);
     statement.execute(sql, false, queryName);
@@ -270,9 +274,9 @@ public class LensClient {
     return result.getStatus() == APIResult.Status.SUCCEEDED;
   }
 
-  public APIResult dropDatabase(String database) {
-    LOG.debug("Dropping database " + database);
-    APIResult result = mc.dropDatabase(database);
+  public APIResult dropDatabase(String database, boolean cascade) {
+    LOG.debug("Dropping database " + database + ", cascade: " + cascade);
+    APIResult result = mc.dropDatabase(database, cascade);
     LOG.debug("Return status of dropping " + database + " result " + result);
     return result;
   }
