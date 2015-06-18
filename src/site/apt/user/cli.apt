@@ -92,6 +92,8 @@ User CLI Commands
 *--+--+
 |close/bye|Releases all resources of the server session and exits the shell|
 *--+--+
+|debug [[--enable] To print all logs on cli for debugging purpose]|prints all class lelvel logs on cli for debugging purpose|
+*--+--+
 |get [--key] \<key\>|Fetches and prints session parameter specified with name <<<key>>> from lens server|
 *--+--+
 |list resources [[--type] \<resource-type\>]|list all resources from session. If type is provided,  lists resources of type <<<resource-type>>>. Valid values for type are jar and file.|
@@ -103,6 +105,8 @@ User CLI Commands
 |set \<key\>=\<value\>|Assign <<<value>>> to session parameter specified with <<<key>>> on lens server|
 *--+--+
 |show params|Fetches and prints all session parameter from lens server|
+*--+--+
+|verbose [[--enable] Print the clilogger logs on cli]|Show cliLogger logs for command|
 *--+--+
   <<Lens Connection Commands>>
 

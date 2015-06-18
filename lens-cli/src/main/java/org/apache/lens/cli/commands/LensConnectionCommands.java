@@ -18,12 +18,17 @@
  */
 package org.apache.lens.cli.commands;
 
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.ws.rs.ProcessingException;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
+
+import org.apache.lens.client.LensClient;
+
+import org.apache.log4j.*;
 
 import org.springframework.shell.core.ExitShellRequest;
 import org.springframework.shell.core.annotation.CliCommand;
@@ -150,6 +155,126 @@ public class LensConnectionCommands extends BaseLensCommand {
       return "No resources found";
     }
     return Joiner.on("\n").skipNulls().join(resources);
+  }
+
+  /**
+   * Enables to show all class level logs on cli
+   * @param enable
+   */
+  @CliCommand(value = {"debug"}, help = "prints all class level logs and verbose logs on cli for debugging purpose."
+          + " 'debug false'  to turn off all class level logging and verbose level logging ")
+  public void debug(@CliOption(key = {"", "enable"},
+      mandatory = false, unspecifiedDefaultValue = "true",
+      help = "To print all logs on cli for debugging purpose") boolean enable) {
+    Logger logger = LoggerUtil.getRootLogger();
+    Logger cliLogger = LoggerUtil.getCliLogger();
+    if (enable) {
+      LoggerUtil.addConsoleAppenderIfNotPresent(logger);
+      LoggerUtil.addConsoleAppenderIfNotPresent(cliLogger);
+    } else {
+      LoggerUtil.removeConsoleAppender(logger);
+      LoggerUtil.removeConsoleAppender(cliLogger);
+    }
+  }
+
+  /**
+   * Enables to show only cliLogger(verbose) logs on cli
+   * @param enable
+   */
+  @CliCommand(value = {"verbose"}, help = "Show cliLogger logs on cli"
+          + "'verbose false'  turns off the cliLogger logs on console")
+  public void verbose(@CliOption(key = {"", "enable"},
+      mandatory = false, unspecifiedDefaultValue = "true",
+      help = "Print the clilogger logs on cli") boolean enable) {
+    Logger cliLogger = LoggerUtil.getCliLogger();
+    if (enable) {
+      LoggerUtil.addConsoleAppenderIfNotPresent(cliLogger);
+    } else {
+      LoggerUtil.removeConsoleAppender(cliLogger);
+    }
+  }
+
+  private static class LoggerUtil {
+    private static Logger logger;
+    private static Logger cliLogger;
+
+    public static Logger getRootLogger() {
+      if (logger == null) {
+        logger = Logger.getRootLogger();
+      }
+      return logger;
+    }
+
+    public static Logger getCliLogger() {
+      if (cliLogger == null) {
+        cliLogger = Logger.getLogger(LensClient.CLILOGGER);
+      }
+      return cliLogger;
+    }
+
+    public static ConsoleAppender getConsoleAppender() {
+      return getConsoleAppender(getPatternLayout());
+    }
+
+    public static ConsoleAppender getConsoleAppender(Layout layout) {
+      ConsoleAppender consoleAppender = new ConsoleAppender();
+      consoleAppender.setLayout(layout);
+      consoleAppender.activateOptions();
+      return consoleAppender;
+    }
+
+    public static PatternLayout getPatternLayout() {
+      String conversionPattern = "%d [%t] %F %-7p - %m%n";
+      return getPatternLayout(conversionPattern);
+    }
+
+    public static PatternLayout getPatternLayout(String conversionPattern) {
+      PatternLayout layout = new PatternLayout();
+      layout.setConversionPattern(conversionPattern);
+      return layout;
+    }
+
+    /**
+     * Check whether ConsoleAppender was already added
+     * @param logger
+     * @return true   if it was already added
+     *         false  if it does not contain ConsoleAppender
+     */
+    public static void addConsoleAppenderIfNotPresent(Logger logger) {
+      boolean isConsoleAppenderAdded = false;
+      Layout layout = null;
+      Enumeration appenderSeries = logger.getAllAppenders();
+      while (appenderSeries.hasMoreElements()) {
+        Appender appender = (Appender) appenderSeries.nextElement();
+        if (appender instanceof ConsoleAppender) {
+          isConsoleAppenderAdded = true;
+          break;
+        } else {
+          layout = appender.getLayout();
+        }
+      }
+      if (!isConsoleAppenderAdded) {
+        if (layout == null) {
+          layout = LoggerUtil.getPatternLayout();
+        }
+        if (logger.getLevel() == null) {
+          logger.setLevel(Level.DEBUG);
+        }
+        ConsoleAppender consoleAppender = LoggerUtil.getConsoleAppender(layout);
+        logger.addAppender(consoleAppender);
+      }
+    }
+
+    public static void removeConsoleAppender(Logger logger) {
+      Enumeration appenderSeries = logger.getAllAppenders();
+      while (appenderSeries.hasMoreElements()) {
+        Appender appender = (Appender) appenderSeries.nextElement();
+        if (appender instanceof ConsoleAppender) {
+          logger.removeAppender(appender);
+        }
+      }
+    }
+
   }
 
   /**

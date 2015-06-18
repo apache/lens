@@ -37,6 +37,8 @@ import lombok.Getter;
 
 public class LensClient {
   private static final Log LOG = LogFactory.getLog(LensClient.class);
+
+  public static final String CLILOGGER =  "cliLogger";
   private static final String DEFAULT_PASSWORD = "";
   private final LensClientConfig conf;
   @Getter
@@ -47,6 +49,10 @@ public class LensClient {
   private final HashMap<QueryHandle, LensStatement> statementMap =
     Maps.newHashMap();
   private final LensStatement statement;
+
+  public static Log getCliLooger() {
+    return LogFactory.getLog(CLILOGGER);
+  }
 
   public LensClient() {
     this(new LensClientConfig());

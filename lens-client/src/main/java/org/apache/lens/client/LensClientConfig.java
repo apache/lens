@@ -49,7 +49,7 @@ public class LensClientConfig extends Configuration {
   private static final String QUERY_POLL_INTERVAL_KEY = CLIENT_PFX + "query.poll.interval";
 
   /** The Constant DEFAULT_QUERY_POLL_INTERVAL. */
-  private static final long DEFAULT_QUERY_POLL_INTERVAL = 10 * 1000L;
+  private static final long DEFAULT_QUERY_POLL_INTERVAL = 10L;
 
   /** The Constant USER_NAME. */
   private static final String USER_NAME = CLIENT_PFX + "user.name";

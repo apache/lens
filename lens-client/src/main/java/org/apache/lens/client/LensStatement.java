@@ -191,16 +191,37 @@ public class LensStatement {
    * @param handle the handle
    */
   public void waitForQueryToComplete(QueryHandle handle) {
+    LensClient.getCliLooger().info("Query handle: " + handle);
     query = getQuery(handle);
-    while (!query.getStatus().finished()
-      && !(query.getStatus().toString().equals(Status.CLOSED.toString()))) {
+    while (isQueryInQUEUEDSate()) {
       query = getQuery(handle);
+      LensClient.getCliLooger().debug("Query " + handle + " status: " + query.getStatus());
       try {
         Thread.sleep(connection.getLensConnectionParams().getQueryPollInterval());
       } catch (InterruptedException e) {
         throw new IllegalStateException(e);
       }
     }
+    LensClient.getCliLooger().info("User query: '" + query.getUserQuery()
+      + "' was submitted to " + query.getSelectedDriverClassName());
+    if (query.getDriverQuery() != null) {
+      LensClient.getCliLooger().info(" Driver query: '" + query.getDriverQuery()
+        + "' and Driver handle: " + query.getDriverOpHandle());
+    }
+    while (!query.getStatus().finished()
+      && !(query.getStatus().toString().equals(Status.CLOSED.toString()))) {
+      query = getQuery(handle);
+      LensClient.getCliLooger().info(query.getStatus());
+      try {
+        Thread.sleep(connection.getLensConnectionParams().getQueryPollInterval());
+      } catch (InterruptedException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+  }
+
+  private boolean isQueryInQUEUEDSate() {
+    return query.getStatus().getStatus().equals(QueryStatus.Status.QUEUED);
   }
 
   /**
