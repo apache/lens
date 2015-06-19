@@ -333,6 +333,43 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     return joinCondition;
   }
 
+  /**
+   * Get the count of columns in a given select expression
+   *
+   * @param node
+   * @return Column count
+   */
+  public int getColumnCount(ASTNode node) {
+    int count = 0;
+    for (int i = 0; i < node.getChildCount(); i++) {
+      ASTNode child = (ASTNode) node.getChild(i);
+      if (child.getToken().getType() == TOK_TABLE_OR_COL) {
+        count++;
+      } else {
+        count += getColumnCount(child);
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Check if expression is used in select
+   *
+   * @param node
+   * @return true if expressions is used
+   */
+  public boolean isExpressionsUsed(ASTNode node) {
+    for (int i = 0; i < node.getChildCount(); i++) {
+      if (node.getChild(i).getType() == HiveParser.TOK_SELEXPR) {
+        int cnt = getColumnCount((ASTNode) node.getChild(i));
+        if (cnt >= 2) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   /*
    * Get filter conditions if user has specified a join condition for filter pushdown.
    */
@@ -844,7 +881,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     // Construct the final fact in-line query with keys,
     // measures and individual sub queries built.
 
-    if (whereTree == null || joinTree == null || allSubQueries.length() == 0 || aggColumn.isEmpty()) {
+
+    if (whereTree == null || joinTree == null || allSubQueries.length() == 0
+        || aggColumn.isEmpty() || isExpressionsUsed(selectAST)) {
       LOG.info("@@@Query not eligible for inner subquery rewrite");
       // construct query without fact sub query
       constructQuery(selectTree, whereTree, groupByTree, havingTree, orderByTree, limit);
