@@ -947,12 +947,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
       MISSING_PARTITIONS);
     assertEquals(pruneCauses.getDetails().get("cheapfact").iterator().next().getCause(),
       NO_CANDIDATE_STORAGES);
-    assertEquals(pruneCauses.getDetails().get("summary4").iterator().next()
-      .getCause(), NO_CANDIDATE_STORAGES);
-    assertEquals(pruneCauses.getDetails().get("summary4").iterator().next()
-      .getStorageCauses().values().iterator().next().getCause(), SkipStorageCode.PART_COL_DOES_NOT_EXIST);
-    assertEquals(pruneCauses.getDetails().get("summary4").iterator().next()
-      .getStorageCauses().values().iterator().next().getNonExistantPartCols(), Arrays.asList("dt"));
+    assertEquals(pruneCauses.getDetails().get("summary4").iterator().next().getCause(), TIMEDIM_NOT_SUPPORTED);
+    assertTrue(pruneCauses.getDetails().get("summary4").iterator().next().getUnsupportedTimeDims().contains("d_time"));
   }
 
   @Test

@@ -18,6 +18,9 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.PART_COL_DOES_NOT_EXIST;
 import static org.apache.lens.cube.parse.DateUtil.WSPACE;
 import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
 
@@ -44,6 +47,7 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * Resolve storages and partitions of all candidate tables and prunes candidate tables with missing storages or
@@ -58,16 +62,15 @@ class StorageTableResolver implements ContextRewriter {
   CubeMetastoreClient client;
   private final boolean failOnPartialData;
   private final List<String> validDimTables;
-  private final Map<CubeFactTable, Map<UpdatePeriod, Set<String>>> validStorageMap =
-    new HashMap<CubeFactTable, Map<UpdatePeriod, Set<String>>>();
+  private final Map<CubeFactTable, Map<UpdatePeriod, Set<String>>> validStorageMap = new HashMap<>();
   private String processTimePartCol = null;
   private final UpdatePeriod maxInterval;
-  private final Map<String, Set<String>> nonExistingPartitions = new HashMap<String, Set<String>>();
+  private final Map<String, Set<String>> nonExistingPartitions = new HashMap<>();
   private TimeRangeWriter rangeWriter;
   private DateFormat partWhereClauseFormat = null;
   private PHASE phase;
 
-  static enum PHASE {
+  enum PHASE {
     FACT_TABLES, FACT_PARTITIONS, DIM_TABLE_AND_PARTITIONS;
 
     static PHASE first() {
@@ -218,7 +221,7 @@ class StorageTableResolver implements ContextRewriter {
         }
         if (storageTables.isEmpty()) {
           LOG.info("Not considering dim table:" + dimtable + " as no candidate storage tables eixst");
-          cubeql.addDimPruningMsgs(dim, dimtable, CandidateTablePruneCause.noCandidateStorages(skipStorageCauses));
+          cubeql.addDimPruningMsgs(dim, dimtable, noCandidateStorages(skipStorageCauses));
           i.remove();
           continue;
         }
@@ -291,7 +294,7 @@ class StorageTableResolver implements ContextRewriter {
       }
       if (storageTableMap.isEmpty()) {
         LOG.info("Not considering fact table:" + fact + " as it does not" + " have any storage tables");
-        cubeql.addFactPruningMsgs(fact, CandidateTablePruneCause.noCandidateStorages(skipStorageCauses));
+        cubeql.addFactPruningMsgs(fact, noCandidateStorages(skipStorageCauses));
         i.remove();
       }
     }
@@ -352,24 +355,33 @@ class StorageTableResolver implements ContextRewriter {
   private void resolveFactStoragePartitions(CubeQueryContext cubeql) throws SemanticException {
     // Find candidate tables wrt supported storages
     Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator();
-    Map<TimeRange, String> whereClasueForFallback = new LinkedHashMap<TimeRange, String>();
+    Map<TimeRange, String> whereClauseForFallback = new LinkedHashMap<TimeRange, String>();
     while (i.hasNext()) {
       CandidateFact cfact = i.next();
-      List<FactPartition> answeringParts = new ArrayList<FactPartition>();
-      HashMap<String, SkipStorageCause> skipStorageCauses = new HashMap<String, SkipStorageCause>();
+      List<FactPartition> answeringParts = new ArrayList<>();
+      HashMap<String, SkipStorageCause> skipStorageCauses = new HashMap<>();
       PartitionRangesForPartitionColumns missingParts = new PartitionRangesForPartitionColumns();
       boolean noPartsForRange = false;
+      Set<String> unsupportedTimeDims = Sets.newHashSet();
       for (TimeRange range : cubeql.getTimeRanges()) {
         StringBuilder extraWhereClause = new StringBuilder();
         Set<FactPartition> rangeParts = getPartitions(cfact.fact, range, skipStorageCauses, missingParts);
         // If no partitions were found, then we'll fallback.
-        String partcol = range.getPartitionColumn();
+        String partCol = range.getPartitionColumn();
+        boolean partColNotSupported = rangeParts.isEmpty();
+        for(String storage: cfact.fact.getStorages()) {
+          String storageTableName = MetastoreUtil.getFactStorageTableName(cfact.fact.getName(), storage).toLowerCase();
+          partColNotSupported &= skipStorageCauses.containsKey(storageTableName)
+            && skipStorageCauses.get(storageTableName).getCause().equals(PART_COL_DOES_NOT_EXIST)
+            && skipStorageCauses.get(storageTableName).getNonExistantPartCols().contains(partCol);
+        }
         TimeRange prevRange = range;
         String sep = "";
         while (rangeParts.isEmpty()) {
           // TODO: should we add a condition whether on range's partcol any missing partitions are not there
-          String timeDim = cubeql.getBaseCube().getTimeDimOfPartitionColumn(partcol);
-          if (!cfact.getColumns().contains(timeDim)) {
+          String timeDim = cubeql.getBaseCube().getTimeDimOfPartitionColumn(partCol);
+          if (partColNotSupported && !cfact.getColumns().contains(timeDim)) {
+            unsupportedTimeDims.add(cubeql.getBaseCube().getTimeDimOfPartitionColumn(range.getPartitionColumn()));
             break;
           }
           TimeRange fallBackRange = getFallbackRange(prevRange, cfact, cubeql);
@@ -381,13 +393,13 @@ class StorageTableResolver implements ContextRewriter {
           extraWhereClause.append(sep)
             .append(prevRange.toTimeDimWhereClause(cubeql.getAliasForTableName(cubeql.getCube()), timeDim));
           sep = " AND ";
-          partcol = fallBackRange.getPartitionColumn();
           prevRange = fallBackRange;
+          partCol = prevRange.getPartitionColumn();
           if (!rangeParts.isEmpty()) {
             break;
           }
         }
-        whereClasueForFallback.put(range, extraWhereClause.toString());
+        whereClauseForFallback.put(range, extraWhereClause.toString());
         if (rangeParts.isEmpty()) {
           LOG.info("No partitions for fallback range:" + range);
           noPartsForRange = true;
@@ -399,7 +411,7 @@ class StorageTableResolver implements ContextRewriter {
         for (FactPartition factPart : rangeParts) {
           for (String table : factPart.getStorageTables()) {
             if (!tablePartMap.containsKey(table)) {
-              tablePartMap.put(table, new LinkedHashSet<FactPartition>(Arrays.asList(factPart)));
+              tablePartMap.put(table, new LinkedHashSet<>(Collections.singletonList(factPart)));
             } else {
               LinkedHashSet<FactPartition> storagePart = tablePartMap.get(table);
               storagePart.add(factPart);
@@ -413,6 +425,13 @@ class StorageTableResolver implements ContextRewriter {
         String rangeWhereClause = rangeWriter.getTimeRangeWhereClause(cubeql,
           cubeql.getAliasForTableName(cubeql.getCube().getName()), rangeParts);
         cfact.getRangeToWhereClause().put(range, joinWithAnd(rangeWhereClause, extraWhereClause.toString()));
+      }
+      if (!unsupportedTimeDims.isEmpty()) {
+        LOG.info("Not considering fact table:" + cfact.fact + " as it doesn't support time dimensions: "
+          + unsupportedTimeDims);
+        cubeql.addFactPruningMsgs(cfact.fact, timeDimNotSupported(unsupportedTimeDims));
+        i.remove();
+        continue;
       }
       Set<String> nonExistingParts = missingParts.toSet();
       if (!nonExistingParts.isEmpty()) {
@@ -428,13 +447,13 @@ class StorageTableResolver implements ContextRewriter {
          * 3. Storage tables do not have the update period for the timerange queried.
          */
         if (failOnPartialData && !nonExistingParts.isEmpty()) {
-          cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.missingPartitions(nonExistingParts));
+          cubeql.addFactPruningMsgs(cfact.fact, missingPartitions(nonExistingParts));
         } else if (!skipStorageCauses.isEmpty()) {
-          CandidateTablePruneCause cause = CandidateTablePruneCause.noCandidateStorages(skipStorageCauses);
+          CandidateTablePruneCause cause = noCandidateStorages(skipStorageCauses);
           cubeql.addFactPruningMsgs(cfact.fact, cause);
         } else {
           CandidateTablePruneCause cause =
-            new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
+            new CandidateTablePruneCause(NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
           cubeql.addFactPruningMsgs(cfact.fact, cause);
         }
         i.remove();
@@ -445,7 +464,7 @@ class StorageTableResolver implements ContextRewriter {
       StorageUtil.getMinimalAnsweringTables(answeringParts, minimalStorageTables);
       if (minimalStorageTables.isEmpty()) {
         LOG.info("Not considering fact table:" + cfact + " as it does not" + " have any storage tables");
-        cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.noCandidateStorages(skipStorageCauses));
+        cubeql.addFactPruningMsgs(cfact.fact, noCandidateStorages(skipStorageCauses));
         i.remove();
         continue;
       }
@@ -463,10 +482,10 @@ class StorageTableResolver implements ContextRewriter {
           LinkedHashSet<FactPartition> rangeParts = cfact.getRangeToStoragePartMap().get(trange).get(table);
           LinkedHashSet<FactPartition> minimalPartsCopy = new LinkedHashSet<FactPartition>(minimalParts);
           minimalPartsCopy.retainAll(rangeParts);
-          if (!StringUtils.isEmpty(whereClasueForFallback.get(trange))) {
+          if (!StringUtils.isEmpty(whereClauseForFallback.get(trange))) {
             rangeToWhere.put(
                 rangeWriter.getTimeRangeWhereClause(cubeql, cubeql.getAliasForTableName(cubeql.getCube().getName()),
-                    minimalPartsCopy) + " and  " + whereClasueForFallback.get(trange), table);
+                    minimalPartsCopy) + " and  " + whereClauseForFallback.get(trange), table);
           } else {
             rangeToWhere.put(rangeWriter.getTimeRangeWhereClause(cubeql,
                 cubeql.getAliasForTableName(cubeql.getCube().getName()), minimalPartsCopy), table);

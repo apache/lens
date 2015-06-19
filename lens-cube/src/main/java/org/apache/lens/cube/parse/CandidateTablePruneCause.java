@@ -18,6 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
+
 import java.util.*;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
@@ -98,7 +100,19 @@ public class CandidateTablePruneCause {
     // no candidate storges for cube table, storage cause will have why each
     // storage is not a candidate
     NO_CANDIDATE_STORAGES("No candidate storages for any table"),
-    // cube table has more weight
+    // time dimension not supported. Either directly or indirectly.
+    TIMEDIM_NOT_SUPPORTED("Queried data not available for time dimensions: %s") {
+      @Override
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        Set<String> dims = Sets.newHashSet();
+        for(CandidateTablePruneCause cause: causes){
+          dims.addAll(cause.getUnsupportedTimeDims());
+        }
+        return new Object[]{
+          dims.toString(),
+        };
+      }
+    },
     NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
     NO_COLUMN_PART_OF_A_JOIN_PATH("No column part of a join path. Join columns: [%s]") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
@@ -222,7 +236,9 @@ public class CandidateTablePruneCause {
   private List<String> joinColumns;
   // the columns that are missing default aggregate. only set in case of MISSING_DEFAULT_AGGREGATE
   private List<String> columnsMissingDefaultAggregate;
-
+  // if a time dim is not supported by the fact. Would be set if and only if
+  // the fact is not partitioned by part col of the time dim and time dim is not a dim attribute
+  private Set<String> unsupportedTimeDims;
   // time covered
   private MaxCoveringFactResolver.TimeCovered maxTimeCovered;
   // ranges in which fact is invalid
@@ -234,8 +250,13 @@ public class CandidateTablePruneCause {
 
   // Different static constructors for different causes.
   public static CandidateTablePruneCause factNotAvailableInRange(List<TimeRange> ranges) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(FACT_NOT_AVAILABLE_IN_RANGE);
     cause.invalidRanges = ranges;
+    return cause;
+  }
+  public static CandidateTablePruneCause timeDimNotSupported(Set<String> unsupportedTimeDims) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(TIMEDIM_NOT_SUPPORTED);
+    cause.unsupportedTimeDims = unsupportedTimeDims;
     return cause;
   }
 
@@ -244,7 +265,7 @@ public class CandidateTablePruneCause {
     for (Collection<String> missing : missingColumns) {
       colList.addAll(missing);
     }
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.COLUMN_NOT_FOUND);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(COLUMN_NOT_FOUND);
     cause.setMissingColumns(colList);
     return cause;
   }
@@ -262,27 +283,27 @@ public class CandidateTablePruneCause {
     for (String column : exprs) {
       colList.add(column);
     }
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.EXPRESSION_NOT_EVALUABLE);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(EXPRESSION_NOT_EVALUABLE);
     cause.setMissingExpressions(colList);
     return cause;
   }
 
   public static CandidateTablePruneCause missingPartitions(Set<String> nonExistingParts) {
     CandidateTablePruneCause cause =
-      new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_PARTITIONS);
+      new CandidateTablePruneCause(MISSING_PARTITIONS);
     cause.setMissingPartitions(nonExistingParts);
     return cause;
   }
 
   public static CandidateTablePruneCause lessData(MaxCoveringFactResolver.TimeCovered timeCovered) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.LESS_DATA);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(LESS_DATA);
     cause.setMaxTimeCovered(timeCovered);
     return cause;
   }
 
   public static CandidateTablePruneCause noColumnPartOfAJoinPath(final Collection<String> colSet) {
     CandidateTablePruneCause cause =
-      new CandidateTablePruneCause(CandidateTablePruneCode.NO_COLUMN_PART_OF_A_JOIN_PATH);
+      new CandidateTablePruneCause(NO_COLUMN_PART_OF_A_JOIN_PATH);
     cause.setJoinColumns(new ArrayList<String>() {
       {
         addAll(colSet);
@@ -292,7 +313,7 @@ public class CandidateTablePruneCause {
   }
 
   public static CandidateTablePruneCause noCandidateStorages(Map<String, SkipStorageCause> storageCauses) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(NO_CANDIDATE_STORAGES);
     cause.setStorageCauses(new HashMap<String, SkipStorageCause>());
     for (Map.Entry<String, SkipStorageCause> entry : storageCauses.entrySet()) {
       String key = entry.getKey();
@@ -303,7 +324,7 @@ public class CandidateTablePruneCause {
   }
 
   public static CandidateTablePruneCause missingDefaultAggregate(String... names) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_DEFAULT_AGGREGATE);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(MISSING_DEFAULT_AGGREGATE);
     cause.setColumnsMissingDefaultAggregate(Lists.newArrayList(names));
     return cause;
   }
