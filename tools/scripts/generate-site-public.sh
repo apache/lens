@@ -34,16 +34,16 @@ fi
 
 SVN_TARGET=$1
 TMP=/tmp/lens-site-stage
+SITE_BACKUP=/tmp/lens-site-backup
 STAGE=`pwd`/target/staging
 REST_DIR=`pwd`/lens-server/target/site/wsdocs
 VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)' || die "unable to get version")
 
-
 echo "Starting generate-site"
 CURR_BRANCH=`git branch | sed -n '/\* /s///p'`
 echo "Running site in current lens branch" $CURR_BRANCH
-mvn clean test -Dtest=org.apache.lens.doc.TestGenerateConfigDoc,org.apache.lens.cli.doc.TestGenerateCLIUserDoc || die "Unable to generate config docs"
-mvn install -DskipTests
+mvn clean test -Dtest=org.apache.lens.doc.TestGenerateConfigDoc,org.apache.lens.cli.doc.TestGenerateCLIUserDoc -DskipCheck || die "Unable to generate config docs"
+mvn install -DskipTests -DskipCheck
 mvn site site:stage -Ddependency.locations.enabled=false -Ddependency.details.enabled=false || die "unable to generate site"
 
 echo "Site gen complete"
@@ -54,7 +54,7 @@ mkdir -p $TMP
 cd $TMP
 
 mkdir -p current || die "unable to create dir current"
-mkdir -p versions/$VERSION || due "unable to create dir versions/$VERSION"
+mkdir -p versions/$VERSION || die "unable to create dir versions/$VERSION"
 
 find current -type f -exec git rm {} \;
 echo "Copying REST docs from " $REST_DIR
@@ -85,6 +85,11 @@ echo '</ul>' >> versions/index.html
 
 ## Copy entire doc directory to Apache SVN Target dir
 mkdir -p $SVN_TARGET/site/publish
+mkdir -p $SITE_BACKUP/site/publish
+cp -r $SVN_TARGET/site/publish/ $SITE_BACKUP/site/publish
+rm -r $SVN_TARGET/site/publish/*
+rm -r $SITE_BACKUP/site/publish/versions/$VERSION
+cp -r $SITE_BACKUP/site/publish/versions $SVN_TARGET/site/publish/
 cp -r $TMP/ $SVN_TARGET/site/publish
 cd $SVN_TARGET
 echo "Generated site."
