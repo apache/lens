@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -101,18 +101,18 @@ setenv() {
     LENSCPPATH=${LENSCPPATH}:$HADOOP_JARPATH
   fi
 
-  if [ "$HIVE_HOME" != "" ]; then    
+  if [ "$HIVE_HOME" != "" ]; then
     echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into lens classpath"
     LENSCPPATH=${LENSCPPATH}:`ls ${HIVE_HOME}/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
   else
     echo "HIVE_HOME is not set. Set HIVE_HOME and try again"
     exit 1
   fi
-  
+
   # Add HIVE_HOME to HADOOP_CLASS_PATH
   HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${HIVE_HOME}/lib/*"
   export HADOOP_CLASSPATH
- 
+
 }
 ################################
 # main
@@ -138,7 +138,7 @@ while [ -n "$*" ] ; do
       JAVA_PROPERTIES="${JAVA_PROPERTIES} $arg"
       ;;
     *)
-      if [ "$opt_classname" == "" ]; then 
+      if [ "$opt_classname" == "" ]; then
         opt_classname=$arg
         echo "opt_classname is " $opt_classname
       else
@@ -156,7 +156,7 @@ if [ -n "$opt_conf" ]; then
 fi
 
 # finally, invoke the appropriate command
-if [ "$opt_classname" == "" ]; then 
+if [ "$opt_classname" == "" ]; then
   echo "Usage : $0 <classname>"
   exit 1
 fi

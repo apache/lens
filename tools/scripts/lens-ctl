@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -64,14 +64,14 @@ display_help() {
 Usage: $0 start // Start the server
        $0 stop // Stop the server
        $0 restart // Restart the server, stop followed by stop
-       $0 force [stop|restart] // Forcefully stop the server 
+       $0 force [stop|restart] // Forcefully stop the server
        $0 status // Server status
        $0 stack // Dump the thread stacks
        $0 memory-histogram // Server's memory histogram
        $0 memory-dump // Server's memory dump dumped to file in log directory
-       
+
   Optional parameters for the commands --conf/-c, --classpath/-C, -D, --verbose/-v
-  
+
 EOF
 }
 
@@ -122,18 +122,18 @@ start() {
     LENSCPPATH=${LENSCPPATH}:$HADOOP_JARPATH
   fi
 
-  if [ "$HIVE_HOME" != "" ]; then    
+  if [ "$HIVE_HOME" != "" ]; then
     echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into lens classpath"
     LENSCPPATH=${LENSCPPATH}:`ls ${HIVE_HOME}/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
   else
     echo "HIVE_HOME is not set. Set HIVE_HOME and try again"
     exit 1
   fi
-  
+
   # Add HIVE_HOME to HADOOP_CLASS_PATH
   HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${HIVE_HOME}/lib/*"
   export HADOOP_CLASSPATH
-  
+
   mkdir -p $LENS_LOG_DIR
 
   JAVA_PROPERTIES="${JAVA_PROPERTIES} $LENS_OPTS $LENS_PROPERTIES -Dlens.log.dir=$LENS_LOG_DIR -Dlens.home=${LENS_HOME_DIR} -Dconfig.location=$LENS_CONF"
@@ -147,7 +147,7 @@ start() {
   if [ -n "$opt_verbose" ] ; then
     JAVA_PROPERTIES="-Dlensserver.root.logger=INFO,CONSOLE -Dlensserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
     ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.LensServer $*
-  else 
+  else
   pushd ${BASEDIR} > /dev/null
     TIME=`date +%Y%m%d%H%M%s`
 
@@ -175,13 +175,13 @@ stop() {
         kill -15 `cat $LENS_PID_FILE`
       fi
       while :
-        do 
+        do
           if kill -0 `cat $LENS_PID_FILE` > /dev/null 2>&1; then
              echo -n "."
              sleep 1
           else
              break
-          fi  
+          fi
         done
       rm -rf  $LENS_PID_FILE
       echo Stopped lens server!
@@ -199,7 +199,7 @@ status() {
       exit 0
     else
       exit -2
-    fi  
+    fi
   else
     echo "pid file $LENS_PID_FILE not present"
     exit -1
@@ -230,7 +230,7 @@ memory_histo() {
       exit 0
     else
       exit -2
-    fi  
+    fi
   else
     echo "pid file $LENS_PID_FILE not present"
     exit -1
@@ -245,7 +245,7 @@ memory_dump() {
       exit 0
     else
       exit -2
-    fi  
+    fi
   else
     echo "pid file $LENS_PID_FILE not present"
     exit -1

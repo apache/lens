@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -17,7 +18,7 @@
 # under the License.
 #
 
-# The hadoop installation location. 
+# The hadoop installation location.
 #export HADOOP_HOME=
 
 # The Hive installation location. Lens adds hive lib in the classpath.
