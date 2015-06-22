@@ -144,8 +144,7 @@ public class LensClient {
     }
     LensClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
-      result = new LensClientResultSet(statement.getResultSet(),
-        statement.getResultSetMetaData());
+      result = new LensClientResultSet(statement.getResultSetMetaData(), statement.getResultSet());
     }
     return new LensClientResultSetWithStats(result, statement.getQuery());
   }
@@ -161,8 +160,7 @@ public class LensClient {
     }
     LensClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
-      result = new LensClientResultSet(statement.getResultSet(),
-        statement.getResultSetMetaData());
+      result = new LensClientResultSet(statement.getResultSetMetaData(), statement.getResultSet());
     }
     return new LensClientResultSetWithStats(result, statement.getQuery());
   }

@@ -298,7 +298,7 @@ public class JDBCResultSet extends InMemoryResultSet {
   @Override
   public boolean seekToStart() throws LensException {
     try {
-      if (!resultSet.isBeforeFirst()) {
+      if (!resultSet.isClosed() && !resultSet.isBeforeFirst()) {
         resultSet.beforeFirst();
       }
       return true;

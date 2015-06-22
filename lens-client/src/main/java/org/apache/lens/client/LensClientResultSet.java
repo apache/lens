@@ -38,7 +38,7 @@ public class LensClientResultSet {
    * @param result            the result
    * @param resultSetMetaData the result set meta data
    */
-  public LensClientResultSet(QueryResult result, QueryResultSetMetadata resultSetMetaData) {
+  public LensClientResultSet(QueryResultSetMetadata resultSetMetaData, QueryResult result) {
     this.result = result;
     this.resultSetMetadata = resultSetMetaData;
   }
