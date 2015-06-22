@@ -43,7 +43,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * Provides abstract implementation of the query output formatter.
- * <p/>
+ * <p></p>
  * In this it initializes column names, types column object inspectors Also provides methods to construct header from
  * serde
  */

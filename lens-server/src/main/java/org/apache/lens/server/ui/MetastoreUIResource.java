@@ -39,7 +39,7 @@ import org.json.JSONObject;
 
 /**
  * metastore UI resource api
- * <p/>
+ * <p></p>
  * This provides api for all things metastore UI.
  */
 
@@ -74,7 +74,7 @@ public class MetastoreUIResource {
    *
    * @param publicId The publicId for the session in which user is working
    * @return JSON string consisting of different table names and types
-   * @throws LensException, JSONException
+   * @throws WebApplicationException  wraps LensException
    */
   @GET
   @Path("tables")
@@ -137,7 +137,7 @@ public class MetastoreUIResource {
    * @param publicId The publicId for the session in which user is working
    * @param name     name of cube or dimension to be described
    * @return JSON string consisting of different dimension and measure names and types
-   * @throws LensException, JSONException
+   * @throws WebApplicationException wraps LensException
    */
   @GET
   @Path("tables/{name}")
@@ -210,7 +210,6 @@ public class MetastoreUIResource {
    * @param publicId The publicId for the session in which user is working
    * @param keyword  keyword to be searched
    * @return JSON string consisting of different table and column names and types
-   * @throws LensException, JSONException
    */
   @GET
   @Path("searchablefields")

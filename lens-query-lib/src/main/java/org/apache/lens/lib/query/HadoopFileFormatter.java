@@ -30,7 +30,7 @@ import org.apache.hadoop.mapred.Reporter;
 
 /**
  * A hadoop file formatter
- * <p/>
+ * <p></p>
  * This has capability to create output on Hadoop compatible files systems, with hadoop supported compression codecs.
  */
 public class HadoopFileFormatter extends AbstractFileFormatter {

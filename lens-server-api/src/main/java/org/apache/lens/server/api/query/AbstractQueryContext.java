@@ -427,7 +427,6 @@ public abstract class AbstractQueryContext implements Serializable {
    * Set query for a given driver
    * @param driver driver instance
    * @param query query string
-   * @throws LensException
    */
   public void setDriverQuery(LensDriver driver, String query) {
     driverContext.setDriverQuery(driver, query);

@@ -40,7 +40,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 /**
  * Session resource api
- * <p/>
+ * <p></p>
  * This provides api for all things in session.
  */
 @Path("/uisession")

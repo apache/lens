@@ -33,22 +33,21 @@ public interface MetricsService {
 
   /**
    * Increment a counter with the given name Actual name of the counter will be
-   * <p/>
-   * <pre>MetricRegistry.name(MetricsService.class, counter)
-   * <p/>
-   * <pre>
+   * <p></p>
+   * <pre>MetricRegistry.name(MetricsService.class, counter)</pre>
+   * <p></p>
    *
    * @param counter the counter
    */
+
   void incrCounter(String counter);
 
   /**
    * Increment a counter with the name constructed using given class and counter name Actual name of the counter will
    * be
-   * <p/>
-   * <pre>MetricRegistry.name(cls, counter)
-   * <p/>
-   * <pre>
+   * <p></p>
+   * <pre>MetricRegistry.name(cls, counter)</pre>
+   * <p></p>
    *
    * @param cls     Class of the counter for namespacing the counter
    * @param counter the counter
@@ -57,10 +56,9 @@ public interface MetricsService {
 
   /**
    * Decrement a counter with the name costructed using given class and counter name Actual name of the counter will be
-   * <p/>
-   * <pre>MetricRegistry.name(cls, counter)
-   * <p/>
-   * <pre>
+   * <p></p>
+   * <pre>MetricRegistry.name(cls, counter)</pre>
+   * <p></p>
    *
    * @param cls     Class of the counter for namespacing of counters
    * @param counter the counter
@@ -69,10 +67,9 @@ public interface MetricsService {
 
   /**
    * Decrement a counter with the given name Actual name of the counter will be
-   * <p/>
-   * <pre>MetricRegistry.name(MetricsService.class, counter)
-   * <p/>
-   * <pre>
+   * <p></p>
+   * <pre>MetricRegistry.name(MetricsService.class, counter)</pre>
+   * <p></p>
    *
    * @param counter the counter
    */

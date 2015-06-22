@@ -28,7 +28,6 @@ import lombok.Getter;
 /**
  * Instantiates a new lens event.
  *
- * @param eventTime the event time
  */
 @AllArgsConstructor
 public abstract class LensEvent {

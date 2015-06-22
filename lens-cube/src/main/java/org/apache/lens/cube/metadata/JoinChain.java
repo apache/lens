@@ -314,7 +314,7 @@ public class JoinChain implements Named {
    * Convert join paths to schemaGraph's JoinPath
    *
    * @param client
-   * @return List<SchemaGraph.JoinPath>
+   * @return List&lt;SchemaGraph.JoinPath&gt;
    * @throws HiveException
    */
   public List<SchemaGraph.JoinPath> getRelationEdges(CubeMetastoreClient client) throws HiveException {

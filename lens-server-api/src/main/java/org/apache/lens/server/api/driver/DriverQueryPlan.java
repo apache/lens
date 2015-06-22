@@ -151,7 +151,7 @@ public abstract class DriverQueryPlan {
   /**
    * Set the list of table names to be queried.
    *
-   * @param table the table
+   * @param tables the table
    */
   protected void addTablesQueried(Set<String> tables) {
     this.tablesQueried.addAll(tables);

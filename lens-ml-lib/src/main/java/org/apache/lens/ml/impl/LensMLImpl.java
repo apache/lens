@@ -392,7 +392,7 @@ public class LensMLImpl implements LensML {
    * Evaluate a model. Evaluation is done on data selected table from an input table. The model is run as a UDF and its
    * output is inserted into a table with a partition. Each evaluation is given a unique ID. The partition label is
    * associated with this unique ID.
-   * <p/>
+   * <p></p>
    * <p>
    * This call also required a query runner. Query runner is responsible for executing the evaluation query against Lens
    * server.

@@ -71,7 +71,6 @@ public interface SessionService {
    * @param sessionHandle the session handle
    * @param type          the type
    * @param path          the path
-   * @throws LensException the lens exception
    */
 
   void addResource(LensSessionHandle sessionHandle, String type, String path);
@@ -82,7 +81,6 @@ public interface SessionService {
    * @param sessionHandle the session handle
    * @param type          the type
    * @param path          the path
-   * @throws LensException the lens exception
    */
 
   void deleteResource(LensSessionHandle sessionHandle, String type, String path);

@@ -30,8 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Initialize the webapp.
- *
- * @see LensServletContextEvent
  */
 @Slf4j
 public class LensServletContextListener implements ServletContextListener {

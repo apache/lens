@@ -315,7 +315,6 @@ public class ExprColumn extends CubeColumn {
    * Get the AST corresponding to the expression
    *
    * @return the ast
-   * @throws ParseException
    */
   public ASTNode getAst() {
     return getExpressionASTList().get(0);

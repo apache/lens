@@ -39,9 +39,9 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * File format which provides implementation for {@link InMemoryOutputFormatter}
- * <p/>
+ * <p></p>
  * This is a wrapped formatter, which serializes the rows of the result with configured serde. It would only accept the
- * Serde's whose serialization class is {@link Text}
+ * Serde's whose serialization class is Text
  */
 @SuppressWarnings("deprecation")
 public class FileSerdeFormatter extends WrappedFileFormatter implements InMemoryOutputFormatter {

@@ -223,14 +223,13 @@ public class MLServiceResource {
    * Train a model given an algorithm name and algorithm parameters
    * <p>
    * Following parameters are mandatory and must be passed as part of the form
-   * <p/>
+   * </p>
    * <ol>
    * <li>table - input Hive table to load training data from</li>
    * <li>label - name of the labelled column</li>
    * <li>feature - one entry per feature column. At least one feature column is required</li>
    * </ol>
-   * <p/>
-   * </p>
+   * <p></p>
    *
    * @param algorithm algorithm name
    * @param form      form data

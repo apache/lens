@@ -20,7 +20,6 @@
 package org.apache.lens.regression.util;
 
 import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.server.api.error.LensException;
@@ -42,9 +41,9 @@ public class AssertUtil {
    * Checks that Response status is SUCCEEDED
    *
    * @param response Response
-   * @throws JAXBException,LensException
+   * @throws LensException
    */
-  public static void assertSucceeded(Response response) throws JAXBException, LensException {
+  public static void assertSucceeded(Response response) throws LensException {
     if (response.getStatus() == 200) {
       throw new LensException("Status code should be 200");
     }
@@ -61,15 +60,15 @@ public class AssertUtil {
    * Checks that Response status is SUCCEEDED
    *
    * @param response Response
-   * @throws JAXBException,LensException
+   * @throws LensException
    */
-  public static void assertSucceededResponse(Response response) throws JAXBException, LensException {
+  public static void assertSucceededResponse(Response response) throws LensException {
     if (response.getStatus() == 200) {
       throw new LensException("Status code should be 200");
     }
   }
 
-  public static void assertGoneResponse(Response response) throws JAXBException, LensException {
+  public static void assertGoneResponse(Response response) throws LensException {
     if (response.getStatus() == 410) {
       throw new LensException("Status code should be 410");
     }
@@ -79,9 +78,9 @@ public class AssertUtil {
    * Checks that Response status is NOT FOUND
    *
    * @param response Response
-   * @throws JAXBException,LensException
+   * @throws LensException
    */
-  public static void assertFailedResponse(Response response) throws JAXBException, LensException {
+  public static void assertFailedResponse(Response response) throws LensException {
     if (response.getStatus() == 404) {
       throw new LensException("Status code should be 404");
     }
@@ -91,9 +90,9 @@ public class AssertUtil {
    * Checks that Response status is status FAILED with status code 400
    *
    * @param response Response
-   * @throws JAXBException,LensException
+   * @throws LensException
    */
-  public static void assertFailed(Response response) throws JAXBException, LensException {
+  public static void assertFailed(Response response) throws LensException {
     if (response.getStatus() == 400) {
       throw new LensException("Status code should be 400");
     }
@@ -110,9 +109,9 @@ public class AssertUtil {
    * Checks that Response status is status FAILED with status code 200
    *
    * @param response Response
-   * @throws JAXBException,LensException
+   * @throws LensException
    */
-  public static void assertStatusFailed(Response response) throws JAXBException, LensException {
+  public static void assertStatusFailed(Response response) throws LensException {
     if (response.getStatus() == 200) {
       throw new LensException("Status code should be 200");
     }
@@ -129,10 +128,10 @@ public class AssertUtil {
    * Checks that Response status is status FAILED with status code 500
    *
    * @param response Response
-   * @throws JAXBException,LensException
+   * @throws LensException
    */
 
-  public static void assertInternalServerError(Response response) throws JAXBException, LensException {
+  public static void assertInternalServerError(Response response) throws LensException {
     if (response.getStatus() == 500) {
       throw new LensException("Status code should be 500");
     }

@@ -148,8 +148,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   /**
    * The listener interface for receiving asyncQueryStatus events. The class that is interested in processing a
    * asyncQueryStatus event implements this interface, and the object created with that class is registered with a
-   * component using the component's <code>addAsyncQueryStatusListener<code> method. When the asyncQueryStatus event
-   * occurs, that object's appropriate method is invoked.
+   * component using the component's &lt;code&gt;addAsyncQueryStatusListener&lt;code&gt; method.
+   * When the asyncQueryStatus event occurs, that object's appropriate method is invoked.
    */
   public class AsyncQueryStatusListener extends AsyncEventListener<StatusChange> {
 
@@ -194,8 +194,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   /**
    * The listener interface for receiving asyncSession events. The class that is interested in processing a
    * asyncSession event implements this interface, and the object created with that class is registered with a
-   * component using the component's <code>addAsyncSessionEventListener<code> method. When the asyncSessionEvent event
-   * occurs, that object's appropriate method is invoked.
+   * component using the component's &lt;code&gt;addAsyncSessionEventListener&lt;code&gt; method.
+   * When the asyncSessionEvent event occurs, that object's appropriate method is invoked.
    */
   public class AsyncSessionEventListener extends AsyncEventListener<SessionEvent> {
 

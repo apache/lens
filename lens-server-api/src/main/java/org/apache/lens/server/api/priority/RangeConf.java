@@ -24,16 +24,16 @@ import java.util.TreeMap;
 /**
  * Class for storing range configurations. An Example would be grading system.
  * The value F,30,D,40,C,60,B,80,A corresponds to a system where
- * - inf < marks <= 30         : F
- * 30 < marks <= 40            : D
- * 40 < marks <= 60            : C
- * 60 < marks <= 80            : B
- * 80 < marks <= + Inf         : A
- * <p/>
+ * - inf &lt; marks &lt;= 30         : F
+ * 30 &lt; marks &lt;= 40            : D
+ * 40 &lt; marks &lt;= 60            : C
+ * 60 &lt; marks &lt;= 80            : B
+ * 80 &lt; marks &lt;= + Inf         : A
+ * <p></p>
  * rangeConfInstance.get(marks) would give you the grade depending on the range.
- * <p/>
+ * <p></p>
  * The utility is for easily storing range configs in config xml files.
- * <p/>
+ * <p></p>
  * Implementation is done by storing the least value(floor) and keeping a treemap on rest of values
  *
  * @param <K> Key type. Integer in the grade range example

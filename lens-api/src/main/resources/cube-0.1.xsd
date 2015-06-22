@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <!--
 
   Licensed to the Apache Software Foundation (ASF) under one
@@ -530,13 +531,14 @@
         Join chain represents the paths to reach a dimension.
         For example, to reach Country from
         SalesCube, there can be the following equivalent paths:
-        SalesCube.deliveryStateid -> State.id, State.countryid ->Country.id
-        SalesCube.deliveryCityid -> City.id, City.stateid -> State.id, State.countryid ->Country.id
+        SalesCube.deliveryStateid -&amp;gt; State.id, State.countryid -&amp;gt; Country.id
+        SalesCube.deliveryCityid -&amp;gt; City.id, City.stateid -&amp;gt; State.id, State.countryid -&amp;gt;Country.id
         Both the above paths will be associated with same
         join chain i.e with same name, if they are equivalent and at
         runtime, LENS will choose the path to use. If the
         paths are not equivalent, they should be named differently.
-        SalesCube.productionStateid -> State.id, State.countryid ->Country.id will be named differently.
+        SalesCube.productionStateid -&amp;gt; State.id,
+        State.countryid -&amp;gt;Country.id will be named differently.
       </xs:documentation>
     </xs:annotation>
     <xs:complexContent>

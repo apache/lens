@@ -32,7 +32,7 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
  * Dimension HQLContext.
- * <p/>
+ * <p></p>
  * Contains all the dimensions queried and their candidate dim tables Update where string with storage filters added
  * dimensions queried.
  */

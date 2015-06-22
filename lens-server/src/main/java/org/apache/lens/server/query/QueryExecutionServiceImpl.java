@@ -2451,7 +2451,6 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * Add session's resources to selected driver if needed
    *
    * @param ctx QueryContext for executinf queries
-   * @throws LensException
    */
   protected void addSessionResourcesToDriver(final AbstractQueryContext ctx) {
     LensDriver driver = ctx.getSelectedDriver();

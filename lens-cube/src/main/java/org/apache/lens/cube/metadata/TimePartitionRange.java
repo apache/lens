@@ -80,7 +80,7 @@ public class TimePartitionRange implements Iterable<TimePartition>, Named {
 
   /**
    * @param partition
-   * @return begin <= partition < end
+   * @return begin &lt;= partition &lt; end
    */
   public boolean contains(TimePartition partition) {
     return !partition.before(begin) && partition.before(end);

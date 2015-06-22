@@ -42,7 +42,7 @@ import lombok.ToString;
 
 /**
  * This class resolves all the reference columns that are queried.
- * <p/>
+ * <p></p>
  * Keeps track of the context that if any candidate needs to use columns through tables referenced and replaces the
  * columns from referenced tables in all the ASTs
  */

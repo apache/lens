@@ -100,7 +100,7 @@ public interface LensDriver extends Externalizable {
 
   /**
    * Blocking execute of the query
-   * <p/>
+   * <p></p>
    * The driver would be closing the driver handle, once the results are fetched.
    *
    * @param context the context

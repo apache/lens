@@ -63,7 +63,7 @@ public final class JDBCUtils {
 
   /**
    * Parses the JDBC Connection URL.
-   * <p/>
+   * <p></p>
    * The URL format is specified as following :
    * <ul>
    * <li>hostname which contains hosts on which lens server is hosted parsed from authority section</li>
@@ -76,10 +76,10 @@ public final class JDBCUtils {
    * <p>
    * Examples :-
    * </p>
-   * <code>
+   * &lt;code&gt;
    * jdbc:lens://hostname:port/dbname;[optional key value pair of session settings]?
    * [optional configuration settings for connection]#[optional variables to be used in query]
-   * </code>
+   * &lt;/code&gt;
    *
    * @param uri to be used to connect to lens server
    * @return final list of connection parameters

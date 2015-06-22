@@ -36,25 +36,24 @@ import org.codehaus.jackson.map.ObjectMapper;
  * This SerDe can be used for processing JSON data in Hive. It supports arbitrary JSON data, and can handle all Hive
  * types except for UNION. However, the JSON data is expected to be a series of discrete records, rather than a JSON
  * array of objects.
- * <p/>
+ * <p></p>
  * The Hive table is expected to contain columns with names corresponding to fields in the JSON data, but it is not
  * necessary for every JSON field to have a corresponding Hive column. Those JSON fields will be ignored during queries.
- * <p/>
+ * <p></p>
  * Example:
- * <p/>
+ * <p></p>
  * { "a": 1, "b": [ "str1", "str2" ], "c": { "field1": "val1" } }
- * <p/>
+ * <p></p>
  * Could correspond to a table:
- * <p/>
- * CREATE TABLE foo (a INT, b ARRAY<STRING>, c STRUCT<field1:STRING>);
- * <p/>
+ * <p></p>
+ * CREATE TABLE foo (a INT, b ARRAY&lt;STRING&gt;, c STRUCT&lt;field1:STRING&gt;);
+ * <p></p>
  * JSON objects can also interpreted as a Hive MAP type, so long as the keys and values in the JSON object are all of
  * the appropriate types. For example, in the JSON above, another valid table declaraction would be:
- * <p/>
- * CREATE TABLE foo (a INT, b ARRAY<STRING>, c MAP<STRING,STRING>);
- * <p/>
+ * <p></p>
+ * CREATE TABLE foo (a INT, b ARRAY&lt;STRING&gt;, c MAP&lt;STRING,STRING&gt;);
+ * <p> </p>
  * Only STRING keys are supported for Hive MAPs.
- * <p/>
  */
 public class JSonSerde implements SerDe {
 
@@ -106,7 +105,7 @@ public class JSonSerde implements SerDe {
    * This method does the work of deserializing a record into Java objects that Hive can work with via the
    * ObjectInspector interface. For this SerDe, the blob that is passed in is a JSON string, and the Jackson JSON parser
    * is being used to translate the string into Java objects.
-   * <p/>
+   *<p></p>
    * The JSON deserialization works by taking the column names in the Hive table, and looking up those fields in the
    * parsed JSON object. If the value of the field is not a primitive, the object is parsed further.
    *

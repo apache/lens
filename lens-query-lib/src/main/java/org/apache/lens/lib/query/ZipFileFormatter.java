@@ -29,7 +29,7 @@ import org.apache.hadoop.fs.Path;
 
 /**
  * Zip file formatter.
- * <p/>
+ * <p></p>
  * Creates a zip on hadoop compatible file system, with ability to split output across multiple part files and provide a
  * final zip output file.
  */

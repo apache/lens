@@ -46,7 +46,6 @@ public abstract class SessionEvent extends LensEvent {
    *
    * @param eventTime the event time
    * @param handle    the lens session handle
-   * @param user      name of user
    */
   public SessionEvent(long eventTime, LensSessionHandle handle) {
     super(eventTime);

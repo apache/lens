@@ -42,7 +42,7 @@ import com.google.common.collect.Lists;
 
 /**
  * metastore resource api
- * <p/>
+ * <p> </p>
  * This provides api for all things metastore.
  */
 @Path("metastore")
@@ -86,7 +86,7 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @return StringList consisting of all database names.
-   * @throws org.apache.lens.server.api.error.LensException
+   * @throws WebApplicationException
    */
   @GET
   @Path("databases")
@@ -202,7 +202,7 @@ public class MetastoreResource {
    *                  ignored. If no dbOption or dbname are passed, then default is to get tables from current db.
    * @param dbName    The db name. If not empty, the tables in the db will be returned
    * @return StringList consisting of all table names.
-   * @throws LensException
+   * @throws WebApplicationException
    */
   @GET
   @Path("nativetables")
@@ -231,7 +231,7 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param tableName The native table name
    * @return JAXB representation of {@link XNativeTable}
-   * @throws LensException
+   * @throws WebApplicationException
    */
   @GET
   @Path("nativetables/{tableName}")
@@ -433,7 +433,7 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @return StringList consisting of all the storage names
-   * @throws LensException
+   * @throws WebApplicationException Wraps LensException
    */
   @GET
   @Path("storages")
@@ -579,7 +579,7 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @return StringList consisting of all the dimension names
-   * @throws LensException
+   * @throws WebApplicationException wraps lensException
    */
   @GET
   @Path("dimensions")
@@ -1031,7 +1031,7 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
    * @param storage   The storage name
-   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt "xxx" and y &gt
+   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt; "xxx" and y &gt;
    *                  "yyy"
    * @return JAXB representation of {@link XPartitionList} containing {@link XPartition} objects
    */
@@ -1059,7 +1059,7 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
    * @param storage   The storage name
-   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt "xxx" and y &gt
+   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt; "xxx" and y &gt;
    *                  "yyy"
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
    * {@link Status#FAILED}, if drop has failed
@@ -1383,7 +1383,7 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param dimension The dimension table name
    * @param storage   The storage name
-   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt "xxx" and y &gt
+   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt; "xxx" and y &gt;
    *                  "yyy"
    * @return JAXB representation of {@link XPartitionList} containing {@link XPartition} objects
    */
@@ -1407,7 +1407,7 @@ public class MetastoreResource {
    * @param sessionid    The sessionid in which user is working
    * @param dimTableName The dimension table name
    * @param storage      The storage name
-   * @param filter       The filter for partitions, string representation of the filter for ex: x &lt 'xxx' and y &gt
+   * @param filter       The filter for partitions, string representation of the filter for ex: x &lt; 'xxx' and y &gt;
    *                     'yyy'
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
    * {@link Status#FAILED}, if drop has failed

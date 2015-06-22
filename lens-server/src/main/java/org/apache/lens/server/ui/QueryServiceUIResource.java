@@ -105,7 +105,7 @@ public class QueryServiceUIResource {
    *
    * @param publicId  The public id of the session in which user is working
    * @param state     If any state is passed, all the queries in that state will be returned, otherwise all queries will
-   *                  be returned. Possible states are {@value QueryStatus.Status#values()}
+   *                  be returned. Possible states are {@link org.apache.lens.api.query.QueryStatus.Status#values()}
    * @param user      return queries matching the user. If set to "all", return queries of all users. By default,
    *                  returns queries of the current user.
    * @param queryName human readable query name set by user (optional)
@@ -225,8 +225,8 @@ public class QueryServiceUIResource {
    *
    * @param publicId    The user session handle
    * @param queryHandle The query handle
-   * @return APIResult with state {@value org.apache.lens.api.APIResult.Status#SUCCEEDED} in case of successful
-   * cancellation. APIResult with state {@value org.apache.lens.api.APIResult.Status#FAILED} in case of cancellation
+   * @return APIResult with state {@link org.apache.lens.api.APIResult.Status#SUCCEEDED} in case of successful
+   * cancellation. APIResult with state {@link org.apache.lens.api.APIResult.Status#FAILED} in case of cancellation
    * failure.
    */
   @DELETE

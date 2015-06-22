@@ -449,7 +449,7 @@ public final class JAXBUtils {
   }
 
   /**
-   * Convert JAXB properties to Map<String, String>
+   * Convert JAXB properties to Map&lt;String, String&gt;
    *
    * @param xProperties
    * @return {@link Map}

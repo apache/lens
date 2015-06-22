@@ -1123,7 +1123,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
 
   /**
    * Prune candidate fact sets with respect to available candidate facts.
-   * <p/>
+   * <p></p>
    * Prune a candidate set, if any of the fact is missing.
    *
    * @param pruneCause
@@ -1142,7 +1142,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
 
   /**
    * Prune candidate fact with respect to available candidate fact sets.
-   * <p/>
+   * <p></p>
    * If candidate fact is not present in any of the candidate fact sets, remove it.
    *
    * @param pruneCause

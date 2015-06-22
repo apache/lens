@@ -30,10 +30,9 @@ import org.glassfish.jersey.server.monitoring.RequestEventListener;
 /**
  * The listener interface for receiving lensApplication events. The class that is interested in processing a
  * lensApplication event implements this interface, and the object created with that class is registered with a
- * component using the component's <code>addLensApplicationListener<code> method. When the lensApplication event occurs,
- * that object's appropriate method is invoked.
+ * component using the component's &lt;code&gt;addLensApplicationListener&lt;code&gt; method.
+ * When the lensApplication event occurs, that object's appropriate method is invoked.
  *
- * @see LensApplicationEvent
  */
 public class LensApplicationListener implements ApplicationEventListener {
 

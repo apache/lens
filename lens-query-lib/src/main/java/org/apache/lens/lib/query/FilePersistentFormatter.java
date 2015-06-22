@@ -38,7 +38,7 @@ import org.apache.hadoop.fs.PathFilter;
 
 /**
  * File formatter for {@link PersistedOutputFormatter}
- * <p/>
+ * <p></p>
  * This is a {@link WrappedFileFormatter} which can wrap any {@link FileFormatter}.
  */
 public class FilePersistentFormatter extends WrappedFileFormatter implements PersistedOutputFormatter {

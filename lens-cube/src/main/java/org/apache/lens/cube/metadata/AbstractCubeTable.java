@@ -91,7 +91,7 @@ public abstract class AbstractCubeTable implements Named {
   /**
    * Add more table properties
    *
-   * @param properties
+   * @param props  properties
    */
   public void addProperties(Map<String, String> props) {
     this.properties.putAll(props);

@@ -97,7 +97,7 @@ public class CubeMetastoreClient {
   /**
    * get latest date for timeDimension from all fact-storage tables belonging to the given cube having timeDimension,
    * return the most recent of all.
-   * <p/>
+   * <p></p>
    * latest date for a single fact-storage table for given time dimension is the latest of the latest dates for all its
    * update periods
    *
@@ -318,7 +318,7 @@ public class CubeMetastoreClient {
 
     /**
      * helper method for ensuring get(storageTable).get(updatePeriod).get(partitionColumn) gives a non-null object.
-     * <p/>
+     * <p></p>
      * kind of like mkdir -p
      *
      * @param storageTable
@@ -715,7 +715,7 @@ public class CubeMetastoreClient {
 
   /**
    * Add a partition specified by the storage partition desc on the storage passed.
-   * <p/>
+   * <p></p>
    * TODO: separate methods for fact and dim partition addition.
    *
    * @param partSpec    The storage partition description
@@ -1846,7 +1846,6 @@ public class CubeMetastoreClient {
    * @param cubeName The cube name to be altered
    * @param cube     The new cube definition {@link Cube} or {@link DerivedCube}
    * @throws HiveException
-   * @throws InvalidOperationException
    */
   public void alterCube(String cubeName, CubeInterface cube) throws HiveException {
     Table cubeTbl = getTable(cubeName);
@@ -1866,7 +1865,6 @@ public class CubeMetastoreClient {
    * @param dimName The cube name to be altered
    * @param newDim  The new dimension definition
    * @throws HiveException
-   * @throws InvalidOperationException
    */
   public void alterDimension(String dimName, Dimension newDim) throws HiveException {
     Table tbl = getTable(dimName);
@@ -1886,7 +1884,6 @@ public class CubeMetastoreClient {
    * @param storageName The storage name to be altered
    * @param storage     The new storage definition
    * @throws HiveException
-   * @throws InvalidOperationException
    */
   public void alterStorage(String storageName, Storage storage) throws HiveException {
     Table storageTbl = getTable(storageName);
@@ -1975,7 +1972,6 @@ public class CubeMetastoreClient {
    * @param factName
    * @param storage
    * @throws HiveException
-   * @throws InvalidOperationException
    */
   public void dropStorageFromFact(String factName, String storage) throws HiveException {
     CubeFactTable cft = getFactTable(factName);
@@ -2050,7 +2046,6 @@ public class CubeMetastoreClient {
    * @param storageTableDescs
    *
    * @throws HiveException
-   * @throws InvalidOperationException
    */
   public void alterCubeFactTable(String factTableName, CubeFactTable cubeFactTable,
     Map<String, StorageTableDesc> storageTableDescs) throws HiveException {
@@ -2087,7 +2082,6 @@ public class CubeMetastoreClient {
    * @param dimTableName
    * @param cubeDimensionTable
    * @throws HiveException
-   * @throws InvalidOperationException
    */
   public void alterCubeDimensionTable(String dimTableName, CubeDimensionTable cubeDimensionTable,
     Map<String, StorageTableDesc> storageTableDescs) throws HiveException {

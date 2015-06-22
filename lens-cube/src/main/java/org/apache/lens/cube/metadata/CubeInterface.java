@@ -87,7 +87,7 @@ public interface CubeInterface extends Named {
 
   /**
    * Get cube column given by column name.
-   * <p/>
+   * <p></p>
    * It can be a measure, dimension attribute or an expression.
    *
    * @param colName Column name
@@ -146,10 +146,10 @@ public interface CubeInterface extends Named {
 
   /**
    * Whether all the fields of cube can be queried.
-   * <p/>
+   * <p></p>
    * If false, the fields can queried through derived cubes. Users can look at derived cube fields to know which all
    * fields can be queried together.
-   * <p/>
+   * <p></p>
    * If true, all the fields can be directly queried.
    *
    * @return true or false
