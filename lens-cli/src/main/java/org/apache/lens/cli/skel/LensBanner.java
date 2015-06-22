@@ -50,6 +50,11 @@ public class LensBanner extends DefaultBannerProvider {
 
   @Override
   public String getVersion() {
-    return getClass().getPackage().getImplementationVersion() + " built with spring shell " + super.getVersion();
+    return getClass().getPackage().getImplementationVersion();
+  }
+
+  @Override
+  public String getProviderName() {
+    return "Lens CLI";
   }
 }
