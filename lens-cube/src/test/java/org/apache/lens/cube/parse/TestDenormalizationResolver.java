@@ -23,7 +23,9 @@ import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
@@ -164,7 +166,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
               }))
           );
           put("summary1,cheapfact,testfactmonthly,testfact2,testfact",
-            Arrays.asList(CandidateTablePruneCause.columnNotFound("dim2big1", "dim2")));
+            Arrays.asList(CandidateTablePruneCause.columnNotFound("dim2big2")));
         }
       }
     ));
@@ -222,6 +224,34 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       "select citydim.name, citydim.statename, citydim.nocandidatecol from citydim", conf);
     Assert.assertEquals(e.getMessage(),
       "No dimension table has the queried columns for citydim, columns: [name, statename, nocandidatecol]");
+  }
+
+  @Test
+  public void testCubeQueryWithTwoRefCols() throws Exception {
+    Configuration tConf = new Configuration(conf);
+    tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
+    CubeQueryContext cubeql = rewriteCtx("select dim2, test_time_dim2 from testcube where " + TWO_DAYS_RANGE, tConf);
+    Set<String> candidateFacts = new HashSet<String>();
+    for (CandidateFact cfact : cubeql.getCandidateFacts()) {
+      candidateFacts.add(cfact.getName().toLowerCase());
+    }
+    // testfact contains test_time_dim_hour_id, but not dim2 - it should have been removed.
+    Assert.assertFalse(candidateFacts.contains("testfact"));
+    // summary2 contains dim2, but not test_time_dim2 - it should have been removed.
+    Assert.assertFalse(candidateFacts.contains("summary2"));
+  }
+
+  @Test
+  public void testDimensionQueryWithTwoRefCols() throws Exception {
+    Configuration tConf = new Configuration(conf);
+    tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
+    CubeQueryContext cubeql = rewriteCtx("select citydim.zipcode, citydim.statename from" + " citydim", tConf);
+    Set<String> candidateDims = new HashSet<String>();
+    for (CandidateDim cdim : cubeql.getCandidateDims().get(cubeql.getMetastoreClient().getDimension("citydim"))) {
+      candidateDims.add(cdim.getName());
+    }
+    // city_table2 contains stateid, but not zipcode - it should have been removed.
+    Assert.assertFalse(candidateDims.contains("city_table2"));
   }
 
   @Test

@@ -68,6 +68,7 @@ class ExpressionResolver implements ContextRewriter {
     @Getter
     private Set<ExprSpecContext> allExprs = new LinkedHashSet<ExprSpecContext>();
     private Set<CandidateTable> directlyAvailableIn = new HashSet<CandidateTable>();
+    @Getter
     private Map<CandidateTable, Set<ExprSpecContext>> evaluableExpressions =
       new HashMap<CandidateTable, Set<ExprSpecContext>>();
     private boolean hasMeasures = false;
@@ -95,7 +96,7 @@ class ExpressionResolver implements ContextRewriter {
           try {
             if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
               cubeql.addOptionalDimTable(table, null,
-                false, esc.getTblAliasToColumns().get(table).toArray(new String[0]));
+                false, null, false, esc.getTblAliasToColumns().get(table).toArray(new String[0]));
               esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
             }
           } catch (HiveException e) {
@@ -132,7 +133,7 @@ class ExpressionResolver implements ContextRewriter {
         for (String table : esc.getTblAliasToColumns().keySet()) {
           try {
             if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
-              cubeql.addOptionalDimTable(table, null, false,
+              cubeql.addOptionalDimTable(table, null, false, null, false,
                 esc.getTblAliasToColumns().get(table).toArray(new String[0]));
               esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
             }
@@ -171,17 +172,17 @@ class ExpressionResolver implements ContextRewriter {
       if (evalSet == null) {
         evalSet = new LinkedHashSet<ExprSpecContext>();
         evaluableExpressions.put(cTable, evalSet);
-        // add optional dimensions involved in expressions
-        for (String table : esc.getTblAliasToColumns().keySet()) {
-          try {
-            if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
-              cubeql.addOptionalDimTable(table, cTable,
-                false, esc.getTblAliasToColumns().get(table).toArray(new String[0]));
-              esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
-            }
-          } catch (HiveException e) {
-            throw new SemanticException(e);
+      }
+      // add optional dimensions involved in expressions
+      for (String table : esc.getTblAliasToColumns().keySet()) {
+        try {
+          if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
+            cubeql.addOptionalExprDimTable(table, exprCol.getName(), srcAlias, cTable,
+              esc.getTblAliasToColumns().get(table).toArray(new String[0]));
+            esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
           }
+        } catch (HiveException e) {
+          throw new SemanticException(e);
         }
       }
       evalSet.add(esc);
@@ -210,6 +211,7 @@ class ExpressionResolver implements ContextRewriter {
     private Set<ExprSpec> exprSpecs = new LinkedHashSet<ExprSpec>();
     @Getter
     private ASTNode finalAST;
+    @Getter
     private Set<Dimension> exprDims = new HashSet<Dimension>();
     // for each expression store alias to columns queried
     @Getter
@@ -367,6 +369,7 @@ class ExpressionResolver implements ContextRewriter {
       }
       for (ExprSpecContext esc : ec.allExprs) {
         if (esc.getTblAliasToColumns().get(alias) == null) {
+          log.debug("{} = {} is evaluable in {}", expr, esc, cTable);
           ec.addEvaluable(cubeql, cTable, esc);
         } else {
           Set<String> columns = esc.getTblAliasToColumns().get(alias);

@@ -152,11 +152,13 @@ public class DenormalizationResolver implements ContextRewriter {
             refCols.add(refer);
             // Add to optional tables
             if (refer.col.isChainedColumn()) {
-              cubeql.addOptionalDimTable(refer.col.getChainName(), table, false, refer.col.getRefColumn());
+              cubeql.addOptionalDimTable(refer.col.getChainName(), table, false, refer.col.getName(), true,
+                refer.col.getRefColumn());
 
             } else {
               for (TableReference reference : refer.col.getReferences()) {
-                cubeql.addOptionalDimTable(reference.getDestTable(), table, false, reference.getDestColumn());
+                cubeql.addOptionalDimTable(reference.getDestTable(), table, false, refer.col.getName(), true,
+                  reference.getDestColumn());
               }
             }
             return true;
