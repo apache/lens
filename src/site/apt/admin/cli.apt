@@ -28,8 +28,8 @@ commands.
 
        bin/lens-ctl start // Start the server
        bin/lens-ctl stop // Stop the server
-       bin/lens-ctl restart // Restart the server, stop followed by stop
-       bin/lens-ctl force [stop|restart] // Forcefully stop the server 
+       bin/lens-ctl restart // Restart the server, stop followed by start
+       bin/lens-ctl force [stop|restart] // Forcefully stop/restart the server
        bin/lens-ctl status // Server status
        bin/lens-ctl stack // Dump the thread stacks
        bin/lens-ctl memory-histogram // Server's memory histogram
