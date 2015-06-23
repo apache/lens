@@ -22,7 +22,11 @@ package org.apache.lens.server.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 
@@ -30,7 +34,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Iterators;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,25 +42,20 @@ import lombok.extern.slf4j.Slf4j;
 public class TestScannedPaths {
 
   public void testScannedPaths() throws Exception {
-    File fileA = null, fileB = null;
     String filenameA, filenameB, fileRegex;
     String tempPath = "target/tempfiles/";
     ScannedPaths sc;
-    Iterator<String> iter = null;
 
     try {
       filenameA = "tempdata_a";
       filenameB = "tempdata_b";
       fileRegex = tempPath + "tempdata_*";
 
-      fileA = createNewPath(tempPath + filenameA);
-      fileB = createNewPath(tempPath + filenameB);
+      createNewPath(tempPath + filenameA);
+      createNewPath(tempPath + filenameB);
       sc = new ScannedPaths(fileRegex, "file");
 
-      Assert.assertEquals(Iterators.size(sc.iterator()), 2, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains(filenameA));
-      Assert.assertTrue(iter.next().contains(filenameB));
+      assertUnOrdered(sc, filenameA, filenameB);
 
       /**
        * Testing negative Scenario
@@ -74,8 +72,7 @@ public class TestScannedPaths {
   }
 
   public void testScannedPathsJarGlobOrder() throws Exception {
-    File fileA = null, fileB = null, fileC = null;
-    File jarFile = null, globFile = null;
+    File jarFile, globFile;
     String filenameA, filenameB, filenameC, fileRegex;
     String tempPath = "target/tempfiles/";
     ScannedPaths sc;
@@ -88,9 +85,9 @@ public class TestScannedPaths {
       filenameC = "tempdata_c.data";
       fileRegex = tempPath;
 
-      fileA = createNewPath(tempPath + filenameA);
-      fileB = createNewPath(tempPath + filenameB);
-      fileC = createNewPath(tempPath + filenameC);
+      createNewPath(tempPath + filenameA);
+      createNewPath(tempPath + filenameB);
+      createNewPath(tempPath + filenameC);
 
       /** Test jar_order **/
       jarFile = createNewPath(tempPath + "jar_order");
@@ -99,10 +96,8 @@ public class TestScannedPaths {
       writer.println(filenameA);
       writer.close();
       sc = new ScannedPaths(fileRegex, "jar");
-      Assert.assertEquals(Iterators.size(sc.iterator()), 2, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains(filenameB));
-      Assert.assertTrue(iter.next().contains(filenameA));
+
+      assertOrdered(sc, filenameB, filenameA);
 
       /** Test glob_order **/
       if (jarFile != null) {
@@ -115,11 +110,9 @@ public class TestScannedPaths {
       writer.println(filenameC);
       writer.close();
       sc = new ScannedPaths(fileRegex, "file");
-      Assert.assertEquals(Iterators.size(sc.iterator()), 3, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains(filenameB));
-      Assert.assertTrue(iter.next().contains(filenameA));
-      Assert.assertTrue(iter.next().contains(filenameC));
+
+      assertOrdered(sc, filenameB, filenameA, filenameC);
+
     } catch (Exception e) {
       Assert.fail("Exception while testing ScannedPaths : " + e.getMessage());
     } finally {
@@ -135,7 +128,7 @@ public class TestScannedPaths {
    * sourceDirPath/tempfiles/tempdata_a.jar
    * sourceDirPath/tempfiles/tempdata_c.jar
    * sourceDirPath/tempfiles/dir1/tempdata_a.jar
-   * sourceDirPath/tempfiles/dir1/tempdata_b.jar
+   * sourceDirPath/tempfiles + "-duplicate"/dir1/tempdata_b.jar
    * sourceDirPath/tempfiles/dir1/tempdata_c.data
    * sourceDirPath/tempfiles/dir2/tempdata_a.data
    * sourceDirPath/tempfiles/dir2/tempdata_b.data
@@ -152,7 +145,7 @@ public class TestScannedPaths {
    * @param sourceDirPath
    */
   private void createTempDirStructure1(String sourceDirPath) {
-    File jarFile = null, globFile = null;
+    File jarFile, globFile;
     String filenameA, filenameB, filenameC;
     String tempPath = sourceDirPath + "/tempfiles/";
     FileUtils.deleteQuietly(new File(tempPath));
@@ -247,8 +240,7 @@ public class TestScannedPaths {
    * @param sourceDirPath
    */
   private void createTempDirStructure2(String sourceDirPath) {
-    File orderFile = null;
-    String filenameA, filenameB, filenameC;
+    File orderFile;
     String tempPath = sourceDirPath + "/parent_dir/";
     FileUtils.deleteQuietly(new File(tempPath));
 
@@ -290,12 +282,16 @@ public class TestScannedPaths {
 
   public void testScannedPathsMultipleJarGlobOrder() throws Exception {
     ScannedPaths sc;
-    Iterator<String> iter = null;
     String tempPath = "target/test/";
 
-    String filenameA = "tempdata_a";
-    String filenameB = "tempdata_b";
-    String filenameC = "tempdata_c";
+    String filenameAJar = "tempdata_a.jar";
+    String filenameBJar = "tempdata_b.jar";
+    String filenameCJar = "tempdata_c.jar";
+    String filenameCDupJar = "tempdata_c-duplicate.jar";
+    String filenameCDupJar2 = "tempdata_c-duplicate-2.jar";
+    String filenameAData = "tempdata_a.data";
+    String filenameBData = "tempdata_b.data";
+    String filenameCData = "tempdata_c.data";
 
     String fileRegex1 = tempPath + "*";
     String fileRegex2 = tempPath + "*/*";
@@ -304,21 +300,19 @@ public class TestScannedPaths {
       createTempDirStructure1(tempPath);
 
       sc = new ScannedPaths(fileRegex1, "jar");
-      Assert.assertEquals(Iterators.size(sc.iterator()), 2, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains(filenameC));
-      Assert.assertTrue(iter.next().contains(filenameA));
+      assertUnOrdered(sc, filenameCJar, filenameAJar);
 
       sc = new ScannedPaths(fileRegex2, "jar");
-      Assert.assertEquals(Iterators.size(sc.iterator()), 7, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains(filenameB));
-      Assert.assertTrue(iter.next().contains(filenameA));
-      Assert.assertTrue(iter.next().contains(filenameC)); // Direct matched tempdata_c.jar
-      Assert.assertTrue(iter.next().contains(filenameC));
-      Assert.assertTrue(iter.next().contains(filenameC + "-duplicate"));
-      Assert.assertTrue(iter.next().contains(filenameA));
-      Assert.assertTrue(iter.next().contains(filenameA)); // Direct matched tempdata_a.jar
+
+      assertUnOrdered(sc,
+          filenameBJar,
+          filenameAJar,
+          filenameCJar, // Direct matched tempdata_c.jar
+          filenameCJar,
+          filenameCDupJar,
+          filenameAJar,
+          filenameAJar // Direct matched tempdata_a.jar
+      );
 
       /** Remove jar_order files from temp dir **/
       FileUtils.deleteQuietly(new File(tempPath + "tempfiles/dir1/jar_order"));
@@ -326,26 +320,24 @@ public class TestScannedPaths {
       FileUtils.deleteQuietly(new File(tempPath + "tempfiles/dir3/jar_order"));
 
       sc = new ScannedPaths(fileRegex1, "file");
-      Assert.assertEquals(Iterators.size(sc.iterator()), 2, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains(filenameC));
-      Assert.assertTrue(iter.next().contains(filenameA));
+      assertUnOrdered(sc, filenameCJar, filenameAJar);
 
       sc = new ScannedPaths(fileRegex2, "file");
-      Assert.assertEquals(Iterators.size(sc.iterator()), 12, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains(filenameC));
-      Assert.assertTrue(iter.next().contains(filenameB));
-      Assert.assertTrue(iter.next().contains(filenameA));
-      Assert.assertTrue(iter.next().contains(filenameC)); // Direct matched tempdata_c.jar
-      Assert.assertTrue(iter.next().contains(filenameC));
-      Assert.assertTrue(iter.next().contains(filenameB));
-      Assert.assertTrue(iter.next().contains(filenameA));
-      Assert.assertTrue(iter.next().contains(filenameC));
-      Assert.assertTrue(iter.next().contains(filenameC + "-duplicate"));
-      Assert.assertTrue(iter.next().contains(filenameC + "-duplicate-2")); // Inner dir regex match
-      Assert.assertTrue(iter.next().contains(filenameC + "-duplicate")); // Inner dir regex match
-      Assert.assertTrue(iter.next().contains(filenameA)); // Direct matched tempdata_a.jar
+
+      assertUnOrdered(sc,
+          filenameCData, // dir1
+          filenameBJar,  // dir1
+          filenameAJar,  // dir1
+          filenameCJar,  // Direct matched tempdata_c.jar
+          filenameCJar,  // dir2
+          filenameBData, // dir2
+          filenameAData, // dir2
+          filenameCJar,  // dir3
+          filenameCDupJar, //dir3
+          filenameCDupJar2, // dir3/inner
+          filenameCDupJar, // dir3/inner
+          filenameAJar // Direct matched tempdata_a.jar
+      );
 
     } catch (Exception e) {
       Assert.fail("Exception while testing ScannedPaths : " + e.getMessage());
@@ -357,7 +349,6 @@ public class TestScannedPaths {
 
   public void testScannedPathsRecursive() throws Exception {
     ScannedPaths sc;
-    Iterator<String> iter = null;
     String tempPath = "target/test/";
 
     String fileRegex = tempPath + "parent_*";
@@ -366,14 +357,14 @@ public class TestScannedPaths {
       createTempDirStructure2(tempPath);
 
       sc = new ScannedPaths(fileRegex, "file");
-      Assert.assertEquals(Iterators.size(sc.iterator()), 6, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains("jar_1"));
-      Assert.assertTrue(iter.next().contains("jar_2"));
-      Assert.assertTrue(iter.next().contains("jar_4"));
-      Assert.assertTrue(iter.next().contains("jar_3"));
-      Assert.assertTrue(iter.next().contains("jar_6"));
-      Assert.assertTrue(iter.next().contains("jar_5"));
+
+      assertUnOrdered(sc,
+          "jar_1",
+          "jar_2",
+          "jar_4",
+          "jar_3",
+          "jar_6",
+          "jar_5");
 
       /** Now also enforce order for c_dir **/
       File orderFile = createNewPath(tempPath, "parent_dir/c_dir/glob_order");
@@ -383,14 +374,14 @@ public class TestScannedPaths {
       writer.close();
 
       sc = new ScannedPaths(fileRegex, "file");
-      Assert.assertEquals(Iterators.size(sc.iterator()), 6, "Incorrect number of matches found");
-      iter = sc.iterator();
-      Assert.assertTrue(iter.next().contains("jar_1"));
-      Assert.assertTrue(iter.next().contains("jar_2"));
-      Assert.assertTrue(iter.next().contains("jar_4"));
-      Assert.assertTrue(iter.next().contains("jar_3"));
-      Assert.assertTrue(iter.next().contains("jar_5"));
-      Assert.assertTrue(iter.next().contains("jar_6"));
+
+      assertUnOrdered(sc,
+          "jar_1",
+          "jar_2",
+          "jar_4",
+          "jar_3",
+          "jar_5",
+          "jar_6");
 
     } catch (Exception e) {
       Assert.fail("Exception while testing ScannedPaths : " + e.getMessage());
@@ -436,5 +427,33 @@ public class TestScannedPaths {
       Assert.fail("Unable to create test file, so bailing out.");
     }
     return f;
+  }
+
+  private void assertOrdered(ScannedPaths sc, String ... expectedPaths) {
+    List<String> actual = new ArrayList<>();
+    for (String path : sc) {
+      actual.add(path.substring(path.lastIndexOf("/") + 1, path.length()));
+    }
+
+    List<String> expected = new ArrayList<>();
+    for (String path : expectedPaths) {
+      expected.add(path);
+    }
+
+    Assert.assertEquals(actual, expected);
+  }
+
+  private void assertUnOrdered(ScannedPaths sc, String ... expectedPaths) {
+    Set<String> actual = new HashSet<>();
+    for (String path : sc) {
+      actual.add(path.substring(path.lastIndexOf("/") + 1, path.length()));
+    }
+
+    Set<String> expected = new HashSet<>();
+    for (String path : expectedPaths) {
+      expected.add(path);
+    }
+
+    Assert.assertEquals(actual, expected);
   }
 }
