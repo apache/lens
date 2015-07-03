@@ -20,6 +20,7 @@ package org.apache.lens.api.query;
 
 import static org.apache.lens.api.query.SubmitOp.*;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -36,7 +37,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SupportedQuerySubmitOperations {
+public class SupportedQuerySubmitOperations implements Serializable {
 
   private static final String SEP = ", ";
 

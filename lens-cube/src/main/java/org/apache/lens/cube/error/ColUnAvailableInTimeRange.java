@@ -20,6 +20,7 @@ package org.apache.lens.cube.error;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -41,7 +42,7 @@ import lombok.NoArgsConstructor;
 @XmlAccessorType(XmlAccessType.FIELD)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @EqualsAndHashCode
-public class ColUnAvailableInTimeRange {
+public class ColUnAvailableInTimeRange implements Serializable {
 
   private static final ThreadLocal<DateFormat> DATE_FORMAT = new ThreadLocal<DateFormat>() {
     @Override
