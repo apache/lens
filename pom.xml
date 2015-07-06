@@ -492,6 +492,7 @@
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
+          <skip>${skipCheck}</skip>
           <useDefaultExcludes>true</useDefaultExcludes>
           <useMavenDefaultExcludes>true</useMavenDefaultExcludes>
           <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
@@ -586,6 +587,7 @@
             </goals>
             <phase>package</phase>
             <configuration>
+              <skip>${skipCheck}</skip>
               <consoleOutput>true</consoleOutput>
               <includeTestSourceDirectory>true</includeTestSourceDirectory>
               <configLocation>checkstyle.xml</configLocation>
@@ -1389,6 +1391,12 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>dev</id>
+      <properties>
+        <skipCheck>true</skipCheck>
+      </properties>
     </profile>
   </profiles>
 </project>
