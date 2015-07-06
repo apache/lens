@@ -30,6 +30,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryRewriter;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -614,7 +615,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @param node the node
    * @return the aggregate columns
    */
-  public ArrayList<String> getAggregateColumns(ASTNode node) {
+  public ArrayList<String> getAggregateColumns(ASTNode node, MutableInt count) {
 
     StringBuilder aggmeasures = new StringBuilder();
     if (HQLParser.isAggregateAST(node)) {
@@ -625,9 +626,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
         String funident = HQLParser.findNodeByPath(node, Identifier).toString();
         String measure = funident.concat("(").concat(aggCol).concat(")");
-
-        String alias = measure.replaceAll("\\s+", "").replaceAll("\\(\\(", "_").replaceAll("[.]", "_")
-          .replaceAll("[)]", "");
+        count.add(1);
+        String alias = "alias" + String.valueOf(count);
         String allaggmeasures = aggmeasures.append(measure).append(" as ").append(alias).toString();
         String aggColAlias = funident + "(" + alias + ")";
 
@@ -640,7 +640,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     for (int i = 0; i < node.getChildCount(); i++) {
       ASTNode child = (ASTNode) node.getChild(i);
-      getAggregateColumns(child);
+      getAggregateColumns(child, count);
     }
     return (ArrayList<String>) aggColumn;
   }
@@ -862,7 +862,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     replaceWithUnderlyingStorage(hconf, fromAST);
     replaceAliasInAST();
     getFilterInJoinCond(fromAST);
-    getAggregateColumns(selectAST);
+    getAggregateColumns(selectAST, new MutableInt(0));
     constructJoinChain();
     getAllFilters(whereAST);
     buildSubqueries(fromAST);
