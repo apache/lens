@@ -1384,12 +1384,17 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
 
   public List<String> getPartitionTimelines(LensSessionHandle sessionid, String factName, String storage,
     String updatePeriod, String timeDimension) throws LensException, HiveException {
-    CubeMetastoreClient client = getClient(sessionid);
-    List<String> ret = Lists.newArrayList();
-    for (PartitionTimeline timeline : client.getTimelines(factName, storage, updatePeriod, timeDimension)) {
-      ret.add(timeline.toString());
+    acquire(sessionid);
+    try {
+      CubeMetastoreClient client = getClient(sessionid);
+      List<String> ret = Lists.newArrayList();
+      for (PartitionTimeline timeline : client.getTimelines(factName, storage, updatePeriod, timeDimension)) {
+        ret.add(timeline.toString());
+      }
+      return ret;
+    } finally {
+      release(sessionid);
     }
-    return ret;
   }
 
   @Override
