@@ -249,6 +249,11 @@ public final class LensTestUtil {
   }
 
   public static void createTestDatabaseResources(String[] testDatabases, HiveConf conf) throws Exception {
+    File srcJarDir = new File("target/testjars/");
+    if (!srcJarDir.exists()) {
+      // nothing to setup
+      return;
+    }
     File resDir = new File("target/resources");
     if (!resDir.exists()) {
       resDir.mkdir();
@@ -256,8 +261,8 @@ public final class LensTestUtil {
 
     // Create databases and resource dirs
     Hive hive = Hive.get(conf);
-    File testJarFile = new File("testdata/test.jar");
-    File serdeJarFile = new File("testdata/serde.jar");
+    File testJarFile = new File("target/testjars/test.jar");
+    File serdeJarFile = new File("target/testjars/serde.jar");
     for (String db : testDatabases) {
       Database database = new Database();
       database.setName(db);

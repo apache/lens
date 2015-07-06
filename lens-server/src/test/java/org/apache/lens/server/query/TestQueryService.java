@@ -1342,7 +1342,7 @@ public class TestQueryService extends LensJerseyTest {
       sessionService.openSession("foo@localhost", "bar", LensTestUtil.DB_WITH_JARS, new HashMap<String, String>());
 
     // Add a jar in the session
-    File testJarFile = new File("testdata/test2.jar");
+    File testJarFile = new File("target/testjars/test2.jar");
     sessionService.addResourceToAllServices(sessionHandle, "jar", "file://" + testJarFile.getAbsolutePath());
 
     log.info("@@@ Opened session " + sessionHandle.getPublicId() + " with database " + LensTestUtil.DB_WITH_JARS);
