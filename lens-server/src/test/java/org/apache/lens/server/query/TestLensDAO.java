@@ -76,7 +76,7 @@ public class TestLensDAO extends LensJerseyTest {
 
     try {
       conn = service.lensServerDao.getConnection();
-      stmt = conn.createStatement();
+      stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       ResultSet rs = stmt.executeQuery("SELECT handle FROM finished_queries");
 
       JDBCResultSet jdbcResultSet = new JDBCResultSet(null, rs, false);
