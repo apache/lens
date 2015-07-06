@@ -803,7 +803,7 @@ public class TestColumnarSQLRewriter {
    */
   @Test
   public void testReplaceDBName() throws Exception {
-    File jarDir = new File("testdata");
+    File jarDir = new File("target/testjars");
     File testJarFile = new File(jarDir, "test.jar");
     File serdeJarFile = new File(jarDir, "serde.jar");
 

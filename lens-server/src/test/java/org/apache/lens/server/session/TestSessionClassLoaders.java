@@ -154,7 +154,7 @@ public class TestSessionClassLoaders {
     LensSessionImpl session = sessionService.getSession(sessionHandle);
     session.setDbResService(sessionService.getDatabaseResourceService());
 
-    File sessionJar = new File("testdata/test2.jar");
+    File sessionJar = new File("target/testjars/test2.jar");
 
     String sessionJarLocation = "file://" + sessionJar.getAbsolutePath();
 

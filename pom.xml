@@ -100,7 +100,7 @@
     <license.plugin.version>2.6</license.plugin.version>
     <buildnumber.plugin.version>1.0</buildnumber.plugin.version>
     <findbugs.plugin.version>3.0.1</findbugs.plugin.version>
-    <antrun.plugin.version>1.7</antrun.plugin.version>
+    <antrun.plugin.version>1.8</antrun.plugin.version>
     <cobertura.plugin.version>2.7</cobertura.plugin.version>
 
     <!-- debian -->
@@ -434,6 +434,11 @@
             <forkedProcessTimeoutInSeconds>2400</forkedProcessTimeoutInSeconds>
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>${antrun.plugin.version}</version>
         </plugin>
         <plugin>
           <artifactId>jdeb</artifactId>
@@ -1277,7 +1282,6 @@
           <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
-          <version>${antrun.plugin.version}</version>
           <executions>
             <execution>
               <phase>process-classes</phase>
