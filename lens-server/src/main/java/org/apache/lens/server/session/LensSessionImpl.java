@@ -240,11 +240,10 @@ public class LensSessionImpl extends HiveSessionImpl {
   /**
    * Sets the config.
    *
-   * @param key   the key
-   * @param value the value
+   * @param config   the config to overlay
    */
-  public void setConfig(String key, String value) {
-    persistInfo.getConfig().put(key, value);
+  public void setConfig(Map<String, String> config) {
+    persistInfo.getConfig().putAll(config);
   }
 
   /**

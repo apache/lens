@@ -18,29 +18,17 @@
  */
 package org.apache.lens.server;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.lens.api.APIResult;
+import org.apache.lens.api.*;
 import org.apache.lens.api.APIResult.Status;
-import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.StringList;
-import org.apache.lens.api.query.LensQuery;
-import org.apache.lens.api.query.PersistentQueryResult;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
 import org.apache.lens.server.api.error.LensException;
@@ -172,7 +160,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(),
         new LensConf(), MediaType.APPLICATION_XML_TYPE));
       final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
       Assert.assertNotNull(handle);
       LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
@@ -228,6 +216,10 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
   public void testHiveServerRestart() throws Exception {
     QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
     LensSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
+
+    // set params
+    setParams(lensSessionId);
+
     // Create data file
     createRestartTestDataFile();
 
@@ -240,7 +232,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     // Create a test table
     LensTestUtil.createTable("test_hive_server_restart", target(), lensSessionId);
     LensTestUtil.loadData("test_hive_server_restart", TestResourceFile.TEST_DATA_FILE.getValue(), target(),
-        lensSessionId);
+      lensSessionId);
     LOG.info("Loaded data");
 
     LOG.info("Hive Server restart test");
@@ -258,7 +250,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
     QueryHandle handle = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle);
 
@@ -287,6 +279,10 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     Thread.sleep(10000);
     LOG.info("Server restarted");
 
+    // Check params to be set
+    verifyParamOnRestart(lensSessionId);
+
+
     // Poll for first query, we should not get any exception
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
       .get(LensQuery.class);
@@ -312,7 +308,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(),
         new LensConf(), MediaType.APPLICATION_XML_TYPE));
       handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
       Assert.assertNotNull(handle);
 
       // Poll for second query, this should finish successfully
@@ -364,17 +360,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     Assert.assertNotNull(restartTestSession);
 
     // Set a param
-    WebTarget paramTarget = sessionTarget.path("params");
-    FormDataMultiPart setpart = new FormDataMultiPart();
-    setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), restartTestSession,
-      MediaType.APPLICATION_XML_TYPE));
-    setpart
-      .bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("key").build(), "lens.session.testRestartKey"));
-    setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("value").build(), "myvalue"));
-    APIResult result = paramTarget.request().put(Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
-      APIResult.class);
-    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
+    setParams(restartTestSession);
     // Add resource
     // add a resource
     final WebTarget resourcetarget = target().path("session/resources");
@@ -384,25 +370,16 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), "file"));
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
       "target/test-classes/lens-site.xml"));
-    result = resourcetarget.path("add").request()
+    APIResult result = resourcetarget.path("add").request()
       .put(Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
 
     // restart server
     restartLensServer();
 
-    // Check session exists in the server
-
-    // Try and get params back
-    StringList sessionParams = paramTarget.queryParam("sessionid", restartTestSession).queryParam("verbose", true)
-      .request().get(StringList.class);
-    sessionParams = paramTarget.queryParam("sessionid", restartTestSession)
-      .queryParam("key", "lens.session.testRestartKey").request().get(StringList.class);
-    System.out.println("Session params:" + sessionParams.getElements());
-    Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("lens.session.testRestartKey=myvalue"));
-
     // Check resources added again
+    verifyParamOnRestart(restartTestSession);
+
     HiveSessionService sessionService = LensServices.get().getService("session");
     LensSessionImpl session = sessionService.getSession(restartTestSession);
     Assert.assertEquals(session.getLensSessionPersistInfo().getResources().size(), 1);
@@ -415,4 +392,25 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
+  private void setParams(LensSessionHandle lensSessionHandle) {
+    FormDataMultiPart setpart = new FormDataMultiPart();
+    setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionHandle,
+      MediaType.APPLICATION_XML_TYPE));
+    setpart
+      .bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("key").build(), "lens.session.testRestartKey"));
+    setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("value").build(), "myvalue"));
+    APIResult result = target().path("session").path("params").request()
+      .put(Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+  }
+
+  private void verifyParamOnRestart(LensSessionHandle lensSessionHandle) {
+
+    StringList sessionParams = target().path("session").path("params").queryParam("sessionid", lensSessionHandle)
+      .queryParam("verbose", true).queryParam("key", "lens.session.testRestartKey").request().get(StringList.class);
+    System.out.println("Session params:" + sessionParams.getElements());
+    Assert.assertEquals(sessionParams.getElements().size(), 1);
+    Assert.assertTrue(sessionParams.getElements().contains("lens.session.testRestartKey=myvalue"));
+
+  }
 }
