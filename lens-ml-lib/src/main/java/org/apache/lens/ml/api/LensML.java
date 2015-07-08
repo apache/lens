@@ -22,140 +22,171 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.ml.algo.api.MLAlgo;
-import org.apache.lens.ml.algo.api.MLModel;
 import org.apache.lens.server.api.error.LensException;
 
 /**
- * Lens's machine learning interface used by client code as well as Lens ML service.
+ * LensML interface to train and evaluate Machine learning models.
  */
 public interface LensML {
 
-  /** Name of ML service */
+  /**
+   * Name of ML service
+   */
   String NAME = "ml";
 
   /**
-   * Get list of available machine learning algorithms
+   * @return the list of supported Algos.
+   */
+  List<Algo> getAlgos();
+
+  /**
+   * Get Algo given an algo name.
    *
+   * @param name of the Algo
+   * @return Algo definition
+   */
+  Algo getAlgo(String name) throws LensException;
+
+  /**
+   * Creates a data set from an existing table
+   *
+   * @param name      the name of the data set
+   * @param dataTable the data table
    * @return
    */
-  List<String> getAlgorithms();
+  String createDataSet(String name, String dataTable, String dataBase) throws LensException;
 
   /**
-   * Get user friendly information about parameters accepted by the algorithm.
+   * Creates a data set from a query
    *
-   * @param algorithm the algorithm
-   * @return map of param key to its help message
+   * @param name  the name of the data set
+   * @param query query
+   * @return
    */
-  Map<String, String> getAlgoParamDescription(String algorithm);
+  String createDataSetFromQuery(String name, String query);
 
   /**
-   * Get a algo object instance which could be used to generate a model of the given algorithm.
+   * Returns the data set given the name
    *
-   * @param algorithm the algorithm
-   * @return the algo for name
-   * @throws LensException the lens exception
+   * @param name the name of the data set
+   * @return
    */
-  MLAlgo getAlgoForName(String algorithm) throws LensException;
+  DataSet getDataSet(String name) throws LensException;
 
   /**
-   * Create a model using the given HCatalog table as input. The arguments should contain information needeed to
-   * generate the model.
+   * Creates a Model with a chosen Algo and its parameters, feature list and the label.
    *
-   * @param table     the table
-   * @param algorithm the algorithm
-   * @param args      the args
-   * @return Unique ID of the model created after training is complete
-   * @throws LensException the lens exception
+   * @param name       the name of Model
+   * @param algo       the name of the Alog
+   * @param algoParams the algo parameters
+   * @param features   list of features
+   * @param label      the label to use
+   * @returns Model id of the created model
    */
-  String train(String table, String algorithm, String[] args) throws LensException;
+  String createModel(String name, String algo, Map<String, String> algoParams,
+                     List<Feature> features, Feature label, LensSessionHandle lensSessionHandle) throws LensException;
 
   /**
-   * Get model IDs for the given algorithm.
+   * Get Model given a modelId
    *
-   * @param algorithm the algorithm
-   * @return the models
-   * @throws LensException the lens exception
-   */
-  List<String> getModels(String algorithm) throws LensException;
-
-  /**
-   * Get a model instance given the algorithm name and model ID.
-   *
-   * @param algorithm the algorithm
-   * @param modelId   the model id
+   * @param modelId the id of the model
    * @return the model
-   * @throws LensException the lens exception
    */
-  MLModel getModel(String algorithm, String modelId) throws LensException;
+  Model getModel(String modelId) throws LensException;
 
   /**
-   * Get the FS location where model instance is saved.
+   * Train a model. This calls returns immediately after triggering the training
+   * asynchronously, the readiness of the ModelInstance should be checked based on its status.
    *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @return the model path
+   * @param modelId     the model id
+   * @param dataSetName data set name to use
+   * @return ModelInstance id the handle to the ModelInstance instance
    */
-  String getModelPath(String algorithm, String modelID);
+  String trainModel(String modelId, String dataSetName, LensSessionHandle lensSessionHandle) throws LensException;
 
   /**
-   * Evaluate model by running it against test data contained in the given table.
+   * Get Trained Model
    *
-   * @param session   the session
-   * @param table     the table
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @return Test report object containing test output table, and various evaluation metrics
-   * @throws LensException the lens exception
+   * @param modelInstanceId the id of the ModelInstance
+   * @return Trained model
    */
-  MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID,
-    String outputTable) throws LensException;
+  ModelInstance getModelInstance(String modelInstanceId) throws LensException;
 
   /**
-   * Get test reports for an algorithm.
+   * Cancels the creation of modelInstance.
    *
-   * @param algorithm the algorithm
-   * @return the test reports
-   * @throws LensException the lens exception
+   * @param modelInstanceId
+   * @return true on successful cancellation false otherwise.
    */
-  List<String> getTestReports(String algorithm) throws LensException;
+  boolean cancelModelInstance(String modelInstanceId);
 
   /**
-   * Get a test report by ID.
+   * Get the list of ModelInstance for a given model
    *
-   * @param algorithm the algorithm
-   * @param reportID  the report id
-   * @return the test report
-   * @throws LensException the lens exception
+   * @param modelId the model id
+   * @return List of trained models
    */
-  MLTestReport getTestReport(String algorithm, String reportID) throws LensException;
+  List<ModelInstance> getAllModelInstances(String modelId);
 
   /**
-   * Online predict call given a model ID, algorithm name and sample feature values.
+   * Evaluate a ModelInstance. This calls returns immediately after triggering the training
+   * asynchronously, the readiness of the Evaluation should be checked based on its status.
    *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @param features  the features
-   * @return prediction result
-   * @throws LensException the lens exception
+   * @param modelInstanceId the trained model id
+   * @param dataSetName     the data to use to evaluate
+   * @return the evaluationId
    */
-  Object predict(String algorithm, String modelID, Object[] features) throws LensException;
+  String evaluate(String modelInstanceId, String dataSetName, LensSessionHandle lensSessionHandle) throws LensException;
 
   /**
-   * Permanently delete a model instance.
+   * Get Evaluation
    *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @throws LensException the lens exception
+   * @param evalId
+   * @return the evaluation
    */
-  void deleteModel(String algorithm, String modelID) throws LensException;
+  Evaluation getEvaluation(String evalId) throws LensException;
 
   /**
-   * Permanently delete a test report instance.
+   * Cancels the Evaluation
    *
-   * @param algorithm the algorithm
-   * @param reportID  the report id
-   * @throws LensException the lens exception
+   * @param evalId
+   * @return true on successful cancellation false otherwise.
    */
-  void deleteTestReport(String algorithm, String reportID) throws LensException;
+  boolean cancelEvaluation(String evalId);
+
+  /**
+   * Batch predicts for a given data set. This calls returns immediately after triggering the prediction
+   * asynchronously, the readiness of the prediction should be checked based on its status.
+   *
+   * @param modelInstanceId
+   * @param dataSetName
+   * @return prediction id
+   */
+  String predict(String modelInstanceId, String dataSetName, LensSessionHandle lensSessionHandle) throws LensException;
+
+  /**
+   * Get BatchPrediction information
+   *
+   * @param predictionId
+   * @return
+   */
+  Prediction getPrediction(String predictionId) throws LensException;
+
+  /**
+   * Cancels the Prediction
+   *
+   * @param predictionId
+   * @return true on successful cancellation false otherwise.
+   */
+  boolean cancelPrediction(String predictionId);
+
+  /**
+   * Predict for a given feature vector
+   *
+   * @param modelInstanceId
+   * @param featureVector   the key is feature name.
+   * @return predicted value
+   */
+  String predict(String modelInstanceId, Map<String, String> featureVector) throws LensException;
+
 }

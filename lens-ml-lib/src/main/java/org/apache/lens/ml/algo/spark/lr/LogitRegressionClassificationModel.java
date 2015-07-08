@@ -18,7 +18,10 @@
  */
 package org.apache.lens.ml.algo.spark.lr;
 
+import java.util.List;
+
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
+import org.apache.lens.ml.api.Feature;
 
 import org.apache.spark.mllib.classification.LogisticRegressionModel;
 
@@ -28,12 +31,10 @@ import org.apache.spark.mllib.classification.LogisticRegressionModel;
 public class LogitRegressionClassificationModel extends BaseSparkClassificationModel<LogisticRegressionModel> {
 
   /**
-   * Instantiates a new logit regression classification model.
-   *
-   * @param modelId the model id
-   * @param model   the model
+   * @param featureList
+   * @param model
    */
-  public LogitRegressionClassificationModel(String modelId, LogisticRegressionModel model) {
-    super(modelId, model);
+  public LogitRegressionClassificationModel(List<Feature> featureList, LogisticRegressionModel model) {
+    super(featureList, model);
   }
 }

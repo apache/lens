@@ -78,25 +78,17 @@ import org.apache.spark.rdd.RDD;
  */
 public class LensRDDClient {
 
-  /** The Constant LOG. */
+  /**
+   * The Constant LOG.
+   */
   public static final Log LOG = LogFactory.getLog(LensRDDClient.class);
   // Default input format for table created from Lens result set
-  /** The Constant INPUT_FORMAT. */
-  private static final String INPUT_FORMAT = TextInputFormat.class.getName();
-  // Default output format
-  /** The Constant OUTPUT_FORMAT. */
-  private static final String OUTPUT_FORMAT = TextOutputFormat.class.getName();
-  // Name of partition column and its value. There is always exactly one partition in the table created from
-  // Result set.
-  /** The Constant TEMP_TABLE_PART_COL. */
-  private static final String TEMP_TABLE_PART_COL = "dummy_partition_column";
-
-  /** The Constant TEMP_TABLE_PART_VAL. */
-  private static final String TEMP_TABLE_PART_VAL = "placeholder_value";
-
-  /** The Constant HIVE_CONF. */
+  /**
+   * The Constant HIVE_CONF.
+   */
   protected static final HiveConf HIVE_CONF = new HiveConf();
 
+  // Default output format
   static {
     HIVE_CONF.setVar(HiveConf.ConfVars.METASTOREURIS, "");
     HIVE_CONF.set("javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=./metastore_db;create=true");
@@ -104,11 +96,32 @@ public class LensRDDClient {
     HIVE_CONF.setBoolean("hive.metastore.local", true);
     HIVE_CONF.set("hive.metastore.warehouse.dir", "file://${user.dir}/warehouse");
   }
-
-  /** The spark context. */
+  // Name of partition column and its value. There is always exactly one partition in the table created from
+  // Result set.
+  /**
+   * The Constant INPUT_FORMAT.
+   */
+  private static final String INPUT_FORMAT = TextInputFormat.class.getName();
+  /**
+   * The Constant OUTPUT_FORMAT.
+   */
+  private static final String OUTPUT_FORMAT = TextOutputFormat.class.getName();
+  /**
+   * The Constant TEMP_TABLE_PART_COL.
+   */
+  private static final String TEMP_TABLE_PART_COL = "dummy_partition_column";
+  /**
+   * The Constant TEMP_TABLE_PART_VAL.
+   */
+  private static final String TEMP_TABLE_PART_VAL = "placeholder_value";
+  /**
+   * The spark context.
+   */
   private final JavaSparkContext sparkContext; // Spark context
 
-  /** The lens client. */
+  /**
+   * The lens client.
+   */
   private LensClient lensClient; // Lens client instance. Initialized lazily.
 
   /**
@@ -318,13 +331,19 @@ public class LensRDDClient {
    */
   public static class LensRDDResult implements Serializable {
 
-    /** The result rdd. */
+    /**
+     * The result rdd.
+     */
     private transient RDD<List<Object>> resultRDD;
 
-    /** The lens query. */
+    /**
+     * The lens query.
+     */
     private QueryHandle lensQuery;
 
-    /** The temp table name. */
+    /**
+     * The temp table name.
+     */
     private String tempTableName;
 
     /**

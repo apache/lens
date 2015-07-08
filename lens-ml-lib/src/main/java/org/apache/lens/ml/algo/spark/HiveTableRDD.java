@@ -33,10 +33,10 @@ import org.apache.spark.api.java.JavaSparkContext;
  * Create a JavaRDD based on a Hive table using HCatInputFormat.
  */
 public final class HiveTableRDD {
+  public static final Log LOG = LogFactory.getLog(HiveTableRDD.class);
+
   private HiveTableRDD() {
   }
-
-  public static final Log LOG = LogFactory.getLog(HiveTableRDD.class);
 
   /**
    * Creates the hive table rdd.
@@ -50,7 +50,9 @@ public final class HiveTableRDD {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   public static JavaPairRDD<WritableComparable, HCatRecord> createHiveTableRDD(JavaSparkContext javaSparkContext,
-    Configuration conf, String db, String table, String partitionFilter) throws IOException {
+                                                                               Configuration conf, String db,
+                                                                               String table, String partitionFilter)
+    throws IOException {
 
     HCatInputFormat.setInput(conf, db, table, partitionFilter);
 

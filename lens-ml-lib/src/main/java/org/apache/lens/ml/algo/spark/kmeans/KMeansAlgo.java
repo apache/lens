@@ -18,15 +18,18 @@
  */
 package org.apache.lens.ml.algo.spark.kmeans;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.ml.algo.api.AlgoParam;
 import org.apache.lens.ml.algo.api.Algorithm;
-import org.apache.lens.ml.algo.api.MLAlgo;
-import org.apache.lens.ml.algo.api.MLModel;
+import org.apache.lens.ml.algo.api.TrainedModel;
 import org.apache.lens.ml.algo.lib.AlgoArgParser;
 import org.apache.lens.ml.algo.spark.HiveTableRDD;
+import org.apache.lens.ml.api.AlgoParam;
+import org.apache.lens.ml.api.DataSet;
+import org.apache.lens.ml.api.Feature;
+import org.apache.lens.ml.api.Model;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -46,54 +49,71 @@ import org.apache.spark.mllib.linalg.Vectors;
 
 import scala.Tuple2;
 
+
 /**
  * The Class KMeansAlgo.
  */
-@Algorithm(name = "spark_kmeans_algo", description = "Spark MLLib KMeans algo")
-public class KMeansAlgo implements MLAlgo {
+public class KMeansAlgo implements Algorithm {
 
-  /** The conf. */
+  static String description = "Spark K means algo";
+  static String name = "spark_k_means";
+
+  /**
+   * The conf.
+   */
   private transient LensConf conf;
 
-  /** The spark context. */
+  /**
+   * The spark context.
+   */
   private JavaSparkContext sparkContext;
 
-  /** The part filter. */
+  /**
+   * The part filter.
+   */
   @AlgoParam(name = "partition", help = "Partition filter to be used while constructing table RDD")
   private String partFilter = null;
 
-  /** The k. */
+  /**
+   * The k.
+   */
   @AlgoParam(name = "k", help = "Number of cluster")
   private int k;
 
-  /** The max iterations. */
+  /**
+   * The max iterations.
+   */
   @AlgoParam(name = "maxIterations", help = "Maximum number of iterations", defaultValue = "100")
   private int maxIterations = 100;
 
-  /** The runs. */
+  /**
+   * The runs.
+   */
   @AlgoParam(name = "runs", help = "Number of parallel run", defaultValue = "1")
   private int runs = 1;
 
-  /** The initialization mode. */
+  /**
+   * The initialization mode.
+   */
   @AlgoParam(name = "initializationMode",
     help = "initialization model, either \"random\" or \"k-means||\" (default).", defaultValue = "k-means||")
   private String initializationMode = "k-means||";
 
   @Override
   public String getName() {
-    return getClass().getAnnotation(Algorithm.class).name();
+    return name;
   }
 
   @Override
   public String getDescription() {
-    return getClass().getAnnotation(Algorithm.class).description();
+    return description;
   }
 
   /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.ml.MLAlgo#configure(org.apache.lens.api.LensConf)
-   */
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.ml.MLAlgo#configure(org.apache.lens.api.LensConf)
+     */
   @Override
   public void configure(LensConf configuration) {
     this.conf = configuration;
@@ -104,51 +124,6 @@ public class KMeansAlgo implements MLAlgo {
     return conf;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.ml.MLAlgo#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
-   * java.lang.String, java.lang.String[])
-   */
-  @Override
-  public MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException {
-    List<String> features = AlgoArgParser.parseArgs(this, params);
-    final int[] featurePositions = new int[features.size()];
-    final int NUM_FEATURES = features.size();
-
-    JavaPairRDD<WritableComparable, HCatRecord> rdd = null;
-    try {
-      // Map feature names to positions
-      Table tbl = Hive.get(toHiveConf(conf)).getTable(db, table);
-      List<FieldSchema> allCols = tbl.getAllCols();
-      int f = 0;
-      for (int i = 0; i < tbl.getAllCols().size(); i++) {
-        String colName = allCols.get(i).getName();
-        if (features.contains(colName)) {
-          featurePositions[f++] = i;
-        }
-      }
-
-      rdd = HiveTableRDD.createHiveTableRDD(sparkContext, toHiveConf(conf), db, table, partFilter);
-      JavaRDD<Vector> trainableRDD = rdd.map(new Function<Tuple2<WritableComparable, HCatRecord>, Vector>() {
-        @Override
-        public Vector call(Tuple2<WritableComparable, HCatRecord> v1) throws Exception {
-          HCatRecord hCatRecord = v1._2();
-          double[] arr = new double[NUM_FEATURES];
-          for (int i = 0; i < NUM_FEATURES; i++) {
-            Object val = hCatRecord.get(featurePositions[i]);
-            arr[i] = val == null ? 0d : (Double) val;
-          }
-          return Vectors.dense(arr);
-        }
-      });
-
-      KMeansModel model = KMeans.train(trainableRDD.rdd(), k, maxIterations, runs, initializationMode);
-      return new KMeansClusteringModel(modelId, model);
-    } catch (Exception e) {
-      throw new LensException("KMeans algo failed for " + db + "." + table, e);
-    }
-  }
 
   /**
    * To hive conf.
@@ -162,5 +137,58 @@ public class KMeansAlgo implements MLAlgo {
       hiveConf.set(key, conf.getProperties().get(key));
     }
     return hiveConf;
+  }
+
+  @Override
+  public List<AlgoParam> getParams() {
+    return null;
+  }
+
+  @Override
+  public TrainedModel train(Model model, DataSet trainingDataSet) throws LensException {
+    AlgoArgParser.parseArgs(this, model.getAlgoSpec().getAlgoParams());
+    List<String> features = new ArrayList<>();
+    for (Feature feature : model.getFeatureSpec()) {
+      features.add(feature.getDataColumn());
+    }
+
+    final int[] featurePositions = new int[features.size()];
+    final int NUM_FEATURES = features.size();
+
+    JavaPairRDD<WritableComparable, HCatRecord> rdd = null;
+
+    try {
+      // Map feature names to positions
+      Table tbl = Hive.get(toHiveConf(conf)).getTable(trainingDataSet.getDatabase(), trainingDataSet.getTableName());
+      List<FieldSchema> allCols = tbl.getAllCols();
+      int f = 0;
+      for (int i = 0; i < tbl.getAllCols().size(); i++) {
+        String colName = allCols.get(i).getName();
+        if (features.contains(colName)) {
+          featurePositions[f++] = i;
+        }
+      }
+
+      rdd = HiveTableRDD.createHiveTableRDD(sparkContext, toHiveConf(conf), trainingDataSet.getDatabase(),
+        trainingDataSet.getTableName(), partFilter);
+      JavaRDD<Vector> trainableRDD = rdd.map(new Function<Tuple2<WritableComparable, HCatRecord>, Vector>() {
+        @Override
+        public Vector call(Tuple2<WritableComparable, HCatRecord> v1) throws Exception {
+          HCatRecord hCatRecord = v1._2();
+          double[] arr = new double[NUM_FEATURES];
+          for (int i = 0; i < NUM_FEATURES; i++) {
+            Object val = hCatRecord.get(featurePositions[i]);
+            arr[i] = val == null ? 0d : (Double) val;
+          }
+          return Vectors.dense(arr);
+        }
+      });
+
+      KMeansModel kMeansModel = KMeans.train(trainableRDD.rdd(), k, maxIterations, runs, initializationMode);
+      return new KMeansClusteringModel(model.getFeatureSpec(), kMeansModel);
+    } catch (Exception e) {
+      throw new LensException(
+        "KMeans algo failed for " + trainingDataSet.getDatabase() + "." + trainingDataSet.getTableName(), e);
+    }
   }
 }

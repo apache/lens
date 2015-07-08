@@ -16,44 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.impl;
+package org.apache.lens.ml.api;
 
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.api.error.LensException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import lombok.Getter;
-import lombok.Setter;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
- * Run a query against a Lens server.
+ * The Interface AlgoParam.
  */
-public abstract class QueryRunner {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface AlgoParam {
 
   /**
-   * The session handle.
-   */
-  protected final LensSessionHandle sessionHandle;
-
-  @Getter
-  @Setter
-  protected String queryName;
-
-  /**
-   * Instantiates a new query runner.
+   * Name.
    *
-   * @param sessionHandle the session handle
+   * @return the string
    */
-  public QueryRunner(LensSessionHandle sessionHandle) {
-    this.sessionHandle = sessionHandle;
-  }
+  @XmlElement String name();
 
   /**
-   * Run query.
+   * Help.
    *
-   * @param query the query
-   * @return the query handle
-   * @throws LensException the lens exception
+   * @return the string
    */
-  public abstract QueryHandle runQuery(String query) throws LensException;
+  @XmlElement String help();
+
+  /**
+   * Default value.
+   *
+   * @return the string
+   */
+  @XmlElement String defaultValue() default "None";
 }

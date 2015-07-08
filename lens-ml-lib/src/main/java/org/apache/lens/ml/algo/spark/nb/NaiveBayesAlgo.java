@@ -20,23 +20,27 @@ package org.apache.lens.ml.algo.spark.nb;
 
 import java.util.Map;
 
-import org.apache.lens.ml.algo.api.AlgoParam;
-import org.apache.lens.ml.algo.api.Algorithm;
 import org.apache.lens.ml.algo.spark.BaseSparkAlgo;
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
+import org.apache.lens.ml.api.AlgoParam;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.spark.mllib.classification.NaiveBayes;
+import org.apache.spark.mllib.classification.NaiveBayesModel;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
 /**
  * The Class NaiveBayesAlgo.
  */
-@Algorithm(name = "spark_naive_bayes", description = "Spark Naive Bayes classifier algo")
 public class NaiveBayesAlgo extends BaseSparkAlgo {
 
-  /** The lambda. */
+  static final String DESCRIPTION = "Spark naive bayes algo";
+  static final String NAME = "spark_naive_bayes";
+
+  /**
+   * The lambda.
+   */
   @AlgoParam(name = "lambda", help = "Lambda parameter for naive bayes learner", defaultValue = "1.0d")
   private double lambda = 1.0;
 
@@ -48,6 +52,10 @@ public class NaiveBayesAlgo extends BaseSparkAlgo {
    */
   public NaiveBayesAlgo(String name, String description) {
     super(name, description);
+  }
+
+  public NaiveBayesAlgo() {
+    super(NAME, DESCRIPTION);
   }
 
   /*
@@ -66,8 +74,9 @@ public class NaiveBayesAlgo extends BaseSparkAlgo {
    * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
-  protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
+  protected BaseSparkClassificationModel trainInternal(RDD<LabeledPoint> trainingRDD)
     throws LensException {
-    return new NaiveBayesClassificationModel(modelId, NaiveBayes.train(trainingRDD, lambda));
+    NaiveBayesModel naiveBayesModel = NaiveBayes.train(trainingRDD, lambda);
+    return new NaiveBayesClassificationModel(features, NaiveBayes.train(trainingRDD, lambda));
   }
 }

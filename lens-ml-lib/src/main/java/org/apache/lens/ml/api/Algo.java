@@ -16,38 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.algo.api;
+package org.apache.lens.ml.api;
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.server.api.error.LensException;
+import java.util.List;
 
-/**
- * The Interface MLAlgo.
- */
-public interface MLAlgo {
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+
+
+public interface Algo {
+
+  @XmlElement
   String getName();
 
+  @XmlElement
   String getDescription();
 
-  /**
-   * Configure.
-   *
-   * @param configuration the configuration
-   */
-  void configure(LensConf configuration);
-
-  LensConf getConf();
-
-  /**
-   * Train.
-   *
-   * @param conf    the conf
-   * @param db      the db
-   * @param table   the table
-   * @param modelId the model id
-   * @param params  the params
-   * @return the ML model
-   * @throws LensException the lens exception
-   */
-  MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException;
+  @XmlElementWrapper
+  List<AlgoParam> getParams();
 }

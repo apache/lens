@@ -16,33 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.algo.api;
+package org.apache.lens.ml.api;
 
-import java.util.List;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.ml.api.AlgoParam;
-import org.apache.lens.ml.api.DataSet;
-import org.apache.lens.ml.api.Model;
-import org.apache.lens.server.api.error.LensException;
+/**
+ * Status of the batch jobs for training, evaluation and prediction
+ */
 
-public interface Algorithm {
-
-  String getName();
-
-  String getDescription();
-
-  List<AlgoParam> getParams();
-
-  /**
-   * Configure.
-   *
-   * @param configuration the configuration
-   */
-  void configure(LensConf configuration);
-
-  LensConf getConf();
-
-  TrainedModel train(Model model, DataSet dataTable) throws LensException;
-
+@XmlRootElement
+public enum Status {
+  SUBMITTED,
+  RUNNING,
+  FAILED,
+  CANCELLED,
+  COMPLETED
 }

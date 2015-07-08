@@ -16,44 +16,62 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.impl;
+package org.apache.lens.ml.api;
+
+import java.util.Date;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.api.error.LensException;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Run a query against a Lens server.
+ * Contains meta data for an Evaluation. Evaluation captures metadata of the process of evaluating data contained in
+ * inputDataSetName against modelInstanceId.
  */
-public abstract class QueryRunner {
+@NoArgsConstructor
+@AllArgsConstructor
+@XmlRootElement
+public class Evaluation implements MLProcess {
 
-  /**
-   * The session handle.
-   */
-  protected final LensSessionHandle sessionHandle;
+  @XmlElement
+  @Getter
+  @Setter
+  String id;
+
+  @XmlElement
+  @Getter
+  @Setter
+  Date startTime;
+
+  @XmlElement
+  @Getter
+  @Setter
+  Date finishTime;
+
+  @XmlElement
+  @Getter
+  @Setter
+  Status status;
 
   @Getter
   @Setter
-  protected String queryName;
+  @XmlElement
+  LensSessionHandle lensSessionHandle;
 
-  /**
-   * Instantiates a new query runner.
-   *
-   * @param sessionHandle the session handle
-   */
-  public QueryRunner(LensSessionHandle sessionHandle) {
-    this.sessionHandle = sessionHandle;
-  }
+  @Getter
+  @Setter
+  @XmlElement
+  String modeInstanceId;
 
-  /**
-   * Run query.
-   *
-   * @param query the query
-   * @return the query handle
-   * @throws LensException the lens exception
-   */
-  public abstract QueryHandle runQuery(String query) throws LensException;
+  @Getter
+  @Setter
+  @XmlElement
+  String inputDataSetName;
+
 }

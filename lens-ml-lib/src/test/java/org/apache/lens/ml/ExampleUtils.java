@@ -40,10 +40,10 @@ import org.apache.hadoop.mapred.TextInputFormat;
  * The Class ExampleUtils.
  */
 public final class ExampleUtils {
+  private static final Log LOG = LogFactory.getLog(ExampleUtils.class);
+
   private ExampleUtils() {
   }
-
-  private static final Log LOG = LogFactory.getLog(ExampleUtils.class);
 
   /**
    * Creates the example table.
@@ -57,7 +57,8 @@ public final class ExampleUtils {
    * @throws HiveException the hive exception
    */
   public static void createTable(HiveConf conf, String database, String tableName, String sampleDataFile,
-    String labelColumn, Map<String, String> tableParams, String... features) throws HiveException {
+                                 String labelColumn, Map<String, String> tableParams, String... features)
+    throws HiveException {
 
     Path dataFilePath = new Path(sampleDataFile);
     Path partDir = dataFilePath.getParent();
@@ -65,14 +66,14 @@ public final class ExampleUtils {
     // Create table
     List<FieldSchema> columns = new ArrayList<FieldSchema>();
 
+    for (String feature : features) {
+      columns.add(new FieldSchema(feature, "double", "Feature " + feature));
+    }
+
     // Label is optional. Not used for unsupervised models.
     // If present, label will be the first column, followed by features
     if (labelColumn != null) {
       columns.add(new FieldSchema(labelColumn, "double", "Labelled Column"));
-    }
-
-    for (String feature : features) {
-      columns.add(new FieldSchema(feature, "double", "Feature " + feature));
     }
 
     Table tbl = Hive.get(conf).newTable(database + "." + tableName);

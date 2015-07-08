@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.lens.ml.api.Feature;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.logging.Log;
@@ -50,59 +51,76 @@ import lombok.ToString;
 @ToString
 public class TableTrainingSpec implements Serializable {
 
-  /** The Constant LOG. */
+  /**
+   * The Constant LOG.
+   */
   public static final Log LOG = LogFactory.getLog(TableTrainingSpec.class);
-
-  /** The training rdd. */
+  /**
+   * The label pos.
+   */
+  int labelPos;
+  /**
+   * The feature positions.
+   */
+  int[] featurePositions;
+  /**
+   * The num features.
+   */
+  int numFeatures;
+  /**
+   * The labeled rdd.
+   */
+  transient JavaRDD<LabeledPoint> labeledRDD;
+  /**
+   * The training rdd.
+   */
   @Getter
   private transient RDD<LabeledPoint> trainingRDD;
-
-  /** The testing rdd. */
+  /**
+   * The testing rdd.
+   */
   @Getter
   private transient RDD<LabeledPoint> testingRDD;
-
-  /** The database. */
+  /**
+   * The database.
+   */
   @Getter
   private String database;
-
-  /** The table. */
+  /**
+   * The table.
+   */
   @Getter
   private String table;
 
-  /** The partition filter. */
+  // By default all samples are considered for training
+  /**
+   * The partition filter.
+   */
   @Getter
   private String partitionFilter;
-
-  /** The feature columns. */
+  /**
+   * The feature columns.
+   */
   @Getter
-  private List<String> featureColumns;
-
-  /** The label column. */
+  private List<Feature> featureColumns;
+  /**
+   * The label column.
+   */
   @Getter
-  private String labelColumn;
-
-  /** The conf. */
+  private Feature labelColumn;
+  /**
+   * The conf.
+   */
   @Getter
   private transient HiveConf conf;
-
-  // By default all samples are considered for training
-  /** The split training. */
+  /**
+   * The split training.
+   */
   private boolean splitTraining;
-
-  /** The training fraction. */
+  /**
+   * The training fraction.
+   */
   private double trainingFraction = 1.0;
-
-  /** The label pos. */
-  int labelPos;
-
-  /** The feature positions. */
-  int[] featurePositions;
-
-  /** The num features. */
-  int numFeatures;
-
-  /** The labeled rdd. */
-  transient JavaRDD<LabeledPoint> labeledRDD;
 
   /**
    * New builder.
@@ -114,11 +132,141 @@ public class TableTrainingSpec implements Serializable {
   }
 
   /**
+   * Validate.
+   *
+   * @return true, if successful
+   */
+  boolean validate() {
+    List<HCatFieldSchema> columns;
+    try {
+      HCatInputFormat.setInput(conf, database == null ? "default" : database, table, partitionFilter);
+      HCatSchema tableSchema = HCatInputFormat.getTableSchema(conf);
+      columns = tableSchema.getFields();
+    } catch (IOException exc) {
+      LOG.error("Error getting table info " + toString(), exc);
+      return false;
+    }
+
+    LOG.info(table + " columns " + columns.toString());
+
+    boolean valid = false;
+    if (columns != null && !columns.isEmpty()) {
+      // Check labeled column
+      List<String> columnNamesInTable = new ArrayList();
+      List<String> columnNamesInFeatureList = new ArrayList();
+      for (HCatFieldSchema col : columns) {
+        columnNamesInTable.add(col.getName());
+      }
+
+      for (Feature feature : featureColumns) {
+        columnNamesInFeatureList.add(feature.getDataColumn());
+      }
+
+      String labelColumnName = labelColumn.getDataColumn();
+
+      // Need at least one feature column and one label column
+      valid = columnNamesInTable.contains(labelColumnName);
+
+      if (valid) {
+        labelPos = columnNamesInTable.indexOf(labelColumnName);
+
+        // Check feature columns
+        if (featureColumns == null || featureColumns.isEmpty()) {
+          // feature columns are not provided, so all columns except label column are feature columns
+          featurePositions = new int[columnNamesInTable.size() - 1];
+          int p = 0;
+          for (int i = 0; i < columnNamesInTable.size(); i++) {
+            if (i == labelPos) {
+              continue;
+            }
+            featurePositions[p++] = i;
+          }
+
+          columnNamesInTable.remove(labelPos);
+          featureColumns = new ArrayList<Feature>();
+          for (String featureName : columnNamesInTable) {
+            featureColumns.add(new Feature(featureName, null, null, featureName));
+          }
+        } else {
+          // Feature columns were provided, verify all feature columns are present in the table
+          valid = columnNamesInTable.containsAll(columnNamesInFeatureList);
+          if (valid) {
+            // Get feature positions
+            featurePositions = new int[columnNamesInFeatureList.size()];
+            for (int i = 0; i < columnNamesInFeatureList.size(); i++) {
+              featurePositions[i] = columnNamesInTable.indexOf(featureColumns.get(i).getDataColumn());
+            }
+          }
+        }
+        numFeatures = featureColumns.size();
+      }
+    }
+
+    return valid;
+  }
+
+  /**
+   * Creates the rd ds.
+   *
+   * @param sparkContext the spark context
+   * @throws LensException the lens exception
+   */
+  public void createRDDs(JavaSparkContext sparkContext) throws LensException {
+    // Validate the spec
+    if (!validate()) {
+      throw new LensException("Table spec not valid: " + toString());
+    }
+
+    LOG.info("Creating RDDs with spec " + toString());
+
+    // Get the RDD for table
+    JavaPairRDD<WritableComparable, HCatRecord> tableRDD;
+    try {
+      tableRDD = HiveTableRDD.createHiveTableRDD(sparkContext, conf, database, table, partitionFilter);
+    } catch (IOException e) {
+      throw new LensException(e);
+    }
+
+    // Map into trainable RDD
+    // TODO: Figure out a way to use custom value mappers
+    FeatureValueMapper[] valueMappers = new FeatureValueMapper[numFeatures + 1];
+    final DoubleValueMapper doubleMapper = new DoubleValueMapper();
+    for (int i = 0; i < numFeatures; i++) {
+      valueMappers[i] = doubleMapper;
+    }
+    valueMappers[numFeatures] = doubleMapper; //label mapper
+    ColumnFeatureFunction trainPrepFunction = new ColumnFeatureFunction(featurePositions, valueMappers, labelPos,
+      numFeatures, 0);
+    labeledRDD = tableRDD.map(trainPrepFunction);
+
+    if (splitTraining) {
+      // We have to split the RDD between a training RDD and a testing RDD
+      LOG.info("Splitting RDD for table " + database + "." + table + " with split fraction " + trainingFraction);
+      JavaRDD<DataSample> sampledRDD = labeledRDD.map(new Function<LabeledPoint, DataSample>() {
+        @Override
+        public DataSample call(LabeledPoint v1) throws Exception {
+          return new DataSample(v1);
+        }
+      });
+
+      trainingRDD = sampledRDD.filter(new TrainingFilter(trainingFraction)).map(new GetLabeledPoint()).rdd();
+      testingRDD = sampledRDD.filter(new TestingFilter(trainingFraction)).map(new GetLabeledPoint()).rdd();
+    } else {
+      LOG.info("Using same RDD for train and test");
+      trainingRDD = labeledRDD.rdd();
+      testingRDD = trainingRDD;
+    }
+    LOG.info("Generated RDDs");
+  }
+
+  /**
    * The Class TableTrainingSpecBuilder.
    */
   public static class TableTrainingSpecBuilder {
 
-    /** The spec. */
+    /**
+     * The spec.
+     */
     final TableTrainingSpec spec;
 
     /**
@@ -178,7 +326,7 @@ public class TableTrainingSpec implements Serializable {
      * @param labelColumn the label column
      * @return the table training spec builder
      */
-    public TableTrainingSpecBuilder labelColumn(String labelColumn) {
+    public TableTrainingSpecBuilder labelColumn(Feature labelColumn) {
       spec.labelColumn = labelColumn;
       return this;
     }
@@ -189,7 +337,7 @@ public class TableTrainingSpec implements Serializable {
      * @param featureColumns the feature columns
      * @return the table training spec builder
      */
-    public TableTrainingSpecBuilder featureColumns(List<String> featureColumns) {
+    public TableTrainingSpecBuilder featureColumns(List<Feature> featureColumns) {
       spec.featureColumns = featureColumns;
       return this;
     }
@@ -223,10 +371,14 @@ public class TableTrainingSpec implements Serializable {
    */
   public static class DataSample implements Serializable {
 
-    /** The labeled point. */
+    /**
+     * The labeled point.
+     */
     private final LabeledPoint labeledPoint;
 
-    /** The sample. */
+    /**
+     * The sample.
+     */
     private final double sample;
 
     /**
@@ -245,7 +397,9 @@ public class TableTrainingSpec implements Serializable {
    */
   public static class TrainingFilter implements Function<DataSample, Boolean> {
 
-    /** The training fraction. */
+    /**
+     * The training fraction.
+     */
     private double trainingFraction;
 
     /**
@@ -273,7 +427,9 @@ public class TableTrainingSpec implements Serializable {
    */
   public static class TestingFilter implements Function<DataSample, Boolean> {
 
-    /** The training fraction. */
+    /**
+     * The training fraction.
+     */
     private double trainingFraction;
 
     /**
@@ -310,124 +466,6 @@ public class TableTrainingSpec implements Serializable {
     public LabeledPoint call(DataSample v1) throws Exception {
       return v1.labeledPoint;
     }
-  }
-
-  /**
-   * Validate.
-   *
-   * @return true, if successful
-   */
-  boolean validate() {
-    List<HCatFieldSchema> columns;
-    try {
-      HCatInputFormat.setInput(conf, database == null ? "default" : database, table, partitionFilter);
-      HCatSchema tableSchema = HCatInputFormat.getTableSchema(conf);
-      columns = tableSchema.getFields();
-    } catch (IOException exc) {
-      LOG.error("Error getting table info " + toString(), exc);
-      return false;
-    }
-
-    LOG.info(table + " columns " + columns.toString());
-
-    boolean valid = false;
-    if (columns != null && !columns.isEmpty()) {
-      // Check labeled column
-      List<String> columnNames = new ArrayList<String>();
-      for (HCatFieldSchema col : columns) {
-        columnNames.add(col.getName());
-      }
-
-      // Need at least one feature column and one label column
-      valid = columnNames.contains(labelColumn) && columnNames.size() > 1;
-
-      if (valid) {
-        labelPos = columnNames.indexOf(labelColumn);
-
-        // Check feature columns
-        if (featureColumns == null || featureColumns.isEmpty()) {
-          // feature columns are not provided, so all columns except label column are feature columns
-          featurePositions = new int[columnNames.size() - 1];
-          int p = 0;
-          for (int i = 0; i < columnNames.size(); i++) {
-            if (i == labelPos) {
-              continue;
-            }
-            featurePositions[p++] = i;
-          }
-
-          columnNames.remove(labelPos);
-          featureColumns = columnNames;
-        } else {
-          // Feature columns were provided, verify all feature columns are present in the table
-          valid = columnNames.containsAll(featureColumns);
-          if (valid) {
-            // Get feature positions
-            featurePositions = new int[featureColumns.size()];
-            for (int i = 0; i < featureColumns.size(); i++) {
-              featurePositions[i] = columnNames.indexOf(featureColumns.get(i));
-            }
-          }
-        }
-        numFeatures = featureColumns.size();
-      }
-    }
-
-    return valid;
-  }
-
-  /**
-   * Creates the rd ds.
-   *
-   * @param sparkContext the spark context
-   * @throws LensException the lens exception
-   */
-  public void createRDDs(JavaSparkContext sparkContext) throws LensException {
-    // Validate the spec
-    if (!validate()) {
-      throw new LensException("Table spec not valid: " + toString());
-    }
-
-    LOG.info("Creating RDDs with spec " + toString());
-
-    // Get the RDD for table
-    JavaPairRDD<WritableComparable, HCatRecord> tableRDD;
-    try {
-      tableRDD = HiveTableRDD.createHiveTableRDD(sparkContext, conf, database, table, partitionFilter);
-    } catch (IOException e) {
-      throw new LensException(e);
-    }
-
-    // Map into trainable RDD
-    // TODO: Figure out a way to use custom value mappers
-    FeatureValueMapper[] valueMappers = new FeatureValueMapper[numFeatures];
-    final DoubleValueMapper doubleMapper = new DoubleValueMapper();
-    for (int i = 0; i < numFeatures; i++) {
-      valueMappers[i] = doubleMapper;
-    }
-
-    ColumnFeatureFunction trainPrepFunction = new ColumnFeatureFunction(featurePositions, valueMappers, labelPos,
-      numFeatures, 0);
-    labeledRDD = tableRDD.map(trainPrepFunction);
-
-    if (splitTraining) {
-      // We have to split the RDD between a training RDD and a testing RDD
-      LOG.info("Splitting RDD for table " + database + "." + table + " with split fraction " + trainingFraction);
-      JavaRDD<DataSample> sampledRDD = labeledRDD.map(new Function<LabeledPoint, DataSample>() {
-        @Override
-        public DataSample call(LabeledPoint v1) throws Exception {
-          return new DataSample(v1);
-        }
-      });
-
-      trainingRDD = sampledRDD.filter(new TrainingFilter(trainingFraction)).map(new GetLabeledPoint()).rdd();
-      testingRDD = sampledRDD.filter(new TestingFilter(trainingFraction)).map(new GetLabeledPoint()).rdd();
-    } else {
-      LOG.info("Using same RDD for train and test");
-      trainingRDD = labeledRDD.rdd();
-      testingRDD = trainingRDD;
-    }
-    LOG.info("Generated RDDs");
   }
 
 }

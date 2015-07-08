@@ -18,36 +18,13 @@
  */
 package org.apache.lens.ml.algo.api;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.io.Serializable;
+import java.util.Map;
 
-/**
- * The Interface AlgoParam.
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface AlgoParam {
+import org.apache.lens.server.api.error.LensException;
 
-  /**
-   * Name.
-   *
-   * @return the string
-   */
-  String name();
+public interface TrainedModel<PREDICTION> extends Serializable {
 
-  /**
-   * Help.
-   *
-   * @return the string
-   */
-  String help();
+  PREDICTION predict(Map<String, String> featureVector) throws LensException;
 
-  /**
-   * Default value.
-   *
-   * @return the string
-   */
-  String defaultValue() default "None";
 }

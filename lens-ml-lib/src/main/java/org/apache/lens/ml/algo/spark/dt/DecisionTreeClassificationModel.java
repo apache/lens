@@ -18,7 +18,10 @@
  */
 package org.apache.lens.ml.algo.spark.dt;
 
+import java.util.List;
+
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
+import org.apache.lens.ml.api.Feature;
 
 /**
  * The Class DecisionTreeClassificationModel.
@@ -26,12 +29,10 @@ import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
 public class DecisionTreeClassificationModel extends BaseSparkClassificationModel<SparkDecisionTreeModel> {
 
   /**
-   * Instantiates a new decision tree classification model.
-   *
-   * @param modelId the model id
-   * @param model   the model
+   * @param featureList
+   * @param model
    */
-  public DecisionTreeClassificationModel(String modelId, SparkDecisionTreeModel model) {
-    super(modelId, model);
+  public DecisionTreeClassificationModel(List<Feature> featureList, SparkDecisionTreeModel model) {
+    super(featureList, model);
   }
 }

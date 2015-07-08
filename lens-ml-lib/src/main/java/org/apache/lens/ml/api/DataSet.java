@@ -16,44 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.impl;
+package org.apache.lens.ml.api;
 
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.api.error.LensException;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Run a query against a Lens server.
+ * Contains meta data for a data set. A data set is identified by name, tableName and database.
  */
-public abstract class QueryRunner {
-
-  /**
-   * The session handle.
-   */
-  protected final LensSessionHandle sessionHandle;
+@AllArgsConstructor
+@XmlRootElement
+public class DataSet {
+  @Getter
+  @Setter
+  @XmlElement
+  String name;
 
   @Getter
   @Setter
-  protected String queryName;
+  @XmlElement
+  String tableName;
 
-  /**
-   * Instantiates a new query runner.
-   *
-   * @param sessionHandle the session handle
-   */
-  public QueryRunner(LensSessionHandle sessionHandle) {
-    this.sessionHandle = sessionHandle;
-  }
+  @Getter
+  @Setter
+  @XmlElement
+  String database;
 
-  /**
-   * Run query.
-   *
-   * @param query the query
-   * @return the query handle
-   * @throws LensException the lens exception
-   */
-  public abstract QueryHandle runQuery(String query) throws LensException;
 }

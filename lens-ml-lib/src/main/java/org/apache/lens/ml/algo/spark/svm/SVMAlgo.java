@@ -20,10 +20,9 @@ package org.apache.lens.ml.algo.spark.svm;
 
 import java.util.Map;
 
-import org.apache.lens.ml.algo.api.AlgoParam;
-import org.apache.lens.ml.algo.api.Algorithm;
 import org.apache.lens.ml.algo.spark.BaseSparkAlgo;
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
+import org.apache.lens.ml.api.AlgoParam;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.spark.mllib.classification.SVMModel;
@@ -34,22 +33,31 @@ import org.apache.spark.rdd.RDD;
 /**
  * The Class SVMAlgo.
  */
-@Algorithm(name = "spark_svm", description = "Spark SVML classifier algo")
 public class SVMAlgo extends BaseSparkAlgo {
 
-  /** The min batch fraction. */
+  static final String DESCRIPTION = "Spark SVM algo";
+  static final String NAME = "spark_svm";
+  /**
+   * The min batch fraction.
+   */
   @AlgoParam(name = "minBatchFraction", help = "Fraction for batched learning", defaultValue = "1.0d")
   private double minBatchFraction;
 
-  /** The reg param. */
+  /**
+   * The reg param.
+   */
   @AlgoParam(name = "regParam", help = "regularization parameter for gradient descent", defaultValue = "1.0d")
   private double regParam;
 
-  /** The step size. */
+  /**
+   * The step size.
+   */
   @AlgoParam(name = "stepSize", help = "Iteration step size", defaultValue = "1.0d")
   private double stepSize;
 
-  /** The iterations. */
+  /**
+   * The iterations.
+   */
   @AlgoParam(name = "iterations", help = "Number of iterations", defaultValue = "100")
   private int iterations;
 
@@ -61,6 +69,10 @@ public class SVMAlgo extends BaseSparkAlgo {
    */
   public SVMAlgo(String name, String description) {
     super(name, description);
+  }
+
+  public SVMAlgo() {
+    super(NAME, DESCRIPTION);
   }
 
   /*
@@ -82,9 +94,9 @@ public class SVMAlgo extends BaseSparkAlgo {
    * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
-  protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
+  protected BaseSparkClassificationModel trainInternal(RDD<LabeledPoint> trainingRDD)
     throws LensException {
     SVMModel svmModel = SVMWithSGD.train(trainingRDD, iterations, stepSize, regParam, minBatchFraction);
-    return new SVMClassificationModel(modelId, svmModel);
+    return new SVMClassificationModel(features, svmModel);
   }
 }

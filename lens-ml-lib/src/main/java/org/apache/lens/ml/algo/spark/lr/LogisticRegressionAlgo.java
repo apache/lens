@@ -20,10 +20,9 @@ package org.apache.lens.ml.algo.spark.lr;
 
 import java.util.Map;
 
-import org.apache.lens.ml.algo.api.AlgoParam;
-import org.apache.lens.ml.algo.api.Algorithm;
 import org.apache.lens.ml.algo.spark.BaseSparkAlgo;
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
+import org.apache.lens.ml.api.AlgoParam;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.spark.mllib.classification.LogisticRegressionModel;
@@ -34,18 +33,24 @@ import org.apache.spark.rdd.RDD;
 /**
  * The Class LogisticRegressionAlgo.
  */
-@Algorithm(name = "spark_logistic_regression", description = "Spark logistic regression algo")
 public class LogisticRegressionAlgo extends BaseSparkAlgo {
 
-  /** The iterations. */
+  static final String DESCRIPTION = "Spark logistic regression algo";
+  static final String NAME = "spark_logistic_regression";
+
+  /**
+   * The iterations.
+   */
   @AlgoParam(name = "iterations", help = "Max number of iterations", defaultValue = "100")
   private int iterations;
-
-  /** The step size. */
+  /**
+   * The step size.
+   */
   @AlgoParam(name = "stepSize", help = "Step size", defaultValue = "1.0d")
   private double stepSize;
-
-  /** The min batch fraction. */
+  /**
+   * The min batch fraction.
+   */
   @AlgoParam(name = "minBatchFraction", help = "Fraction for batched learning", defaultValue = "1.0d")
   private double minBatchFraction;
 
@@ -57,6 +62,14 @@ public class LogisticRegressionAlgo extends BaseSparkAlgo {
    */
   public LogisticRegressionAlgo(String name, String description) {
     super(name, description);
+  }
+
+  public LogisticRegressionAlgo(String name) {
+    super(name, DESCRIPTION);
+  }
+
+  public LogisticRegressionAlgo() {
+    super(NAME, DESCRIPTION);
   }
 
   /*
@@ -77,10 +90,11 @@ public class LogisticRegressionAlgo extends BaseSparkAlgo {
    * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
-  protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
+  protected BaseSparkClassificationModel trainInternal(RDD<LabeledPoint> trainingRDD)
     throws LensException {
+
     LogisticRegressionModel lrModel = LogisticRegressionWithSGD.train(trainingRDD, iterations, stepSize,
       minBatchFraction);
-    return new LogitRegressionClassificationModel(modelId, lrModel);
+    return new LogitRegressionClassificationModel(features, lrModel);
   }
 }

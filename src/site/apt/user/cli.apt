@@ -92,7 +92,7 @@ User CLI Commands
 *--+--+
 |close/bye|Releases all resources of the server session and exits the shell|
 *--+--+
-|debug [[--enable] To print all logs on cli for debugging purpose]|prints all class lelvel logs on cli for debugging purpose|
+|debug [[--enable] To print all logs on cli for debugging purpose]|prints all class level logs and verbose logs on cli for debugging purpose. 'debug false'  to turn off all class level logging and verbose level logging |
 *--+--+
 |get [--key] \<key\>|Fetches and prints session parameter specified with name <<<key>>> from lens server|
 *--+--+
@@ -106,7 +106,7 @@ User CLI Commands
 *--+--+
 |show params|Fetches and prints all session parameter from lens server|
 *--+--+
-|verbose [[--enable] Print the clilogger logs on cli]|Show cliLogger logs for command|
+|verbose [[--enable] Print the clilogger logs on cli]|Show cliLogger logs on cli'verbose false'  turns off the cliLogger logs on console|
 *--+--+
   <<Lens Connection Commands>>
 
@@ -121,7 +121,7 @@ User CLI Commands
 *--+--+
 |create database [--db] \<database-name\> [--ignoreIfExists \<ignore-if-exists\>]|create a database with specified name. if <<<ignore-if-exists>>> is true, create will not be tried if already exists. Default is false|
 *--+--+
-|drop database [--db] \<database-name\>|drop a database with specified name|
+|drop database [--db] \<database-name\> [--cascade ]|drop a database with specified name|
 *--+--+
 |show databases|displays list of all databases|
 *--+--+

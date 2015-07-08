@@ -16,44 +16,48 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.impl;
+package org.apache.lens.ml.api;
 
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.api.error.LensException;
+import java.util.List;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Run a query against a Lens server.
+ * The Model class. Contains meta data for a model creation. Algorithm to use, list of features and label. This doesn't
+ * contains the actual data for training the model (which is separated and stored in model instance class).
  */
-public abstract class QueryRunner {
-
-  /**
-   * The session handle.
-   */
-  protected final LensSessionHandle sessionHandle;
+@AllArgsConstructor
+@XmlRootElement
+public class Model {
 
   @Getter
   @Setter
-  protected String queryName;
+  @XmlElement
+  private String id;
 
-  /**
-   * Instantiates a new query runner.
-   *
-   * @param sessionHandle the session handle
-   */
-  public QueryRunner(LensSessionHandle sessionHandle) {
-    this.sessionHandle = sessionHandle;
-  }
+  @Getter
+  @Setter
+  @XmlElement
+  private String name;
 
-  /**
-   * Run query.
-   *
-   * @param query the query
-   * @return the query handle
-   * @throws LensException the lens exception
-   */
-  public abstract QueryHandle runQuery(String query) throws LensException;
+  @Getter
+  @Setter
+  @XmlElement
+  private AlgoSpec algoSpec;
+
+  @Getter
+  @Setter
+  @XmlElementWrapper
+  private List<Feature> featureSpec;
+
+  @Getter
+  @Setter
+  @XmlElementWrapper
+  private Feature labelSpec;
 }

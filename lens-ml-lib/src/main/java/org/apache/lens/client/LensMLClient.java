@@ -20,40 +20,55 @@ package org.apache.lens.client;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.Form;
-
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.ml.algo.api.MLAlgo;
-import org.apache.lens.ml.algo.api.MLModel;
-import org.apache.lens.ml.api.LensML;
-import org.apache.lens.ml.api.MLTestReport;
-import org.apache.lens.ml.api.ModelMetadata;
-import org.apache.lens.ml.api.TestReport;
+import org.apache.lens.ml.api.*;
+import org.apache.lens.ml.server.MLService;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.ServiceProvider;
+import org.apache.lens.server.api.ServiceProviderFactory;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.conf.HiveConf;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
-import lombok.extern.slf4j.Slf4j;
-
-/**
- * Client side implementation of LensML
- */
-@Slf4j
 public class LensMLClient implements LensML, Closeable {
+  private static final Log LOG = LogFactory.getLog(LensMLClient.class);
+  private static final HiveConf HIVE_CONF;
 
-  /** The client. */
+  static {
+    HIVE_CONF = new HiveConf();
+    // Add default config so that we know the service provider implementation
+    HIVE_CONF.addResource("lensserver-default.xml");
+    HIVE_CONF.addResource("lens-site.xml");
+  }
+
+  /**
+   * The ml service.
+   */
+  MLService mlService;
+  /**
+   * The service provider.
+   */
+  ServiceProvider serviceProvider;
+  /**
+   * The service provider factory.
+   */
+  ServiceProviderFactory serviceProviderFactory;
+  /**
+   * The client.
+   */
   private LensMLJerseyClient client;
+
+  /**
+   * Instantiates a new ML service resource.
+   */
+  public LensMLClient() {
+
+  }
 
   public LensMLClient(String password) {
     this(new LensClientConfig(), password);
@@ -72,232 +87,147 @@ public class LensMLClient implements LensML, Closeable {
   }
 
   public LensMLClient(LensClient lensClient) {
-    client = new LensMLJerseyClient(lensClient.getConnection(), lensClient
-        .getConnection().getSessionHandle());
+    client = new LensMLJerseyClient(lensClient.getConnection(), lensClient.getConnection().getSessionHandle());
+    serviceProviderFactory = getServiceProviderFactory(HIVE_CONF);
   }
 
-  /**
-   * Get list of available machine learning algorithms
-   *
-   * @return
-   */
-  @Override
-  public List<String> getAlgorithms() {
-    return client.getAlgoNames();
-  }
-
-  /**
-   * Get user friendly information about parameters accepted by the algorithm.
-   *
-   * @param algorithm the algorithm
-   * @return map of param key to its help message
-   */
-  @Override
-  public Map<String, String> getAlgoParamDescription(String algorithm) {
-    List<String> paramDesc = client.getParamDescriptionOfAlgo(algorithm);
-    // convert paramDesc to map
-    Map<String, String> paramDescMap = new LinkedHashMap<String, String>();
-    for (String str : paramDesc) {
-      String[] keyHelp = StringUtils.split(str, ":");
-      paramDescMap.put(keyHelp[0].trim(), keyHelp[1].trim());
+  private ServiceProvider getServiceProvider() {
+    if (serviceProvider == null) {
+      serviceProvider = serviceProviderFactory.getServiceProvider();
     }
-    return paramDescMap;
+    return serviceProvider;
   }
 
   /**
-   * Get a algo object instance which could be used to generate a model of the given algorithm.
+   * Gets the service provider factory.
    *
-   * @param algorithm the algorithm
-   * @return the algo for name
-   * @throws LensException the lens exception
+   * @param conf the conf
+   * @return the service provider factory
    */
-  @Override
-  public MLAlgo getAlgoForName(String algorithm) throws LensException {
-    throw new UnsupportedOperationException("MLAlgo cannot be accessed from client");
-  }
-
-  /**
-   * Create a model using the given HCatalog table as input. The arguments should contain information needeed to
-   * generate the model.
-   *
-   * @param table     the table
-   * @param algorithm the algorithm
-   * @param args      the args
-   * @return Unique ID of the model created after training is complete
-   * @throws LensException the lens exception
-   */
-  @Override
-  public String train(String table, String algorithm, String[] args) throws LensException {
-    Form trainParams = new Form();
-    trainParams.param("table", table);
-    for (int i = 0; i < args.length; i += 2) {
-      trainParams.param(args[i], args[i + 1]);
-    }
-    return client.trainModel(algorithm, trainParams);
-  }
-
-  /**
-   * Get model IDs for the given algorithm.
-   *
-   * @param algorithm the algorithm
-   * @return the models
-   * @throws LensException the lens exception
-   */
-  @Override
-  public List<String> getModels(String algorithm) throws LensException {
-    return client.getModelsForAlgorithm(algorithm);
-  }
-
-  /**
-   * Get a model instance given the algorithm name and model ID.
-   *
-   * @param algorithm the algorithm
-   * @param modelId   the model id
-   * @return the model
-   * @throws LensException the lens exception
-   */
-  @Override
-  public MLModel getModel(String algorithm, String modelId) throws LensException {
-    ModelMetadata metadata = client.getModelMetadata(algorithm, modelId);
-    String modelPathURI = metadata.getModelPath();
-
-    ObjectInputStream in = null;
+  private ServiceProviderFactory getServiceProviderFactory(HiveConf conf) {
+    Class<?> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY, ServiceProviderFactory.class);
     try {
-      URI modelURI = new URI(modelPathURI);
-      Path modelPath = new Path(modelURI);
-      FileSystem fs = FileSystem.get(modelURI, client.getConf());
-      in = new ObjectInputStream(fs.open(modelPath));
-      MLModel<?> model = (MLModel) in.readObject();
-      return model;
-    } catch (IOException e) {
-      throw new LensException(e);
-    } catch (URISyntaxException e) {
-      throw new LensException(e);
-    } catch (ClassNotFoundException e) {
-      throw new LensException(e);
-    } finally {
-      if (in != null) {
-        try {
-          in.close();
-        } catch (IOException e) {
-          log.error("Error closing stream.", e);
-        }
-      }
+      return (ServiceProviderFactory) spfClass.newInstance();
+    } catch (InstantiationException e) {
+      throw new RuntimeException(e);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
     }
-
   }
 
-  /**
-   * Get the FS location where model instance is saved.
-   *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @return the model path
-   */
-  @Override
-  public String getModelPath(String algorithm, String modelID) {
-    ModelMetadata metadata = client.getModelMetadata(algorithm, modelID);
-    return metadata.getModelPath();
+  private MLService getMlService() {
+    if (mlService == null) {
+      mlService = (MLService) getServiceProvider().getService(MLService.NAME);
+    }
+    return mlService;
   }
 
-  /**
-   * Evaluate model by running it against test data contained in the given table.
-   *
-   * @param session   the session
-   * @param table     the table
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @return Test report object containing test output table, and various evaluation metrics
-   * @throws LensException the lens exception
-   */
-  @Override
-  public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID,
-    String outputTable) throws LensException {
-    String reportID = client.testModel(table, algorithm, modelID, outputTable);
-    return getTestReport(algorithm, reportID);
-  }
-
-  /**
-   * Get test reports for an algorithm.
-   *
-   * @param algorithm the algorithm
-   * @return the test reports
-   * @throws LensException the lens exception
-   */
-  @Override
-  public List<String> getTestReports(String algorithm) throws LensException {
-    return client.getTestReportsOfAlgorithm(algorithm);
-  }
-
-  /**
-   * Get a test report by ID.
-   *
-   * @param algorithm the algorithm
-   * @param reportID  the report id
-   * @return the test report
-   * @throws LensException the lens exception
-   */
-  @Override
-  public MLTestReport getTestReport(String algorithm, String reportID) throws LensException {
-    TestReport report = client.getTestReport(algorithm, reportID);
-    MLTestReport mlTestReport = new MLTestReport();
-    mlTestReport.setAlgorithm(report.getAlgorithm());
-    mlTestReport.setFeatureColumns(Arrays.asList(report.getFeatureColumns().split("\\,+")));
-    mlTestReport.setLensQueryID(report.getQueryID());
-    mlTestReport.setLabelColumn(report.getLabelColumn());
-    mlTestReport.setModelID(report.getModelID());
-    mlTestReport.setOutputColumn(report.getOutputColumn());
-    mlTestReport.setPredictionResultColumn(report.getOutputColumn());
-    mlTestReport.setQueryID(report.getQueryID());
-    mlTestReport.setReportID(report.getReportID());
-    mlTestReport.setTestTable(report.getTestTable());
-    return mlTestReport;
-  }
-
-  /**
-   * Online predict call given a model ID, algorithm name and sample feature values.
-   *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @param features  the features
-   * @return prediction result
-   * @throws LensException the lens exception
-   */
-  @Override
-  public Object predict(String algorithm, String modelID, Object[] features) throws LensException {
-    return getModel(algorithm, modelID).predict(features);
-  }
-
-  /**
-   * Permanently delete a model instance.
-   *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @throws LensException the lens exception
-   */
-  @Override
-  public void deleteModel(String algorithm, String modelID) throws LensException {
-    client.deleteModel(algorithm, modelID);
-  }
-
-  /**
-   * Permanently delete a test report instance.
-   *
-   * @param algorithm the algorithm
-   * @param reportID  the report id
-   * @throws LensException the lens exception
-   */
-  @Override
-  public void deleteTestReport(String algorithm, String reportID) throws LensException {
-    client.deleteTestReport(algorithm, reportID);
-  }
-
-  /**
-   * Close connection
-   */
   @Override
   public void close() throws IOException {
     client.close();
+  }
+
+  @Override
+  public List<Algo> getAlgos() {
+    return getMlService().getAlgos();
+  }
+
+  public List<String> getAlgoNames() {
+    return null;
+  }
+
+  @Override
+  public Algo getAlgo(String name) throws LensException {
+    return null;
+  }
+
+  @Override
+  public String createDataSet(String name, String dataTable, String dataBase) throws LensException {
+
+    return client.createDataSet(name, dataTable, dataBase);
+  }
+
+  public void test() {
+    client.test();
+  }
+
+  @Override
+  public String createDataSetFromQuery(String name, String query) {
+    return null;
+  }
+
+  @Override
+  public DataSet getDataSet(String name) throws LensException {
+    return null;
+  }
+
+  @Override
+  public String createModel(String name, String algo, Map<String, String> algoParams, List<Feature> features,
+                            Feature label, LensSessionHandle lensSessionHandle) throws LensException {
+    return getMlService().createModel(name, algo, algoParams, features, label, lensSessionHandle);
+  }
+
+  @Override
+  public Model getModel(String modelId) throws LensException {
+    return getMlService().getModel(modelId);
+  }
+
+  @Override
+  public String trainModel(String modelId, String dataSetName, LensSessionHandle lensSessionHandle)
+    throws LensException {
+    return getMlService().trainModel(modelId, dataSetName, lensSessionHandle);
+  }
+
+  @Override
+  public ModelInstance getModelInstance(String modelInstanceId) throws LensException {
+    return getMlService().getModelInstance(modelInstanceId);
+  }
+
+  @Override
+  public List<ModelInstance> getAllModelInstances(String modelId) {
+    return null;
+  }
+
+  @Override
+  public String evaluate(String modelInstanceId, String dataSetName, LensSessionHandle lensSessionHandle)
+    throws LensException {
+    return getMlService().evaluate(modelInstanceId, dataSetName, lensSessionHandle);
+  }
+
+  @Override
+  public Evaluation getEvaluation(String evalId) throws LensException {
+    return getMlService().getEvaluation(evalId);
+  }
+
+  @Override
+  public String predict(String modelInstanceId, String dataSetName, LensSessionHandle lensSessionHandle)
+    throws LensException {
+    return getMlService().predict(modelInstanceId, dataSetName, lensSessionHandle);
+  }
+
+  @Override
+  public boolean cancelModelInstance(String modelInstanceId) {
+    return getMlService().cancelModelInstance(modelInstanceId);
+  }
+
+  @Override
+  public boolean cancelEvaluation(String evalId) {
+    return getMlService().cancelEvaluation(evalId);
+  }
+
+  @Override
+  public boolean cancelPrediction(String predicitonId) {
+    return getMlService().cancelPrediction(predicitonId);
+  }
+
+  @Override
+  public Prediction getPrediction(String predictionId) throws LensException {
+    return getMlService().getPrediction(predictionId);
+  }
+
+  @Override
+  public String predict(String modelInstanceId, Map<String, String> featureVector) throws LensException {
+    return getMlService().predict(modelInstanceId, featureVector);
   }
 
   public LensSessionHandle getSessionHandle() {

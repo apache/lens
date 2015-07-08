@@ -16,44 +16,48 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.impl;
+package org.apache.lens.ml.api;
 
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.api.error.LensException;
+import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Run a query against a Lens server.
+ * Feature class. Equivalent of a feature of a Machine Learning model.
  */
-public abstract class QueryRunner {
 
-  /**
-   * The session handle.
-   */
-  protected final LensSessionHandle sessionHandle;
+@AllArgsConstructor
+@XmlRootElement
+public class Feature implements Serializable {
 
   @Getter
   @Setter
-  protected String queryName;
-
+  @XmlElement
+  private String name;
+  @Getter
+  @Setter
+  @XmlElement
+  private String description;
+  @Getter
+  @Setter
+  @XmlElement
+  private Type type;
   /**
-   * Instantiates a new query runner.
-   *
-   * @param sessionHandle the session handle
+   * Name of the column of the table to which this feature is mapped.
    */
-  public QueryRunner(LensSessionHandle sessionHandle) {
-    this.sessionHandle = sessionHandle;
+  @Getter
+  @Setter
+  @XmlElement
+  private String dataColumn;
+
+  @XmlRootElement
+  public enum Type {
+    Categorical,
+    Continuous
   }
-
-  /**
-   * Run query.
-   *
-   * @param query the query
-   * @return the query handle
-   * @throws LensException the lens exception
-   */
-  public abstract QueryHandle runQuery(String query) throws LensException;
 }

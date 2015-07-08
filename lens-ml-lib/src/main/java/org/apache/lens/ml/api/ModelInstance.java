@@ -16,64 +16,71 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.algo.api;
+package org.apache.lens.ml.api;
 
-import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.lens.api.LensSessionHandle;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
- * Instantiates a new ML model.
+ * The Model Instance Class. Contains meta data for TrainedModel i.e. information about the algorithm used for
+ * training and specification about features and label. Model instance captures meta data for the process of training
+ * Model modelId using test data from dataSet.
  */
-@NoArgsConstructor
-@ToString
-public abstract class MLModel<PREDICTION> implements Serializable {
+@AllArgsConstructor
+@XmlRootElement
+public class ModelInstance implements MLProcess {
 
-  /** The id. */
+  @XmlElement
   @Getter
   @Setter
-  private String id;
+  String id;
 
-  /** The created at. */
+  @XmlElement
   @Getter
   @Setter
-  private Date createdAt;
+  Date startTime;
 
-  /** The algo name. */
+  @XmlElement
   @Getter
   @Setter
-  private String algoName;
+  Date finishTime;
 
-  /** The table. */
+  @XmlElement
   @Getter
   @Setter
-  private String table;
+  Status status;
 
-  /** The params. */
   @Getter
   @Setter
-  private List<String> params;
+  @XmlElement
+  LensSessionHandle lensSessionHandle;
 
-  /** The label column. */
   @Getter
   @Setter
-  private String labelColumn;
+  @XmlElement
+  String modelId;
 
-  /** The feature columns. */
   @Getter
   @Setter
-  private List<String> featureColumns;
+  @XmlElement
+  String dataSet;
 
-  /**
-   * Predict.
-   *
-   * @param args the args
-   * @return the prediction
-   */
-  public abstract PREDICTION predict(Object... args);
+  @Getter
+  @Setter
+  @XmlElement
+  String path;
+
+  @Getter
+  @Setter
+  @XmlElement
+  String evaluationId;
+
 }

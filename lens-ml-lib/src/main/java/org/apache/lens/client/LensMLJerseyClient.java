@@ -21,46 +21,46 @@ package org.apache.lens.client;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
-import org.apache.lens.ml.api.ModelMetadata;
-import org.apache.lens.ml.api.TestReport;
+import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.ml.api.Evaluation;
+import org.apache.lens.ml.api.Feature;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-/*
- * Client code to invoke server side ML API
- */
-
-/**
- * The Class LensMLJerseyClient.
- */
 public class LensMLJerseyClient {
-  /** The Constant LENS_ML_RESOURCE_PATH. */
+
+  /**
+   * The Constant LENS_ML_RESOURCE_PATH.
+   */
   public static final String LENS_ML_RESOURCE_PATH = "lens.ml.resource.path";
 
-  /** The Constant DEFAULT_ML_RESOURCE_PATH. */
+  /**
+   * The Constant DEFAULT_ML_RESOURCE_PATH.
+   */
   public static final String DEFAULT_ML_RESOURCE_PATH = "ml";
 
-  /** The Constant LOG. */
+  /**
+   * The Constant LOG.
+   */
   public static final Log LOG = LogFactory.getLog(LensMLJerseyClient.class);
 
-  /** The connection. */
+  /**
+   * The connection.
+   */
   private final LensConnection connection;
 
   private final LensSessionHandle sessionHandle;
@@ -86,173 +86,6 @@ public class LensMLJerseyClient {
     this.sessionHandle = sessionHandle;
   }
 
-  protected WebTarget getMLWebTarget() {
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-    LensConnectionParams connParams = connection.getLensConnectionParams();
-    String baseURI = connParams.getBaseConnectionUrl();
-    String mlURI = connParams.getConf().get(LENS_ML_RESOURCE_PATH, DEFAULT_ML_RESOURCE_PATH);
-    return client.target(baseURI).path(mlURI);
-  }
-
-  /**
-   * Gets the model metadata.
-   *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @return the model metadata
-   */
-  public ModelMetadata getModelMetadata(String algorithm, String modelID) {
-    try {
-      return getMLWebTarget().path("models").path(algorithm).path(modelID).request().get(ModelMetadata.class);
-    } catch (NotFoundException exc) {
-      return null;
-    }
-  }
-
-  /**
-   * Delete model.
-   *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   */
-  public void deleteModel(String algorithm, String modelID) {
-    getMLWebTarget().path("models").path(algorithm).path(modelID).request().delete();
-  }
-
-  /**
-   * Gets the models for algorithm.
-   *
-   * @param algorithm the algorithm
-   * @return the models for algorithm
-   */
-  public List<String> getModelsForAlgorithm(String algorithm) {
-    try {
-      StringList models = getMLWebTarget().path("models").path(algorithm).request().get(StringList.class);
-      return models == null ? null : models.getElements();
-    } catch (NotFoundException exc) {
-      return null;
-    }
-  }
-
-  public List<String> getAlgoNames() {
-    StringList algoNames = getMLWebTarget().path("algos").request().get(StringList.class);
-    return algoNames == null ? null : algoNames.getElements();
-  }
-
-  /**
-   * Train model.
-   *
-   * @param algorithm the algorithm
-   * @param params    the params
-   * @return the string
-   */
-  public String trainModel(String algorithm, Form params) {
-    return getMLWebTarget().path(algorithm).path("train").request(MediaType.APPLICATION_JSON_TYPE)
-      .post(Entity.entity(params, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
-  }
-
-  /**
-   * Test model.
-   *
-   * @param table       the table
-   * @param algorithm   the algorithm
-   * @param modelID     the model id
-   * @param outputTable the output table name
-   * @return the string
-   */
-  public String testModel(String table, String algorithm, String modelID, String outputTable) {
-    WebTarget modelTestTarget = getMLWebTarget().path("test").path(table).path(algorithm).path(modelID);
-
-    FormDataMultiPart mp = new FormDataMultiPart();
-
-    LensSessionHandle sessionHandle = this.sessionHandle == null ? connection.getSessionHandle() : this.sessionHandle;
-
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), sessionHandle,
-      MediaType.APPLICATION_XML_TYPE));
-
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("outputTable").build(), outputTable));
-    return modelTestTarget.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), String.class);
-  }
-
-  /**
-   * Gets the test reports of algorithm.
-   *
-   * @param algorithm the algorithm
-   * @return the test reports of algorithm
-   */
-  public List<String> getTestReportsOfAlgorithm(String algorithm) {
-    try {
-      StringList list = getMLWebTarget().path("reports").path(algorithm).request().get(StringList.class);
-      return list == null ? null : list.getElements();
-    } catch (NotFoundException exc) {
-      return null;
-    }
-  }
-
-  /**
-   * Gets the test report.
-   *
-   * @param algorithm the algorithm
-   * @param reportID  the report id
-   * @return the test report
-   */
-  public TestReport getTestReport(String algorithm, String reportID) {
-    try {
-      return getMLWebTarget().path("reports").path(algorithm).path(reportID).request().get(TestReport.class);
-    } catch (NotFoundException exc) {
-      return null;
-    }
-  }
-
-  /**
-   * Delete test report.
-   *
-   * @param algorithm the algorithm
-   * @param reportID  the report id
-   * @return the string
-   */
-  public String deleteTestReport(String algorithm, String reportID) {
-    return getMLWebTarget().path("reports").path(algorithm).path(reportID).request().delete(String.class);
-  }
-
-  /**
-   * Predict single.
-   *
-   * @param algorithm the algorithm
-   * @param modelID   the model id
-   * @param features  the features
-   * @return the string
-   */
-  public String predictSingle(String algorithm, String modelID, Map<String, String> features) {
-    WebTarget target = getMLWebTarget().path("predict").path(algorithm).path(modelID);
-
-    for (Map.Entry<String, String> entry : features.entrySet()) {
-      target.queryParam(entry.getKey(), entry.getValue());
-    }
-
-    return target.request().get(String.class);
-  }
-
-  /**
-   * Gets the param description of algo.
-   *
-   * @param algorithm the algorithm
-   * @return the param description of algo
-   */
-  public List<String> getParamDescriptionOfAlgo(String algorithm) {
-    try {
-      StringList paramHelp = getMLWebTarget().path("algos").path(algorithm).request(MediaType.APPLICATION_XML)
-        .get(StringList.class);
-      return paramHelp.getElements();
-    } catch (NotFoundException exc) {
-      return null;
-    }
-  }
-
-  public Configuration getConf() {
-    return connection.getLensConnectionParams().getConf();
-  }
-
   public void close() {
     try {
       connection.close();
@@ -261,10 +94,56 @@ public class LensMLJerseyClient {
     }
   }
 
+  protected WebTarget getMLWebTarget() {
+    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    LensConnectionParams connParams = connection.getLensConnectionParams();
+    String baseURI = connParams.getBaseConnectionUrl();
+    String mlURI = connParams.getConf().get(LENS_ML_RESOURCE_PATH, DEFAULT_ML_RESOURCE_PATH);
+    return client.target(baseURI).path(mlURI);
+  }
+
+  public List<String> getAlgoNames() {
+    StringList algoNames = getMLWebTarget().path("algonames").request().get(StringList.class);
+    return algoNames.getElements() == null ? null : algoNames.getElements();
+  }
+
+  public String createModel(String name, String algo, Map<String, String> algoParams,
+                            List<Feature> features, Feature label) {
+    return "";
+  }
+
   public LensSessionHandle getSessionHandle() {
     if (sessionHandle != null) {
       return sessionHandle;
     }
     return connection.getSessionHandle();
   }
+
+  public String createDataSet(String dataSetName, String dataTableName, String dataBase) {
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("dataSetName").build(), dataSetName));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("dataTableName").build(), dataTableName));
+
+    LensAPIResult result = getMLWebTarget().path("dataset")
+      .queryParam("dataSetName", dataSetName)
+      .queryParam("dataTableName", dataTableName)
+      .queryParam("dataBaseName", dataBase)
+      .request(MediaType.APPLICATION_XML)
+      .post(Entity.xml(dataSetName), LensAPIResult.class);
+
+    LensAPIResult<String> apiResult = getMLWebTarget().path("dataset").request().post(
+      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensAPIResult.class);
+
+    return apiResult.getData();
+
+  }
+
+  public void test() {
+
+    Evaluation result = getMLWebTarget().path("evaluation")
+      .request(MediaType.APPLICATION_XML)
+      .get(Evaluation.class);
+
+  }
+
 }

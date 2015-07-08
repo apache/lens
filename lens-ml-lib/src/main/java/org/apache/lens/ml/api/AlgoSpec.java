@@ -16,44 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.impl;
+package org.apache.lens.ml.api;
 
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.api.error.LensException;
+import java.util.Map;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Run a query against a Lens server.
+ * The Algo Spec class. This class works as a particular instance of an Algorithm run. since it contains the exact
+ * algoParams with which an Algorithm was run.
  */
-public abstract class QueryRunner {
-
-  /**
-   * The session handle.
-   */
-  protected final LensSessionHandle sessionHandle;
-
+@AllArgsConstructor
+public class AlgoSpec {
   @Getter
   @Setter
-  protected String queryName;
-
-  /**
-   * Instantiates a new query runner.
-   *
-   * @param sessionHandle the session handle
-   */
-  public QueryRunner(LensSessionHandle sessionHandle) {
-    this.sessionHandle = sessionHandle;
-  }
-
-  /**
-   * Run query.
-   *
-   * @param query the query
-   * @return the query handle
-   * @throws LensException the lens exception
-   */
-  public abstract QueryHandle runQuery(String query) throws LensException;
+  private Algo algo;
+  @Getter
+  @Setter
+  private Map<String, String> algoParams;
 }
