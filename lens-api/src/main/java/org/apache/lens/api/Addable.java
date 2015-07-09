@@ -16,25 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
+/*
+ *
+ */
+package org.apache.lens.api;
 
-import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.lens.server.api.query.cost.QueryCost;
-
-public class MockFailDriver extends MockDriver {
-
-  @Override
-  public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
-    throw new LensException("failing!");
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.api.driver.MockDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
+public interface Addable<T extends Addable<T>> {
+  /**
+   * Add another object of same type object of the same type.
+   * Implement this if add operation makes sense for the class
+   * @param other
+   * @return new T object after logical addition
    */
-  public DriverQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
-    throw new LensException("failing!");
-  }
+  T add(T other);
 }

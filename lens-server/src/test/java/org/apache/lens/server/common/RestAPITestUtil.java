@@ -58,13 +58,17 @@ public class RestAPITestUtil {
         Optional.of(userName), Optional.of(passwd), Optional.of(conf));
 
     return target.path("session").request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        LensSessionHandle.class);
+      LensSessionHandle.class);
   }
 
   public static Response estimate(final WebTarget target, final Optional<LensSessionHandle> sessionId,
       final Optional<String> query) {
 
     return runQuery(target, sessionId, query, Optional.of("estimate"));
+  }
+  public static Response explain(final WebTarget target, final Optional<LensSessionHandle> sessionId,
+    final Optional<String> query) {
+    return runQuery(target, sessionId, query, Optional.of("explain"));
   }
 
   public static Response runQuery(final WebTarget target, final Optional<LensSessionHandle> sessionId,

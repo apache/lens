@@ -20,12 +20,11 @@
 package org.apache.lens.cube.metadata;
 
 import java.text.DateFormat;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.lens.server.api.error.LensException;
 
+import com.google.common.collect.ImmutableMap;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -165,5 +164,16 @@ public class FactPartition implements Comparable<FactPartition> {
 
   public TimePartition getTimePartition() throws LensException {
     return TimePartition.of(getPeriod(), getPartSpec());
+  }
+
+  public double getAllTableWeights(ImmutableMap<String, Double> tableWeights) {
+    float weight = 0;
+    for (String tblName : getStorageTables()) {
+      Double tblWeight = tableWeights.get(tblName);
+      if (tblWeight != null) {
+        weight += tblWeight;
+      }
+    }
+    return weight;
   }
 }

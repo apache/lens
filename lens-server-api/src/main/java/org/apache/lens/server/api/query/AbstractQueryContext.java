@@ -19,15 +19,11 @@
 package org.apache.lens.server.api.query;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
@@ -35,6 +31,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.query.DriverSelectorQueryContext.DriverQueryContext;
+import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.commons.logging.Log;
@@ -192,6 +189,14 @@ public abstract class AbstractQueryContext implements Serializable {
     return estimateRunnables;
   }
 
+  public Map<String, Double> getTableWeights(LensDriver driver) {
+    return getDriverContext().getDriverRewriterPlan(driver).getTableWeights();
+  }
+
+  public DriverQueryPlan getDriverRewriterPlan(LensDriver driver) {
+    return getDriverContext().getDriverRewriterPlan(driver);
+  }
+
   /**
    * Runnable to wrap estimate computation for a driver. Failure cause and success status
    * are stored as field members
@@ -210,7 +215,7 @@ public abstract class AbstractQueryContext implements Serializable {
     private LensException cause;
 
     public DriverEstimateRunnable(AbstractQueryContext queryContext,
-                                  LensDriver driver) {
+      LensDriver driver) {
       this.queryContext = queryContext;
       this.driver = driver;
     }
@@ -242,10 +247,10 @@ public abstract class AbstractQueryContext implements Serializable {
       String expMsg = LensUtil.getCauseMessage(e);
       driverQueryContext.setDriverQueryCostEstimateError(e);
       failureCause = new StringBuilder("Driver :")
-          .append(driver.getClass().getName())
-          .append(" Cause :")
-          .append(expMsg)
-          .toString();
+        .append(driver.getClass().getName())
+        .append(" Cause :")
+        .append(expMsg)
+        .toString();
       LOG.error("Setting driver cost failed for driver " + driver + " Cause: " + failureCause, e);
     }
   }
@@ -278,6 +283,7 @@ public abstract class AbstractQueryContext implements Serializable {
   public String getFinalDriverQuery(LensDriver driver) {
     return driverContext.getFinalDriverQuery(driver);
   }
+
   /**
    * Get driver conf
    *
@@ -293,11 +299,12 @@ public abstract class AbstractQueryContext implements Serializable {
    * Get query cost for the driver
    *
    * @param driver
-   * @return QueryCost
+   * @return QueryCostTO
    */
   public QueryCost getDriverQueryCost(LensDriver driver) {
     return driverContext.getDriverQueryCost(driver);
   }
+
   /**
    * Wrapper method for convenience on driver context
    *
@@ -363,7 +370,7 @@ public abstract class AbstractQueryContext implements Serializable {
   /**
    * Get selected driver's cost
    *
-   * @return QueryCost
+   * @return QueryCostTO
    * @throws LensException
    */
   public QueryCost getSelectedDriverQueryCost() throws LensException {
@@ -431,6 +438,10 @@ public abstract class AbstractQueryContext implements Serializable {
   public void setDriverQuery(LensDriver driver, String query) {
     driverContext.setDriverQuery(driver, query);
     isDriverQueryExplicitlySet = true;
+  }
+
+  public void setDriverCost(LensDriver driver, QueryCost cost) {
+    driverContext.setDriverCost(driver, cost);
   }
 
   /**

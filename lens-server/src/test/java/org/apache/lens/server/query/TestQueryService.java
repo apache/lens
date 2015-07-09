@@ -39,9 +39,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.error.LensCommonErrorCode;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.api.result.LensErrorTO;
-import org.apache.lens.api.result.LensJAXBContextResolver;
+import org.apache.lens.api.result.*;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.driver.hive.TestHiveDriver;
 import org.apache.lens.server.LensJerseyTest;
@@ -1319,12 +1317,12 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
 
-    final QueryCost result = target.request()
+    final QueryCostTO result = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensAPIResult<QueryCost>>() {}).getData();
+          new GenericType<LensAPIResult<QueryCostTO>>() {}).getData();
     Assert.assertNotNull(result);
-    Assert.assertEquals(result.getEstimatedExecTimeMillis(), 1L);
-    Assert.assertEquals(result.getEstimatedResourceUsage(), 1.0);
+    Assert.assertEquals(result.getEstimatedExecTimeMillis(), null);
+    Assert.assertEquals(result.getEstimatedResourceUsage(), Double.MAX_VALUE);
   }
 
 
@@ -1474,11 +1472,11 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
 
-    final QueryCost queryCost = target.request()
+    final QueryCostTO queryCostTO = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensAPIResult<QueryCost>>() {
+          new GenericType<LensAPIResult<QueryCostTO>>() {
           }).getData();
-    Assert.assertNotNull(queryCost);
+    Assert.assertNotNull(queryCostTO);
 
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 

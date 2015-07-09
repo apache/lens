@@ -33,9 +33,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.query.QueryCost;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryPrepareHandle;
+import org.apache.lens.api.query.*;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
@@ -44,6 +42,8 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
+import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.user.UserConfigLoader;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
@@ -543,7 +543,7 @@ public class JDBCDriver implements LensDriver {
     return rewrittenQuery;
   }
 
-  private static final QueryCost JDBC_DRIVER_COST = new QueryCost(0, 0);
+  static final QueryCost JDBC_DRIVER_COST = new FactPartitionBasedQueryCost(0);
 
   /**
    * Dummy JDBC query Plan class to get min cost selector working.

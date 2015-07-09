@@ -21,8 +21,8 @@ package org.apache.lens.server.api.driver;
 import java.util.Collections;
 import java.util.Comparator;
 
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;

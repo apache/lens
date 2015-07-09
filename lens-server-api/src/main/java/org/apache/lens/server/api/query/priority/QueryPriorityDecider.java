@@ -16,25 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.query.priority;
 
+import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
-public class MockFailDriver extends MockDriver {
+public interface QueryPriorityDecider {
 
-  @Override
-  public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
-    throw new LensException("failing!");
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.api.driver.MockDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
+  /**
+   * @param cost
+   * @return calculated Priority based on the pre calculated query cost
+   * @throws LensException when can't decide priority.
    */
-  public DriverQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
-    throw new LensException("failing!");
-  }
+  Priority decidePriority(QueryCost cost) throws LensException;
 }

@@ -16,25 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.query.cost;
 
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.lens.server.api.query.cost.QueryCost;
 
-public class MockFailDriver extends MockDriver {
-
-  @Override
-  public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
-    throw new LensException("failing!");
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.api.driver.MockDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
+public interface QueryCostCalculator {
+  /**
+   * @param queryContext
+   * @return calculated cost based on anything available in abstract query context
+   * @throws LensException when can't calculate cost
    */
-  public DriverQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
-    throw new LensException("failing!");
-  }
+  QueryCost calculateCost(AbstractQueryContext queryContext, LensDriver driver) throws LensException;
 }

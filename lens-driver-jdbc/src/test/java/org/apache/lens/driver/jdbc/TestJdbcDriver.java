@@ -18,31 +18,28 @@
  */
 package org.apache.lens.driver.jdbc;
 
-import static org.apache.lens.server.api.user.MockUserConfigLoader.*;
+import static org.apache.lens.server.api.user.MockUserConfigLoader.KEY;
+import static org.apache.lens.server.api.user.MockUserConfigLoader.VALUE;
 
 import static org.testng.Assert.*;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
-import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.user.MockUserConfigLoader;
 import org.apache.lens.server.api.util.LensUtil;
 
@@ -52,14 +49,10 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import com.codahale.metrics.MetricRegistry;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -133,7 +126,7 @@ public class TestJdbcDriver {
 
   protected ExplainQueryContext createExplainContext(final String query, Configuration conf) {
     ExplainQueryContext ectx = new ExplainQueryContext(UUID.randomUUID().toString(), query, "testuser", null, conf,
-        drivers);
+      drivers);
     return ectx;
   }
 
@@ -265,8 +258,7 @@ public class TestJdbcDriver {
     ExplainQueryContext ctx = createExplainContext(query1, baseConf);
     Assert.assertNull(ctx.getFinalDriverQuery(driver));
     QueryCost cost = driver.estimate(ctx);
-    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
-    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    Assert.assertEquals(cost, JDBCDriver.JDBC_DRIVER_COST);
     Assert.assertNotNull(ctx.getFinalDriverQuery(driver));
 
     // Test connection leak for estimate
@@ -339,8 +331,7 @@ public class TestJdbcDriver {
     // run estimate and execute - because server would first run estimate and then execute with same context
     QueryContext ctx = createQueryContext(query1, metricConf);
     QueryCost cost = driver.estimate(ctx);
-    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
-    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    Assert.assertEquals(cost, JDBCDriver.JDBC_DRIVER_COST);
     LensResultSet result = driver.execute(ctx);
     Assert.assertNotNull(result);
 
@@ -348,15 +339,13 @@ public class TestJdbcDriver {
     // run estimate and prepare - because server would first run estimate and then prepare with same context
     PreparedQueryContext pContext = new PreparedQueryContext(query1, "SA", metricConf, drivers);
     cost = driver.estimate(pContext);
-    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
-    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    Assert.assertEquals(cost, JDBCDriver.JDBC_DRIVER_COST);
     driver.prepare(pContext);
 
     // test explain and prepare
     PreparedQueryContext pContext2 = new PreparedQueryContext(query1, "SA", metricConf, drivers);
     cost = driver.estimate(pContext2);
-    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
-    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    Assert.assertEquals(cost, JDBCDriver.JDBC_DRIVER_COST);
     driver.prepare(pContext2);
     driver.explainAndPrepare(pContext2);
   }

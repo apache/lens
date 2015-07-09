@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.priority;
+package org.apache.lens.server.api.query.priority;
 
 
 import org.apache.lens.api.Priority;
@@ -27,7 +27,7 @@ import org.apache.lens.api.Priority;
  * @see RangeConf
  */
 
-public class CostToPriorityRangeConf extends RangeConf<Float, Priority> {
+public class CostToPriorityRangeConf extends RangeConf<Double, Priority> {
   /**
    * Super constructor
    *
@@ -46,8 +46,8 @@ public class CostToPriorityRangeConf extends RangeConf<Float, Priority> {
    * @see RangeConf#parseKey(String)
    */
   @Override
-  protected Float parseKey(String s) {
-    return Float.parseFloat(s);
+  protected Double parseKey(String s) {
+    return Double.parseDouble(s);
   }
 
   /**

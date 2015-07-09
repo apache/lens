@@ -18,15 +18,12 @@
  */
 package org.apache.lens.driver.hive;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
+import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -34,6 +31,7 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -42,10 +40,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HiveQueryPlan extends DriverQueryPlan {
 
+  @Getter
+  private final QueryCost cost;
   /** The explain output. */
   private String explainOutput;
-
-  static final QueryCost HIVE_DRIVER_COST = new QueryCost(1, 1.0);
 
   /**
    * The Enum ParserState.
@@ -100,8 +98,9 @@ public class HiveQueryPlan extends DriverQueryPlan {
    * @param metastoreConf the metastore conf
    * @throws HiveException the hive exception
    */
-  public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared, HiveConf metastoreConf)
+  public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared, HiveConf metastoreConf, QueryCost cost)
     throws HiveException {
+    this.cost = cost;
     setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
@@ -196,7 +195,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
           }
         }
         break;
-      default :
+      default:
         break;
       }
     }
@@ -241,13 +240,5 @@ public class HiveQueryPlan extends DriverQueryPlan {
   @Override
   public String getPlan() {
     return explainOutput;
-  }
-
-  @Override
-  public QueryCost getCost() {
-    /*
-     * Return query cost as 1 so that if JDBC storage and other storage is present, JDBC is given preference.
-     */
-    return HIVE_DRIVER_COST;
   }
 }

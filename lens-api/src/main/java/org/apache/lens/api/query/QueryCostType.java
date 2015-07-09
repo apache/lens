@@ -16,24 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.priority;
+/*
+ *
+ */
+package org.apache.lens.api.query;
 
-import org.apache.lens.api.Priority;
-import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.AbstractQueryContext;
-
-import org.apache.log4j.Logger;
-
-public interface QueryPriorityDecider {
-  /**
-   * The Constant LOG.
-   */
-  Logger LOG = Logger.getLogger(QueryPriorityDecider.class);
-
-  /**
-   * @param queryContext
-   * @return calculated Priority based on the explained plans for each driver
-   * @throws LensException when can't decide priority.
-   */
-  Priority decidePriority(AbstractQueryContext queryContext) throws LensException;
+public enum QueryCostType {
+  LOW, MEDIUM, HIGH
 }

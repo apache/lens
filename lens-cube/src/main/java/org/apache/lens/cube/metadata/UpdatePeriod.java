@@ -19,24 +19,35 @@
 
 package org.apache.lens.cube.metadata;
 
+import static java.util.Calendar.*;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 
 import org.apache.lens.cube.parse.DateUtil;
 
 public enum UpdatePeriod implements Named {
-  SECONDLY(Calendar.SECOND, 1000, "yyyy-MM-dd-HH-mm-ss"), MINUTELY(Calendar.MINUTE, 60 * SECONDLY.weight(),
-    "yyyy-MM-dd-HH-mm"), HOURLY(Calendar.HOUR_OF_DAY, 60 * MINUTELY.weight(), "yyyy-MM-dd-HH"), DAILY(
-    Calendar.DAY_OF_MONTH, 24 * HOURLY.weight(), "yyyy-MM-dd"), WEEKLY(Calendar.WEEK_OF_YEAR, 7 * DAILY.weight(),
-    "yyyy-'W'ww"), MONTHLY(Calendar.MONTH, 30 * DAILY.weight(), "yyyy-MM"), QUARTERLY(Calendar.MONTH, 3 * MONTHLY
-    .weight(), "yyyy-MM"), YEARLY(Calendar.YEAR, 12 * MONTHLY.weight(), "yyyy");
+  SECONDLY(SECOND, 1000, 1.4f, "yyyy-MM-dd-HH-mm-ss"),
+  MINUTELY(MINUTE, 60 * SECONDLY.weight(), 1.35f, "yyyy-MM-dd-HH-mm"),
+  HOURLY(HOUR_OF_DAY, 60 * MINUTELY.weight(), 1.3f, "yyyy-MM-dd-HH"),
+  DAILY(DAY_OF_MONTH, 24 * HOURLY.weight(), 1f, "yyyy-MM-dd"),
+  WEEKLY(WEEK_OF_YEAR, 7 * DAILY.weight(), 0.7f, "yyyy-'W'ww"),
+  MONTHLY(MONTH, 30 * DAILY.weight(), 0.6f, "yyyy-MM"),
+  QUARTERLY(MONTH, 3 * MONTHLY.weight(), 0.55f, "yyyy-MM"),
+  YEARLY(YEAR, 12 * MONTHLY.weight(), 0.52f, "yyyy");
 
-  public static final long MIN_INTERVAL = SECONDLY.weight();
+  public static final long MIN_INTERVAL = values()[0].weight();
   private final int calendarField;
   private final long weight;
+  /**
+   * Normalization factor is calculated in comparison with daily update period. What it means is that
+   * for a fixed time range, reading partitions of this update period is expensive/cheap as compared to
+   * reading partitions of daily update period by this factor. Values are tentatively picked based on
+   * similar logic in an existing system at InMobi.
+   */
+  private final float normalizationFactor;
   private final String format;
 
   private static DateFormat getSecondlyFormat() {
@@ -144,9 +155,10 @@ public enum UpdatePeriod implements Named {
   private static ThreadLocal<DateFormat> quarterlyFormat;
   private static ThreadLocal<DateFormat> yearlyFormat;
 
-  UpdatePeriod(int calendarField, long diff, String format) {
+  UpdatePeriod(int calendarField, long diff, float normalizationFactor, String format) {
     this.calendarField = calendarField;
     this.weight = diff;
+    this.normalizationFactor = normalizationFactor;
     this.format = format;
   }
 
@@ -181,7 +193,7 @@ public enum UpdatePeriod implements Named {
     case YEARLY:
       return getYearlyFormat();
     default:
-      return null;
+      throw new IllegalArgumentException("Update period illegal, or doesn't have defined format");
     }
   }
 
@@ -196,6 +208,10 @@ public enum UpdatePeriod implements Named {
 
   public boolean canParseDateString(String dateString) {
     return formatStr().replaceAll("'", "").length() == dateString.length();
+  }
+
+  public float getNormalizationFactor() {
+    return normalizationFactor;
   }
 
   public static class UpdatePeriodComparator implements Comparator<UpdatePeriod> {

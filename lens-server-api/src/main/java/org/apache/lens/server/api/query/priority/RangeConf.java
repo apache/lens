@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.lens.server.api.priority;
+package org.apache.lens.server.api.query.priority;
 
 import java.util.TreeMap;
 

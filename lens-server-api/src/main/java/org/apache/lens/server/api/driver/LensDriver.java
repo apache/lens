@@ -20,14 +20,12 @@ package org.apache.lens.server.api.driver;
 
 import java.io.Externalizable;
 
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
-import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.lens.server.api.query.PreparedQueryContext;
-import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.hadoop.conf.Configuration;
@@ -57,7 +55,7 @@ public interface LensDriver extends Externalizable {
    *
    * @param qctx The query context
    *
-   * @return The QueryCost object
+   * @return The QueryCostTO object
    *
    * @throws LensException the lens exception if driver cannot estimate
    */

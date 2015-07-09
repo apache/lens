@@ -30,6 +30,7 @@ import javax.xml.bind.JAXBException;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.api.result.QueryCostTO;
 import org.apache.lens.regression.core.constants.QueryURL;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
@@ -253,7 +254,7 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the Estimate result
    */
 
-  public QueryCost estimateQuery(String queryString, String sessionHandleString, String conf) throws
+  public QueryCostTO estimateQuery(String queryString, String sessionHandleString, String conf) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
@@ -266,20 +267,20 @@ public class QueryHelper extends ServiceManagerHelper {
     String queryCostString = response.readEntity(String.class);
     logger.info(queryCostString);
     LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryCostString, LensAPIResult.class);
-    QueryCost queryCost = (QueryCost) successResponse.getData();
-    if (queryCost == null) {
+    QueryCostTO queryCostTO = (QueryCostTO) successResponse.getData();
+    if (queryCostTO == null) {
       throw new LensException("Estimate Failed");
     }
-    return queryCost;
+    return queryCostTO;
   }
 
-  public QueryCost estimateQuery(String queryString, String sessionHandleString) throws
+  public QueryCostTO estimateQuery(String queryString, String sessionHandleString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return estimateQuery(queryString, sessionHandleString,
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
   }
 
-  public QueryCost estimateQuery(String queryString) throws
+  public QueryCostTO estimateQuery(String queryString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return estimateQuery(queryString, sessionHandleString);
   }

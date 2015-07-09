@@ -16,25 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.query.priority;
 
+import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
-public class MockFailDriver extends MockDriver {
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class CostRangePriorityDecider implements QueryPriorityDecider {
+
+  @NonNull
+  private final CostToPriorityRangeConf costToPriorityRangeMap;
 
   @Override
-  public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
-    throw new LensException("failing!");
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.api.driver.MockDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
-   */
-  public DriverQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
-    throw new LensException("failing!");
+  public Priority decidePriority(@NonNull final QueryCost cost) throws LensException {
+    Priority p = costToPriorityRangeMap.get(cost.getEstimatedResourceUsage());
+    log.info("cost was: {}, decided priority: {}", cost, p);
+    return p;
   }
 }

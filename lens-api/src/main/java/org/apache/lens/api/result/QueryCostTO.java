@@ -19,15 +19,20 @@
 /*
  *
  */
-package org.apache.lens.api.query;
+package org.apache.lens.api.result;
+
+import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.lens.api.query.QueryCostType;
+import org.apache.lens.api.query.QuerySubmitResult;
+
 import lombok.*;
 
 /**
- * The Class QueryCost.
+ * The Class QueryCostTO.
  */
 @XmlRootElement
 /**
@@ -44,37 +49,27 @@ import lombok.*;
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
-public class QueryCost extends QuerySubmitResult implements Comparable<QueryCost> {
+public class QueryCostTO extends QuerySubmitResult implements Serializable {
 
   /**
    * The estimated exec time millis.
    */
   @XmlElement
   @Getter
-  private long estimatedExecTimeMillis;
+  private Long estimatedExecTimeMillis;
 
   /**
    * The estimated resource usage.
    */
   @XmlElement
   @Getter
-  private double estimatedResourceUsage;
+  private Double estimatedResourceUsage;
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
+  /**
+   * Normalized query cost, calculated by driver
    */
-  @Override
-  public int compareTo(QueryCost other) {
-    if (estimatedExecTimeMillis == other.estimatedExecTimeMillis) {
-      if (estimatedResourceUsage == other.estimatedResourceUsage) {
-        return 0;
-      } else {
-        return (int) (estimatedResourceUsage - other.estimatedResourceUsage);
-      }
-    } else {
-      return (int) (estimatedExecTimeMillis - other.estimatedExecTimeMillis);
-    }
-  }
+  @XmlElement
+  @Getter
+  private QueryCostType type;
+
 }

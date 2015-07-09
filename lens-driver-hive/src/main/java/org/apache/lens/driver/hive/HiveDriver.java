@@ -27,19 +27,23 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.driver.hive.priority.DurationBasedQueryPriorityDecider;
+import org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
-import org.apache.lens.server.api.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
+import org.apache.lens.server.api.query.cost.QueryCost;
+import org.apache.lens.server.api.query.cost.QueryCostCalculator;
+import org.apache.lens.server.api.query.priority.CostRangePriorityDecider;
+import org.apache.lens.server.api.query.priority.CostToPriorityRangeConf;
+import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.commons.lang.StringUtils;
@@ -72,21 +76,16 @@ public class HiveDriver implements LensDriver {
   public static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hive.hs2.connection.expiry.delay";
 
   public static final String HS2_CALCULATE_PRIORITY = "lens.driver.hive.calculate.priority";
+  public static final String HS2_COST_CALCULATOR = "lens.driver.hive.cost.calculator.class";
 
   /**
    * Config param for defining priority ranges.
    */
   public static final String HS2_PRIORITY_RANGES = "lens.driver.hive.priority.ranges";
-  public static final String HS2_PARTITION_WEIGHT_MONTHLY = "lens.driver.hive.priority.partition.weight.monthly";
-  public static final String HS2_PARTITION_WEIGHT_DAILY = "lens.driver.hive.priority.partition.weight.daily";
-  public static final String HS2_PARTITION_WEIGHT_HOURLY = "lens.driver.hive.priority.partition.weight.hourly";
 
   // Default values of conf params
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
   public static final String HS2_PRIORITY_DEFAULT_RANGES = "VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW";
-  public static final float MONTHLY_PARTITION_WEIGHT_DEFAULT = 0.5f;
-  public static final float DAILY_PARTITION_WEIGHT_DEFAULT = 0.75f;
-  public static final float HOURLY_PARTITION_WEIGHT_DEFAULT = 1.0f;
   public static final String SESSION_KEY_DELIMITER = ".";
 
   /** The driver conf- which will merged with query conf */
@@ -123,8 +122,9 @@ public class HiveDriver implements LensDriver {
 
   /** The driver listeners. */
   private List<LensEventListener<DriverEvent>> driverListeners;
-  QueryPriorityDecider queryPriorityDecider;
 
+  QueryCostCalculator queryCostCalculator;
+  QueryPriorityDecider queryPriorityDecider;
   // package-local. Test case can change.
   boolean whetherCalculatePriority;
   private UserConfigLoader userConfigLoader;
@@ -331,15 +331,25 @@ public class HiveDriver implements LensDriver {
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
     connectionExpiryTimeout = this.driverConf.getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
     whetherCalculatePriority = this.driverConf.getBoolean(HS2_CALCULATE_PRIORITY, true);
-    queryPriorityDecider = new DurationBasedQueryPriorityDecider(
-      this,
-      this.driverConf.get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES),
-      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_MONTHLY, MONTHLY_PARTITION_WEIGHT_DEFAULT),
-      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_DAILY, DAILY_PARTITION_WEIGHT_DEFAULT),
-      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_HOURLY, HOURLY_PARTITION_WEIGHT_DEFAULT)
+    Class<? extends QueryCostCalculator> queryCostCalculatorClass = this.driverConf.getClass(HS2_COST_CALCULATOR,
+      FactPartitionBasedQueryCostCalculator.class, QueryCostCalculator.class);
+    try {
+      queryCostCalculator = queryCostCalculatorClass.newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new LensException("Can't instantiate query cost calculator of class: " + queryCostCalculatorClass, e);
+    }
+    queryPriorityDecider = new CostRangePriorityDecider(
+      new CostToPriorityRangeConf(driverConf.get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES))
     );
   }
 
+  private QueryCost calculateQueryCost(AbstractQueryContext qctx) throws LensException {
+    if (qctx.isOlapQuery()) {
+      return queryCostCalculator.calculateCost(qctx, this);
+    } else {
+      return new FactPartitionBasedQueryCost(Double.MAX_VALUE);
+    }
+  }
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
     log.info("Estimate: " + qctx.getDriverQuery(this));
@@ -352,13 +362,16 @@ public class HiveDriver implements LensDriver {
     }
     if (qctx.isOlapQuery()) {
       // if query is olap query and rewriting takes care of semantic validation
-      // estimate is not doing anything as of now
-      return HiveQueryPlan.HIVE_DRIVER_COST;
+      // estimate is calculating cost of the query
+      // the calculation is done only for cube queries
+      // for all other native table queries, the cost will be maximum
+      return calculateQueryCost(qctx);
     } else {
-      // its native table query. Do explain and return cost
+      // its native table query. validate and return cost
       return explain(qctx).getCost();
     }
   }
+
 
   /*
    * (non-Javadoc)
@@ -385,14 +398,14 @@ public class HiveDriver implements LensDriver {
 
     // Get result set of explain
     HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
-    List<String> explainOutput = new ArrayList<String>();
+    List<String> explainOutput = new ArrayList<>();
     while (inMemoryResultSet.hasNext()) {
       explainOutput.add((String) inMemoryResultSet.next().getValues().get(0));
     }
     closeQuery(explainQueryCtx.getQueryHandle());
     try {
       hiveConf.setClassLoader(explainCtx.getConf().getClassLoader());
-      HiveQueryPlan hqp = new HiveQueryPlan(explainOutput, null, hiveConf);
+      HiveQueryPlan hqp = new HiveQueryPlan(explainOutput, null, hiveConf, calculateQueryCost(explainCtx));
       explainCtx.getDriverContext().setDriverQueryPlan(this, hqp);
       return hqp;
     } catch (HiveException e) {
@@ -494,7 +507,10 @@ public class HiveDriver implements LensDriver {
       if (whetherCalculatePriority) {
         try {
           // Inside try since non-data fetching queries can also be executed by async method.
-          String priority = queryPriorityDecider.decidePriority(ctx).toString();
+          if (ctx.getDriverQueryCost(this) == null) {
+            ctx.setDriverCost(this, queryCostCalculator.calculateCost(ctx, this));
+          }
+          String priority = queryPriorityDecider.decidePriority(ctx.getDriverQueryCost(this)).toString();
           qdconf.set("mapred.job.priority", priority);
           log.info("set priority to " + priority);
         } catch (Exception e) {
@@ -942,7 +958,7 @@ public class HiveDriver implements LensDriver {
      */
     QueryCompletionNotifier(QueryHandle handle, long timeoutMillis, QueryCompletionListener listener)
       throws LensException {
-      hiveHandle = getHiveHandle(handle);
+      this.handle = handle;
       this.timeoutMillis = timeoutMillis;
       this.listener = listener;
       this.pollInterval = timeoutMillis / 10;
@@ -957,12 +973,17 @@ public class HiveDriver implements LensDriver {
     public void run() {
       // till query is complete or timeout has reached
       long timeSpent = 0;
-      String error = null;
+      String error;
       try {
         while (timeSpent <= timeoutMillis) {
-          if (isFinished(hiveHandle)) {
-            listener.onCompletion(handle);
-            return;
+          try {
+            hiveHandle = getHiveHandle(handle);
+            if (isFinished(hiveHandle)) {
+              listener.onCompletion(handle);
+              return;
+            }
+          } catch(LensException e) {
+            log.debug("query handle: {} Not yet launched on driver", handle);
           }
           Thread.sleep(pollInterval);
           timeSpent += pollInterval;
