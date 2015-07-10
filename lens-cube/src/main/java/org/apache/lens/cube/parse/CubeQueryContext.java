@@ -1196,10 +1196,12 @@ public class CubeQueryContext implements TrackQueriedColumns {
       Set<CandidateFact> cfacts = i.next();
       if (!candidateFacts.containsAll(cfacts)) {
         LOG.info("Not considering fact table set:" + cfacts
-          + " as they have non candidate tables and facts missing because of" + pruneCause);
+          + " as they have non candidate tables and facts missing because of " + pruneCause);
         i.remove();
       }
     }
+    // prune candidate facts
+    pruneCandidateFactWithCandidateSet(CandidateTablePruneCode.ELEMENT_IN_SET_PRUNED);
   }
 
   /**
