@@ -745,6 +745,8 @@ public class CubeTestSetup {
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("dim11", "string", "basedim")));
     cubeDimensions2.add(new ReferencedDimAtrribute(new FieldSchema("dim12", "int", "ref dim"), "Dim2 refer",
       new TableReference("testdim2", "id")));
+    cubeDimensions2.add(new ReferencedDimAtrribute(new FieldSchema("dim22", "int", "ref dim"), "Dim2 refer",
+      "dim2chain", "id", null, null, null));
 
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(BASE_CUBE_NAME),
@@ -829,6 +831,16 @@ public class CubeTestSetup {
             });
           }
         });
+        add(new JoinChain("dim2chain", "dim2chain", "dim2chain") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("basecube", "dim2"));
+                add(new TableReference("testdim2", "id"));
+              }
+            });
+          }
+        });
       }
     };
 
@@ -861,6 +873,7 @@ public class CubeTestSetup {
     dimensions.add("dim2");
     dimensions.add("dim11");
     dimensions.add("dim12");
+    dimensions.add("dim22");
     dimensions.add("d_time");
     dimensions.add("test_time_dim");
     client.createDerivedCube(BASE_CUBE_NAME, DERIVED_CUBE_NAME2, measures, dimensions, derivedProperties, 10L);
@@ -941,7 +954,6 @@ public class CubeTestSetup {
     // create fact only with extra measures
     factName = "testFact2_BASE";
     factColumns = new ArrayList<FieldSchema>();
-    factColumns.add(new FieldSchema("msr11", "int", "first measure"));
     factColumns.add(new FieldSchema("msr12", "float", "second measure"));
 
     // add dimensions of the cube
@@ -988,6 +1000,8 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
     factColumns.add(new FieldSchema("dim12", "string", "base dim"));
+    factColumns.add(new FieldSchema("dim22", "string", "base dim"));
+    factColumns.add(new FieldSchema("cityid", "int", "city id"));
 
     storageAggregatePeriods = new HashMap<String, Set<UpdatePeriod>>();
     updates = new HashSet<UpdatePeriod>();

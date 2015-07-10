@@ -242,6 +242,20 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
   }
 
   @Test
+  public void testCubeQueryWithOptionalDimsRemoved() throws Exception {
+    String hqlQuery = rewrite("select cityzip.code, dim22, msr11 from basecube where " + TWO_DAYS_RANGE,
+      conf);
+    String joinExpr = " join " + getDbName()
+      + "c1_citytable citydim on basecube.cityid = citydim.id and (citydim.dt = 'latest') "
+      + " join " + getDbName() + "c1_ziptable cityzip on citydim.zipcode = cityzip.code and (cityzip.dt = 'latest')";
+    String expected =
+      getExpectedQuery("basecube", "select cityzip.code, basecube.dim22, basecube.msr11 FROM ",
+        joinExpr, null, null, null,
+        getWhereForHourly2days("basecube", "C1_testfact2_raw_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
+  @Test
   public void testDimensionQueryWithTwoRefCols() throws Exception {
     Configuration tConf = new Configuration(conf);
     tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
