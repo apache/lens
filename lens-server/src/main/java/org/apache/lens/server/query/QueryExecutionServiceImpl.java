@@ -1749,6 +1749,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     }
     QueryCompletionListener listener = new QueryCompletionListenerImpl(handle);
     if (getQueryContext(sessionHandle, handle).getSelectedDriver() == null) {
+      result.setStatus(getQueryContext(sessionHandle, handle).getStatus());
       return result;
     }
     synchronized (ctx) {
@@ -1770,6 +1771,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         result.setResult(getResultset(handle).toQueryResult());
       }
     }
+
+    result.setStatus(getQueryContext(sessionHandle, handle).getStatus());
+
     return result;
   }
 

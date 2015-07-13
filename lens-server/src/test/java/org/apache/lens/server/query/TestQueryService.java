@@ -1230,10 +1230,7 @@ public class TestQueryService extends LensJerseyTest {
         new GenericType<LensAPIResult<QueryHandleWithResultSet>>() {}).getData();
     Assert.assertNotNull(result.getQueryHandle());
     Assert.assertNull(result.getResult());
-
-    LensQuery ctx = target.path(result.getQueryHandle().toString()).queryParam("sessionid", lensSessionId).request()
-      .get(LensQuery.class);
-    Assert.assertEquals(ctx.getStatus().getStatus(), Status.FAILED);
+    Assert.assertEquals(result.getStatus().getStatus(), Status.FAILED);
   }
 
   /**

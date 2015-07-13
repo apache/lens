@@ -54,6 +54,13 @@ public class QueryHandleWithResultSet extends QuerySubmitResult {
   private QueryResult result;
 
   /**
+   * The status.
+   */
+  @Getter
+  @Setter
+  private QueryStatus status;
+
+  /**
    * Instantiates a new query handle with result set.
    *
    * @param handle the handle
