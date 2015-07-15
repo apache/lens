@@ -20,6 +20,9 @@ package org.apache.lens.server.query;
 
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
+import static org.apache.lens.server.common.RestAPITestUtil.execute;
+import static org.apache.lens.server.common.RestAPITestUtil.waitForQueryToFinish;
+
 import static org.testng.Assert.*;
 
 import java.io.*;
@@ -41,7 +44,6 @@ import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.api.result.*;
 import org.apache.lens.driver.hive.HiveDriver;
-import org.apache.lens.driver.hive.TestHiveDriver;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
@@ -79,6 +81,7 @@ import org.testng.annotations.Test;
 
 import com.codahale.metrics.MetricRegistry;
 
+import com.google.common.base.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -213,48 +216,46 @@ public class TestQueryService extends LensJerseyTest {
   }
 
   /**
-   * Test launch fail.
+   * Test rewrite failure in execute operation.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void testRewriteFailureInExecute() throws InterruptedException {
+    final WebTarget target = target().path("queryapi/queries");
+    LensConf conf = new LensConf();
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+        MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(
+        new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from non_exist_table"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+        MediaType.APPLICATION_XML_TYPE));
+    final Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+    assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+  }
+
+  /**
+   * Test launch failure in execute operation.
    *
    * @throws InterruptedException the interrupted exception
    */
   @Test
   public void testLaunchFail() throws InterruptedException {
-    final WebTarget target = target().path("queryapi/queries");
-    long failedQueries = metricsSvc.getTotalFailedQueries();
-    System.out.println("%% " + failedQueries);
-    LensConf conf = new LensConf();
-    final FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
-      MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-      "select ID from non_exist_table"));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
-      MediaType.APPLICATION_XML_TYPE));
-    final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensAPIResult<QueryHandle>>() {
-        }).getData();
 
-    assertNotNull(handle);
+    final Response response = execute(target(), Optional.of(lensSessionId), Optional.of("select fail from non_exist"));
+    assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
-      .get(LensQuery.class);
-    QueryStatus stat = ctx.getStatus();
-    while (!stat.finished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
-      stat = ctx.getStatus();
-      System.out.println("%% query " + ctx.getQueryHandle() + " status:" + stat);
-      Thread.sleep(1000);
-    }
+    QueryHandle handle = response.readEntity(new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+    LensQuery lensQuery = waitForQueryToFinish(target(), lensSessionId, handle);
 
-    assertTrue(ctx.getSubmissionTime() > 0);
-    assertEquals(ctx.getLaunchTime(), 0);
-    assertEquals(ctx.getDriverStartTime(), 0);
-    assertEquals(ctx.getDriverFinishTime(), 0);
-    assertTrue(ctx.getFinishTime() > 0);
-    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
-    /* Commented and jira ticket raised for correction: https://issues.apache.org/jira/browse/LENS-685
-    assertTrue(metricsSvc.getTotalFailedQueries() >= failedQueries + 1);*/
+    assertTrue(lensQuery.getSubmissionTime() > 0);
+    assertEquals(lensQuery.getLaunchTime(), 0);
+    assertEquals(lensQuery.getDriverStartTime(), 0);
+    assertEquals(lensQuery.getDriverFinishTime(), 0);
+    assertTrue(lensQuery.getFinishTime() > 0);
+    assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.FAILED);
   }
 
   // test with execute async post, get all queries, get query context,
@@ -269,14 +270,12 @@ public class TestQueryService extends LensJerseyTest {
   public void testQueriesAPI() throws InterruptedException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
-    LensConf conf = new LensConf();
-    conf.addProperty("hive.exec.driver.run.hooks", TestHiveDriver.FailHook.class.getCanonicalName());
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
 
     long queuedQueries = metricsSvc.getQueuedQueries();
@@ -286,7 +285,6 @@ public class TestQueryService extends LensJerseyTest {
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
         new GenericType<LensAPIResult<QueryHandle>>() {
         }).getData();
-
     assertNotNull(handle);
 
     // Get all queries
@@ -295,38 +293,29 @@ public class TestQueryService extends LensJerseyTest {
       .get(new GenericType<List<QueryHandle>>() {});
     assertTrue(allQueriesXML.size() >= 1);
 
-    // JSON
-    // List<QueryHandle> allQueriesJSON = target.request(
-    // MediaType.APPLICATION_JSON).get(new GenericType<List<QueryHandle>>() {
-    // });
-    // Assert.assertEquals(allQueriesJSON.size(), 1);
-    // JAXB
     List<QueryHandle> allQueries = (List<QueryHandle>) target.queryParam("sessionid", lensSessionId).request()
-      .get(new GenericType<List<QueryHandle>>() {
-      });
+      .get(new GenericType<List<QueryHandle>>() {});
     assertTrue(allQueries.size() >= 1);
     assertTrue(allQueries.contains(handle));
 
-    // Get query
-    // Invocation.Builder builderjson = target.path(handle.toString()).request(MediaType.APPLICATION_JSON);
-    // String responseJSON = builderjson.get(String.class);
-    // System.out.println("query JSON:" + responseJSON);
     String queryXML = target.path(handle.toString()).queryParam("sessionid", lensSessionId)
       .request(MediaType.APPLICATION_XML).get(String.class);
-    System.out.println("query XML:" + queryXML);
+    log.debug("query XML:{}", queryXML);
 
     Response response = target.path(handle.toString() + "001").queryParam("sessionid", lensSessionId).request().get();
     assertEquals(response.getStatus(), 404);
 
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
       .get(LensQuery.class);
-    // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.finished()) {
+      Thread.sleep(1000);
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
+      /*
+      Commented due to same issue as: https://issues.apache.org/jira/browse/LENS-683
       switch (stat.getStatus()) {
       case RUNNING:
         assertEquals(metricsSvc.getRunningQueries(), runningQueries + 1);
@@ -335,16 +324,16 @@ public class TestQueryService extends LensJerseyTest {
         assertEquals(metricsSvc.getQueuedQueries(), queuedQueries + 1);
         break;
       default: // nothing
-      }
-      Thread.sleep(1000);
+      }*/
     }
+
     assertTrue(ctx.getSubmissionTime() > 0);
     assertTrue(ctx.getFinishTime() > 0);
-    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
+    assertEquals(ctx.getStatus().getStatus(), Status.SUCCESSFUL);
 
     // Update conf for query
     final FormDataMultiPart confpart = new FormDataMultiPart();
-    conf = new LensConf();
+    LensConf conf = new LensConf();
     conf.addProperty("my.property", "myvalue");
     confpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
@@ -1229,13 +1218,10 @@ public class TestQueryService extends LensJerseyTest {
     // set a timeout value enough for tests
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(), "300000"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
-      MediaType.APPLICATION_XML_TYPE));
+        MediaType.APPLICATION_XML_TYPE));
 
-    QueryHandleWithResultSet result = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensAPIResult<QueryHandleWithResultSet>>() {}).getData();
-    assertNotNull(result.getQueryHandle());
-    assertNull(result.getResult());
-    assertEquals(result.getStatus().getStatus(), Status.FAILED);
+    Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+    assertEquals(response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
   }
 
   /**

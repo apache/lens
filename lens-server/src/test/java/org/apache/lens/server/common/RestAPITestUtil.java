@@ -34,6 +34,9 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.ObjectFactory;
 import org.apache.lens.api.metastore.XCube;
 import org.apache.lens.api.metastore.XFactTable;
+import org.apache.lens.api.query.LensQuery;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryStatus;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
@@ -47,6 +50,9 @@ public class RestAPITestUtil {
     throw new UnsupportedOperationException();
   }
 
+  public static LensSessionHandle openFooBarSession(final WebTarget target) {
+    return openSession(target, "foo", "bar");
+  }
   public static LensSessionHandle openSession(final WebTarget target, final String userName, final String passwd) {
     return openSession(target, userName, passwd, new LensConf());
   }
@@ -58,33 +64,34 @@ public class RestAPITestUtil {
         Optional.of(userName), Optional.of(passwd), Optional.of(conf));
 
     return target.path("session").request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      LensSessionHandle.class);
+        LensSessionHandle.class);
   }
 
   public static Response estimate(final WebTarget target, final Optional<LensSessionHandle> sessionId,
       final Optional<String> query) {
 
-    return runQuery(target, sessionId, query, Optional.of("estimate"));
-  }
-  public static Response explain(final WebTarget target, final Optional<LensSessionHandle> sessionId,
-    final Optional<String> query) {
-    return runQuery(target, sessionId, query, Optional.of("explain"));
+    return postQuery(target, sessionId, query, Optional.of("estimate"));
   }
 
-  public static Response runQuery(final WebTarget target, final Optional<LensSessionHandle> sessionId,
+  public static Response execute(final WebTarget target, final Optional<LensSessionHandle> sessionId,
+    final Optional<String> query) {
+    return postQuery(target, sessionId, query, Optional.of("execute"));
+  }
+
+  public static Response postQuery(final WebTarget target, final Optional<LensSessionHandle> sessionId,
       final Optional<String> query, final Optional<String> operation) {
 
-    return runQuery(target, sessionId, query, operation, new LensConf());
+    return postQuery(target, sessionId, query, operation, new LensConf());
   }
 
-  public static Response runQuery(final WebTarget target, final Optional<LensSessionHandle> sessionId,
+  public static Response postQuery(final WebTarget target, final Optional<LensSessionHandle> sessionId,
       final Optional<String> query, final Optional<String> operation, final LensConf conf) {
 
     FormDataMultiPart mp = FormDataMultiPartFactory
         .createFormDataMultiPartForQuery(sessionId, query, operation, conf);
 
-    return target.path("queryapi/queries").request(MediaType.APPLICATION_XML).post(Entity.entity(mp,
-        MediaType.MULTIPART_FORM_DATA_TYPE));
+    return target.path("queryapi/queries").request(MediaType.APPLICATION_XML).post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
   }
 
   public static void closeSessionFailFast(final WebTarget target, final LensSessionHandle sessionId) {
@@ -180,5 +187,26 @@ public class RestAPITestUtil {
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       throw new RuntimeException("Setup failed");
     }
+  }
+
+  public static LensQuery waitForQueryToFinish(final WebTarget target, final LensSessionHandle lensSessionHandle,
+    final QueryHandle handle) throws InterruptedException {
+
+    LensQuery lensQuery = getLensQuery(target, lensSessionHandle, handle);
+
+    QueryStatus stat = lensQuery.getStatus();
+    while (!stat.finished()) {
+      lensQuery = getLensQuery(target, lensSessionHandle, handle);
+      stat = lensQuery.getStatus();
+      Thread.sleep(1000);
+    }
+    return lensQuery;
+  }
+
+  public static LensQuery getLensQuery(final WebTarget target, final LensSessionHandle lensSessionHandle,
+    final QueryHandle handle) {
+
+    return target.path("queryapi/queries").path(handle.toString()).queryParam("sessionid", lensSessionHandle).request()
+        .get(LensQuery.class);
   }
 }

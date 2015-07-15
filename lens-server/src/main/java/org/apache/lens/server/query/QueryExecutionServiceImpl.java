@@ -555,12 +555,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             try {
               // acquire session before any query operation.
               acquire(query.getLensSessionIdentifier());
-              // the check to see if the query was already rewritten and selected driver's rewritten query is set
-              if (!query.isDriverQueryExplicitlySet()) {
-                rewriteAndSelect(query);
-              } else {
-                log.debug("Query is already rewritten");
-              }
 
               /* Check javadoc of QueryExecutionServiceImpl#removalFromLaunchedQueriesLock for reason for existence
               of this lock. */
@@ -1595,7 +1589,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       } else {
         ctx.setQueryName(pctx.getQueryName());
       }
-      return executeAsyncInternal(sessionHandle, ctx);
+      ctx.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
+      return submitQuery(ctx);
     } finally {
       release(sessionHandle);
     }
@@ -1692,7 +1687,14 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * @throws LensException the lens exception
    */
   private QueryHandle executeAsyncInternal(LensSessionHandle sessionHandle, QueryContext ctx) throws LensException {
+
     ctx.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
+    rewriteAndSelect(ctx);
+    return submitQuery(ctx);
+  }
+
+  private QueryHandle submitQuery(final QueryContext ctx) throws LensException {
+
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0, QUEUED, "Query is queued", false, null, null, null));
     queuedQueries.add(ctx);
@@ -1848,6 +1850,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       accept(query, qconf, SubmitOp.EXECUTE);
       QueryContext ctx = createContext(query, getSession(sessionHandle).getLoggedInUser(), conf, qconf);
       ctx.setQueryName(queryName);
+      ctx.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
+      rewriteAndSelect(ctx);
       return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
       release(sessionHandle);
@@ -1866,7 +1870,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   private QueryHandleWithResultSet executeTimeoutInternal(LensSessionHandle sessionHandle, QueryContext ctx,
     long timeoutMillis, Configuration conf) throws LensException {
-    QueryHandle handle = executeAsyncInternal(sessionHandle, ctx);
+    QueryHandle handle = submitQuery(ctx);
     QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
     // getQueryContext calls updateStatus, which fires query events if there's a change in status
 

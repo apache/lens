@@ -94,6 +94,7 @@ public class MockDriver implements LensDriver {
   public void configure(Configuration conf) throws LensException {
     this.conf = conf;
     ioTestVal = conf.getInt("mock.driver.test.val", -1);
+    this.conf.addResource("failing-query-driver-site.xml");
   }
 
   /**

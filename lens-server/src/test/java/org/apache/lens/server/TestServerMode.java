@@ -37,6 +37,7 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.LensServices.SERVICE_MODE;
+import org.apache.lens.server.common.RestAPITestUtil;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -60,6 +61,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
+    LensTestUtil.createTable("test_table", target(), RestAPITestUtil.openFooBarSession(target()));
   }
 
   /*
@@ -173,7 +175,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
 
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
-    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select name from table"));
+    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select id from test_table"));
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(),
       new LensConf(), MediaType.APPLICATION_XML_TYPE));

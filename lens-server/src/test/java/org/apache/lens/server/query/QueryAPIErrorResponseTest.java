@@ -139,7 +139,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
     LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf());
 
-    Response response = runQuery(target(), Optional.of(sessionId), Optional.of(MOCK_QUERY),
+    Response response = postQuery(target(), Optional.of(sessionId), Optional.of(MOCK_QUERY),
         Optional.of(INVALID_OPERATION));
 
     final String expectedErrMsg = "Provided Operation is not supported. Supported Operations are: "
@@ -166,9 +166,11 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
         expectedErrMsg, MOCK_STACK_TRACE);
     LensErrorTO childError2 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
         expectedErrMsg, MOCK_STACK_TRACE);
+    LensErrorTO childError3 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
+        expectedErrMsg, MOCK_STACK_TRACE);
 
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE, Arrays.asList(childError1, childError2));
+        expectedErrMsg, MOCK_STACK_TRACE, Arrays.asList(childError1, childError2, childError3));
 
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(Status.INTERNAL_SERVER_ERROR,
         expectedLensErrorTO);
