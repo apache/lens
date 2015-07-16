@@ -44,6 +44,16 @@
   </property>
 
   <property>
+    <name>lens.server.query.phase1.rewriters</name>
+    <value></value>
+    <description>Query phase 1 rewriters. This is to convert user query to cube query. The resulting cube query will
+      be passed for validation and rewriting to hql query.\
+      Use cases will be to use extra intelligence to convert user query to optimized cube query.\
+      Or define shortcuts for certain frequently used queries :)
+    </description>
+  </property>
+
+  <property>
     <name>lens.server.servicenames</name>
     <value>session,query,metastore,scheduler,quota</value>
     <description>These services would be started in the specified order when lens-server starts up</description>

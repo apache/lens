@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.query;
+package org.apache.lens.server.api.query.rewrite;
 
 import org.apache.lens.server.api.error.LensException;
 

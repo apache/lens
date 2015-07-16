@@ -27,7 +27,7 @@ import org.apache.lens.cube.parse.CubeSemanticAnalyzer;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.QueryRewriter;
+import org.apache.lens.server.api.query.rewrite.QueryRewriter;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableInt;

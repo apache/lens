@@ -40,7 +40,6 @@ import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.api.result.LensErrorTO;
-import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensService;
@@ -57,6 +56,8 @@ import org.apache.lens.server.api.query.*;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
+import org.apache.lens.server.rewrite.RewriteUtil;
+import org.apache.lens.server.rewrite.UserQueryToCubeQueryRewriter;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
@@ -253,6 +254,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       }
     }
   };
+  private UserQueryToCubeQueryRewriter userQueryToCubeQueryRewriter;
 
 
   /**
@@ -297,7 +299,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     getEventService().addListenerForType(new QueryExecutionStatisticsGenerator(this, getEventService()),
       QueryEnded.class);
     getEventService().addListenerForType(
-        new QueryEndNotifier(this, getCliService().getHiveConf(), this.logSegregationContext), QueryEnded.class);
+      new QueryEndNotifier(this, getCliService().getHiveConf(), this.logSegregationContext), QueryEnded.class);
     log.info("Registered query result formatter");
   }
 
@@ -489,6 +491,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     public QuerySubmitter(@NonNull final ErrorCollection errorCollection) {
       this.errorCollection = errorCollection;
     }
+
     /*
      * (non-Javadoc)
      *
@@ -909,6 +912,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     super.init(hiveConf);
     this.conf = hiveConf;
     try {
+      this.userQueryToCubeQueryRewriter = new UserQueryToCubeQueryRewriter(conf);
+    } catch (LensException e) {
+      throw new IllegalStateException("Could not load phase 1 rewriters");
+    }
+    try {
       initializeQueryAcceptors();
     } catch (LensException e) {
       throw new IllegalStateException("Could not load acceptors");
@@ -1078,6 +1086,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     MethodMetricsContext parallelCallGauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), false,
       PARALLEL_CALL_GAUGE);
     try {
+      userQueryToCubeQueryRewriter.rewrite(ctx);
       // Initially we obtain individual runnables for rewrite and estimate calls
       // These are mapped against the driver, so that later it becomes easy to chain them
       // for each driver.

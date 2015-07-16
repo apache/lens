@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.driver.cube;
+package org.apache.lens.server.rewrite;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
+import org.apache.lens.driver.cube.RewriterPlan;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
@@ -84,7 +85,7 @@ public final class RewriteUtil {
    * @param query the query
    * @return the list
    * @throws SemanticException the semantic exception
-   * @throws ParseException    the parse exception
+   * @throws LensException     the lensexception
    */
   static List<CubeQueryInfo> findCubePositions(String query, HiveConf conf)
     throws SemanticException, LensException {
@@ -220,7 +221,8 @@ public final class RewriteUtil {
    */
   public static Map<LensDriver, DriverRewriterRunnable> rewriteQuery(AbstractQueryContext ctx) throws LensException {
     try {
-      String replacedQuery = getReplacedQuery(ctx.getUserQuery());
+
+      String replacedQuery = getReplacedQuery(ctx.getPhase1RewrittenQuery());
       Map<LensDriver, DriverRewriterRunnable> runnables = new LinkedHashMap<LensDriver, DriverRewriterRunnable>();
       List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery, ctx.getHiveConf());
 

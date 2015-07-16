@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.driver.cube;
-
-import static org.mockito.Matchers.any;
+package org.apache.lens.server.rewrite;
 
 import java.util.*;
 
@@ -36,11 +34,9 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.parse.*;
 
+import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -71,6 +67,7 @@ public class TestRewriting {
   public IObjectFactory getObjectFactory() {
     return new PowerMockObjectFactory();
   }
+
   private HiveConf hconf = new HiveConf();
 
   static int i = 0;
@@ -81,7 +78,7 @@ public class TestRewriting {
 
   private CubeQueryRewriter getMockedRewriter() throws SemanticException, ParseException, LensException {
     CubeQueryRewriter mockwriter = Mockito.mock(CubeQueryRewriter.class);
-    Mockito.when(mockwriter.rewrite(any(String.class))).thenAnswer(new Answer<CubeQueryContext>() {
+    Mockito.when(mockwriter.rewrite(Matchers.any(String.class))).thenAnswer(new Answer<CubeQueryContext>() {
       @Override
       public CubeQueryContext answer(InvocationOnMock invocation) throws Throwable {
         Object[] args = invocation.getArguments();
@@ -94,7 +91,7 @@ public class TestRewriting {
         }
       }
     });
-    Mockito.when(mockwriter.rewrite(any(ASTNode.class))).thenAnswer(new Answer<CubeQueryContext>() {
+    Mockito.when(mockwriter.rewrite(Matchers.any(ASTNode.class))).thenAnswer(new Answer<CubeQueryContext>() {
       @Override
       public CubeQueryContext answer(InvocationOnMock invocation) throws Throwable {
         Object[] args = invocation.getArguments();
@@ -116,7 +113,7 @@ public class TestRewriting {
     throws SemanticException, ParseException, LensException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
     Mockito.when(context.toHQL()).thenReturn(query.substring(4));
-    Mockito.when(context.toAST(any(Context.class))).thenReturn(HQLParser.parseHQL(query.substring(4), hconf));
+    Mockito.when(context.toAST(Matchers.any(Context.class))).thenReturn(HQLParser.parseHQL(query.substring(4), hconf));
     return context;
   }
 
@@ -142,12 +139,12 @@ public class TestRewriting {
     StringBuilder builder = new StringBuilder();
     HQLParser.toInfixString(ast, builder);
     Mockito.when(context.toHQL()).thenReturn(builder.toString());
-    Mockito.when(context.toAST(any(Context.class))).thenReturn(ast);
+    Mockito.when(context.toAST(Matchers.any(Context.class))).thenReturn(ast);
     return context;
   }
 
   private void runRewrites(Map<LensDriver, RewriteUtil.DriverRewriterRunnable> runnableMap) {
-    for (LensDriver driver: runnableMap.keySet()) {
+    for (LensDriver driver : runnableMap.keySet()) {
       RewriteUtil.DriverRewriterRunnable r = runnableMap.get(driver);
       r.run();
       Assert.assertTrue(r.getDriver() == driver);
@@ -443,7 +440,7 @@ public class TestRewriting {
     Iterator<LensDriver> itr = dQueries.keySet().iterator();
     itr.next();
     LensDriver failedDriver = itr.next();
-    Assert.assertFalse(dQueries.get(failedDriver).isSucceeded(),  failedDriver + " rewrite should have failed");
+    Assert.assertFalse(dQueries.get(failedDriver).isSucceeded(), failedDriver + " rewrite should have failed");
     Assert.assertNull(dQueries.get(failedDriver).getRewrittenQuery(),
       failedDriver + " rewritten query should not be set");
     // running again will fail on both drivers
