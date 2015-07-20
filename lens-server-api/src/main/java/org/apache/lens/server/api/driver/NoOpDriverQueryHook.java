@@ -16,24 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.user;
-
-import java.util.Map;
-
-/**
- * The Class UserConfigLoader. It's initialized once in the server lifetime. After that, it's job is to
- * Get session configs for the user on each session open. This config applies to the particular session
- * and is forwarded for all actions. One Use case is to decide driver specific details e.g. priority/queue of
- * all queries of the user.
+/*
+ *
  */
-public interface UserConfigLoader {
+package org.apache.lens.server.api.driver;
 
-  /**
-   * Gets the user config.
-   *
-   * @param loggedInUser the logged in user
-   * @return the user config
-   * @throws UserConfigLoaderException the user config loader exception
-   */
-  Map<String, String> getUserConfig(String loggedInUser) throws UserConfigLoaderException;
+import org.apache.lens.server.api.query.AbstractQueryContext;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class NoOpDriverQueryHook implements DriverQueryHook {
+  @Override
+  public void preLaunch(AbstractQueryContext ctx) {
+    log.info("Pre launch for {}, user query: {}, driver query: {}", ctx.getSubmittedUser(), ctx.getUserQuery(),
+      ctx.getSelectedDriverQuery());
+  }
 }

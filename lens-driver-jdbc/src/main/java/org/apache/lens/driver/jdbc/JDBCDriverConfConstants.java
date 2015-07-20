@@ -33,6 +33,7 @@ public final class JDBCDriverConfConstants {
 
   /** The Constant JDBC_QUERY_REWRITER_CLASS. */
   public static final String JDBC_QUERY_REWRITER_CLASS = JDBC_DRIVER_PFX + "query.rewriter";
+  public static final String JDBC_QUERY_HOOK_CLASS = JDBC_DRIVER_PFX + "query.hook.class";
 
   /** The Constant JDBC_DRIVER_CLASS. */
   public static final String JDBC_DRIVER_CLASS = JDBC_DRIVER_PFX + "driver.class";

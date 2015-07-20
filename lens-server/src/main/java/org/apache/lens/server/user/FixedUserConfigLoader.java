@@ -26,29 +26,28 @@ import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
+import com.google.common.collect.Maps;
+
 /**
  * The Class FixedUserConfigLoader.
  */
-public class FixedUserConfigLoader extends UserConfigLoader {
+public class FixedUserConfigLoader implements UserConfigLoader {
 
-  /**
-   * Instantiates a new fixed user config loader.
-   *
-   * @param conf the conf
-   */
+  private final String fixedValue;
+
   public FixedUserConfigLoader(HiveConf conf) {
-    super(conf);
+    fixedValue = conf.get(LensConfConstants.USER_RESOLVER_FIXED_VALUE);
   }
 
   /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
-   */
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
+     */
   @Override
   public Map<String, String> getUserConfig(String loggedInUser) {
-    HashMap<String, String> userConfig = new HashMap<String, String>();
-    userConfig.put(LensConfConstants.SESSION_CLUSTER_USER, hiveConf.get(LensConfConstants.USER_RESOLVER_FIXED_VALUE));
+    HashMap<String, String> userConfig = Maps.newHashMap();
+    userConfig.put(LensConfConstants.SESSION_CLUSTER_USER, fixedValue);
     return userConfig;
   }
 }

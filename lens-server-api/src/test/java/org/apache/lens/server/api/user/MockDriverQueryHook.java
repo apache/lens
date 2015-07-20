@@ -18,30 +18,15 @@
  */
 package org.apache.lens.server.api.user;
 
-import java.util.Map;
+import org.apache.lens.server.api.driver.DriverQueryHook;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 
-import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.QueryContext;
-
-import org.apache.hadoop.hive.conf.HiveConf;
-
-import com.beust.jcommander.internal.Maps;
-
-public class MockUserConfigLoader extends UserConfigLoader {
+public class MockDriverQueryHook implements DriverQueryHook {
   public static final String KEY = "TEST_KEY";
   public static final String VALUE = "TEST_VALUE";
 
-  public MockUserConfigLoader(HiveConf conf) {
-    super(conf);
-  }
-
   @Override
-  public Map<String, String> getUserConfig(String loggedInUser) throws UserConfigLoaderException {
-    return Maps.newHashMap();
-  }
-
-  @Override
-  public void preSubmit(QueryContext ctx) throws LensException {
+  public void preLaunch(AbstractQueryContext ctx) {
     ctx.getSelectedDriverConf().set(KEY, VALUE);
   }
 }

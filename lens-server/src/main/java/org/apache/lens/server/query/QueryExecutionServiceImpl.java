@@ -19,6 +19,7 @@
 package org.apache.lens.server.query;
 
 import static org.apache.lens.api.query.QueryStatus.Status.*;
+import static org.apache.lens.server.api.LensConfConstants.*;
 import static org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 
 import java.io.*;
@@ -44,7 +45,6 @@ import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.error.LensMultiCauseException;
@@ -60,7 +60,6 @@ import org.apache.lens.server.rewrite.RewriteUtil;
 import org.apache.lens.server.rewrite.UserQueryToCubeQueryRewriter;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
-import org.apache.lens.server.user.UserConfigLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -273,7 +272,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * Initialize query acceptors and listeners.
    */
   private void initializeQueryAcceptors() throws LensException {
-    String[] acceptorClasses = conf.getStrings(LensConfConstants.ACCEPTOR_CLASSES);
+    String[] acceptorClasses = conf.getStrings(ACCEPTOR_CLASSES);
     if (acceptorClasses != null) {
       for (String acceptorClass : acceptorClasses) {
         try {
@@ -290,7 +289,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   private void initializeListeners() {
-    if (conf.getBoolean(LensConfConstants.QUERY_STATE_LOGGER_ENABLED, true)) {
+    if (conf.getBoolean(QUERY_STATE_LOGGER_ENABLED, true)) {
       getEventService().addListenerForType(new QueryStatusLogger(), StatusChange.class);
       log.info("Registered query state logger");
     }
@@ -309,17 +308,16 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @throws LensException the lens exception
    */
   private void loadDriversAndSelector() throws LensException {
-    String[] driverClasses = conf.getStrings(LensConfConstants.DRIVER_CLASSES);
+    Class<?>[] driverClasses = conf.getClasses(DRIVER_CLASSES);
     if (driverClasses != null) {
-      for (String driverClass : driverClasses) {
+      for (Class<?> driverClass : driverClasses) {
         try {
-          Class<?> clazz = Class.forName(driverClass);
-          LensDriver driver = (LensDriver) clazz.newInstance();
+          LensDriver driver = (LensDriver) driverClass.newInstance();
           driver.configure(LensServerConf.getConf());
-          driver.registerUserConfigLoader(UserConfigLoaderFactory.getUserConfigLoader());
-          driver.registerDriverEventListener(driverEventListener);
-
-          drivers.put(driverClass, driver);
+          if (driver instanceof HiveDriver) {
+            driver.registerDriverEventListener(driverEventListener);
+          }
+          drivers.put(driverClass.getName(), driver);
           log.info("Driver for " + driverClass + " is loaded");
         } catch (Exception e) {
           log.warn("Could not load the driver:" + driverClass, e);
@@ -330,15 +328,15 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       throw new LensException("No drivers specified");
     }
     try {
-      Class<? extends DriverSelector> driverSelectorClass = conf.getClass(LensConfConstants.DRIVER_SELECTOR_CLASS,
+      Class<? extends DriverSelector> driverSelectorClass = conf.getClass(DRIVER_SELECTOR_CLASS,
         MinQueryCostSelector.class,
         DriverSelector.class);
       log.info("Using driver selector class: " + driverSelectorClass.getCanonicalName());
       driverSelector = driverSelectorClass.newInstance();
     } catch (Exception e) {
       throw new LensException("Couldn't instantiate driver selector class. Class name: "
-        + conf.get(LensConfConstants.DRIVER_SELECTOR_CLASS) + ". Please supply a valid value for "
-        + LensConfConstants.DRIVER_SELECTOR_CLASS);
+        + conf.get(DRIVER_SELECTOR_CLASS) + ". Please supply a valid value for "
+        + DRIVER_SELECTOR_CLASS);
     }
   }
 
@@ -928,8 +926,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       LOG.error(e);
       throw new IllegalStateException("Could not load drivers", e);
     }
-    maxFinishedQueries = conf.getInt(LensConfConstants.MAX_NUMBER_OF_FINISHED_QUERY,
-      LensConfConstants.DEFAULT_FINISHED_QUERIES);
+    maxFinishedQueries = conf.getInt(MAX_NUMBER_OF_FINISHED_QUERY,
+      DEFAULT_FINISHED_QUERIES);
     initalizeFinishedQueryStore(conf);
     log.info("Query execution service initialized");
   }
@@ -1043,12 +1041,12 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   private void startEstimatePool() {
-    int minPoolSize = conf.getInt(LensConfConstants.ESTIMATE_POOL_MIN_THREADS,
-      LensConfConstants.DEFAULT_ESTIMATE_POOL_MIN_THREADS);
-    int maxPoolSize = conf.getInt(LensConfConstants.ESTIMATE_POOL_MAX_THREADS,
-      LensConfConstants.DEFAULT_ESTIMATE_POOL_MAX_THREADS);
-    int keepAlive = conf.getInt(LensConfConstants.ESTIMATE_POOL_KEEP_ALIVE_MILLIS,
-      LensConfConstants.DEFAULT_ESTIMATE_POOL_KEEP_ALIVE_MILLIS);
+    int minPoolSize = conf.getInt(ESTIMATE_POOL_MIN_THREADS,
+      DEFAULT_ESTIMATE_POOL_MIN_THREADS);
+    int maxPoolSize = conf.getInt(ESTIMATE_POOL_MAX_THREADS,
+      DEFAULT_ESTIMATE_POOL_MAX_THREADS);
+    int keepAlive = conf.getInt(ESTIMATE_POOL_KEEP_ALIVE_MILLIS,
+      DEFAULT_ESTIMATE_POOL_KEEP_ALIVE_MILLIS);
 
     final ThreadFactory defaultFactory = Executors.defaultThreadFactory();
     final AtomicInteger thId = new AtomicInteger();
@@ -1111,8 +1109,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
       // Wait for all rewrite and estimates to finish
       try {
-        long estimateLatchTimeout = ctx.getConf().getLong(LensConfConstants.ESTIMATE_TIMEOUT_MILLIS,
-          LensConfConstants.DEFAULT_ESTIMATE_TIMEOUT_MILLIS);
+        long estimateLatchTimeout = ctx.getConf().getLong(ESTIMATE_TIMEOUT_MILLIS,
+          DEFAULT_ESTIMATE_TIMEOUT_MILLIS);
         boolean completed = estimateCompletionLatch.await(estimateLatchTimeout, TimeUnit.MILLISECONDS);
 
         // log operations yet to complete and  check if we can proceed with at least one driver
@@ -2157,7 +2155,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   private QueryContext createResourceQuery(String command, LensSessionHandle sessionHandle, LensDriver driver)
     throws LensException {
     LensConf qconf = new LensConf();
-    qconf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    qconf.addProperty(QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     QueryContext addQuery = QueryContext.createContextWithSingleDriver(command,
       getSession(sessionHandle).getLoggedInUser(), qconf, getLensConf(
         sessionHandle, qconf), driver, sessionHandle.getPublicId().toString(), true);
@@ -2330,7 +2328,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         log.warn("Unable to get status for Result Directory", e);
         throw new NotFoundException("Http result not available for query:" + queryHandle.toString());
       }
-      String resultFSReadUrl = ctx.getConf().get(LensConfConstants.RESULT_FS_READ_URL);
+      String resultFSReadUrl = ctx.getConf().get(RESULT_FS_READ_URL);
       if (resultFSReadUrl != null) {
         try {
           URI resultReadPath = new URI(resultFSReadUrl + resultPath.toUri().getPath() + "?op=OPEN&user.name="

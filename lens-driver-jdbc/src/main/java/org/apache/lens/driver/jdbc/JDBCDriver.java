@@ -20,8 +20,6 @@ package org.apache.lens.driver.jdbc;
 
 import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.*;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
-
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -33,7 +31,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.query.*;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
@@ -41,11 +40,12 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
-import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.PreparedQueryContext;
+import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.rewrite.QueryRewriter;
-import org.apache.lens.server.api.user.UserConfigLoader;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
@@ -92,7 +92,7 @@ public class JDBCDriver implements LensDriver {
   private ConnectionProvider estimateConnectionProvider;
 
   private LogSegregationContext logSegregationContext;
-  private UserConfigLoader userConfigLoader;
+  private DriverQueryHook queryHook;
 
   /**
    * Data related to a query submitted to JDBCDriver.
@@ -419,6 +419,13 @@ public class JDBCDriver implements LensDriver {
     this.conf.addResource("jdbcdriver-default.xml");
     this.conf.addResource("jdbcdriver-site.xml");
     init(conf);
+    try {
+      queryHook = this.conf.getClass(
+        JDBC_QUERY_HOOK_CLASS, NoOpDriverQueryHook.class, DriverQueryHook.class
+      ).newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
+    }
     configured = true;
     LOG.info("JDBC Driver configured");
   }
@@ -532,7 +539,7 @@ public class JDBCDriver implements LensDriver {
       // check for insert clause
       ASTNode dest = HQLParser.findNodeByPath(ast, HiveParser.TOK_INSERT);
       if (dest != null
-        && ((ASTNode) (dest.getChild(0).getChild(0).getChild(0))).getToken().getType() != TOK_TMP_FILE) {
+        && ((ASTNode) (dest.getChild(0).getChild(0).getChild(0))).getToken().getType() != HiveParser.TOK_TMP_FILE) {
         throw new LensException("Not allowed statement:" + query);
       }
     }
@@ -889,9 +896,7 @@ public class JDBCDriver implements LensDriver {
     String rewrittenQuery = rewriteQuery(context);
     JdbcQueryContext jdbcCtx = new JdbcQueryContext(context, logSegregationContext);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
-    if (userConfigLoader != null) {
-      userConfigLoader.preSubmit(context);
-    }
+    queryHook.preLaunch(context);
     try {
       Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx, logSegregationContext));
       jdbcCtx.setResultFuture(future);
@@ -1078,13 +1083,6 @@ public class JDBCDriver implements LensDriver {
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
 
   }
-
-
-  @Override
-  public void registerUserConfigLoader(UserConfigLoader userConfigLoader) {
-    this.userConfigLoader = userConfigLoader;
-  }
-
 
   /*
    * (non-Javadoc)

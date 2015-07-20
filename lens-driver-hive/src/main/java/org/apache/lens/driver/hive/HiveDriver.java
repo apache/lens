@@ -44,7 +44,6 @@ import org.apache.lens.server.api.query.cost.QueryCostCalculator;
 import org.apache.lens.server.api.query.priority.CostRangePriorityDecider;
 import org.apache.lens.server.api.query.priority.CostToPriorityRangeConf;
 import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
-import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -71,6 +70,8 @@ public class HiveDriver implements LensDriver {
 
   /** The Constant HIVE_CONNECTION_CLASS. */
   public static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
+
+  public static final String HIVE_QUERY_HOOK_CLASS = "lens.driver.hive.query.hook.class";
 
   /** The Constant HS2_CONNECTION_EXPIRY_DELAY. */
   public static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hive.hs2.connection.expiry.delay";
@@ -127,7 +128,7 @@ public class HiveDriver implements LensDriver {
   QueryPriorityDecider queryPriorityDecider;
   // package-local. Test case can change.
   boolean whetherCalculatePriority;
-  private UserConfigLoader userConfigLoader;
+  private DriverQueryHook queryHook;
 
 
   private String sessionDbKey(String sessionHandle, String database) {
@@ -341,6 +342,13 @@ public class HiveDriver implements LensDriver {
     queryPriorityDecider = new CostRangePriorityDecider(
       new CostToPriorityRangeConf(driverConf.get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES))
     );
+    try {
+      queryHook = driverConf.getClass(
+        HIVE_QUERY_HOOK_CLASS, NoOpDriverQueryHook.class, DriverQueryHook.class
+      ).newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
+    }
   }
 
   private QueryCost calculateQueryCost(AbstractQueryContext qctx) throws LensException {
@@ -350,6 +358,7 @@ public class HiveDriver implements LensDriver {
       return new FactPartitionBasedQueryCost(Double.MAX_VALUE);
     }
   }
+
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
     log.info("Estimate: " + qctx.getDriverQuery(this));
@@ -520,9 +529,7 @@ public class HiveDriver implements LensDriver {
             + "User query: " + ctx.getUserQuery(), e);
         }
       }
-      if (userConfigLoader != null) {
-        userConfigLoader.preSubmit(ctx);
-      }
+      queryHook.preLaunch(ctx);
       OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.getSelectedDriverQuery(),
         qdconf.getValByRegex(".*"));
       ctx.setDriverOpHandle(op.toString());
@@ -758,11 +765,6 @@ public class HiveDriver implements LensDriver {
     driverListeners.add(driverEventListener);
   }
 
-  @Override
-  public void registerUserConfigLoader(UserConfigLoader userConfigLoader) {
-    this.userConfigLoader = userConfigLoader;
-  }
-
   protected CLIServiceClient getClient() throws LensException {
     if (isEmbedded) {
       if (embeddedConnection == null) {
@@ -982,7 +984,7 @@ public class HiveDriver implements LensDriver {
               listener.onCompletion(handle);
               return;
             }
-          } catch(LensException e) {
+          } catch (LensException e) {
             log.debug("query handle: {} Not yet launched on driver", handle);
           }
           Thread.sleep(pollInterval);

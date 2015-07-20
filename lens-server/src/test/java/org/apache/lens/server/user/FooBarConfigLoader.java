@@ -21,8 +21,6 @@ package org.apache.lens.server.user;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.user.UserConfigLoader;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -30,7 +28,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 /**
  * The Class FooBarConfigLoader.
  */
-public class FooBarConfigLoader extends UserConfigLoader {
+public class FooBarConfigLoader implements UserConfigLoader {
 
   /** The const hash map. */
   public static final HashMap<String, String> CONST_HASH_MAP = new HashMap<String, String>() {
@@ -45,7 +43,6 @@ public class FooBarConfigLoader extends UserConfigLoader {
    * @param conf the conf
    */
   public FooBarConfigLoader(HiveConf conf) {
-    super(conf);
   }
 
   /*
@@ -56,11 +53,5 @@ public class FooBarConfigLoader extends UserConfigLoader {
   @Override
   public Map<String, String> getUserConfig(String loggedInUser) {
     return CONST_HASH_MAP;
-  }
-
-  @Override
-  public void preSubmit(QueryContext ctx) throws LensException {
-    super.preSubmit(ctx);
-    ctx.getSelectedDriverConf().set("random.conf.key", "random.conf.value");
   }
 }
