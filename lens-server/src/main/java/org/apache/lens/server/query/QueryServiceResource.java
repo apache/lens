@@ -210,7 +210,7 @@ public class QueryServiceResource {
       @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
       @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
 
-    final String requestId = this.logSegregationContext.get();
+    final String requestId = this.logSegregationContext.getLogSegragationId();
 
     try {
       validateSessionId(sessionid);

@@ -503,7 +503,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
           QueryContext ctx = queuedQueries.take();
 
           /* Setting log segregation id */
-          logSegregationContext.set(ctx.getQueryHandleString());
+          logSegregationContext.setLogSegragationAndQueryId(ctx.getQueryHandleString());
 
           synchronized (ctx) {
             if (ctx.getStatus().getStatus().equals(QUEUED)) {
@@ -587,7 +587,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
               return;
             }
 
-            logSegregationContext.set(ctx.getQueryHandleString());
+            logSegregationContext.setLogSegragationAndQueryId(ctx.getQueryHandleString());
             log.info("Polling status for " + ctx.getQueryHandle());
             try {
               // session is not required to update status of the query
@@ -808,7 +808,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         FinishedQuery finished = null;
         try {
           finished = finishedQueries.take();
-          logSegregationContext.set(finished.getQueryHandleString());
+          logSegregationContext.setLogSegragationAndQueryId(finished.getQueryHandleString());
         } catch (InterruptedException e) {
           log.info("QueryPurger has been interrupted, exiting");
           return;
@@ -883,7 +883,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       while (!stopped && !prepareQueryPurger.isInterrupted()) {
         try {
           PreparedQueryContext prepared = preparedQueryQueue.take();
-          logSegregationContext.set(prepared.getQueryHandleString());
+          logSegregationContext.setLogSegragationAndQueryId(prepared.getQueryHandleString());
           destroyPreparedQuery(prepared);
           log.info("Purged prepared query: " + prepared.getPrepareHandle());
         } catch (LensException e) {
@@ -1220,7 +1220,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     @Override
     public void run() {
       try {
-        logSegregationContext.set(ctx.getLogHandle());
+        // With following set - explain estimate calls are setting queryLogId as requestid in logSegregationContext
+        logSegregationContext.setLogSegragationAndQueryId(ctx.getLogHandle());
         acquire(ctx.getLensSessionIdentifier());
         MethodMetricsContext rewriteGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
           REWRITE_GAUGE);

@@ -280,7 +280,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       public void run() {
         try {
           final String runId = UUID.randomUUID().toString();
-          logSegregationContext.set(runId);
+          logSegregationContext.setLogSegregationId(runId);
           persistLensServiceState();
           LOG.info("SnapShot of Lens Services created");
         } catch (IOException e) {

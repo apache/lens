@@ -185,7 +185,7 @@ public class LensServer {
   public static void main(String[] args) throws Exception {
 
     final String runId = UUID.randomUUID().toString();
-    new MappedDiagnosticLogSegregationContext().set(runId);
+    new MappedDiagnosticLogSegregationContext().setLogSegregationId(runId);
 
     printStartupMessage();
     try {

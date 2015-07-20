@@ -117,7 +117,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
         + ". No email generated");
       return;
     }
-    this.logSegregationContext.set(queryContext.getQueryHandleString());
+    this.logSegregationContext.setLogSegragationAndQueryId(queryContext.getQueryHandleString());
 
     boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(LensConfConstants.QUERY_MAIL_NOTIFY,
       LensConfConstants.WHETHER_MAIL_NOTIFY_DEFAULT));

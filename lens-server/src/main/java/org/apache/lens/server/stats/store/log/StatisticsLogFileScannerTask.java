@@ -76,7 +76,7 @@ public class StatisticsLogFileScannerTask extends TimerTask {
     try {
 
       final String runId = UUID.randomUUID().toString();
-      this.logSegregationContext.set(runId);
+      this.logSegregationContext.setLogSegregationId(runId);
 
       for (Map.Entry<String, String> entry : scanSet.entrySet()) {
         File f = new File(entry.getValue()).getAbsoluteFile();

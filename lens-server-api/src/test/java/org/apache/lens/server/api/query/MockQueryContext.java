@@ -33,4 +33,9 @@ public class MockQueryContext extends AbstractQueryContext {
     final Configuration conf, final Collection<LensDriver> drivers) {
     super(query, "testuser", qconf, conf, drivers, false);
   }
+
+  @Override
+  public String getLogHandle() {
+    return super.getUserQuery();
+  }
 }

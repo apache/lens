@@ -49,7 +49,7 @@ public class LensRequestContextInitFilter implements ContainerRequestFilter {
     String uniqueRequesId = UUID.randomUUID().toString();
 
     /* Add request id for appearing in every log line */
-    new MappedDiagnosticLogSegregationContext().set(uniqueRequesId);
+    new MappedDiagnosticLogSegregationContext().setLogSegregationId(uniqueRequesId);
 
     /* Add request id to headers */
     requestContext.getHeaders().add(REQUEST_ID, uniqueRequesId);

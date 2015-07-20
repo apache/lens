@@ -455,9 +455,7 @@ public abstract class AbstractQueryContext implements Serializable {
    * Get handle of the query for logging purposes
    * @return
    */
-  public String getLogHandle() {
-    return this.getUserQuery();
-  }
+  public abstract String getLogHandle();
 
   /**
    * Returns database set while launching query

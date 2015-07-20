@@ -22,15 +22,32 @@ import org.slf4j.MDC;
 
 public class MappedDiagnosticLogSegregationContext implements LogSegregationContext {
 
-  private static final String LOG_SEGREGATION_ID = "logSegregationId";
+  public static final String LOG_SEGREGATION_ID = "logSegregationId";
+  public static final String QUERY_LOG_ID = "queryLogId";
 
   @Override
-  public void set(String id) {
+  public void setLogSegregationId(String id) {
     MDC.put(LOG_SEGREGATION_ID, id);
   }
 
   @Override
-  public String get() {
+  public String getLogSegragationId() {
     return MDC.get(LOG_SEGREGATION_ID);
+  }
+
+  @Override
+  public void setLogSegragationAndQueryId(String id) {
+    setLogSegregationId(id);
+    setQueryId(id);
+  }
+
+  @Override
+  public String getQueryId() {
+    return MDC.get(QUERY_LOG_ID);
+  }
+
+  @Override
+  public void setQueryId(String id) {
+    MDC.put(QUERY_LOG_ID, id);
   }
 }

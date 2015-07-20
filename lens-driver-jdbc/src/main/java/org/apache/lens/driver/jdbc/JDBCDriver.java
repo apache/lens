@@ -294,7 +294,7 @@ public class JDBCDriver implements LensDriver {
     @Override
     public QueryResult call() {
 
-      logSegregationContext.set(this.queryContext.getQueryHandleString());
+      logSegregationContext.setLogSegragationAndQueryId(this.queryContext.getQueryHandleString());
 
       Statement stmt = null;
       Connection conn = null;

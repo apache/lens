@@ -79,7 +79,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
   private void formatOutput(QueryExecuted event) {
     QueryHandle queryHandle = event.getQueryHandle();
     QueryContext ctx = queryService.getQueryContext(queryHandle);
-    this.logSegregationContext.set(ctx.getQueryHandleString());
+    this.logSegregationContext.setLogSegragationAndQueryId(ctx.getQueryHandleString());
     try {
       if (!ctx.isPersistent()) {
         LOG.info("No result formatting required for query " + queryHandle);
