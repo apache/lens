@@ -37,7 +37,6 @@ import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.Type;
 import org.apache.hive.service.cli.TypeDescriptor;
 import org.apache.hive.service.cli.TypeQualifiers;
-import org.apache.log4j.Logger;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 
@@ -46,13 +45,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class JDBCResultSet.
  */
+@Slf4j
 public class JDBCResultSet extends InMemoryResultSet {
-
-  /** The Constant LOG. */
-  public static final Logger LOG = Logger.getLogger(JDBCResultSet.class);
 
   /** The result meta. */
   ResultSetMetaData resultMeta;
@@ -101,7 +100,7 @@ public class JDBCResultSet extends InMemoryResultSet {
    */
   @Override
   public int size() throws LensException {
-    LOG.warn("Size of result set is not supported");
+    log.warn("Size of result set is not supported");
     return -1;
   }
 
@@ -120,7 +119,7 @@ public class JDBCResultSet extends InMemoryResultSet {
           jdbcResultSetMetadata.getFieldSchemas().add(col);
         }
       } catch (Exception e) {
-        LOG.error("Error getting JDBC type information: " + e.getMessage(), e);
+        log.error("Error getting JDBC type information: {}", e.getMessage(), e);
         jdbcResultSetMetadata.setFieldSchemas(null);
       }
       lensResultMeta = jdbcResultSetMetadata;

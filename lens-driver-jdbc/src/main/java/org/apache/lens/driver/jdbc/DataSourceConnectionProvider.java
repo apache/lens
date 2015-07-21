@@ -28,17 +28,16 @@ import java.util.Map;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class DataSourceConnectionProvider.
  */
+@Slf4j
 public class DataSourceConnectionProvider implements ConnectionProvider {
-
-  /** The Constant LOG. */
-  public static final Logger LOG = Logger.getLogger(DataSourceConnectionProvider.class);
 
   /** The data source map. */
   private Map<DriverConfig, ComboPooledDataSource> dataSourceMap;
@@ -187,7 +186,7 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
       cpds.setCheckoutTimeout(conf.getInt(JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT,
         JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT_DEFAULT));
       dataSourceMap.put(config, cpds);
-      LOG.info("Created new datasource for config: " + config);
+      log.info("Created new datasource for config: {}", config);
     }
     return dataSourceMap.get(config).getConnection();
   }
@@ -201,10 +200,10 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
   public void close() throws IOException {
     for (Map.Entry<DriverConfig, ComboPooledDataSource> entry : dataSourceMap.entrySet()) {
       entry.getValue().close();
-      LOG.info("Closed datasource: " + entry.getKey());
+      log.info("Closed datasource: {}", entry.getKey());
     }
     dataSourceMap.clear();
-    LOG.info("Closed datasource connection provider");
+    log.info("Closed datasource connection provider");
   }
 
   protected final ComboPooledDataSource getDataSource(Configuration conf) {

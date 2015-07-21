@@ -31,8 +31,6 @@ import org.apache.lens.server.api.query.rewrite.QueryRewriter;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableInt;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -44,9 +42,12 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class ColumnarSQLRewriter.
  */
+@Slf4j
 public class ColumnarSQLRewriter implements QueryRewriter {
 
   /** The clause name. */
@@ -114,9 +115,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   /** The map aliases. */
   private final Map<String, String> mapAliases = new HashMap<String, String>();
-
-  /** The Constant LOG. */
-  private static final Log LOG = LogFactory.getLog(ColumnarSQLRewriter.class);
 
   /** The where tree. */
   private String whereTree;
@@ -197,7 +195,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
 
     if (!qb.getSubqAliases().isEmpty()) {
-      LOG.warn("Subqueries in from clause is not supported by " + this + " Query : " + this.query);
+      log.warn("Subqueries in from clause is not supported by {} Query : {}", this, this.query);
       throw new SemanticException("Subqueries in from clause is not supported by " + this + " Query : " + this.query);
     }
 
@@ -302,7 +300,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       } else if (joinToken.equals("TOK_UNIQUEJOIN")) {
         joinType = "unique join";
       } else {
-        LOG.info("Non supported join type : " + joinToken);
+        log.info("Non supported join type : {}", joinToken);
       }
 
       if (node.getChildCount() > 2) {
@@ -382,7 +380,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   public void getFilterInJoinCond(ASTNode node) {
 
     if (node == null) {
-      LOG.debug("Join AST is null ");
+      log.debug("Join AST is null ");
       return;
     }
 
@@ -422,7 +420,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   public void factFilterPushDown(ASTNode node) {
     if (node == null) {
-      LOG.debug("Join AST is null ");
+      log.debug("Join AST is null ");
       return;
     }
 
@@ -460,7 +458,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    */
   public void getFactKeysFromNode(ASTNode node) {
     if (node == null) {
-      LOG.debug("AST is null ");
+      log.debug("AST is null ");
       return;
     }
     if (node.getToken().getType() == HiveParser.DOT
@@ -507,7 +505,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    */
   public void buildSubqueries(ASTNode node) {
     if (node == null) {
-      LOG.debug("Join AST is null ");
+      log.debug("Join AST is null ");
       return;
     }
 
@@ -880,7 +878,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     if (whereTree == null || joinTree == null || allSubQueries.length() == 0
         || aggColumn.isEmpty() || isExpressionsUsed(selectAST)) {
-      LOG.info("@@@Query not eligible for inner subquery rewrite");
+      log.info("@@@Query not eligible for inner subquery rewrite");
       // construct query without fact sub query
       constructQuery(selectTree, whereTree, groupByTree, havingTree, orderByTree, limit);
       return;
@@ -1079,7 +1077,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         String finalRewrittenQuery = "";
         String[] queries = query.toLowerCase().split("union all");
         for (int i = 0; i < queries.length; i++) {
-          LOG.info("Union Query Part " + i + " : " + queries[i]);
+          log.info("Union Query Part {} : {}", i, queries[i]);
           ast = HQLParser.parseHQL(queries[i], metastoreConf);
           buildQuery(conf, metastoreConf);
           mergedQuery = rewrittenQuery.append(" union all ");
@@ -1087,14 +1085,14 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           reset();
         }
         queryReplacedUdf = replaceUDFForDB(finalRewrittenQuery);
-        LOG.info("Input Query : " + query);
-        LOG.info("Rewritten Query :  " + queryReplacedUdf);
+        log.info("Input Query : {}", query);
+        log.info("Rewritten Query : {}", queryReplacedUdf);
       } else {
         ast = HQLParser.parseHQL(query, metastoreConf);
         buildQuery(conf, metastoreConf);
         queryReplacedUdf = replaceUDFForDB(rewrittenQuery.toString());
-        LOG.info("Input Query : " + query);
-        LOG.info("Rewritten Query :  " + queryReplacedUdf);
+        log.info("Input Query : {}", query);
+        log.info("Rewritten Query :  {}", queryReplacedUdf);
       }
     } catch (SemanticException e) {
       throw new LensException(e);
@@ -1158,7 +1156,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           }
         }
       } catch (HiveException e) {
-        LOG.warn("No corresponding table in metastore:" + e.getMessage());
+        log.warn("No corresponding table in metastore:", e);
       }
     } else {
       for (int i = 0; i < tree.getChildCount(); i++) {

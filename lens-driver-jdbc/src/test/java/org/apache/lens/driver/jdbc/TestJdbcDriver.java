@@ -261,7 +261,7 @@ public class TestJdbcDriver {
       driver.getEstimateConnectionConf().getInt(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE, 50);
     for (int i = 0; i < maxEstimateConnections + 10; i++) {
       try {
-        log.info("Iteration#" + (i + 1));
+        log.info("Iteration#{}", (i + 1));
         String query = i > maxEstimateConnections ? "SELECT * FROM estimate_test" : "CREATE TABLE FOO(ID INT)";
         ExplainQueryContext context = createExplainContext(query, baseConf);
         cost = driver.estimate(context);
@@ -807,8 +807,8 @@ public class TestJdbcDriver {
     DataSourceConnectionProvider.DriverConfig queryCfg =
       queryCp.getDriverConfigfromConf(driver.getConf());
 
-    log.info("@@@ ESTIMATE_CFG " + estimateCfg);
-    log.info("@@@ QUERY CFG " + queryCfg);
+    log.info("@@@ ESTIMATE_CFG {}", estimateCfg);
+    log.info("@@@ QUERY CFG {}", queryCfg);
 
     // Get connection from each so that pools get initialized
     try {

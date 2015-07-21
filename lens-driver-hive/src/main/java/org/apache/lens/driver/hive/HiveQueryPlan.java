@@ -166,7 +166,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
               Table tbl = metastore.getTable(table, false);
               if (tbl == null) {
                 // table not found, possible case if query is create table
-                log.info("Table " + table + " not found while extracting plan details");
+                log.info("Table {} not found while extracting plan details", table);
                 continue;
               }
               tablesQueried.add(table);
