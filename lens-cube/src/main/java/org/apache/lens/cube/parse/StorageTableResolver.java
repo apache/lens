@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.MetastoreUtil.getFactOrDimtableStorageTableName;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.PART_COL_DOES_NOT_EXIST;
@@ -182,7 +183,7 @@ class StorageTableResolver implements ContextRewriter {
         Map<String, SkipStorageCause> skipStorageCauses = new HashMap<String, SkipStorageCause>();
         for (String storage : dimtable.getStorages()) {
           if (isStorageSupported(storage)) {
-            String tableName = MetastoreUtil.getDimStorageTableName(dimtable.getName(), storage).toLowerCase();
+            String tableName = getFactOrDimtableStorageTableName(dimtable.getName(), storage).toLowerCase();
             if (validDimTables != null && !validDimTables.contains(tableName)) {
               LOG.info("Not considering dim storage table:" + tableName + " as it is not a valid dim storage");
               skipStorageCauses.put(tableName, new SkipStorageCause(SkipStorageCode.INVALID));
@@ -307,7 +308,7 @@ class StorageTableResolver implements ContextRewriter {
   }
 
   String getStorageTableName(CubeFactTable fact, String storage, List<String> validFactStorageTables) {
-    String tableName = MetastoreUtil.getFactStorageTableName(fact.getName(), storage).toLowerCase();
+    String tableName = getFactOrDimtableStorageTableName(fact.getName(), storage).toLowerCase();
     if (validFactStorageTables != null && !validFactStorageTables.contains(tableName)) {
       LOG.info("Skipping storage table " + tableName + " as it is not valid");
       return null;
@@ -370,7 +371,7 @@ class StorageTableResolver implements ContextRewriter {
         String partCol = range.getPartitionColumn();
         boolean partColNotSupported = rangeParts.isEmpty();
         for(String storage: cfact.fact.getStorages()) {
-          String storageTableName = MetastoreUtil.getFactStorageTableName(cfact.fact.getName(), storage).toLowerCase();
+          String storageTableName = getFactOrDimtableStorageTableName(cfact.fact.getName(), storage).toLowerCase();
           partColNotSupported &= skipStorageCauses.containsKey(storageTableName)
             && skipStorageCauses.get(storageTableName).getCause().equals(PART_COL_DOES_NOT_EXIST)
             && skipStorageCauses.get(storageTableName).getNonExistantPartCols().contains(partCol);

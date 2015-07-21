@@ -363,7 +363,7 @@ public class MetastoreResource {
    * @param cubeName  The cube name
    * @param cube      The {@link XCube} representation of the updated cube definition
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
-   * state {@link Status#FAILED}, if udpate has failed
+   * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/cubes/{cubeName}")
@@ -870,7 +870,7 @@ public class MetastoreResource {
    * @param factName  name of the fact table
    * @param fact      The {@link XFactTable} representation of the updated fact table definition
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
-   * state {@link Status#FAILED}, if udpate has failed
+   * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/facts/{factName}")
@@ -1108,6 +1108,34 @@ public class MetastoreResource {
     }
     return SUCCESS;
   }
+  /**
+   * updates an existing partition for a storage of fact
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param factName  fact table name
+   * @param storage   storage name
+   * @param partition {@link XPartition} representation of partition.
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state
+   * {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/facts/{factName}/storages/{storage}/partition")
+  public APIResult updatePartitionOfFactStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("factName") String factName,
+    @PathParam("storage") String storage,
+    XPartition partition) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition is null", partition);
+    try {
+      getSvc().updatePartition(sessionid, factName, storage, partition);
+    } catch (LensException exc) {
+      checkTableNotFound(exc, factName);
+      LOG.error("Error adding partition to storage of fact" + factName + ":" + storage, exc);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
 
   /**
    * Batch Add partitions for a storage of fact
@@ -1129,6 +1157,34 @@ public class MetastoreResource {
     checkNonNullArgs("Partition List is null", partitions);
     try {
       getSvc().addPartitionsToFactStorage(sessionid, factName, storage, partitions);
+    } catch (LensException exc) {
+      checkTableNotFound(exc, factName);
+      LOG.error("Error adding partition to storage of fact" + factName + ":" + storage, exc);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+  /**
+   * Batch Update partitions for a storage of fact
+   *
+   * @param sessionid  The sessionid in which user is working
+   * @param factName   fact table name
+   * @param storage    storage name
+   * @param partitions {@link XPartitionList} representation of partitions
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state
+   * {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/facts/{factName}/storages/{storage}/partitions")
+  public APIResult updatePartitionsOfFactStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("factName") String factName,
+    @PathParam("storage") String storage,
+    XPartitionList partitions) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition List is null", partitions);
+    try {
+      getSvc().updatePartitions(sessionid, factName, storage, partitions);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
       LOG.error("Error adding partition to storage of fact" + factName + ":" + storage, exc);
@@ -1206,7 +1262,7 @@ public class MetastoreResource {
    * @param sessionid      The sessionid in which user is working
    * @param dimensionTable The {@link XDimensionTable} representation of the updated dim table definition
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
-   * state {@link Status#FAILED}, if udpate has failed
+   * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/dimtables/{dimTableName}")
@@ -1481,6 +1537,33 @@ public class MetastoreResource {
     }
     return SUCCESS;
   }
+  /**
+   * Updates an existing partition for a storage of dimension
+   *
+   * @param sessionid    The sessionid in which user is working
+   * @param dimTableName dimension table name
+   * @param storage      storage name
+   * @param partition    {@link XPartition} representation of partition
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state
+   * {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/dimtables/{dimTableName}/storages/{storage}/partition")
+  public APIResult updatePartitionOfDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("dimTableName") String dimTableName,
+    @PathParam("storage") String storage,
+    XPartition partition) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition is null", partition);
+    try {
+      getSvc().updatePartition(sessionid, dimTableName, storage, partition);
+    } catch (LensException exc) {
+      LOG.error("Error adding partition to storage of dimension table " + dimTableName + ":" + storage, exc);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
 
   /**
    * Add new partitions for a storage of dimension
@@ -1502,6 +1585,33 @@ public class MetastoreResource {
     checkNonNullArgs("Partition list is null", partitions);
     try {
       getSvc().addPartitionsToDimStorage(sessionid, dimTableName, storage, partitions);
+    } catch (LensException exc) {
+      LOG.error("Error adding partition to storage of dimension table " + dimTableName + ":" + storage, exc);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+  /**
+   * Add new partitions for a storage of dimension
+   *
+   * @param sessionid    The sessionid in which user is working
+   * @param dimTableName dimension table name
+   * @param storage      storage name
+   * @param partitions   {@link XPartitionList} representation of list of partitions
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state
+   * {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/dimtables/{dimTableName}/storages/{storage}/partitions")
+  public APIResult updatePartitionsOfDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("dimTableName") String dimTableName,
+    @PathParam("storage") String storage,
+    XPartitionList partitions) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition list is null", partitions);
+    try {
+      getSvc().updatePartitions(sessionid, dimTableName, storage, partitions);
     } catch (LensException exc) {
       LOG.error("Error adding partition to storage of dimension table " + dimTableName + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());

@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cli.commands;
 
+import java.io.File;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
@@ -29,6 +30,8 @@ import org.apache.lens.cli.commands.annotations.UserDocumentation;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
+
+import lombok.NonNull;
 
 /**
  * The Class LensFactCommands.
@@ -226,6 +229,24 @@ public class LensFactCommands extends PhysicalTableCrudCommand<XFactTable> {
     @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-spec-path>") String path) {
     return addPartition(tableName, storageName, path);
   }
+  /**
+   * updates the partition in the fact.
+   *
+   * @param tableName   fact name
+   * @param storageName storage name
+   * @param path        partition spec path
+   * @return the string
+   */
+  @CliCommand(value = "fact update single-partition",
+    help = "update single partition to fact <fact_name>'s"
+      + " storage <storage_name>, reading spec from <partition-spec-path>"
+      + " The partition has to exist to be eligible for updation.")
+  public String updatePartitionOfFact(
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-spec-path>") @NonNull final File path) {
+    return updatePartition(tableName, storageName, path);
+  }
 
   @CliCommand(value = "fact add partitions",
     help = "add multiple partition to fact <fact_name>'s"
@@ -235,6 +256,17 @@ public class LensFactCommands extends PhysicalTableCrudCommand<XFactTable> {
     @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-list-spec-path>") String path) {
     return addPartitions(tableName, storageName, path);
+  }
+
+  @CliCommand(value = "fact update partitions",
+    help = "update multiple partition of fact <fact_name>'s"
+      + " storage <storage_name>, reading partition list spec from <partition-list-spec-path>"
+      +" The partitions have to exist to be eligible for updation.")
+  public String updatePartitionsOfFact(
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-list-spec-path>") String path) {
+    return updatePartitions(tableName, storageName, path);
   }
 
   @CliCommand(value = "fact timelines",
@@ -291,6 +323,16 @@ public class LensFactCommands extends PhysicalTableCrudCommand<XFactTable> {
   @Override
   protected APIResult doDropPartitions(String tableName, String storageName, String filter) {
     return getClient().dropAllPartitionsOfFact(tableName, storageName, filter);
+  }
+
+  @Override
+  protected APIResult doUpdatePartition(String tableName, String storageName, String validPath) {
+    return getClient().updatePartitionOfFact(tableName, storageName, validPath);
+  }
+
+  @Override
+  protected APIResult doUpdatePartitions(String tableName, String storageName, String validPath) {
+    return getClient().updatePartitionsOfFact(tableName, storageName, validPath);
   }
 
   @Override

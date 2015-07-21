@@ -143,7 +143,7 @@ public class BaseLensCommand implements ExecutionProcessor {
       .replaceAll("]", "\n").replaceAll(",", "").replaceAll("\"", "").replaceAll("\n\n", "\n");
   }
 
-  public String getValidPath(String path, boolean shouldBeDirectory, boolean shouldExist) {
+  public static String getValidPath(String path, boolean shouldBeDirectory, boolean shouldExist) {
     path = path.replaceAll("/$", "");
     if (path.startsWith("~")) {
       path = path.replaceFirst("~", System.getProperty("user.home"));

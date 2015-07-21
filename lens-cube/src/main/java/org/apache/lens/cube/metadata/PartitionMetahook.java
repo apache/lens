@@ -21,11 +21,12 @@ package org.apache.lens.cube.metadata;
 import java.util.List;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
 
 public interface PartitionMetahook {
 
   /**
-   * Called before calling add partition
+   * Called before calling add partition(s)
    *
    * @param storagePartitionDesc
    * @throws HiveException
@@ -33,7 +34,7 @@ public interface PartitionMetahook {
   void preAddPartitions(List<StoragePartitionDesc> storagePartitionDesc) throws HiveException;
 
   /**
-   * Called after successfully adding the partition
+   * Called after successfully adding the partition(s)
    *
    * @param storagePartitionDesc
    * @throws HiveException
@@ -47,6 +48,30 @@ public interface PartitionMetahook {
    * @throws HiveException
    */
   void rollbackAddPartitions(List<StoragePartitionDesc> storagePartitionDesc) throws HiveException;
+
+  /**
+   * Called before calling update partition(s)
+   *
+   * @param partitions
+   * @throws HiveException
+   */
+  void preUpdatePartition(List<Partition> partitions) throws HiveException;
+
+  /**
+   * Called after successfully updating partition(s)
+   *
+   * @param partitions
+   * @throws HiveException
+   */
+  void commitUpdatePartition(List<Partition> partitions) throws HiveException;
+
+  /**
+   * Called after failed updating partition(s)
+   *
+   * @param partitions
+   * @throws HiveException
+   */
+  void rollbackUpdatePartition(List<Partition> partitions) throws HiveException;
 
   /**
    * Called before calling drop partition

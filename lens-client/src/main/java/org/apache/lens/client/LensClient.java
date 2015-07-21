@@ -530,6 +530,37 @@ public class LensClient {
   public APIResult addPartitionsToDim(String table, String storage, String partsSpec) {
     return mc.addPartitionsToDimensionTable(table, storage, partsSpec);
   }
+  public APIResult updatePartitionOfFact(String table, String storage, String partSpec) {
+    return mc.updatePartitionOfFactTable(table, storage, partSpec);
+  }
+
+  public APIResult updatePartitionsOfFact(String table, String storage, String partsSpec) {
+    return mc.updatePartitionsOfFactTable(table, storage, partsSpec);
+  }
+
+  public APIResult updatePartitionOfFact(String table, String storage, XPartition xp) {
+    return mc.updatePartitionOfFactTable(table, storage, xp);
+  }
+
+  public APIResult updatePartitionsOfFact(String table, String storage, XPartitionList xpList) {
+    return mc.updatePartitionsOfFactTable(table, storage, xpList);
+  }
+
+  public APIResult updatePartitionOfDim(String table, String storage, String partSpec) {
+    return mc.updatePartitionOfDimensionTable(table, storage, partSpec);
+  }
+
+  public APIResult updatePartitionOfDim(String table, String storage, XPartition xp) {
+    return mc.updatePartitionOfDimensionTable(table, storage, xp);
+  }
+
+  public APIResult updatePartitionsOfDim(String table, String storage, XPartitionList xpList) {
+    return mc.updatePartitionsOfDimensionTable(table, storage, xpList);
+  }
+
+  public APIResult updatePartitionsOfDim(String table, String storage, String partsSpec) {
+    return mc.updatePartitionsOfDimensionTable(table, storage, partsSpec);
+  }
 
   public QueryPrepareHandle prepare(String sql, String queryName) {
     return statement.prepareQuery(sql, queryName);

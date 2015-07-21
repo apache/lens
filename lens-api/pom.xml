@@ -89,6 +89,8 @@
             <arg>-extension</arg>
             <arg>-Xinheritance</arg>
             <arg>-XtoString</arg>
+            <arg>-Xequals</arg>
+            <arg>-XhashCode</arg>
           </args>
           <plugins>
             <plugin>

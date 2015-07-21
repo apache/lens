@@ -33,14 +33,16 @@ import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
+import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.mapred.InputFormat;
 
 import com.google.common.base.Optional;
-
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -783,9 +785,8 @@ public final class JAXBUtils {
     return nonTimePartSpec;
   }
 
-  public static XPartition xpartitionFromPartition(Partition p) throws HiveException {
+  public static XPartition xpartitionFromPartition(Partition p, List<String> timePartCols) throws HiveException {
     XPartition xp = new XPartition();
-    xp.setFullPartitionSpec(new XPartSpec());
     xp.setPartitionParameters(new XProperties());
     xp.setSerdeParameters(new XProperties());
     xp.setName(p.getCompleteName());
@@ -795,16 +796,56 @@ public final class JAXBUtils {
     xp.getPartitionParameters().getProperty().addAll(xPropertiesFromMap(p.getParameters()));
     String upParam = p.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD);
     xp.setUpdatePeriod(XUpdatePeriod.valueOf(upParam));
-    for (Map.Entry<String, String> entry : p.getSpec().entrySet()) {
+    LinkedHashMap<String, String> partSpec = p.getSpec();
+    xp.setFullPartitionSpec(new XPartSpec());
+    for (Map.Entry<String, String> entry : partSpec.entrySet()) {
       XPartSpecElement e = new XPartSpecElement();
       e.setKey(entry.getKey());
       e.setValue(entry.getValue());
       xp.getFullPartitionSpec().getPartSpecElement().add(e);
     }
+    try {
+      xp.setTimePartitionSpec(new XTimePartSpec());
+      xp.setNonTimePartitionSpec(new XPartSpec());
+      for (Map.Entry<String, String> entry : partSpec.entrySet()) {
+        if (timePartCols.contains(entry.getKey())) {
+          XTimePartSpecElement timePartSpecElement = new XTimePartSpecElement();
+          timePartSpecElement.setKey(entry.getKey());
+          timePartSpecElement
+            .setValue(getXMLGregorianCalendar(UpdatePeriod.valueOf(xp.getUpdatePeriod().name()).format().parse(
+              entry.getValue())));
+          xp.getTimePartitionSpec().getPartSpecElement().add(timePartSpecElement);
+        } else {
+          XPartSpecElement partSpecElement = new XPartSpecElement();
+          partSpecElement.setKey(entry.getKey());
+          partSpecElement.setValue(entry.getValue());
+          xp.getNonTimePartitionSpec().getPartSpecElement().add(partSpecElement);
+        }
+      }
+    } catch (java.text.ParseException exc) {
+      log.debug("can't form time part spec from " + partSpec, exc);
+      xp.setTimePartitionSpec(null);
+      xp.setNonTimePartitionSpec(null);
+    }
     xp.setSerdeClassname(p.getTPartition().getSd().getSerdeInfo().getSerializationLib());
     xp.getSerdeParameters().getProperty().addAll(xPropertiesFromMap(
       p.getTPartition().getSd().getSerdeInfo().getParameters()));
     return xp;
+  }
+
+  public static void updatePartitionFromXPartition(Partition partition, XPartition xp)
+    throws ClassNotFoundException, HiveException {
+    partition.getParameters().putAll(mapFromXProperties(xp.getPartitionParameters()));
+    partition.getTPartition().getSd().getSerdeInfo().setParameters(mapFromXProperties(xp.getSerdeParameters()));
+    partition.setLocation(xp.getLocation());
+    if (xp.getInputFormat() != null) {
+      partition.setInputFormatClass((Class<? extends InputFormat>) Class.forName(xp.getInputFormat()));
+    }
+    if (xp.getOutputFormat() != null) {
+      partition.setOutputFormatClass((Class<? extends HiveOutputFormat>) Class.forName(xp.getOutputFormat()));
+    }
+    partition.getParameters().put(MetastoreConstants.PARTITION_UPDATE_PERIOD, xp.getUpdatePeriod().name());
+    partition.getTPartition().getSd().getSerdeInfo().setSerializationLib(xp.getSerdeClassname());
   }
 
   public static StoragePartitionDesc storagePartSpecFromXPartition(
@@ -892,5 +933,21 @@ public final class JAXBUtils {
     xtable.setStorageDescriptor(getStorageTableDescFromHiveTable(table));
     xtable.setTableType(table.getTableType().name());
     return xtable;
+  }
+
+  public static Map<String, String> getFullPartSpecAsMap(XPartition partition) {
+    Map<String, String> spec = Maps.newHashMap();
+    if (partition.getTimePartitionSpec() != null) {
+      for (XTimePartSpecElement timePartSpecElement : partition.getTimePartitionSpec().getPartSpecElement()) {
+        spec.put(timePartSpecElement.getKey(), UpdatePeriod.valueOf(partition.getUpdatePeriod().name()).format()
+          .format(getDateFromXML(timePartSpecElement.getValue())));
+      }
+    }
+    if (partition.getNonTimePartitionSpec() != null) {
+      for (XPartSpecElement partSpecElement : partition.getNonTimePartitionSpec().getPartSpecElement()) {
+        spec.put(partSpecElement.getKey(), partSpecElement.getValue());
+      }
+    }
+    return spec;
   }
 }

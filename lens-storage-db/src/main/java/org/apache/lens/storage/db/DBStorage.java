@@ -25,6 +25,7 @@ import org.apache.lens.cube.metadata.Storage;
 import org.apache.lens.cube.metadata.StoragePartitionDesc;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 /**
@@ -156,6 +157,21 @@ public class DBStorage extends Storage {
    */
   @Override
   public void rollbackAddPartitions(List<StoragePartitionDesc> arg0) throws HiveException {
+  }
+
+  @Override
+  public void preUpdatePartition(List<Partition> partitions) throws HiveException {
+
+  }
+
+  @Override
+  public void commitUpdatePartition(List<Partition> partitions) throws HiveException {
+
+  }
+
+  @Override
+  public void rollbackUpdatePartition(List<Partition> partitions) throws HiveException {
+
   }
 
   /*

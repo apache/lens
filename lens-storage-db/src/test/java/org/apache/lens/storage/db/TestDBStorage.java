@@ -148,7 +148,7 @@ public class TestDBStorage {
 
     // Assert for storage tables
     for (String storage : storageTables.keySet()) {
-      String storageTableName = MetastoreUtil.getDimStorageTableName(dimTblName, storage);
+      String storageTableName = MetastoreUtil.getFactOrDimtableStorageTableName(dimTblName, storage);
       Assert.assertTrue(client.tableExists(storageTableName));
     }
   }

@@ -46,15 +46,11 @@ Hive driver configuration
 *--+--+---+--+
 |11|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is an embedded connection which does not require a remote hive server. For connecting to a hiveserver end point, remote connection should be used. The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection and org.apache.lens.driver.hive.RemoteThriftConnection.|
 *--+--+---+--+
-|12|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
+|12|lens.driver.hive.cost.calculator.class|org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator|Cost calculator class. By default calculating cost through fact partitions.|
 *--+--+---+--+
-|13|lens.driver.hive.priority.partition.weight.daily|0.75|Weight of monthly partition in cost calculation|
+|13|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
 *--+--+---+--+
-|14|lens.driver.hive.priority.partition.weight.hourly|1.0|Weight of monthly partition in cost calculation|
-*--+--+---+--+
-|15|lens.driver.hive.priority.partition.weight.monthly|0.5|Weight of monthly partition in cost calculation|
-*--+--+---+--+
-|16|lens.driver.hive.priority.ranges|VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW|Priority Ranges. The numbers are the costs of the query.                                                                                                                                                    \ |
+|14|lens.driver.hive.priority.ranges|VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW|Priority Ranges. The numbers are the costs of the query.                                                                                                                                                    \ |
 |  |                                |                                     |The cost is calculated based on partition weights and fact weights. The interpretation of the default config is:                                                                                            \ |
 |  |                                |                                     |                                                                                                                                                                                                            \ |
 |  |                                |                                     |cost \<= 7\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \ Priority = VERY_HIGH                                                                                                                                             \ |
@@ -69,5 +65,7 @@ Hive driver configuration
 |  |                                |                                     |                                                                                                                                                                                                            \ |
 |  |                                |                                     |One use case in range tuning can be that you never want queries to run with VERY_HIGH, assuming no other changes, you'll modify the value of this param in hivedriver-site.xml to be HIGH,30.0,NORMAL,90,LOW\ |
 |  |                                |                                     |via the configs, you can tune both the ranges and partition weights. this would give the end user more control.                                                                                               |
+*--+--+---+--+
+|15|lens.driver.hive.query.hook.class|org.apache.lens.server.api.driver.NoOpDriverQueryHook|The query hook class for hive driver. By default hook is No op. To add a hook, you should look at the default implementation and from there it'll be easy to derive what value can be added through a new hook|
 *--+--+---+--+
 The configuration parameters and their default values

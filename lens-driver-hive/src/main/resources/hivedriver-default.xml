@@ -35,6 +35,14 @@
   </property>
 
   <property>
+    <name>lens.driver.hive.query.hook.class</name>
+    <value>org.apache.lens.server.api.driver.NoOpDriverQueryHook</value>
+    <description>The query hook class for hive driver. By default hook is No op. To add a hook, you should look
+      at the default implementation and from there it'll be easy to derive what value can be added through a new hook
+    </description>
+  </property>
+
+  <property>
     <name>lens.driver.hive.hs2.connection.expiry.delay</name>
     <value>600000</value>
     <description>The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2</description>
@@ -133,22 +141,9 @@
       user more control.
     </description>
   </property>
-
   <property>
-    <name>lens.driver.hive.priority.partition.weight.monthly</name>
-    <value>0.5</value>
-    <description>Weight of monthly partition in cost calculation</description>
-  </property>
-
-  <property>
-    <name>lens.driver.hive.priority.partition.weight.daily</name>
-    <value>0.75</value>
-    <description>Weight of monthly partition in cost calculation</description>
-  </property>
-
-  <property>
-    <name>lens.driver.hive.priority.partition.weight.hourly</name>
-    <value>1.0</value>
-    <description>Weight of monthly partition in cost calculation</description>
+    <name>lens.driver.hive.cost.calculator.class</name>
+    <value>org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator</value>
+    <description>Cost calculator class. By default calculating cost through fact partitions.</description>
   </property>
 </configuration>

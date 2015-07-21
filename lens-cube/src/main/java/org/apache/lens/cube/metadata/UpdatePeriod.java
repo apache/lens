@@ -23,10 +23,13 @@ import static java.util.Calendar.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 
 import org.apache.lens.cube.parse.DateUtil;
+
+import org.apache.commons.lang3.time.DateUtils;
 
 public enum UpdatePeriod implements Named {
   SECONDLY(SECOND, 1000, 1.4f, "yyyy-MM-dd-HH-mm-ss"),
@@ -212,6 +215,22 @@ public enum UpdatePeriod implements Named {
 
   public float getNormalizationFactor() {
     return normalizationFactor;
+  }
+
+  public Date truncate(Date date) {
+    if (this.equals(UpdatePeriod.WEEKLY)) {
+      Date truncDate = DateUtils.truncate(date, Calendar.DAY_OF_MONTH);
+      Calendar cal = Calendar.getInstance();
+      cal.setTime(truncDate);
+      cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+      return cal.getTime();
+    } else if (this.equals(UpdatePeriod.QUARTERLY)) {
+      Date dt = DateUtils.truncate(date, this.calendarField());
+      dt.setMonth(dt.getMonth() - dt.getMonth() % 3);
+      return dt;
+    } else {
+      return DateUtils.truncate(date, this.calendarField());
+    }
   }
 
   public static class UpdatePeriodComparator implements Comparator<UpdatePeriod> {

@@ -1119,10 +1119,10 @@ public class CubeTestSetup {
     List<StoragePartitionDesc> storagePartitionDescs = Lists.newArrayList();
     List<String> partitions = Lists.newArrayList();
     StoreAllPartitionTimeline ttdStoreAll =
-      new StoreAllPartitionTimeline(MetastoreUtil.getFactStorageTableName(fact.getName(), c4), HOURLY,
+      new StoreAllPartitionTimeline(MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), c4), HOURLY,
         "ttd");
     StoreAllPartitionTimeline ttd2StoreAll =
-      new StoreAllPartitionTimeline(MetastoreUtil.getFactStorageTableName(fact.getName(), c4), HOURLY,
+      new StoreAllPartitionTimeline(MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), c4), HOURLY,
         "ttd2");
     while (!(temp.after(NOW))) {
       Map<String, Date> timeParts = new HashMap<String, Date>();
@@ -1170,7 +1170,7 @@ public class CubeTestSetup {
     assertNotNull(storageName);
     assertNotNull(updatePeriod);
     assertNotNull(timeDim);
-    String storageTableName = MetastoreUtil.getFactStorageTableName(factName, storageName);
+    String storageTableName = MetastoreUtil.getFactOrDimtableStorageTableName(factName, storageName);
     List<PartitionTimeline> timelines = client.getTimelines(factName, storageName, updatePeriod.name(), timeDim);
     assertEquals(timelines.size(), 1);
     PartitionTimeline actualTimeline = timelines.get(0);
@@ -1178,14 +1178,14 @@ public class CubeTestSetup {
     assertEquals(client.getTable(storageTableName).getParameters()
       .get(MetastoreUtil.getPartitionTimelineStorageClassKey(updatePeriod,
         timeDim)), expectedTimeline.getClass().getCanonicalName());
-    expectedTimeline.init(client.getTable(MetastoreUtil.getFactStorageTableName(factName, storageName)));
+    expectedTimeline.init(client.getTable(MetastoreUtil.getFactOrDimtableStorageTableName(factName, storageName)));
     assertEquals(actualTimeline, expectedTimeline);
   }
 
   private void assertTimeline(CubeMetastoreClient client, String factName, String storageName,
     UpdatePeriod updatePeriod, String timeDim, Class<? extends PartitionTimeline> partitionTimelineClass)
     throws Exception {
-    String storageTableName = MetastoreUtil.getFactStorageTableName(factName, storageName);
+    String storageTableName = MetastoreUtil.getFactOrDimtableStorageTableName(factName, storageName);
     PartitionTimeline expectedTimeline = partitionTimelineClass.getConstructor(
       String.class, UpdatePeriod.class, String.class)
       .newInstance(storageTableName, updatePeriod, timeDim);

@@ -92,7 +92,7 @@ User CLI Commands
 *--+--+
 |close/bye|Releases all resources of the server session and exits the shell|
 *--+--+
-|debug [[--enable] To print all logs on cli for debugging purpose]|prints all class lelvel logs on cli for debugging purpose|
+|debug [[--enable] To print all logs on cli for debugging purpose]|prints all class level logs and verbose logs on cli for debugging purpose. 'debug false'  to turn off all class level logging and verbose level logging |
 *--+--+
 |get [--key] \<key\>|Fetches and prints session parameter specified with name <<<key>>> from lens server|
 *--+--+
@@ -106,7 +106,7 @@ User CLI Commands
 *--+--+
 |show params|Fetches and prints all session parameter from lens server|
 *--+--+
-|verbose [[--enable] Print the clilogger logs on cli]|Show cliLogger logs for command|
+|verbose [[--enable] Print the clilogger logs on cli]|Show cliLogger logs on cli'verbose false'  turns off the cliLogger logs on console|
 *--+--+
   <<Lens Connection Commands>>
 
@@ -121,7 +121,7 @@ User CLI Commands
 *--+--+
 |create database [--db] \<database-name\> [--ignoreIfExists \<ignore-if-exists\>]|create a database with specified name. if <<<ignore-if-exists>>> is true, create will not be tried if already exists. Default is false|
 *--+--+
-|drop database [--db] \<database-name\>|drop a database with specified name|
+|drop database [--db] \<database-name\> [--cascade ]|drop a database with specified name|
 *--+--+
 |show databases|displays list of all databases|
 *--+--+
@@ -237,6 +237,10 @@ User CLI Commands
 *--+--+
 |fact timelines [--fact_name] \<fact_name\> [--storage_name \<storage_name\>] [--update_period \<update_period\>] [--time_dimension \<time_dimension\>]|get timelines for fact. Can optionally specify storage, update period and time dimension to filter by. Instead of time dimension, partition column can be directly passed as <<<time_dimension>>>|
 *--+--+
+|fact update partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>>|
+*--+--+
+|fact update single-partition [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>>|
+*--+--+
 |show facts [[--cube_name] \<cube_name\>]|display list of fact tables in current database. If optional <<<cube_name>>> is supplied, only facts belonging to cube <<<cube_name>>> will be displayed|
 *--+--+
 |update fact [--fact_name] \<fact_name\> [--path] \<path-to-fact-spec\>|update fact <<<fact_name>>> taking spec from <<<path-to-fact-spec>>>|
@@ -273,6 +277,10 @@ User CLI Commands
 |dimtable list partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|get all partitions associated with dimtable <<<dimtable_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>|
 *--+--+
 |dimtable list storages [--dimtable_name] \<dimtable_name\>|display list of storage associated to dimtable <<<dimtable_name>>>|
+*--+--+
+|dimtable update partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>>|
+*--+--+
+|dimtable update single-partition [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>>|
 *--+--+
 |drop dimtable [--dimtable_name] \<dimtable_name\> [--cascade \<cascade\>]|drop dimtable <<<dimtable_name>>>.  If <<<cascade>>> is true, all the storage tables associated with the dimtable <<<dimtable_name>>> are also dropped. By default <<<cascade>>> is false|
 *--+--+

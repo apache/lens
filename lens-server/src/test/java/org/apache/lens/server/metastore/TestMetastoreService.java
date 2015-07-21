@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.metastore;
 
+import static org.apache.lens.cube.metadata.UpdatePeriod.*;
+
 import static org.testng.Assert.*;
 
 import java.util.*;
@@ -27,19 +29,13 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.lens.api.APIResult;
+import org.apache.lens.api.*;
 import org.apache.lens.api.APIResult.Status;
-import org.apache.lens.api.DateTime;
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.StringList;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
@@ -56,10 +52,7 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.log4j.BasicConfigurator;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.*;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -652,7 +645,7 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(hcube.getDimAttributeByName("dim1").getDescription(), "first dimension");
       assertEquals(hcube.getDimAttributeByName("dim1").getDisplayString(), "Dimension1");
       assertEquals((((BaseDimAttribute) hcube.getDimAttributeByName("dim1")).getNumOfDistinctValues().get()),
-          Long.valueOf(2000));
+        Long.valueOf(2000));
 
       assertNotNull(hcube.getDimAttributeByName("testdim2col2"));
       assertEquals(hcube.getDimAttributeByName("testdim2col2").getDisplayString(), "Chained Dimension");
@@ -663,12 +656,12 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getChainName(), "chain1");
       assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getRefColumn(), "col2");
       assertEquals((((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2"))
-          .getNumOfDistinctValues().get()), Long.valueOf(1000));
+        .getNumOfDistinctValues().get()), Long.valueOf(1000));
       assertEquals((((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2"))
-          .getNumOfDistinctValues().get()), Long.valueOf(1000));
+        .getNumOfDistinctValues().get()), Long.valueOf(1000));
 
       assertEquals(((BaseDimAttribute) hcube.getDimAttributeByName("dim2")).getNumOfDistinctValues().isPresent(),
-          false);
+        false);
 
       assertNotNull(hcube.getMeasureByName("msr1"));
       assertEquals(hcube.getMeasureByName("msr1").getDescription(), "first measure");
@@ -1019,7 +1012,7 @@ public class TestMetastoreService extends LensJerseyTest {
     XDimension dimension = createDimension("testdim");
     APIResult result = target().path("metastore").path("dimensions")
       .queryParam("sessionid", lensSessionId).request(
-      mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dimension)), APIResult.class);
+        mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dimension)), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     XDimensionTable dt = createDimTable("testdim", dimTableName);
     dt.getStorageTables().getStorageTable().add(createStorageTblElement("test", dimTableName, "HOURLY"));
@@ -1343,7 +1336,7 @@ public class TestMetastoreService extends LensJerseyTest {
       // add one more storage table
       createStorage("testAlterDimStorage");
       XStorageTableElement newStorage = createStorageTblElement("testAlterDimStorage", dt3.getTableName(),
-        (String[])null);
+        (String[]) null);
       newStorage.getTableDesc().setFieldDelimiter(":");
       dt3.getStorageTables().getStorageTable().add(newStorage);
       // Update the table
@@ -1446,8 +1439,8 @@ public class TestMetastoreService extends LensJerseyTest {
       CubeDimensionTable cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
       assertTrue(cdim.getStorages().contains("test"));
       assertTrue(cdim.getStorages().contains("test2"));
-      assertEquals(cdim.getSnapshotDumpPeriods().get("test2"), UpdatePeriod.DAILY);
-      assertEquals(cdim.getSnapshotDumpPeriods().get("test"), UpdatePeriod.HOURLY);
+      assertEquals(cdim.getSnapshotDumpPeriods().get("test2"), DAILY);
+      assertEquals(cdim.getSnapshotDumpPeriods().get("test"), HOURLY);
 
       result = target().path("metastore/dimtables/").path(table).path("storages").path("test")
         .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -1470,7 +1463,7 @@ public class TestMetastoreService extends LensJerseyTest {
       cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
       assertFalse(cdim.getStorages().contains("test"));
       assertTrue(cdim.getStorages().contains("test2"));
-      assertEquals(cdim.getSnapshotDumpPeriods().get("test2"), UpdatePeriod.DAILY);
+      assertEquals(cdim.getSnapshotDumpPeriods().get("test2"), DAILY);
 
       // add another storage without dump period
       sTbl = createStorageTblElement("test3", table, (String[]) null);
@@ -1625,8 +1618,8 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(cf.getProperties().get("foo"), "bar");
       assertTrue(cf.getStorages().contains("S1"));
       assertTrue(cf.getStorages().contains("S2"));
-      assertTrue(cf.getUpdatePeriods().get("S1").contains(UpdatePeriod.HOURLY));
-      assertTrue(cf.getUpdatePeriods().get("S2").contains(UpdatePeriod.DAILY));
+      assertTrue(cf.getUpdatePeriods().get("S1").contains(HOURLY));
+      assertTrue(cf.getUpdatePeriods().get("S2").contains(DAILY));
 
       // Finally, drop the fact table
       result = target().path("metastore").path("facts").path(table)
@@ -1714,8 +1707,8 @@ public class TestMetastoreService extends LensJerseyTest {
       CubeFactTable ucf = JAXBUtils.cubeFactFromFactTable(gotFact);
 
       assertEquals(ucf.weight(), 20.0);
-      assertTrue(ucf.getUpdatePeriods().get("S2").contains(UpdatePeriod.MONTHLY));
-      assertTrue(ucf.getUpdatePeriods().get("S3").contains(UpdatePeriod.DAILY));
+      assertTrue(ucf.getUpdatePeriods().get("S2").contains(MONTHLY));
+      assertTrue(ucf.getUpdatePeriods().get("S3").contains(DAILY));
 
       boolean foundC2 = false;
       for (FieldSchema fs : cf.getColumns()) {
@@ -1820,9 +1813,9 @@ public class TestMetastoreService extends LensJerseyTest {
       XFactTable gotFact = gotFactElement.getValue();
       CubeFactTable ucf = JAXBUtils.cubeFactFromFactTable(gotFact);
 
-      assertTrue(ucf.getUpdatePeriods().get("S3").contains(UpdatePeriod.MONTHLY));
-      assertTrue(ucf.getUpdatePeriods().get("S3").contains(UpdatePeriod.DAILY));
-      assertTrue(ucf.getUpdatePeriods().get("S3").contains(UpdatePeriod.HOURLY));
+      assertTrue(ucf.getUpdatePeriods().get("S3").contains(MONTHLY));
+      assertTrue(ucf.getUpdatePeriods().get("S3").contains(DAILY));
+      assertTrue(ucf.getUpdatePeriods().get("S3").contains(HOURLY));
 
       // Drop new storage
       result = target().path("metastore/facts").path(table).path("storages").path("S3")
@@ -1849,7 +1842,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XTimePartSpecElement timePart = cubeObjectFactory.createXTimePartSpecElement();
     timePart.setKey(timeDimension);
-    timePart.setValue(JAXBUtils.getXMLGregorianCalendar(partDate));
+    timePart.setValue(JAXBUtils.getXMLGregorianCalendar(HOURLY.truncate(partDate)));
 
     return createPartition(cubeTableName, Arrays.asList(timePart));
   }
@@ -2008,6 +2001,12 @@ public class TestMetastoreService extends LensJerseyTest {
         .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
+      xp.setLocation(xp.getLocation() + "/a/b/c");
+      APIResult partUpdateResult = target().path("metastore/facts/").path(table).path("storages/S2/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .put(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      assertEquals(partUpdateResult.getStatus(), Status.SUCCEEDED);
+
       JAXBElement<XPartitionList> partitionsElement = target().path("metastore/facts").path(table)
         .path("storages/S2/partitions")
         .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -2016,7 +2015,16 @@ public class TestMetastoreService extends LensJerseyTest {
       XPartitionList partitions = partitionsElement.getValue();
       assertNotNull(partitions);
       assertEquals(partitions.getPartition().size(), 1);
-
+      XPartition readPartition = partitions.getPartition().get(0);
+      assertEquals(readPartition.getLocation(), xp.getLocation());
+      assertEquals(readPartition.getTimePartitionSpec(), xp.getTimePartitionSpec());
+      assertEquals(readPartition.getNonTimePartitionSpec(), xp.getNonTimePartitionSpec());
+      assertNotNull(readPartition.getFullPartitionSpec());
+      XTimePartSpecElement timePartSpec = readPartition.getTimePartitionSpec().getPartSpecElement().iterator().next();
+      XPartSpecElement fullPartSpec = readPartition.getFullPartitionSpec().getPartSpecElement().iterator().next();
+      assertEquals(timePartSpec.getKey(), fullPartSpec.getKey());
+      assertEquals(UpdatePeriod.valueOf(xp.getUpdatePeriod().name()).format().format(JAXBUtils.getDateFromXML(
+        timePartSpec.getValue())), fullPartSpec.getValue());
       DateTime date =
         target().path("metastore/cubes").path("testCube").path("latestdate").queryParam("timeDimension", "dt")
           .queryParam("sessionid", lensSessionId).request(mediaType).get(DateTime.class);
@@ -2063,7 +2071,7 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(partitions.getPartition().size(), 1);
 
       // Drop again by values
-      String[] val = new String[]{UpdatePeriod.HOURLY.format().format(partDate)};
+      String[] val = new String[]{HOURLY.format().format(partDate)};
       dropResult = target().path("metastore/facts").path(table).path("storages/S2/partition")
         .queryParam("values", StringUtils.join(val, ","))
         .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -2112,6 +2120,12 @@ public class TestMetastoreService extends LensJerseyTest {
         .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
+      xp.setLocation(xp.getLocation() + "/a/b/c");
+      APIResult partUpdateResult = target().path("metastore/dimtables/").path(table).path("storages/test/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .put(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      assertEquals(partUpdateResult.getStatus(), Status.SUCCEEDED);
+
       JAXBElement<XPartitionList> partitionsElement = target().path("metastore/dimtables").path(table)
         .path("storages/test/partitions")
         .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -2120,6 +2134,37 @@ public class TestMetastoreService extends LensJerseyTest {
       XPartitionList partitions = partitionsElement.getValue();
       assertNotNull(partitions);
       assertEquals(partitions.getPartition().size(), 2);
+
+      assertEquals(partitions.getPartition().get(0).getLocation(), xp.getLocation());
+      assertEquals(partitions.getPartition().get(1).getLocation(), xp.getLocation());
+
+      // one is latest partition.
+      assertTrue(partitions.getPartition().get(0).getTimePartitionSpec() == null
+        || partitions.getPartition().get(1).getTimePartitionSpec() == null);
+      XPartition postedPartition, latestPartition;
+      if (partitions.getPartition().get(0).getTimePartitionSpec() == null) {
+        postedPartition = partitions.getPartition().get(1);
+        latestPartition = partitions.getPartition().get(0);
+      } else {
+        postedPartition = partitions.getPartition().get(0);
+        latestPartition = partitions.getPartition().get(1);
+      }
+
+      assertEquals(postedPartition.getTimePartitionSpec(), xp.getTimePartitionSpec());
+      assertEquals(postedPartition.getNonTimePartitionSpec(), xp.getNonTimePartitionSpec());
+      assertNotNull(postedPartition.getFullPartitionSpec());
+
+      XTimePartSpecElement timePartSpec = postedPartition.getTimePartitionSpec().getPartSpecElement().iterator().next();
+      XPartSpecElement fullPartSpec = postedPartition.getFullPartitionSpec().getPartSpecElement().iterator().next();
+      assertEquals(timePartSpec.getKey(), fullPartSpec.getKey());
+      assertEquals(UpdatePeriod.valueOf(xp.getUpdatePeriod().name()).format().format(JAXBUtils.getDateFromXML(
+        timePartSpec.getValue())), fullPartSpec.getValue());
+
+      assertNull(latestPartition.getTimePartitionSpec());
+      assertNull(latestPartition.getNonTimePartitionSpec());
+      assertEquals(latestPartition.getFullPartitionSpec().getPartSpecElement().get(0).getValue(),
+        "latest");
+
 
       // Drop the partitions
       APIResult dropResult = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
@@ -2159,7 +2204,7 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(partitions.getPartition().size(), 2);
 
       // Drop again by values
-      String[] val = new String[]{UpdatePeriod.HOURLY.format().format(partDate)};
+      String[] val = new String[]{HOURLY.format().format(partDate)};
       dropResult = target().path("metastore/dimtables").path(table).path("storages/test/partition")
         .queryParam("values", StringUtils.join(val, ","))
         .queryParam("sessionid", lensSessionId).request(mediaType)

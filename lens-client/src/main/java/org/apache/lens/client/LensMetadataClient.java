@@ -967,6 +967,101 @@ public class LensMetadataClient {
       return new APIResult(Status.FAILED, "File not found");
     }
   }
+  public APIResult updatePartitionOfDimensionTable(String dimTblName, String storage,
+    XPartition partition) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimtables").path(dimTblName)
+      .path("storages").path(storage).path("partition")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .put(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
+    return result;
+  }
+
+  public APIResult updatePartitionOfDimensionTable(String dimTblName, String storage,
+    String partitionSpec) {
+    try {
+      return updatePartitionOfDimensionTable(dimTblName, storage, (XPartition) readFromXML(partitionSpec));
+    } catch (JAXBException e) {
+      LOG.info("Unmarshalling error:", e);
+      return new APIResult(Status.FAILED, "Unmarshalling failed");
+    } catch (IOException e) {
+      LOG.info("File error:", e);
+      return new APIResult(Status.FAILED, "File not found");
+    }
+  }
+
+  public APIResult updatePartitionsOfDimensionTable(String dimTblName, String storage,
+    XPartitionList partitions) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimtables").path(dimTblName)
+      .path("storages").path(storage).path("partitions")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .put(Entity.xml(objFact.createXPartitionList(partitions)), APIResult.class);
+    return result;
+  }
+
+  public APIResult updatePartitionsOfDimensionTable(String dimTblName, String storage,
+    String partitionsSpec) {
+    try {
+      return updatePartitionsOfDimensionTable(dimTblName, storage, (XPartitionList) readFromXML(partitionsSpec));
+    } catch (JAXBException e) {
+      LOG.info("Unmarshalling error:", e);
+      return new APIResult(Status.FAILED, "Unmarshalling failed");
+    } catch (IOException e) {
+      LOG.info("File error:", e);
+      return new APIResult(Status.FAILED, "File not found");
+    }
+  }
+
+  public APIResult updatePartitionOfFactTable(String fact, String storage,
+    XPartition partition) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("facts").path(fact)
+      .path("storages").path(storage).path("partition")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .put(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
+    return result;
+  }
+
+  public APIResult updatePartitionOfFactTable(String fact, String storage,
+    String partitionSpec) {
+    try {
+      return updatePartitionOfFactTable(fact, storage, (XPartition) readFromXML(partitionSpec));
+    } catch (JAXBException e) {
+      LOG.info("Unmarshalling error:", e);
+      return new APIResult(Status.FAILED, "Unmarshalling failed");
+    } catch (IOException e) {
+      LOG.info("File error:", e);
+      return new APIResult(Status.FAILED, "File not found");
+    }
+  }
+
+  public APIResult updatePartitionsOfFactTable(String fact, String storage,
+    XPartitionList partitions) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("facts").path(fact)
+      .path("storages").path(storage).path("partitions")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .put(Entity.xml(objFact.createXPartitionList(partitions)), APIResult.class);
+    return result;
+  }
+
+  public APIResult updatePartitionsOfFactTable(String fact, String storage,
+    String partitionsSpec) {
+    try {
+      return updatePartitionsOfFactTable(fact, storage, (XPartitionList) readFromXML(partitionsSpec));
+    } catch (JAXBException e) {
+      LOG.info("Unmarshalling error:", e);
+      return new APIResult(Status.FAILED, "Unmarshalling failed");
+    } catch (IOException e) {
+      LOG.info("File error:", e);
+      return new APIResult(Status.FAILED, "File not found");
+    }
+  }
 
   public Date getLatestDateOfCube(String cubeName, String timePartition) {
     return getMetastoreWebTarget().path("cubes").path(cubeName).path("latestdate")
