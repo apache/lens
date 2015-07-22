@@ -18,6 +18,9 @@
  */
 package org.apache.lens.server.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
@@ -148,5 +151,21 @@ public final class UtilityMethods {
       sb.append(entry.getKey()).append(":").append(entry.getValue()).append("\n");
     }
     return sb.toString();
+  }
+
+  /**
+   * Pipe input stream to output stream
+   *
+   * @param is the is
+   * @param os the os
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  public static void pipe(InputStream is, OutputStream os) throws IOException {
+    int n;
+    byte[] buffer = new byte[4096];
+    while ((n = is.read(buffer)) > -1) {
+      os.write(buffer, 0, n);
+      os.flush();
+    }
   }
 }

@@ -113,6 +113,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   @BeforeSuite
   public void startAll() throws Exception {
     LOG.info("Before suite");
+    System.setProperty("lens.log.dir", "target/");
     TestRemoteHiveDriver.createHS2Service();
     System.out.println("Remote hive server started!");
     HiveConf hiveConf = new HiveConf();

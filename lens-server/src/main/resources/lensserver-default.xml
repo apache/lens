@@ -360,7 +360,7 @@
 
   <property>
     <name>lens.server.ws.resourcenames</name>
-    <value>session,metastore,query,quota,scheduler,index</value>
+    <value>session,metastore,query,quota,scheduler,index,log</value>
     <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
   </property>
 
@@ -386,6 +386,12 @@
     <name>lens.server.index.ws.resource.impl</name>
     <value>org.apache.lens.server.IndexResource</value>
     <description>Implementation class for Index Resource</description>
+  </property>
+
+  <property>
+    <name>lens.server.log.ws.resource.impl</name>
+    <value>org.apache.lens.server.LogResource</value>
+    <description>Implementation class for Log Resource</description>
   </property>
 
   <property>

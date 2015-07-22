@@ -2292,22 +2292,6 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     log.info("Persisted " + allQueries.size() + " queries");
   }
 
-  /**
-   * Pipe.
-   *
-   * @param is the is
-   * @param os the os
-   * @throws IOException Signals that an I/O exception has occurred.
-   */
-  private void pipe(InputStream is, OutputStream os) throws IOException {
-    int n;
-    byte[] buffer = new byte[4096];
-    while ((n = is.read(buffer)) > -1) {
-      os.write(buffer, 0, n);
-      os.flush();
-    }
-  }
-
   /*
    * (non-Javadoc)
    *
@@ -2348,7 +2332,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             try {
               FileSystem fs = resultPath.getFileSystem(ctx.getConf());
               fin = fs.open(resultPath);
-              pipe(fin, os);
+              UtilityMethods.pipe(fin, os);
             } finally {
               if (fin != null) {
                 fin.close();
