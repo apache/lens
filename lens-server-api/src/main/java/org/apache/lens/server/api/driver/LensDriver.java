@@ -24,12 +24,14 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
-import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.lens.server.api.query.PreparedQueryContext;
-import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
+import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.hadoop.conf.Configuration;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * The Interface LensDriver.
@@ -182,4 +184,19 @@ public interface LensDriver extends Externalizable {
    * @param driverEventListener the driver event listener
    */
   void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener);
+
+  /**
+   *
+   * @return The {@link QueryLaunchingConstraint}s to be checked before launching a query on driver. If there are no
+   * driver level constraints, then an empty set is returned. null is never returned.
+   */
+  ImmutableSet<QueryLaunchingConstraint> getQueryConstraints();
+
+  /**
+   *
+   * @return The {@link WaitingQueriesSelectionPolicy}s to be used to select waiting queries eligible to be moved out
+   * of waiting state. If there are no driver level waiting query selection policies, then an empty set is returned.
+   * null is never returned.
+   */
+  ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies();
 }

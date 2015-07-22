@@ -18,6 +18,8 @@
  */
 package org.apache.lens.driver.hive;
 
+import static org.apache.lens.server.api.util.LensUtil.getImplementations;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -38,6 +40,8 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
+import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.cost.QueryCostCalculator;
@@ -60,6 +64,8 @@ import org.apache.hive.service.cli.thrift.TSessionHandle;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
+import com.google.common.collect.ImmutableSet;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -88,6 +94,12 @@ public class HiveDriver implements LensDriver {
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
   public static final String HS2_PRIORITY_DEFAULT_RANGES = "VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW";
   public static final String SESSION_KEY_DELIMITER = ".";
+
+  private static final String QUERY_LAUNCHIG_CONSTRAINT_FACTORIES_KEY
+    = "lens.driver.hive.query.launching.constraint.factories";
+
+  private static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY
+    = "lens.driver.hive.waiting.queries.selection.policy.factories";
 
   /** The driver conf- which will merged with query conf */
   private Configuration driverConf;
@@ -130,6 +142,9 @@ public class HiveDriver implements LensDriver {
   boolean whetherCalculatePriority;
   private DriverQueryHook queryHook;
 
+  @Getter
+  private ImmutableSet<QueryLaunchingConstraint> queryConstraints;
+  private ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies;
 
   private String sessionDbKey(String sessionHandle, String database) {
     return sessionHandle + SESSION_KEY_DELIMITER + database;
@@ -349,6 +364,8 @@ public class HiveDriver implements LensDriver {
     } catch (InstantiationException | IllegalAccessException e) {
       throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
     }
+    queryConstraints = getImplementations(QUERY_LAUNCHIG_CONSTRAINT_FACTORIES_KEY, driverConf);
+    selectionPolicies = getImplementations(WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY, driverConf);
   }
 
   private QueryCost calculateQueryCost(AbstractQueryContext qctx) throws LensException {
@@ -763,6 +780,11 @@ public class HiveDriver implements LensDriver {
   @Override
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
     driverListeners.add(driverEventListener);
+  }
+
+  @Override
+  public ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies() {
+    return selectionPolicies;
   }
 
   protected CLIServiceClient getClient() throws LensException {

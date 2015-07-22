@@ -68,4 +68,8 @@ Hive driver configuration
 *--+--+---+--+
 |15|lens.driver.hive.query.hook.class|org.apache.lens.server.api.driver.NoOpDriverQueryHook|The query hook class for hive driver. By default hook is No op. To add a hook, you should look at the default implementation and from there it'll be easy to derive what value can be added through a new hook|
 *--+--+---+--+
+|16|lens.driver.hive.query.launching.constraint.factories| |Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
+*--+--+---+--+
+|17|lens.driver.hive.waiting.queries.selection.policy.factories| |Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
+*--+--+---+--+
 The configuration parameters and their default values

@@ -34,11 +34,16 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
+import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
+
+import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * The Class MockDriver.
@@ -185,6 +190,16 @@ public class MockDriver implements LensDriver {
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
   }
 
+
+  @Override
+  public ImmutableSet<QueryLaunchingConstraint> getQueryConstraints() {
+    return ImmutableSet.copyOf(Sets.<QueryLaunchingConstraint>newHashSet());
+  }
+
+  @Override
+  public ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies() {
+    return ImmutableSet.copyOf(Sets.<WaitingQueriesSelectionPolicy>newHashSet());
+  }
 
   /*
    * (non-Javadoc)

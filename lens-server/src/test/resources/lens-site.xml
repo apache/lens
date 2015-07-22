@@ -163,5 +163,4 @@
     <name>lens.server.estimate.timeout.millis</name>
     <value>120000</value>
   </property>
-
 </configuration>

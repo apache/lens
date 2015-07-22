@@ -18,7 +18,12 @@
  */
 package org.apache.lens.driver.jdbc;
 
+import static java.lang.Integer.parseInt;
+
 import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.*;
+import static org.apache.lens.server.api.util.LensUtil.getImplementations;
+
+import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -40,9 +45,10 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
-import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.lens.server.api.query.PreparedQueryContext;
-import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
+import org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory;
+import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.rewrite.QueryRewriter;
@@ -55,6 +61,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -92,6 +99,10 @@ public class JDBCDriver implements LensDriver {
 
   private LogSegregationContext logSegregationContext;
   private DriverQueryHook queryHook;
+
+  @Getter
+  private ImmutableSet<QueryLaunchingConstraint> queryConstraints;
+  private ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies;
 
   /**
    * Data related to a query submitted to JDBCDriver.
@@ -436,6 +447,13 @@ public class JDBCDriver implements LensDriver {
    * @throws LensException the lens exception
    */
   protected void init(Configuration conf) throws LensException {
+
+    final int maxPoolSize = parseInt(this.conf.get(JDBC_POOL_MAX_SIZE));
+    final int maxConcurrentQueries
+      = parseInt(this.conf.get(MaxConcurrentDriverQueriesConstraintFactory.MAX_CONCURRENT_QUERIES_KEY));
+    checkState(maxPoolSize == maxConcurrentQueries, "maxPoolSize:" + maxPoolSize + " maxConcurrentQueries:"
+      + maxConcurrentQueries);
+
     queryContextMap = new ConcurrentHashMap<QueryHandle, JdbcQueryContext>();
     asyncQueryPool = Executors.newCachedThreadPool(new ThreadFactory() {
       @Override
@@ -456,6 +474,8 @@ public class JDBCDriver implements LensDriver {
       throw new LensException(e);
     }
     this.logSegregationContext = new MappedDiagnosticLogSegregationContext();
+    this.queryConstraints = getImplementations(QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY, this.conf);
+    this.selectionPolicies = getImplementations(WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY, this.conf);
   }
 
   /**
@@ -1081,6 +1101,11 @@ public class JDBCDriver implements LensDriver {
   @Override
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
 
+  }
+
+  @Override
+  public ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies() {
+    return this.selectionPolicies;
   }
 
   /*

@@ -893,4 +893,22 @@ public final class LensConfConstants {
   public static final int DEFAULT_ESTIMATE_POOL_KEEP_ALIVE_MILLIS = 60000; // 1 minute
 
   public static final String QUERY_PHASE1_REWRITERS = SERVER_PFX + "query.phase1.rewriters";
+
+  /**
+   * Key to get the implementations of query constraint factories.
+   */
+  public static final String QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY = SERVER_PFX
+    + "query.launching.constraint.factories";
+
+  /**
+   * Key to get the total query cost ceiling per user.
+   */
+  public static final String TOTAL_QUERY_COST_CEILING_PER_USER_KEY = SERVER_PFX
+      + "total.query.cost.ceiling.per.user";
+
+  /**
+   * Key to get the implementations of waiting queries selection policy factories.
+   */
+  public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY = SERVER_PFX
+      + "waiting.queries.selection.policy.factories";
 }

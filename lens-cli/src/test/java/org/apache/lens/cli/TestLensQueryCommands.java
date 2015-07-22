@@ -32,6 +32,7 @@ import javax.xml.datatype.DatatypeFactory;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensQueryCommands;
 import org.apache.lens.client.LensClient;
@@ -234,19 +235,23 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String[] resultSplits = result.split("\n");
     // assert on the number of queries
     assertEquals(String.valueOf(resultSplits.length - 1), resultSplits[resultSplits.length - 1].split(": ")[1]);
-    String details = qCom.getDetails(qh);
-    assertTrue(details.contains("driverQuery"), details);
+
+    QueryStatus queryStatus = client.getQueryStatus(qh);
+    while (!queryStatus.finished()) {
+      if (queryStatus.launched()) {
+        String details = qCom.getDetails(qh);
+        assertTrue(details.contains("driverQuery"));
+      }
+      Thread.sleep(1000);
+      queryStatus = client.getQueryStatus(qh);
+    }
 
     // Check that query name searching is 'ilike'
     String result2 = qCom.getAllQueries("", "query", "all", -1, Long.MAX_VALUE);
     assertTrue(result2.contains(qh), result2);
 
-    while (!client.getQueryStatus(qh).finished()) {
-      Thread.sleep(5000);
-    }
-
     assertTrue(qCom.getStatus(qh).contains("Status : SUCCESSFUL"));
-    details = qCom.getDetails(qh);
+    String details = qCom.getDetails(qh);
     assertTrue(details.contains("driverQuery"));
 
     result = qCom.getQueryResults(qh, null, true);

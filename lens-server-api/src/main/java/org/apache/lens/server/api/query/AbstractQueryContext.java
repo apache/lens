@@ -89,6 +89,13 @@ public abstract class AbstractQueryContext implements Serializable {
   protected String selectedDriverQuery;
 
   /**
+   * The selected Driver query cost
+   */
+  @Getter
+  @Setter
+  protected QueryCost selectedDriverQueryCost;
+
+  /**
    * The submitted user.
    */
   @Getter
@@ -365,19 +372,6 @@ public abstract class AbstractQueryContext implements Serializable {
   public DriverQueryPlan getSelectedDriverQueryPlan() throws LensException {
     if (driverContext != null) {
       return driverContext.getSelectedDriverQueryPlan();
-    }
-    return null;
-  }
-
-  /**
-   * Get selected driver's cost
-   *
-   * @return QueryCostTO
-   * @throws LensException
-   */
-  public QueryCost getSelectedDriverQueryCost() throws LensException {
-    if (driverContext != null) {
-      return driverContext.getSelectedDriverQueryCost();
     }
     return null;
   }

@@ -16,17 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- *
- */
-package org.apache.lens.api;
+package org.apache.lens.server.query.collect;
 
-public interface Addable<T extends Addable<T>> {
-  /**
-   * Add another object of same type object of the same type.
-   * Implement this if add operation makes sense for the class
-   * @param other
-   * @return new T object after logical addition
-   */
-  T add(T other);
+import org.apache.lens.server.api.query.collect.ImmutableQueryCollection;
+
+/**
+ *
+ * {@link QueryCollection} interface defines all (immutable + mutable) behaviours on queries existing in lens system.
+ *
+ * @see ImmutableQueryCollection
+ * @see MutableQueryCollection
+ */
+public interface QueryCollection extends ImmutableQueryCollection, MutableQueryCollection {
 }

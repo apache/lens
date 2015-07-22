@@ -24,15 +24,16 @@ package org.apache.lens.server.api.query.cost;
 import static org.testng.Assert.*;
 
 import org.apache.lens.api.query.QueryCostType;
+import org.apache.lens.api.serialize.SerializationTest;
 
 import org.testng.annotations.Test;
 
 
 public class TestFactPartitionBasedQueryCost {
-  FactPartitionBasedQueryCost cost0 = new FactPartitionBasedQueryCost(0.0);
-  FactPartitionBasedQueryCost cost1 = new FactPartitionBasedQueryCost(0.2);
-  FactPartitionBasedQueryCost cost11 = new FactPartitionBasedQueryCost(0.2);
-  FactPartitionBasedQueryCost cost2 = new FactPartitionBasedQueryCost(0.3);
+  QueryCost cost0 = new FactPartitionBasedQueryCost(0.0);
+  QueryCost cost1 = new FactPartitionBasedQueryCost(0.2);
+  QueryCost cost11 = new FactPartitionBasedQueryCost(0.2);
+  QueryCost cost2 = new FactPartitionBasedQueryCost(0.3);
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
   public void testInvalid() {
@@ -73,5 +74,10 @@ public class TestFactPartitionBasedQueryCost {
     assertTrue(cost1.equals(cost11));
     assertTrue(cost11.equals(cost1));
     assertFalse(cost1.equals(cost2));
+  }
+
+  @Test
+  public void testFactPartitionBasedQueryCostIsSerializable() {
+    new SerializationTest().verifySerializationAndDeserialization(new FactPartitionBasedQueryCost(Double.MAX_VALUE));
   }
 }

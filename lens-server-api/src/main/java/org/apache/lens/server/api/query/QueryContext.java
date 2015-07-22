@@ -32,10 +32,13 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryStatus;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
+import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
@@ -181,6 +184,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
       .getDriverQueryContextMap().keySet(), prepared.getDriverContext().getSelectedDriver(), true);
     setDriverContext(prepared.getDriverContext());
     setSelectedDriverQuery(prepared.getSelectedDriverQuery());
+    setSelectedDriverQueryCost(prepared.getSelectedDriverQueryCost());
   }
 
   /**
@@ -337,15 +341,12 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
   /*
    * Introduced for Recovering finished query.
    */
-  void setStatusSkippingTransitionTest(QueryStatus newStatus) throws LensException {
+  public void setStatusSkippingTransitionTest(final QueryStatus newStatus) throws LensException {
     this.status = newStatus;
   }
 
-  public synchronized void setStatus(QueryStatus newStatus) throws LensException {
-    if (!this.status.isValidateTransition(newStatus.getStatus())) {
-      throw new LensException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus()
-        + "]");
-    }
+  public synchronized void setStatus(final QueryStatus newStatus) throws LensException {
+    validateTransition(newStatus);
     this.status = newStatus;
   }
 
@@ -401,5 +402,36 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
 
   public String getQueryHandleString() {
     return queryHandle.getHandleIdString();
+  }
+
+  public void validateTransition(final QueryStatus newStatus) throws LensException {
+    if (!this.status.isValidTransition(newStatus.getStatus())) {
+      throw new LensException("Invalid state transition:from[" + this.status.getStatus() + " to "
+          + newStatus.getStatus() + "]");
+    }
+  }
+
+  public boolean finished() {
+    return this.status.finished();
+  }
+
+  public boolean launched() {
+    return this.status.launched();
+  }
+
+  public boolean running() {
+    return this.status.running();
+  }
+
+  public boolean queued() {
+    return this.status.queued();
+  }
+
+  public ImmutableSet<QueryLaunchingConstraint> getSelectedDriverQueryConstraints() {
+    return getSelectedDriver().getQueryConstraints();
+  }
+
+  public ImmutableSet<WaitingQueriesSelectionPolicy> getSelectedDriverSelectionPolicies() {
+    return getSelectedDriver().getWaitingQuerySelectionPolicies();
   }
 }

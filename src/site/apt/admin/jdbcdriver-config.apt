@@ -24,56 +24,62 @@ Jdbc driver configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|lens.cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
+|1|driver.max.concurrent.launched.queries|15|Maximum queries which can be launched simultaneously on this driver. This should be equal to lens.driver.jdbc.pool.max.size. This configuration value is only useful when MaxConcurrentDriverQueriesConstraint is enabled by using org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory as one of the factories in lens.driver.jdbc.query.constraint.factories property.|
 *--+--+---+--+
-|2|lens.cube.query.partition.where.clause.format|yyyy-MM-dd HH:mm:ss|The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition|
+|2|lens.cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
 *--+--+---+--+
-|3|lens.cube.query.replace.timedim|false|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
+|3|lens.cube.query.partition.where.clause.format|yyyy-MM-dd HH:mm:ss|The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition|
 *--+--+---+--+
-|4|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.BetweenTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
+|4|lens.cube.query.replace.timedim|false|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|5|lens.driver.jdbc.connection.provider| |A contract for obtaining JDBC connections|
+|5|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.BetweenTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
 *--+--+---+--+
-|6|lens.driver.jdbc.db.password| |The database user's password|
+|6|lens.driver.jdbc.connection.provider| |A contract for obtaining JDBC connections|
 *--+--+---+--+
-|7|lens.driver.jdbc.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname|
+|7|lens.driver.jdbc.db.password| |The database user's password|
 *--+--+---+--+
-|8|lens.driver.jdbc.db.user| |The database user on whose behalf the connection is being made|
+|8|lens.driver.jdbc.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname|
 *--+--+---+--+
-|9|lens.driver.jdbc.driver.class|com.mysql.jdbc.Driver|Type of JDBC driver used to connect backend database|
+|9|lens.driver.jdbc.db.user| |The database user on whose behalf the connection is being made|
 *--+--+---+--+
-|10|lens.driver.jdbc.enable.resultset.streaming.retrieval|false|Flag to enable row by row retrieval of result set from the database server. This is used to enable streaming result sets for MySQL. This is set to false by default.|
+|10|lens.driver.jdbc.driver.class|com.mysql.jdbc.Driver|Type of JDBC driver used to connect backend database|
 *--+--+---+--+
-|11|lens.driver.jdbc.estimate.db.password| |The database user's password, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.password would be used. Override this property to tune estimate connection pool|
+|11|lens.driver.jdbc.enable.resultset.streaming.retrieval|false|Flag to enable row by row retrieval of result set from the database server. This is used to enable streaming result sets for MySQL. This is set to false by default.|
 *--+--+---+--+
-|12|lens.driver.jdbc.estimate.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.uri will be used.|
+|12|lens.driver.jdbc.estimate.db.password| |The database user's password, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.password would be used. Override this property to tune estimate connection pool|
 *--+--+---+--+
-|13|lens.driver.jdbc.estimate.db.user| |The database user on whose behalf the connection is being made, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.user would be used. Override this property to tune estimate connection pool|
+|13|lens.driver.jdbc.estimate.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.uri will be used.|
 *--+--+---+--+
-|14|lens.driver.jdbc.estimate.driver.class| |Type of JDBC driver used to connect backend database for estimate queries. If This property is not specified, value for lens.driver.jdbc.driver.class will be used. Override this property to tune estimate connection pool|
+|14|lens.driver.jdbc.estimate.db.user| |The database user on whose behalf the connection is being made, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.user would be used. Override this property to tune estimate connection pool|
 *--+--+---+--+
-|15|lens.driver.jdbc.estimate.get.connection.timeout| |Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket , for estimate queries. If this property is not specified, value for lens.driver.jdbc.get.connection.timeout would be used. Override this property to tune estimate connection pool.|
+|15|lens.driver.jdbc.estimate.driver.class| |Type of JDBC driver used to connect backend database for estimate queries. If This property is not specified, value for lens.driver.jdbc.driver.class will be used. Override this property to tune estimate connection pool|
 *--+--+---+--+
-|16|lens.driver.jdbc.estimate.pool.idle.time| |Maximum idle time in sec before a connection is closed, for estimate queries. If this property is not specified, value for lens.driver.jdbc.pool.idle.time would be used. Override this property to tune estimate connection pool.|
+|16|lens.driver.jdbc.estimate.get.connection.timeout| |Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket , for estimate queries. If this property is not specified, value for lens.driver.jdbc.get.connection.timeout would be used. Override this property to tune estimate connection pool.|
 *--+--+---+--+
-|17|lens.driver.jdbc.estimate.pool.max.size| |Maximum number of concurrent connections allowed in pool, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.pool.max.size would be used. Override this property to tune estimate connection pool|
+|17|lens.driver.jdbc.estimate.pool.idle.time| |Maximum idle time in sec before a connection is closed, for estimate queries. If this property is not specified, value for lens.driver.jdbc.pool.idle.time would be used. Override this property to tune estimate connection pool.|
 *--+--+---+--+
-|18|lens.driver.jdbc.estimate.pool.max.statements| |Maximum number of prepared statements to cache per connection, for estimate queries. If this property is not specified, value for lens.driver.jdbc.pool.max.statements would be used.|
+|18|lens.driver.jdbc.estimate.pool.max.size| |Maximum number of concurrent connections allowed in pool, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.pool.max.size would be used. Override this property to tune estimate connection pool|
 *--+--+---+--+
-|19|lens.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
+|19|lens.driver.jdbc.estimate.pool.max.statements| |Maximum number of prepared statements to cache per connection, for estimate queries. If this property is not specified, value for lens.driver.jdbc.pool.max.statements would be used.|
 *--+--+---+--+
-|20|lens.driver.jdbc.fetch.size|1000|Fetch size for JDBC result set|
+|20|lens.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
 *--+--+---+--+
-|21|lens.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
+|21|lens.driver.jdbc.fetch.size|1000|Fetch size for JDBC result set|
 *--+--+---+--+
-|22|lens.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
+|22|lens.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
 *--+--+---+--+
-|23|lens.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
+|23|lens.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
 *--+--+---+--+
-|24|lens.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
+|24|lens.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
 *--+--+---+--+
-|25|lens.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
+|25|lens.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
 *--+--+---+--+
-|26|lens.driver.jdbc.validate.through.prepare|true|Flag to enable query syntactic and semantic validation using prepared statement.|
+|26|lens.driver.jdbc.query.launching.constraint.factories|org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory|Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
+*--+--+---+--+
+|27|lens.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
+*--+--+---+--+
+|28|lens.driver.jdbc.validate.through.prepare|true|Flag to enable query syntactic and semantic validation using prepared statement.|
+*--+--+---+--+
+|29|lens.driver.jdbc.waiting.queries.selection.policy.factories|org.apache.lens.server.api.query.collect.DriverSpecificWaitingQueriesSelectionPolicyFactory|Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
 *--+--+---+--+
 The configuration parameters and their default values

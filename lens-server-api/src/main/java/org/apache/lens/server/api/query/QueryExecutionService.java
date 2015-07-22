@@ -302,6 +302,13 @@ public interface QueryExecutionService {
   long getRunningQueriesCount();
 
   /**
+   * Get waiting queries count
+   *
+   * @return waiting queries count
+   */
+  long getWaitingQueriesCount();
+
+  /**
    * Get finished queries count
    *
    * @return finished queries count

@@ -186,6 +186,18 @@ public class QueryStatus implements Serializable {
     return status.equals(Status.SUCCESSFUL) || status.equals(Status.FAILED) || status.equals(Status.CANCELED);
   }
 
+  public boolean launched() {
+    return status.equals(Status.LAUNCHED);
+  }
+
+  public boolean running() {
+    return status.equals(Status.RUNNING);
+  }
+
+  public boolean queued() {
+    return status.equals(Status.QUEUED);
+  }
+
   /**
    * Checks if is valid transition.
    *
@@ -254,7 +266,7 @@ public class QueryStatus implements Serializable {
    * @param newState the new state
    * @return true, if is validate transition
    */
-  public boolean isValidateTransition(Status newState) {
+  public boolean isValidTransition(final Status newState) {
     return isValidTransition(this.status, newState);
   }
 

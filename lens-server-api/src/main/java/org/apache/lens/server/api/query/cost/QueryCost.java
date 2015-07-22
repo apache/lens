@@ -22,14 +22,16 @@
 package org.apache.lens.server.api.query.cost;
 
 
-import org.apache.lens.api.Addable;
 import org.apache.lens.api.query.QueryCostType;
 
 /**
  * QueryCost Interface.
  * @param <T>
  */
-public interface QueryCost<T extends QueryCost<T>> extends Comparable<T>, Addable<T> {
+public interface QueryCost<T extends QueryCost> extends Comparable<T> {
+
+  T add(final T queryCost);
+
   QueryCostType getQueryCostType();
 
   long getEstimatedExecTimeMillis() throws UnsupportedOperationException;

@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
@@ -50,7 +51,6 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.testng.Assert;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -94,7 +94,6 @@ public final class LensTestUtil {
     final QueryHandle handle = target.request()
         .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
             new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
-
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
       .get(LensQuery.class);
@@ -104,12 +103,13 @@ public final class LensTestUtil {
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
-    assertTrue(ctx.getSubmissionTime() > 0);
-    assertTrue(ctx.getLaunchTime() > 0);
-    assertTrue(ctx.getDriverStartTime() > 0);
-    assertTrue(ctx.getDriverFinishTime() > 0);
-    assertTrue(ctx.getFinishTime() > 0);
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+    final String debugHelpMsg = "Query Handle:"+ctx.getQueryHandleString();
+    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, debugHelpMsg);
+    assertTrue(ctx.getSubmissionTime() > 0, debugHelpMsg);
+    assertTrue(ctx.getLaunchTime() > 0, debugHelpMsg);
+    assertTrue(ctx.getDriverStartTime() > 0, debugHelpMsg);
+    assertTrue(ctx.getDriverFinishTime() > 0, debugHelpMsg);
+    assertTrue(ctx.getFinishTime() > 0, debugHelpMsg);
   }
 
   public static void createTable(String tblName, WebTarget parent, LensSessionHandle lensSessionId)
@@ -145,7 +145,7 @@ public final class LensTestUtil {
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
   /**
    * Load data.
@@ -214,7 +214,7 @@ public final class LensTestUtil {
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
   /**

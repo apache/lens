@@ -118,6 +118,11 @@ public interface MetricsService {
   String RUNNING_QUERIES = "running-queries";
 
   /**
+   * The Constant WAITING_QUERIES.
+   */
+  String WAITING_QUERIES = "waiting-queries";
+
+  /**
    * The Constant FINISHED_QUERIES.
    */
   String FINISHED_QUERIES = "finished-queries";
@@ -135,6 +140,8 @@ public interface MetricsService {
   long getQueuedQueries();
 
   long getRunningQueries();
+
+  long getWaitingQueries();
 
   long getFinishedQueries();
 

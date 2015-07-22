@@ -30,6 +30,7 @@ import org.apache.lens.server.api.util.LensUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
+import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -238,32 +239,6 @@ public class DriverSelectorQueryContext {
     return driverQueryCtxs.get(getSelectedDriver()).getDriverQueryPlan();
   }
 
-  /**
-   * Return selected driver's query plan, but check for null conditions first.
-   *
-   * @return DriverQueryPlan of Selected Driver
-   * @throws LensException
-   */
-  public QueryCost getSelectedDriverQueryCost() throws LensException {
-    final Map<LensDriver, DriverQueryContext> driverQueryCtxs = getDriverQueryContextMap();
-    if (driverQueryCtxs == null) {
-      throw new LensException("No Driver query ctx. Check if re-write happened or not");
-    }
-    if (getSelectedDriver() == null) {
-      throw new LensException("Selected Driver is NULL.");
-    }
-
-    if (driverQueryCtxs.get(getSelectedDriver()) == null) {
-      throw new LensException("Could not find Driver Context for selected driver " + getSelectedDriver());
-    }
-
-    if (driverQueryCtxs.get(getSelectedDriver()).getDriverQueryCostEstimateError() != null) {
-      throw new LensException("Driver Query Cost of the selected driver is null",
-        driverQueryCtxs.get(getSelectedDriver()).getDriverQueryCostEstimateError());
-    }
-    return driverQueryCtxs.get(getSelectedDriver()).getDriverCost();
-  }
-
   public Configuration getSelectedDriverConf() {
     return getSelectedDriver() == null ? null : driverQueryContextMap.get(getSelectedDriver()).getDriverSpecificConf();
   }
@@ -288,6 +263,17 @@ public class DriverSelectorQueryContext {
 
   public Collection<LensDriver> getDrivers() {
     return driverQueryContextMap.keySet();
+  }
+
+  public Collection<LensDriver> getDriversWithValidQueryCost() {
+
+    final Set<LensDriver> eligibleDrivers = Sets.newLinkedHashSet();
+    for (Map.Entry<LensDriver, DriverQueryContext> driverToDriverContext : this.driverQueryContextMap.entrySet()) {
+      if (driverToDriverContext.getValue().driverCost != null) {
+        eligibleDrivers.add(driverToDriverContext.getKey());
+      }
+    }
+    return Collections.unmodifiableCollection(eligibleDrivers);
   }
 
   public Collection<String> getDriverQueries() {

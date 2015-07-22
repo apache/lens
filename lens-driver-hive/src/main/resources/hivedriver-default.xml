@@ -146,4 +146,22 @@
     <value>org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator</value>
     <description>Cost calculator class. By default calculating cost through fact partitions.</description>
   </property>
+
+  <property>
+    <name>lens.driver.hive.query.launching.constraint.factories</name>
+    <value></value>
+    <description>Factories used to instantiate constraints enforced on queries by driver. A query will be launched
+      only if all constraints pass. Every Factory should be an implementation of
+      org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of
+      org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.</description>
+  </property>
+
+  <property>
+    <name>lens.driver.hive.waiting.queries.selection.policy.factories</name>
+    <value></value>
+    <description>Factories used to instantiate driver specific waiting queries selection policies. Every factory should
+    be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an
+    implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.</description>
+  </property>
+
 </configuration>

@@ -127,6 +127,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   /** The running queries. */
   private Gauge<Long> runningQueries;
 
+  /** The waiting queries. */
+  private Gauge<Long> waitingQueries;
+
   /** The finished queries. */
   private Gauge<Long> finishedQueries;
 
@@ -330,6 +333,14 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         }
       });
 
+    waitingQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, WAITING_QUERIES),
+      new Gauge<Long>() {
+        @Override
+        public Long getValue() {
+          return getQuerySvc().getWaitingQueriesCount();
+        }
+      });
+
     finishedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES),
       new Gauge<Long>() {
         @Override
@@ -360,7 +371,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         + OPENED_SESSIONS));
 
     totalClosedSessions = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
-        + CLOSED_SESSIONS));
+      + CLOSED_SESSIONS));
 
     totalExpiredSessions = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
         + EXPIRED_SESSIONS));
@@ -505,6 +516,11 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public long getRunningQueries() {
     return runningQueries.getValue();
+  }
+
+  @Override
+  public long getWaitingQueries() {
+    return waitingQueries.getValue();
   }
 
   @Override

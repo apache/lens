@@ -25,9 +25,11 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 
 import org.apache.hadoop.conf.Configuration;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -156,6 +158,9 @@ public class FinishedLensQuery {
   @Setter
   private String queryName;
 
+  @Getter
+  private LensDriver selectedDriver;
+
   /**
    * Instantiates a new finished lens query.
    */
@@ -183,12 +188,14 @@ public class FinishedLensQuery {
     if (ctx.getQueryName() != null) {
       this.queryName = ctx.getQueryName().toLowerCase();
     }
+    this.selectedDriver = ctx.getSelectedDriver();
   }
 
   public QueryContext toQueryContext(Configuration conf, Collection<LensDriver> drivers) throws LensException {
     QueryContext qctx = new QueryContext(userQuery, submitter, new LensConf(), conf, drivers, null, submissionTime,
       false);
     qctx.setQueryHandle(QueryHandle.fromString(handle));
+    qctx.setLaunchTime(this.startTime);
     qctx.setEndTime(getEndTime());
     qctx.setStatusSkippingTransitionTest(new QueryStatus(0.0, QueryStatus.Status.valueOf(getStatus()),
         getErrorMessage() == null ? "" : getErrorMessage(), getResult() != null, null, null, null));
@@ -197,5 +204,9 @@ public class FinishedLensQuery {
     qctx.setResultSetPath(getResult());
     qctx.setQueryName(getQueryName());
     return qctx;
+  }
+
+  public ImmutableSet<WaitingQueriesSelectionPolicy> getDriverSelectionPolicies() {
+    return this.selectedDriver.getWaitingQuerySelectionPolicies();
   }
 }

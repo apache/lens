@@ -21,6 +21,8 @@
  */
 package org.apache.lens.server.api.query.cost;
 
+import java.io.Serializable;
+
 import org.apache.lens.api.query.QueryCostType;
 
 import com.google.common.base.Preconditions;
@@ -29,7 +31,8 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-public class FactPartitionBasedQueryCost implements QueryCost<FactPartitionBasedQueryCost> {
+public class FactPartitionBasedQueryCost implements QueryCost<FactPartitionBasedQueryCost>, Serializable {
+
   private final double partitionCost;
 
   public FactPartitionBasedQueryCost(final double partitionCost) {

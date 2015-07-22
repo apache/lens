@@ -18,7 +18,15 @@
  */
 package org.apache.lens.server.api.util;
 
+import java.util.Set;
+
+import org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 /**
  * Utility methods for Lens
@@ -47,4 +55,32 @@ public final class LensUtil {
     return expMsg;
   }
 
+  public static <T> ImmutableSet<T> getImplementations(final String factoriesKey, final Configuration conf) {
+
+    Set<T> implSet = Sets.newLinkedHashSet();
+    final String[] factoryNames = conf.getStrings(factoriesKey);
+
+    if (factoryNames == null) {
+      return ImmutableSet.copyOf(implSet);
+    }
+
+    for (String factoryName : factoryNames) {
+      if (StringUtils.isNotBlank(factoryName)) {
+        final T implementation = getImplementation(factoryName, conf);
+        implSet.add(implementation);
+      }
+    }
+    return ImmutableSet.copyOf(implSet);
+  }
+
+  public static <T> T getImplementation(final String factoryName, final Configuration conf) {
+
+    try {
+      ConfigBasedObjectCreationFactory<T> factory
+        = (ConfigBasedObjectCreationFactory<T>) Class.forName(factoryName).newInstance();
+      return factory.create(conf);
+    } catch (final ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 }
