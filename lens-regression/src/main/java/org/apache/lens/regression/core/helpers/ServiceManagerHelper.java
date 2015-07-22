@@ -40,12 +40,12 @@ import org.apache.lens.regression.util.AssertUtil;
 import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.log4j.Logger;
-
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class ServiceManagerHelper {
 
   private static final String LENS_BASE_URL = "lens.baseurl";
@@ -68,8 +68,6 @@ public abstract class ServiceManagerHelper {
   protected String clientDir;
   protected String serverHdfsUrl;
   protected String currentDB;
-
-  private Logger logger = Logger.getLogger(ServiceManagerHelper.class);
 
   public ServiceManagerHelper(String envFileName) {
     Properties prop = Util.getPropertiesObj(envFileName);
@@ -153,7 +151,7 @@ public abstract class ServiceManagerHelper {
         MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
     AssertUtil.assertSucceededResponse(response);
     sessionHandleString = response.readEntity(String.class);
-    logger.info("Session Handle String" + sessionHandleString);
+    log.info("Session Handle String:{}", sessionHandleString);
     return sessionHandleString;
   }
 
@@ -174,7 +172,7 @@ public abstract class ServiceManagerHelper {
     if (result.getMessage() == null) {
       throw new LensException("Status message is null");
     }
-    logger.info("Closed Session : " + sessionHandleString);
+    log.info("Closed Session : {}", sessionHandleString);
   }
 
   public <T> Response exec(String functionName, String path, WebTarget service, FormDataMultiPart headers,

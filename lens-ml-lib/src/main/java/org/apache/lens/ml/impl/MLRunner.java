@@ -26,8 +26,6 @@ import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientConfig;
 import org.apache.lens.client.LensMLClient;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
@@ -39,9 +37,10 @@ import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
 
-public class MLRunner {
+import lombok.extern.slf4j.Slf4j;
 
-  private static final Log LOG = LogFactory.getLog(MLRunner.class);
+@Slf4j
+public class MLRunner {
 
   private LensMLClient mlClient;
   private String algoName;
@@ -90,7 +89,7 @@ public class MLRunner {
   }
 
   public MLTask train() throws Exception {
-    LOG.info("Starting train & eval");
+    log.info("Starting train & eval");
 
     createTable(trainTable, trainFile);
     createTable(testTable, testFile);
@@ -103,7 +102,7 @@ public class MLRunner {
       taskBuilder.addFeatureColumn(feature);
     }
     MLTask task = taskBuilder.build();
-    LOG.info("Created task " + task.toString());
+    log.info("Created task {}", task.toString());
     task.run();
     return task;
   }
@@ -141,7 +140,7 @@ public class MLRunner {
 
     Hive.get(conf).dropTable(database, tableName, false, true);
     Hive.get(conf).createTable(tbl, true);
-    LOG.info("Created table " + tableName);
+    log.info("Created table {}", tableName);
 
     // Add partition for the data file
     AddPartitionDesc partitionDesc = new AddPartitionDesc(database, tableName,
@@ -150,7 +149,7 @@ public class MLRunner {
     partSpec.put("dummy_partition_col", "dummy_val");
     partitionDesc.addPartition(partSpec, partDir.toUri().toString());
     Hive.get(conf).createPartitions(partitionDesc);
-    LOG.info(tableName + ": Added partition " + partDir.toUri().toString());
+    log.info("{}: Added partition {}", tableName, partDir.toUri().toString());
   }
 
   public static void main(String[] args) throws Exception {

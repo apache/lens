@@ -34,18 +34,16 @@ import org.apache.lens.ml.algo.spark.svm.SVMAlgo;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class SparkMLDriver.
  */
+@Slf4j
 public class SparkMLDriver implements MLDriver {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(SparkMLDriver.class);
 
   /** The owns spark context. */
   private boolean ownsSparkContext = true;
@@ -120,7 +118,7 @@ public class SparkMLDriver implements MLDriver {
         ((BaseSparkAlgo) algo).setSparkContext(sparkContext);
       }
     } catch (LensException exc) {
-      LOG.error("Error creating algo object", exc);
+      log.error("Error creating algo object", exc);
     }
     return algo;
   }
@@ -178,8 +176,8 @@ public class SparkMLDriver implements MLDriver {
         sparkConf.set("spark.yarn.jar", yarnJars);
       }
 
-      LOG.info("Spark home is set to " + sparkConf.get("spark.home"));
-      LOG.info("spark.yarn.jar is set to " + yarnJars);
+      log.info("Spark home is set to {}", sparkConf.get("spark.home"));
+      log.info("spark.yarn.jar is set to {}", yarnJars);
     }
 
     sparkConf.setAppName("lens-ml");
@@ -206,7 +204,7 @@ public class SparkMLDriver implements MLDriver {
         throw new LensException("HIVE_HOME is not set");
       }
 
-      LOG.info("HIVE_HOME at " + hiveLocation);
+      log.info("HIVE_HOME at {}", hiveLocation);
 
       File hiveLibDir = new File(hiveLocation, "lib");
       FilenameFilter jarFileFilter = new FilenameFilter() {
@@ -220,7 +218,7 @@ public class SparkMLDriver implements MLDriver {
       // Add hive jars
       for (File jarFile : hiveLibDir.listFiles(jarFileFilter)) {
         jarFiles.add(jarFile.getAbsolutePath());
-        LOG.info("Adding HIVE jar " + jarFile.getAbsolutePath());
+        log.info("Adding HIVE jar {}", jarFile.getAbsolutePath());
         sparkContext.addJar(jarFile.getAbsolutePath());
       }
 
@@ -228,20 +226,20 @@ public class SparkMLDriver implements MLDriver {
       File hcatalogDir = new File(hiveLocation + "/hcatalog/share/hcatalog");
       for (File jarFile : hcatalogDir.listFiles(jarFileFilter)) {
         jarFiles.add(jarFile.getAbsolutePath());
-        LOG.info("Adding HCATALOG jar " + jarFile.getAbsolutePath());
+        log.info("Adding HCATALOG jar {}", jarFile.getAbsolutePath());
         sparkContext.addJar(jarFile.getAbsolutePath());
       }
 
       // Add the current jar
       String[] lensSparkLibJars = JavaSparkContext.jarOfClass(SparkMLDriver.class);
       for (String lensSparkJar : lensSparkLibJars) {
-        LOG.info("Adding Lens JAR " + lensSparkJar);
+        log.info("Adding Lens JAR {}", lensSparkJar);
         sparkContext.addJar(lensSparkJar);
       }
     }
 
     isStarted = true;
-    LOG.info("Created Spark context for app: '" + sparkContext.appName() + "', Spark master: " + sparkContext.master());
+    log.info("Created Spark context for app: '{}', Spark master: {}", sparkContext.appName(), sparkContext.master());
   }
 
   /*
@@ -252,14 +250,14 @@ public class SparkMLDriver implements MLDriver {
   @Override
   public void stop() throws LensException {
     if (!isStarted) {
-      LOG.warn("Spark driver was not started");
+      log.warn("Spark driver was not started");
       return;
     }
     isStarted = false;
     if (ownsSparkContext) {
       sparkContext.stop();
     }
-    LOG.info("Stopped spark context " + this);
+    log.info("Stopped spark context {}", this);
   }
 
   @Override

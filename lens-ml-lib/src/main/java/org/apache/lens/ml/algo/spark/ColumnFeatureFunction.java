@@ -20,21 +20,21 @@ package org.apache.lens.ml.algo.spark;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
-import org.apache.log4j.Logger;
 import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
 
 import com.google.common.base.Preconditions;
+
+import lombok.extern.slf4j.Slf4j;
+
 import scala.Tuple2;
 
 /**
  * A feature function that directly maps an HCatRecord to a feature vector. Each column becomes a feature in the vector,
  * with the value of the feature obtained using the value mapper for that column
  */
+@Slf4j
 public class ColumnFeatureFunction extends FeatureFunction {
-
-  /** The Constant LOG. */
-  public static final Logger LOG = Logger.getLogger(ColumnFeatureFunction.class);
 
   /** The feature value mappers. */
   private final FeatureValueMapper[] featureValueMappers;
@@ -85,7 +85,7 @@ public class ColumnFeatureFunction extends FeatureFunction {
     HCatRecord record = tuple._2();
 
     if (record == null) {
-      LOG.info("@@@ Null record");
+      log.info("@@@ Null record");
       return defaultLabeledPoint;
     }
 

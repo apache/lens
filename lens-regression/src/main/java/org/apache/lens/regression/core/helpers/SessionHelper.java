@@ -35,14 +35,10 @@ import org.apache.lens.regression.util.AssertUtil;
 import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
-
-
-
+@Slf4j
 public class SessionHelper extends ServiceManagerHelper {
-
-  private static Logger logger = Logger.getLogger(SessionHelper.class);
 
   private WebTarget servLens = ServiceManagerHelper.getServerLens();
   private String sessionHandleString = ServiceManagerHelper.getSessionHandle();
@@ -75,7 +71,7 @@ public class SessionHelper extends ServiceManagerHelper {
             formData.getForm());
     AssertUtil.assertSucceededResponse(response);
     String newSessionHandleString = response.readEntity(String.class);
-    logger.info("Session Handle String" + newSessionHandleString);
+    log.info("Session Handle String:{}", newSessionHandleString);
     return newSessionHandleString;
   }
 
@@ -102,7 +98,7 @@ public class SessionHelper extends ServiceManagerHelper {
     if (result.getMessage() == null) {
       throw new LensException("Status message is null");
     }
-    logger.info("Closed Session : " + sessionHandleString);
+    log.info("Closed Session : {}", sessionHandleString);
   }
 
   /**
@@ -127,12 +123,12 @@ public class SessionHelper extends ServiceManagerHelper {
     response = this.exec("get", "/session/params", servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
     String responseString = response.readEntity(String.class);
-    logger.info(responseString);
+    log.info(responseString);
     HashMap<String, String> map = Util.stringListToMap(responseString);
     if (!map.get(param).equals(value)) {
       throw new LensException("Could not set property");
     }
-    logger.info("Added property " + param + " = " + value);
+    log.info("Added property {}={}", param, value);
   }
 
   public void setAndValidateParam(String param, String value) throws Exception {
@@ -156,7 +152,7 @@ public class SessionHelper extends ServiceManagerHelper {
    * @param sessionHandleString
    */
   public void addResourcesJar(String path, String sessionHandleString) throws JAXBException, LensException {
-    logger.info("Adding Resources " + path);
+    log.info("Adding Resources {}", path);
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
     formData.add("type", "jar");
@@ -164,7 +160,7 @@ public class SessionHelper extends ServiceManagerHelper {
     Response response = this
         .exec("put", "/session/resources/add", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE, null,
             formData.getForm());
-    logger.info("Response : " + response);
+    log.info("Response : {}", response);
     AssertUtil.assertSucceeded(response);
   }
 
@@ -179,7 +175,7 @@ public class SessionHelper extends ServiceManagerHelper {
    * @param sessionHandleString
    */
   public void removeResourcesJar(String path, String sessionHandleString) throws JAXBException, LensException {
-    logger.info("Removing Resources " + path);
+    log.info("Removing Resources {}", path);
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
     formData.add("type", "jar");
@@ -187,7 +183,7 @@ public class SessionHelper extends ServiceManagerHelper {
     Response response = this
         .exec("put", "/session/resources/delete", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE, null,
             formData.getForm());
-    logger.info("Response : " + response);
+    log.info("Response : {}", response);
     AssertUtil.assertSucceeded(response);
   }
 

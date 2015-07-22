@@ -28,20 +28,14 @@ import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class DriverSelectorQueryContext {
-
-  /**
-   * The constant LOG
-   */
-  public static final Log LOG = LogFactory.getLog(DriverSelectorQueryContext.class);
-
 
   /**
    * The selected driver.
@@ -200,7 +194,7 @@ public class DriverSelectorQueryContext {
         driverQueryContext.setDriverQueryPlan(driver.explain(qctx));
         succeededOnAtleastOneDriver = true;
       } catch (Exception e) {
-        LOG.error("Setting driver plan failed for driver " + driver, e);
+        log.error("Setting driver plan failed for driver {}", driver, e);
         String expMsg = LensUtil.getCauseMessage(e);
         driverQueryContext.setDriverQueryPlanGenerationError(e);
         detailedFailureCause.append("\n Driver :").append(driver.getClass().getName());

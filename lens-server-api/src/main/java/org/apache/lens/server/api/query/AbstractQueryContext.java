@@ -34,22 +34,17 @@ import org.apache.lens.server.api.query.DriverSelectorQueryContext.DriverQueryCo
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.util.LensUtil;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class AbstractQueryContext implements Serializable {
   private static final long serialVersionUID = 1L;
-
-  /**
-   * The Constant LOG
-   */
-  public static final Log LOG = LogFactory.getLog(AbstractQueryContext.class);
 
   /**
    * The user query.
@@ -129,7 +124,7 @@ public abstract class AbstractQueryContext implements Serializable {
     if (conf.getBoolean(LensConfConstants.ENABLE_QUERY_METRICS, LensConfConstants.DEFAULT_ENABLE_QUERY_METRICS)) {
       UUID metricId = UUID.randomUUID();
       conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, metricId.toString());
-      LOG.info("Generated metric id: " + metricId + " for query: " + query);
+      log.info("Generated metric id: {} for query: {}", metricId, query);
     }
     driverContext = new DriverSelectorQueryContext(query, conf, drivers, mergeDriverConf);
     userQuery = query;
@@ -178,7 +173,7 @@ public abstract class AbstractQueryContext implements Serializable {
   public void estimateCostForDrivers() throws LensException {
     Map<LensDriver, DriverEstimateRunnable> estimateRunnables = getDriverEstimateRunnables();
     for (LensDriver driver : estimateRunnables.keySet()) {
-      LOG.info("Running estimate for driver " + driver);
+      log.info("Running estimate for driver {}", driver);
       estimateRunnables.get(driver).run();
     }
   }
@@ -258,7 +253,7 @@ public abstract class AbstractQueryContext implements Serializable {
         .append(" Cause :")
         .append(expMsg)
         .toString();
-      LOG.error("Setting driver cost failed for driver " + driver + " Cause: " + failureCause, e);
+      log.error("Setting driver cost failed for driver {} Cause: {}", driver, failureCause, e);
     }
   }
 

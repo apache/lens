@@ -30,7 +30,6 @@ import org.apache.lens.server.model.LensResourceMethod;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -38,14 +37,16 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Factory for creating MethodMetrics objects on demand.
  */
+@Slf4j
 public class MethodMetricsFactory {
-  public static final Logger LOG = Logger.getLogger(MethodMetricsFactory.class);
 
   private final MetricRegistry metricRegistry;
 
@@ -83,7 +84,7 @@ public class MethodMetricsFactory {
     if (result == null) {
       synchronized (this) {
         result = methodMetricsMap.get(name);
-        LOG.info("Creating MethodMetrics of name: " + name);
+        log.info("Creating MethodMetrics of name: {}", name);
         result = new MethodMetrics(
           metricRegistry.meter(name(name, "meter")),
           metricRegistry.timer(name(name, "timer")),
@@ -146,7 +147,7 @@ public class MethodMetricsFactory {
    */
   public void clear() {
     synchronized (this) {
-      LOG.info("clearing factory");
+      log.info("clearing factory");
       for (Map.Entry<String, MethodMetrics> entry : methodMetricsMap.entrySet()) {
         metricRegistry.remove(name(entry.getKey(), "meter"));
         metricRegistry.remove(name(entry.getKey(), "timer"));

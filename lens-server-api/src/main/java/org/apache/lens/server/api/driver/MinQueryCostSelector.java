@@ -25,10 +25,8 @@ import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 
 public class MinQueryCostSelector implements DriverSelector {
-  public static final Logger LOG = Logger.getLogger(MinQueryCostSelector.class);
 
   /**
    * Returns the driver that has the minimum query cost.

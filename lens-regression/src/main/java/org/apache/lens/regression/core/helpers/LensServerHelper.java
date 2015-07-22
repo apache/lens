@@ -30,14 +30,12 @@ import org.apache.lens.regression.util.AssertUtil;
 import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.log4j.Logger;
-
 import com.jcraft.jsch.JSchException;
 
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class LensServerHelper extends ServiceManagerHelper {
-
-  private static Logger logger = Logger.getLogger(LensServerHelper.class);
 
   private WebTarget servLens = ServiceManagerHelper.getServerLens();
   private String sessionHandleString = ServiceManagerHelper.getSessionHandle();
@@ -60,9 +58,9 @@ public class LensServerHelper extends ServiceManagerHelper {
     Response response = this.exec("get", "", servLens, null, null);
     while (response == null && counter < 40) {
       Thread.sleep(5000);
-      logger.info("Waiting for Lens server to come up ");
+      log.info("Waiting for Lens server to come up ");
       response = this.exec("get", "", servLens, null, null);
-      logger.info(response);
+      log.info("Response:{}", response);
       counter++;
     }
     AssertUtil.assertSucceededResponse(response);

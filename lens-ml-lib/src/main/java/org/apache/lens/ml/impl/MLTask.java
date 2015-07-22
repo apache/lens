@@ -24,19 +24,18 @@ import org.apache.lens.client.LensMLClient;
 import org.apache.lens.ml.api.LensML;
 import org.apache.lens.ml.api.MLTestReport;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Run a complete cycle of train and test (evaluation) for an ML algorithm
  */
 @ToString
+@Slf4j
 public class MLTask implements Runnable {
-  private static final Log LOG = LogFactory.getLog(MLTask.class);
 
   public enum State {
     RUNNING, SUCCESSFUL, FAILED
@@ -200,14 +199,14 @@ public class MLTask implements Runnable {
   @Override
   public void run() {
     taskState = State.RUNNING;
-    LOG.info("Starting " + taskID);
+    log.info("Starting {}", taskID);
     try {
       runTask();
       taskState = State.SUCCESSFUL;
-      LOG.info("Complete " + taskID);
+      log.info("Complete {}", taskID);
     } catch (Exception e) {
       taskState = State.FAILED;
-      LOG.info("Error running task " + taskID, e);
+      log.info("Error running task {}", taskID, e);
     }
   }
 
@@ -221,20 +220,20 @@ public class MLTask implements Runnable {
     if (mlClient != null) {
       // Connect to a remote Lens server
       ml = mlClient;
-      LOG.info("Working in client mode. Lens session handle " + mlClient.getSessionHandle().getPublicId());
+      log.info("Working in client mode. Lens session handle {}", mlClient.getSessionHandle().getPublicId());
     } else {
       // In server mode session handle has to be passed by the user as a request parameter
       ml = MLUtils.getMLService();
-      LOG.info("Working in Lens server");
+      log.info("Working in Lens server");
     }
 
     String[] algoArgs = buildTrainingArgs();
-    LOG.info("Starting task " + taskID + " algo args: " + Arrays.toString(algoArgs));
+    log.info("Starting task {} algo args: {} ", taskID, Arrays.toString(algoArgs));
 
     modelID = ml.train(trainingTable, algorithm, algoArgs);
     printModelMetadata(taskID, modelID);
 
-    LOG.info("Starting test " + taskID);
+    log.info("Starting test {}", taskID);
     testTable = (testTable != null) ? testTable : trainingTable;
     MLTestReport testReport = ml.testModel(mlClient.getSessionHandle(), testTable, algorithm, modelID, outputTable);
     reportID = testReport.getReportID();
@@ -244,7 +243,7 @@ public class MLTask implements Runnable {
 
   // Save task metadata to DB
   private void saveTask() {
-    LOG.info("Saving task details to DB");
+    log.info("Saving task details to DB");
   }
 
   private void printTestReport(String exampleID, MLTestReport testReport) {

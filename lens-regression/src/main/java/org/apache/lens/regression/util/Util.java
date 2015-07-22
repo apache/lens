@@ -33,17 +33,17 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.metastore.ObjectFactory;
 
-import org.apache.log4j.Logger;
-
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
+import lombok.extern.slf4j.Slf4j;
 
+
+@Slf4j
 public class Util {
 
-  private static final Logger LOGGER = Logger.getLogger(Util.class);
   private static final String PROPERTY_FILE = "lens.properties";
   private static Properties properties;
 
@@ -55,7 +55,7 @@ public class Util {
     try {
       if (properties == null) {
         properties = new Properties();
-        LOGGER.info("filename: " + filename);
+        log.info("filename: {}", filename);
         InputStream confStream = Util.class.getResourceAsStream("/" + filename);
         properties.load(confStream);
         confStream.close();
@@ -63,7 +63,7 @@ public class Util {
       return properties;
 
     } catch (IOException e) {
-      LOGGER.info(e.getStackTrace());
+      log.info("Error in getProperies:", e);
     }
     return null;
   }
@@ -81,7 +81,7 @@ public class Util {
     String host = Util.getProperty("lens.remote.host");
     String password = Util.getProperty("lens.remote.password");
 
-    LOGGER.info("Running command : " + command + " on host : " + host + " with user as " + userName);
+    log.info("Running command : {} on host : {} with user as {}", command, host, userName);
 
     JSch jsch = new JSch();
     Session session = jsch.getSession(userName, host, 22);
@@ -106,7 +106,7 @@ public class Util {
       outputBuffer.append(toAppend);
       readByte = commandOutput.read();
       if (toAppend == '\n') {
-        LOGGER.info(print.toString());
+        log.info(print.toString());
         print = new StringBuilder();
       } else {
         print.append(toAppend);
@@ -123,7 +123,7 @@ public class Util {
       out.println(str);
       out.close();
     } catch (IOException e) {
-      LOGGER.info("File Exception : " + e);
+      log.info("File Exception : ", e);
     }
   }
 
@@ -177,7 +177,7 @@ public class Util {
     try {
       getMarshaller(clazz).marshal(root, stringWriter);
     } catch (JAXBException e) {
-      LOGGER.error("Not able to marshall", e);
+      log.error("Not able to marshall", e);
     }
     return stringWriter.toString();
   }
@@ -191,7 +191,7 @@ public class Util {
 
       return jaxbMarshaller;
     } catch (JAXBException e) {
-      LOGGER.error("Error : ", e);
+      log.error("Error : ", e);
     }
 
     return null;

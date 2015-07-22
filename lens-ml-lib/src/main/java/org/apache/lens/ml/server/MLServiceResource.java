@@ -41,21 +41,19 @@ import org.apache.lens.server.api.ServiceProviderFactory;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Machine Learning service.
  */
 @Path("/ml")
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Slf4j
 public class MLServiceResource {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(MLServiceResource.class);
 
   /** The ml service. */
   MLService mlService;
@@ -284,9 +282,9 @@ public class MLServiceResource {
         algoArgs.add(values.get(0));
       }
     }
-    LOG.info("Training table " + table + " with algo " + algorithm + " params=" + algoArgs.toString());
+    log.info("Training table {} with algo {} params={}", table, algorithm, algoArgs.toString());
     String modelId = getMlService().train(table, algorithm, algoArgs.toArray(new String[]{}));
-    LOG.info("Done training " + table + " modelid = " + modelId);
+    log.info("Done training {} modelid = {}", table, modelId);
     return modelId;
   }
 
@@ -300,7 +298,7 @@ public class MLServiceResource {
   @Produces(MediaType.TEXT_PLAIN)
   public Response clearModelCache() {
     ModelLoader.clearCache();
-    LOG.info("Cleared model cache");
+    log.info("Cleared model cache");
     return Response.ok("Cleared cache", MediaType.TEXT_PLAIN_TYPE).build();
   }
 

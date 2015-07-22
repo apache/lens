@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
@@ -36,14 +34,15 @@ import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class ExampleUtils.
  */
+@Slf4j
 public final class ExampleUtils {
   private ExampleUtils() {
   }
-
-  private static final Log LOG = LogFactory.getLog(ExampleUtils.class);
 
   /**
    * Creates the example table.
@@ -88,7 +87,7 @@ public final class ExampleUtils {
     tbl.setPartCols(partCols);
 
     Hive.get(conf).createTable(tbl, false);
-    LOG.info("Created table " + tableName);
+    log.info("Created table {}", tableName);
 
     // Add partition for the data file
     AddPartitionDesc partitionDesc = new AddPartitionDesc(database, tableName, false);
@@ -96,6 +95,6 @@ public final class ExampleUtils {
     partSpec.put("dummy_partition_col", "dummy_val");
     partitionDesc.addPartition(partSpec, partDir.toUri().toString());
     Hive.get(conf).createPartitions(partitionDesc);
-    LOG.info(tableName + ": Added partition " + partDir.toUri().toString());
+    log.info("{}: Added partition {}", tableName, partDir.toUri().toString());
   }
 }

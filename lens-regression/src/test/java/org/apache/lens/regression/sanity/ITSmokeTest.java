@@ -24,11 +24,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
-
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
 import org.apache.lens.regression.util.Util;
-
-import org.apache.log4j.Logger;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -36,9 +33,11 @@ import org.testng.annotations.Test;
 
 import com.jcraft.jsch.JSchException;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ITSmokeTest extends BaseTestClass {
 
-  private static final Logger LOGGER = Logger.getLogger(ITSmokeTest.class);
   private final String resourceDir = "src/test/resources";
   private final String resultFile = resourceDir + "/result.data";
   private final String smokeOutput = resourceDir + "/output.txt";
@@ -47,7 +46,7 @@ public class ITSmokeTest extends BaseTestClass {
 
   @BeforeMethod(alwaysRun = true)
   public void setUp(Method method) throws Exception {
-    LOGGER.info("Test Name: " + method.getName());
+    log.info("Test Name: {}", method.getName());
   }
 
   @Test(enabled = true, groups = { "integration" })
@@ -58,23 +57,23 @@ public class ITSmokeTest extends BaseTestClass {
     String populateMetastoreCommand = "bash " + exampleScript + " populate-metastore -db " + dbName;
     String runQueriesCommand = "bash " + exampleScript + " runqueries -db " + dbName;
 
-    LOGGER.info("Creating schema : ");
+    log.info("Creating schema : ");
     String output = Util.runRemoteCommand(sampleMetastoreCommand);
     System.out.println("Output : " + output);
-    LOGGER.info("Output : " + output);
+    log.info("Output : {}", output);
 
-    LOGGER.info("Populating Metastore : ");
+    log.info("Populating Metastore : ");
     output = Util.runRemoteCommand(populateMetastoreCommand);
-    LOGGER.info("Output : " + output);
+    log.info("Output : {}", output);
 
-    LOGGER.info("Running Queries in Background : ");
+    log.info("Running Queries in Background : ");
     output = Util.runRemoteCommand("nohup " + runQueriesCommand + " > smoke.log 2>&1 &");
-    LOGGER.info("Output : " + output);
+    log.info("Output : {}", output);
 
     waitToComplete();
 
     output = Util.runRemoteCommand("cat smoke.log");
-    LOGGER.info("Output : " + output);
+    log.info("Output : {}", output);
 
     Util.writeFile(smokeOutput, output);
 
