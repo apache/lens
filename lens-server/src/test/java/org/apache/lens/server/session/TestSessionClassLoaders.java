@@ -29,8 +29,6 @@ import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hive.service.cli.CLIService;
@@ -40,8 +38,10 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class TestSessionClassLoaders {
-  private static final Log LOG = LogFactory.getLog(TestSessionClassLoaders.class);
 
   private final HiveConf conf = LensServerConf.createHiveConf();
   private HiveSessionService sessionService;
@@ -119,7 +119,7 @@ public class TestSessionClassLoaders {
       sessionService.release(sessionHandle);
     }
 
-    LOG.info("@@ Teting DB2");
+    log.info("@@ Teting DB2");
 
     // Loading test class should pass for DB1
     session.setCurrentDatabase(DB1);
@@ -136,7 +136,7 @@ public class TestSessionClassLoaders {
       clz = session.getCubeMetastoreClient().getConf().getClassByName(TestDatabaseResourceService.TEST_CLASS);
       Assert.assertNotNull(clz);
     } catch (ClassNotFoundException cnf) {
-      LOG.error(cnf.getMessage(), cnf);
+      log.error(cnf.getMessage(), cnf);
       Assert.fail("Should not have thrown class not found exception: " + cnf.getMessage());
     } finally {
       sessionService.release(sessionHandle);
@@ -166,7 +166,7 @@ public class TestSessionClassLoaders {
     boolean loadedSessionClass = false;
     boolean loadedDBClass = false;
     try {
-      LOG.info("@@@ TEST 1");
+      log.info("@@@ TEST 1");
       sessionService.acquire(sessionHandle);
 
       ClassLoader dbClassLoader = session.getClassLoader("default");
@@ -181,7 +181,7 @@ public class TestSessionClassLoaders {
       Class clz = Class.forName("ClassLoaderTestClass", true, Thread.currentThread().getContextClassLoader());
       loadedDBClass = true;
     } catch (ClassNotFoundException cnf) {
-      LOG.error(cnf.getMessage(), cnf);
+      log.error(cnf.getMessage(), cnf);
       Assert.assertTrue(loadedSessionClass);
       Assert.assertFalse(loadedDBClass);
     } finally {
@@ -192,7 +192,7 @@ public class TestSessionClassLoaders {
     loadedSessionClass = false;
     loadedDBClass = false;
     try {
-      LOG.info("@@@ TEST 1 - cube client");
+      log.info("@@@ TEST 1 - cube client");
       sessionService.acquire(sessionHandle);
 
       // testClass2 should be loaded since test2.jar is added to the session
@@ -204,14 +204,14 @@ public class TestSessionClassLoaders {
       Class clz = session.getCubeMetastoreClient().getConf().getClassByName("ClassLoaderTestClass");
       loadedDBClass = true;
     } catch (ClassNotFoundException cnf) {
-      LOG.error(cnf.getMessage(), cnf);
+      log.error(cnf.getMessage(), cnf);
       Assert.assertTrue(loadedSessionClass);
       Assert.assertFalse(loadedDBClass);
     } finally {
       sessionService.release(sessionHandle);
     }
 
-    LOG.info("@@@ TEST 2");
+    log.info("@@@ TEST 2");
     session.setCurrentDatabase(DB1);
     loadedSessionClass = false;
     loadedDBClass = false;
@@ -230,7 +230,7 @@ public class TestSessionClassLoaders {
     Assert.assertTrue(loadedSessionClass);
     Assert.assertTrue(loadedDBClass);
 
-    LOG.info("@@@ TEST 2 - cube client");
+    log.info("@@@ TEST 2 - cube client");
     loadedSessionClass = false;
     loadedDBClass = false;
     try {
@@ -248,7 +248,7 @@ public class TestSessionClassLoaders {
     Assert.assertTrue(loadedDBClass);
 
     // Switch back to default DB, again the test2.jar should be available, test.jar should not be available
-    LOG.info("@@@ TEST 3");
+    log.info("@@@ TEST 3");
     session.setCurrentDatabase("default");
     loadedSessionClass = false;
     loadedDBClass = false;
@@ -267,7 +267,7 @@ public class TestSessionClassLoaders {
       sessionService.release(sessionHandle);
     }
 
-    LOG.info("@@@ TEST 3 -- cube client");
+    log.info("@@@ TEST 3 -- cube client");
     session.setCurrentDatabase("default");
     loadedSessionClass = false;
     loadedDBClass = false;
@@ -282,7 +282,7 @@ public class TestSessionClassLoaders {
       Class clz = session.getCubeMetastoreClient().getConf().getClassByName("ClassLoaderTestClass");
       loadedDBClass = true;
     } catch (ClassNotFoundException cnf) {
-      LOG.error(cnf.getMessage(), cnf);
+      log.error(cnf.getMessage(), cnf);
       Assert.assertTrue(loadedSessionClass);
       Assert.assertFalse(loadedDBClass);
     } finally {

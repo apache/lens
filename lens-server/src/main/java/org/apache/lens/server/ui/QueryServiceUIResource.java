@@ -35,19 +35,17 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class QueryServiceUIResource.
  */
 @Path("/queryuiapi")
+@Slf4j
 public class QueryServiceUIResource {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(QueryServiceUIResource.class);
 
   /** The query server. */
   private QueryExecutionService queryServer;
@@ -82,7 +80,7 @@ public class QueryServiceUIResource {
    * Instantiates a new query service ui resource.
    */
   public QueryServiceUIResource() {
-    LOG.info("Query UI Service");
+    log.info("Query UI Service");
     queryServer = (QueryExecutionService) LensServices.get().getService("query");
   }
 
@@ -194,7 +192,7 @@ public class QueryServiceUIResource {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
     checkSessionHandle(sessionHandle);
     List<Object> rows = new ArrayList<Object>();
-    LOG.info("FetchResultSet for queryHandle:" + queryHandle);
+    log.info("FetchResultSet for queryHandle:{}", queryHandle);
     try {
       QueryResultSetMetadata resultSetMetadata = queryServer.getResultSetMetadata(sessionHandle,
         getQueryHandle(queryHandle));

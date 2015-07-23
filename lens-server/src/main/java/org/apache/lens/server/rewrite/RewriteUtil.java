@@ -41,18 +41,18 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.log4j.Logger;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class RewriteUtil.
  */
+@Slf4j
 public final class RewriteUtil {
   private RewriteUtil() {
 
   }
-  public static final Logger LOG = Logger.getLogger(RewriteUtil.class);
 
   /** The cube pattern. */
   static Pattern cubePattern = Pattern.compile(".*CUBE(.*)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE
@@ -91,7 +91,7 @@ public final class RewriteUtil {
     throws SemanticException, LensException {
 
     ASTNode ast = HQLParser.parseHQL(query, conf);
-    LOG.debug("User query AST:" + ast.dump());
+    log.debug("User query AST:{}", ast.dump());
     List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
     findCubePositions(ast, cubeQueries, query);
     for (CubeQueryInfo cqi : cubeQueries) {
@@ -113,12 +113,11 @@ public final class RewriteUtil {
     int childCount = ast.getChildCount();
     if (ast.getToken() != null) {
       if (ast.getChild(0) != null) {
-        LOG.debug("First child:" + ast.getChild(0) + " Type:"
-          + ((ASTNode) ast.getChild(0)).getToken().getType());
+        log.debug("First child: {} Type:{}", ast.getChild(0), ((ASTNode) ast.getChild(0)).getToken().getType());
       }
       if (ast.getToken().getType() == HiveParser.TOK_QUERY
         && ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
-        LOG.debug("Inside cube clause");
+        log.debug("Inside cube clause");
         CubeQueryInfo cqi = new CubeQueryInfo();
         cqi.cubeAST = ast;
         if (ast.getParent() != null) {
@@ -138,7 +137,7 @@ public final class RewriteUtil {
               cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine() - 1, "UNION ALL");
             } else {
               // Not expected to reach here
-              LOG.warn("Unknown query pattern found with AST:" + ast.dump());
+              log.warn("Unknown query pattern found with AST:{}", ast.dump());
               throw new SemanticException("Unknown query pattern");
             }
           } else {
@@ -146,12 +145,12 @@ public final class RewriteUtil {
             // one for next AST
             // and one for the close parenthesis if there are no more unionall
             // or one for the string 'UNION ALL' if there are more union all
-            LOG.debug("Child of union all");
+            log.debug("Child of union all");
             cqi.endPos = getEndPos(originalQuery, parent.getParent().getChild(1).getCharPositionInLine(), ")",
               "UNION ALL");
           }
         }
-        LOG.debug("Adding cqi " + cqi + " query:" + originalQuery.substring(cqi.startPos, cqi.endPos));
+        log.debug("Adding cqi {} query:{}", cqi, originalQuery.substring(cqi.startPos, cqi.endPos));
         cubeQueries.add(cqi);
       } else {
         for (int childPos = 0; childPos < childCount; ++childPos) {
@@ -159,7 +158,7 @@ public final class RewriteUtil {
         }
       }
     } else {
-      LOG.warn("Null AST!");
+      log.warn("Null AST!");
     }
   }
 
@@ -310,9 +309,7 @@ public final class RewriteUtil {
         // user query. We are looping through all sub queries here.
         int qIndex = 1;
         for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
-          if (LOG.isDebugEnabled()) {
-            LOG.debug("Rewriting cube query:" + cqi.query);
-          }
+          log.debug("Rewriting cube query: {}", cqi.query);
 
           if (start != cqi.startPos) {
             builder.append(replacedQuery.substring(start, cqi.startPos));
@@ -328,9 +325,7 @@ public final class RewriteUtil {
           toHQLGauge.markSuccess();
           qIndex++;
 
-          if (LOG.isDebugEnabled()) {
-            LOG.debug("Rewritten query:" + hqlQuery);
-          }
+          log.debug("Rewritten query:", hqlQuery);
 
           builder.append(hqlQuery);
           start = cqi.endPos;
@@ -343,7 +338,7 @@ public final class RewriteUtil {
         ctx.getDriverContext().setDriverRewriterPlan(driver, getRewriterPlan(this));
         succeeded = true;
         ctx.setDriverQuery(driver, rewrittenQuery);
-        LOG.info("Final rewritten query for driver:" + driver + " is: " + rewrittenQuery);
+        log.info("Final rewritten query for driver: {} is: {}", driver, rewrittenQuery);
 
       } catch (final LensException e) {
 
@@ -368,7 +363,7 @@ public final class RewriteUtil {
 
     private void captureExceptionInformation(final Exception e) {
 
-      LOG.warn("Driver : " + driver + " Skipped for the query rewriting due to ", e);
+      log.warn("Driver : {}  Skipped for the query rewriting due to ", driver, e);
       ctx.setDriverRewriteError(driver, e);
       failureCause = new StringBuilder(" Driver :")
           .append(driver.getClass().getName())

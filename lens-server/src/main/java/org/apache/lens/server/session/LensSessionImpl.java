@@ -34,8 +34,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.util.UtilityMethods;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -49,14 +47,13 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class LensSessionImpl.
  */
+@Slf4j
 public class LensSessionImpl extends HiveSessionImpl {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(LensSessionImpl.class);
 
   /** The persist info. */
   private LensSessionPersistInfo persistInfo = new LensSessionPersistInfo();
@@ -185,7 +182,7 @@ public class LensSessionImpl extends HiveSessionImpl {
             JavaUtils.closeClassLoader(entry.getValue());
           }
         } catch (Exception e) {
-          LOG.error("Error closing session classloader for session: " + getSessionHandle().getSessionId(), e);
+          log.error("Error closing session classloader for session: {}", getSessionHandle().getSessionId(), e);
         }
       }
       sessionDbClassLoaders.clear();
@@ -323,9 +320,7 @@ public class LensSessionImpl extends HiveSessionImpl {
         try {
           ClassLoader classLoader = getDbResService().getClassLoader(database);
           if (classLoader == null) {
-            if (LOG.isDebugEnabled()) {
-              LOG.debug("DB resource service gave null class loader for " + database);
-            }
+            log.debug("DB resource service gave null class loader for {}", database);
           } else {
             if (areResourcesAdded()) {
               // We need to update DB specific classloader with added resources
@@ -336,8 +331,8 @@ public class LensSessionImpl extends HiveSessionImpl {
 
           return classLoader == null ? getSessionState().getConf().getClassLoader() : classLoader;
         } catch (LensException e) {
-          LOG.error("Error getting classloader for database " + database + " for session "
-            + getSessionHandle().getSessionId() + " defaulting to session state class loader", e);
+          log.error("Error getting classloader for database {} for session {} "
+            + " defaulting to session state class loader", database, getSessionHandle().getSessionId(), e);
           return getSessionState().getConf().getClassLoader();
         }
       }

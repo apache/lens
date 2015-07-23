@@ -72,8 +72,6 @@ import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -86,6 +84,8 @@ import org.apache.hive.service.cli.TypeDescriptor;
 import org.codehaus.jackson.*;
 import org.codehaus.jackson.map.*;
 import org.codehaus.jackson.map.module.SimpleModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -412,13 +412,12 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   /**
    * The Class QueryStatusLogger.
    */
-  @Slf4j
   public static class QueryStatusLogger implements LensEventListener<StatusChange> {
 
     /**
      * The Constant STATUS_LOG.
      */
-    public static final Log STATUS_LOG = LogFactory.getLog(QueryStatusLogger.class);
+    public static final Logger STATUS_LOG = LoggerFactory.getLogger(QueryStatusLogger.class);
 
     /*
      * (non-Javadoc)
@@ -1040,7 +1039,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     try {
       loadDriversAndSelector();
     } catch (LensException e) {
-      LOG.error(e);
+      log.error("Error while loading drivers", e);
       throw new IllegalStateException("Could not load drivers", e);
     }
     maxFinishedQueries = conf.getInt(MAX_NUMBER_OF_FINISHED_QUERY,
@@ -1180,7 +1179,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       }
     };
 
-    LOG.debug("starting estimate pool");
+    log.debug("starting estimate pool");
     ThreadPoolExecutor estimatePool = new ThreadPoolExecutor(minPoolSize, maxPoolSize, keepAlive, TimeUnit.MILLISECONDS,
       new LinkedBlockingQueue<Runnable>(), threadFactory);
     estimatePool.allowCoreThreadTimeOut(true);

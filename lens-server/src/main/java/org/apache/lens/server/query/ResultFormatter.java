@@ -30,21 +30,18 @@ import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.*;
 import org.apache.lens.server.model.LogSegregationContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class ResultFormatter.
  */
+@Slf4j
 public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(ResultFormatter.class);
 
   /** The query service. */
   QueryExecutionServiceImpl queryService;
@@ -82,11 +79,11 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
     this.logSegregationContext.setLogSegragationAndQueryId(ctx.getQueryHandleString());
     try {
       if (!ctx.isPersistent()) {
-        LOG.info("No result formatting required for query " + queryHandle);
+        log.info("No result formatting required for query " + queryHandle);
         return;
       }
       if (ctx.isResultAvailableInDriver()) {
-        LOG.info("Result formatter for " + queryHandle);
+        log.info("Result formatter for {}", queryHandle);
         LensResultSet resultSet = queryService.getDriverResultset(queryHandle);
         boolean isPersistedInDriver = resultSet instanceof PersistentResultSet;
         if (isPersistedInDriver) {
@@ -96,10 +93,10 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           long size = fs.getContentSummary(persistedDirectory).getLength();
           long threshold = ctx.getConf().getLong(LensConfConstants.RESULT_FORMAT_SIZE_THRESHOLD,
             LensConfConstants.DEFAULT_RESULT_FORMAT_SIZE_THRESHOLD);
-          LOG.info(" size :" + size + " threshold:" + threshold);
+          log.info(" size :{} threshold:{}", size, threshold);
           if (size > threshold) {
-            LOG.warn("Persisted result size more than the threshold, size:" + size + " and threshold:" + threshold
-              + "; Skipping formatter");
+            log.warn("Persisted result size more than the threshold, size:{} and threshold:{}; Skipping formatter",
+              size, threshold);
             queryService.setSuccessState(ctx);
             return;
           }
@@ -114,12 +111,12 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
             formatter.writeHeader();
           }
           if (isPersistedInDriver) {
-            LOG.info("Result formatter for " + queryHandle + " in persistent result");
+            log.info("Result formatter for {} in persistent result", queryHandle);
             Path persistedDirectory = new Path(ctx.getHdfsoutPath());
             // write all files from persistent directory
             ((PersistedOutputFormatter) formatter).addRowsFromPersistedPath(persistedDirectory);
           } else {
-            LOG.info("Result formatter for " + queryHandle + " in inmemory result");
+            log.info("Result formatter for {} in inmemory result", queryHandle);
             InMemoryResultSet inmemory = (InMemoryResultSet) resultSet;
             while (inmemory.hasNext()) {
               ((InMemoryOutputFormatter) formatter).writeRow(inmemory.next());
@@ -134,16 +131,16 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           formatter.close();
         }
         queryService.setSuccessState(ctx);
-        LOG.info("Result formatter has completed. Final path:" + formatter.getFinalOutputPath());
+        log.info("Result formatter has completed. Final path:{}", formatter.getFinalOutputPath());
       }
     } catch (Exception e) {
       MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(ResultFormatter.class, "formatting-errors");
-      LOG.warn("Exception while formatting result for " + queryHandle, e);
+      log.warn("Exception while formatting result for {}", queryHandle, e);
       try {
         queryService.setFailedStatus(ctx, "Result formatting failed!", e.getMessage(), null);
       } catch (LensException e1) {
-        LOG.error("Exception while setting failure for " + queryHandle, e1);
+        log.error("Exception while setting failure for {}", queryHandle, e1);
       }
     }
   }
@@ -178,7 +175,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
       } catch (ClassNotFoundException e) {
         throw new LensException(e);
       }
-      LOG.info("Created result formatter:" + formatter.getClass().getCanonicalName());
+      log.info("Created result formatter:{}", formatter.getClass().getCanonicalName());
       ctx.setQueryOutputFormatter(formatter);
     }
   }

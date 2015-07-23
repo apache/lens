@@ -39,8 +39,6 @@ import org.apache.lens.server.query.TestQueryService;
 import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.LensSessionImpl;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hive.service.Service;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -51,14 +49,14 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class TestServerRestart.
  */
 @Test(alwaysRun = true, groups = "restart-test", dependsOnGroups = "unit-test")
+@Slf4j
 public class TestServerRestart extends LensAllApplicationJerseyTest {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(TestServerRestart.class);
 
   /** The data file. */
   private File dataFile;
@@ -120,7 +118,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
    */
   @Test
   public void testQueryService() throws InterruptedException, IOException, LensException {
-    LOG.info("Server restart test");
+    log.info("Server restart test");
 
     QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
     LensSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
@@ -130,7 +128,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     // Create a test table
     LensTestUtil.createTable("test_server_restart", target(), lensSessionId);
     LensTestUtil.loadData("test_server_restart", TestResourceFile.TEST_DATA_FILE.getValue(), target(), lensSessionId);
-    LOG.info("Loaded data");
+    log.info("Loaded data");
 
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
@@ -144,9 +142,9 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
         // Kill the query submitter thread to make sure some queries stay in accepted queue
         try {
           queryService.pauseQuerySubmitter();
-          LOG.info("Stopped query submitter");
+          log.info("Stopped query submitter");
         } catch (Exception exc) {
-          LOG.error("Could not kill query submitter", exc);
+          log.error("Could not kill query submitter", exc);
         }
         killed = true;
       }
@@ -166,25 +164,25 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
         .get(LensQuery.class);
       QueryStatus stat = ctx.getStatus();
-      LOG.info(i + " submitted query " + handle + " state: " + ctx.getStatus().getStatus());
+      log.info("{} submitted query {} state: {}", i, handle, ctx.getStatus().getStatus());
       launchedQueries.add(handle);
     }
 
     // Restart the server
-    LOG.info("Restarting lens server!");
+    log.info("Restarting lens server!");
     restartLensServer();
-    LOG.info("Restarted lens server!");
+    log.info("Restarted lens server!");
     queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
 
     // All queries should complete after server restart
     for (QueryHandle handle : launchedQueries) {
-      LOG.info("Polling query " + handle);
+      log.info("Polling query {}", handle);
       try {
         LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
           .get(LensQuery.class);
         QueryStatus stat = ctx.getStatus();
         while (!stat.finished()) {
-          LOG.info("Polling query " + handle + " Status:" + stat);
+          log.info("Polling query {} Status:{}", handle, stat);
           ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
           stat = ctx.getStatus();
           Thread.sleep(1000);
@@ -196,13 +194,13 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
         List<String> rows = TestQueryService.readResultSet(resultset, handle, true);
         Assert.assertEquals(rows.size(), 1);
         Assert.assertEquals(rows.get(0), "" + NROWS);
-        LOG.info("Completed " + handle);
+        log.info("Completed {}", handle);
       } catch (Exception exc) {
-        LOG.error("Failed query " + handle, exc);
+        log.error("Failed query {}", handle, exc);
         Assert.fail(exc.getMessage());
       }
     }
-    LOG.info("End server restart test");
+    log.info("End server restart test");
     LensTestUtil.dropTable("test_server_restart", target(), lensSessionId);
     queryService.closeSession(lensSessionId);
   }
@@ -227,15 +225,15 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     HiveSessionService sessionService = (HiveSessionService) LensServices.get().getService(SessionService.NAME);
     sessionService.addResource(lensSessionId, "FILE", dataFile.toURI().toString());
     queryService.getSession(lensSessionId).addResource("FILE", dataFile.toURI().toString());
-    LOG.info("@@ Added resource " + dataFile.toURI());
+    log.info("@@ Added resource {}", dataFile.toURI());
 
     // Create a test table
     LensTestUtil.createTable("test_hive_server_restart", target(), lensSessionId);
     LensTestUtil.loadData("test_hive_server_restart", TestResourceFile.TEST_DATA_FILE.getValue(), target(),
       lensSessionId);
-    LOG.info("Loaded data");
+    log.info("Loaded data");
 
-    LOG.info("Hive Server restart test");
+    log.info("Hive Server restart test");
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
 
@@ -260,24 +258,24 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     for (int i = 0; i < sessionResources.size(); i++) {
       restoreCounts[i] = sessionResources.get(i).getRestoreCount();
     }
-    LOG.info("@@ Current counts " + Arrays.toString(restoreCounts));
+    log.info("@@ Current counts {}", Arrays.toString(restoreCounts));
     // Restart hive server
     TestRemoteHiveDriver.stopHS2Service();
 
     // Wait for server to stop
     while (TestRemoteHiveDriver.getServerState() != Service.STATE.STOPPED) {
-      LOG.info("Waiting for HS2 to stop. Current state " + TestRemoteHiveDriver.getServerState());
+      log.info("Waiting for HS2 to stop. Current state {}", TestRemoteHiveDriver.getServerState());
       Thread.sleep(1000);
     }
 
     TestRemoteHiveDriver.createHS2Service();
     // Wait for server to come up
     while (Service.STATE.STARTED != TestRemoteHiveDriver.getServerState()) {
-      LOG.info("Waiting for HS2 to start " + TestRemoteHiveDriver.getServerState());
+      log.info("Waiting for HS2 to start {}", TestRemoteHiveDriver.getServerState());
       Thread.sleep(1000);
     }
     Thread.sleep(10000);
-    LOG.info("Server restarted");
+    log.info("Server restarted");
 
     // Check params to be set
     verifyParamOnRestart(lensSessionId);
@@ -288,14 +286,14 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       .get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.finished()) {
-      LOG.info("Polling query " + handle + " Status:" + stat);
+      log.info("Polling query {} Status:{}", handle, stat);
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
 
     Assert.assertTrue(stat.finished());
-    LOG.info("Previous query status: " + stat.getStatusMessage());
+    log.info("Previous query status: {}", stat.getStatusMessage());
 
     for (int i = 0; i < 5; i++) {
       // Submit another query, again no exception expected
@@ -315,12 +313,12 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       while (!stat.finished()) {
-        LOG.info("Post restart polling query " + handle + " Status:" + stat);
+        log.info("Post restart polling query {} Status:{}", handle, stat);
         ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
         stat = ctx.getStatus();
         Thread.sleep(1000);
       }
-      LOG.info("@@ " + i + " Final status for " + handle + " " + stat.getStatus());
+      log.info("@@ {} Final status for {}: {}", i, handle, stat.getStatus());
     }
 
     // Now we can expect that session resources have been added back exactly once
@@ -328,12 +326,12 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       LensSessionImpl.ResourceEntry resourceEntry = sessionResources.get(i);
       Assert.assertEquals(resourceEntry.getRestoreCount(), 1 + restoreCounts[i], "Restore test failed for "
         + resourceEntry + " pre count=" + restoreCounts[i] + " post count=" + resourceEntry.getRestoreCount());
-      LOG.info("@@ Latest count " + resourceEntry + " = " + resourceEntry.getRestoreCount());
+      log.info("@@ Latest count {}={}", resourceEntry, resourceEntry.getRestoreCount());
     }
     // Assert.assertEquals(stat.getStatus(), QueryStatus.Status.SUCCESSFUL,
     // "Expected to be successful " + handle);
 
-    LOG.info("End hive server restart test");
+    log.info("End hive server restart test");
     LensTestUtil.dropTable("test_hive_server_restart", target(), lensSessionId);
     queryService.closeSession(lensSessionId);
   }

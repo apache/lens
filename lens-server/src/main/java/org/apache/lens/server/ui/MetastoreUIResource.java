@@ -30,12 +30,11 @@ import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * metastore UI resource api
@@ -44,9 +43,8 @@ import org.json.JSONObject;
  */
 
 @Path("metastoreapi")
+@Slf4j
 public class MetastoreUIResource {
-
-  public static final Log LOG = LogFactory.getLog(MetastoreUIResource.class);
 
   public CubeMetastoreService getSvc() {
     return (CubeMetastoreService) LensServices.get().getService("metastore");
@@ -96,7 +94,7 @@ public class MetastoreUIResource {
         try {
           tableList.put(new JSONObject().put("name", cube).put("type", "cube"));
         } catch (JSONException j) {
-          LOG.error(j);
+          log.error("Error while parsing json", j);
         }
       }
     }
@@ -113,7 +111,7 @@ public class MetastoreUIResource {
         try {
           tableList.put(new JSONObject().put("name", dimTable).put("type", "dimtable"));
         } catch (JSONException j) {
-          LOG.error(j);
+          log.error("Error while parsing json", j);
         }
       }
     }
@@ -124,7 +122,7 @@ public class MetastoreUIResource {
         tableList.put(new JSONObject().put("name", nativeTable).put("type", "native"));
       }
     } catch (Exception e) {
-      LOG.error(e);
+      log.error("Error while getting all native tables", e);
     }
 
     return tableList.toString();
@@ -160,7 +158,7 @@ public class MetastoreUIResource {
           try {
             attribList.put(new JSONObject().put("name", measure.getName()).put("type", measure.getType()));
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
         }
       }
@@ -169,7 +167,7 @@ public class MetastoreUIResource {
           try {
             attribList.put(new JSONObject().put("name", dim.getName()).put("type", dim.getType()));
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
         }
       }
@@ -185,7 +183,7 @@ public class MetastoreUIResource {
           try {
             attribList.put(new JSONObject().put("name", col.getName()).put("type", col.getType()));
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
         }
       }
@@ -196,7 +194,7 @@ public class MetastoreUIResource {
             attribList.put(new JSONObject().put("name", expr.getName()).put("type", "expression")
               .put("expression", expr.getExprSpec()));
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
         }
       }
@@ -223,7 +221,7 @@ public class MetastoreUIResource {
 
       tableList = new JSONArray(getAllTables(publicId));
     } catch (JSONException j) {
-      LOG.error(j);
+      log.error("Error while parsing json", j);
     }
     for (int item = 0; item < tableList.length(); item++) {
       String name = null, type = null;
@@ -231,7 +229,7 @@ public class MetastoreUIResource {
         name = tableList.getJSONObject(item).getString("name");
         type = tableList.getJSONObject(item).getString("type");
       } catch (JSONException j) {
-        LOG.error(j);
+        log.error("Error while parsing json", j);
       }
       if (type.equals("cube")) {
         JSONArray cubeAttribList = null;
@@ -240,7 +238,7 @@ public class MetastoreUIResource {
 
           cubeAttribList = new JSONArray(getDescription(publicId, "cube", name));
         } catch (JSONException j) {
-          LOG.error(j);
+          log.error("Error while parsing json", j);
         }
         for (int col = 0; col < cubeAttribList.length(); col++) {
           String colname = null, coltype = null;
@@ -249,13 +247,13 @@ public class MetastoreUIResource {
             coltype = cubeAttribList.getJSONObject(col).getString("type");
 
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
           if (colname.contains(keyword)) {
             try {
               cubeSearchResultList.put(new JSONObject().put("name", colname).put("type", coltype));
             } catch (JSONException j) {
-              LOG.error(j);
+              log.error("Error while parsing json", j);
             }
           }
         }
@@ -264,14 +262,14 @@ public class MetastoreUIResource {
             searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns",
               cubeSearchResultList));
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
         } else if (name.contains(keyword)) {
           try {
             searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns",
               cubeSearchResultList));
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
         }
       } else if (type.equals("dimtable")) {
@@ -281,7 +279,7 @@ public class MetastoreUIResource {
 
           dimAttribList = new JSONArray(getDescription(publicId, "dimtable", name));
         } catch (JSONException j) {
-          LOG.error(j);
+          log.error("Error while parsing json", j);
         }
         for (int col = 0; col < dimAttribList.length(); col++) {
           String colname = null, coltype = null;
@@ -290,13 +288,13 @@ public class MetastoreUIResource {
             coltype = dimAttribList.getJSONObject(col).getString("type");
 
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
           if (colname.contains(keyword)) {
             try {
               dimSearchResultList.put(new JSONObject().put("name", colname).put("type", coltype));
             } catch (JSONException j) {
-              LOG.error(j);
+              log.error("Error while parsing json", j);
             }
           }
         }
@@ -305,14 +303,14 @@ public class MetastoreUIResource {
             searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns",
               dimSearchResultList));
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
         } else if (name.contains(keyword)) {
           try {
             searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns",
               dimSearchResultList));
           } catch (JSONException j) {
-            LOG.error(j);
+            log.error("Error while parsing json", j);
           }
         }
       }

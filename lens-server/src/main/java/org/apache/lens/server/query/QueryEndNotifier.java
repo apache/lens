@@ -40,23 +40,20 @@ import org.apache.lens.server.api.query.QueryEnded;
 import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import lombok.Data;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class QueryEndNotifier.
  */
+@Slf4j
 public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
   /** The query service. */
   private final QueryExecutionServiceImpl queryService;
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(QueryEndNotifier.class);
 
   /** The Constant EMAIL_ERROR_COUNTER. */
   public static final String EMAIL_ERROR_COUNTER = "email-send-errors";
@@ -113,8 +110,8 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     }
     QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
     if (queryContext == null) {
-      LOG.warn("Could not find the context for " + event.getQueryHandle() + " for event:" + event.getCurrentValue()
-        + ". No email generated");
+      log.warn("Could not find the context for {} for event:{}. No email generated", event.getQueryHandle(),
+        event.getCurrentValue());
       return;
     }
     this.logSegregationContext.setLogSegragationAndQueryId(queryContext.getQueryHandleString());
@@ -138,7 +135,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     String cc = queryContext.getConf().get(LensConfConstants.QUERY_RESULT_EMAIL_CC,
       LensConfConstants.QUERY_RESULT_DEFAULT_EMAIL_CC);
 
-    LOG.info("Sending completion email for query handle: " + event.getQueryHandle());
+    log.info("Sending completion email for query handle: {}", event.getQueryHandle());
     sendMail(host, port, new Email(from, to, cc, mailSubject, mailMessage), mailSmtpTimeout, mailSmtpConnectionTimeout);
   }
 
@@ -225,7 +222,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     } catch (Exception e) {
       MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(QueryEndNotifier.class, EMAIL_ERROR_COUNTER);
-      LOG.error("Error sending query end email", e);
+      log.error("Error sending query end email", e);
     }
   }
 }

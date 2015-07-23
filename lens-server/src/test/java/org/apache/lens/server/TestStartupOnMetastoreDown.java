@@ -21,16 +21,15 @@ package org.apache.lens.server;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 
 import org.testng.Assert;
 
-public class TestStartupOnMetastoreDown {
-  private static final Log LOG = LogFactory.getLog(TestStartupOnMetastoreDown.class);
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+public class TestStartupOnMetastoreDown {
   private final LogSegregationContext logSegregationContext = new MappedDiagnosticLogSegregationContext();
 
   // @Test
@@ -51,7 +50,7 @@ public class TestStartupOnMetastoreDown {
       try {
         services.stop();
       } catch (Exception exc) {
-        LOG.error("Error stopping services", exc);
+        log.error("Error stopping services", exc);
         Assert.fail("services.stop() got unexpected exception " + exc);
       }
       Hive.closeCurrent();

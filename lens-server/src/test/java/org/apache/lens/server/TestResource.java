@@ -23,17 +23,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 /**
  * The Class TestResource.
  */
 @Path("/test")
 public class TestResource {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(TestResource.class);
 
   /**
    * API to check if resource is up and running

@@ -24,16 +24,13 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.SecurityContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class AuthenticationFilter.
  */
+@Slf4j
 public class AuthenticationFilter implements ContainerRequestFilter {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(AuthenticationFilter.class);
 
   /*
    * (non-Javadoc)
@@ -45,6 +42,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     final SecurityContext securityContext = requestContext.getSecurityContext();
     String user = securityContext.getUserPrincipal() != null ? securityContext.getUserPrincipal().getName() : null;
-    LOG.info("Request from user: " + user + ", path=" + requestContext.getUriInfo().getPath());
+    log.info("Request from user: {} , path={}", user, requestContext.getUriInfo().getPath());
   }
 }

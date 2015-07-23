@@ -42,8 +42,6 @@ import org.apache.lens.server.user.UserConfigLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
@@ -59,13 +57,13 @@ import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class LensService.
  */
+@Slf4j
 public abstract class LensService extends CompositeService implements Externalizable {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(LensService.class);
 
   /** The cli service. */
   private final CLIService cliService;
@@ -129,11 +127,11 @@ public abstract class LensService extends CompositeService implements Externaliz
         sessionConf.putAll(configuration);
       }
       Map<String, String> userConfig = UserConfigLoaderFactory.getUserConfig(username);
-      LOG.info("Got user config: " + userConfig);
+      log.info("Got user config: {}", userConfig);
       UtilityMethods.mergeMaps(sessionConf, userConfig, false);
       sessionConf.put(LensConfConstants.SESSION_LOGGEDIN_USER, username);
       if (sessionConf.get(LensConfConstants.SESSION_CLUSTER_USER) == null) {
-        LOG.info("Didn't get cluster user from user config loader. Setting same as logged in user: " + username);
+        log.info("Didn't get cluster user from user config loader. Setting same as logged in user: {}", username);
         sessionConf.put(LensConfConstants.SESSION_CLUSTER_USER, username);
       }
       String clusterUser = sessionConf.get(LensConfConstants.SESSION_CLUSTER_USER);
@@ -217,7 +215,7 @@ public abstract class LensService extends CompositeService implements Externaliz
           cliService.getHiveConf());
         provider.Authenticate(userName, password);
       } catch (Exception e) {
-        LOG.error("Auth error: " + e);
+        log.error("Auth error: ", e);
         throw new NotAuthorizedException(e);
       }
     }
@@ -256,7 +254,7 @@ public abstract class LensService extends CompositeService implements Externaliz
     try {
       return ((LensSessionImpl) getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
-      LOG.warn("Session " + sessionHandle.getPublicId() + " not found", exc);
+      log.warn("Session {} not found", sessionHandle.getPublicId(), exc);
       // throw resource gone exception (410)
       throw new ClientErrorException("Session " + sessionHandle.getPublicId() + " is invalid " + sessionHandle, 410);
     }
@@ -269,7 +267,7 @@ public abstract class LensService extends CompositeService implements Externaliz
    */
   public void acquire(LensSessionHandle sessionHandle) {
     if (sessionHandle != null) {
-      LOG.debug("Acquiring lens session:" + sessionHandle.getPublicId());
+      log.debug("Acquiring lens session:{}", sessionHandle.getPublicId());
       getSession(sessionHandle).acquire();
     }
   }
@@ -297,7 +295,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   public void release(LensSessionHandle sessionHandle) {
     if (sessionHandle != null) {
       getSession(sessionHandle).release();
-      LOG.debug("Released lens session:" + sessionHandle.getPublicId());
+      log.debug("Released lens session:{}", sessionHandle.getPublicId());
     }
   }
 

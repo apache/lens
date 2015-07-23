@@ -49,7 +49,6 @@ import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
-import org.apache.log4j.BasicConfigurator;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.*;
@@ -73,7 +72,6 @@ public class TestMetastoreService extends LensJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    BasicConfigurator.configure();
     cubeObjectFactory = new ObjectFactory();
     metastoreService = (CubeMetastoreServiceImpl) LensServices.get().getService("metastore");
     lensSessionId = metastoreService.openSession("foo", "bar", new HashMap<String, String>());

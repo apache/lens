@@ -29,8 +29,6 @@ import org.apache.lens.server.api.user.UserConfigLoader;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.hsqldb.server.Server;
@@ -49,7 +47,6 @@ import liquibase.resource.FileSystemResourceAccessor;
  */
 @Test(groups = "unit-test")
 public class TestUserConfigLoader {
-  public static final Log LOG = LogFactory.getLog(TestUserConfigLoader.class);
 
   /** The conf. */
   private HiveConf conf;
