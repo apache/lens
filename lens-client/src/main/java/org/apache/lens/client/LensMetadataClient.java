@@ -36,7 +36,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.DateTime;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.metastore.*;
