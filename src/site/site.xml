@@ -31,7 +31,7 @@
 		<href>http://lens.incubator.apache.org</href>
         <height>54px</height>
   </bannerLeft>
-	
+
     <bannerRight>
         <name>Apache Incubator</name>
         <src>/images/apache-incubator-logo.png</src>
@@ -44,6 +44,8 @@
       <item name="Getting Started" href="./lenshome/quick-start.html" />
       <item name="Installing and Running Lens" href="./lenshome/install-and-run.html" />
       <item name="Pseudo Distributed Setup" href="./lenshome/pseudo-distributed-setup.html" />
+      <item name="20 Minute Video demo" target="_new"
+        href="http://cwiki.apache.org/confluence/display/LENS/2015/07/13/20+Minute+video+demo+of+Apache+Lens+through+examples" />
     </menu>
       <menu name="Releases" >
       <item name="Download" href="./releases/download.html" />
