@@ -42,12 +42,13 @@ import org.apache.thrift.TException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import lombok.extern.apachecommons.CommonsLog;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Wrapper class around Hive metastore to do cube metastore operations.
  */
-@CommonsLog
+@Slf4j
 public class CubeMetastoreClient {
   private final HiveConf config;
   private final boolean enableCaching;
@@ -299,7 +300,7 @@ public class CubeMetastoreClient {
             }
           }
         }
-        log.info("timeline for " + storageTableName + " is: " + get(storageTableName));
+        log.info("timeline for {} is: {}", storageTableName, get(storageTableName));
       }
       // return the final value from memory
       return get(storageTableName);
@@ -311,7 +312,7 @@ public class CubeMetastoreClient {
       // First make sure all combinations of update period and partition column have an entry even
       // if no partitions exist
       String storageTableName = MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storage));
-      log.info("loading from all partitions: " + storageTableName);
+      log.info("loading from all partitions: {}", storageTableName);
       Table storageTable = getTable(storageTableName);
       if (getCubeFact(fact).getUpdatePeriods() != null && getCubeFact(fact).getUpdatePeriods().get(
         storage) != null) {
@@ -328,8 +329,8 @@ public class CubeMetastoreClient {
         UpdatePeriod period = deduceUpdatePeriod(partition);
         List<String> values = partition.getValues();
         if (values.contains(StorageConstants.LATEST_PARTITION_VALUE)) {
-          log.info("dropping latest partition from fact storage table: " + storageTableName
-            + ". Spec: " + partition.getSpec());
+          log.info("dropping latest partition from fact storage table: {}. Spec: {}", storageTableName,
+            partition.getSpec());
           getClient().dropPartition(storageTableName, values, false);
           continue;
         }
@@ -347,7 +348,7 @@ public class CubeMetastoreClient {
     private void loadTimelinesFromTableProperties(String fact, String storage) throws HiveException, LensException {
       // found in table properties, load from there.
       String storageTableName = MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storage));
-      log.info("loading from table properties: " + storageTableName);
+      log.info("loading from table properties: {}", storageTableName);
       for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
         for (String partCol : getTimePartColNamesOfTable(storageTableName)) {
           ensureEntry(storageTableName, updatePeriod, partCol).init(getTable(storageTableName));
@@ -371,7 +372,7 @@ public class CubeMetastoreClient {
           partition));
       } catch (LensException e) {
         // to take care of the case where partition name is something like `latest`
-        log.error("Couldn't parse partition: " + partition + " with update period: " + updatePeriod + ", skipping.", e);
+        log.error("Couldn't parse partition: {} with update period: {}, skipping.", partition, updatePeriod, e);
       }
     }
 

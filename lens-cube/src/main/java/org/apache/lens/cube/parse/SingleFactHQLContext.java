@@ -23,8 +23,6 @@ import java.util.Map;
 import org.apache.lens.cube.metadata.Dimension;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -36,8 +34,6 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
  * Updates from string with join clause expanded
  */
 class SingleFactHQLContext extends DimOnlyHQLContext {
-
-  public static final Log LOG = LogFactory.getLog(SingleFactHQLContext.class.getName());
 
   private final CandidateFact fact;
   private String storageAlias;

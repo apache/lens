@@ -30,8 +30,6 @@ import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -51,7 +49,6 @@ import lombok.Getter;
  * Holds context of a candidate fact table.
  */
 public class CandidateFact implements CandidateTable {
-  public static final Log LOG = LogFactory.getLog(CandidateFact.class.getName());
   final CubeFactTable fact;
   @Getter
   private Set<String> storageTables;

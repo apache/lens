@@ -31,9 +31,10 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import lombok.Data;
 import lombok.NonNull;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Represents the in-memory data structure that represents timeline of all existing partitions for a given storage
@@ -43,7 +44,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * @see org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline
  */
 @Data
-@CommonsLog
+@Slf4j
 public abstract class PartitionTimeline implements Iterable<TimePartition> {
   private final String storageTableName;
   private final UpdatePeriod updatePeriod;
@@ -87,10 +88,10 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
         props.put(entry.getKey().substring(prefix.length()), entry.getValue());
       }
     }
-    log.info("initializing timeline from table properties: "
-      + getStorageTableName() + ", " + getUpdatePeriod() + ", " + getPartCol());
+    log.info("initializing timeline from table properties: {},{},{}",
+      getStorageTableName(), getUpdatePeriod(), getPartCol());
     initFromProperties(props);
-    log.info("initialized to: " + this);
+    log.info("initialized to: {}", this);
   }
 
   /**
@@ -115,11 +116,11 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
     if (getAll() == null) {
       return true;
     }
-    log.info("initializing timeline from batch addition: "
-      + getStorageTableName() + ", " + getUpdatePeriod() + ", " + getPartCol());
+    log.info("initializing timeline from batch addition: {},{},{}",
+      getStorageTableName(), getUpdatePeriod(), getPartCol());
     boolean result = add(getAll());
     all = null;
-    log.info("initialized to: " + this);
+    log.info("initialized to: {}", this);
     return result;
   }
 

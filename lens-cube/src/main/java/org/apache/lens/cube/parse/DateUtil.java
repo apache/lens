@@ -35,17 +35,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.log4j.Logger;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class DateUtil {
   private DateUtil() {
 
   }
-
-  public static final Logger LOG = Logger.getLogger(DateUtil.class);
 
   /*
    * NOW -> new java.util.Date() NOW-7DAY -> a date one week earlier NOW (+-)
@@ -143,7 +142,7 @@ public final class DateUtil {
     try {
       return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
     } catch (ParseException e) {
-      LOG.error("Invalid date format. expected only " + ABSDATE_FMT + " date provided:" + str, e);
+      log.error("Invalid date format. expected only {} date provided:{}", ABSDATE_FMT, str, e);
       throw new SemanticException(e, ErrorMsg.WRONG_TIME_RANGE_FORMAT, ABSDATE_FMT, str);
     }
   }

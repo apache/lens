@@ -40,8 +40,6 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipUpdatePeriodCode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -50,12 +48,14 @@ import org.apache.hadoop.util.ReflectionUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Resolve storages and partitions of all candidate tables and prunes candidate tables with missing storages or
  * partitions.
  */
+@Slf4j
 class StorageTableResolver implements ContextRewriter {
-  public static final Log LOG = LogFactory.getLog(StorageTableResolver.class.getName());
 
   private final Configuration conf;
   private final List<String> supportedStorages;
@@ -185,7 +185,7 @@ class StorageTableResolver implements ContextRewriter {
           if (isStorageSupported(storage)) {
             String tableName = getFactOrDimtableStorageTableName(dimtable.getName(), storage).toLowerCase();
             if (validDimTables != null && !validDimTables.contains(tableName)) {
-              LOG.info("Not considering dim storage table:" + tableName + " as it is not a valid dim storage");
+              log.info("Not considering dim storage table:{} as it is not a valid dim storage", tableName);
               skipStorageCauses.put(tableName, new SkipStorageCause(SkipStorageCode.INVALID));
               continue;
             }
@@ -194,9 +194,9 @@ class StorageTableResolver implements ContextRewriter {
               // check if partition exists
               foundPart = client.dimTableLatestPartitionExists(tableName);
               if (foundPart) {
-                LOG.info("Adding existing partition" + StorageConstants.LATEST_PARTITION_VALUE);
+                log.info("Adding existing partition {}", StorageConstants.LATEST_PARTITION_VALUE);
               } else {
-                LOG.info("Partition " + StorageConstants.LATEST_PARTITION_VALUE + " does not exist on " + tableName);
+                log.info("Partition {} does not exist on {}", StorageConstants.LATEST_PARTITION_VALUE, tableName);
               }
               if (!failOnPartialData || foundPart) {
                 storageTables.add(tableName);
@@ -205,7 +205,7 @@ class StorageTableResolver implements ContextRewriter {
                     StorageConstants.getPartitionsForLatest());
                 whereClauses.put(tableName, whereClause);
               } else {
-                LOG.info("Not considering dim storage table:" + tableName + " as no dim partitions exist");
+                log.info("Not considering dim storage table:{} as no dim partitions exist", tableName);
                 skipStorageCauses.put(tableName, new SkipStorageCause(SkipStorageCode.NO_PARTITIONS));
               }
             } else {
@@ -213,7 +213,7 @@ class StorageTableResolver implements ContextRewriter {
               foundPart = true;
             }
           } else {
-            LOG.info("Storage:" + storage + " is not supported");
+            log.info("Storage:{} is not supported", storage);
             skipStorageCauses.put(storage, new SkipStorageCause(SkipStorageCode.UNSUPPORTED));
           }
         }
@@ -221,7 +221,7 @@ class StorageTableResolver implements ContextRewriter {
           addNonExistingParts(dim.getName(), StorageConstants.getPartitionsForLatest());
         }
         if (storageTables.isEmpty()) {
-          LOG.info("Not considering dim table:" + dimtable + " as no candidate storage tables eixst");
+          log.info("Not considering dim table:{} as no candidate storage tables eixst", dimtable);
           cubeql.addDimPruningMsgs(dim, dimtable, noCandidateStorages(skipStorageCauses));
           i.remove();
           continue;
@@ -254,7 +254,7 @@ class StorageTableResolver implements ContextRewriter {
         String storage = entry.getKey();
         // skip storages that are not supported
         if (!isStorageSupported(storage)) {
-          LOG.info("Skipping storage: " + storage + " as it is not supported");
+          log.info("Skipping storage: {} as it is not supported", storage);
           skipStorageCauses.put(storage, new SkipStorageCause(SkipStorageCode.UNSUPPORTED));
           continue;
         }
@@ -271,12 +271,12 @@ class StorageTableResolver implements ContextRewriter {
         Map<String, SkipUpdatePeriodCode> skipUpdatePeriodCauses = new HashMap<String, SkipUpdatePeriodCode>();
         for (UpdatePeriod updatePeriod : entry.getValue()) {
           if (maxInterval != null && updatePeriod.compareTo(maxInterval) > 0) {
-            LOG.info("Skipping update period " + updatePeriod + " for fact" + fact);
+            log.info("Skipping update period {} for fact {}", updatePeriod, fact);
             skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.QUERY_INTERVAL_BIGGER);
             continue;
           }
           if (validUpdatePeriods != null && !validUpdatePeriods.contains(updatePeriod.name().toLowerCase())) {
-            LOG.info("Skipping update period " + updatePeriod + " for fact" + fact + " for storage" + storage);
+            log.info("Skipping update period {} for fact {} for storage {}", updatePeriod, fact, storage);
             skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.INVALID);
             continue;
           }
@@ -286,7 +286,7 @@ class StorageTableResolver implements ContextRewriter {
             storageTableMap.put(updatePeriod, storageTables);
           }
           isStorageAdded = true;
-          LOG.info("Adding storage table:" + table + " for fact:" + fact + " for update period" + updatePeriod);
+          log.info("Adding storage table:{} for fact:{} for update period {}", table, fact, updatePeriod);
           storageTables.add(table);
         }
         if (!isStorageAdded) {
@@ -294,7 +294,7 @@ class StorageTableResolver implements ContextRewriter {
         }
       }
       if (storageTableMap.isEmpty()) {
-        LOG.info("Not considering fact table:" + fact + " as it does not" + " have any storage tables");
+        log.info("Not considering fact table:{} as it does not have any storage tables", fact);
         cubeql.addFactPruningMsgs(fact, noCandidateStorages(skipStorageCauses));
         i.remove();
       }
@@ -310,7 +310,7 @@ class StorageTableResolver implements ContextRewriter {
   String getStorageTableName(CubeFactTable fact, String storage, List<String> validFactStorageTables) {
     String tableName = getFactOrDimtableStorageTableName(fact.getName(), storage).toLowerCase();
     if (validFactStorageTables != null && !validFactStorageTables.contains(tableName)) {
-      LOG.info("Skipping storage table " + tableName + " as it is not valid");
+      log.info("Skipping storage table {} as it is not valid", tableName);
       return null;
     }
     return tableName;
@@ -386,7 +386,7 @@ class StorageTableResolver implements ContextRewriter {
             break;
           }
           TimeRange fallBackRange = getFallbackRange(prevRange, cfact, cubeql);
-          LOG.info("No partitions for range:" + range + ". fallback range: " + fallBackRange);
+          log.info("No partitions for range:{}. fallback range: {}", range, fallBackRange);
           if (fallBackRange == null) {
             break;
           }
@@ -402,7 +402,7 @@ class StorageTableResolver implements ContextRewriter {
         }
         whereClauseForFallback.put(range, extraWhereClause.toString());
         if (rangeParts.isEmpty()) {
-          LOG.info("No partitions for fallback range:" + range);
+          log.info("No partitions for fallback range:{}", range);
           noPartsForRange = true;
           continue;
         }
@@ -428,8 +428,8 @@ class StorageTableResolver implements ContextRewriter {
         cfact.getRangeToWhereClause().put(range, joinWithAnd(rangeWhereClause, extraWhereClause.toString()));
       }
       if (!unsupportedTimeDims.isEmpty()) {
-        LOG.info("Not considering fact table:" + cfact.fact + " as it doesn't support time dimensions: "
-          + unsupportedTimeDims);
+        log.info("Not considering fact table:{} as it doesn't support time dimensions: {}", cfact.fact,
+          unsupportedTimeDims);
         cubeql.addFactPruningMsgs(cfact.fact, timeDimNotSupported(unsupportedTimeDims));
         i.remove();
         continue;
@@ -439,8 +439,8 @@ class StorageTableResolver implements ContextRewriter {
         addNonExistingParts(cfact.fact.getName(), nonExistingParts);
       }
       if (cfact.getNumQueriedParts() == 0 || (failOnPartialData && (noPartsForRange || !nonExistingParts.isEmpty()))) {
-        LOG.info("Not considering fact table:" + cfact.fact + " as it could" + " not find partition for given ranges: "
-          + cubeql.getTimeRanges());
+        log.info("Not considering fact table:{} as it could not find partition for given ranges: {}", cfact.fact,
+          cubeql.getTimeRanges());
         /*
          * This fact is getting discarded because of any of following reasons:
          * 1. Has missing partitions
@@ -464,7 +464,7 @@ class StorageTableResolver implements ContextRewriter {
       Map<String, Set<FactPartition>> minimalStorageTables = new LinkedHashMap<String, Set<FactPartition>>();
       StorageUtil.getMinimalAnsweringTables(answeringParts, minimalStorageTables);
       if (minimalStorageTables.isEmpty()) {
-        LOG.info("Not considering fact table:" + cfact + " as it does not" + " have any storage tables");
+        log.info("Not considering fact table:{} as it does not have any storage tables", cfact);
         cubeql.addFactPruningMsgs(cfact.fact, noCandidateStorages(skipStorageCauses));
         i.remove();
         continue;
@@ -494,7 +494,7 @@ class StorageTableResolver implements ContextRewriter {
         }
         cfact.getRangeToStorageWhereMap().put(trange, rangeToWhere);
       }
-      LOG.info("Resolved partitions for fact " + cfact + ": " + answeringParts + " storageTables:" + storageTables);
+      log.info("Resolved partitions for fact {}: {} storageTables:{}", cfact, answeringParts, storageTables);
     }
   }
 
@@ -533,16 +533,16 @@ class StorageTableResolver implements ContextRewriter {
     boolean addNonExistingParts, Map<String, SkipStorageCause> skipStorageCauses,
     PartitionRangesForPartitionColumns missingPartitions)
     throws Exception {
-    LOG.info("getPartitions for " + fact + " from fromDate:" + fromDate + " toDate:" + toDate);
+    log.info("getPartitions for {} from fromDate:{} toDate:{}", fact, fromDate, toDate);
     if (fromDate.equals(toDate) || fromDate.after(toDate)) {
       return true;
     }
     UpdatePeriod interval = CubeFactTable.maxIntervalInRange(fromDate, toDate, updatePeriods);
     if (interval == null) {
-      LOG.info("No max interval for range:" + fromDate + " to " + toDate);
+      log.info("No max interval for range: {} to {}", fromDate, toDate);
       return false;
     }
-    LOG.info("Max interval for " + fact + " is:" + interval);
+    log.info("Max interval for {} is: {}", fact, interval);
     Set<String> storageTbls = new LinkedHashSet<String>();
     storageTbls.addAll(validStorageMap.get(fact).get(interval));
 
@@ -550,7 +550,7 @@ class StorageTableResolver implements ContextRewriter {
     while (it.hasNext()) {
       String storageTableName = it.next();
       if (!client.partColExists(storageTableName, partCol)) {
-        LOG.info(partCol + " does not exist in" + storageTableName);
+        log.info("{} does not exist in {}", partCol, storageTableName);
         skipStorageCauses.put(storageTableName, SkipStorageCause.partColDoesNotExist(partCol));
         it.remove();
         continue;
@@ -573,24 +573,24 @@ class StorageTableResolver implements ContextRewriter {
       Date dt = iter.next();
       Date nextDt = iter.peekNext();
       FactPartition part = new FactPartition(partCol, dt, interval, null, partWhereClauseFormat);
-      LOG.info("candidate storage tables for searching partitions: " + storageTbls);
+      log.info("candidate storage tables for searching partitions: {}", storageTbls);
       updateFactPartitionStorageTablesFrom(fact, part, storageTbls);
-      LOG.info("Storage tables containing Partition " + part + " are: " + part.getStorageTables());
+      log.info("Storage tables containing Partition {} are: {}", part, part.getStorageTables());
       if (part.isFound()) {
-        LOG.info("Adding existing partition" + part);
+        log.info("Adding existing partition {}", part);
         partitions.add(part);
-        LOG.info("Looking for look ahead process time partitions for " + part);
+        log.info("Looking for look ahead process time partitions for {}", part);
         if (processTimePartCol == null) {
-          LOG.info("processTimePartCol is null");
+          log.info("processTimePartCol is null");
         } else if (partCol.equals(processTimePartCol)) {
-          LOG.info("part column is process time col");
+          log.info("part column is process time col");
         } else if (updatePeriods.first().equals(interval)) {
-          LOG.info("Update period is the least update period");
+          log.info("Update period is the least update period");
         } else if ((iter.getNumIters() - iter.getCounter()) > lookAheadNumParts) {
           // see if this is the part of the last-n look ahead partitions
-          LOG.info("Not a look ahead partition");
+          log.info("Not a look ahead partition");
         } else {
-          LOG.info("Looking for look ahead process time partitions for " + part);
+          log.info("Looking for look ahead process time partitions for {}", part);
           // check if finer partitions are required
           // final partitions are required if no partitions from
           // look-ahead
@@ -605,32 +605,32 @@ class StorageTableResolver implements ContextRewriter {
             updateFactPartitionStorageTablesFrom(fact, processTimePartition,
               part.getStorageTables());
             if (processTimePartition.isFound()) {
-              LOG.info("Finer parts not required for look-ahead partition :" + part);
+              log.info("Finer parts not required for look-ahead partition :{}", part);
             } else {
-              LOG.info("Looked ahead process time partition " + processTimePartition + " is not found");
+              log.info("Looked ahead process time partition {} is not found", processTimePartition);
               TreeSet<UpdatePeriod> newset = new TreeSet<UpdatePeriod>();
               newset.addAll(updatePeriods);
               newset.remove(interval);
-              LOG.info("newset of update periods:" + newset);
+              log.info("newset of update periods:{}", newset);
               if (!newset.isEmpty()) {
                 // Get partitions for look ahead process time
-                LOG.info("Looking for process time partitions between " + pdt + " and " + nextPdt);
+                log.info("Looking for process time partitions between {} and {}", pdt, nextPdt);
                 Set<FactPartition> processTimeParts =
                   getPartitions(fact, TimeRange.getBuilder().fromDate(pdt).toDate(nextPdt).partitionColumn(
                     processTimePartCol).build(), newset, false, skipStorageCauses, missingPartitions);
-                LOG.info("Look ahead partitions: " + processTimeParts);
+                log.info("Look ahead partitions: {}", processTimeParts);
                 TimeRange timeRange = TimeRange.getBuilder().fromDate(dt).toDate(nextDt).build();
                 for (FactPartition pPart : processTimeParts) {
-                  LOG.info("Looking for finer partitions in pPart: " + pPart);
+                  log.info("Looking for finer partitions in pPart: {}", pPart);
                   for (Date date : timeRange.iterable(pPart.getPeriod(), 1)) {
                     partitions.add(new FactPartition(partCol, date, pPart.getPeriod(), pPart,
                       partWhereClauseFormat));
                   }
-                  LOG.info("added all sub partitions blindly in pPart: " + pPart);
+                  log.info("added all sub partitions blindly in pPart: {}", pPart);
                   //                          if (!getPartitions(fact, dt, cal.getTime(), partCol, pPart, partitions,
                   // newset, false,
                   //                            skipStorageCauses, nonExistingParts)) {
-                  //                            LOG.info("No partitions found in look ahead range");
+                  //                            log.info("No partitions found in look ahead range");
                   //                          }
                 }
               }
@@ -638,14 +638,14 @@ class StorageTableResolver implements ContextRewriter {
           }
         }
       } else {
-        LOG.info("Partition:" + part + " does not exist in any storage table");
+        log.info("Partition:{} does not exist in any storage table", part);
         TreeSet<UpdatePeriod> newset = new TreeSet<UpdatePeriod>();
         newset.addAll(updatePeriods);
         newset.remove(interval);
         if (!getPartitions(fact, dt, nextDt, partCol, partitions, newset, false, skipStorageCauses,
           missingPartitions)) {
 
-          LOG.info("Adding non existing partition" + part);
+          log.info("Adding non existing partition {}", part);
           if (addNonExistingParts) {
             // Add non existing partitions for all cases of whether we populate all non existing or not.
             missingPartitions.add(part);
@@ -655,11 +655,11 @@ class StorageTableResolver implements ContextRewriter {
               part.getStorageTables().addAll(storageTbls);
             }
           } else {
-            LOG.info("No finer granual partitions exist for" + part);
+            log.info("No finer granual partitions exist for {}", part);
             return false;
           }
         } else {
-          LOG.info("Finer granual partitions added for " + part);
+          log.info("Finer granual partitions added for {}", part);
         }
       }
     }

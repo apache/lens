@@ -28,8 +28,6 @@ import org.apache.lens.cube.metadata.CubeMeasure;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -39,15 +37,16 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * <p> Replace select and having columns with default aggregate functions on them, if default aggregate is defined and
  * if there isn't already an aggregate function specified on the columns. </p> <p/> <p> Expressions which already
  * contain aggregate sub-expressions will not be changed. </p> <p/> <p> At this point it's assumed that aliases have
  * been added to all columns. </p>
  */
+@Slf4j
 class AggregateResolver implements ContextRewriter {
-  public static final Log LOG = LogFactory.getLog(AggregateResolver.class.getName());
-
   public AggregateResolver(Configuration conf) {
   }
 
@@ -82,7 +81,7 @@ class AggregateResolver implements ContextRewriter {
         }
       }
       nonDefaultAggregates = true;
-      LOG.info("Query has non default aggregates, no aggregate resolution will be done");
+      log.info("Query has non default aggregates, no aggregate resolution will be done");
     }
 
     cubeql.pruneCandidateFactSet(CandidateTablePruneCode.MISSING_DEFAULT_AGGREGATE);

@@ -27,6 +27,9 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Sets;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public final class CubeDimensionTable extends AbstractCubeTable {
   private String dimName; // dimension name the dimtabe belongs to
   private final Map<String, UpdatePeriod> snapshotDumpPeriods = new HashMap<String, UpdatePeriod>();
@@ -210,7 +213,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     }
 
     if (snapshotDumpPeriods.containsKey(storage)) {
-      LOG.info("Updating dump period for " + storage + " from " + snapshotDumpPeriods.get(storage) + " to " + period);
+      log.info("Updating dump period for {} from {} to {}", storage, snapshotDumpPeriods.get(storage), period);
     }
 
     snapshotDumpPeriods.put(storage, period);

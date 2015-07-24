@@ -23,10 +23,11 @@ import java.util.*;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.log4j.Logger;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public abstract class AbstractCubeTable implements Named {
-  public static final Logger LOG = Logger.getLogger(AbstractCubeTable.class);
   private final String name;
   private final List<FieldSchema> columns;
   private final Map<String, String> properties = new HashMap<String, String>();
@@ -132,8 +133,8 @@ public abstract class AbstractCubeTable implements Named {
       i++;
     }
     if (alterPos != -1) {
-      LOG.info("In " + getName() + " replacing column " + toReplace.getName() + ":" + toReplace.getType() + " to "
-        + column.getName() + ":" + column.getType());
+      log.info("In {} replacing column {}:{} to {}:{}", getName(), toReplace.getName(), toReplace.getType(),
+        column.getName(), column.getType());
       columns.add(alterPos, column);
     } else {
       columns.add(column);

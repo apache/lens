@@ -33,8 +33,6 @@ import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
@@ -49,18 +47,17 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import lombok.AllArgsConstructor;
-
 import lombok.Data;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CubeQueryContext implements TrackQueriedColumns {
   public static final String TIME_RANGE_FUNC = "time_range_in";
   public static final String NOW = "now";
   public static final String DEFAULT_TABLE = "_default_";
-  public static final Log LOG = LogFactory.getLog(CubeQueryContext.class.getName());
   private final ASTNode ast;
   @Getter
   private final QB qb;
@@ -225,7 +222,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       // try adding them as joinchains
       boolean added = addJoinChain(alias, false);
       if (!added) {
-        LOG.info("Queried tables do not exist. Missing table:" + alias);
+        log.info("Queried tables do not exist. Missing table:{}", alias);
         throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
       }
     }
@@ -260,10 +257,10 @@ public class CubeQueryContext implements TrackQueriedColumns {
       String destTable = joinchain.getDestTable();
       boolean added = addQueriedTable(alias, destTable, isOptional, true);
       if (!added) {
-        LOG.info("Queried tables do not exist. Missing tables:" + destTable);
+        log.info("Queried tables do not exist. Missing tables:{}", destTable);
         throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
       }
-      LOG.info("Added join chain for " + destTable);
+      log.info("Added join chain for {}", destTable);
       return true;
     }
 
@@ -444,8 +441,8 @@ public class CubeQueryContext implements TrackQueriedColumns {
       if (!optDim.isRequiredInJoinChain) {
         optDim.isRequiredInJoinChain = isRequiredInJoin;
       }
-      LOG.info("Adding optional dimension:" + dim + " optDim:" + optDim
-        + (cubeCol == null ? "" : " for column:" + cubeCol + " isRef:" + isRef));
+      log.info("Adding optional dimension:{} optDim:{} {} isRef:{}", dim , optDim,
+        (cubeCol == null ? "" : " for column:" + cubeCol),  isRef);
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
@@ -581,7 +578,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       builder.append("\n Destination:");
       builder.append("\n\t dest expr:" + qb.getParseInfo().getDestForClause(clause).dump());
     }
-    LOG.info(builder.toString());
+    log.info(builder.toString());
   }
 
   void printJoinTree(QBJoinTree joinTree, StringBuilder builder) {
@@ -777,8 +774,8 @@ public class CubeQueryContext implements TrackQueriedColumns {
       for (Dimension dim : dimensions) {
         if (candidateDims.get(dim) != null && candidateDims.get(dim).size() > 0) {
           CandidateDim cdim = candidateDims.get(dim).iterator().next();
-          LOG.info("Available candidate dims are:" + candidateDims.get(dim) + ", picking up " + cdim.dimtable
-            + " for querying");
+          log.info("Available candidate dims are:{}, picking up {} for querying.", candidateDims.get(dim),
+            cdim.dimtable);
           dimsToQuery.put(dim, cdim);
         } else {
           String reason = "";
@@ -814,7 +811,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     if (hasCubeInQuery()) {
       if (candidateFactSets.size() > 0) {
         facts = candidateFactSets.iterator().next();
-        LOG.info("Available candidate facts:" + candidateFactSets + ", picking up " + facts + " for querying");
+        log.info("Available candidate facts:{}, picking up {} for querying", candidateFactSets, facts);
       } else {
         String reason = "";
         if (!factPruningMsgs.isEmpty()) {
@@ -917,7 +914,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       }
       dimsToQuery.putAll(pickCandidateDimsToQuery(joiningTables));
     }
-    LOG.info("Picked Fact:" + cfacts + " dimsToQuery:" + dimsToQuery);
+    log.info("Picked Fact:{} dimsToQuery: {}" + dimsToQuery, cfacts);
     pickedDimTables = dimsToQuery.values();
     pickedFacts = cfacts;
     if (cfacts != null) {
@@ -952,8 +949,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     ParseDriver pd = new ParseDriver();
     ASTNode tree;
     try {
-      LOG.info("HQL:" + hql);
-      System.out.println("Rewritten HQL:" + hql);
+      log.info("HQL:{}", hql);
       tree = pd.parse(hql, ctx);
     } catch (ParseException e) {
       throw new SemanticException(e);
@@ -1195,8 +1191,8 @@ public class CubeQueryContext implements TrackQueriedColumns {
     for (Iterator<Set<CandidateFact>> i = candidateFactSets.iterator(); i.hasNext();) {
       Set<CandidateFact> cfacts = i.next();
       if (!candidateFacts.containsAll(cfacts)) {
-        LOG.info("Not considering fact table set:" + cfacts
-          + " as they have non candidate tables and facts missing because of " + pruneCause);
+        log.info("Not considering fact table set:{} as they have non candidate tables and facts missing because of {}",
+          cfacts, pruneCause);
         i.remove();
       }
     }
@@ -1225,7 +1221,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     for (Iterator<CandidateFact> i = candidateFacts.iterator(); i.hasNext();) {
       CandidateFact cfact = i.next();
       if (!allCoveringFacts.contains(cfact)) {
-        LOG.info("Not considering fact table:" + cfact + " as " + pruneCause);
+        log.info("Not considering fact table:{} as {}", cfact, pruneCause);
         addFactPruningMsgs(cfact.fact, pruneCause);
         i.remove();
       }

@@ -25,6 +25,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Cube extends AbstractBaseTable implements CubeInterface {
   private final Set<CubeMeasure> measures;
   private final Set<CubeDimAttribute> dimensions;
@@ -234,7 +237,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     // Replace measure if already existing
     if (measureMap.containsKey(measure.getName().toLowerCase())) {
       measures.remove(getMeasureByName(measure.getName()));
-      LOG.info("Replacing measure " + getMeasureByName(measure.getName()) + " with " + measure);
+      log.info("Replacing measure {} with {}", getMeasureByName(measure.getName()), measure);
     }
 
     measures.add(measure);
@@ -250,7 +253,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
    */
   public boolean removeJoinChain(String chainName) {
     if (super.removeJoinChain(chainName)) {
-      LOG.info("Removing dimension " + getDimAttributeByName(chainName));
+      log.info("Removing dimension {}", getDimAttributeByName(chainName));
       return true;
     }
     return false;
@@ -270,7 +273,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     // Replace dimension if already existing
     if (dimMap.containsKey(dimension.getName().toLowerCase())) {
       dimensions.remove(getDimAttributeByName(dimension.getName()));
-      LOG.info("Replacing dimension " + getDimAttributeByName(dimension.getName()) + " with " + dimension);
+      log.info("Replacing dimension {} with {}", getDimAttributeByName(dimension.getName()), dimension);
     }
 
     dimensions.add(dimension);
@@ -287,7 +290,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
    */
   public void removeDimension(String dimName) {
     if (dimMap.containsKey(dimName.toLowerCase())) {
-      LOG.info("Removing dimension " + getDimAttributeByName(dimName));
+      log.info("Removing dimension {}", getDimAttributeByName(dimName));
       dimensions.remove(getDimAttributeByName(dimName));
       dimMap.remove(dimName.toLowerCase());
       MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeDimensionListKey(getName()), dimensions);
@@ -301,7 +304,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
    */
   public void removeMeasure(String msrName) {
     if (measureMap.containsKey(msrName.toLowerCase())) {
-      LOG.info("Removing measure " + getMeasureByName(msrName));
+      log.info("Removing measure {}", getMeasureByName(msrName));
       measures.remove(getMeasureByName(msrName));
       measureMap.remove(msrName.toLowerCase());
       MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeMeasureListKey(getName()), measures);
@@ -324,7 +327,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
       timeDims = new LinkedHashSet<String>();
     }
     if (timeDims.contains(timedDimension)) {
-      LOG.info("Timed dimension " + timedDimension + " is" + " already present in cube " + getName());
+      log.info("Timed dimension {} is already present in cube {}", timedDimension, getName());
       return;
     }
 

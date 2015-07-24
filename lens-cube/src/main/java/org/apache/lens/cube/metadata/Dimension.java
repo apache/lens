@@ -27,6 +27,9 @@ import java.util.Set;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Dimension extends AbstractBaseTable {
 
   private final Set<CubeDimAttribute> attributes;
@@ -192,7 +195,7 @@ public class Dimension extends AbstractBaseTable {
     // Replace dimension if already existing
     if (attributeMap.containsKey(attribute.getName().toLowerCase())) {
       attributes.remove(getAttributeByName(attribute.getName()));
-      LOG.info("Replacing attribute " + getAttributeByName(attribute.getName()) + " with " + attribute);
+      log.info("Replacing attribute {} with {}", getAttributeByName(attribute.getName()), attribute);
     }
 
     attributes.add(attribute);
@@ -208,7 +211,7 @@ public class Dimension extends AbstractBaseTable {
    */
   public void removeAttribute(String attrName) {
     if (attributeMap.containsKey(attrName.toLowerCase())) {
-      LOG.info("Removing attribute " + getAttributeByName(attrName));
+      log.info("Removing attribute {}", getAttributeByName(attrName));
       attributes.remove(getAttributeByName(attrName));
       attributeMap.remove(attrName.toLowerCase());
       MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getDimAttributeListKey(getName()), attributes);

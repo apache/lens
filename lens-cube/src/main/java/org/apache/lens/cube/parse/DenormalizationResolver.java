@@ -28,8 +28,6 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCo
 import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -39,6 +37,7 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.antlr.runtime.CommonToken;
 
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class resolves all the reference columns that are queried.
@@ -46,9 +45,8 @@ import lombok.ToString;
  * Keeps track of the context that if any candidate needs to use columns through tables referenced and replaces the
  * columns from referenced tables in all the ASTs
  */
+@Slf4j
 public class DenormalizationResolver implements ContextRewriter {
-
-  private static final Log LOG = LogFactory.getLog(DenormalizationResolver.class);
 
   public DenormalizationResolver(Configuration conf) {
   }
@@ -143,7 +141,7 @@ public class DenormalizationResolver implements ContextRewriter {
             // should not be required here. Join resolution will figure out if
             // there is no path
             // to the source table
-            LOG.info("Adding denormalized column for column:" + col + " for table:" + table);
+            log.info("Adding denormalized column for column:{} for table:{}", col, table);
             Set<ReferencedQueriedColumn> refCols = tableToRefCols.get(table.getName());
             if (refCols == null) {
               refCols = new HashSet<ReferencedQueriedColumn>();
@@ -185,7 +183,7 @@ public class DenormalizationResolver implements ContextRewriter {
       if (pickedReferences.containsKey(col)) {
         for (PickedReference ref : pickedReferences.get(col)) {
           if (ref.srcAlias.equalsIgnoreCase(srcAlias)) {
-            LOG.info("Picked reference for " + col + " ref:" + pickedReferences.get(col));
+            log.info("Picked reference for {} ref:{}", col, pickedReferences.get(col));
             return ref;
           }
         }
@@ -378,7 +376,7 @@ public class DenormalizationResolver implements ContextRewriter {
           if (denormCtx.tableToRefCols.containsKey(cfact.getName())) {
             for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(cfact.getName())) {
               if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
-                LOG.info("Not considering fact table:" + cfact + " as column " + refcol.col + " is not available");
+                log.info("Not considering fact table:{} as column {} is not available", cfact, refcol.col);
                 cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(refcol.col.getName()));
                 i.remove();
               }
@@ -398,7 +396,7 @@ public class DenormalizationResolver implements ContextRewriter {
             if (denormCtx.tableToRefCols.containsKey(cdim.getName())) {
               for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(cdim.getName())) {
                 if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
-                  LOG.info("Not considering dim table:" + cdim + " as column " + refcol.col + " is not available");
+                  log.info("Not considering dim table:{} as column {} is not available", cdim, refcol.col);
                   cubeql.addDimPruningMsgs(dim, cdim.dimtable,
                     CandidateTablePruneCause.columnNotFound(refcol.col.getName()));
                   i.remove();

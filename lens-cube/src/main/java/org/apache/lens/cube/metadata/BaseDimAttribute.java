@@ -27,11 +27,13 @@ import java.util.Map;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 
 import com.google.common.base.Optional;
+
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 
-@CommonsLog @ToString(callSuper=true, includeFieldNames=true)
+@Slf4j
+@ToString(callSuper=true, includeFieldNames=true)
 public class BaseDimAttribute extends CubeDimAttribute {
   @Getter private final String type;
   @Getter private Optional<Long> numOfDistinctValues = Optional.absent();
@@ -87,8 +89,8 @@ public class BaseDimAttribute extends CubeDimAttribute {
       try {
         return Optional.of(Long.parseLong((props.get(MetastoreUtil.getDimNumOfDistinctValuesPropertyKey(name)))));
       } catch (NumberFormatException ne) {
-        log.error("NumberFormat exception while parsing the num of distinct vlaues "
-            + props.get(MetastoreUtil.getDimNumOfDistinctValuesPropertyKey(name)));
+        log.error("NumberFormat exception while parsing the num of distinct vlaues {}",
+            props.get(MetastoreUtil.getDimNumOfDistinctValuesPropertyKey(name)));
       }
     }
     return Optional.absent();

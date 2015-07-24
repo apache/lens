@@ -28,14 +28,14 @@ import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import com.google.common.collect.Sets;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This resolver prunes the candidate tables for following cases
@@ -47,9 +47,9 @@ import com.google.common.collect.Sets;
  * candidate tables 5. Required denormalized fields are not part of refered tables, there by all the candidates which
  * are using denormalized fields.
  */
+@Slf4j
 class CandidateTableResolver implements ContextRewriter {
 
-  private static final Log LOG = LogFactory.getLog(CandidateTableResolver.class.getName());
   private boolean checkForQueriedColumns = true;
 
   public CandidateTableResolver(Configuration conf) {
@@ -58,7 +58,7 @@ class CandidateTableResolver implements ContextRewriter {
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
     if (checkForQueriedColumns) {
-      LOG.debug("Dump queried columns:" + cubeql.getTblAliasToColumns());
+      log.debug("Dump queried columns:{}", cubeql.getTblAliasToColumns());
       populateCandidateTables(cubeql);
       resolveCandidateFactTables(cubeql);
       resolveCandidateDimTables(cubeql);
@@ -68,7 +68,7 @@ class CandidateTableResolver implements ContextRewriter {
     } else {
       // populate optional tables
       for (Dimension dim : cubeql.getOptionalDimensions()) {
-        LOG.info("Populating optional dim:" + dim);
+        log.info("Populating optional dim:{}", dim);
         populateDimTables(dim, cubeql, true);
       }
       if (cubeql.getAutoJoinCtx() != null) {
@@ -99,7 +99,7 @@ class CandidateTableResolver implements ContextRewriter {
           CandidateFact cfact = new CandidateFact(fact, cubeql.getCube());
           cubeql.getCandidateFacts().add(cfact);
         }
-        LOG.info("Populated candidate facts:" + cubeql.getCandidateFacts());
+        log.info("Populated candidate facts: {}", cubeql.getCandidateFacts());
       }
 
       if (cubeql.getDimensions().size() != 0) {
@@ -125,7 +125,7 @@ class CandidateTableResolver implements ContextRewriter {
           throw new SemanticException(ErrorMsg.NO_CANDIDATE_DIM_AVAILABLE, dim.getName(),
             "Dimension tables do not exist");
         } else {
-          LOG.info("Not considering optional dimension " + dim + " as," + " No dimension tables exist");
+          log.info("Not considering optional dimension {}  as, No dimension tables exist", dim);
           removeOptionalDim(cubeql, dim);
         }
       }
@@ -133,7 +133,7 @@ class CandidateTableResolver implements ContextRewriter {
         CandidateDim cdim = new CandidateDim(dimtable, dim);
         candidates.add(cdim);
       }
-      LOG.info("Populated candidate dims:" + cubeql.getCandidateDimTables().get(dim) + " for " + dim);
+      log.info("Populated candidate dims: {} for {}", cubeql.getCandidateDimTables().get(dim), dim);
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
@@ -154,8 +154,8 @@ class CandidateTableResolver implements ContextRewriter {
       while (iter.hasNext()) {
         CandidateTable candidate = iter.next();
         if (!allCandidates.contains(candidate)) {
-          LOG.info("Removing candidate " + candidate + " from requiredForCandidates of " + dim + ", as it is no more"
-            + " candidate");
+          log.info("Removing candidate {} from requiredForCandidates of {}, as it is no more candidate", candidate,
+            dim);
           iter.remove();
           removedCandidates.add(candidate);
         }
@@ -167,7 +167,7 @@ class CandidateTableResolver implements ContextRewriter {
       OptionalDimCtx optdim = optdimEntry.getValue();
       candidatesReachableThroughRefs.addAll(optdim.requiredForCandidates);
       if ((!optdim.colQueried.isEmpty() && optdim.requiredForCandidates.isEmpty()) && !optdim.isRequiredInJoinChain) {
-        LOG.info("Not considering optional dimension " + dim + " as all requiredForCandidates are removed");
+        log.info("Not considering optional dimension {} as all requiredForCandidates are removed", dim);
         tobeRemoved.add(dim);
       }
     }
@@ -181,12 +181,12 @@ class CandidateTableResolver implements ContextRewriter {
     // remove all the depending candidate table as well
     for (CandidateTable candidate : optdim.requiredForCandidates) {
       if (candidate instanceof CandidateFact) {
-        LOG.info("Not considering fact:" + candidate + " as refered table does not have any valid dimtables");
+        log.info("Not considering fact:{} as refered table does not have any valid dimtables", candidate);
         cubeql.getCandidateFacts().remove(candidate);
         cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
           CandidateTablePruneCode.INVALID_DENORM_TABLE));
       } else {
-        LOG.info("Not considering dimtable:" + candidate + " as refered table does not have any valid dimtables");
+        log.info("Not considering dimtable:{} as refered table does not have any valid dimtables", candidate);
         cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
         cubeql.addDimPruningMsgs((Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
           new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE));
@@ -212,7 +212,7 @@ class CandidateTableResolver implements ContextRewriter {
 
         if (validFactTables != null) {
           if (!validFactTables.contains(cfact.getName().toLowerCase())) {
-            LOG.info("Not considering fact table:" + cfact + " as it is" + " not a valid fact");
+            log.info("Not considering fact table:{} as it is not a valid fact", cfact);
             cubeql
               .addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(CandidateTablePruneCode.INVALID));
             i.remove();
@@ -230,7 +230,7 @@ class CandidateTableResolver implements ContextRewriter {
           if (!cfact.getColumns().contains(col.toLowerCase())) {
             // check if it available as reference, if not remove the candidate
             if (!cubeql.getDeNormCtx().addRefUsage(cfact, col, cubeql.getCube().getName())) {
-              LOG.info("Not considering fact table:" + cfact + " as column " + col + " is not available");
+              log.info("Not considering fact table:{} as column {} is not available", cfact, col);
               cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(col));
               toRemove = true;
               break;
@@ -245,8 +245,8 @@ class CandidateTableResolver implements ContextRewriter {
             // check if chain is optional or not
             if (optdim == null || optdim.isRequiredInJoinChain
               || (optdim != null && optdim.requiredForCandidates.contains(cfact))) {
-              LOG.info("Not considering fact table:" + cfact + " as columns " + chain.getSourceColumns()
-                + " are not available");
+              log.info("Not considering fact table:{} as columns {} are not available", cfact,
+                chain.getSourceColumns());
               cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(chain.getSourceColumns()));
               toRemove = true;
               break;
@@ -261,7 +261,7 @@ class CandidateTableResolver implements ContextRewriter {
           cubeql.getExprCtx().updateEvaluables(expr, cfact);
           if (!cubeql.getQueriedExprsWithMeasures().contains(expr) && !cubeql.getExprCtx().isEvaluable(expr, cfact)) {
             // if expression has no measures, prune facts which cannot evaluate expression
-            LOG.info("Not considering fact table:" + cfact + " as expression " + expr + " is not evaluatable");
+            log.info("Not considering fact table:{} as expression {} is not evaluatable", cfact, expr);
             cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.expressionNotEvaluable(expr));
             toRemove = true;
             break;
@@ -273,7 +273,7 @@ class CandidateTableResolver implements ContextRewriter {
         if (!checkForColumnExists(cfact, queriedMsrs)
           && (cubeql.getQueriedExprsWithMeasures().isEmpty()
             || cubeql.getExprCtx().allNotEvaluable(cubeql.getQueriedExprsWithMeasures(), cfact))) {
-          LOG.info("Not considering fact table:" + cfact + " as columns " + queriedMsrs + " is not available");
+          log.info("Not considering fact table:{} as columns {} is not available", cfact, queriedMsrs);
           cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(queriedMsrs,
             cubeql.getQueriedExprsWithMeasures()));
           toRemove = true;
@@ -305,7 +305,7 @@ class CandidateTableResolver implements ContextRewriter {
         List<CandidateFact> cfacts = new ArrayList<CandidateFact>(cubeql.getCandidateFacts());
         cfactset = findCoveringSets(cubeql, cfacts, queriedMsrs,
           cubeql.getQueriedExprsWithMeasures());
-        LOG.info("Measure covering fact sets :" + cfactset);
+        log.info("Measure covering fact sets :{}", cfactset);
         String msrString = (!queriedMsrs.isEmpty() ? queriedMsrs.toString() : "")
           + (!cubeql.getQueriedExprsWithMeasures().isEmpty() ? cubeql.getQueriedExprsWithMeasures().toString() : "");
         if (cfactset.isEmpty()) {
@@ -353,8 +353,8 @@ class CandidateTableResolver implements ContextRewriter {
               cfactset.add(set);
             }
           } else {
-            LOG.info("Couldnt find any set containing remaining measures:" + remainingMsrs + " " + remainingExprs
-              + " in " + cfactsPassed);
+            log.info("Couldnt find any set containing remaining measures:{} {} in {}", remainingMsrs, remainingExprs,
+              cfactsPassed);
           }
         }
       }
@@ -388,8 +388,8 @@ class CandidateTableResolver implements ContextRewriter {
                 || (optdim != null && optdim.requiredForCandidates.contains(cdim))) {
                 i.remove();
                 removed = true;
-                LOG.info("Not considering dimtable:" + dimtable + " as its columns are"
-                  + " not part of any join paths. Join columns:" + colSet);
+                log.info("Not considering dimtable:{} as its columns are not part of any join paths. Join columns:{}",
+                  dimtable, colSet);
                 cubeql.addDimPruningMsgs(dim, dimtable, CandidateTablePruneCause.noColumnPartOfAJoinPath(colSet));
                 break;
               }
@@ -408,8 +408,8 @@ class CandidateTableResolver implements ContextRewriter {
                   || (optdim != null && optdim.requiredForCandidates.contains(cdim))) {
                   i.remove();
                   removed = true;
-                  LOG.info("Not considering dimtable:" + dimtable + " as its columns are"
-                    + " not part of any join paths. Join columns:" + colSet);
+                  log.info("Not considering dimtable:{} as its columns are not part of any join paths. Join columns:{}",
+                    dimtable, colSet);
                   cubeql.addDimPruningMsgs(dim, dimtable, CandidateTablePruneCause.noColumnPartOfAJoinPath(colSet));
                   break;
                 }
@@ -421,8 +421,8 @@ class CandidateTableResolver implements ContextRewriter {
             if (cubeql.getOptionalDimensionMap().get(dim) != null
               && !checkForColumnExists(cdim, cubeql.getOptionalDimensionMap().get(dim).colQueried)) {
               i.remove();
-              LOG.info("Not considering optional dimtable:" + dimtable + " as its denorm fields do not exist."
-                + " Denorm fields:" + cubeql.getOptionalDimensionMap().get(dim).colQueried);
+              log.info("Not considering optional dimtable:{} as its denorm fields do not exist. Denorm fields:{}",
+                dimtable, cubeql.getOptionalDimensionMap().get(dim).colQueried);
               cubeql.addDimPruningMsgs(dim, dimtable,
                 CandidateTablePruneCause.noColumnPartOfAJoinPath(cubeql.getOptionalDimensionMap().get(dim).colQueried));
             }
@@ -436,9 +436,8 @@ class CandidateTableResolver implements ContextRewriter {
               .getAllJoinPathColumnsOfTable(dim).toString());
           } else {
             // remove it from optional tables
-            LOG.info("Not considering optional dimension " + dim + " as,"
-              + " No dimension table has the queried columns:" + optdim.colQueried
-              + " Clearing the required for candidates:" + optdim.requiredForCandidates);
+            log.info("Not considering optional dimension {} as, No dimension table has the queried columns:{}"
+              + " Clearing the required for candidates:{}", dim, optdim.colQueried, optdim.requiredForCandidates);
             removeOptionalDim(cubeql, dim);
           }
         }
@@ -467,8 +466,8 @@ class CandidateTableResolver implements ContextRewriter {
             if (optdim == null || optdim.isRequiredInJoinChain
               || (optdim != null && optdim.requiredForCandidates.contains(cfact))) {
               i.remove();
-              LOG.info("Not considering fact table:" + fact + " as it does not have columns"
-                + " in any of the join paths. Join columns:" + colSet);
+              log.info("Not considering fact table:{} as it does not have columns in any of the join paths."
+                + " Join columns:{}", fact, colSet);
               cubeql.addFactPruningMsgs(fact, CandidateTablePruneCause.noColumnPartOfAJoinPath(colSet));
               break;
             }
@@ -492,7 +491,7 @@ class CandidateTableResolver implements ContextRewriter {
     if (cubeql.getAutoJoinCtx() == null) {
       Set<Dimension> optionaldims = new HashSet<Dimension>(cubeql.getOptionalDimensions());
       for (Dimension dim : optionaldims) {
-        LOG.info("Not considering optional dimension " + dim + " as," + " automatic join resolver is disbled ");
+        log.info("Not considering optional dimension {} as, automatic join resolver is disbled ", dim);
         removeOptionalDim(cubeql, dim);
       }
       return;
@@ -510,14 +509,13 @@ class CandidateTableResolver implements ContextRewriter {
         CandidateTable candidate = iter.next();
         boolean remove = false;
         if (cubeql.getAutoJoinCtx().getJoinPathFromColumns().get(dim) == null) {
-          LOG.info("Removing candidate " + candidate + " from requiredForCandidates of " + dim + ", as no join paths"
-            + " exist");
+          log.info("Removing candidate {} from requiredForCandidates of {}, as no join paths exist", candidate, dim);
           remove = true;
         } else {
           List<String> colSet = cubeql.getAutoJoinCtx().getJoinPathFromColumns().get(dim).get(candidate.getBaseTable());
           if (!checkForColumnExists(candidate, colSet)) {
-            LOG.info("Removing candidate " + candidate + " from requiredForCandidates of " + dim + ", as columns:"
-              + colSet + " do not exist");
+            log.info("Removing candidate {} from requiredForCandidates of {}, as columns:{} do not exist", candidate,
+              dim, colSet);
             remove = true;
           }
         }
@@ -554,13 +552,13 @@ class CandidateTableResolver implements ContextRewriter {
             if (!candidatesReachableThroughRefs.contains(candidate)) {
               if (candidate instanceof CandidateFact) {
                 if (cubeql.getCandidateFacts().contains(candidate)) {
-                  LOG.info("Not considering fact:" + candidate + " as its required optional dims are not reachable");
+                  log.info("Not considering fact:{} as its required optional dims are not reachable", candidate);
                   cubeql.getCandidateFacts().remove(candidate);
                   cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact,
                     CandidateTablePruneCause.columnNotFound(col));
                 }
               } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
-                LOG.info("Not considering dimtable:" + candidate + " as its required optional dims are not reachable");
+                log.info("Not considering dimtable:{} as its required optional dims are not reachable", candidate);
                 cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
                 cubeql.addDimPruningMsgs((Dimension) candidate.getBaseTable(),
                   (CubeDimensionTable) candidate.getTable(),
@@ -605,13 +603,13 @@ class CandidateTableResolver implements ContextRewriter {
             }
             if (candidate instanceof CandidateFact) {
               if (cubeql.getCandidateFacts().contains(candidate)) {
-                LOG.info("Not considering fact:" + candidate + " as is not reachable through any optional dim");
+                log.info("Not considering fact:{} as is not reachable through any optional dim", candidate);
                 cubeql.getCandidateFacts().remove(candidate);
                 cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact,
                   CandidateTablePruneCause.expressionNotEvaluable(col.getExprCol()));
               }
             } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
-              LOG.info("Not considering dimtable:" + candidate + " as is not reachable through any optional dim");
+              log.info("Not considering dimtable:{} as is not reachable through any optional dim", candidate);
               cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
               cubeql.addDimPruningMsgs((Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
                 CandidateTablePruneCause.expressionNotEvaluable(col.getExprCol()));
@@ -627,7 +625,7 @@ class CandidateTableResolver implements ContextRewriter {
       Dimension dim = optdimEntry.getKey();
       OptionalDimCtx optdim = optdimEntry.getValue();
       if ((!optdim.colQueried.isEmpty() && optdim.requiredForCandidates.isEmpty()) && !optdim.isRequiredInJoinChain) {
-        LOG.info("Not considering optional dimension " + dim + " as all requiredForCandidates are removed");
+        log.info("Not considering optional dimension {} as all requiredForCandidates are removed", dim);
         tobeRemoved.add(dim);
       }
     }
@@ -649,9 +647,9 @@ class CandidateTableResolver implements ContextRewriter {
                 // check if the column is an expression
                 if (cdim.getBaseTable().getExpressionNames().contains(col)) {
                   cubeql.getExprCtx().updateEvaluables(col, cdim);
-                  // check if the expression is evaluatable
+                  // check if the expression is evaluable
                   if (!cubeql.getExprCtx().isEvaluable(col, cdim)) {
-                    LOG.info("Not considering dimtable:" + cdim + " as expression " + col + " is not evaluatable");
+                    log.info("Not considering dimtable: {} as expression {} is not evaluable", cdim, col);
                     cubeql.addDimPruningMsgs(dim, cdim.getTable(), CandidateTablePruneCause.expressionNotEvaluable(
                       col));
                     i.remove();
@@ -660,7 +658,7 @@ class CandidateTableResolver implements ContextRewriter {
                 } else if (!cubeql.getDeNormCtx().addRefUsage(cdim, col, dim.getName())) {
                   // check if it available as reference, if not remove the
                   // candidate
-                  LOG.info("Not considering dimtable:" + cdim + " as column " + col + " is not available");
+                  log.info("Not considering dimtable: {} as column {} is not available", cdim, col);
                   cubeql.addDimPruningMsgs(dim, cdim.getTable(), CandidateTablePruneCause.columnNotFound(col));
                   i.remove();
                   break;
