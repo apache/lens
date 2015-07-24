@@ -23,10 +23,7 @@ import java.io.StringWriter;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -43,6 +40,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class APIResult {
 
+  private static final APIResult SUCCESS = new APIResult(Status.SUCCEEDED, "");
   /**
    * The status.
    */
@@ -116,5 +114,47 @@ public class APIResult {
     } catch (JAXBException e) {
       return e.getMessage();
     }
+  }
+
+  public static APIResult partial(int actual, int expected) {
+    return new APIResult(Status.PARTIAL, actual + " out of " + expected);
+  }
+
+  public static APIResult successOrPartialOrFailure(int actual, int expected) {
+    return successOrPartialOrFailure(actual, expected, null);
+  }
+
+  public static APIResult successOrPartialOrFailure(int actual, int expected, Exception e) {
+    if (actual == 0 && expected != 0) {
+      return failure(e);
+    }
+    if (actual < expected) {
+      return partial(actual, expected);
+    } else {
+      return success();
+    }
+  }
+
+  public static APIResult success() {
+    return SUCCESS;
+  }
+
+  public static APIResult failure(Exception e) {
+    String cause = extractCause(e);
+    return new APIResult(Status.FAILED, cause);
+  }
+
+  public static APIResult partial(Exception e) {
+    String cause = extractCause(e);
+    return new APIResult(Status.PARTIAL, cause);
+  }
+
+  private static String extractCause(Throwable e) {
+    String cause = null;
+    while ((cause == null || cause.isEmpty()) && e != null) {
+      cause = e.getMessage();
+      e = e.getCause();
+    }
+    return cause;
   }
 }
