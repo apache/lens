@@ -727,6 +727,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base="xs:string">
+      <xs:enumeration value="CONTINUOUS"/>
       <xs:enumeration value="SECONDLY"/>
       <xs:enumeration value="MINUTELY"/>
       <xs:enumeration value="HOURLY"/>

@@ -157,6 +157,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         {
           put("summary2,testfact2_raw,summary3",
             Arrays.asList(new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE)));
+          put("testfact_continuous",
+              Arrays.asList(CandidateTablePruneCause.columnNotFound("msr2", "msr3")));
           put("summary4", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(
               new HashMap<String, CandidateTablePruneCause.SkipStorageCause>() {
                 {

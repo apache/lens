@@ -39,7 +39,8 @@ public enum UpdatePeriod implements Named {
   WEEKLY(WEEK_OF_YEAR, 7 * DAILY.weight(), 0.7f, "yyyy-'W'ww"),
   MONTHLY(MONTH, 30 * DAILY.weight(), 0.6f, "yyyy-MM"),
   QUARTERLY(MONTH, 3 * MONTHLY.weight(), 0.55f, "yyyy-MM"),
-  YEARLY(YEAR, 12 * MONTHLY.weight(), 0.52f, "yyyy");
+  YEARLY(YEAR, 12 * MONTHLY.weight(), 0.52f, "yyyy"),
+  CONTINUOUS(Calendar.SECOND, 1, 1.5f, "yyyy-MM-dd-HH-mm-ss");
 
   public static final long MIN_INTERVAL = values()[0].weight();
   private final int calendarField;
@@ -179,6 +180,8 @@ public enum UpdatePeriod implements Named {
 
   public DateFormat format() {
     switch (this) {
+    case CONTINUOUS:
+      return getSecondlyFormat();
     case SECONDLY:
       return getSecondlyFormat();
     case MINUTELY:

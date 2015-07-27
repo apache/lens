@@ -224,6 +224,7 @@ public final class DateUtil {
         break;
       }
     case SECONDLY:
+    case CONTINUOUS:
       if (cal.get(Calendar.MILLISECOND) != 0) {
         hasFraction = true;
       }
@@ -258,6 +259,7 @@ public final class DateUtil {
     case MINUTELY:
       cal.set(Calendar.SECOND, 0);
     case SECONDLY:
+    case CONTINUOUS:
       cal.set(Calendar.MILLISECOND, 0);
       break;
     case WEEKLY:
@@ -381,6 +383,7 @@ public final class DateUtil {
   static CoveringInfo getCoveringInfo(Date from, Date to, UpdatePeriod interval) {
     switch (interval) {
     case SECONDLY:
+    case CONTINUOUS:
       return getMilliSecondCoveringInfo(from, to, 1000);
     case MINUTELY:
       return getMilliSecondCoveringInfo(from, to, 1000 * 60);

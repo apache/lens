@@ -62,8 +62,8 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
       getSemanticExceptionInRewrite("cube select msr2 from " + cubeName + " where " + LAST_YEAR_RANGE,
         getConf());
     PruneCauses.BriefAndDetailedError causes = extractPruneCause(e);
-    assertTrue(causes.getBrief().contains("No facts available for all of these time ranges:"));
-    assertEquals(causes.getDetails().size(), 1);
+    assertTrue(causes.getBrief().contains("Columns [msr2] are not present in any table"));
+    assertEquals(causes.getDetails().size(), 2);
     assertEquals(causes.getDetails().values().iterator().next().size(), 1);
     assertEquals(causes.getDetails().values().iterator().next().iterator().next().getCause(),
       FACT_NOT_AVAILABLE_IN_RANGE);

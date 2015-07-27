@@ -546,6 +546,19 @@ class StorageTableResolver implements ContextRewriter {
     Set<String> storageTbls = new LinkedHashSet<String>();
     storageTbls.addAll(validStorageMap.get(fact).get(interval));
 
+    if (interval == UpdatePeriod.CONTINUOUS && rangeWriter.getClass().equals(BetweenTimeRangeWriter.class)) {
+      for (String storageTbl : storageTbls) {
+        FactPartition part = new FactPartition(partCol, fromDate, interval, null, partWhereClauseFormat);
+        partitions.add(part);
+        part.getStorageTables().add(storageTbl);
+        part = new FactPartition(partCol, toDate, interval, null, partWhereClauseFormat);
+        partitions.add(part);
+        part.getStorageTables().add(storageTbl);
+        log.info("Added continuous fact partition for storage table " + storageTbl);
+      }
+      return true;
+    }
+
     Iterator<String> it = storageTbls.iterator();
     while (it.hasNext()) {
       String storageTableName = it.next();

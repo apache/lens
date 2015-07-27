@@ -24,6 +24,8 @@ import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import static org.testng.Assert.*;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
@@ -56,7 +58,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
   @BeforeTest
   public void setupDriver() throws Exception {
     conf = new Configuration();
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2");
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C0,C1,C2");
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
@@ -73,6 +75,50 @@ public class TestCubeRewriter extends TestQueryRewrite {
     SemanticException e = getSemanticExceptionInRewrite(
       "select SUM(msr2) from testCube where" + " time_range_in(d_time, 'NOW - 2DAYS', 'NOW')", getConf());
     assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+  }
+
+  @Test
+  public void testQueryWithContinuousUpdatePeriod() throws Exception {
+    Configuration conf = getConf();
+    conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS, BetweenTimeRangeWriter.class, TimeRangeWriter.class);
+
+    DateFormat qFmt = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
+    Calendar qCal = Calendar.getInstance();
+    Date toDate = qCal.getTime();
+    String qTo = qFmt.format(toDate);
+    qCal.setTime(TWODAYS_BACK);
+    Date from2DaysBackDate = qCal.getTime();
+    String qFrom = qFmt.format(from2DaysBackDate);
+
+    CubeQueryContext rewrittenQuery = rewriteCtx("select SUM(msr15) from testCube where"
+      + " time_range_in(d_time, '"+ qFrom + "', '" + qTo + "')", conf);
+
+    DateFormat fmt = UpdatePeriod.CONTINUOUS.format();
+    String to = fmt.format(toDate);
+    String from = fmt.format(from2DaysBackDate);
+
+    String expected = "select SUM((testCube.msr15)) from TestQueryRewrite.c0_testFact_CONTINUOUS testcube"
+        + " WHERE ((( testcube . dt ) between  '" + from + "'  and  '" + to + "' ))";
+    System.out.println("rewrittenQuery.toHQL() " + rewrittenQuery.toHQL());
+    System.out.println("expected " + expected);
+    compareQueries(expected, rewrittenQuery.toHQL());
+
+    //test with msr2 on different fact
+    rewrittenQuery = rewriteCtx("select SUM(msr2) from testCube where" + " time_range_in(d_time, '"
+      + qFrom + "', '" + qTo + "')", conf);
+    expected = "select SUM((testCube.msr2)) from TestQueryRewrite.c0_testFact testcube"
+        + " WHERE ((( testcube . dt ) between  '" + from + "'  and  '" + to + "' ))";
+    System.out.println("rewrittenQuery.toHQL() " + rewrittenQuery.toHQL());
+    System.out.println("expected " + expected);
+    compareQueries(expected, rewrittenQuery.toHQL());
+
+    //from date 4 days back
+    qCal.setTime(BEFORE_4_DAYS_START);
+    Date from4DaysBackDate = qCal.getTime();
+    String qFrom4DaysBackDate = qFmt.format(from4DaysBackDate);
+    SemanticException th = getSemanticExceptionInRewrite("select SUM(msr15) from testCube where"
+      + " time_range_in(d_time, '"+ qFrom4DaysBackDate + "', '" + qTo + "')", getConf());
+    assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
   }
 
   @Test
@@ -255,6 +301,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
       System.err.println("__FAILED__ " + method + "\n\tExpected: " + expected + "\n\t---------\n\tActual: " + actual);
     }
+    log.info("expectedTrimmed " + expectedTrimmed);
+    log.info("actualTrimmed " + actualTrimmed);
     assertTrue(expectedTrimmed.equalsIgnoreCase(actualTrimmed));
   }
 
