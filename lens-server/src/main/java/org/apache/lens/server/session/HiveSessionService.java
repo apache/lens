@@ -32,10 +32,11 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.server.LensService;
+import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.session.SessionClosed;
 import org.apache.lens.server.api.session.SessionExpired;
 import org.apache.lens.server.api.session.SessionOpened;
@@ -66,7 +67,8 @@ import lombok.extern.slf4j.Slf4j;
  * The Class HiveSessionService.
  */
 @Slf4j
-public class HiveSessionService extends LensService implements SessionService {
+public class HiveSessionService extends BaseLensService implements SessionService {
+
 
   /** The restorable sessions. */
   private List<LensSessionImpl.LensSessionPersistInfo> restorableSessions;
@@ -102,7 +104,7 @@ public class HiveSessionService extends LensService implements SessionService {
   public int addResourceToAllServices(LensSessionHandle sessionid, String type, String path) {
     int numAdded = 0;
     boolean error = false;
-    for (LensService service : LensServices.get().getLensServices()) {
+    for (BaseLensService service : LensServices.get().getLensServices()) {
       try {
         service.addResource(sessionid, type, path);
         numAdded++;
@@ -448,6 +450,16 @@ public class HiveSessionService extends LensService implements SessionService {
     log.info("Session service pesristed " + SESSION_MAP.size() + " sessions");
   }
 
+  /**
+   * @inheritDoc
+   */
+  @Override
+  public HealthStatus getHealthStatus() {
+    return this.getServiceState().equals(STATE.STARTED)
+        ? new HealthStatus(true, "Hive session service is healthy.")
+        : new HealthStatus(false, "Hive session service is down.");
+  }
+
   /*
    * (non-Javadoc)
    *
@@ -484,7 +496,7 @@ public class HiveSessionService extends LensService implements SessionService {
   private void closeInternal(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
     // Inform query service
-    LensService svc = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
+    BaseLensService svc = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
     if (svc instanceof QueryExecutionServiceImpl) {
       ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
     }

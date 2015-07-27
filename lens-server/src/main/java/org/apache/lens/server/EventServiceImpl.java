@@ -27,6 +27,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.health.HealthStatus;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
@@ -169,6 +170,15 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
   @Override
   public <T extends LensEvent> Collection<LensEventListener> getListeners(Class<T> eventType) {
     return Collections.unmodifiableList(eventListeners.get(eventType));
+  }
+
+  @Override
+  public HealthStatus getHealthStatus() {
+    return (this.getServiceState().equals(STATE.STARTED)
+        && !eventHandlerPool.isShutdown()
+        && !eventHandlerPool.isTerminated())
+        ? new HealthStatus(true, "Event service is healthy.")
+        : new HealthStatus(false, "Event service is unhealthy.");
   }
 
   /*

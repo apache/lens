@@ -28,8 +28,10 @@ import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
-import org.apache.lens.server.LensService;
+import org.apache.lens.server.BaseLensService;
+import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.session.LensSessionImpl;
 
@@ -47,7 +49,7 @@ import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CubeMetastoreServiceImpl extends LensService implements CubeMetastoreService {
+public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMetastoreService {
 
   public CubeMetastoreServiceImpl(CLIService cliService) {
     super(NAME, cliService);
@@ -1470,4 +1472,34 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       release(sessionHandle);
     }
   }
+
+  /**
+   * @inheritDoc
+   */
+  @Override
+  public HealthStatus getHealthStatus() {
+    boolean isHealthy = true;
+    StringBuilder details = new StringBuilder();
+
+    try{
+      /** Try to issue command on hive **/
+      Hive.get(LensServerConf.getHiveConf()).getAllDatabases();
+    } catch (HiveException e) {
+      isHealthy = false;
+      details.append("Could not connect to Hive.");
+      log.error("Could not connect to Hive.", e);
+    }
+
+    /** Check if service is up **/
+    if (!this.getServiceState().equals(STATE.STARTED)) {
+      isHealthy = false;
+      details.append("Cube metastore service is down");
+      log.error("Cube metastore service is down");
+    }
+
+    return isHealthy
+        ? new HealthStatus(isHealthy, "Cube metastore service is healthy.")
+        : new HealthStatus(isHealthy, details.toString());
+  }
+
 }

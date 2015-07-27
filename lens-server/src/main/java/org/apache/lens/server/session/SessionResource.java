@@ -30,7 +30,7 @@ import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
-import org.apache.lens.server.LensService;
+import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
@@ -201,7 +201,7 @@ public class SessionResource {
     int numDeleted = 0;
 
     for(String matchedPath : scannedPaths) {
-      for (LensService service : LensServices.get().getLensServices()) {
+      for (BaseLensService service : LensServices.get().getLensServices()) {
         try {
           if (matchedPath.startsWith("file:") && !matchedPath.startsWith("file://")) {
             matchedPath = "file://" + matchedPath.substring("file:".length());

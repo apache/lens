@@ -34,9 +34,11 @@ import javax.ws.rs.NotFoundException;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.LensService;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
@@ -63,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
  * The Class LensService.
  */
 @Slf4j
-public abstract class LensService extends CompositeService implements Externalizable {
+public abstract class BaseLensService extends CompositeService implements Externalizable, LensService {
 
   /** The cli service. */
   private final CLIService cliService;
@@ -83,7 +85,7 @@ public abstract class LensService extends CompositeService implements Externaliz
    * @param name       the name
    * @param cliService the cli service
    */
-  protected LensService(String name, CLIService cliService) {
+  protected BaseLensService(String name, CLIService cliService) {
     super(name);
     this.cliService = cliService;
   }
@@ -100,7 +102,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   }
 
   public static int getNumberOfSessions() {
-    return LensService.SESSION_MAP.size();
+    return BaseLensService.SESSION_MAP.size();
   }
 
   /**
@@ -420,5 +422,12 @@ public abstract class LensService extends CompositeService implements Externaliz
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
   }
+
+  /**
+   * Returns the health status of the service.
+   *
+   * @return
+   */
+  public abstract HealthStatus getHealthStatus();
 
 }

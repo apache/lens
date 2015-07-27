@@ -237,9 +237,9 @@ User CLI Commands
 *--+--+
 |fact timelines [--fact_name] \<fact_name\> [--storage_name \<storage_name\>] [--update_period \<update_period\>] [--time_dimension \<time_dimension\>]|get timelines for fact. Can optionally specify storage, update period and time dimension to filter by. Instead of time dimension, partition column can be directly passed as <<<time_dimension>>>|
 *--+--+
-|fact update partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>>|
+|fact update partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition of fact <<<fact_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>> The partitions have to exist to be eligible for updation.|
 *--+--+
-|fact update single-partition [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>>|
+|fact update single-partition [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>> The partition has to exist to be eligible for updation.|
 *--+--+
 |show facts [[--cube_name] \<cube_name\>]|display list of fact tables in current database. If optional <<<cube_name>>> is supplied, only facts belonging to cube <<<cube_name>>> will be displayed|
 *--+--+
@@ -278,9 +278,9 @@ User CLI Commands
 *--+--+
 |dimtable list storages [--dimtable_name] \<dimtable_name\>|display list of storage associated to dimtable <<<dimtable_name>>>|
 *--+--+
-|dimtable update partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>>|
+|dimtable update partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>> The partitions have to exist to be eligible for updation.|
 *--+--+
-|dimtable update single-partition [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>>|
+|dimtable update single-partition [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>> The partition has to exist to be eligible for updation.|
 *--+--+
 |drop dimtable [--dimtable_name] \<dimtable_name\> [--cascade \<cascade\>]|drop dimtable <<<dimtable_name>>>.  If <<<cascade>>> is true, all the storage tables associated with the dimtable <<<dimtable_name>>> are also dropped. By default <<<cascade>>> is false|
 *--+--+

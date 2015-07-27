@@ -44,13 +44,14 @@ import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.driver.hive.HiveDriver;
+import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServerConf;
-import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.error.LensMultiCauseException;
 import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.metrics.MetricsService;
@@ -97,7 +98,7 @@ import lombok.extern.slf4j.Slf4j;
  * The Class QueryExecutionServiceImpl.
  */
 @Slf4j
-public class QueryExecutionServiceImpl extends LensService implements QueryExecutionService {
+public class QueryExecutionServiceImpl extends BaseLensService implements QueryExecutionService {
 
   /**
    * The Constant PREPARED_QUERIES_COUNTER.
@@ -2434,6 +2435,58 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       }
       log.info("Persisted " + allQueries.size() + " queries");
     }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  @Override
+  public HealthStatus getHealthStatus() {
+    boolean isHealthy = true;
+    StringBuilder details = new StringBuilder();
+
+    if (!this.getServiceState().equals(STATE.STARTED)) {
+      isHealthy = false;
+      details.append("Query execution service is down.");
+    }
+
+    if (!this.statusPoller.isAlive()) {
+      isHealthy = false;
+      details.append("Status poller thread is dead.");
+    }
+
+    if (!this.prepareQueryPurger.isAlive()) {
+      isHealthy = false;
+      details.append("PrepareQuery purger thread is dead.");
+    }
+
+    if (!this.queryPurger.isAlive()) {
+      isHealthy = false;
+      details.append("Query purger thread is dead.");
+    }
+
+    if (!this.querySubmitter.isAlive()) {
+      isHealthy = false;
+      details.append("Query submitter thread is dead.");
+    }
+
+    if (this.estimatePool.isShutdown() || this.estimatePool.isTerminated()) {
+      isHealthy = false;
+      details.append("Estimate Pool is dead.");
+    }
+
+    if (querySubmitterRunnable.pausedForTest) {
+      isHealthy = false;
+      details.append("QuerySubmitter paused for test.");
+    }
+
+    if (!isHealthy) {
+      log.error(details.toString());
+    }
+
+    return isHealthy
+        ? new HealthStatus(isHealthy, "QueryExecution service is healthy.")
+        : new HealthStatus(isHealthy, details.toString());
   }
 
   /*

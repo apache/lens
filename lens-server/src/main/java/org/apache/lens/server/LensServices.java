@@ -80,7 +80,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
   private final Map<String, Service> services = new LinkedHashMap<String, Service>();
 
   /** The lens services. */
-  private final List<LensService> lensServices = new ArrayList<LensService>();
+  private final List<BaseLensService> lensServices = new ArrayList<BaseLensService>();
 
   /** The persist dir. */
   private Path persistDir;
@@ -209,11 +209,11 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
           Class<?> cls = Class.forName(serviceClassName);
 
-          if (LensService.class.isAssignableFrom(cls)) {
-            Class<? extends LensService> serviceClass = (Class<? extends LensService>) cls;
+          if (BaseLensService.class.isAssignableFrom(cls)) {
+            Class<? extends BaseLensService> serviceClass = (Class<? extends BaseLensService>) cls;
             log.info("Adding {}  service with {}", sName, serviceClass);
             Constructor<?> constructor = serviceClass.getConstructor(CLIService.class);
-            LensService service = (LensService) constructor.newInstance(new Object[]{cliService});
+            BaseLensService service = (BaseLensService) constructor.newInstance(new Object[]{cliService});
             addService(service);
             lensServices.add(service);
           } else if (Service.class.isAssignableFrom(cls)) {
@@ -297,7 +297,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
     if (conf.getBoolean(SERVER_RECOVER_ON_RESTART,
       DEFAULT_SERVER_RECOVER_ON_RESTART)) {
 
-      for (LensService service : lensServices) {
+      for (BaseLensService service : lensServices) {
         ObjectInputStream in = null;
         try {
           try {
@@ -330,7 +330,8 @@ public class LensServices extends CompositeService implements ServiceProvider {
           log.info("Persisting server state in {}", persistDir);
 
           long now = System.currentTimeMillis();
-          for (LensService service : lensServices) {
+
+          for (BaseLensService service : lensServices) {
             log.info("Persisting state of service: {}", service.getName());
             Path serviceWritePath = new Path(persistDir, service.getName() + ".out" + "." + now);
             ObjectOutputStream out = null;
@@ -369,7 +370,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
    * @param service the service
    * @return the service persist path
    */
-  private Path getServicePersistPath(LensService service) {
+  private Path getServicePersistPath(BaseLensService service) {
     return new Path(persistDir, service.getName() + ".final");
   }
 
@@ -382,7 +383,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
     if (getServiceState() != STATE.STOPPED) {
       log.info("Stopping lens server");
       stopping = true;
-      for (LensService service : lensServices) {
+      for (BaseLensService service : lensServices) {
         service.prepareStopping();
       }
 
@@ -434,7 +435,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
     return (T) services.get(sName);
   }
 
-  public List<LensService> getLensServices() {
+  public List<BaseLensService> getLensServices() {
     return lensServices;
   }
 

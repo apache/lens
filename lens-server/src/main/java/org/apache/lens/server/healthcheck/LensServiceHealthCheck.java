@@ -16,40 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.quota;
+package org.apache.lens.server.healthcheck;
 
-import org.apache.lens.server.BaseLensService;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensService;
 import org.apache.lens.server.api.health.HealthStatus;
-import org.apache.lens.server.api.quota.QuotaService;
 
-import org.apache.hive.service.cli.CLIService;
+import com.codahale.metrics.health.HealthCheck;
 
-/**
- * The Class QuotaServiceImpl.
- */
-public class QuotaServiceImpl extends BaseLensService implements QuotaService {
+public class LensServiceHealthCheck extends HealthCheck {
 
-  /**
-   * The constant name for quota service.
-   */
-  public static final String NAME = "quota";
+  private final LensService service;
 
-  /**
-   * Instantiates a new quota service impl.
-   *
-   * @param cliService the cli service
-   */
-  public QuotaServiceImpl(CLIService cliService) {
-    super(NAME, cliService);
+  public LensServiceHealthCheck(String serviceName) {
+    this.service = LensServices.get().getService(serviceName);
   }
 
-  /**
-   * @inheritDoc
-   */
   @Override
-  public HealthStatus getHealthStatus() {
-    return this.getServiceState().equals(STATE.STARTED)
-        ? new HealthStatus(true, "Quota service is healthy.")
-        : new HealthStatus(false, "Quota service is down.");
+  protected Result check() throws Exception {
+    HealthStatus status = service.getHealthStatus();
+
+    if (status.isHealthy()) {
+      return Result.healthy();
+    } else {
+      return Result.unhealthy(status.getDetails());
+    }
   }
 }
