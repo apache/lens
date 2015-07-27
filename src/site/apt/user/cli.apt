@@ -102,6 +102,8 @@ User CLI Commands
 *--+--+
 |remove jar [--path] \<path-to-jar-on-server-side\>|Removes a jar resource from session|
 *--+--+
+|session|Print the current session handle|
+*--+--+
 |set \<key\>=\<value\>|Assign <<<value>>> to session parameter specified with <<<key>>> on lens server|
 *--+--+
 |show params|Fetches and prints all session parameter from lens server|

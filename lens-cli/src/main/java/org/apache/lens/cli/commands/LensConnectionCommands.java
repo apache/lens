@@ -24,8 +24,8 @@ import java.util.List;
 import javax.ws.rs.ProcessingException;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
-
 import org.apache.lens.client.LensClient;
 
 import org.apache.log4j.*;
@@ -36,7 +36,6 @@ import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Joiner;
-
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -158,14 +157,28 @@ public class LensConnectionCommands extends BaseLensCommand {
   }
 
   /**
+   * Get the current session handle
+   */
+  @CliCommand(value = {"session"}, help = "Print the current session handle")
+  public String getSessionHandle() {
+    LensSessionHandle sessionHandle = getClient().getConnection().getSessionHandle();
+    if (sessionHandle != null) {
+      return "Session Handle: " + sessionHandle.getPublicId();
+    } else {
+      return "Session not established";
+    }
+  }
+
+  /**
    * Enables to show all class level logs on cli
    * @param enable
    */
-  @CliCommand(value = {"debug"}, help = "prints all class level logs and verbose logs on cli for debugging purpose."
-          + " 'debug false'  to turn off all class level logging and verbose level logging ")
+  @CliCommand(value = {"debug"},
+    help = "prints all class level logs and verbose logs on cli for debugging purpose."
+      + " 'debug false' to turn off all class level logging and verbose level logging ")
   public void debug(@CliOption(key = {"", "enable"},
-      mandatory = false, unspecifiedDefaultValue = "true",
-      help = "To print all logs on cli for debugging purpose") boolean enable) {
+    mandatory = false, unspecifiedDefaultValue = "true",
+    help = "To print all logs on cli for debugging purpose") boolean enable) {
     Logger logger = LoggerUtil.getRootLogger();
     Logger cliLogger = LoggerUtil.getCliLogger();
     if (enable) {
@@ -181,11 +194,11 @@ public class LensConnectionCommands extends BaseLensCommand {
    * Enables to show only cliLogger(verbose) logs on cli
    * @param enable
    */
-  @CliCommand(value = {"verbose"}, help = "Show cliLogger logs on cli"
-          + "'verbose false'  turns off the cliLogger logs on console")
+  @CliCommand(value = {"verbose"},
+    help = "Show cliLogger logs on cli. 'verbose false'  turns off the cliLogger logs on console")
   public void verbose(@CliOption(key = {"", "enable"},
-      mandatory = false, unspecifiedDefaultValue = "true",
-      help = "Print the clilogger logs on cli") boolean enable) {
+    mandatory = false, unspecifiedDefaultValue = "true",
+    help = "Print the clilogger logs on cli") boolean enable) {
     Logger cliLogger = LoggerUtil.getCliLogger();
     if (enable) {
       LoggerUtil.addConsoleAppenderIfNotPresent(cliLogger);
