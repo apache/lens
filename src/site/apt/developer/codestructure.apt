@@ -1,0 +1,55 @@
+~~
+~~ Licensed to the Apache Software Foundation (ASF) under one
+~~ or more contributor license agreements.  See the NOTICE file
+~~ distributed with this work for additional information
+~~ regarding copyright ownership.  The ASF licenses this file
+~~ to you under the Apache License, Version 2.0 (the
+~~ "License"); you may not use this file except in compliance
+~~ with the License.  You may obtain a copy of the License at
+~~
+~~   http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing,
+~~ software distributed under the License is distributed on an
+~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+~~ KIND, either express or implied.  See the License for the
+~~ specific language governing permissions and limitations
+~~ under the License.
+~~
+
+Lens Code Structure
+
+  Here is some detail on how the Apache Lens modules are structured -
+
+  * <<checkstyle>> - Has checkstyle rules imposed on the project.
+
+  * <<lens-api>> - Lens API. Has API primarily for the clients.
+
+  * <<lens-server-api>> - Lens API mainly for server extensions. This contains API for Service, Driver, LensEvent, QueryRewriter etc.
+
+  * <<lens-cube>> - Cube data model and query rewriting from cube QL to HQL done here.
+
+  * <<lens-storage-db>> - Storage definition for DBStorage and DBStorageHandler.
+
+  * <<lens-query-lib>> - The Query lib containing some Serde or OutputFormatter implementations.
+
+  * <<lens-driver-hive>> - Driver implementation for Hive as execution engine.
+
+  * <<lens-driver-jdbc>> - Driver implementation for JDBC as execution engine.
+
+  * <<lens-server>> - The server module - containing the service implementations, REST resources and HttpServer itself.
+
+  * <<lens-client>> - Java client built on top of REST interface.
+
+  * <<lens-cli>> - CLI built using spring shell and lens-client.
+
+  * <<lens-examples>> - Examples containing example schema and queries.
+
+  * <<lens-dist>> - Packaging for binary distribution of lens
+
+  * <<lens-ml-lib>> - Wrapper over Spark ML lib where input to a model is output of a query.
+
+  * <<lens-ml-dist>> - Packaging for ml-lib - which has server, client, spark libraries and ml-lib.
+
+  * <<lens-regression>> - The regression test suite.
+
