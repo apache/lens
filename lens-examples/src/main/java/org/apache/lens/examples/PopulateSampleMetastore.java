@@ -39,6 +39,16 @@ public class PopulateSampleMetastore {
   private APIResult result;
   private int retCode = 0;
 
+  private static final Date DATE = new Date(System.currentTimeMillis());
+  private static final SimpleDateFormat FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+  private static final String NOW_TIME = FORMAT.format(DATE);
+
+  private static final String INSERT_QUERY = "INSERT INTO "
+      + "mydb_sales_aggr_continuous_fact (order_time, delivery_time, customer_id, "
+      + "product_id, promotion_id, customer_city_id, production_city_id, delivery_city_id, unit_sales, "
+      + "store_sales, store_cost, max_line_item_price, max_line_item_discount) values "
+      + "('" + NOW_TIME + "','" + NOW_TIME + "',2,2,1,2,2,2,1,8,2,10,2)";
+
   public PopulateSampleMetastore() throws JAXBException {
     metaClient = new LensMetadataClient(LensClientSingletonWrapper.instance().getClient().getConnection());
   }
@@ -107,13 +117,7 @@ public class PopulateSampleMetastore {
     con.setAutoCommit(true);
     Statement statement = con.createStatement();
     try {
-      Date date = new Date(System.currentTimeMillis());
-      SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-      String nowTime = format.format(date);
-      statement.execute("INSERT INTO mydb_sales_aggr_continuous_fact (order_time, delivery_time, customer_id, "
-              + "product_id, promotion_id, customer_city_id, production_city_id, delivery_city_id, unit_sales, "
-              + "store_sales, store_cost, max_line_item_price, max_line_item_discount) values "
-              + "('" + nowTime + "','" + nowTime + "',2,2,1,2,2,2,1,8,2,10,2)");
+      statement.execute(INSERT_QUERY);
 
     } finally {
       statement.close();
