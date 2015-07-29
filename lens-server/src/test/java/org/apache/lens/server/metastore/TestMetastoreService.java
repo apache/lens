@@ -1999,6 +1999,12 @@ public class TestMetastoreService extends LensJerseyTest {
         .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
+      // add same should fail
+      partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.FAILED);
+
       xp.setLocation(xp.getLocation() + "/a/b/c");
       APIResult partUpdateResult = target().path("metastore/facts/").path(table).path("storages/S2/partition")
         .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -2031,6 +2037,14 @@ public class TestMetastoreService extends LensJerseyTest {
       partDate.setSeconds(0);
       partDate.setTime(partDate.getTime() - partDate.getTime() % 1000);
       assertEquals(date.getDate(), partDate);
+      // add two partitions, one of them already added. result should be partial
+      XPartitionList parts = new XPartitionList();
+      parts.getPartition().add(xp);
+      parts.getPartition().add(createPartition(table, DateUtils.addHours(partDate, 1)));
+      partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartitionList(parts)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.PARTIAL);
 
       // Drop the partitions
       APIResult dropResult = target().path("metastore/facts").path(table).path("storages/S2/partitions")
@@ -2118,6 +2132,13 @@ public class TestMetastoreService extends LensJerseyTest {
         .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
+      // create call for same
+      partAddResult = target().path("metastore/dimtables/").path(table).path("storages/test/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.FAILED);
+
+
       xp.setLocation(xp.getLocation() + "/a/b/c");
       APIResult partUpdateResult = target().path("metastore/dimtables/").path(table).path("storages/test/partition")
         .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -2163,6 +2184,15 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(latestPartition.getFullPartitionSpec().getPartSpecElement().get(0).getValue(),
         "latest");
 
+      // create should give partial now:
+      XPartition xp2 = createPartition(table, DateUtils.addHours(partDate, 1));
+      XPartitionList parts = new XPartitionList();
+      parts.getPartition().add(xp);
+      parts.getPartition().add(xp2);
+      partAddResult = target().path("metastore/dimtables/").path(table).path("storages/test/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartitionList(parts)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.PARTIAL);
 
       // Drop the partitions
       APIResult dropResult = target().path("metastore/dimtables").path(table).path("storages/test/partitions")

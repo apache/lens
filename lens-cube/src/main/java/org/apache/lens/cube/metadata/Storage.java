@@ -239,11 +239,11 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    * @param latestInfo
    * @throws HiveException
    */
-  public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
+  public List<Partition> addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
     throws HiveException {
     Map<Map<String, String>, LatestInfo> latestInfos = Maps.newHashMap();
     latestInfos.put(addPartitionDesc.getNonTimePartSpec(), latestInfo);
-    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
+    return addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
       Collections.singletonList(addPartitionDesc), latestInfos);
   }
 
@@ -258,7 +258,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    *                              column
    * @throws HiveException
    */
-  public void addPartitions(Hive client, String factOrDimTable, UpdatePeriod updatePeriod,
+  public List<Partition> addPartitions(Hive client, String factOrDimTable, UpdatePeriod updatePeriod,
     List<StoragePartitionDesc> storagePartitionDescs,
     Map<Map<String, String>, LatestInfo> latestInfos) throws HiveException {
     preAddPartitions(storagePartitionDescs);
@@ -348,8 +348,9 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
           }
         }
       }
-      client.createPartitions(addParts);
+      List<Partition> partitionsAdded = client.createPartitions(addParts);
       success = true;
+      return partitionsAdded;
     } finally {
       if (success) {
         commitAddPartitions(storagePartitionDescs);

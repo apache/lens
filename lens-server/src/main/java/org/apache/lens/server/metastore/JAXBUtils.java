@@ -785,6 +785,18 @@ public final class JAXBUtils {
     return nonTimePartSpec;
   }
 
+  public static XPartitionList xpartitionListFromPartitionList(List<Partition> partitions, List<String> timePartCols)
+    throws HiveException {
+    XPartitionList xPartitionList = new XPartitionList();
+    xPartitionList.getPartition();
+    if (partitions != null) {
+      for (Partition partition : partitions) {
+        xPartitionList.getPartition().add(xpartitionFromPartition(partition, timePartCols));
+      }
+    }
+    return xPartitionList;
+  }
+
   public static XPartition xpartitionFromPartition(Partition p, List<String> timePartCols) throws HiveException {
     XPartition xp = new XPartition();
     xp.setPartitionParameters(new XProperties());
