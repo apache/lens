@@ -34,8 +34,8 @@ import org.apache.lens.client.model.BriefError;
 import org.apache.lens.client.model.IdBriefErrorTemplate;
 import org.apache.lens.client.model.IdBriefErrorTemplateKey;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
@@ -57,8 +57,8 @@ public class LensClient {
     Maps.newHashMap();
   private final LensStatement statement;
 
-  public static Log getCliLooger() {
-    return LogFactory.getLog(CLILOGGER);
+  public static Logger getCliLooger() {
+    return LoggerFactory.getLogger(CLILOGGER);
   }
 
   public LensClient() {

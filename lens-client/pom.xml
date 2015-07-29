@@ -39,10 +39,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.lens</groupId>
       <artifactId>lens-server</artifactId>
       <version>${project.version}</version>
@@ -137,10 +133,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-    </dependency>
-    <dependency>
-    <groupId>log4j</groupId>
-    <artifactId>log4j</artifactId>
     </dependency>
   </dependencies>
 </project>

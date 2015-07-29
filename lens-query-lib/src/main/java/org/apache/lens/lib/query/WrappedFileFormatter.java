@@ -24,8 +24,6 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 
 /**
@@ -38,11 +36,6 @@ public abstract class WrappedFileFormatter extends AbstractOutputFormatter {
    * The formatter.
    */
   private AbstractFileFormatter formatter;
-
-  /**
-   * The Constant LOG.
-   */
-  public static final Log LOG = LogFactory.getLog(FilePersistentFormatter.class);
 
   /*
    * (non-Javadoc)
