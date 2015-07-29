@@ -22,18 +22,15 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 import org.apache.lens.api.LensConf;
+import org.apache.lens.ml.algo.api.AlgoParam;
 import org.apache.lens.ml.algo.api.Algorithm;
-import org.apache.lens.ml.algo.api.TrainedModel;
-import org.apache.lens.ml.api.AlgoParam;
-import org.apache.lens.ml.api.DataSet;
-import org.apache.lens.ml.api.Feature;
-import org.apache.lens.ml.api.Model;
+import org.apache.lens.ml.algo.api.MLAlgo;
+import org.apache.lens.ml.algo.api.MLModel;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
@@ -41,63 +38,44 @@ import org.apache.spark.rdd.RDD;
 /**
  * The Class BaseSparkAlgo.
  */
-public abstract class BaseSparkAlgo implements Algorithm {
+public abstract class BaseSparkAlgo implements MLAlgo {
 
-  /**
-   * The Constant LOG.
-   */
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(BaseSparkAlgo.class);
 
-  /**
-   * The name.
-   */
+  /** The name. */
   private final String name;
 
-  /**
-   * The description.
-   */
+  /** The description. */
   private final String description;
 
-  /**
-   * The spark context.
-   */
+  /** The spark context. */
   protected JavaSparkContext sparkContext;
 
-  /**
-   * The params.
-   */
+  /** The params. */
   protected Map<String, String> params;
 
-  /**
-   * The conf.
-   */
+  /** The conf. */
   protected transient LensConf conf;
 
-  /**
-   * The training fraction.
-   */
+  /** The training fraction. */
   @AlgoParam(name = "trainingFraction", help = "% of dataset to be used for training", defaultValue = "0")
   protected double trainingFraction;
-  /**
-   * The label.
-   */
-  @AlgoParam(name = "label", help = "column name, feature name which is used as a training label for supervised "
-    + "learning")
-  protected Feature label;
-  /**
-   * The partition filter.
-   */
+
+  /** The use training fraction. */
+  private boolean useTrainingFraction;
+
+  /** The label. */
+  @AlgoParam(name = "label", help = "Name of column which is used as a training label for supervised learning")
+  protected String label;
+
+  /** The partition filter. */
   @AlgoParam(name = "partition", help = "Partition filter used to create create HCatInputFormats")
   protected String partitionFilter;
-  /**
-   * The features.
-   */
-  @AlgoParam(name = "feature", help = "sample features containing feature name and column name")
-  protected List<Feature> features;
-  /**
-   * The use training fraction.
-   */
-  private boolean useTrainingFraction;
+
+  /** The features. */
+  @AlgoParam(name = "feature", help = "Column name(s) which are to be used as sample features")
+  protected List<String> features;
 
   /**
    * Instantiates a new base spark algo.
@@ -132,26 +110,17 @@ public abstract class BaseSparkAlgo implements Algorithm {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.TrainedModel#train(Model model, String dataTable)
+   * @see org.apache.lens.ml.MLAlgo#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
+   * java.lang.String, java.lang.String[])
    */
   @Override
-  public TrainedModel train(Model model, DataSet dataTable) throws LensException {
-    parseParams(model.getAlgoSpec().getAlgoParams());
-    features = model.getFeatureSpec();
-    String database = dataTable.getDatabase();
-    if (database.isEmpty()) {
-      if (SessionState.get() != null) {
-        database = SessionState.get().getCurrentDatabase();
-      } else {
-        database = "default";
-      }
-    }
-
+  public MLModel<?> train(LensConf conf, String db, String table, String modelId, String... params)
+    throws LensException {
+    parseParams(params);
 
     TableTrainingSpec.TableTrainingSpecBuilder builder = TableTrainingSpec.newBuilder().hiveConf(toHiveConf(conf))
-      .database(database).table(dataTable.getTableName()).partitionFilter(partitionFilter)
-      .featureColumns(model.getFeatureSpec())
-      .labelColumn(model.getLabelSpec());
+      .database(db).table(table).partitionFilter(partitionFilter).featureColumns(features).labelColumn(label);
+
     if (useTrainingFraction) {
       builder.trainingFraction(trainingFraction);
     }
@@ -162,8 +131,12 @@ public abstract class BaseSparkAlgo implements Algorithm {
     spec.createRDDs(sparkContext);
 
     RDD<LabeledPoint> trainingRDD = spec.getTrainingRDD();
-    BaseSparkClassificationModel<?> trainedModel = trainInternal(trainingRDD);
-    return trainedModel;
+    BaseSparkClassificationModel<?> model = trainInternal(modelId, trainingRDD);
+    model.setTable(table);
+    model.setParams(Arrays.asList(params));
+    model.setLabelColumn(label);
+    model.setFeatureColumns(features);
+    return model;
   }
 
   /**
@@ -185,13 +158,29 @@ public abstract class BaseSparkAlgo implements Algorithm {
    *
    * @param args the args
    */
+  public void parseParams(String[] args) {
+    if (args.length % 2 != 0) {
+      throw new IllegalArgumentException("Invalid number of params " + args.length);
+    }
 
-  public void parseParams(Map<String, String> args) {
+    params = new LinkedHashMap<String, String>();
 
-    params = new HashMap();
+    for (int i = 0; i < args.length; i += 2) {
+      if ("f".equalsIgnoreCase(args[i]) || "feature".equalsIgnoreCase(args[i])) {
+        if (features == null) {
+          features = new ArrayList<String>();
+        }
+        features.add(args[i + 1]);
+      } else if ("l".equalsIgnoreCase(args[i]) || "label".equalsIgnoreCase(args[i])) {
+        label = args[i + 1];
+      } else {
+        params.put(args[i].replaceAll("\\-+", ""), args[i + 1]);
+      }
+    }
 
-    if (args.containsKey("trainingFraction")) {
-      String trainingFractionStr = args.get("trainingFraction");
+    if (params.containsKey("trainingFraction")) {
+      // Get training Fraction
+      String trainingFractionStr = params.get("trainingFraction");
       try {
         trainingFraction = Double.parseDouble(trainingFractionStr);
         useTrainingFraction = true;
@@ -199,11 +188,12 @@ public abstract class BaseSparkAlgo implements Algorithm {
         throw new IllegalArgumentException("Invalid training fraction", nfe);
       }
     }
-    if (args.containsKey("partition") || args.containsKey("p")) {
-      partitionFilter = args.containsKey("partition") ? args.get("partition") : args.get("p");
+
+    if (params.containsKey("partition") || params.containsKey("p")) {
+      partitionFilter = params.containsKey("partition") ? params.get("partition") : params.get("p");
     }
 
-    parseAlgoParams(args);
+    parseAlgoParams(params);
   }
 
   /**
@@ -253,8 +243,12 @@ public abstract class BaseSparkAlgo implements Algorithm {
   public Map<String, String> getArgUsage() {
     Map<String, String> usage = new LinkedHashMap<String, String>();
     Class<?> clz = this.getClass();
-    usage.put("Algorithm Name", name);
-    usage.put("Algorithm Description", description);
+    // Put class name and description as well as part of the usage
+    Algorithm algorithm = clz.getAnnotation(Algorithm.class);
+    if (algorithm != null) {
+      usage.put("Algorithm Name", algorithm.name());
+      usage.put("Algorithm Description", algorithm.description());
+    }
 
     // Get all algo params including base algo params
     while (clz != null) {
@@ -283,22 +277,11 @@ public abstract class BaseSparkAlgo implements Algorithm {
   /**
    * Train internal.
    *
+   * @param modelId     the model id
    * @param trainingRDD the training rdd
    * @return the base spark classification model
    * @throws LensException the lens exception
    */
-  protected abstract BaseSparkClassificationModel trainInternal(RDD<LabeledPoint> trainingRDD)
+  protected abstract BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
     throws LensException;
-
-  @Override
-  public List<AlgoParam> getParams() {
-    ArrayList<AlgoParam> paramList = new ArrayList();
-    for (Field field : this.getClass().getDeclaredFields()) {
-      AlgoParam param = field.getAnnotation(AlgoParam.class);
-      if (param != null) {
-        paramList.add(param);
-      }
-    }
-    return paramList;
-  }
 }

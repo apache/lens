@@ -29,8 +29,14 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 @ApplicationPath("/ml")
 public class MLApp extends Application {
+
   private final Set<Class<?>> classes;
 
+  /**
+   * Pass additional classes when running in test mode
+   *
+   * @param additionalClasses
+   */
   public MLApp(Class<?>... additionalClasses) {
     classes = new HashSet<Class<?>>();
 

@@ -24,11 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.ml.algo.api.Algorithm;
+import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLDriver;
 import org.apache.lens.ml.algo.lib.Algorithms;
 import org.apache.lens.ml.algo.spark.dt.DecisionTreeAlgo;
-import org.apache.lens.ml.algo.spark.kmeans.KMeansAlgo;
 import org.apache.lens.ml.algo.spark.lr.LogisticRegressionAlgo;
 import org.apache.lens.ml.algo.spark.nb.NaiveBayesAlgo;
 import org.apache.lens.ml.algo.spark.svm.SVMAlgo;
@@ -45,33 +44,40 @@ import org.apache.spark.api.java.JavaSparkContext;
  */
 public class SparkMLDriver implements MLDriver {
 
-  /**
-   * The Constant LOG.
-   */
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(SparkMLDriver.class);
-  /**
-   * Supported algorithms.
-   */
-  private final Algorithms algorithms = new Algorithms();
-  /**
-   * If the driver owns spark's context.
-   */
+
+  /** The owns spark context. */
   private boolean ownsSparkContext = true;
+
   /**
-   * Spark's client mode.
+   * The Enum SparkMasterMode.
    */
+  private enum SparkMasterMode {
+    // Embedded mode used in tests
+    /** The embedded. */
+    EMBEDDED,
+    // Yarn client and Yarn cluster modes are used when deploying the app to Yarn cluster
+    /** The yarn client. */
+    YARN_CLIENT,
+
+    /** The yarn cluster. */
+    YARN_CLUSTER
+  }
+
+  /** The algorithms. */
+  private final Algorithms algorithms = new Algorithms();
+
+  /** The client mode. */
   private SparkMasterMode clientMode = SparkMasterMode.EMBEDDED;
-  /**
-   * If the driver is started.
-   */
+
+  /** The is started. */
   private boolean isStarted;
-  /**
-   * The spark conf.
-   */
+
+  /** The spark conf. */
   private SparkConf sparkConf;
-  /**
-   * The spark context.
-   */
+
+  /** The spark context. */
   private JavaSparkContext sparkContext;
 
   /**
@@ -94,22 +100,20 @@ public class SparkMLDriver implements MLDriver {
     return algorithms.isAlgoSupported(name);
   }
 
-  /**
-   * Returns Algorithm Instance for it's name
+  /*
+   * (non-Javadoc)
    *
-   * @param name
-   * @return
-   * @throws LensException
+   * @see org.apache.lens.ml.MLDriver#getAlgoInstance(java.lang.String)
    */
   @Override
-  public Algorithm getAlgoInstance(String name) throws LensException {
+  public MLAlgo getAlgoInstance(String name) throws LensException {
     checkStarted();
 
     if (!isAlgoSupported(name)) {
       return null;
     }
 
-    Algorithm algo = null;
+    MLAlgo algo = null;
     try {
       algo = algorithms.getAlgoForName(name);
       if (algo instanceof BaseSparkAlgo) {
@@ -122,21 +126,19 @@ public class SparkMLDriver implements MLDriver {
   }
 
   /**
-   * Register Algorithms
+   * Register algos.
    */
   private void registerAlgos() {
-    algorithms.register("spark_logistic_regression", LogisticRegressionAlgo.class);
-    algorithms.register("spark_naive_bayes", NaiveBayesAlgo.class);
-    algorithms.register("spark_k_means", KMeansAlgo.class);
-    algorithms.register("spark_svm", SVMAlgo.class);
-    algorithms.register("spark_decision_tree", DecisionTreeAlgo.class);
+    algorithms.register(NaiveBayesAlgo.class);
+    algorithms.register(SVMAlgo.class);
+    algorithms.register(LogisticRegressionAlgo.class);
+    algorithms.register(DecisionTreeAlgo.class);
   }
 
-  /**
-   * Initializes the driver
+  /*
+   * (non-Javadoc)
    *
-   * @param conf the conf
-   * @throws LensException
+   * @see org.apache.lens.ml.MLDriver#init(org.apache.lens.api.LensConf)
    */
   @Override
   public void init(LensConf conf) throws LensException {
@@ -278,27 +280,6 @@ public class SparkMLDriver implements MLDriver {
 
   public JavaSparkContext getSparkContext() {
     return sparkContext;
-  }
-
-  /**
-   * The Enum SparkMasterMode.
-   */
-  private enum SparkMasterMode {
-    // Embedded mode used in tests
-    /**
-     * The embedded.
-     */
-    EMBEDDED,
-    // Yarn client and Yarn cluster modes are used when deploying the app to Yarn cluster
-    /**
-     * The yarn client.
-     */
-    YARN_CLIENT,
-
-    /**
-     * The yarn cluster.
-     */
-    YARN_CLUSTER
   }
 
 }

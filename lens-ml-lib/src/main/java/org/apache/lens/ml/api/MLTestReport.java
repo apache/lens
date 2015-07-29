@@ -18,66 +18,78 @@
  */
 package org.apache.lens.ml.api;
 
-import java.util.Date;
+import java.io.Serializable;
+import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.lens.api.LensSessionHandle;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-/*
- * Batch prediction Instance
- */
+import lombok.ToString;
 
 /**
- * Contains meta data for an Prediction. Prediction captures the meta data of process of batch predicting data of
- * inputDataSet against the ModelInstance modelInstanceId and populating results in outputDataSet.
+ * Instantiates a new ML test report.
  */
-@AllArgsConstructor
-@XmlRootElement
-public class Prediction implements MLProcess {
-  @XmlElement
+@NoArgsConstructor
+@ToString
+public class MLTestReport implements Serializable {
+
+  /** The test table. */
   @Getter
   @Setter
-  String id;
+  private String testTable;
 
-  @XmlElement
+  /** The output table. */
   @Getter
   @Setter
-  Date startTime;
+  private String outputTable;
 
-  @XmlElement
+  /** The output column. */
   @Getter
   @Setter
-  Date finishTime;
+  private String outputColumn;
 
-  @XmlElement
+  /** The label column. */
   @Getter
   @Setter
-  Status status;
+  private String labelColumn;
 
+  /** The feature columns. */
   @Getter
   @Setter
-  @XmlElement
-  LensSessionHandle lensSessionHandle;
+  private List<String> featureColumns;
 
+  /** The algorithm. */
   @Getter
   @Setter
-  @XmlElement
-  String modelInstanceId;
+  private String algorithm;
 
+  /** The model id. */
   @Getter
   @Setter
-  @XmlElement
-  String inputDataSet;
+  private String modelID;
 
+  /** The report id. */
   @Getter
   @Setter
-  @XmlElement
-  String outputDataSet;
+  private String reportID;
 
+  /** The query id. */
+  @Getter
+  @Setter
+  private String queryID;
+
+  /** The test output path. */
+  @Getter
+  @Setter
+  private String testOutputPath;
+
+  /** The prediction result column. */
+  @Getter
+  @Setter
+  private String predictionResultColumn;
+
+  /** The lens query id. */
+  @Getter
+  @Setter
+  private String lensQueryID;
 }

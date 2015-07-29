@@ -18,10 +18,7 @@
  */
 package org.apache.lens.ml.algo.spark.svm;
 
-import java.util.List;
-
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
-import org.apache.lens.ml.api.Feature;
 
 import org.apache.spark.mllib.classification.SVMModel;
 
@@ -31,10 +28,12 @@ import org.apache.spark.mllib.classification.SVMModel;
 public class SVMClassificationModel extends BaseSparkClassificationModel<SVMModel> {
 
   /**
-   * @param featureList
-   * @param model
+   * Instantiates a new SVM classification model.
+   *
+   * @param modelId the model id
+   * @param model   the model
    */
-  public SVMClassificationModel(List<Feature> featureList, SVMModel model) {
-    super(featureList, model);
+  public SVMClassificationModel(String modelId, SVMModel model) {
+    super(modelId, model);
   }
 }

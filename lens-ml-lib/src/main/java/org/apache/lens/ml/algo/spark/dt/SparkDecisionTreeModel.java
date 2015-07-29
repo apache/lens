@@ -31,9 +31,7 @@ import org.apache.spark.rdd.RDD;
  */
 public class SparkDecisionTreeModel implements ClassificationModel {
 
-  /**
-   * The model.
-   */
+  /** The model. */
   private final DecisionTreeModel model;
 
   /**

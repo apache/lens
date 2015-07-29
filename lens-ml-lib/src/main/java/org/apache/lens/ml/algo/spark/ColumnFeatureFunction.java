@@ -33,34 +33,22 @@ import scala.Tuple2;
  */
 public class ColumnFeatureFunction extends FeatureFunction {
 
-  /**
-   * The Constant LOG.
-   */
+  /** The Constant LOG. */
   public static final Logger LOG = Logger.getLogger(ColumnFeatureFunction.class);
 
-  /**
-   * The feature value mappers.
-   */
+  /** The feature value mappers. */
   private final FeatureValueMapper[] featureValueMappers;
 
-  /**
-   * The feature positions.
-   */
+  /** The feature positions. */
   private final int[] featurePositions;
 
-  /**
-   * The label column pos.
-   */
+  /** The label column pos. */
   private final int labelColumnPos;
 
-  /**
-   * The num features.
-   */
+  /** The num features. */
   private final int numFeatures;
 
-  /**
-   * The default labeled point.
-   */
+  /** The default labeled point. */
   private final LabeledPoint defaultLabeledPoint;
 
   /**
@@ -74,12 +62,11 @@ public class ColumnFeatureFunction extends FeatureFunction {
    * @param defaultLabel     default lable to be used for null records
    */
   public ColumnFeatureFunction(int[] featurePositions, FeatureValueMapper[] valueMappers, int labelColumnPos,
-                               int numFeatures, double defaultLabel) {
+    int numFeatures, double defaultLabel) {
     Preconditions.checkNotNull(valueMappers, "Value mappers argument is required");
     Preconditions.checkNotNull(featurePositions, "Feature positions are required");
-    Preconditions.checkArgument(valueMappers.length == featurePositions.length + 1,
-      "Mismatch between number of value mappers and feature positions. There should be value mappers for features and "
-        + "one additional mapper for label");
+    Preconditions.checkArgument(valueMappers.length == featurePositions.length,
+      "Mismatch between number of value mappers and feature positions");
 
     this.featurePositions = featurePositions;
     this.featureValueMappers = valueMappers;
@@ -109,8 +96,7 @@ public class ColumnFeatureFunction extends FeatureFunction {
       features[i] = featureValueMappers[i].call(record.get(featurePos));
     }
 
-    //Feature mapper for label is stored after label mappers at position numFeatures.
-    double label = featureValueMappers[numFeatures].call(record.get(labelColumnPos));
+    double label = featureValueMappers[labelColumnPos].call(record.get(labelColumnPos));
     return new LabeledPoint(label, Vectors.dense(features));
   }
 }

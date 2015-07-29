@@ -18,28 +18,21 @@
  */
 package org.apache.lens.ml.impl;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-
-import org.apache.lens.ml.algo.api.TrainedModel;
-import org.apache.lens.ml.api.Model;
+import org.apache.lens.ml.algo.api.Algorithm;
+import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.server.MLService;
 import org.apache.lens.ml.server.MLServiceImpl;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.ServiceProviderFactory;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 public final class MLUtils {
-  private static final HiveConf HIVE_CONF;
+  private MLUtils() {
+  }
 
-  private static final Log LOG = LogFactory.getLog(MLUtils.class);
+  private static final HiveConf HIVE_CONF;
 
   static {
     HIVE_CONF = new HiveConf();
@@ -48,7 +41,12 @@ public final class MLUtils {
     HIVE_CONF.addResource("lens-site.xml");
   }
 
-  private MLUtils() {
+  public static String getAlgoName(Class<? extends MLAlgo> algoClass) {
+    Algorithm annotation = algoClass.getAnnotation(Algorithm.class);
+    if (annotation != null) {
+      return annotation.name();
+    }
+    throw new IllegalArgumentException("Algo should be decorated with annotation - " + Algorithm.class.getName());
   }
 
   public static MLServiceImpl getMLService() throws Exception {
@@ -61,34 +59,4 @@ public final class MLUtils {
     ServiceProviderFactory spf = spfClass.newInstance();
     return spf.getServiceProvider();
   }
-
-  public static Path persistModel(TrainedModel trainedModel, Model model, String modelInstanceId) throws IOException {
-    Path algoDir = getAlgoDir(model.getAlgoSpec().getAlgo().getName());
-    FileSystem fs = algoDir.getFileSystem(HIVE_CONF);
-
-    if (!fs.exists(algoDir)) {
-      fs.mkdirs(algoDir);
-    }
-
-    Path modelSavePath = new Path(algoDir, new Path(model.getId(), modelInstanceId));
-    ObjectOutputStream outputStream = null;
-
-    try {
-      outputStream = new ObjectOutputStream(fs.create(modelSavePath, false));
-      outputStream.writeObject(trainedModel);
-      outputStream.flush();
-    } catch (IOException io) {
-      LOG.error("Error saving model " + modelInstanceId + " reason: " + io.getMessage());
-      throw io;
-    } finally {
-      IOUtils.closeQuietly(outputStream);
-    }
-    return modelSavePath;
-  }
-
-  public static Path getAlgoDir(String algoName) throws IOException {
-    String modelSaveBaseDir = HIVE_CONF.get(ModelLoader.MODEL_PATH_BASE_DIR, ModelLoader.MODEL_PATH_BASE_DIR_DEFAULT);
-    return new Path(new Path(modelSaveBaseDir), algoName);
-  }
-
 }

@@ -43,7 +43,7 @@ public interface MLDriver {
    * @return the algo instance
    * @throws LensException the lens exception
    */
-  Algorithm getAlgoInstance(String algo) throws LensException;
+  MLAlgo getAlgoInstance(String algo) throws LensException;
 
   /**
    * Inits the.

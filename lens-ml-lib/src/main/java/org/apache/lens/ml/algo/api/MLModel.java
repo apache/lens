@@ -16,71 +16,64 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.api;
+package org.apache.lens.ml.algo.api;
 
+import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.lens.api.LensSessionHandle;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
- * The Model Instance Class. Contains meta data for TrainedModel i.e. information about the algorithm used for
- * training and specification about features and label. Model instance captures meta data for the process of training
- * Model modelId using test data from dataSet.
+ * Instantiates a new ML model.
  */
-@AllArgsConstructor
-@XmlRootElement
-public class ModelInstance implements MLProcess {
+@NoArgsConstructor
+@ToString
+public abstract class MLModel<PREDICTION> implements Serializable {
 
-  @XmlElement
+  /** The id. */
   @Getter
   @Setter
-  String id;
+  private String id;
 
-  @XmlElement
+  /** The created at. */
   @Getter
   @Setter
-  Date startTime;
+  private Date createdAt;
 
-  @XmlElement
+  /** The algo name. */
   @Getter
   @Setter
-  Date finishTime;
+  private String algoName;
 
-  @XmlElement
+  /** The table. */
   @Getter
   @Setter
-  Status status;
+  private String table;
 
+  /** The params. */
   @Getter
   @Setter
-  @XmlElement
-  LensSessionHandle lensSessionHandle;
+  private List<String> params;
 
+  /** The label column. */
   @Getter
   @Setter
-  @XmlElement
-  String modelId;
+  private String labelColumn;
 
+  /** The feature columns. */
   @Getter
   @Setter
-  @XmlElement
-  String dataSet;
+  private List<String> featureColumns;
 
-  @Getter
-  @Setter
-  @XmlElement
-  String path;
-
-  @Getter
-  @Setter
-  @XmlElement
-  String evaluationId;
-
+  /**
+   * Predict.
+   *
+   * @param args the args
+   * @return the prediction
+   */
+  public abstract PREDICTION predict(Object... args);
 }

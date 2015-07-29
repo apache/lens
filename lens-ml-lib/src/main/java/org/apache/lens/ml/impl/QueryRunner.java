@@ -30,13 +30,10 @@ import lombok.Setter;
  */
 public abstract class QueryRunner {
 
-  /**
-   * The session handle.
-   */
+  /** The session handle. */
   protected final LensSessionHandle sessionHandle;
 
-  @Getter
-  @Setter
+  @Getter @Setter
   protected String queryName;
 
   /**

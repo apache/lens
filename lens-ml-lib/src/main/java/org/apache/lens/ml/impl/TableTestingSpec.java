@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.lens.ml.api.Feature;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,64 +38,39 @@ import lombok.Getter;
  */
 public class TableTestingSpec {
 
-  /**
-   * The Constant LOG.
-   */
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(TableTestingSpec.class);
 
-  /**
-   * The db.
-   */
+  /** The db. */
   private String db;
 
-  /**
-   * The table containing input data.
-   */
+  /** The table containing input data. */
   private String inputTable;
 
   // TODO use partition condition
-  /**
-   * The partition filter.
-   */
+  /** The partition filter. */
   private String partitionFilter;
 
-  /**
-   * The feature columns.
-   */
-  private List<Feature> featureColumns;
+  /** The feature columns. */
+  private List<String> featureColumns;
 
-  /**
-   * The label column.
-   */
-  private Feature labelColumn;
+  /** The label column. */
+  private String labelColumn;
 
-  /**
-   * The output column.
-   */
+  /** The output column. */
   private String outputColumn;
 
-  /**
-   * The output table.
-   */
+  /** The output table. */
   private String outputTable;
 
-  /**
-   * The conf.
-   */
+  /** The conf. */
   private transient HiveConf conf;
 
-  /**
-   * The algorithm.
-   */
+  /** The algorithm. */
   private String algorithm;
 
-  /**
-   * The model id.
-   */
+  /** The model id. */
   private String modelID;
-
-  /*The modelInstanceId*/
-  private String modelInstanceId;
 
   @Getter
   private boolean outputTableExists;
@@ -108,128 +81,11 @@ public class TableTestingSpec {
   private HashMap<String, FieldSchema> columnNameToFieldSchema;
 
   /**
-   * New builder.
-   *
-   * @return the table testing spec builder
-   */
-  public static TableTestingSpecBuilder newBuilder() {
-    return new TableTestingSpecBuilder();
-  }
-
-  /**
-   * Validate.
-   *
-   * @return true, if successful
-   */
-  public boolean validate() {
-    List<FieldSchema> columns;
-    try {
-      Hive metastoreClient = Hive.get(conf);
-      Table tbl = (db == null) ? metastoreClient.getTable(inputTable) : metastoreClient.getTable(db, inputTable);
-      columns = tbl.getAllCols();
-      columnNameToFieldSchema = new HashMap<String, FieldSchema>();
-
-      for (FieldSchema fieldSchema : columns) {
-        columnNameToFieldSchema.put(fieldSchema.getName(), fieldSchema);
-      }
-
-      // Check if output table exists
-      Table outTbl = metastoreClient.getTable(db == null ? "default" : db, outputTable, false);
-      outputTableExists = (outTbl != null);
-    } catch (HiveException exc) {
-      LOG.error("Error getting table info " + toString(), exc);
-      return false;
-    }
-
-    // Check if labeled column and feature columns are contained in the table
-    List<String> testTableColumns = new ArrayList<String>(columns.size());
-    for (FieldSchema column : columns) {
-      testTableColumns.add(column.getName());
-    }
-
-    List<String> inputColumnNames = new ArrayList();
-    for (Feature feature : featureColumns) {
-      inputColumnNames.add(feature.getDataColumn());
-    }
-
-    if (!testTableColumns.containsAll(inputColumnNames)) {
-      LOG.info("Invalid feature columns: " + inputColumnNames + ". Actual columns in table:" + testTableColumns);
-      return false;
-    }
-
-    if (!testTableColumns.contains(labelColumn.getDataColumn())) {
-      LOG.info(
-        "Invalid label column: " + labelColumn.getDataColumn() + ". Actual columns in table:" + testTableColumns);
-      return false;
-    }
-
-    if (StringUtils.isBlank(outputColumn)) {
-      LOG.info("Output column is required");
-      return false;
-    }
-
-    if (StringUtils.isBlank(outputTable)) {
-      LOG.info("Output table is required");
-      return false;
-    }
-    return true;
-  }
-
-  public String getTestQuery() {
-    if (!validate()) {
-      return null;
-    }
-
-    // We always insert a dynamic partition
-    StringBuilder q = new StringBuilder("INSERT OVERWRITE TABLE " + outputTable + " PARTITION (part_testid='" + testID
-      + "')  SELECT ");
-    List<String> featureNameList = new ArrayList();
-    List<String> featureMapBuilder = new ArrayList();
-    for (Feature feature : featureColumns) {
-      featureNameList.add(feature.getDataColumn());
-      featureMapBuilder.add("'" + feature.getDataColumn() + "'");
-      featureMapBuilder.add(feature.getDataColumn());
-    }
-    String featureCols = StringUtils.join(featureNameList, ",");
-    String featureMapString = StringUtils.join(featureMapBuilder, ",");
-    q.append(featureCols).append(",").append(labelColumn.getDataColumn()).append(", ").append("predict(").append("'")
-      .append(algorithm)
-      .append("', ").append("'").append(modelID).append("', ").append("'").append(modelInstanceId).append("', ")
-      .append(featureMapString).append(") ").append(outputColumn)
-      .append(" FROM ").append(inputTable);
-
-    return q.toString();
-  }
-
-  public String getCreateOutputTableQuery() {
-    StringBuilder createTableQuery = new StringBuilder("CREATE TABLE IF NOT EXISTS ").append(outputTable).append("(");
-    // Output table contains feature columns, label column, output column
-    List<String> outputTableColumns = new ArrayList<String>();
-    for (Feature featureCol : featureColumns) {
-      outputTableColumns.add(featureCol.getDataColumn() + " "
-        + columnNameToFieldSchema.get(featureCol.getDataColumn()).getType());
-    }
-
-    outputTableColumns.add(labelColumn.getDataColumn() + " "
-      + columnNameToFieldSchema.get(labelColumn.getDataColumn()).getType());
-    outputTableColumns.add(outputColumn + " string");
-
-    createTableQuery.append(StringUtils.join(outputTableColumns, ", "));
-
-    // Append partition column
-    createTableQuery.append(") PARTITIONED BY (part_testid string)");
-
-    return createTableQuery.toString();
-  }
-
-  /**
    * The Class TableTestingSpecBuilder.
    */
   public static class TableTestingSpecBuilder {
 
-    /**
-     * The spec.
-     */
+    /** The spec. */
     private final TableTestingSpec spec;
 
     /**
@@ -278,7 +134,7 @@ public class TableTestingSpec {
      * @param featureColumns the feature columns
      * @return the table testing spec builder
      */
-    public TableTestingSpecBuilder featureColumns(List<Feature> featureColumns) {
+    public TableTestingSpecBuilder featureColumns(List<String> featureColumns) {
       spec.featureColumns = featureColumns;
       return this;
     }
@@ -289,7 +145,7 @@ public class TableTestingSpec {
      * @param labelColumn the label column
      * @return the table testing spec builder
      */
-    public TableTestingSpecBuilder lableColumn(Feature labelColumn) {
+    public TableTestingSpecBuilder lableColumn(String labelColumn) {
       spec.labelColumn = labelColumn;
       return this;
     }
@@ -349,11 +205,6 @@ public class TableTestingSpec {
       return this;
     }
 
-    public TableTestingSpecBuilder modelInstanceID(String modelInstanceId) {
-      spec.modelInstanceId = modelInstanceId;
-      return this;
-    }
-
     /**
      * Builds the.
      *
@@ -373,5 +224,102 @@ public class TableTestingSpec {
       spec.testID = testID;
       return this;
     }
+  }
+
+  /**
+   * New builder.
+   *
+   * @return the table testing spec builder
+   */
+  public static TableTestingSpecBuilder newBuilder() {
+    return new TableTestingSpecBuilder();
+  }
+
+  /**
+   * Validate.
+   *
+   * @return true, if successful
+   */
+  public boolean validate() {
+    List<FieldSchema> columns;
+    try {
+      Hive metastoreClient = Hive.get(conf);
+      Table tbl = (db == null) ? metastoreClient.getTable(inputTable) : metastoreClient.getTable(db, inputTable);
+      columns = tbl.getAllCols();
+      columnNameToFieldSchema = new HashMap<String, FieldSchema>();
+
+      for (FieldSchema fieldSchema : columns) {
+        columnNameToFieldSchema.put(fieldSchema.getName(), fieldSchema);
+      }
+
+      // Check if output table exists
+      Table outTbl = metastoreClient.getTable(db == null ? "default" : db, outputTable, false);
+      outputTableExists = (outTbl != null);
+    } catch (HiveException exc) {
+      LOG.error("Error getting table info " + toString(), exc);
+      return false;
+    }
+
+    // Check if labeled column and feature columns are contained in the table
+    List<String> testTableColumns = new ArrayList<String>(columns.size());
+    for (FieldSchema column : columns) {
+      testTableColumns.add(column.getName());
+    }
+
+    if (!testTableColumns.containsAll(featureColumns)) {
+      LOG.info("Invalid feature columns: " + featureColumns + ". Actual columns in table:" + testTableColumns);
+      return false;
+    }
+
+    if (!testTableColumns.contains(labelColumn)) {
+      LOG.info("Invalid label column: " + labelColumn + ". Actual columns in table:" + testTableColumns);
+      return false;
+    }
+
+    if (StringUtils.isBlank(outputColumn)) {
+      LOG.info("Output column is required");
+      return false;
+    }
+
+    if (StringUtils.isBlank(outputTable)) {
+      LOG.info("Output table is required");
+      return false;
+    }
+    return true;
+  }
+
+  public String getTestQuery() {
+    if (!validate()) {
+      return null;
+    }
+
+    // We always insert a dynamic partition
+    StringBuilder q = new StringBuilder("INSERT OVERWRITE TABLE " + outputTable + " PARTITION (part_testid='" + testID
+      + "')  SELECT ");
+    String featureCols = StringUtils.join(featureColumns, ",");
+    q.append(featureCols).append(",").append(labelColumn).append(", ").append("predict(").append("'").append(algorithm)
+      .append("', ").append("'").append(modelID).append("', ").append(featureCols).append(") ").append(outputColumn)
+      .append(" FROM ").append(inputTable);
+
+    return q.toString();
+  }
+
+  public String getCreateOutputTableQuery() {
+    StringBuilder createTableQuery = new StringBuilder("CREATE TABLE IF NOT EXISTS ").append(outputTable).append("(");
+    // Output table contains feature columns, label column, output column
+    List<String> outputTableColumns = new ArrayList<String>();
+    for (String featureCol : featureColumns) {
+      outputTableColumns.add(featureCol + " " + columnNameToFieldSchema.get(featureCol).getType());
+    }
+
+    outputTableColumns.add(labelColumn + " " + columnNameToFieldSchema.get(labelColumn).getType());
+    outputTableColumns.add(outputColumn + " string");
+
+    createTableQuery.append(StringUtils.join(outputTableColumns, ", "));
+
+    // Append partition column
+    createTableQuery.append(") PARTITIONED BY (part_testid string)");
+
+    return createTableQuery.toString();
   }
 }

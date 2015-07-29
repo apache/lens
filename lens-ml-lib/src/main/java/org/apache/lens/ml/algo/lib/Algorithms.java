@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.ml.algo.api.Algorithm;
+import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.server.api.error.LensException;
 
 /**
@@ -32,44 +33,50 @@ import org.apache.lens.server.api.error.LensException;
  */
 public class Algorithms {
 
-  /**
-   * The algorithm classes.
-   */
-
-  private final Map<String, Class<? extends Algorithm>> algorithmClasses
-    = new HashMap<String, Class<? extends Algorithm>>();
+  /** The algorithm classes. */
+  private final Map<String, Class<? extends MLAlgo>> algorithmClasses
+    = new HashMap<String, Class<? extends MLAlgo>>();
 
   /**
-   * Registers algorithm
+   * Register.
    *
-   * @param name
-   * @param algoClass
+   * @param algoClass the algo class
    */
-  public void register(String name, Class<? extends Algorithm> algoClass) {
-    if (algoClass != null) {
-      algorithmClasses.put(name, algoClass);
+  public void register(Class<? extends MLAlgo> algoClass) {
+    if (algoClass != null && algoClass.getAnnotation(Algorithm.class) != null) {
+      algorithmClasses.put(algoClass.getAnnotation(Algorithm.class).name(), algoClass);
+    } else {
+      throw new IllegalArgumentException("Not a valid algorithm class: " + algoClass);
     }
   }
 
-  public Algorithm getAlgoForName(String name) throws LensException {
-    Class<? extends Algorithm> algoClass = algorithmClasses.get(name);
-
+  /**
+   * Gets the algo for name.
+   *
+   * @param name the name
+   * @return the algo for name
+   * @throws LensException the lens exception
+   */
+  public MLAlgo getAlgoForName(String name) throws LensException {
+    Class<? extends MLAlgo> algoClass = algorithmClasses.get(name);
     if (algoClass == null) {
       return null;
     }
+    Algorithm algoAnnotation = algoClass.getAnnotation(Algorithm.class);
+    String description = algoAnnotation.description();
     try {
-      Constructor<? extends Algorithm> constructor = algoClass.getConstructor();
-      return constructor.newInstance();
-    } catch (Exception e) {
-      throw new LensException("Unable to get Algorithm " + name, e);
+      Constructor<? extends MLAlgo> algoConstructor = algoClass.getConstructor(String.class, String.class);
+      return algoConstructor.newInstance(name, description);
+    } catch (Exception exc) {
+      throw new LensException("Unable to get algo: " + name, exc);
     }
   }
 
   /**
-   * Checks if algorithm is supported
+   * Checks if is algo supported.
    *
-   * @param name
-   * @return
+   * @param name the name
+   * @return true, if is algo supported
    */
   public boolean isAlgoSupported(String name) {
     return algorithmClasses.containsKey(name);
@@ -78,4 +85,5 @@ public class Algorithms {
   public List<String> getAlgorithmNames() {
     return new ArrayList<String>(algorithmClasses.keySet());
   }
+
 }

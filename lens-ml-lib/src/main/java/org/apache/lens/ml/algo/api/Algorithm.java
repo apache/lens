@@ -18,31 +18,29 @@
  */
 package org.apache.lens.ml.algo.api;
 
-import java.util.List;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.ml.api.AlgoParam;
-import org.apache.lens.ml.api.DataSet;
-import org.apache.lens.ml.api.Model;
-import org.apache.lens.server.api.error.LensException;
-
-public interface Algorithm {
-
-  String getName();
-
-  String getDescription();
-
-  List<AlgoParam> getParams();
+/**
+ * The Interface Algorithm.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Algorithm {
 
   /**
-   * Configure.
+   * Name.
    *
-   * @param configuration the configuration
+   * @return the string
    */
-  void configure(LensConf configuration);
+  String name();
 
-  LensConf getConf();
-
-  TrainedModel train(Model model, DataSet dataTable) throws LensException;
-
+  /**
+   * Description.
+   *
+   * @return the string
+   */
+  String description();
 }

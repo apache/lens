@@ -18,12 +18,13 @@
  */
 package org.apache.lens.ml.algo.lib;
 
-import org.apache.lens.ml.algo.api.TrainedModel;
+import org.apache.lens.ml.algo.api.MLModel;
 
 /**
- * The Class ClassifierBaseModel
+ * Return a single double value as a prediction. This is useful in classifiers where the classifier returns a single
+ * class label as a prediction.
  */
-public abstract class ClassifierBaseModel implements TrainedModel<Double> {
+public abstract class ClassifierBaseModel extends MLModel<Double> {
 
   /**
    * Gets the feature vector.

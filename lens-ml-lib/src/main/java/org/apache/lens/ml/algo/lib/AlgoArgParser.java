@@ -19,39 +19,51 @@
 package org.apache.lens.ml.algo.lib;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.lens.ml.algo.api.Algorithm;
-import org.apache.lens.ml.api.AlgoParam;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.lens.ml.algo.api.AlgoParam;
+import org.apache.lens.ml.algo.api.MLAlgo;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * AlgoArgParser class. Parses and sets algo params.
+ * The Class AlgoArgParser.
  */
 @Slf4j
 public final class AlgoArgParser {
-  /**
-   * The Constant LOG.
-   */
-  public static final Log LOG = LogFactory.getLog(AlgoArgParser.class);
-
   private AlgoArgParser() {
   }
 
   /**
-   * Extracts all the variables annotated with @AlgoParam checks if any input key matches the name
-   * if so replaces the value.
+   * The Class CustomArgParser.
    *
-   * @param algo
-   * @param algoParameters
+   * @param <E> the element type
    */
-  public static void parseArgs(Algorithm algo, Map<String, String> algoParameters) {
-    Class<? extends Algorithm> algoClass = algo.getClass();
+  public abstract static class CustomArgParser<E> {
+
+    /**
+     * Parses the.
+     *
+     * @param value the value
+     * @return the e
+     */
+    public abstract E parse(String value);
+  }
+
+  /**
+   * Extracts feature names. If the algo has any parameters associated with @AlgoParam annotation, those are set
+   * as well.
+   *
+   * @param algo the algo
+   * @param args    the args
+   * @return List of feature column names.
+   */
+  public static List<String> parseArgs(MLAlgo algo, String[] args) {
+    List<String> featureColumns = new ArrayList<String>();
+    Class<? extends MLAlgo> algoClass = algo.getClass();
     // Get param fields
     Map<String, Field> fieldMap = new HashMap<String, Field>();
 
@@ -63,11 +75,14 @@ public final class AlgoArgParser {
       }
     }
 
-    for (Map.Entry<String, String> entry : algoParameters.entrySet()) {
-      String key = entry.getKey();
-      String value = entry.getValue();
+    for (int i = 0; i < args.length; i += 2) {
+      String key = args[i].trim();
+      String value = args[i + 1].trim();
+
       try {
-        if (fieldMap.containsKey(key)) {
+        if ("feature".equalsIgnoreCase(key)) {
+          featureColumns.add(value);
+        } else if (fieldMap.containsKey(key)) {
           Field f = fieldMap.get(key);
           if (String.class.equals(f.getType())) {
             f.set(algo, value);
@@ -86,29 +101,14 @@ public final class AlgoArgParser {
               CustomArgParser<?> parser = clz.newInstance();
               f.set(algo, parser.parse(value));
             } else {
-              LOG.warn("Ignored param " + key + "=" + value + " as no parser found");
+              log.warn("Ignored param " + key + "=" + value + " as no parser found");
             }
           }
         }
       } catch (Exception exc) {
-        LOG.error("Error while setting param " + key + " to " + value + " for algo " + algo, exc);
+        log.error("Error while setting param " + key + " to " + value + " for algo " + algo, exc);
       }
     }
-  }
-
-  /**
-   * The Class CustomArgParser.
-   *
-   * @param <E> the element type
-   */
-  public abstract static class CustomArgParser<E> {
-
-    /**
-     * Parses the.
-     *
-     * @param value the value
-     * @return the e
-     */
-    public abstract E parse(String value);
+    return featureColumns;
   }
 }

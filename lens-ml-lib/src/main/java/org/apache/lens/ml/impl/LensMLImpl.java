@@ -19,74 +19,71 @@
 package org.apache.lens.ml.impl;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.ml.algo.api.Algorithm;
+import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLDriver;
-import org.apache.lens.ml.algo.api.TrainedModel;
+import org.apache.lens.ml.algo.api.MLModel;
+import org.apache.lens.ml.algo.spark.BaseSparkAlgo;
 import org.apache.lens.ml.algo.spark.SparkMLDriver;
-import org.apache.lens.ml.api.*;
-import org.apache.lens.ml.dao.InMemoryMetaStoreClient;
-import org.apache.lens.ml.dao.MetaStoreClient;
+import org.apache.lens.ml.api.LensML;
+import org.apache.lens.ml.api.MLTestReport;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.spark.api.java.JavaSparkContext;
 
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * The Class LensMLImpl.
+ */
+@Slf4j
 public class LensMLImpl implements LensML {
 
-  /**
-   * The Constant LOG.
-   */
-  public static final Log LOG = LogFactory.getLog(LensMLImpl.class);
-
-  /**
-   * Check if the predict UDF has been registered for a user
-   */
-  private final Map<LensSessionHandle, Boolean> predictUdfStatus;
-
-  /**
-   * The drivers.
-   */
+  /** The drivers. */
   protected List<MLDriver> drivers;
 
-  /**
-   * The metaStoreClient
-   */
-  MetaStoreClient metaStoreClient = new InMemoryMetaStoreClient();
-
-  Map<String, Algo> algorithms = new HashMap<String, Algo>();
-
-  /**
-   * The conf.
-   */
+  /** The conf. */
   private HiveConf conf;
 
-  /**
-   * The spark context.
-   */
+  /** The spark context. */
   private JavaSparkContext sparkContext;
 
-  /**
-   * Background thread to periodically check if we need to clear expire status for a session
-   */
+  /** Check if the predict UDF has been registered for a user */
+  private final Map<LensSessionHandle, Boolean> predictUdfStatus;
+  /** Background thread to periodically check if we need to clear expire status for a session */
   private ScheduledExecutorService udfStatusExpirySvc;
-
-  /**
-   * Life Cycle manager of Model Instance creation.
-   */
-  private MLProcessLifeCycleManager mlProcessLifeCycleManager;
 
   /**
    * Instantiates a new lens ml impl.
@@ -111,10 +108,155 @@ public class LensMLImpl implements LensML {
     this.sparkContext = jsc;
   }
 
-  /**
-   * Initialises  LensMLImpl. Registers drives, checks if there are previously interrupted MLprocess.
+  public List<String> getAlgorithms() {
+    List<String> algos = new ArrayList<String>();
+    for (MLDriver driver : drivers) {
+      algos.addAll(driver.getAlgoNames());
+    }
+    return algos;
+  }
+
+  /*
+   * (non-Javadoc)
    *
-   * @param hiveConf
+   * @see org.apache.lens.ml.LensML#getAlgoForName(java.lang.String)
+   */
+  public MLAlgo getAlgoForName(String algorithm) throws LensException {
+    for (MLDriver driver : drivers) {
+      if (driver.isAlgoSupported(algorithm)) {
+        return driver.getAlgoInstance(algorithm);
+      }
+    }
+    throw new LensException("Algo not supported " + algorithm);
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#train(java.lang.String, java.lang.String, java.lang.String[])
+   */
+  public String train(String table, String algorithm, String[] args) throws LensException {
+    MLAlgo algo = getAlgoForName(algorithm);
+
+    String modelId = UUID.randomUUID().toString();
+
+    log.info("Begin training model " + modelId + ", algo=" + algorithm + ", table=" + table + ", params="
+      + Arrays.toString(args));
+
+    String database = null;
+    if (SessionState.get() != null) {
+      database = SessionState.get().getCurrentDatabase();
+    } else {
+      database = "default";
+    }
+
+    MLModel model = algo.train(toLensConf(conf), database, table, modelId, args);
+
+    log.info("Done training model: " + modelId);
+
+    model.setCreatedAt(new Date());
+    model.setAlgoName(algorithm);
+
+    Path modelLocation = null;
+    try {
+      modelLocation = persistModel(model);
+      log.info("Model saved: " + modelId + ", algo: " + algorithm + ", path: " + modelLocation);
+      return model.getId();
+    } catch (IOException e) {
+      throw new LensException("Error saving model " + modelId + " for algo " + algorithm, e);
+    }
+  }
+
+  /**
+   * Gets the algo dir.
+   *
+   * @param algoName the algo name
+   * @return the algo dir
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  private Path getAlgoDir(String algoName) throws IOException {
+    String modelSaveBaseDir = conf.get(ModelLoader.MODEL_PATH_BASE_DIR, ModelLoader.MODEL_PATH_BASE_DIR_DEFAULT);
+    return new Path(new Path(modelSaveBaseDir), algoName);
+  }
+
+  /**
+   * Persist model.
+   *
+   * @param model the model
+   * @return the path
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  private Path persistModel(MLModel model) throws IOException {
+    // Get model save path
+    Path algoDir = getAlgoDir(model.getAlgoName());
+    FileSystem fs = algoDir.getFileSystem(conf);
+
+    if (!fs.exists(algoDir)) {
+      fs.mkdirs(algoDir);
+    }
+
+    Path modelSavePath = new Path(algoDir, model.getId());
+    ObjectOutputStream outputStream = null;
+
+    try {
+      outputStream = new ObjectOutputStream(fs.create(modelSavePath, false));
+      outputStream.writeObject(model);
+      outputStream.flush();
+    } catch (IOException io) {
+      log.error("Error saving model " + model.getId() + " reason: " + io.getMessage(), io);
+      throw io;
+    } finally {
+      IOUtils.closeQuietly(outputStream);
+    }
+    return modelSavePath;
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#getModels(java.lang.String)
+   */
+  public List<String> getModels(String algorithm) throws LensException {
+    try {
+      Path algoDir = getAlgoDir(algorithm);
+      FileSystem fs = algoDir.getFileSystem(conf);
+      if (!fs.exists(algoDir)) {
+        return null;
+      }
+
+      List<String> models = new ArrayList<String>();
+
+      for (FileStatus stat : fs.listStatus(algoDir)) {
+        models.add(stat.getPath().getName());
+      }
+
+      if (models.isEmpty()) {
+        return null;
+      }
+
+      return models;
+    } catch (IOException ioex) {
+      throw new LensException(ioex);
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#getModel(java.lang.String, java.lang.String)
+   */
+  public MLModel getModel(String algorithm, String modelId) throws LensException {
+    try {
+      return ModelLoader.loadModel(conf, algorithm, modelId);
+    } catch (IOException e) {
+      throw new LensException(e);
+    }
+  }
+
+  /**
+   * Inits the.
+   *
+   * @param hiveConf the hive conf
    */
   public synchronized void init(HiveConf hiveConf) {
     this.conf = hiveConf;
@@ -126,7 +268,7 @@ public class LensMLImpl implements LensML {
       throw new RuntimeException("No ML Drivers specified in conf");
     }
 
-    LOG.info("Loading drivers " + Arrays.toString(driverClasses));
+    log.info("Loading drivers " + Arrays.toString(driverClasses));
     drivers = new ArrayList<MLDriver>(driverClasses.length);
 
     for (String driverClass : driverClasses) {
@@ -134,12 +276,12 @@ public class LensMLImpl implements LensML {
       try {
         cls = Class.forName(driverClass);
       } catch (ClassNotFoundException e) {
-        LOG.error("Driver class not found " + driverClass);
+        log.error("Driver class not found " + driverClass, e);
         continue;
       }
 
       if (!MLDriver.class.isAssignableFrom(cls)) {
-        LOG.warn("Not a driver class " + driverClass);
+        log.warn("Not a driver class " + driverClass);
         continue;
       }
 
@@ -148,22 +290,21 @@ public class LensMLImpl implements LensML {
         MLDriver driver = mlDriverClass.newInstance();
         driver.init(toLensConf(conf));
         drivers.add(driver);
-        LOG.info("Added driver " + driverClass);
+        log.info("Added driver " + driverClass);
       } catch (Exception e) {
-        LOG.error("Failed to create driver " + driverClass + " reason: " + e.getMessage(), e);
+        log.error("Failed to create driver " + driverClass + " reason: " + e.getMessage(), e);
       }
     }
     if (drivers.isEmpty()) {
       throw new RuntimeException("No ML drivers loaded");
     }
 
-    mlProcessLifeCycleManager = new MLProcessLifeCycleManager(conf, metaStoreClient, drivers);
-
-    mlProcessLifeCycleManager.init();
-
-    LOG.info("Inited ML service");
+    log.info("Inited ML service");
   }
 
+  /**
+   * Start.
+   */
   public synchronized void start() {
     for (MLDriver driver : drivers) {
       try {
@@ -171,215 +312,362 @@ public class LensMLImpl implements LensML {
           ((SparkMLDriver) driver).useSparkContext(sparkContext);
         }
         driver.start();
-        registerAlgorithms(driver);
       } catch (LensException e) {
-        LOG.error("Failed to start driver " + driver, e);
+        log.error("Failed to start driver " + driver, e);
       }
     }
-
-    mlProcessLifeCycleManager.start();
 
     udfStatusExpirySvc = Executors.newSingleThreadScheduledExecutor();
     udfStatusExpirySvc.scheduleAtFixedRate(new UDFStatusExpiryRunnable(), 60, 60, TimeUnit.SECONDS);
 
-    LOG.info("Started ML service");
+    log.info("Started ML service");
   }
 
+  /**
+   * Stop.
+   */
   public synchronized void stop() {
     for (MLDriver driver : drivers) {
       try {
         driver.stop();
       } catch (LensException e) {
-        LOG.error("Failed to stop driver " + driver, e);
+        log.error("Failed to stop driver " + driver, e);
       }
     }
     drivers.clear();
     udfStatusExpirySvc.shutdownNow();
-
-    mlProcessLifeCycleManager.stop();
-
-    LOG.info("Stopped ML service");
+    log.info("Stopped ML service");
   }
 
-  @Override
-  public List<Algo> getAlgos() {
-    List<Algo> allAlgos = new ArrayList<Algo>();
-    allAlgos.addAll(algorithms.values());
-    return allAlgos;
-  }
-
-  @Override
-  public Algo getAlgo(String name) throws LensException {
-    return algorithms.get(name);
-  }
-
-  @Override
-  public String createDataSet(String name, String dataTable, String dataBase) throws LensException {
-    DataSet dataSet = metaStoreClient.createDataSet(name, dataTable, dataBase);
-    return dataSet.getName();
-  }
-
-  @Override
-  public String createDataSetFromQuery(String name, String query) {
-    return null;
-  }
-
-  @Override
-  public DataSet getDataSet(String name) throws LensException {
-    return metaStoreClient.getDataSet(name);
-  }
-
-  @Override
-  public String createModel(String name, String algoName, Map<String, String> algoParams, List<Feature> features,
-                            Feature label, LensSessionHandle lensSessionHandle) throws LensException {
-    Algo algo = getAlgo(algoName);
-    AlgoSpec algoSpec = new AlgoSpec(algo, algoParams);
-    Model model = metaStoreClient.createModel(name, algoName, algoSpec, features, label);
-    return model.getId();
-  }
-
-  @Override
-  public Model getModel(String modelId) throws LensException {
-    return metaStoreClient.getModel(modelId);
-  }
-
-  @Override
-  public String trainModel(String modelId, String dataSetName, LensSessionHandle lensSessionHandle)
-    throws LensException {
-    String id = UUID.randomUUID().toString();
-
-    ModelInstance modelInstance = metaStoreClient.createModelInstance(new Date(), null, Status.SUBMITTED,
-      lensSessionHandle,
-      modelId, dataSetName, "", null);
-    mlProcessLifeCycleManager.addProcess(modelInstance);
-    return modelInstance.getId();
-  }
-
-  @Override
-  public ModelInstance getModelInstance(String modelInstanceId) throws LensException {
-    ModelInstance modelInstance = (ModelInstance) mlProcessLifeCycleManager.getMLProcess(modelInstanceId);
-    if (modelInstance != null) {
-      return modelInstance;
-    }
-    return metaStoreClient.getModelInstance(modelInstanceId);
-  }
-
-  @Override
-  public boolean cancelModelInstance(String modelInstanceId) {
-    return mlProcessLifeCycleManager.cancelProcess(modelInstanceId);
-  }
-
-  @Override
-  public List<ModelInstance> getAllModelInstances(String modelId) {
-    return null;
-  }
-
-  @Override
-  public String evaluate(String modelInstanceId, String inputDataSetName, LensSessionHandle lensSessionHandle)
-    throws LensException {
-
-    metaStoreClient.getDataSet(inputDataSetName);
-
-    Evaluation evaluation = metaStoreClient.createEvaluation(new Date(), null, Status.SUBMITTED, lensSessionHandle,
-      modelInstanceId, inputDataSetName);
-    mlProcessLifeCycleManager.addProcess(evaluation);
-    return evaluation.getId();
-  }
-
-  @Override
-  public Evaluation getEvaluation(String evalId) throws LensException {
-    return metaStoreClient.getEvaluation(evalId);
-  }
-
-  @Override
-  public boolean cancelEvaluation(String evalId) {
-    return mlProcessLifeCycleManager.cancelProcess(evalId);
-  }
-
-  @Override
-  public String predict(String modelInstanceId, String dataSetName, LensSessionHandle lensSessionHandle)
-    throws LensException {
-    String id = UUID.randomUUID().toString();
-    DataSet dataSet = metaStoreClient.getDataSet(dataSetName);
-    String outputDataSetName = MLConfConstants.PREDICTION_OUTPUT_TABLE_PREFIX + id.replace("-", "_");
-    metaStoreClient.createDataSet(outputDataSetName, outputDataSetName, dataSet.getDatabase());
-    Prediction prediction = metaStoreClient.createPrediction(new Date(), null, Status.SUBMITTED, lensSessionHandle,
-      modelInstanceId,
-      dataSetName, outputDataSetName);
-    mlProcessLifeCycleManager.addProcess(prediction);
-    return prediction.getId();
-  }
-
-  @Override
-  public Prediction getPrediction(String predictionId) throws LensException {
-    Prediction prediction = (Prediction) mlProcessLifeCycleManager.getMLProcess(predictionId);
-    if (prediction != null) {
-      return prediction;
-    }
-    return metaStoreClient.getPrediction(predictionId);
-  }
-
-  @Override
-  public boolean cancelPrediction(String predictionId) {
-    return mlProcessLifeCycleManager.cancelProcess(predictionId);
-  }
-
-  @Override
-  public String predict(String modelInstanceId, Map<String, String> featureVector) throws LensException {
-    ModelInstance modelInstance;
-    Model model;
-    try {
-      modelInstance = metaStoreClient.getModelInstance(modelInstanceId);
-      if (modelInstance == null) {
-        throw new LensException("Invalid modelInstance Id.");
-      }
-      if (modelInstance.getStatus() != Status.COMPLETED) {
-        throw new LensException("Prediction is allowed only on modelInstances which has completed training "
-          + "successfully. Current modelInstance status : " + modelInstance.getStatus());
-      }
-      model = metaStoreClient.getModel(modelInstance.getModelId());
-    } catch (Exception e) {
-      throw new LensException("Error Reading modelInstanceId :" + modelInstanceId, e);
-    }
-
-    try {
-      TrainedModel trainedModel = ModelLoader
-        .loadModel(conf, model.getAlgoSpec().getAlgo().getName(), model.getId(), modelInstance.getId());
-      Object trainingResult = trainedModel.predict(featureVector);
-      return trainingResult.toString();
-    } catch (Exception e) {
-      throw new LensException("Error while training model for modelInstanceId: " + modelInstanceId, e);
-    }
+  public synchronized HiveConf getHiveConf() {
+    return conf;
   }
 
   /**
-   * Register all available algorithms to cache.
-   *
-   * @param driver
+   * Clear models.
    */
-  void registerAlgorithms(MLDriver driver) {
-    for (String algoName : driver.getAlgoNames()) {
-      try {
-        final Algorithm algorithm = driver.getAlgoInstance(algoName);
-        algorithms.put(algorithm.getName(), new Algo() {
-          @Override
-          public String getName() {
-            return algorithm.getName();
-          }
+  public void clearModels() {
+    ModelLoader.clearCache();
+  }
 
-          @Override
-          public String getDescription() {
-            return algorithm.getDescription();
-          }
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#getModelPath(java.lang.String, java.lang.String)
+   */
+  public String getModelPath(String algorithm, String modelID) {
+    return ModelLoader.getModelLocation(conf, algorithm, modelID).toString();
+  }
 
-          @Override
-          public List<AlgoParam> getParams() {
-            return algorithm.getParams();
-          }
-        });
-      } catch (Exception e) {
-        LOG.error("Couldn't register algorithm " + algoName);
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#testModel(org.apache.lens.api.LensSessionHandle, java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
+  @Override
+  public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID,
+    String outputTable) throws LensException {
+    return null;
+  }
+
+  /**
+   * Test a model in embedded mode.
+   *
+   * @param sessionHandle the session handle
+   * @param table         the table
+   * @param algorithm     the algorithm
+   * @param modelID       the model id
+   * @param queryApiUrl   the query api url
+   * @return the ML test report
+   * @throws LensException the lens exception
+   */
+  public MLTestReport testModelRemote(LensSessionHandle sessionHandle, String table, String algorithm, String modelID,
+    String queryApiUrl, String outputTable) throws LensException {
+    return testModel(sessionHandle, table, algorithm, modelID, new RemoteQueryRunner(sessionHandle, queryApiUrl),
+      outputTable);
+  }
+
+  /**
+   * Evaluate a model. Evaluation is done on data selected table from an input table. The model is run as a UDF and its
+   * output is inserted into a table with a partition. Each evaluation is given a unique ID. The partition label is
+   * associated with this unique ID.
+   * <p></p>
+   * <p>
+   * This call also required a query runner. Query runner is responsible for executing the evaluation query against Lens
+   * server.
+   * </p>
+   *
+   * @param sessionHandle the session handle
+   * @param table         the table
+   * @param algorithm     the algorithm
+   * @param modelID       the model id
+   * @param queryRunner   the query runner
+   * @param outputTable   table where test output will be written
+   * @return the ML test report
+   * @throws LensException the lens exception
+   */
+  public MLTestReport testModel(final LensSessionHandle sessionHandle, String table, String algorithm, String modelID,
+    QueryRunner queryRunner, String outputTable) throws LensException {
+    if (sessionHandle == null) {
+      throw new NullPointerException("Null session not allowed");
+    }
+    // check if algorithm exists
+    if (!getAlgorithms().contains(algorithm)) {
+      throw new LensException("No such algorithm " + algorithm);
+    }
+
+    MLModel<?> model;
+    try {
+      model = ModelLoader.loadModel(conf, algorithm, modelID);
+    } catch (IOException e) {
+      throw new LensException(e);
+    }
+
+    if (model == null) {
+      throw new LensException("Model not found: " + modelID + " algorithm=" + algorithm);
+    }
+
+    String database = null;
+
+    if (SessionState.get() != null) {
+      database = SessionState.get().getCurrentDatabase();
+    }
+
+    String testID = UUID.randomUUID().toString().replace("-", "_");
+    final String testTable = outputTable;
+    final String testResultColumn = "prediction_result";
+
+    // TODO support error metric UDAFs
+    TableTestingSpec spec = TableTestingSpec.newBuilder().hiveConf(conf)
+      .database(database == null ? "default" : database).inputTable(table).featureColumns(model.getFeatureColumns())
+      .outputColumn(testResultColumn).lableColumn(model.getLabelColumn()).algorithm(algorithm).modelID(modelID)
+      .outputTable(testTable).testID(testID).build();
+
+    String testQuery = spec.getTestQuery();
+    if (testQuery == null) {
+      throw new LensException("Invalid test spec. " + "table=" + table + " algorithm=" + algorithm + " modelID="
+        + modelID);
+    }
+
+    if (!spec.isOutputTableExists()) {
+      log.info("Output table '" + testTable + "' does not exist for test algorithm = " + algorithm + " modelid="
+        + modelID + ", Creating table using query: " + spec.getCreateOutputTableQuery());
+      // create the output table
+      String createOutputTableQuery = spec.getCreateOutputTableQuery();
+      queryRunner.runQuery(createOutputTableQuery);
+      log.info("Table created " + testTable);
+    }
+
+    // Check if ML UDF is registered in this session
+    registerPredictUdf(sessionHandle, queryRunner);
+
+    log.info("Running evaluation query " + testQuery);
+    queryRunner.setQueryName("model_test_" + modelID);
+    QueryHandle testQueryHandle = queryRunner.runQuery(testQuery);
+
+    MLTestReport testReport = new MLTestReport();
+    testReport.setReportID(testID);
+    testReport.setAlgorithm(algorithm);
+    testReport.setFeatureColumns(model.getFeatureColumns());
+    testReport.setLabelColumn(model.getLabelColumn());
+    testReport.setModelID(model.getId());
+    testReport.setOutputColumn(testResultColumn);
+    testReport.setOutputTable(testTable);
+    testReport.setTestTable(table);
+    testReport.setQueryID(testQueryHandle.toString());
+
+    // Save test report
+    persistTestReport(testReport);
+    log.info("Saved test report " + testReport.getReportID());
+    return testReport;
+  }
+
+  /**
+   * Persist test report.
+   *
+   * @param testReport the test report
+   * @throws LensException the lens exception
+   */
+  private void persistTestReport(MLTestReport testReport) throws LensException {
+    log.info("saving test report " + testReport.getReportID());
+    try {
+      ModelLoader.saveTestReport(conf, testReport);
+      log.info("Saved report " + testReport.getReportID());
+    } catch (IOException e) {
+      log.error("Error saving report " + testReport.getReportID() + " reason: " + e.getMessage(), e);
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#getTestReports(java.lang.String)
+   */
+  public List<String> getTestReports(String algorithm) throws LensException {
+    Path reportBaseDir = new Path(conf.get(ModelLoader.TEST_REPORT_BASE_DIR, ModelLoader.TEST_REPORT_BASE_DIR_DEFAULT));
+    FileSystem fs = null;
+
+    try {
+      fs = reportBaseDir.getFileSystem(conf);
+      if (!fs.exists(reportBaseDir)) {
+        return null;
       }
+
+      Path algoDir = new Path(reportBaseDir, algorithm);
+      if (!fs.exists(algoDir)) {
+        return null;
+      }
+
+      List<String> reports = new ArrayList<String>();
+      for (FileStatus stat : fs.listStatus(algoDir)) {
+        reports.add(stat.getPath().getName());
+      }
+      return reports;
+    } catch (IOException e) {
+      log.error("Error reading report list for " + algorithm, e);
+      return null;
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#getTestReport(java.lang.String, java.lang.String)
+   */
+  public MLTestReport getTestReport(String algorithm, String reportID) throws LensException {
+    try {
+      return ModelLoader.loadReport(conf, algorithm, reportID);
+    } catch (IOException e) {
+      throw new LensException(e);
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#predict(java.lang.String, java.lang.String, java.lang.Object[])
+   */
+  public Object predict(String algorithm, String modelID, Object[] features) throws LensException {
+    // Load the model instance
+    MLModel<?> model = getModel(algorithm, modelID);
+    return model.predict(features);
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#deleteModel(java.lang.String, java.lang.String)
+   */
+  public void deleteModel(String algorithm, String modelID) throws LensException {
+    try {
+      ModelLoader.deleteModel(conf, algorithm, modelID);
+      log.info("DELETED model " + modelID + " algorithm=" + algorithm);
+    } catch (IOException e) {
+      log.error(
+        "Error deleting model file. algorithm=" + algorithm + " model=" + modelID + " reason: " + e.getMessage(), e);
+      throw new LensException("Unable to delete model " + modelID + " for algorithm " + algorithm, e);
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#deleteTestReport(java.lang.String, java.lang.String)
+   */
+  public void deleteTestReport(String algorithm, String reportID) throws LensException {
+    try {
+      ModelLoader.deleteTestReport(conf, algorithm, reportID);
+      log.info("DELETED report=" + reportID + " algorithm=" + algorithm);
+    } catch (IOException e) {
+      log.error("Error deleting report " + reportID + " algorithm=" + algorithm + " reason: " + e.getMessage(), e);
+      throw new LensException("Unable to delete report " + reportID + " for algorithm " + algorithm, e);
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.lens.ml.LensML#getAlgoParamDescription(java.lang.String)
+   */
+  public Map<String, String> getAlgoParamDescription(String algorithm) {
+    MLAlgo algo = null;
+    try {
+      algo = getAlgoForName(algorithm);
+    } catch (LensException e) {
+      log.error("Error getting algo description : " + algorithm, e);
+      return null;
+    }
+    if (algo instanceof BaseSparkAlgo) {
+      return ((BaseSparkAlgo) algo).getArgUsage();
+    }
+    return null;
+  }
+
+  /**
+   * Submit model test query to a remote Lens server.
+   */
+  class RemoteQueryRunner extends QueryRunner {
+
+    /** The query api url. */
+    final String queryApiUrl;
+
+    /**
+     * Instantiates a new remote query runner.
+     *
+     * @param sessionHandle the session handle
+     * @param queryApiUrl   the query api url
+     */
+    public RemoteQueryRunner(LensSessionHandle sessionHandle, String queryApiUrl) {
+      super(sessionHandle);
+      this.queryApiUrl = queryApiUrl;
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.ml.TestQueryRunner#runQuery(java.lang.String)
+     */
+    @Override
+    public QueryHandle runQuery(String query) throws LensException {
+      // Create jersey client for query endpoint
+      Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+      WebTarget target = client.target(queryApiUrl);
+      final FormDataMultiPart mp = new FormDataMultiPart();
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), sessionHandle,
+        MediaType.APPLICATION_XML_TYPE));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), query));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+
+      LensConf lensConf = new LensConf();
+      lensConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, false + "");
+      lensConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false + "");
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), lensConf,
+        MediaType.APPLICATION_XML_TYPE));
+
+      final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+          new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+
+      LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", sessionHandle).request()
+        .get(LensQuery.class);
+
+      QueryStatus stat = ctx.getStatus();
+      while (!stat.finished()) {
+        ctx = target.path(handle.toString()).queryParam("sessionid", sessionHandle).request().get(LensQuery.class);
+        stat = ctx.getStatus();
+        try {
+          Thread.sleep(500);
+        } catch (InterruptedException e) {
+          throw new LensException(e);
+        }
+      }
+
+      if (stat.getStatus() != QueryStatus.Status.SUCCESSFUL) {
+        throw new LensException("Query failed " + ctx.getQueryHandle().getHandleId() + " reason:"
+          + stat.getErrorMessage());
+      }
+
+      return ctx.getQueryHandle();
     }
   }
 
@@ -395,54 +683,29 @@ public class LensMLImpl implements LensML {
     return lensConf;
   }
 
-  /**
-   * Gets the algo dir.
-   *
-   * @param algoName the algo name
-   * @return the algo dir
-   * @throws java.io.IOException Signals that an I/O exception has occurred.
-   */
-  private Path getAlgoDir(String algoName) throws IOException {
-    String modelSaveBaseDir = conf.get(ModelLoader.MODEL_PATH_BASE_DIR, ModelLoader.MODEL_PATH_BASE_DIR_DEFAULT);
-    return new Path(new Path(modelSaveBaseDir), algoName);
-  }
-
-  /**
-   * Registers predict UDF for a given LensSession
-   *
-   * @param sessionHandle
-   * @param queryRunner
-   * @throws LensException
-   */
   protected void registerPredictUdf(LensSessionHandle sessionHandle, QueryRunner queryRunner) throws LensException {
-    if (isUdfRegistered(sessionHandle)) {
+    if (isUdfRegisterd(sessionHandle)) {
       // Already registered, nothing to do
       return;
     }
 
-    LOG.info("Registering UDF for session " + sessionHandle.getPublicId().toString());
+    log.info("Registering UDF for session " + sessionHandle.getPublicId().toString());
 
-    String regUdfQuery = "CREATE TEMPORARY FUNCTION " + MLConfConstants.UDF_NAME + " AS '" + HiveMLUDF.class
+    String regUdfQuery = "CREATE TEMPORARY FUNCTION " + HiveMLUDF.UDF_NAME + " AS '" + HiveMLUDF.class
       .getCanonicalName() + "'";
     queryRunner.setQueryName("register_predict_udf_" + sessionHandle.getPublicId().toString());
     QueryHandle udfQuery = queryRunner.runQuery(regUdfQuery);
-    LOG.info("udf query handle is " + udfQuery);
+    log.info("udf query handle is " + udfQuery);
     predictUdfStatus.put(sessionHandle, true);
-    LOG.info("Predict UDF registered for session " + sessionHandle.getPublicId().toString());
+    log.info("Predict UDF registered for session " + sessionHandle.getPublicId().toString());
   }
 
-  /**
-   * Checks if predict UDF is registered for a given LensSession
-   *
-   * @param sessionHandle
-   * @return
-   */
-  protected boolean isUdfRegistered(LensSessionHandle sessionHandle) {
+  protected boolean isUdfRegisterd(LensSessionHandle sessionHandle) {
     return predictUdfStatus.containsKey(sessionHandle);
   }
 
   /**
-   * Clears predictUDFStatus for all closed LensSessions.
+   * Periodically check if sessions have been closed, and clear UDF registered status.
    */
   private class UDFStatusExpiryRunnable implements Runnable {
     public void run() {
@@ -452,12 +715,12 @@ public class LensMLImpl implements LensML {
         List<LensSessionHandle> sessions = new ArrayList<LensSessionHandle>(predictUdfStatus.keySet());
         for (LensSessionHandle sessionHandle : sessions) {
           if (!sessionService.isOpen(sessionHandle)) {
-            LOG.info("Session closed, removing UDF status: " + sessionHandle);
+            log.info("Session closed, removing UDF status: " + sessionHandle);
             predictUdfStatus.remove(sessionHandle);
           }
         }
       } catch (Exception exc) {
-        LOG.warn("Error clearing UDF statuses", exc);
+        log.warn("Error clearing UDF statuses", exc);
       }
     }
   }
