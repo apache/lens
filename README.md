@@ -14,7 +14,7 @@ Confirm versions :
   # echo ${JAVA_HOME}
 
 Additionally MAVEN_OPTS can be configured as :
-  # export MAVEN_OPTS="-Xms512m -Xmx2048"
+  # export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=256m"
 
 Build the project :
   # mvn clean package
