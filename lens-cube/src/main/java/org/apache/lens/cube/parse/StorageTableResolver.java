@@ -194,7 +194,7 @@ class StorageTableResolver implements ContextRewriter {
               // check if partition exists
               foundPart = client.dimTableLatestPartitionExists(tableName);
               if (foundPart) {
-                log.info("Adding existing partition {}", StorageConstants.LATEST_PARTITION_VALUE);
+                log.debug("Adding existing partition {}", StorageConstants.LATEST_PARTITION_VALUE);
               } else {
                 log.info("Partition {} does not exist on {}", StorageConstants.LATEST_PARTITION_VALUE, tableName);
               }
@@ -286,7 +286,7 @@ class StorageTableResolver implements ContextRewriter {
             storageTableMap.put(updatePeriod, storageTables);
           }
           isStorageAdded = true;
-          log.info("Adding storage table:{} for fact:{} for update period {}", table, fact, updatePeriod);
+          log.debug("Adding storage table:{} for fact:{} for update period {}", table, fact, updatePeriod);
           storageTables.add(table);
         }
         if (!isStorageAdded) {
@@ -542,7 +542,7 @@ class StorageTableResolver implements ContextRewriter {
       log.info("No max interval for range: {} to {}", fromDate, toDate);
       return false;
     }
-    log.info("Max interval for {} is: {}", fact, interval);
+    log.debug("Max interval for {} is: {}", fact, interval);
     Set<String> storageTbls = new LinkedHashSet<String>();
     storageTbls.addAll(validStorageMap.get(fact).get(interval));
 
@@ -554,7 +554,7 @@ class StorageTableResolver implements ContextRewriter {
         part = new FactPartition(partCol, toDate, interval, null, partWhereClauseFormat);
         partitions.add(part);
         part.getStorageTables().add(storageTbl);
-        log.info("Added continuous fact partition for storage table " + storageTbl);
+        log.info("Added continuous fact partition for storage table {}", storageTbl);
       }
       return true;
     }
@@ -586,24 +586,24 @@ class StorageTableResolver implements ContextRewriter {
       Date dt = iter.next();
       Date nextDt = iter.peekNext();
       FactPartition part = new FactPartition(partCol, dt, interval, null, partWhereClauseFormat);
-      log.info("candidate storage tables for searching partitions: {}", storageTbls);
+      log.debug("candidate storage tables for searching partitions: {}", storageTbls);
       updateFactPartitionStorageTablesFrom(fact, part, storageTbls);
-      log.info("Storage tables containing Partition {} are: {}", part, part.getStorageTables());
+      log.debug("Storage tables containing Partition {} are: {}", part, part.getStorageTables());
       if (part.isFound()) {
-        log.info("Adding existing partition {}", part);
+        log.debug("Adding existing partition {}", part);
         partitions.add(part);
-        log.info("Looking for look ahead process time partitions for {}", part);
+        log.debug("Looking for look ahead process time partitions for {}", part);
         if (processTimePartCol == null) {
-          log.info("processTimePartCol is null");
+          log.debug("processTimePartCol is null");
         } else if (partCol.equals(processTimePartCol)) {
-          log.info("part column is process time col");
+          log.debug("part column is process time col");
         } else if (updatePeriods.first().equals(interval)) {
-          log.info("Update period is the least update period");
+          log.debug("Update period is the least update period");
         } else if ((iter.getNumIters() - iter.getCounter()) > lookAheadNumParts) {
           // see if this is the part of the last-n look ahead partitions
-          log.info("Not a look ahead partition");
+          log.debug("Not a look ahead partition");
         } else {
-          log.info("Looking for look ahead process time partitions for {}", part);
+          log.debug("Looking for look ahead process time partitions for {}", part);
           // check if finer partitions are required
           // final partitions are required if no partitions from
           // look-ahead
@@ -618,28 +618,28 @@ class StorageTableResolver implements ContextRewriter {
             updateFactPartitionStorageTablesFrom(fact, processTimePartition,
               part.getStorageTables());
             if (processTimePartition.isFound()) {
-              log.info("Finer parts not required for look-ahead partition :{}", part);
+              log.debug("Finer parts not required for look-ahead partition :{}", part);
             } else {
-              log.info("Looked ahead process time partition {} is not found", processTimePartition);
+              log.debug("Looked ahead process time partition {} is not found", processTimePartition);
               TreeSet<UpdatePeriod> newset = new TreeSet<UpdatePeriod>();
               newset.addAll(updatePeriods);
               newset.remove(interval);
-              log.info("newset of update periods:{}", newset);
+              log.debug("newset of update periods:{}", newset);
               if (!newset.isEmpty()) {
                 // Get partitions for look ahead process time
-                log.info("Looking for process time partitions between {} and {}", pdt, nextPdt);
+                log.debug("Looking for process time partitions between {} and {}", pdt, nextPdt);
                 Set<FactPartition> processTimeParts =
                   getPartitions(fact, TimeRange.getBuilder().fromDate(pdt).toDate(nextPdt).partitionColumn(
                     processTimePartCol).build(), newset, false, skipStorageCauses, missingPartitions);
-                log.info("Look ahead partitions: {}", processTimeParts);
+                log.debug("Look ahead partitions: {}", processTimeParts);
                 TimeRange timeRange = TimeRange.getBuilder().fromDate(dt).toDate(nextDt).build();
                 for (FactPartition pPart : processTimeParts) {
-                  log.info("Looking for finer partitions in pPart: {}", pPart);
+                  log.debug("Looking for finer partitions in pPart: {}", pPart);
                   for (Date date : timeRange.iterable(pPart.getPeriod(), 1)) {
                     partitions.add(new FactPartition(partCol, date, pPart.getPeriod(), pPart,
                       partWhereClauseFormat));
                   }
-                  log.info("added all sub partitions blindly in pPart: {}", pPart);
+                  log.debug("added all sub partitions blindly in pPart: {}", pPart);
                   //                          if (!getPartitions(fact, dt, cal.getTime(), partCol, pPart, partitions,
                   // newset, false,
                   //                            skipStorageCauses, nonExistingParts)) {
@@ -658,7 +658,7 @@ class StorageTableResolver implements ContextRewriter {
         if (!getPartitions(fact, dt, nextDt, partCol, partitions, newset, false, skipStorageCauses,
           missingPartitions)) {
 
-          log.info("Adding non existing partition {}", part);
+          log.debug("Adding non existing partition {}", part);
           if (addNonExistingParts) {
             // Add non existing partitions for all cases of whether we populate all non existing or not.
             missingPartitions.add(part);
@@ -672,7 +672,7 @@ class StorageTableResolver implements ContextRewriter {
             return false;
           }
         } else {
-          log.info("Finer granual partitions added for {}", part);
+          log.debug("Finer granual partitions added for {}", part);
         }
       }
     }

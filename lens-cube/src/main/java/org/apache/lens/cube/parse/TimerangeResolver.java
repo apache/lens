@@ -175,7 +175,7 @@ class TimerangeResolver implements ContextRewriter {
         ReferencedQueriedColumn refCol = refColIter.next();
         for (TimeRange range : cubeql.getTimeRanges()) {
           if (!refCol.col.isColumnAvailableInTimeRange(range)) {
-            log.debug("The refernced column:" + refCol.col.getName() + " is not in the range queried");
+            log.debug("The refernced column: {} is not in the range queried", refCol.col.getName());
             refColIter.remove();
             break;
           }
@@ -199,8 +199,7 @@ class TimerangeResolver implements ContextRewriter {
       CubeColumn column = cubeql.getCube().getColumnByName(col);
       for (TimeRange range : cubeql.getTimeRanges()) {
         if (!column.isColumnAvailableInTimeRange(range)) {
-          log.info("Timerange queried is not in column life for " + column
-            + ", Removing join paths containing the column");
+          log.info("Timerange queried is not in column life for {}, Removing join paths containing the column", column);
           // Remove join paths containing this column
           Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths = joinContext.getAllPaths();
 
@@ -211,7 +210,7 @@ class TimerangeResolver implements ContextRewriter {
             while (joinPathIterator.hasNext()) {
               SchemaGraph.JoinPath path = joinPathIterator.next();
               if (path.containsColumnOfTable(col, (AbstractCubeTable) cubeql.getCube())) {
-                log.info("Removing join path:" + path + " as columns :" + col + " is not available in the range");
+                log.info("Removing join path: {} as columns :{} is not available in the range", path, col);
                 joinPathIterator.remove();
                 if (joinPaths.isEmpty()) {
                   // This dimension doesn't have any paths left
@@ -254,7 +253,7 @@ class TimerangeResolver implements ContextRewriter {
       }
       if (!invalidTimeRanges.isEmpty()){
         cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.factNotAvailableInRange(invalidTimeRanges));
-        log.info("Not considering " + cfact + " as it's not available for time ranges: " + invalidTimeRanges);
+        log.info("Not considering {} as it's not available for time ranges: {}", cfact, invalidTimeRanges);
         iter.remove();
       }
     }

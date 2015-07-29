@@ -441,8 +441,10 @@ public class CubeQueryContext implements TrackQueriedColumns {
       if (!optDim.isRequiredInJoinChain) {
         optDim.isRequiredInJoinChain = isRequiredInJoin;
       }
-      log.info("Adding optional dimension:{} optDim:{} {} isRef:{}", dim , optDim,
-        (cubeCol == null ? "" : " for column:" + cubeCol),  isRef);
+      if (log.isDebugEnabled()) {
+        log.debug("Adding optional dimension:{} optDim:{} {} isRef:{}", dim , optDim,
+          (cubeCol == null ? "" : " for column:" + cubeCol),  isRef);
+      }
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
@@ -498,6 +500,9 @@ public class CubeQueryContext implements TrackQueriedColumns {
   }
 
   public void print() {
+    if (!log.isDebugEnabled()) {
+      return;
+    }
     StringBuilder builder = new StringBuilder();
     builder.append("ASTNode:" + ast.dump() + "\n");
     builder.append("QB:");
@@ -578,7 +583,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       builder.append("\n Destination:");
       builder.append("\n\t dest expr:" + qb.getParseInfo().getDestForClause(clause).dump());
     }
-    log.info(builder.toString());
+    log.debug(builder.toString());
   }
 
   void printJoinTree(QBJoinTree joinTree, StringBuilder builder) {
@@ -914,7 +919,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       }
       dimsToQuery.putAll(pickCandidateDimsToQuery(joiningTables));
     }
-    log.info("Picked Fact:{} dimsToQuery: {}" + dimsToQuery, cfacts);
+    log.info("Picked Fact:{} dimsToQuery: {}", cfacts, dimsToQuery);
     pickedDimTables = dimsToQuery.values();
     pickedFacts = cfacts;
     if (cfacts != null) {

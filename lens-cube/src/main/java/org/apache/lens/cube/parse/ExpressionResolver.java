@@ -589,7 +589,7 @@ class ExpressionResolver implements ContextRewriter {
             // But for now, they are not eligible expressions
             for (TimeRange range : cubeql.getTimeRanges()) {
               if (!esc.isValidInTimeRange(range)) {
-                log.info("Removing expression " + esc + " as it is not valid in timerange queried");
+                log.info("Removing expression {} as it is not valid in timerange queried", esc);
                 iterator.remove();
                 removedEsc.add(esc);
                 removed = true;
@@ -620,7 +620,7 @@ class ExpressionResolver implements ContextRewriter {
                 }
               }
               if (toRemove) {
-                log.info("Removing expression " + esc + " as its columns are unavailable in timerange queried");
+                log.info("Removing expression {} as its columns are unavailable in timerange queried", esc);
                 iterator.remove();
                 removedEsc.add(esc);
                 removed = true;

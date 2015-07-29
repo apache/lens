@@ -91,7 +91,9 @@ public final class RewriteUtil {
     throws SemanticException, LensException {
 
     ASTNode ast = HQLParser.parseHQL(query, conf);
-    log.debug("User query AST:{}", ast.dump());
+    if (log.isDebugEnabled()) {
+      log.debug("User query AST:{}", ast.dump());
+    }
     List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
     findCubePositions(ast, cubeQueries, query);
     for (CubeQueryInfo cqi : cubeQueries) {
@@ -112,7 +114,7 @@ public final class RewriteUtil {
     throws SemanticException {
     int childCount = ast.getChildCount();
     if (ast.getToken() != null) {
-      if (ast.getChild(0) != null) {
+      if (log.isDebugEnabled() && ast.getChild(0) != null) {
         log.debug("First child: {} Type:{}", ast.getChild(0), ((ASTNode) ast.getChild(0)).getToken().getType());
       }
       if (ast.getToken().getType() == HiveParser.TOK_QUERY
@@ -150,7 +152,9 @@ public final class RewriteUtil {
               "UNION ALL");
           }
         }
-        log.debug("Adding cqi {} query:{}", cqi, originalQuery.substring(cqi.startPos, cqi.endPos));
+        if (log.isDebugEnabled()) {
+          log.debug("Adding cqi {} query:{}", cqi, originalQuery.substring(cqi.startPos, cqi.endPos));
+        }
         cubeQueries.add(cqi);
       } else {
         for (int childPos = 0; childPos < childCount; ++childPos) {
@@ -325,7 +329,7 @@ public final class RewriteUtil {
           toHQLGauge.markSuccess();
           qIndex++;
 
-          log.debug("Rewritten query:", hqlQuery);
+          log.debug("Rewritten query:{}", hqlQuery);
 
           builder.append(hqlQuery);
           start = cqi.endPos;
