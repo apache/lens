@@ -33,6 +33,7 @@ import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
+import org.apache.hadoop.hive.ql.io.HiveFileFormatUtils;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
@@ -854,7 +855,12 @@ public final class JAXBUtils {
       partition.setInputFormatClass((Class<? extends InputFormat>) Class.forName(xp.getInputFormat()));
     }
     if (xp.getOutputFormat() != null) {
-      partition.setOutputFormatClass((Class<? extends HiveOutputFormat>) Class.forName(xp.getOutputFormat()));
+      Class<? extends HiveOutputFormat> outputFormatClass =
+        (Class<? extends HiveOutputFormat>) Class.forName(xp.getOutputFormat());
+      partition.setOutputFormatClass(outputFormatClass);
+      // Again a hack, for the issue described in HIVE-11278
+      partition.getTPartition().getSd().setOutputFormat(
+        HiveFileFormatUtils.getOutputFormatSubstitute(outputFormatClass, false).getName());
     }
     partition.getParameters().put(MetastoreConstants.PARTITION_UPDATE_PERIOD, xp.getUpdatePeriod().name());
     partition.getTPartition().getSd().getSerdeInfo().setSerializationLib(xp.getSerdeClassname());
