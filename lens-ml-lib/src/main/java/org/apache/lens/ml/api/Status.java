@@ -16,38 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.algo.api;
+package org.apache.lens.ml.api;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * The Interface AlgoParam.
+ * Status of the batch jobs for training, evaluation and prediction
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface AlgoParam {
 
-  /**
-   * Name.
-   *
-   * @return the string
-   */
-  String name();
-
-  /**
-   * Help.
-   *
-   * @return the string
-   */
-  String help();
-
-  /**
-   * Default value.
-   *
-   * @return the string
-   */
-  String defaultValue() default "None";
+@XmlRootElement
+public enum Status {
+  SUBMITTED,
+  RUNNING,
+  FAILED,
+  CANCELLED,
+  COMPLETED
 }

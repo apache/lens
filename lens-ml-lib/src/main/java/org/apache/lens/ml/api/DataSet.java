@@ -16,33 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.algo.api;
+package org.apache.lens.ml.api;
 
-import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.ml.api.AlgoParam;
-import org.apache.lens.ml.api.DataSet;
-import org.apache.lens.ml.api.Model;
-import org.apache.lens.server.api.error.LensException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public interface Algorithm {
+/**
+ * Contains meta data for a data set. A data set is identified by name, tableName and database.
+ */
+@AllArgsConstructor
+@NoArgsConstructor
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+public class DataSet {
+  @Getter
+  @Setter
+  @XmlElement
+  private String dsName;
 
-  String getName();
+  @Getter
+  @Setter
+  @XmlElement
+  private String tableName;
 
-  String getDescription();
-
-  List<AlgoParam> getParams();
-
-  /**
-   * Configure.
-   *
-   * @param configuration the configuration
-   */
-  void configure(LensConf configuration);
-
-  LensConf getConf();
-
-  TrainedModel train(Model model, DataSet dataTable) throws LensException;
-
+  @Getter
+  @Setter
+  @XmlElement
+  private String dbName;
 }

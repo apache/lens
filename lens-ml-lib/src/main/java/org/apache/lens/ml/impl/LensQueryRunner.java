@@ -16,56 +16,48 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.algo.api;
+package org.apache.lens.ml.impl;
 
-import java.util.List;
-
-import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.api.error.LensException;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
- * The Interface MLDriver.
+ * Run a query against a Lens server.
  */
-public interface MLDriver {
+public abstract class LensQueryRunner {
 
   /**
-   * Checks if is algo supported.
-   *
-   * @param algo the algo
-   * @return true, if is algo supported
+   * The session handle.
    */
-  boolean isAlgoSupported(String algo);
+  protected final LensSessionHandle sessionHandle;
+
+  @Getter
+  @Setter
+  protected String queryName;
 
   /**
-   * Gets the algo instance.
+   * Instantiates a new query runner.
    *
-   * @param algo the algo
-   * @return the algo instance
+   * @param sessionHandle the session handle
+   */
+  public LensQueryRunner(LensSessionHandle sessionHandle) {
+    this.sessionHandle = sessionHandle;
+  }
+
+  /**
+   * Run query.
+   *
+   * @param query the query
+   * @return the query handle
    * @throws LensException the lens exception
    */
-  Algorithm getAlgoInstance(String algo) throws LensException;
+  public abstract QueryHandle runQuery(String query, MLProcessLifeCycleManager.MLProcessContext mlProcessContext) throws
+    LensException;
 
-  /**
-   * Inits the.
-   *
-   * @param conf the conf
-   * @throws LensException the lens exception
-   */
-  void init(LensConf conf) throws LensException;
-
-  /**
-   * Start.
-   *
-   * @throws LensException the lens exception
-   */
-  void start() throws LensException;
-
-  /**
-   * Stop.
-   *
-   * @throws LensException the lens exception
-   */
-  void stop() throws LensException;
-
-  List<String> getAlgoNames();
+  public abstract QueryHandle runQuery(String query) throws
+    LensException;
 }

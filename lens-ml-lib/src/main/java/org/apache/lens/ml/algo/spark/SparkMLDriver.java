@@ -24,10 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.ml.algo.api.MLAlgo;
+import org.apache.lens.ml.algo.api.Algorithm;
 import org.apache.lens.ml.algo.api.MLDriver;
 import org.apache.lens.ml.algo.lib.Algorithms;
 import org.apache.lens.ml.algo.spark.dt.DecisionTreeAlgo;
+import org.apache.lens.ml.algo.spark.kmeans.KMeansAlgo;
 import org.apache.lens.ml.algo.spark.lr.LogisticRegressionAlgo;
 import org.apache.lens.ml.algo.spark.nb.NaiveBayesAlgo;
 import org.apache.lens.ml.algo.spark.svm.SVMAlgo;
@@ -45,37 +46,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SparkMLDriver implements MLDriver {
 
-  /** The owns spark context. */
-  private boolean ownsSparkContext = true;
-
   /**
-   * The Enum SparkMasterMode.
+   * The algorithms.
    */
-  private enum SparkMasterMode {
-    // Embedded mode used in tests
-    /** The embedded. */
-    EMBEDDED,
-    // Yarn client and Yarn cluster modes are used when deploying the app to Yarn cluster
-    /** The yarn client. */
-    YARN_CLIENT,
-
-    /** The yarn cluster. */
-    YARN_CLUSTER
-  }
-
-  /** The algorithms. */
   private final Algorithms algorithms = new Algorithms();
-
-  /** The client mode. */
+  /**
+   * If the driver owns spark's context.
+   */
+  private boolean ownsSparkContext = true;
+  /**
+   * Spark's client mode.
+   */
   private SparkMasterMode clientMode = SparkMasterMode.EMBEDDED;
-
-  /** The is started. */
+  /**
+   * If the driver is started.
+   */
   private boolean isStarted;
-
-  /** The spark conf. */
+  /**
+   * The spark conf.
+   */
   private SparkConf sparkConf;
-
-  /** The spark context. */
+  /**
+   * The spark context.
+   */
   private JavaSparkContext sparkContext;
 
   /**
@@ -98,20 +91,22 @@ public class SparkMLDriver implements MLDriver {
     return algorithms.isAlgoSupported(name);
   }
 
-  /*
-   * (non-Javadoc)
+  /**
+   * Returns Algorithm Instance for it's name
    *
-   * @see org.apache.lens.ml.MLDriver#getAlgoInstance(java.lang.String)
+   * @param name
+   * @return
+   * @throws LensException
    */
   @Override
-  public MLAlgo getAlgoInstance(String name) throws LensException {
+  public Algorithm getAlgoInstance(String name) throws LensException {
     checkStarted();
 
     if (!isAlgoSupported(name)) {
       return null;
     }
 
-    MLAlgo algo = null;
+    Algorithm algo = null;
     try {
       algo = algorithms.getAlgoForName(name);
       if (algo instanceof BaseSparkAlgo) {
@@ -127,16 +122,18 @@ public class SparkMLDriver implements MLDriver {
    * Register algos.
    */
   private void registerAlgos() {
-    algorithms.register(NaiveBayesAlgo.class);
-    algorithms.register(SVMAlgo.class);
-    algorithms.register(LogisticRegressionAlgo.class);
-    algorithms.register(DecisionTreeAlgo.class);
+    algorithms.register("spark_logistic_regression", LogisticRegressionAlgo.class);
+    algorithms.register("spark_naive_bayes", NaiveBayesAlgo.class);
+    algorithms.register("spark_k_means", KMeansAlgo.class);
+    algorithms.register("spark_svm", SVMAlgo.class);
+    algorithms.register("spark_decision_tree", DecisionTreeAlgo.class);
   }
 
-  /*
-   * (non-Javadoc)
+  /**
+   * Initializes the driver
    *
-   * @see org.apache.lens.ml.MLDriver#init(org.apache.lens.api.LensConf)
+   * @param conf the conf
+   * @throws LensException
    */
   @Override
   public void init(LensConf conf) throws LensException {
@@ -278,6 +275,27 @@ public class SparkMLDriver implements MLDriver {
 
   public JavaSparkContext getSparkContext() {
     return sparkContext;
+  }
+
+  /**
+   * Supported algorithms.
+   */
+  private enum SparkMasterMode {
+    // Embedded mode used in tests
+    /**
+     * The embedded.
+     */
+    EMBEDDED,
+    // Yarn client and Yarn cluster modes are used when deploying the app to Yarn cluster
+    /**
+     * The yarn client.
+     */
+    YARN_CLIENT,
+
+    /**
+     * The yarn cluster.
+     */
+    YARN_CLUSTER
   }
 
 }

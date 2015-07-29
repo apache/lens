@@ -18,48 +18,56 @@
  */
 package org.apache.lens.ml.algo.spark;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.lens.ml.algo.lib.ClassifierBaseModel;
+import org.apache.lens.ml.api.Feature;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.spark.mllib.classification.ClassificationModel;
 import org.apache.spark.mllib.linalg.Vectors;
 
 /**
- * The Class BaseSparkClassificationModel.
+ * The class BaseSparkClassificationModel
  *
- * @param <MODEL> the generic type
+ * @param <MODEL>
  */
 public class BaseSparkClassificationModel<MODEL extends ClassificationModel> extends ClassifierBaseModel {
 
-  /** The model id. */
-  private final String modelId;
-
-  /** The spark model. */
-  private final MODEL sparkModel;
 
   /**
-   * Instantiates a new base spark classification model.
-   *
-   * @param modelId the model id
-   * @param model   the model
+   * The spark model.
    */
-  public BaseSparkClassificationModel(String modelId, MODEL model) {
-    this.modelId = modelId;
+  private final MODEL sparkModel;
+  private List<Feature> featureList;
+
+  /**
+   * initializes BaseSparkClassificationModel
+   *
+   * @param featureList
+   * @param model
+   */
+  public BaseSparkClassificationModel(List<Feature> featureList, MODEL model) {
     this.sparkModel = model;
+    this.featureList = featureList;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.ml.MLModel#predict(java.lang.Object[])
-   */
-  @Override
-  public Double predict(Object... args) {
-    return sparkModel.predict(Vectors.dense(getFeatureVector(args)));
-  }
 
   @Override
-  public String getId() {
-    return modelId;
+  public Double predict(Map<String, String> featureVector) throws LensException {
+    String[] featureArray = new String[featureList.size()];
+    int i = 0;
+    for (Feature feature : featureList) {
+      String featureValue = featureVector.get(feature.getName());
+      if (featureValue == null || featureValue.isEmpty()) {
+        throw new LensException("Error while predicting: input featureVector doesn't contain all required features : "
+          + "Feature Name: " + feature.getName());
+      } else {
+        featureArray[i++] = featureVector.get(feature.getName());
+      }
+    }
+    return sparkModel.predict(Vectors.dense(getFeatureVector(featureArray)));
   }
 
 }

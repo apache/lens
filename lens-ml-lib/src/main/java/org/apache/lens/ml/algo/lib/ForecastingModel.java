@@ -19,21 +19,24 @@
 package org.apache.lens.ml.algo.lib;
 
 import java.util.List;
+import java.util.Map;
 
-import org.apache.lens.ml.algo.api.MLModel;
+import org.apache.lens.ml.algo.api.TrainedModel;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * The Class ForecastingModel.
  */
-public class ForecastingModel extends MLModel<MultiPrediction> {
+public class ForecastingModel implements TrainedModel<MultiPrediction> {
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.MLModel#predict(java.lang.Object[])
+   * @see org.apache.lens.ml.TrainedModel#predict(java.lang.Object[])
    */
+
   @Override
-  public MultiPrediction predict(Object... args) {
+  public MultiPrediction predict(Map<String, String> featureVector) throws LensException {
     return new ForecastingPredictions(null);
   }
 
@@ -42,7 +45,9 @@ public class ForecastingModel extends MLModel<MultiPrediction> {
    */
   public static class ForecastingPredictions implements MultiPrediction {
 
-    /** The values. */
+    /**
+     * The values.
+     */
     private final List<LabelledPrediction> values;
 
     /**
@@ -65,10 +70,14 @@ public class ForecastingModel extends MLModel<MultiPrediction> {
    */
   public static class ForecastingLabel implements LabelledPrediction<Long, Double> {
 
-    /** The timestamp. */
+    /**
+     * The timestamp.
+     */
     private final Long timestamp;
 
-    /** The value. */
+    /**
+     * The value.
+     */
     private final double value;
 
     /**

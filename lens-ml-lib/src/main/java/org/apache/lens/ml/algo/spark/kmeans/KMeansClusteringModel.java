@@ -18,7 +18,12 @@
  */
 package org.apache.lens.ml.algo.spark.kmeans;
 
-import org.apache.lens.ml.algo.api.MLModel;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.lens.ml.algo.api.TrainedModel;
+import org.apache.lens.ml.api.Feature;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.mllib.linalg.Vectors;
@@ -26,42 +31,39 @@ import org.apache.spark.mllib.linalg.Vectors;
 /**
  * The Class KMeansClusteringModel.
  */
-public class KMeansClusteringModel extends MLModel<Integer> {
-
-  /** The model. */
-  private final KMeansModel model;
-
-  /** The model id. */
-  private final String modelId;
+public class KMeansClusteringModel implements TrainedModel<Integer> {
 
   /**
-   * Instantiates a new k means clustering model.
-   *
-   * @param modelId the model id
-   * @param model   the model
+   * The model.
    */
-  public KMeansClusteringModel(String modelId, KMeansModel model) {
-    this.model = model;
-    this.modelId = modelId;
+  private final KMeansModel kMeansModel;
+
+  private List<Feature> featureList;
+
+  /**
+   * Instantiates a new k   means clustering model.
+   *
+   * @param model the model
+   */
+  public KMeansClusteringModel(List<Feature> featureList, KMeansModel model) {
+    this.kMeansModel = model;
+    this.featureList = featureList;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.ml.MLModel#predict(java.lang.Object[])
-   */
+
   @Override
-  public Integer predict(Object... args) {
-    // Convert the params to array of double
-    double[] arr = new double[args.length];
-    for (int i = 0; i < args.length; i++) {
-      if (args[i] != null) {
-        arr[i] = (Double) args[i];
+  public Integer predict(Map<String, String> featureVector) throws LensException {
+    double[] featureArray = new double[featureList.size()];
+    int i = 0;
+    for (Feature feature : featureList) {
+      String featureValue = featureVector.get(feature.getName());
+      if (featureValue == null || featureValue.isEmpty()) {
+        throw new LensException("Error while predicting: input featureVector doesn't contain all required features : "
+          + "Feature Name: " + feature.getName());
       } else {
-        arr[i] = 0d;
+        featureArray[i++] = Double.parseDouble(featureValue);
       }
     }
-
-    return model.predict(Vectors.dense(arr));
+    return kMeansModel.predict(Vectors.dense(featureArray));
   }
 }

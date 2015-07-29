@@ -32,6 +32,8 @@ import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.ml.algo.spark.HiveTableRDD;
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -47,8 +49,6 @@ import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.rdd.RDD;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>
@@ -76,26 +76,19 @@ import lombok.extern.slf4j.Slf4j;
  * JavaRDD&lt;ResultRow&gt; rdd = client.createLensRDD(&quot;SELECT msr1 from TEST_CUBE WHERE ...&quot;, conf);
  * </pre>
  */
-@Slf4j
 public class LensRDDClient {
 
+  /**
+   * The Constant LOG.
+   */
+  public static final Log LOG = LogFactory.getLog(LensRDDClient.class);
   // Default input format for table created from Lens result set
-  /** The Constant INPUT_FORMAT. */
-  private static final String INPUT_FORMAT = TextInputFormat.class.getName();
-  // Default output format
-  /** The Constant OUTPUT_FORMAT. */
-  private static final String OUTPUT_FORMAT = TextOutputFormat.class.getName();
-  // Name of partition column and its value. There is always exactly one partition in the table created from
-  // Result set.
-  /** The Constant TEMP_TABLE_PART_COL. */
-  private static final String TEMP_TABLE_PART_COL = "dummy_partition_column";
-
-  /** The Constant TEMP_TABLE_PART_VAL. */
-  private static final String TEMP_TABLE_PART_VAL = "placeholder_value";
-
-  /** The Constant HIVE_CONF. */
+  /**
+   * The Constant HIVE_CONF.
+   */
   protected static final HiveConf HIVE_CONF = new HiveConf();
 
+  // Default output format
   static {
     HIVE_CONF.setVar(HiveConf.ConfVars.METASTOREURIS, "");
     HIVE_CONF.set("javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=./metastore_db;create=true");
@@ -103,11 +96,32 @@ public class LensRDDClient {
     HIVE_CONF.setBoolean("hive.metastore.local", true);
     HIVE_CONF.set("hive.metastore.warehouse.dir", "file://${user.dir}/warehouse");
   }
-
-  /** The spark context. */
+  // Name of partition column and its value. There is always exactly one partition in the table created from
+  // Result set.
+  /**
+   * The Constant INPUT_FORMAT.
+   */
+  private static final String INPUT_FORMAT = TextInputFormat.class.getName();
+  /**
+   * The Constant OUTPUT_FORMAT.
+   */
+  private static final String OUTPUT_FORMAT = TextOutputFormat.class.getName();
+  /**
+   * The Constant TEMP_TABLE_PART_COL.
+   */
+  private static final String TEMP_TABLE_PART_COL = "dummy_partition_column";
+  /**
+   * The Constant TEMP_TABLE_PART_VAL.
+   */
+  private static final String TEMP_TABLE_PART_VAL = "placeholder_value";
+  /**
+   * The spark context.
+   */
   private final JavaSparkContext sparkContext; // Spark context
 
-  /** The lens client. */
+  /**
+   * The lens client.
+   */
   private LensClient lensClient; // Lens client instance. Initialized lazily.
 
   /**
@@ -230,7 +244,7 @@ public class LensRDDClient {
     try {
       rdd = HiveTableRDD.createHiveTableRDD(sparkContext, HIVE_CONF, "default", tempTableName, TEMP_TABLE_PART_COL
         + "='" + TEMP_TABLE_PART_VAL + "'");
-      log.info("Created RDD {} for table {}", rdd.name(), tempTableName);
+      LOG.info("Created RDD " + rdd.name() + " for table " + tempTableName);
     } catch (IOException e) {
       throw new LensException("Error creating RDD for table " + tempTableName, e);
     }
@@ -267,7 +281,7 @@ public class LensRDDClient {
     tbl.getPartCols().add(new FieldSchema(TEMP_TABLE_PART_COL, "string", "default"));
     hiveClient.createTable(tbl);
 
-    log.info("Table {} created", tableName);
+    LOG.info("Table " + tableName + " created");
 
     // Add partition to the table
     AddPartitionDesc partitionDesc = new AddPartitionDesc("default", tableName, false);
@@ -275,7 +289,7 @@ public class LensRDDClient {
     partSpec.put(TEMP_TABLE_PART_COL, TEMP_TABLE_PART_VAL);
     partitionDesc.addPartition(partSpec, dataLocation);
     hiveClient.createPartitions(partitionDesc);
-    log.info("Created partition in {} for data in {}", tableName, dataLocation);
+    LOG.info("Created partition in " + tableName + " for data in " + dataLocation);
 
     return tableName;
   }
@@ -305,7 +319,7 @@ public class LensRDDClient {
       try {
         Thread.sleep(1000);
       } catch (InterruptedException e) {
-        log.warn("Interrupted while waiting for query", e);
+        LOG.warn("Interrupted while waiting for query", e);
         break;
       }
     }
@@ -317,13 +331,19 @@ public class LensRDDClient {
    */
   public static class LensRDDResult implements Serializable {
 
-    /** The result rdd. */
+    /**
+     * The result rdd.
+     */
     private transient RDD<List<Object>> resultRDD;
 
-    /** The lens query. */
+    /**
+     * The lens query.
+     */
     private QueryHandle lensQuery;
 
-    /** The temp table name. */
+    /**
+     * The temp table name.
+     */
     private String tempTableName;
 
     /**
@@ -368,7 +388,7 @@ public class LensRDDClient {
           JavaPairRDD<WritableComparable, HCatRecord> javaPairRDD = HiveTableRDD.createHiveTableRDD(sparkContext,
             HIVE_CONF, "default", tempTableName, TEMP_TABLE_PART_COL + "='" + TEMP_TABLE_PART_VAL + "'");
           resultRDD = javaPairRDD.map(new HCatRecordToObjectListMapper()).rdd();
-          log.info("Created RDD {} for table {}", resultRDD.name(), tempTableName);
+          LOG.info("Created RDD " + resultRDD.name() + " for table " + tempTableName);
         } catch (IOException e) {
           throw new LensException("Error creating RDD for table " + tempTableName, e);
         }
@@ -390,7 +410,7 @@ public class LensRDDClient {
       try {
         hiveClient = Hive.get(HIVE_CONF);
         hiveClient.dropTable("default." + tempTableName);
-        log.info("Dropped temp table {}", tempTableName);
+        LOG.info("Dropped temp table " + tempTableName);
       } catch (HiveException e) {
         throw new LensException(e);
       }

@@ -18,40 +18,10 @@
  */
 package org.apache.lens.ml;
 
-import java.net.URI;
-
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.UriBuilder;
-
-import org.apache.lens.client.LensClient;
-import org.apache.lens.client.LensClientConfig;
-import org.apache.lens.client.LensMLClient;
-import org.apache.lens.ml.impl.MLRunner;
-import org.apache.lens.ml.impl.MLTask;
-import org.apache.lens.ml.server.MLApp;
-import org.apache.lens.server.LensJerseyTest;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.metastore.MetastoreResource;
-import org.apache.lens.server.query.QueryServiceResource;
-import org.apache.lens.server.session.SessionResource;
-
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
-
-import lombok.extern.slf4j.Slf4j;
-
-
-@Test
-@Slf4j
-public class TestMLRunner extends LensJerseyTest {
+//@Test
+public class TestMLRunner {
+  /*
+  private static final Log LOG = LogFactory.getLog(TestMLRunner.class);
   private static final String TEST_DB = TestMLRunner.class.getSimpleName();
 
   private LensMLClient mlClient;
@@ -101,7 +71,7 @@ public class TestMLRunner extends LensJerseyTest {
 
   @Test
   public void trainAndEval() throws Exception {
-    log.info("Starting train & eval");
+    LOG.info("Starting train & eval");
     String algoName = "spark_naive_bayes";
     String database = "default";
     String trainTable = "naivebayes_training_table";
@@ -125,7 +95,7 @@ public class TestMLRunner extends LensJerseyTest {
 
   @Test
   public void trainAndEvalFromDir() throws Exception {
-    log.info("Starting train & eval from Dir");
+    LOG.info("Starting train & eval from Dir");
     MLRunner runner = new MLRunner();
     runner.init(mlClient, "data/naive_bayes");
     MLTask task = runner.train();
@@ -135,4 +105,5 @@ public class TestMLRunner extends LensJerseyTest {
     Assert.assertNotNull(modelID);
     Assert.assertNotNull(reportID);
   }
+  */
 }

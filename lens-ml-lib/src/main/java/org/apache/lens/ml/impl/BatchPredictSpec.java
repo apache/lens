@@ -36,14 +36,15 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import lombok.Getter;
 
 /**
- * Table specification for running test on a table.
+ * BatchPredictSpec class. Contains table specification for input table for prediction in batch mode. Returns the
+ * HIVE query which can be used to run the prediction job.
  */
-public class TableTestingSpec {
+public class BatchPredictSpec {
 
   /**
    * The Constant LOG.
    */
-  public static final Log LOG = LogFactory.getLog(TableTestingSpec.class);
+  public static final Log LOG = LogFactory.getLog(BatchPredictSpec.class);
 
   /**
    * The db.
@@ -65,11 +66,6 @@ public class TableTestingSpec {
    * The feature columns.
    */
   private List<Feature> featureColumns;
-
-  /**
-   * The label column.
-   */
-  private Feature labelColumn;
 
   /**
    * The output column.
@@ -96,12 +92,17 @@ public class TableTestingSpec {
    */
   private String modelID;
 
-  /*The modelInstanceId*/
+  /**
+   * The modelInstanceIds
+   */
   private String modelInstanceId;
 
   @Getter
   private boolean outputTableExists;
 
+  /**
+   * A unique testId which is predictionId
+   */
   @Getter
   private String testID;
 
@@ -157,11 +158,6 @@ public class TableTestingSpec {
       return false;
     }
 
-    if (!testTableColumns.contains(labelColumn.getDataColumn())) {
-      LOG.info(
-        "Invalid label column: " + labelColumn.getDataColumn() + ". Actual columns in table:" + testTableColumns);
-      return false;
-    }
 
     if (StringUtils.isBlank(outputColumn)) {
       LOG.info("Output column is required");
@@ -192,8 +188,7 @@ public class TableTestingSpec {
     }
     String featureCols = StringUtils.join(featureNameList, ",");
     String featureMapString = StringUtils.join(featureMapBuilder, ",");
-    q.append(featureCols).append(",").append(labelColumn.getDataColumn()).append(", ").append("predict(").append("'")
-      .append(algorithm)
+    q.append(featureCols).append(",").append("predict(").append("'").append(algorithm)
       .append("', ").append("'").append(modelID).append("', ").append("'").append(modelInstanceId).append("', ")
       .append(featureMapString).append(") ").append(outputColumn)
       .append(" FROM ").append(inputTable);
@@ -210,8 +205,7 @@ public class TableTestingSpec {
         + columnNameToFieldSchema.get(featureCol.getDataColumn()).getType());
     }
 
-    outputTableColumns.add(labelColumn.getDataColumn() + " "
-      + columnNameToFieldSchema.get(labelColumn.getDataColumn()).getType());
+
     outputTableColumns.add(outputColumn + " string");
 
     createTableQuery.append(StringUtils.join(outputTableColumns, ", "));
@@ -230,13 +224,13 @@ public class TableTestingSpec {
     /**
      * The spec.
      */
-    private final TableTestingSpec spec;
+    private final BatchPredictSpec spec;
 
     /**
      * Instantiates a new table testing spec builder.
      */
     public TableTestingSpecBuilder() {
-      spec = new TableTestingSpec();
+      spec = new BatchPredictSpec();
     }
 
     /**
@@ -280,17 +274,6 @@ public class TableTestingSpec {
      */
     public TableTestingSpecBuilder featureColumns(List<Feature> featureColumns) {
       spec.featureColumns = featureColumns;
-      return this;
-    }
-
-    /**
-     * Labe column.
-     *
-     * @param labelColumn the label column
-     * @return the table testing spec builder
-     */
-    public TableTestingSpecBuilder lableColumn(Feature labelColumn) {
-      spec.labelColumn = labelColumn;
       return this;
     }
 
@@ -349,6 +332,12 @@ public class TableTestingSpec {
       return this;
     }
 
+    /**
+     * modelInstanceID
+     *
+     * @param modelInstanceId
+     * @return the table testing spec builder
+     */
     public TableTestingSpecBuilder modelInstanceID(String modelInstanceId) {
       spec.modelInstanceId = modelInstanceId;
       return this;
@@ -359,7 +348,7 @@ public class TableTestingSpec {
      *
      * @return the table testing spec
      */
-    public TableTestingSpec build() {
+    public BatchPredictSpec build() {
       return spec;
     }
 

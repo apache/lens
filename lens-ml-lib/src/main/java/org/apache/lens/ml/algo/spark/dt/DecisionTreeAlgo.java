@@ -20,10 +20,9 @@ package org.apache.lens.ml.algo.spark.dt;
 
 import java.util.Map;
 
-import org.apache.lens.ml.algo.api.AlgoParam;
-import org.apache.lens.ml.algo.api.Algorithm;
 import org.apache.lens.ml.algo.spark.BaseSparkAlgo;
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
+import org.apache.lens.ml.api.AlgoParam;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.spark.mllib.regression.LabeledPoint;
@@ -41,19 +40,27 @@ import scala.Enumeration;
 /**
  * The Class DecisionTreeAlgo.
  */
-@Algorithm(name = "spark_decision_tree", description = "Spark Decision Tree classifier algo")
 public class DecisionTreeAlgo extends BaseSparkAlgo {
 
-  /** The algo. */
+  static final String DESCRIPTION = "Spark decision tree algo";
+  static final String NAME = "spark_decision_tree";
+
+  /**
+   * The algo.
+   */
   @AlgoParam(name = "algo", help = "Decision tree algorithm. Allowed values are 'classification' and 'regression'")
   private Enumeration.Value algo;
 
-  /** The decision tree impurity. */
+  /**
+   * The decision tree impurity.
+   */
   @AlgoParam(name = "impurity", help = "Impurity measure used by the decision tree. "
     + "Allowed values are 'gini', 'entropy' and 'variance'")
   private Impurity decisionTreeImpurity;
 
-  /** The max depth. */
+  /**
+   * The max depth.
+   */
   @AlgoParam(name = "maxDepth", help = "Max depth of the decision tree. Integer values expected.",
     defaultValue = "100")
   private int maxDepth;
@@ -66,6 +73,10 @@ public class DecisionTreeAlgo extends BaseSparkAlgo {
    */
   public DecisionTreeAlgo(String name, String description) {
     super(name, description);
+  }
+
+  public DecisionTreeAlgo() {
+    super(NAME, DESCRIPTION);
   }
 
   /*
@@ -100,9 +111,10 @@ public class DecisionTreeAlgo extends BaseSparkAlgo {
    * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
-  protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
+  protected BaseSparkClassificationModel trainInternal(RDD<LabeledPoint> trainingRDD)
     throws LensException {
     DecisionTreeModel model = DecisionTree$.MODULE$.train(trainingRDD, algo, decisionTreeImpurity, maxDepth);
-    return new DecisionTreeClassificationModel(modelId, new SparkDecisionTreeModel(model));
+    return new DecisionTreeClassificationModel(features, new SparkDecisionTreeModel(model));
   }
+
 }

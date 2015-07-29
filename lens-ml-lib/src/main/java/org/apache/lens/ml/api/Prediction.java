@@ -16,64 +16,73 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.algo.api;
+package org.apache.lens.ml.api;
 
-import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.lens.api.LensSessionHandle;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
+
+/*
+ * Batch prediction Instance
+ */
 
 /**
- * Instantiates a new ML model.
+ * Contains meta data for an Prediction. Prediction captures the meta data of process of batch predicting data of
+ * inputDataSet against the ModelInstance modelInstanceId and populating results in outputDataSet.
  */
+@AllArgsConstructor
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 @NoArgsConstructor
-@ToString
-public abstract class MLModel<PREDICTION> implements Serializable {
-
-  /** The id. */
+public class Prediction implements MLProcess {
+  @XmlElement
   @Getter
   @Setter
-  private String id;
+  String id;
 
-  /** The created at. */
+  @XmlElement
   @Getter
   @Setter
-  private Date createdAt;
+  Date startTime;
 
-  /** The algo name. */
+  @XmlElement
   @Getter
   @Setter
-  private String algoName;
+  Date finishTime;
 
-  /** The table. */
+  @XmlElement
   @Getter
   @Setter
-  private String table;
+  Status status;
 
-  /** The params. */
   @Getter
   @Setter
-  private List<String> params;
+  @XmlElement
+  LensSessionHandle lensSessionHandle;
 
-  /** The label column. */
   @Getter
   @Setter
-  private String labelColumn;
+  @XmlElement
+  String modelInstanceId;
 
-  /** The feature columns. */
   @Getter
   @Setter
-  private List<String> featureColumns;
+  @XmlElement
+  String inputDataSet;
 
-  /**
-   * Predict.
-   *
-   * @param args the args
-   * @return the prediction
-   */
-  public abstract PREDICTION predict(Object... args);
+  @Getter
+  @Setter
+  @XmlElement
+  String outputDataSet;
+
 }

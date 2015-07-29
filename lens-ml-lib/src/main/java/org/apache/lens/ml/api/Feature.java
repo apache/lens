@@ -19,77 +19,50 @@
 package org.apache.lens.ml.api;
 
 import java.io.Serializable;
-import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 /**
- * Instantiates a new ML test report.
+ * Feature class. Equivalent of a feature of a Machine Learning model.
  */
+
+@AllArgsConstructor
+@XmlRootElement
 @NoArgsConstructor
-@ToString
-public class MLTestReport implements Serializable {
+@XmlAccessorType(XmlAccessType.FIELD)
+public class Feature implements Serializable {
 
-  /** The test table. */
   @Getter
   @Setter
-  private String testTable;
-
-  /** The output table. */
+  @XmlElement
+  private String name;
   @Getter
   @Setter
-  private String outputTable;
-
-  /** The output column. */
+  @XmlElement
+  private String description;
   @Getter
   @Setter
-  private String outputColumn;
-
-  /** The label column. */
+  @XmlElement
+  private Type type;
+  /**
+   * Name of the column of the table to which this feature is mapped.
+   */
   @Getter
   @Setter
-  private String labelColumn;
+  @XmlElement
+  private String dataColumn;
 
-  /** The feature columns. */
-  @Getter
-  @Setter
-  private List<String> featureColumns;
-
-  /** The algorithm. */
-  @Getter
-  @Setter
-  private String algorithm;
-
-  /** The model id. */
-  @Getter
-  @Setter
-  private String modelID;
-
-  /** The report id. */
-  @Getter
-  @Setter
-  private String reportID;
-
-  /** The query id. */
-  @Getter
-  @Setter
-  private String queryID;
-
-  /** The test output path. */
-  @Getter
-  @Setter
-  private String testOutputPath;
-
-  /** The prediction result column. */
-  @Getter
-  @Setter
-  private String predictionResultColumn;
-
-  /** The lens query id. */
-  @Getter
-  @Setter
-  private String lensQueryID;
+  @XmlRootElement
+  public enum Type {
+    Categorical,
+    Continuous
+  }
 }

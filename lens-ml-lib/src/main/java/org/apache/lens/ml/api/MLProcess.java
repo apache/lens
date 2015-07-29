@@ -16,33 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.algo.api;
+package org.apache.lens.ml.api;
 
-import java.util.List;
+import java.util.Date;
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.ml.api.AlgoParam;
-import org.apache.lens.ml.api.DataSet;
-import org.apache.lens.ml.api.Model;
-import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.api.LensSessionHandle;
 
-public interface Algorithm {
+/**
+ * Interface MLProcess for Process which go through ML LifeCycle of Submitting, Polling and Completion.
+ */
 
-  String getName();
+public interface MLProcess {
 
-  String getDescription();
+  String getId();
 
-  List<AlgoParam> getParams();
+  void setId(String id);
 
-  /**
-   * Configure.
-   *
-   * @param configuration the configuration
-   */
-  void configure(LensConf configuration);
+  Date getStartTime();
 
-  LensConf getConf();
+  void setStartTime(Date time);
 
-  TrainedModel train(Model model, DataSet dataTable) throws LensException;
+  Date getFinishTime();
 
+  void setFinishTime(Date time);
+
+  Status getStatus();
+
+  void setStatus(Status status);
+
+  LensSessionHandle getLensSessionHandle();
+
+  void setLensSessionHandle(LensSessionHandle lensSessionHandle);
 }

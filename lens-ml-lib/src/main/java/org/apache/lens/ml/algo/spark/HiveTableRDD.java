@@ -27,10 +27,14 @@ import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Create a JavaRDD based on a Hive table using HCatInputFormat.
  */
+@Slf4j
 public final class HiveTableRDD {
+
   private HiveTableRDD() {
   }
 
@@ -46,7 +50,9 @@ public final class HiveTableRDD {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   public static JavaPairRDD<WritableComparable, HCatRecord> createHiveTableRDD(JavaSparkContext javaSparkContext,
-    Configuration conf, String db, String table, String partitionFilter) throws IOException {
+                                                                               Configuration conf, String db,
+                                                                               String table, String partitionFilter)
+    throws IOException {
 
     HCatInputFormat.setInput(conf, db, table, partitionFilter);
 

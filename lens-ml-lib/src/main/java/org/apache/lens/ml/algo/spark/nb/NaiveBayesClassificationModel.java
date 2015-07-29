@@ -18,7 +18,10 @@
  */
 package org.apache.lens.ml.algo.spark.nb;
 
+import java.util.List;
+
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
+import org.apache.lens.ml.api.Feature;
 
 import org.apache.spark.mllib.classification.NaiveBayesModel;
 
@@ -28,12 +31,10 @@ import org.apache.spark.mllib.classification.NaiveBayesModel;
 public class NaiveBayesClassificationModel extends BaseSparkClassificationModel<NaiveBayesModel> {
 
   /**
-   * Instantiates a new naive bayes classification model.
-   *
-   * @param modelId the model id
-   * @param model   the model
+   * @param featureList
+   * @param model
    */
-  public NaiveBayesClassificationModel(String modelId, NaiveBayesModel model) {
-    super(modelId, model);
+  public NaiveBayesClassificationModel(List<Feature> featureList, NaiveBayesModel model) {
+    super(featureList, model);
   }
 }
