@@ -105,7 +105,7 @@ public class JoinChain implements Named {
    * @param table
    * @param name
    */
-  public JoinChain(AbstractCubeTable table, String name) {
+  public JoinChain(AbstractBaseTable table, String name) {
     boolean isCube = (table instanceof Cube);
     this.name = name;
     this.paths = new ArrayList<Path>();
