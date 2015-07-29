@@ -509,8 +509,15 @@ Developer Documentation : How to contribute to Apache Lens?
 
   The new doc files can added in src/site of parent module. Or doc change can be done in existing files under src/site.
   Update the config files and run the TestGenerateConfigDoc test calss for updating the config docs.
-  Once the changes are done, contributor can run mvn site:run, which will start localhost doc server on port 8080,
-  which can opened through browser and doc can be validated.
+  Once the changes are done, contributor can run the below command.
+
++---+
+
+  mvn site:run
+
++---+
+
+  This will start localhost doc server on {{{http://localhost:8080}http://localhost:8080}}, which can opened through browser and doc can be validated.
 
 ** How to update the config docs?
 

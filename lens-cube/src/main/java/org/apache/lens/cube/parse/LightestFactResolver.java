@@ -23,17 +23,16 @@ import java.util.*;
 
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Prune fact tables having more weight than minimum.
  */
+@Slf4j
 public class LightestFactResolver implements ContextRewriter {
-  public static final Log LOG = LogFactory.getLog(LightestFactResolver.class.getName());
-
   public LightestFactResolver(Configuration conf) {
   }
 
@@ -51,8 +50,8 @@ public class LightestFactResolver implements ContextRewriter {
       for (Iterator<Set<CandidateFact>> i = cubeql.getCandidateFactSets().iterator(); i.hasNext();) {
         Set<CandidateFact> facts = i.next();
         if (factWeightMap.get(facts) > minWeight) {
-          LOG.info("Not considering facts:" + facts + " from candidate fact tables as it has more fact weight:"
-            + factWeightMap.get(facts) + " minimum:" + minWeight);
+          log.info("Not considering facts:{} from candidate fact tables as it has more fact weight:{} minimum:{}",
+            facts, factWeightMap.get(facts), minWeight);
           i.remove();
         }
       }

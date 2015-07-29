@@ -23,18 +23,17 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Accepts strings of all expressions and constructs HQL query.
  * <p></p>
  * Making this as an abstract class because it provides constructors without all expressions being set.
  */
+@Slf4j
 public abstract class SimpleHQLContext implements HQLContextInterface {
-
-  public static final Log LOG = LogFactory.getLog(SimpleHQLContext.class.getName());
 
   private String select;
   private String from;
@@ -79,8 +78,8 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
     setMissingExpressions();
     String qfmt = getQueryFormat();
     Object[] queryTreeStrings = getQueryTreeStrings();
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("qfmt:" + qfmt + " Query strings: " + Arrays.toString(queryTreeStrings));
+    if (log.isDebugEnabled()) {
+      log.debug("qfmt: {} Query strings: {}", qfmt, Arrays.toString(queryTreeStrings));
     }
     String baseQuery = String.format(qfmt, queryTreeStrings);
     return baseQuery;

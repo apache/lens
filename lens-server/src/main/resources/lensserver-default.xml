@@ -44,6 +44,16 @@
   </property>
 
   <property>
+    <name>lens.server.query.phase1.rewriters</name>
+    <value></value>
+    <description>Query phase 1 rewriters. This is to convert user query to cube query. The resulting cube query will
+      be passed for validation and rewriting to hql query.\
+      Use cases will be to use extra intelligence to convert user query to optimized cube query.\
+      Or define shortcuts for certain frequently used queries :)
+    </description>
+  </property>
+
+  <property>
     <name>lens.server.servicenames</name>
     <value>session,query,metastore,scheduler,quota</value>
     <description>These services would be started in the specified order when lens-server starts up</description>
@@ -350,7 +360,7 @@
 
   <property>
     <name>lens.server.ws.resourcenames</name>
-    <value>session,metastore,query,quota,scheduler,index</value>
+    <value>session,metastore,query,quota,scheduler,index,log</value>
     <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
   </property>
 
@@ -376,6 +386,12 @@
     <name>lens.server.index.ws.resource.impl</name>
     <value>org.apache.lens.server.IndexResource</value>
     <description>Implementation class for Index Resource</description>
+  </property>
+
+  <property>
+    <name>lens.server.log.ws.resource.impl</name>
+    <value>org.apache.lens.server.LogResource</value>
+    <description>Implementation class for Log Resource</description>
   </property>
 
   <property>
@@ -700,4 +716,41 @@
     <value>3600</value>
     <description>Interval at which lens session expiry service runs</description>
   </property>
+
+  <property>
+    <name>lens.server.scheduling.queue.poll.interval.millisec</name>
+    <value>2000</value>
+    <description>The interval at which submission thread will poll scheduling queue to fetch the next query for
+      submission. If value is less than equal to 0, then it would mean that thread will continuosly poll without
+      sleeping. The interval has to be given in milliseconds.</description>
+  </property>
+
+  <property>
+    <name>lens.server.query.launching.constraint.factories</name>
+    <value>org.apache.lens.server.query.constraint.TotalQueryCostCeilingConstraintFactory</value>
+    <description>Factories used to instantiate constraints enforced on queries by lens. Every Factory should be an
+      implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation
+      of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint. A query will be launched only if all
+      constraints pass.</description>
+  </property>
+
+  <property>
+    <name>lens.server.total.query.cost.ceiling.per.user</name>
+    <value>-1.0</value>
+    <description>A query submitted by user will be launched only if total query cost of all current
+      launched queries of user is less than or equal to total query cost ceiling defined by this property.
+      This configuration value is only useful when TotalQueryCostCeilingConstraint is enabled by using
+      org.apache.lens.server.query.constraint.TotalQueryCostCeilingConstraintFactory as one of the factories in
+      lens.server.query.constraint.factories property. Default is -1.0 which means that there is no limit on the total
+      query cost of launched queries submitted by a user.</description>
+  </property>
+
+  <property>
+    <name>lens.server.waiting.queries.selection.policy.factories</name>
+    <value>org.apache.lens.server.query.collect.UserSpecificWaitingQueriesSelectionPolicyFactory</value>
+    <description>Factories used to instantiate waiting queries selection policies. Every factory should
+      be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an
+      implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.</description>
+  </property>
+
 </configuration>

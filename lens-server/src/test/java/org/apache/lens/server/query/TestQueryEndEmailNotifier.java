@@ -42,8 +42,6 @@ import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.common.TestResourceFile;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -64,8 +62,6 @@ import org.testng.annotations.Test;
 @Test(groups = "unit-test")
 public class TestQueryEndEmailNotifier extends LensJerseyTest {
 
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(TestQueryEndEmailNotifier.class);
   private static final int NUM_ITERS = 30;
   /** The query service. */
   QueryExecutionServiceImpl queryService;

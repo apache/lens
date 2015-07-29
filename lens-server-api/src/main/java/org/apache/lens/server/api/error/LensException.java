@@ -124,7 +124,7 @@ public class LensException extends Exception {
    * @see Exception#Exception(Throwable)
    */
   public LensException(final String errorMsg, final int errorcode, final Throwable cause,
-      @NonNull final Object... errorMsgFormattingArgs) {
+    @NonNull final Object... errorMsgFormattingArgs) {
 
     super(errorMsg, cause);
     checkArgument(errorcode > 0);
@@ -134,7 +134,7 @@ public class LensException extends Exception {
   }
 
   public final void buildLensErrorResponse(final ErrorCollection errorCollection,
-      final String apiVersion, final String id) {
+    final String apiVersion, final String id) {
 
     final LensError lensError = errorCollection.getLensError(errorCode);
     final LensErrorTO lensErrorTO = buildLensErrorTO(errorCollection, lensError);
@@ -148,7 +148,7 @@ public class LensException extends Exception {
   }
 
   protected LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection, final String errorMsg,
-      final String stackTrace) {
+    final String stackTrace) {
 
     return LensErrorTO.composedOf(errorCode, errorMsg, stackTrace);
   }
@@ -173,7 +173,7 @@ public class LensException extends Exception {
 
     LensException e = (LensException) o;
     if (errorCode == e.errorCode && isErrorMsgEqual(e)
-        && Arrays.deepEquals(errorMsgFormattingArgs, e.errorMsgFormattingArgs)) {
+      && Arrays.deepEquals(errorMsgFormattingArgs, e.errorMsgFormattingArgs)) {
       return true;
     }
     return false;
@@ -210,5 +210,12 @@ public class LensException extends Exception {
     result = result * PRIME + (this.getMessage() == null ? 0 : this.getMessage().hashCode());
     result = result * PRIME + Arrays.deepHashCode(errorMsgFormattingArgs);
     return result;
+  }
+
+  public static LensException wrap(Exception e) {
+    if (e instanceof LensException) {
+      return (LensException) e;
+    }
+    return new LensException(e);
   }
 }

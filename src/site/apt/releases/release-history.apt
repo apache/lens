@@ -23,6 +23,8 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |Release version|Major features|Release documentation|Release Notes|Download|Incompatibilities|More Info |
 *--+--+---+--+--+--+--+
+|2.2.0-beta-incubating| CLI Improvements, Support for multiple expressions and and union queries, More descriptive error codes, Zeppelin integration, Code cleanup| {{{../versions/2.2.0-beta-incubating/index.html} 2.2.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12329586&projectId=12315923} 2.2 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.2-beta-incubating/} Download}} | {{{#a2.2.x_from_2.1.x} 2.2.x-incompatibilities}} | - |
+*--+--+---+--+--+--+--+
 |2.1.0-beta-incubating| Estimate api, Partition timeline, DB resources, Timers on REST api| {{{../versions/2.1.0-beta-incubating/index.html} 2.1.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12328991} 2.1 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.1-beta-incubating/} Download}} | {{{#a2.1.x_from_2.0.x} 2.1.x-incompatibilities}} | - |
 *--+--+---+--+--+--+--+
 |2.0.1-beta-incubating| First release in Apache| {{{../versions/2.0.1-beta-incubating/index.html} 2.0.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12328990} 2.0 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.0-beta-incubating/} Download}} | - | - |
@@ -35,6 +37,27 @@ All Apache Lens releases
   ganglia metrics reporting, the jar needs to be downloaded and used.
 
 * Incompatibilities
+
+** 2.2.x from 2.1.x
+
+  * LENS-484 : Fact table weight is a mandatory field now, for creating facts from the web interface. Please refer to
+  cube xsd for further details.
+
+  * LENS-553 : Java compilation version moved to Java 7 from Java 6.
+
+  * LENS-546 : Parameter names in Lens CLI will have _ (underscore) instead of - (hyphen) as a separator
+
+  * LENS-256 : Use explicit keywords for different parameter names in Lens-CLI
+
+  * LENS-486 : More structured and informative error responses for the REST interface
+
+  * LENS-487 : Consistent error response display in Lens-CLI. The output shown is different than the previous version.
+
+  * LENS-550 : Removed support for multi table select in cube queries
+
+  * LENS-563 : There was a length limitation of the property value of string that specified 'valid' column list for
+  a fact table. This change has fixed the length limitation by allowing users to set a size parameter, and multiple
+  numerically indexed keys for specifying the bigger column list.
 
 ** 2.1.x from 2.0.x
 

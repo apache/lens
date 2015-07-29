@@ -30,16 +30,15 @@ import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
-import org.apache.lens.server.LensService;
+import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.util.ScannedPaths;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Session resource api
@@ -47,10 +46,8 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
  * This provides api for all things in session.
  */
 @Path("/session")
+@Slf4j
 public class SessionResource {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(SessionResource.class);
 
   /** The session service. */
   private SessionService sessionService;
@@ -204,7 +201,7 @@ public class SessionResource {
     int numDeleted = 0;
 
     for(String matchedPath : scannedPaths) {
-      for (LensService service : LensServices.get().getLensServices()) {
+      for (BaseLensService service : LensServices.get().getLensServices()) {
         try {
           if (matchedPath.startsWith("file:") && !matchedPath.startsWith("file://")) {
             matchedPath = "file://" + matchedPath.substring("file:".length());
@@ -212,7 +209,7 @@ public class SessionResource {
           service.deleteResource(sessionid, type, matchedPath);
           numDeleted++;
         } catch (LensException e) {
-          LOG.error("Failed to delete resource in service:" + service, e);
+          log.error("Failed to delete resource in service:{}", service, e);
           if (numDeleted != 0) {
             return new APIResult(Status.PARTIAL, "Delete resource is partial, failed for service:" + service.getName());
           } else {

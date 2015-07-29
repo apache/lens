@@ -20,12 +20,12 @@ package org.apache.lens.client;
 
 import org.apache.lens.client.exceptions.LensClientServerConnectionException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Enum LensClientSingletonWrapper.
  */
+@Slf4j
 public class LensClientSingletonWrapper {
 
   /** The instance. */
@@ -36,9 +36,6 @@ public class LensClientSingletonWrapper {
   public static LensClientSingletonWrapper instance() {
     return InstanceHolder.INSTANCE;
   }
-
-  /** The log. */
-  private static final Log LOG = LogFactory.getLog(LensClientSingletonWrapper.class);
 
   /** The client. */
   private LensClient client;
@@ -58,7 +55,7 @@ public class LensClientSingletonWrapper {
    * @param e the e
    */
   public void explainFailedAttempt(LensClientServerConnectionException e) {
-    LOG.error("failed login attempt", e);
+    log.error("failed login attempt", e);
     switch (e.getErrorCode()) {
     case 401:
       System.console().printf("username/password combination incorrect.\n");

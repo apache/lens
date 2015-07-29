@@ -19,6 +19,11 @@
 package org.apache.lens.examples;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.xml.bind.JAXBException;
 
@@ -33,6 +38,16 @@ public class PopulateSampleMetastore {
   private LensMetadataClient metaClient;
   private APIResult result;
   private int retCode = 0;
+
+  private static final Date DATE = new Date(System.currentTimeMillis());
+  private static final SimpleDateFormat FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+  private static final String NOW_TIME = FORMAT.format(DATE);
+
+  private static final String INSERT_QUERY = "INSERT INTO "
+      + "mydb_sales_aggr_continuous_fact (order_time, delivery_time, customer_id, "
+      + "product_id, promotion_id, customer_city_id, production_city_id, delivery_city_id, unit_sales, "
+      + "store_sales, store_cost, max_line_item_price, max_line_item_discount) values "
+      + "('" + NOW_TIME + "','" + NOW_TIME + "',2,2,1,2,2,2,1,8,2,10,2)";
 
   public PopulateSampleMetastore() throws JAXBException {
     metaClient = new LensMetadataClient(LensClientSingletonWrapper.instance().getClient().getConnection());
@@ -64,7 +79,7 @@ public class PopulateSampleMetastore {
     }
   }
 
-  public void populateAll() throws JAXBException, IOException {
+  public void populateAll() throws Exception {
     populateDimTables();
     populateFactTables();
   }
@@ -92,6 +107,23 @@ public class PopulateSampleMetastore {
     } else {
       System.out.println("Added partition from:" + fileName);
     }
+  }
+
+  private void createContinuousFactData() throws Exception {
+    Class.forName("org.hsqldb.jdbcDriver");
+    Connection con = DriverManager.getConnection(
+        "jdbc:hsqldb:/tmp/db-storage.db", "SA", "");
+
+    con.setAutoCommit(true);
+    Statement statement = con.createStatement();
+    try {
+      statement.execute(INSERT_QUERY);
+
+    } finally {
+      statement.close();
+      con.close();
+    }
+
   }
 
   private void createDimTablePartitions(String fileName, String dimTable, String storage)
@@ -144,7 +176,7 @@ public class PopulateSampleMetastore {
     }
   }
 
-  public void populateFactTables() throws JAXBException, IOException {
+  public void populateFactTables() throws Exception {
     createFactPartition("fact1-local-part1.xml", "fact1", "local");
     createFactPartition("fact1-local-part2.xml", "fact1", "local");
     createFactPartition("fact1-local-part3.xml", "fact1", "local");
@@ -162,5 +194,6 @@ public class PopulateSampleMetastore {
     createFactPartitions("sales-aggr-fact2-local-parts.xml", "sales_aggr_fact2", "local");
     createFactPartitions("sales-aggr-fact1-mydb-parts.xml", "sales_aggr_fact1", "mydb");
     createFactPartitions("sales-aggr-fact2-mydb-parts.xml", "sales_aggr_fact2", "mydb");
+    createContinuousFactData();
   }
 }

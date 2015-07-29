@@ -29,6 +29,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.lens.api.result.QueryCostTO;
+
 import lombok.*;
 
 /**
@@ -110,7 +112,7 @@ public class QueryPlan extends QuerySubmitResult {
    */
   @XmlElement
   @Getter
-  private QueryCost queryCost;
+  private QueryCostTO queryCost;
 
   /**
    * The error.

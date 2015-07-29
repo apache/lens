@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.*;
+import org.apache.lens.server.api.LensService;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -30,7 +31,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 /**
  * Server api for OLAP Cube Metastore.
  */
-public interface CubeMetastoreService {
+public interface CubeMetastoreService extends LensService {
 
   /** The constant NAME */
   String NAME = "metastore";
@@ -336,14 +337,14 @@ public interface CubeMetastoreService {
    * Get all partitions of a dimension table in a storage
    *
    * @param sessionid  The sessionid
-   * @param dimTblName The dimension table name
-   * @param storage    The storage name
+   * @param dimension The dimension table name
+   * @param storageName    The storage name
    * @param filter     The filter for the list of partitions
    * @return list of {@link XPartition}
    * @throws LensException
    */
-  List<XPartition> getAllPartitionsOfDimTableStorage(LensSessionHandle sessionid, String dimTblName,
-    String storage, String filter) throws LensException;
+  XPartitionList getAllPartitionsOfDimTableStorage(LensSessionHandle sessionid, String dimension,
+    String storageName, String filter) throws LensException;
 
   /**
    * Add partition to dimension table on a storage.
@@ -353,8 +354,9 @@ public interface CubeMetastoreService {
    * @param storageName The storage name
    * @param partition   {@link XPartition}
    * @throws LensException
+   * @return number of partitions added. Either 0 or 1
    */
-  void addPartitionToDimStorage(LensSessionHandle sessionid, String dimTblName, String storageName,
+  int addPartitionToDimStorage(LensSessionHandle sessionid, String dimTblName, String storageName,
     XPartition partition) throws LensException;
 
   /**
@@ -363,9 +365,11 @@ public interface CubeMetastoreService {
    * @param sessionid   The sessionid
    * @param dimTblName  The dimension table name
    * @param storageName The storage name
-   * @param partitions  {@link org.apache.lens.api.metastore.XPartitionList}   * @throws LensException
+   * @param partitions  {@link XPartitionList}
+   * @throws LensException
+   * @return Number of partitions added
    */
-  void addPartitionsToDimStorage(LensSessionHandle sessionid, String dimTblName, String storageName,
+  int addPartitionsToDimStorage(LensSessionHandle sessionid, String dimTblName, String storageName,
     XPartitionList partitions) throws LensException;
 
   /**
@@ -473,13 +477,13 @@ public interface CubeMetastoreService {
    *
    * @param sessionid The sessionid
    * @param fact      The fact table name
-   * @param storage   The storage name
+   * @param storageName   The storage name
    * @param filter    The filter for partition listing
    * @return List of {@link XPartition}
    * @throws LensException
    */
-  List<XPartition> getAllPartitionsOfFactStorage(LensSessionHandle sessionid, String fact,
-    String storage, String filter) throws LensException;
+  XPartitionList getAllPartitionsOfFactStorage(LensSessionHandle sessionid, String fact,
+    String storageName, String filter) throws LensException;
 
   /**
    * Add partition to fact on a storage
@@ -487,10 +491,11 @@ public interface CubeMetastoreService {
    * @param sessionid   The sessionid
    * @param fact        The fact table name
    * @param storageName The storage name
-   * @param partition   {@link org.apache.lens.api.metastore.XPartition}
+   * @param partition   {@link XPartition}
    * @throws LensException
+   * @return number of partitions added. Either 0 or 1
    */
-  void addPartitionToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
+  int addPartitionToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
     XPartition partition) throws LensException;
 
   /**
@@ -499,10 +504,11 @@ public interface CubeMetastoreService {
    * @param sessionid   The sessionid
    * @param fact        The fact table name
    * @param storageName The storage name
-   * @param partitions  {@link org.apache.lens.api.metastore.XPartitionList}
+   * @param partitions  {@link XPartitionList}
    * @throws LensException
+   * @return Number of partitions added
    */
-  void addPartitionsToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
+  int addPartitionsToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
     XPartitionList partitions) throws LensException;
 
   /**
@@ -558,4 +564,10 @@ public interface CubeMetastoreService {
     String updatePeriod, String timeDimension) throws LensException, HiveException;
 
   XJoinChains getAllJoinChains(LensSessionHandle sessionid, String table) throws LensException;
+
+  void updatePartition(LensSessionHandle sessionid, String tblName, String storageName,
+    XPartition partition) throws LensException;
+
+  void updatePartitions(LensSessionHandle sessionid, String tblName, String storageName,
+    XPartitionList partitions) throws LensException;
 }

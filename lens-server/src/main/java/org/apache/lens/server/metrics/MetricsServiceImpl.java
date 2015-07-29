@@ -29,11 +29,14 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.server.LensService;
+import org.apache.lens.server.BaseLensService;
+import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.health.HealthStatus;
+import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.api.metrics.*;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.StatusChange;
@@ -42,7 +45,12 @@ import org.apache.lens.server.api.session.SessionEvent;
 import org.apache.lens.server.api.session.SessionExpired;
 import org.apache.lens.server.api.session.SessionOpened;
 import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.healthcheck.LensServiceHealthCheck;
+import org.apache.lens.server.query.QueryExecutionServiceImpl;
+import org.apache.lens.server.quota.QuotaServiceImpl;
+import org.apache.lens.server.scheduler.QuerySchedulerServiceImpl;
 import org.apache.lens.server.session.DatabaseResourceService;
+import org.apache.lens.server.session.HiveSessionService;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
@@ -126,6 +134,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /** The running queries. */
   private Gauge<Long> runningQueries;
+
+  /** The waiting queries. */
+  private Gauge<Long> waitingQueries;
 
   /** The finished queries. */
   private Gauge<Long> finishedQueries;
@@ -249,6 +260,13 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     methodMetricsFactory = new MethodMetricsFactory(metricRegistry);
     setEnableResourceMethodMetering(hiveConf.getBoolean(LensConfConstants.ENABLE_RESOURCE_METHOD_METERING, false));
     healthCheck = new HealthCheckRegistry();
+    healthCheck.register(CubeMetastoreService.NAME, new LensServiceHealthCheck(CubeMetastoreService.NAME));
+    healthCheck.register(HiveSessionService.NAME, new LensServiceHealthCheck(HiveSessionService.NAME));
+    healthCheck.register(QueryExecutionServiceImpl.NAME, new LensServiceHealthCheck(QueryExecutionServiceImpl.NAME));
+    healthCheck.register(QuerySchedulerServiceImpl.NAME, new LensServiceHealthCheck(QuerySchedulerServiceImpl.NAME));
+    healthCheck.register(QuotaServiceImpl.NAME, new LensServiceHealthCheck(QuotaServiceImpl.NAME));
+    healthCheck.register(MetricsServiceImpl.NAME, new LensServiceHealthCheck(MetricsServiceImpl.NAME));
+    healthCheck.register(EventServiceImpl.NAME, new LensServiceHealthCheck(EventServiceImpl.NAME));
     initCounters();
     timeBetweenPolls = hiveConf.getInt(LensConfConstants.REPORTING_PERIOD, 10);
 
@@ -310,7 +328,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
       new Gauge<Integer>() {
         @Override
         public Integer getValue() {
-          return LensService.getNumberOfSessions();
+          return BaseLensService.getNumberOfSessions();
         }
       });
 
@@ -327,6 +345,14 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         @Override
         public Long getValue() {
           return getQuerySvc().getRunningQueriesCount();
+        }
+      });
+
+    waitingQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, WAITING_QUERIES),
+      new Gauge<Long>() {
+        @Override
+        public Long getValue() {
+          return getQuerySvc().getWaitingQueriesCount();
         }
       });
 
@@ -360,7 +386,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         + OPENED_SESSIONS));
 
     totalClosedSessions = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
-        + CLOSED_SESSIONS));
+      + CLOSED_SESSIONS));
 
     totalExpiredSessions = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
         + EXPIRED_SESSIONS));
@@ -508,6 +534,11 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   }
 
   @Override
+  public long getWaitingQueries() {
+    return waitingQueries.getValue();
+  }
+
+  @Override
   public long getFinishedQueries() {
     return finishedQueries.getValue();
   }
@@ -535,6 +566,31 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public int getActiveSessions() {
     return activeSessions.getValue();
+  }
+
+  @Override
+  public HealthStatus getHealthStatus() {
+    boolean isHealthy = true;
+    StringBuilder details = new StringBuilder();
+
+    if (!this.getServiceState().equals(STATE.STARTED)) {
+      details.append("Metric service is down.");
+      isHealthy = false;
+    }
+
+    // Also unhealthy if 30% of queries have failed.
+    if (getTotalFailedQueries()/(float)getTotalAcceptedQueries() > 0.3) {
+      details.append("30% of queries have failed.");
+      isHealthy = false;
+    }
+
+    if (!isHealthy) {
+      log.error(details.toString());
+    }
+
+    return isHealthy
+        ? new HealthStatus(true, "Metric service is healthy.")
+        : new HealthStatus(false, details.toString());
   }
 
   @Override

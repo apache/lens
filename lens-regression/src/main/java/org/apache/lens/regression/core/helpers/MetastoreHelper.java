@@ -32,14 +32,10 @@ import org.apache.lens.regression.core.type.MapBuilder;
 import org.apache.lens.regression.util.AssertUtil;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
-
-
-
+@Slf4j
 public class MetastoreHelper extends ServiceManagerHelper {
-
-  private static Logger logger = Logger.getLogger(MetastoreHelper.class);
 
   private WebTarget servLens = ServiceManagerHelper.getServerLens();
   private String sessionHandleString = ServiceManagerHelper.getSessionHandle();
@@ -66,11 +62,11 @@ public class MetastoreHelper extends ServiceManagerHelper {
     response = this.exec("get", MetastoreURL.METASTORE_DATABASES_CURRENT_URL, servLens, null, query);
     String responseString = response.readEntity(String.class);
     AssertUtil.assertSucceededResponse(response);
-    logger.info(responseString.trim());
+    log.info("Response: {}", responseString.trim());
     if (!responseString.trim().equals(currentDBName)) {
       throw new LensException("Could not set database");
     }
-    logger.info("Set Current database to " + currentDBName);
+    log.info("Set Current database to {}", currentDBName);
   }
 
   public void setCurrentDatabase(String currentDBName) throws JAXBException, LensException {

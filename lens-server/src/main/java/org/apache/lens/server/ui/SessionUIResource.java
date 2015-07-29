@@ -33,10 +33,9 @@ import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.glassfish.jersey.media.multipart.FormDataParam;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Session resource api
@@ -44,10 +43,8 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
  * This provides api for all things in session.
  */
 @Path("/uisession")
+@Slf4j
 public class SessionUIResource {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(SessionUIResource.class);
 
   /** The open sessions. */
   private static HashMap<UUID, LensSessionHandle> openSessions
@@ -137,7 +134,7 @@ public class SessionUIResource {
   @Path("{publicId}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult closeSession(@PathParam("publicId") UUID publicId) {
-    LOG.info("Closing session with id: " + publicId);
+    log.info("Closing session with id: {}", publicId);
     LensSessionHandle sessionHandle = getOpenSession(publicId);
     checkSessionHandle(sessionHandle);
     openSessions.remove(publicId);

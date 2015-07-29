@@ -22,12 +22,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.parse.CandidateTable;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
+import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;

@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.api.query.ResultRow;
@@ -35,10 +34,16 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.user.UserConfigLoader;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
+import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
+import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
+import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
+
+import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * The Class MockDriver.
@@ -121,7 +126,7 @@ public class MockDriver implements LensDriver {
 
     @Override
     public QueryCost getCost() {
-      return new QueryCost(0L, 0.0);
+      return new FactPartitionBasedQueryCost(0);
     }
   }
 
@@ -185,8 +190,15 @@ public class MockDriver implements LensDriver {
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
   }
 
+
   @Override
-  public void registerUserConfigLoader(UserConfigLoader userConfigLoader) {
+  public ImmutableSet<QueryLaunchingConstraint> getQueryConstraints() {
+    return ImmutableSet.copyOf(Sets.<QueryLaunchingConstraint>newHashSet());
+  }
+
+  @Override
+  public ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies() {
+    return ImmutableSet.copyOf(Sets.<WaitingQueriesSelectionPolicy>newHashSet());
   }
 
   /*
@@ -375,7 +387,7 @@ public class MockDriver implements LensDriver {
 
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
-    return new QueryCost(0L, 0.0);
+    return new FactPartitionBasedQueryCost(0);
   }
 
 }

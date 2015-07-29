@@ -57,10 +57,13 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class TestResultFormatting.
  */
 @Test(groups = "unit-test")
+@Slf4j
 public class TestResultFormatting extends LensJerseyTest {
 
   /** The query service. */
@@ -235,9 +238,9 @@ public class TestResultFormatting extends LensJerseyTest {
       if (qctx == null) {
         // This shouldn't occur. It is appearing when query gets purged. So adding extra logs
         // for debugging in the future.
-        LOG.info("successful query's QueryContext is null");
-        LOG.info("query handle: " + handle);
-        LOG.info("allQueries: " + queryService.allQueries);
+        log.info("successful query's QueryContext is null");
+        log.info("query handle: {}", handle);
+        log.info("allQueries: {}", queryService.allQueries);
         // not doing formatter validation if qctx is null
       } else if (!isDir) {
         // isDir is true if the formatter is skipped due to result being the max size allowed

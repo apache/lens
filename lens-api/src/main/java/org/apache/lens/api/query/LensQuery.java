@@ -220,4 +220,8 @@ public class LensQuery {
   public String getQueryHandleString() {
     return (this.queryHandle != null) ? this.queryHandle.getHandleIdString() : null;
   }
+
+  public boolean queued() {
+    return this.status.queued();
+  }
 }

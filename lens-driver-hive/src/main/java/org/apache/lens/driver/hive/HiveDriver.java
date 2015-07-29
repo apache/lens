@@ -18,6 +18,8 @@
  */
 package org.apache.lens.driver.hive;
 
+import static org.apache.lens.server.api.util.LensUtil.getImplementations;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -27,20 +29,25 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.driver.hive.priority.DurationBasedQueryPriorityDecider;
+import org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
-import org.apache.lens.server.api.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.user.UserConfigLoader;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
+import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
+import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
+import org.apache.lens.server.api.query.cost.QueryCost;
+import org.apache.lens.server.api.query.cost.QueryCostCalculator;
+import org.apache.lens.server.api.query.priority.CostRangePriorityDecider;
+import org.apache.lens.server.api.query.priority.CostToPriorityRangeConf;
+import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -57,6 +64,8 @@ import org.apache.hive.service.cli.thrift.TSessionHandle;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
+import com.google.common.collect.ImmutableSet;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -68,26 +77,29 @@ public class HiveDriver implements LensDriver {
   /** The Constant HIVE_CONNECTION_CLASS. */
   public static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
 
+  public static final String HIVE_QUERY_HOOK_CLASS = "lens.driver.hive.query.hook.class";
+
   /** The Constant HS2_CONNECTION_EXPIRY_DELAY. */
   public static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hive.hs2.connection.expiry.delay";
 
   public static final String HS2_CALCULATE_PRIORITY = "lens.driver.hive.calculate.priority";
+  public static final String HS2_COST_CALCULATOR = "lens.driver.hive.cost.calculator.class";
 
   /**
    * Config param for defining priority ranges.
    */
   public static final String HS2_PRIORITY_RANGES = "lens.driver.hive.priority.ranges";
-  public static final String HS2_PARTITION_WEIGHT_MONTHLY = "lens.driver.hive.priority.partition.weight.monthly";
-  public static final String HS2_PARTITION_WEIGHT_DAILY = "lens.driver.hive.priority.partition.weight.daily";
-  public static final String HS2_PARTITION_WEIGHT_HOURLY = "lens.driver.hive.priority.partition.weight.hourly";
 
   // Default values of conf params
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
   public static final String HS2_PRIORITY_DEFAULT_RANGES = "VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW";
-  public static final float MONTHLY_PARTITION_WEIGHT_DEFAULT = 0.5f;
-  public static final float DAILY_PARTITION_WEIGHT_DEFAULT = 0.75f;
-  public static final float HOURLY_PARTITION_WEIGHT_DEFAULT = 1.0f;
   public static final String SESSION_KEY_DELIMITER = ".";
+
+  private static final String QUERY_LAUNCHIG_CONSTRAINT_FACTORIES_KEY
+    = "lens.driver.hive.query.launching.constraint.factories";
+
+  private static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY
+    = "lens.driver.hive.waiting.queries.selection.policy.factories";
 
   /** The driver conf- which will merged with query conf */
   private Configuration driverConf;
@@ -123,12 +135,16 @@ public class HiveDriver implements LensDriver {
 
   /** The driver listeners. */
   private List<LensEventListener<DriverEvent>> driverListeners;
-  QueryPriorityDecider queryPriorityDecider;
 
+  QueryCostCalculator queryCostCalculator;
+  QueryPriorityDecider queryPriorityDecider;
   // package-local. Test case can change.
   boolean whetherCalculatePriority;
-  private UserConfigLoader userConfigLoader;
+  private DriverQueryHook queryHook;
 
+  @Getter
+  private ImmutableSet<QueryLaunchingConstraint> queryConstraints;
+  private ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies;
 
   private String sessionDbKey(String sessionHandle, String database) {
     return sessionHandle + SESSION_KEY_DELIMITER + database;
@@ -178,7 +194,7 @@ public class HiveDriver implements LensDriver {
 
           if (thConn != null) {
             try {
-              log.info("Closed connection:" + expired.getConnId());
+              log.info("Closed connection: {}", expired.getConnId());
               thConn.close();
             } catch (IOException e) {
               log.error("Error closing connection", e);
@@ -331,18 +347,38 @@ public class HiveDriver implements LensDriver {
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
     connectionExpiryTimeout = this.driverConf.getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
     whetherCalculatePriority = this.driverConf.getBoolean(HS2_CALCULATE_PRIORITY, true);
-    queryPriorityDecider = new DurationBasedQueryPriorityDecider(
-      this,
-      this.driverConf.get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES),
-      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_MONTHLY, MONTHLY_PARTITION_WEIGHT_DEFAULT),
-      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_DAILY, DAILY_PARTITION_WEIGHT_DEFAULT),
-      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_HOURLY, HOURLY_PARTITION_WEIGHT_DEFAULT)
+    Class<? extends QueryCostCalculator> queryCostCalculatorClass = this.driverConf.getClass(HS2_COST_CALCULATOR,
+      FactPartitionBasedQueryCostCalculator.class, QueryCostCalculator.class);
+    try {
+      queryCostCalculator = queryCostCalculatorClass.newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new LensException("Can't instantiate query cost calculator of class: " + queryCostCalculatorClass, e);
+    }
+    queryPriorityDecider = new CostRangePriorityDecider(
+      new CostToPriorityRangeConf(driverConf.get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES))
     );
+    try {
+      queryHook = driverConf.getClass(
+        HIVE_QUERY_HOOK_CLASS, NoOpDriverQueryHook.class, DriverQueryHook.class
+      ).newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
+    }
+    queryConstraints = getImplementations(QUERY_LAUNCHIG_CONSTRAINT_FACTORIES_KEY, driverConf);
+    selectionPolicies = getImplementations(WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY, driverConf);
+  }
+
+  private QueryCost calculateQueryCost(AbstractQueryContext qctx) throws LensException {
+    if (qctx.isOlapQuery()) {
+      return queryCostCalculator.calculateCost(qctx, this);
+    } else {
+      return new FactPartitionBasedQueryCost(Double.MAX_VALUE);
+    }
   }
 
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
-    log.info("Estimate: " + qctx.getDriverQuery(this));
+    log.info("Estimate: {}", qctx.getDriverQuery(this));
     if (qctx.getDriverQuery(this) == null) {
       throw new NullPointerException("Null driver query for " + qctx.getUserQuery());
     }
@@ -352,13 +388,16 @@ public class HiveDriver implements LensDriver {
     }
     if (qctx.isOlapQuery()) {
       // if query is olap query and rewriting takes care of semantic validation
-      // estimate is not doing anything as of now
-      return HiveQueryPlan.HIVE_DRIVER_COST;
+      // estimate is calculating cost of the query
+      // the calculation is done only for cube queries
+      // for all other native table queries, the cost will be maximum
+      return calculateQueryCost(qctx);
     } else {
-      // its native table query. Do explain and return cost
+      // its native table query. validate and return cost
       return explain(qctx).getCost();
     }
   }
+
 
   /*
    * (non-Javadoc)
@@ -374,7 +413,7 @@ public class HiveDriver implements LensDriver {
       // explain called again and again
       return (HiveQueryPlan) explainCtx.getDriverContext().getDriverQueryPlan(this);
     }
-    log.info("Explain: " + explainCtx.getDriverQuery(this));
+    log.info("Explain: {}", explainCtx.getDriverQuery(this));
     Configuration explainConf = new Configuration(explainCtx.getDriverConf(this));
     explainConf.setClassLoader(explainCtx.getConf().getClassLoader());
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
@@ -385,14 +424,14 @@ public class HiveDriver implements LensDriver {
 
     // Get result set of explain
     HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
-    List<String> explainOutput = new ArrayList<String>();
+    List<String> explainOutput = new ArrayList<>();
     while (inMemoryResultSet.hasNext()) {
       explainOutput.add((String) inMemoryResultSet.next().getValues().get(0));
     }
     closeQuery(explainQueryCtx.getQueryHandle());
     try {
       hiveConf.setClassLoader(explainCtx.getConf().getClassLoader());
-      HiveQueryPlan hqp = new HiveQueryPlan(explainOutput, null, hiveConf);
+      HiveQueryPlan hqp = new HiveQueryPlan(explainOutput, null, hiveConf, calculateQueryCost(explainCtx));
       explainCtx.getDriverContext().setDriverQueryPlan(this, hqp);
       return hqp;
     } catch (HiveException e) {
@@ -453,7 +492,7 @@ public class HiveDriver implements LensDriver {
       qdconf.set("mapred.job.name", ctx.getQueryHandle().toString());
       OperationHandle op = getClient().executeStatement(getSession(ctx), ctx.getSelectedDriverQuery(),
         qdconf.getValByRegex(".*"));
-      log.info("The hive operation handle: " + op);
+      log.info("The hive operation handle: {}", op);
       ctx.setDriverOpHandle(op.toString());
       hiveHandles.put(ctx.getQueryHandle(), op);
       updateStatus(ctx);
@@ -490,27 +529,28 @@ public class HiveDriver implements LensDriver {
       Configuration qdconf = ctx.getDriverConf(this);
       qdconf.set("mapred.job.name", ctx.getQueryHandle().toString());
       //Query is already explained.
-      log.info("whetherCalculatePriority: " + whetherCalculatePriority);
+      log.info("whetherCalculatePriority: {}", whetherCalculatePriority);
       if (whetherCalculatePriority) {
         try {
           // Inside try since non-data fetching queries can also be executed by async method.
-          String priority = queryPriorityDecider.decidePriority(ctx).toString();
+          if (ctx.getDriverQueryCost(this) == null) {
+            ctx.setDriverCost(this, queryCostCalculator.calculateCost(ctx, this));
+          }
+          String priority = queryPriorityDecider.decidePriority(ctx.getDriverQueryCost(this)).toString();
           qdconf.set("mapred.job.priority", priority);
-          log.info("set priority to " + priority);
+          log.info("set priority to {}", priority);
         } catch (Exception e) {
           // not failing query launch when setting priority fails
           // priority will be set to usually NORMAL - the default in underlying system.
-          log.error("could not set priority for lens session id:" + ctx.getLensSessionIdentifier()
-            + "User query: " + ctx.getUserQuery(), e);
+          log.error("could not set priority for lens session id:{} User query: {}", ctx.getLensSessionIdentifier(),
+            ctx.getUserQuery(), e);
         }
       }
-      if (userConfigLoader != null) {
-        userConfigLoader.preSubmit(ctx);
-      }
+      queryHook.preLaunch(ctx);
       OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.getSelectedDriverQuery(),
         qdconf.getValByRegex(".*"));
       ctx.setDriverOpHandle(op.toString());
-      log.info("QueryHandle: " + ctx.getQueryHandle() + " HiveHandle:" + op);
+      log.info("QueryHandle: {} HiveHandle:{}", ctx.getQueryHandle(), op);
       hiveHandles.put(ctx.getQueryHandle(), op);
     } catch (IOException e) {
       throw new LensException("Error adding persistent path", e);
@@ -527,7 +567,7 @@ public class HiveDriver implements LensDriver {
    */
   @Override
   public void updateStatus(QueryContext context) throws LensException {
-    log.debug("GetStatus: " + context.getQueryHandle());
+    log.debug("GetStatus: {}", context.getQueryHandle());
     if (context.getDriverStatus().isFinished()) {
       return;
     }
@@ -535,9 +575,9 @@ public class HiveDriver implements LensDriver {
     ByteArrayInputStream in = null;
     try {
       // Get operation status from hive server
-      log.debug("GetStatus hiveHandle: " + hiveHandle);
+      log.debug("GetStatus hiveHandle: {}", hiveHandle);
       OperationStatus opStatus = getClient().getOperationStatus(hiveHandle);
-      log.debug("GetStatus on hiveHandle: " + hiveHandle + " returned state:" + opStatus.getState().name());
+      log.debug("GetStatus on hiveHandle: {} returned state:", hiveHandle, opStatus.getState().name());
 
       switch (opStatus.getState()) {
       case CANCELED:
@@ -649,7 +689,7 @@ public class HiveDriver implements LensDriver {
    */
   @Override
   public LensResultSet fetchResultSet(QueryContext ctx) throws LensException {
-    log.info("FetchResultSet: " + ctx.getQueryHandle());
+    log.info("FetchResultSet: {}", ctx.getQueryHandle());
     // This should be applicable only for a async query
     return createResultSet(ctx, false);
   }
@@ -674,10 +714,10 @@ public class HiveDriver implements LensDriver {
     if (handle == null) {
       return;
     }
-    log.info("CloseQuery: " + handle);
+    log.info("CloseQuery: {}", handle);
     OperationHandle opHandle = hiveHandles.remove(handle);
     if (opHandle != null) {
-      log.info("CloseQuery: " + opHandle);
+      log.info("CloseQuery hiveHandle: {}", opHandle);
       try {
         getClient().closeOperation(opHandle);
       } catch (HiveSQLException e) {
@@ -694,10 +734,10 @@ public class HiveDriver implements LensDriver {
    */
   @Override
   public boolean cancelQuery(QueryHandle handle) throws LensException {
-    log.info("CancelQuery: " + handle);
+    log.info("CancelQuery: {}", handle);
     OperationHandle hiveHandle = getHiveHandle(handle);
     try {
-      log.info("CancelQuery hiveHandle: " + hiveHandle);
+      log.info("CancelQuery hiveHandle: {}", hiveHandle);
       getClient().cancelOperation(hiveHandle);
       return true;
     } catch (HiveSQLException e) {
@@ -722,8 +762,8 @@ public class HiveDriver implements LensDriver {
           getClient().closeSession(lensToHiveSession.get(lensSessionDbKey));
         } catch (Exception e) {
           checkInvalidSession(e);
-          log.warn("Error closing session for lens session: " + lensSessionDbKey + ", hive session: "
-            + lensToHiveSession.get(lensSessionDbKey), e);
+          log.warn("Error closing session for lens session: {}, hive session: ", lensSessionDbKey,
+            lensToHiveSession.get(lensSessionDbKey), e);
         }
       }
       lensToHiveSession.clear();
@@ -743,8 +783,8 @@ public class HiveDriver implements LensDriver {
   }
 
   @Override
-  public void registerUserConfigLoader(UserConfigLoader userConfigLoader) {
-    this.userConfigLoader = userConfigLoader;
+  public ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies() {
+    return selectionPolicies;
   }
 
   protected CLIServiceClient getClient() throws LensException {
@@ -756,7 +796,7 @@ public class HiveDriver implements LensDriver {
         } catch (Exception e) {
           throw new LensException(e);
         }
-        log.info("New thrift connection " + connectionClass);
+        log.info("New thrift connection {}", connectionClass);
       }
       return embeddedConnection.getClient();
     } else {
@@ -774,8 +814,8 @@ public class HiveDriver implements LensDriver {
           connection = new ExpirableConnection(tconn, connectionExpiryTimeout);
           thriftConnExpiryQueue.offer(connection);
           threadConnections.put(connectionKey, connection);
-          log.info("New thrift connection " + connectionClass + " for thread:" + Thread.currentThread().getId()
-            + " for user:" + user + " connection ID=" + connection.getConnId());
+          log.info("New thrift connection {} for thread: {} for user: {} connection ID={}", connectionClass,
+            Thread.currentThread().getId(), user, connection.getConnId());
         } catch (Exception e) {
           throw new LensException(e);
         }
@@ -799,7 +839,7 @@ public class HiveDriver implements LensDriver {
    */
   private LensResultSet createResultSet(QueryContext context, boolean closeAfterFetch) throws LensException {
     OperationHandle op = getHiveHandle(context.getQueryHandle());
-    log.info("Creating result set for hiveHandle:" + op);
+    log.info("Creating result set for hiveHandle:{}", op);
     try {
       if (context.isDriverPersistent()) {
         return new HivePersistentResultSet(new Path(context.getHdfsoutPath()), op, getClient());
@@ -846,7 +886,7 @@ public class HiveDriver implements LensDriver {
       context.unSetDriverPersistent();
       hiveQuery = context.getSelectedDriverQuery();
     }
-    log.info("Hive driver query:" + hiveQuery);
+    log.info("Hive driver query:{}", hiveQuery);
     context.setSelectedDriverQuery(hiveQuery);
   }
 
@@ -875,14 +915,14 @@ public class HiveDriver implements LensDriver {
         try {
           hiveSession = getClient().openSession(ctx.getClusterUser(), "");
           lensToHiveSession.put(sessionDbKey, hiveSession);
-          log.info("New hive session for user: " + ctx.getClusterUser() + ", lens session: " + sessionDbKey
-            + " hive session handle: " + hiveSession.getHandleIdentifier());
+          log.info("New hive session for user: {} , lens session: {} hive session handle: {}", ctx.getClusterUser(),
+            sessionDbKey, hiveSession.getHandleIdentifier());
           for (LensEventListener<DriverEvent> eventListener : driverListeners) {
             try {
               eventListener.onEvent(new DriverSessionStarted(System.currentTimeMillis(), this, lensSession, hiveSession
                 .getSessionId().toString()));
             } catch (Exception exc) {
-              log.error("Error sending driver start event to listener " + eventListener, exc);
+              log.error("Error sending driver start event to listener {}", eventListener, exc);
             }
           }
         } catch (Exception e) {
@@ -942,7 +982,7 @@ public class HiveDriver implements LensDriver {
      */
     QueryCompletionNotifier(QueryHandle handle, long timeoutMillis, QueryCompletionListener listener)
       throws LensException {
-      hiveHandle = getHiveHandle(handle);
+      this.handle = handle;
       this.timeoutMillis = timeoutMillis;
       this.listener = listener;
       this.pollInterval = timeoutMillis / 10;
@@ -957,12 +997,17 @@ public class HiveDriver implements LensDriver {
     public void run() {
       // till query is complete or timeout has reached
       long timeSpent = 0;
-      String error = null;
+      String error;
       try {
         while (timeSpent <= timeoutMillis) {
-          if (isFinished(hiveHandle)) {
-            listener.onCompletion(handle);
-            return;
+          try {
+            hiveHandle = getHiveHandle(handle);
+            if (isFinished(hiveHandle)) {
+              listener.onCompletion(handle);
+              return;
+            }
+          } catch (LensException e) {
+            log.debug("query handle: {} Not yet launched on driver", handle);
           }
           Thread.sleep(pollInterval);
           timeSpent += pollInterval;
@@ -1025,9 +1070,9 @@ public class HiveDriver implements LensDriver {
         QueryHandle qhandle = (QueryHandle) in.readObject();
         OperationHandle opHandle = new OperationHandle((TOperationHandle) in.readObject());
         hiveHandles.put(qhandle, opHandle);
-        log.debug("Hive driver recovered " + qhandle + ":" + opHandle);
+        log.debug("Hive driver recovered {}:{}", qhandle, opHandle);
       }
-      log.info("HiveDriver recovered " + hiveHandles.size() + " queries");
+      log.info("HiveDriver recovered {} queries", hiveHandles.size());
       int numSessions = in.readInt();
       for (int i = 0; i < numSessions; i++) {
         String lensId = in.readUTF();
@@ -1035,7 +1080,7 @@ public class HiveDriver implements LensDriver {
           TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6);
         lensToHiveSession.put(lensId, sHandle);
       }
-      log.info("HiveDriver recovered " + lensToHiveSession.size() + " sessions");
+      log.info("HiveDriver recovered {} sessions", lensToHiveSession.size());
     }
   }
 
@@ -1052,15 +1097,15 @@ public class HiveDriver implements LensDriver {
       for (Map.Entry<QueryHandle, OperationHandle> entry : hiveHandles.entrySet()) {
         out.writeObject(entry.getKey());
         out.writeObject(entry.getValue().toTOperationHandle());
-        log.debug("Hive driver persisted " + entry.getKey() + ":" + entry.getValue());
+        log.debug("Hive driver persisted {}:{}", entry.getKey(), entry.getValue());
       }
-      log.info("HiveDriver persisted " + hiveHandles.size() + " queries");
+      log.info("HiveDriver persisted {} queries ", hiveHandles.size());
       out.writeInt(lensToHiveSession.size());
       for (Map.Entry<String, SessionHandle> entry : lensToHiveSession.entrySet()) {
         out.writeUTF(entry.getKey());
         out.writeObject(entry.getValue().toTSessionHandle());
       }
-      log.info("HiveDriver persisted " + lensToHiveSession.size() + " sessions");
+      log.info("HiveDriver persisted {} sessions", lensToHiveSession.size());
     }
   }
 
@@ -1122,7 +1167,7 @@ public class HiveDriver implements LensDriver {
     for (SessionHandle session : hiveSessionsToCheck) {
       if (isSessionInvalid(exc, session)) {
         // We have to expire previous session
-        log.info("Hive server session " + session + " for lens session " + lensSession + " has become invalid");
+        log.info("Hive server session {} for lens session {} has become invalid", session, lensSession);
         sessionLock.lock();
         try {
           // We should close all connections and clear the session map since
@@ -1146,12 +1191,12 @@ public class HiveDriver implements LensDriver {
   protected void checkInvalidOperation(QueryHandle queryHandle, HiveSQLException exc) {
     final OperationHandle operation = hiveHandles.get(queryHandle);
     if (operation == null) {
-      log.info("No hive operation available for " + queryHandle);
+      log.info("No hive operation available for {}", queryHandle);
       return;
     }
     if (exc.getMessage() != null && exc.getMessage().contains("Invalid OperationHandle:")
       && exc.getMessage().contains(operation.toString())) {
-      log.info("Hive operation " + operation + " for query " + queryHandle + " has become invalid");
+      log.info("Hive operation {} for query {} has become invalid", operation, queryHandle);
       hiveHandles.remove(queryHandle);
       return;
     }
@@ -1193,11 +1238,11 @@ public class HiveDriver implements LensDriver {
           if (hiveSession != null) {
             try {
               getClient().closeSession(hiveSession);
-              log.info("Closed Hive session " + hiveSession.getHandleIdentifier() + " for lens session "
-                + sessionDbKey);
+              log.info("Closed Hive session {} for lens session {}", hiveSession.getHandleIdentifier(),
+                sessionDbKey);
             } catch (Exception e) {
-              log.error("Error closing hive session " + hiveSession.getHandleIdentifier()
-                + " for lens session " + sessionDbKey, e);
+              log.error("Error closing hive session {} for lens session {}", hiveSession.getHandleIdentifier(),
+                sessionDbKey, e);
             }
             resourcesAddedForSession.remove(hiveSession);
           }

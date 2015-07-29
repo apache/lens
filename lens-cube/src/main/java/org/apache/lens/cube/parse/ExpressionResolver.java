@@ -32,6 +32,7 @@ import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.ExprColumn;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
@@ -203,6 +204,16 @@ class ExpressionResolver implements ContextRewriter {
         }
       }
       return false;
+    }
+
+    boolean isEvaluable(CandidateTable cTable) {
+      if (directlyAvailableIn.contains(cTable)) {
+        return true;
+      }
+      if (evaluableExpressions.get(cTable) == null) {
+        return false;
+      }
+      return !evaluableExpressions.get(cTable).isEmpty();
     }
   }
 
@@ -395,13 +406,7 @@ class ExpressionResolver implements ContextRewriter {
     // checks if expr is evaluable
     public boolean isEvaluable(String expr, CandidateTable cTable) {
       ExpressionContext ec = getExpressionContext(expr, cubeql.getAliasForTableName(cTable.getBaseTable().getName()));
-      if (ec.directlyAvailableIn.contains(cTable)) {
-        return true;
-      }
-      if (ec.evaluableExpressions.get(cTable) == null) {
-        return false;
-      }
-      return !ec.evaluableExpressions.get(cTable).isEmpty();
+      return ec.isEvaluable(cTable);
     }
 
     /**
@@ -671,24 +676,40 @@ class ExpressionResolver implements ContextRewriter {
       cubeql.getExprCtx().pruneExpressions();
       // prune candidate facts without any valid expressions
       if (cubeql.getCube() != null && !cubeql.getCandidateFacts().isEmpty()) {
-        for (Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator(); i.hasNext();) {
-          CandidateFact cfact = i.next();
-          for (Map.Entry<String, Set<ExpressionContext>> ecEntry : exprCtx.allExprsQueried.entrySet()) {
-            Set<ExpressionContext> ecSet = ecEntry.getValue();
-            for (ExpressionContext ec : ecSet) {
-              if (ec.getSrcTable().getName().equals(cfact.getBaseTable().getName())) {
-                if (!ec.directlyAvailableIn.contains(cfact)
-                  && (ec.evaluableExpressions.get(cfact) == null
-                  || ec.evaluableExpressions.get(cfact).isEmpty())) {
-                  log.info("Not considering fact table:{} as {} is not evaluable", cfact, ec.exprCol.getName());
-                  cubeql.addFactPruningMsgs(cfact.fact,
-                    CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
-                  i.remove();
+        for (Map.Entry<String, Set<ExpressionContext>> ecEntry : exprCtx.allExprsQueried.entrySet()) {
+          String expr = ecEntry.getKey();
+          Set<ExpressionContext> ecSet = ecEntry.getValue();
+          for (ExpressionContext ec : ecSet) {
+            if (ec.getSrcTable().getName().equals(cubeql.getCube().getName())) {
+              if (cubeql.getQueriedExprsWithMeasures().contains(expr)) {
+                for (Iterator<Set<CandidateFact>> sItr = cubeql.getCandidateFactSets().iterator(); sItr.hasNext();) {
+                  Set<CandidateFact> factSet = sItr.next();
+                  boolean evaluableInSet = false;
+                  for (CandidateFact cfact : factSet) {
+                    if (ec.isEvaluable(cfact)) {
+                      evaluableInSet = true;
+                    }
+                  }
+                  if (!evaluableInSet) {
+                    log.info("Not considering fact table set:{} as {} is not evaluable", factSet, ec.exprCol.getName());
+                    sItr.remove();
+                  }
+                }
+              } else {
+                for (Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator(); i.hasNext();) {
+                  CandidateFact cfact = i.next();
+                  if (!ec.isEvaluable(cfact)) {
+                    log.info("Not considering fact table:{} as {} is not evaluable", cfact, ec.exprCol.getName());
+                    cubeql.addFactPruningMsgs(cfact.fact,
+                      CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
+                    i.remove();
+                  }
                 }
               }
             }
           }
         }
+        cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCode.EXPRESSION_NOT_EVALUABLE);
       }
       // prune candidate dims without any valid expressions
       if (cubeql.getDimensions() != null && !cubeql.getDimensions().isEmpty()) {
@@ -699,9 +720,7 @@ class ExpressionResolver implements ContextRewriter {
               Set<ExpressionContext> ecSet = ecEntry.getValue();
               for (ExpressionContext ec : ecSet) {
                 if (ec.getSrcTable().getName().equals(cdim.getBaseTable().getName())) {
-                  if (!ec.directlyAvailableIn.contains(cdim)
-                    && (ec.evaluableExpressions.get(cdim) == null
-                    || ec.evaluableExpressions.get(cdim).isEmpty())) {
+                  if (!ec.isEvaluable(cdim)) {
                     log.info("Not considering dim table:{} as {} is not evaluable", cdim, ec.exprCol.getName());
                     cubeql.addDimPruningMsgs(dim, cdim.dimtable,
                       CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));

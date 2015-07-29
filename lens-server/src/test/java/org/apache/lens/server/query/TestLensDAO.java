@@ -44,10 +44,13 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class TestLensDAO.
  */
 @Test(groups = "unit-test")
+@Slf4j
 public class TestLensDAO extends LensJerseyTest {
 
   /**
@@ -76,7 +79,7 @@ public class TestLensDAO extends LensJerseyTest {
 
     try {
       conn = service.lensServerDao.getConnection();
-      stmt = conn.createStatement();
+      stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       ResultSet rs = stmt.executeQuery("SELECT handle FROM finished_queries");
 
       JDBCResultSet jdbcResultSet = new JDBCResultSet(null, rs, false);
@@ -85,12 +88,12 @@ public class TestLensDAO extends LensJerseyTest {
 
       String jsonMetadata = MAPPER.writeValueAsString(jdbcRsMeta);
 
-      LOG.info("@@@JSON " + jsonMetadata);
+      log.info("@@@JSON {}" + jsonMetadata);
 
       finishedLensQuery.setMetadata(MAPPER.writeValueAsString(jdbcRsMeta));
       finishedLensQuery.setMetadataClass(JDBCResultSet.JDBCResultSetMetadata.class.getName());
     } catch (SQLException ex) {
-      LOG.error("Error creating result set ", ex);
+      log.error("Error creating result set ", ex);
     } finally {
       if (stmt != null) {
         stmt.close();

@@ -22,8 +22,6 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.Dimension;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -35,8 +33,6 @@ import com.google.common.collect.Lists;
  * queries.
  */
 class MultiFactHQLContext extends SimpleHQLContext {
-
-  public static final Log LOG = LogFactory.getLog(MultiFactHQLContext.class.getName());
 
   private Map<Dimension, CandidateDim> dimsToQuery;
   private Set<CandidateFact> facts;

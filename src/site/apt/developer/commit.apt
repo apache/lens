@@ -69,11 +69,12 @@ Committer Guide
   * Ensure that 24 hours have elapsed since the jira is made patch available or the review request is up. As a practice
    we should observe this, but it should be possible to consciously override and commit with a shorter turnaround time.
 
-  * Apply the patch attached on jira. The patch should licensed under apache license.
+  * Apply the patch attached on jira. The patch should be licensed under apache license.
 
 +---+
 
-  git apply -p0 <final-patch>.patch
+  git apply --check lens_patch.patch
+  git apply lens_patch.patch
 
 +---+
 

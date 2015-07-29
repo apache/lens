@@ -20,8 +20,6 @@ package org.apache.lens.ml.algo.spark;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
@@ -35,8 +33,6 @@ import org.apache.spark.api.java.JavaSparkContext;
 public final class HiveTableRDD {
   private HiveTableRDD() {
   }
-
-  public static final Log LOG = LogFactory.getLog(HiveTableRDD.class);
 
   /**
    * Creates the hive table rdd.

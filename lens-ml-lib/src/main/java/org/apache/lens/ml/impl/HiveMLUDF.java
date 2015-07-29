@@ -22,8 +22,6 @@ import java.io.IOException;
 
 import org.apache.lens.ml.algo.api.MLModel;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.MapredContext;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
@@ -38,21 +36,21 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectIn
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.mapred.JobConf;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Generic UDF to laod ML Models saved in HDFS and apply the model on list of columns passed as argument.
  */
 @Description(name = "predict",
   value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given "
     + "algorithm name, model ID and input feature columns")
+@Slf4j
 public final class HiveMLUDF extends GenericUDF {
   private HiveMLUDF() {
   }
 
   /** The Constant UDF_NAME. */
   public static final String UDF_NAME = "predict";
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(HiveMLUDF.class);
 
   /** The conf. */
   private JobConf conf;
@@ -80,7 +78,7 @@ public final class HiveMLUDF extends GenericUDF {
       throw new UDFArgumentLengthException("Algo name, model ID and at least one feature should be passed to "
         + UDF_NAME);
     }
-    LOG.info(UDF_NAME + " initialized");
+    log.info("{} initialized", UDF_NAME);
     return PrimitiveObjectInspectorFactory.javaDoubleObjectInspector;
   }
 
@@ -133,6 +131,6 @@ public final class HiveMLUDF extends GenericUDF {
     conf = context.getJobConf();
     soi = PrimitiveObjectInspectorFactory.javaStringObjectInspector;
     doi = LazyPrimitiveObjectInspectorFactory.LAZY_DOUBLE_OBJECT_INSPECTOR;
-    LOG.info(UDF_NAME + " configured. Model base dir path: " + conf.get(ModelLoader.MODEL_PATH_BASE_DIR));
+    log.info("{} configured. Model base dir path: {}", UDF_NAME, conf.get(ModelLoader.MODEL_PATH_BASE_DIR));
   }
 }

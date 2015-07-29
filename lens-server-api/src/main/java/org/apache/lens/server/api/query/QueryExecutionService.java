@@ -26,6 +26,7 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.*;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.cost.QueryCost;
 
 /**
  * The Interface QueryExecutionService.
@@ -299,6 +300,13 @@ public interface QueryExecutionService {
    * @return running queries count
    */
   long getRunningQueriesCount();
+
+  /**
+   * Get waiting queries count
+   *
+   * @return waiting queries count
+   */
+  long getWaitingQueriesCount();
 
   /**
    * Get finished queries count

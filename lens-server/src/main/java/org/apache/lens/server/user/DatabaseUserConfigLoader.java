@@ -39,7 +39,7 @@ import com.google.common.cache.CacheBuilder;
 /**
  * The Class DatabaseUserConfigLoader.
  */
-public class DatabaseUserConfigLoader extends UserConfigLoader {
+public class DatabaseUserConfigLoader implements UserConfigLoader {
 
   /** The query sql. */
   protected final String querySql;
@@ -49,6 +49,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
   /** The cache. */
   protected final Cache<String, Map<String, String>> cache;
+  private final HiveConf hiveConf;
 
   /** The ds. */
   protected BasicDataSource ds;
@@ -60,7 +61,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
    * @throws UserConfigLoaderException the user config loader exception
    */
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
-    super(conf);
+    this.hiveConf = conf;
     querySql = conf.get(LensConfConstants.USER_RESOLVER_DB_QUERY);
     keys = conf.get(LensConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     cache = CacheBuilder.newBuilder()

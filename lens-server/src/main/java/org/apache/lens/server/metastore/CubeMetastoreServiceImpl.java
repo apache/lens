@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.metastore;
 
+import static org.apache.lens.server.metastore.JAXBUtils.*;
+
 import java.util.*;
 
 import javax.ws.rs.BadRequestException;
@@ -28,8 +30,10 @@ import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
-import org.apache.lens.server.LensService;
+import org.apache.lens.server.BaseLensService;
+import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.session.LensSessionImpl;
 
@@ -47,7 +51,7 @@ import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CubeMetastoreServiceImpl extends LensService implements CubeMetastoreService {
+public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMetastoreService {
 
   public CubeMetastoreServiceImpl(CLIService cliService) {
     super(NAME, cliService);
@@ -327,7 +331,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       if (dimTable.getStorages() != null && !dimTable.getStorages().isEmpty()) {
         for (String storageName : dimTable.getStorages()) {
           XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-            msClient.getHiveTable(MetastoreUtil.getDimStorageTableName(dimTblName, storageName)));
+            msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(dimTblName, storageName)));
           tblElement.setStorageName(storageName);
           UpdatePeriod p = dimTable.getSnapshotDumpPeriods().get(storageName);
           if (p != null) {
@@ -491,7 +495,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       for (String storageName : cft.getStorages()) {
         Set<UpdatePeriod> updatePeriods = cft.getUpdatePeriods().get(storageName);
         XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-          msClient.getHiveTable(MetastoreUtil.getFactStorageTableName(fact, storageName)));
+          msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(fact, storageName)));
         tblElement.setStorageName(storageName);
         for (UpdatePeriod p : updatePeriods) {
           tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
@@ -605,7 +609,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       CubeFactTable factTable = msClient.getFactTable(fact);
       Set<UpdatePeriod> updatePeriods = factTable.getUpdatePeriods().get(storageName);
       XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-        msClient.getHiveTable(MetastoreUtil.getFactStorageTableName(fact, storageName)));
+        msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(fact, storageName)));
       tblElement.setStorageName(storageName);
       for (UpdatePeriod p : updatePeriods) {
         tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
@@ -625,7 +629,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       CubeMetastoreClient msClient = getClient(sessionid);
       CubeDimensionTable dimTable = msClient.getDimensionTable(dimTblName);
       XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-        msClient.getHiveTable(MetastoreUtil.getDimStorageTableName(dimTblName, storageName)));
+        msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(dimTblName, storageName)));
       tblElement.setStorageName(storageName);
       UpdatePeriod p = dimTable.getSnapshotDumpPeriods().get(storageName);
       if (p != null) {
@@ -690,24 +694,18 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public List<XPartition> getAllPartitionsOfFactStorage(
+  public XPartitionList getAllPartitionsOfFactStorage(
     LensSessionHandle sessionid, String fact, String storageName,
     String filter) throws LensException {
     try {
       acquire(sessionid);
       checkFactStorage(sessionid, fact, storageName);
-      String storageTableName = MetastoreUtil.getFactStorageTableName(fact, storageName);
-      List<Partition> parts = getClient(sessionid).getPartitionsByFilter(storageTableName, filter);
-      if (parts != null) {
-        List<XPartition> result = new ArrayList<XPartition>(parts.size());
-        for (Partition p : parts) {
-          XPartition xp = JAXBUtils.xpartitionFromPartition(p);
-          result.add(xp);
-        }
-        return result;
-      } else {
-        return new ArrayList<XPartition>();
-      }
+      CubeMetastoreClient client = getClient(sessionid);
+      String storageTableName = MetastoreUtil.getFactOrDimtableStorageTableName(fact,
+        storageName);
+      List<Partition> parts = client.getPartitionsByFilter(storageTableName, filter);
+      List<String> timePartCols = client.getTimePartColNamesOfTable(storageTableName);
+      return xpartitionListFromPartitionList(parts, timePartCols);
     } catch (HiveException exc) {
       throw new LensException(exc);
     } finally {
@@ -716,14 +714,12 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public void addPartitionToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
+  public int addPartitionToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
     XPartition partition) throws LensException {
     try {
       acquire(sessionid);
       checkFactStorage(sessionid, fact, storageName);
-      getClient(sessionid).addPartition(
-        JAXBUtils.storagePartSpecFromXPartition(partition),
-        storageName);
+      return getClient(sessionid).addPartition(storagePartSpecFromXPartition(partition), storageName).size();
     } catch (HiveException exc) {
       throw new LensException(exc);
     } finally {
@@ -732,14 +728,12 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public void addPartitionsToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
+  public int addPartitionsToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
     XPartitionList partitions) throws LensException {
     try {
       acquire(sessionid);
       checkFactStorage(sessionid, fact, storageName);
-      getClient(sessionid).addPartitions(
-        JAXBUtils.storagePartSpecListFromXPartitionList(partitions),
-        storageName);
+      return getClient(sessionid).addPartitions(storagePartSpecListFromXPartitionList(partitions), storageName).size();
     } catch (HiveException exc) {
       throw new LensException(exc);
     } finally {
@@ -761,25 +755,17 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public List<XPartition> getAllPartitionsOfDimTableStorage(
+  public XPartitionList getAllPartitionsOfDimTableStorage(
     LensSessionHandle sessionid, String dimension, String storageName, String filter)
     throws LensException {
     try {
       acquire(sessionid);
       checkDimensionStorage(sessionid, dimension, storageName);
-      String storageTableName = MetastoreUtil.getDimStorageTableName(dimension,
-        storageName);
-      List<Partition> partitions = getClient(sessionid).getPartitionsByFilter(storageTableName, filter);
-      if (partitions != null) {
-        List<XPartition> result = new ArrayList<XPartition>(partitions.size());
-        for (Partition p : partitions) {
-          XPartition xp = JAXBUtils.xpartitionFromPartition(p);
-          result.add(xp);
-        }
-        return result;
-      } else {
-        return new ArrayList<XPartition>();
-      }
+      CubeMetastoreClient client = getClient(sessionid);
+      String storageTableName = MetastoreUtil.getFactOrDimtableStorageTableName(dimension, storageName);
+      List<Partition> partitions = client.getPartitionsByFilter(storageTableName, filter);
+      List<String> timePartCols = client.getTimePartColNamesOfTable(storageTableName);
+      return xpartitionListFromPartitionList(partitions, timePartCols);
     } catch (HiveException exc) {
       throw new LensException(exc);
     } finally {
@@ -788,15 +774,12 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public void addPartitionToDimStorage(LensSessionHandle sessionid,
+  public int addPartitionToDimStorage(LensSessionHandle sessionid,
     String dimTblName, String storageName, XPartition partition) throws LensException {
     try {
       acquire(sessionid);
       checkDimensionStorage(sessionid, dimTblName, storageName);
-      getClient(sessionid).addPartition(
-        JAXBUtils.storagePartSpecFromXPartition(partition),
-        storageName);
-      log.info("Added partition for dimension: " + dimTblName + " storage: " + storageName);
+      return getClient(sessionid).addPartition(storagePartSpecFromXPartition(partition), storageName).size();
     } catch (HiveException exc) {
       throw new LensException(exc);
     } finally {
@@ -805,14 +788,52 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public void addPartitionsToDimStorage(LensSessionHandle sessionid,
+  public void updatePartition(LensSessionHandle sessionid, String tblName, String storageName,
+    XPartition xPartition) throws LensException {
+    try {
+      acquire(sessionid);
+      CubeMetastoreClient client = getClient(sessionid);
+      String storageTableName = MetastoreUtil.getFactOrDimtableStorageTableName(tblName, storageName);
+      Partition existingPartition = client.getPartitionByFilter(storageTableName,
+        StorageConstants.getPartFilter(JAXBUtils.getFullPartSpecAsMap(xPartition)));
+      JAXBUtils.updatePartitionFromXPartition(existingPartition, xPartition);
+      client.updatePartition(tblName, storageName, existingPartition);
+    } catch (HiveException | ClassNotFoundException | InvalidOperationException | UnsupportedOperationException exc) {
+      throw new LensException(exc);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public void updatePartitions(LensSessionHandle sessionid, String tblName, String storageName,
+    XPartitionList xPartitions) throws LensException {
+    try {
+      acquire(sessionid);
+      CubeMetastoreClient client = getClient(sessionid);
+      String storageTableName = MetastoreUtil.getFactOrDimtableStorageTableName(tblName, storageName);
+      List<Partition> partitionsToUpdate = new ArrayList<>(xPartitions.getPartition().size());
+      for (XPartition xPartition : xPartitions.getPartition()) {
+        Partition existingPartition = client.getPartitionByFilter(storageTableName,
+          StorageConstants.getPartFilter(JAXBUtils.getFullPartSpecAsMap(xPartition)));
+        JAXBUtils.updatePartitionFromXPartition(existingPartition, xPartition);
+        partitionsToUpdate.add(existingPartition);
+      }
+      client.updatePartitions(tblName, storageName, partitionsToUpdate);
+    } catch (HiveException | ClassNotFoundException | InvalidOperationException exc) {
+      throw new LensException(exc);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public int addPartitionsToDimStorage(LensSessionHandle sessionid,
     String dimTblName, String storageName, XPartitionList partitions) throws LensException {
     try {
       acquire(sessionid);
       checkDimensionStorage(sessionid, dimTblName, storageName);
-      getClient(sessionid).addPartitions(
-        JAXBUtils.storagePartSpecListFromXPartitionList(partitions),
-        storageName);
+      return getClient(sessionid).addPartitions(storagePartSpecListFromXPartitionList(partitions), storageName).size();
     } catch (HiveException exc) {
       throw new LensException(exc);
     } finally {
@@ -1384,12 +1405,17 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
 
   public List<String> getPartitionTimelines(LensSessionHandle sessionid, String factName, String storage,
     String updatePeriod, String timeDimension) throws LensException, HiveException {
-    CubeMetastoreClient client = getClient(sessionid);
-    List<String> ret = Lists.newArrayList();
-    for (PartitionTimeline timeline : client.getTimelines(factName, storage, updatePeriod, timeDimension)) {
-      ret.add(timeline.toString());
+    acquire(sessionid);
+    try {
+      CubeMetastoreClient client = getClient(sessionid);
+      List<String> ret = Lists.newArrayList();
+      for (PartitionTimeline timeline : client.getTimelines(factName, storage, updatePeriod, timeDimension)) {
+        ret.add(timeline.toString());
+      }
+      return ret;
+    } finally {
+      release(sessionid);
     }
-    return ret;
   }
 
   @Override
@@ -1406,7 +1432,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
         throw new BadRequestException("Can't get join chains. '"
           + tableName + "' is neither a cube nor a dimension");
       }
-      XJoinChains xJoinChains= new XJoinChains();
+      XJoinChains xJoinChains = new XJoinChains();
       List<XJoinChain> joinChains = xJoinChains.getJoinChain();
       if (chains != null) {
         for (JoinChain chain : chains) {
@@ -1420,4 +1446,34 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       release(sessionHandle);
     }
   }
+
+  /**
+   * @inheritDoc
+   */
+  @Override
+  public HealthStatus getHealthStatus() {
+    boolean isHealthy = true;
+    StringBuilder details = new StringBuilder();
+
+    try {
+      /** Try to issue command on hive **/
+      Hive.get(LensServerConf.getHiveConf()).getAllDatabases();
+    } catch (HiveException e) {
+      isHealthy = false;
+      details.append("Could not connect to Hive.");
+      log.error("Could not connect to Hive.", e);
+    }
+
+    /** Check if service is up **/
+    if (!this.getServiceState().equals(STATE.STARTED)) {
+      isHealthy = false;
+      details.append("Cube metastore service is down");
+      log.error("Cube metastore service is down");
+    }
+
+    return isHealthy
+      ? new HealthStatus(isHealthy, "Cube metastore service is healthy.")
+      : new HealthStatus(isHealthy, details.toString());
+  }
+
 }

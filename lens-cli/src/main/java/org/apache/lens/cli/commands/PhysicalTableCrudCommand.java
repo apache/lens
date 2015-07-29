@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cli.commands;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -84,8 +85,18 @@ public abstract class PhysicalTableCrudCommand<T> extends LensCRUDCommand<T> {
     return doAddPartition(tableName, storageName, getValidPath(path, false, true)).toString().toLowerCase();
   }
 
+  public String updatePartition(String tableName, String storageName, File path) {
+    // TODO: path.getPath() to be changed to path after LENS-634
+    return doUpdatePartition(tableName, storageName, getValidPath(path.getPath(), false, true)).toString()
+      .toLowerCase();
+  }
+
   public String addPartitions(String tableName, String storageName, String path) {
     return doAddPartitions(tableName, storageName, getValidPath(path, false, true)).toString().toLowerCase();
+  }
+
+  public String updatePartitions(String tableName, String storageName, String path) {
+    return doUpdatePartitions(tableName, storageName, getValidPath(path, false, true)).toString().toLowerCase();
   }
 
   public String dropPartitions(String tableName, String storageName, String filter) {
@@ -111,4 +122,8 @@ public abstract class PhysicalTableCrudCommand<T> extends LensCRUDCommand<T> {
   protected abstract APIResult doAddPartitions(String tableName, String storageName, String path);
 
   protected abstract APIResult doDropPartitions(String tableName, String storageName, String filter);
+
+  protected abstract APIResult doUpdatePartition(String tableName, String storageName, String validPath);
+
+  protected abstract APIResult doUpdatePartitions(String tableName, String storageName, String validPath);
 }

@@ -30,8 +30,6 @@ import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -51,7 +49,6 @@ import lombok.Getter;
  * Holds context of a candidate fact table.
  */
 public class CandidateFact implements CandidateTable {
-  public static final Log LOG = LogFactory.getLog(CandidateFact.class.getName());
   final CubeFactTable fact;
   @Getter
   private Set<String> storageTables;
@@ -190,10 +187,10 @@ public class CandidateFact implements CandidateTable {
     int currentChild = 0;
     for (int i = 0; i < cubeql.getSelectAST().getChildCount(); i++) {
       ASTNode selectExpr = (ASTNode) this.selectAST.getChild(currentChild);
-      Set<String> exprCols = getColsInExpr(cubeCols, selectExpr);
+      Set<String> exprCols = getColsInExpr(cubeql, cubeCols, selectExpr);
       if (getColumns().containsAll(exprCols)) {
         selectIndices.add(i);
-        if (cubeql.getQueriedDimAttrs().containsAll(exprCols)) {
+        if (cubeql.getCube().getDimAttributeNames().containsAll(exprCols)) {
           dimFieldIndices.add(i);
         }
         ASTNode aliasNode = HQLParser.findNodeByPath(selectExpr, Identifier);
@@ -225,7 +222,8 @@ public class CandidateFact implements CandidateTable {
     // TODO
   }
 
-  private Set<String> getColsInExpr(final Set<String> cubeCols, ASTNode expr) throws SemanticException {
+  private Set<String> getColsInExpr(final CubeQueryContext cubeql, final Set<String> cubeCols,
+    ASTNode expr) throws SemanticException {
     final Set<String> cubeColsInExpr = new HashSet<String>();
     HQLParser.bft(expr, new ASTNodeVisitor() {
       @Override
@@ -244,9 +242,10 @@ public class CandidateFact implements CandidateTable {
             cubeColsInExpr.add(column);
           }
         } else if (node.getToken().getType() == DOT) {
+          String alias = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).getText().toLowerCase();
           ASTNode colIdent = (ASTNode) node.getChild(1);
           String column = colIdent.getText().toLowerCase();
-          if (cubeCols.contains(column)) {
+          if (cubeql.getAliasForTableName(cubeql.getCube()).equalsIgnoreCase(alias) && cubeCols.contains(column)) {
             cubeColsInExpr.add(column);
           }
         }

@@ -28,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.*;
@@ -238,11 +239,11 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    * @param latestInfo
    * @throws HiveException
    */
-  public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
+  public List<Partition> addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
     throws HiveException {
     Map<Map<String, String>, LatestInfo> latestInfos = Maps.newHashMap();
     latestInfos.put(addPartitionDesc.getNonTimePartSpec(), latestInfo);
-    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
+    return addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
       Collections.singletonList(addPartitionDesc), latestInfos);
   }
 
@@ -257,7 +258,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    *                              column
    * @throws HiveException
    */
-  public void addPartitions(Hive client, String factOrDimTable, UpdatePeriod updatePeriod,
+  public List<Partition> addPartitions(Hive client, String factOrDimTable, UpdatePeriod updatePeriod,
     List<StoragePartitionDesc> storagePartitionDescs,
     Map<Map<String, String>, LatestInfo> latestInfos) throws HiveException {
     preAddPartitions(storagePartitionDescs);
@@ -347,12 +348,50 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
           }
         }
       }
-      client.createPartitions(addParts);
-      commitAddPartitions(storagePartitionDescs);
+      List<Partition> partitionsAdded = client.createPartitions(addParts);
+      success = true;
+      return partitionsAdded;
+    } finally {
+      if (success) {
+        commitAddPartitions(storagePartitionDescs);
+      } else {
+        rollbackAddPartitions(storagePartitionDescs);
+      }
+    }
+  }
+
+  /**
+   * Update existing partition
+   * @param client          hive client instance
+   * @param fact            fact name
+   * @param partition       partition to be updated
+   * @throws InvalidOperationException
+   * @throws HiveException
+   */
+  public void updatePartition(Hive client, String fact, Partition partition)
+    throws InvalidOperationException, HiveException {
+    client.alterPartition(MetastoreUtil.getFactOrDimtableStorageTableName(fact, getName()), partition);
+  }
+
+  /**
+   * Update existing partitions
+   * @param client          hive client instance
+   * @param fact            fact name
+   * @param partitions      partitions to be updated
+   * @throws InvalidOperationException
+   * @throws HiveException
+   */
+  public void updatePartitions(Hive client, String fact, List<Partition> partitions)
+    throws InvalidOperationException, HiveException {
+    boolean success = false;
+    try {
+      client.alterPartitions(MetastoreUtil.getFactOrDimtableStorageTableName(fact, getName()), partitions);
       success = true;
     } finally {
-      if (!success) {
-        rollbackAddPartitions(storagePartitionDescs);
+      if (success) {
+        commitUpdatePartition(partitions);
+      } else {
+        rollbackUpdatePartition(partitions);
       }
     }
   }
@@ -413,10 +452,11 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
           }
         }
       }
-      commitDropPartition(storageTableName, partVals);
       success = true;
     } finally {
-      if (!success) {
+      if (success) {
+        commitDropPartition(storageTableName, partVals);
+      } else {
         rollbackDropPartition(storageTableName, partVals);
       }
     }

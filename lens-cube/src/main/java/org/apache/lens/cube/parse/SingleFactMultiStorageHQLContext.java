@@ -24,16 +24,12 @@ import java.util.Map;
 
 import org.apache.lens.cube.metadata.Dimension;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import lombok.Getter;
 
 
 public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
-
-  public static final Log LOG = LogFactory.getLog(SingleFactMultiStorageHQLContext.class.getName());
 
   @Getter
   private CubeQueryContext query = null;

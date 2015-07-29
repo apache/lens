@@ -31,8 +31,6 @@ import javax.ws.rs.core.Response;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import com.google.common.cache.CacheBuilder;
@@ -45,9 +43,6 @@ import com.google.common.io.Files;
  */
 @Path("/")
 public class StaticFileResource {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(StaticFileResource.class);
 
   // Cache for file content, bound by both size and time
   /** The Constant CONTENT_CACHE. */

@@ -29,9 +29,12 @@ import org.apache.lens.server.api.user.UserConfigLoaderException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * A factory for creating UserConfigLoader objects.
  */
+@Slf4j
 public final class UserConfigLoaderFactory {
   private UserConfigLoaderFactory() {
 
@@ -133,6 +136,15 @@ public final class UserConfigLoaderFactory {
    * @return the user config
    */
   public static Map<String, String> getUserConfig(String loggedInUser) {
-    return getUserConfigLoader().getUserConfig(loggedInUser);
+    try {
+      Map<String, String> config = getUserConfigLoader().getUserConfig(loggedInUser);
+      if (config == null) {
+        throw new UserConfigLoaderException("Got null User config for: " + loggedInUser);
+      }
+      return config;
+    } catch (RuntimeException e) {
+      log.error("Couldn't get user config for user: " + loggedInUser, e);
+      throw e;
+    }
   }
 }

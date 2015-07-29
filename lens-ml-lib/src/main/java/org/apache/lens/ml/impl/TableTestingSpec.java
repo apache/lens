@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -32,14 +30,13 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Table specification for running test on a table.
  */
+@Slf4j
 public class TableTestingSpec {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(TableTestingSpec.class);
 
   /** The db. */
   private String db;
@@ -256,7 +253,7 @@ public class TableTestingSpec {
       Table outTbl = metastoreClient.getTable(db == null ? "default" : db, outputTable, false);
       outputTableExists = (outTbl != null);
     } catch (HiveException exc) {
-      LOG.error("Error getting table info " + toString(), exc);
+      log.error("Error getting table info {}", toString(), exc);
       return false;
     }
 
@@ -267,22 +264,22 @@ public class TableTestingSpec {
     }
 
     if (!testTableColumns.containsAll(featureColumns)) {
-      LOG.info("Invalid feature columns: " + featureColumns + ". Actual columns in table:" + testTableColumns);
+      log.info("Invalid feature columns: {}. Actual columns in table:{}", featureColumns, testTableColumns);
       return false;
     }
 
     if (!testTableColumns.contains(labelColumn)) {
-      LOG.info("Invalid label column: " + labelColumn + ". Actual columns in table:" + testTableColumns);
+      log.info("Invalid label column: {}. Actual columns in table:{}", labelColumn, testTableColumns);
       return false;
     }
 
     if (StringUtils.isBlank(outputColumn)) {
-      LOG.info("Output column is required");
+      log.info("Output column is required");
       return false;
     }
 
     if (StringUtils.isBlank(outputTable)) {
-      LOG.info("Output table is required");
+      log.info("Output table is required");
       return false;
     }
     return true;

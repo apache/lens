@@ -38,18 +38,16 @@ import org.apache.lens.server.api.ServiceProviderFactory;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class MLServiceImpl.
  */
+@Slf4j
 public class MLServiceImpl extends CompositeService implements MLService {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(LensMLImpl.class);
 
   /** The ml. */
   private LensMLImpl ml;
@@ -156,7 +154,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
     ml.init(hiveConf);
     super.init(hiveConf);
     serviceProviderFactory = getServiceProviderFactory(hiveConf);
-    LOG.info("Inited ML service");
+    log.info("Inited ML service");
   }
 
   /*
@@ -168,7 +166,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
   public synchronized void start() {
     ml.start();
     super.start();
-    LOG.info("Started ML service");
+    log.info("Started ML service");
   }
 
   /*
@@ -180,7 +178,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
   public synchronized void stop() {
     ml.stop();
     super.stop();
-    LOG.info("Stopped ML service");
+    log.info("Stopped ML service");
   }
 
   /**
@@ -294,7 +292,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
       // Wait for test query to complete
       LensQuery query = queryService.getQuery(sessionHandle, testQueryHandle);
-      LOG.info("Submitted query " + testQueryHandle.getHandleId());
+      log.info("Submitted query {}", testQueryHandle.getHandleId());
       while (!query.getStatus().finished()) {
         try {
           Thread.sleep(500);

@@ -38,12 +38,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.collect.Maps;
+
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 
+@Slf4j
 public class LensClient {
-  private static final Log LOG = LogFactory.getLog(LensClient.class);
-
   public static final String CLILOGGER =  "cliLogger";
   private static final String DEFAULT_PASSWORD = "";
   private final LensClientConfig conf;
@@ -93,10 +94,10 @@ public class LensClient {
   }
 
   public LensAPIResult<QueryHandle> executeQueryAsynch(String sql, String queryName) throws LensAPIException {
-    LOG.debug("Executing query " + sql);
+    log.debug("Executing query {}", sql);
     LensAPIResult<QueryHandle> lensAPIResult = statement.execute(sql, false, queryName);
     LensQuery query = statement.getQuery();
-    LOG.debug("Adding query to statementMap " + query.getQueryHandle());
+    log.debug("Adding query to statementMap {}", query.getQueryHandle());
     statementMap.put(query.getQueryHandle(), statement);
     return lensAPIResult;
   }
@@ -130,7 +131,7 @@ public class LensClient {
   }
 
   public LensClientResultSetWithStats getResults(String sql, String queryName) throws LensAPIException {
-    LOG.debug("Executing query " + sql);
+    log.debug("Executing query {}", sql);
     statement.execute(sql, true, queryName);
     return getResultsFromStatement(statement);
   }
@@ -213,7 +214,7 @@ public class LensClient {
   public QueryResult getResults(QueryHandle query) {
     QueryStatus status = getLensStatement(query).getStatus();
     if (!status.isResultSetAvailable()) {
-      LOG.debug("Current status of the query is " + status);
+      log.debug("Current status of the query is {}", status);
       throw new IllegalStateException("Resultset for the query "
         + query + " is not available, its current status is " + status);
     }
@@ -226,76 +227,76 @@ public class LensClient {
 
 
   private void connectToLensServer() {
-    LOG.debug("Connecting to lens server " + new LensConnectionParams(conf));
+    log.debug("Connecting to lens server {}", new LensConnectionParams(conf));
     connection = new LensConnection(new LensConnectionParams(conf));
     connection.open(password);
-    LOG.debug("Successfully connected to server " + connection);
+    log.debug("Successfully connected to server {}", connection);
   }
 
 
   public List<String> getAllDatabases() {
-    LOG.debug("Getting all database");
+    log.debug("Getting all database");
     return mc.getAlldatabases();
   }
 
   public List<String> getAllNativeTables() {
-    LOG.debug("Getting all native tables");
+    log.debug("Getting all native tables");
     return mc.getAllNativeTables();
   }
 
   public List<String> getAllFactTables() {
-    LOG.debug("Getting all fact table");
+    log.debug("Getting all fact table");
     return mc.getAllFactTables();
   }
 
   public List<String> getAllFactTables(String cubeName) {
-    LOG.debug("Getting all fact table");
+    log.debug("Getting all fact table");
     return mc.getAllFactTables(cubeName);
   }
 
   public List<String> getAllDimensionTables() {
-    LOG.debug("Getting all dimension table");
+    log.debug("Getting all dimension table");
     return mc.getAllDimensionTables();
   }
 
   public List<String> getAllDimensionTables(String dimensionName) {
-    LOG.debug("Getting all dimension table");
+    log.debug("Getting all dimension table");
     return mc.getAllDimensionTables(dimensionName);
   }
 
   public List<String> getAllCubes() {
-    LOG.debug("Getting all cubes in database");
+    log.debug("Getting all cubes in database");
     return mc.getAllCubes();
   }
 
   public List<String> getAllDimensions() {
-    LOG.debug("Getting all dimensions in database");
+    log.debug("Getting all dimensions in database");
     return mc.getAllDimensions();
   }
 
   public String getCurrentDatabae() {
-    LOG.debug("Getting current database");
+    log.debug("Getting current database");
     return mc.getCurrentDatabase();
   }
 
 
   public boolean setDatabase(String database) {
-    LOG.debug("Set the database to " + database);
+    log.debug("Set the database to {}", database);
     APIResult result = mc.setDatabase(database);
     return result.getStatus() == APIResult.Status.SUCCEEDED;
   }
 
   public APIResult dropDatabase(String database, boolean cascade) {
-    LOG.debug("Dropping database " + database + ", cascade: " + cascade);
+    log.debug("Dropping database {}, cascade: {}", database, cascade);
     APIResult result = mc.dropDatabase(database, cascade);
-    LOG.debug("Return status of dropping " + database + " result " + result);
+    log.debug("Return status of dropping {} result {}", database, result);
     return result;
   }
 
   public APIResult createDatabase(String database, boolean ignoreIfExists) {
-    LOG.debug("Creating database " + database + " ignore " + ignoreIfExists);
+    log.debug("Creating database {} ignore {}", database, ignoreIfExists);
     APIResult result = mc.createDatabase(database, ignoreIfExists);
-    LOG.debug("Create database result " + result);
+    log.debug("Create database result {}", result);
     return result;
   }
 
@@ -312,7 +313,7 @@ public class LensClient {
   }
 
   public APIResult closeConnection() {
-    LOG.debug("Closing lens connection: " + new LensConnectionParams(conf));
+    log.debug("Closing lens connection: {}", new LensConnectionParams(conf));
     return this.connection.close();
   }
 
@@ -529,6 +530,37 @@ public class LensClient {
 
   public APIResult addPartitionsToDim(String table, String storage, String partsSpec) {
     return mc.addPartitionsToDimensionTable(table, storage, partsSpec);
+  }
+  public APIResult updatePartitionOfFact(String table, String storage, String partSpec) {
+    return mc.updatePartitionOfFactTable(table, storage, partSpec);
+  }
+
+  public APIResult updatePartitionsOfFact(String table, String storage, String partsSpec) {
+    return mc.updatePartitionsOfFactTable(table, storage, partsSpec);
+  }
+
+  public APIResult updatePartitionOfFact(String table, String storage, XPartition xp) {
+    return mc.updatePartitionOfFactTable(table, storage, xp);
+  }
+
+  public APIResult updatePartitionsOfFact(String table, String storage, XPartitionList xpList) {
+    return mc.updatePartitionsOfFactTable(table, storage, xpList);
+  }
+
+  public APIResult updatePartitionOfDim(String table, String storage, String partSpec) {
+    return mc.updatePartitionOfDimensionTable(table, storage, partSpec);
+  }
+
+  public APIResult updatePartitionOfDim(String table, String storage, XPartition xp) {
+    return mc.updatePartitionOfDimensionTable(table, storage, xp);
+  }
+
+  public APIResult updatePartitionsOfDim(String table, String storage, XPartitionList xpList) {
+    return mc.updatePartitionsOfDimensionTable(table, storage, xpList);
+  }
+
+  public APIResult updatePartitionsOfDim(String table, String storage, String partsSpec) {
+    return mc.updatePartitionsOfDimensionTable(table, storage, partsSpec);
   }
 
   public QueryPrepareHandle prepare(String sql, String queryName) {

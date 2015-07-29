@@ -74,6 +74,19 @@ public class TestLensApplication extends LensJerseyTest {
     Assert.assertEquals(response.readEntity(String.class), "OK");
   }
 
+  /**
+   * Test log resources loaded.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void testLogResourceLoaded() throws InterruptedException {
+    final WebTarget target = target().path("logs");
+    final Response response = target.request().get();
+    Assert.assertEquals(response.getStatus(), 200);
+    Assert.assertEquals(response.readEntity(String.class), "Logs resource is up!");
+  }
+
   @Test
   public void testMetricService() {
     MetricsService metrics = ((MetricsService) LensServices.get().getService(MetricsService.NAME));

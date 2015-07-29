@@ -24,8 +24,6 @@ import java.util.Date;
 
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import lombok.Data;
 import lombok.NonNull;
 
@@ -41,7 +39,7 @@ public class TimePartition implements Comparable<TimePartition>, Named {
     this.updatePeriod = updatePeriod;
     Calendar cal = Calendar.getInstance();
     cal.setTime(date);
-    this.date = truncate(date, updatePeriod);
+    this.date = updatePeriod.truncate(date);
     this.dateString = updatePeriod.format().format(this.date);
   }
 
@@ -107,22 +105,6 @@ public class TimePartition implements Comparable<TimePartition>, Named {
 
   public boolean after(TimePartition when) {
     return this.date.after(when.date);
-  }
-
-  private Date truncate(Date date, UpdatePeriod updatePeriod) {
-    if (updatePeriod.equals(UpdatePeriod.WEEKLY)) {
-      Date truncDate = DateUtils.truncate(date, Calendar.DAY_OF_MONTH);
-      Calendar cal = Calendar.getInstance();
-      cal.setTime(truncDate);
-      cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-      return cal.getTime();
-    } else if (updatePeriod.equals(UpdatePeriod.QUARTERLY)) {
-      Date dt = DateUtils.truncate(date, updatePeriod.calendarField());
-      dt.setMonth(dt.getMonth() - dt.getMonth() % 3);
-      return dt;
-    } else {
-      return DateUtils.truncate(date, updatePeriod.calendarField());
-    }
   }
 
   protected static String getWrongUpdatePeriodMessage(UpdatePeriod up, String dateString) {

@@ -20,12 +20,13 @@ package org.apache.lens.server.api.events;
 
 import java.util.Collection;
 
+import org.apache.lens.server.api.LensService;
 import org.apache.lens.server.api.error.LensException;
 
 /**
  * Singleton which is responsible for managing the event-listener mapping as well as processing events.
  */
-public interface LensEventService {
+public interface LensEventService extends LensService {
 
   /**
    * The Constant NAME.
@@ -71,4 +72,5 @@ public interface LensEventService {
    * @return all the listeners
    */
   <T extends LensEvent> Collection<LensEventListener> getListeners(Class<T> changeType);
+
 }

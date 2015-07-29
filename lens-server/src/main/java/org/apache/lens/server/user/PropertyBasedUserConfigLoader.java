@@ -18,10 +18,7 @@
  */
 package org.apache.lens.server.user;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -32,13 +29,15 @@ import org.apache.lens.server.api.user.UserConfigLoaderException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
+import com.google.common.collect.Maps;
+
 /**
  * The Class PropertyBasedUserConfigLoader.
  */
-public class PropertyBasedUserConfigLoader extends UserConfigLoader {
+public class PropertyBasedUserConfigLoader implements UserConfigLoader {
 
   /** The user map. */
-  private HashMap<String, Map<String, String>> userMap;
+  private HashMap<String, Map<String, String>> userMap = Maps.newHashMap();
 
   /**
    * Instantiates a new property based user config loader.
@@ -47,10 +46,8 @@ public class PropertyBasedUserConfigLoader extends UserConfigLoader {
    * @throws UserConfigLoaderException the user config loader exception
    */
   public PropertyBasedUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
-    super(conf);
-    userMap = new HashMap<String, Map<String, String>>();
     Properties properties = new Properties();
-    String filename = hiveConf.get(LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME, null);
+    String filename = conf.get(LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME, null);
     if (filename == null) {
       throw new UserConfigLoaderException("property file path not provided for property based resolver."
         + "Please set property " + LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME);

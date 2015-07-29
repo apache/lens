@@ -195,7 +195,7 @@ public class LensStatement {
   public void waitForQueryToComplete(QueryHandle handle) {
     LensClient.getCliLooger().info("Query handle: " + handle);
     query = getQuery(handle);
-    while (isQueryInQUEUEDSate()) {
+    while (query.queued()) {
       query = getQuery(handle);
       LensClient.getCliLooger().debug("Query " + handle + " status: " + query.getStatus());
       try {
@@ -220,10 +220,6 @@ public class LensStatement {
         throw new IllegalStateException(e);
       }
     }
-  }
-
-  private boolean isQueryInQUEUEDSate() {
-    return query.getStatus().getStatus().equals(QueryStatus.Status.QUEUED);
   }
 
   /**

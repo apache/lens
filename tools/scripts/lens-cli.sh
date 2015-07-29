@@ -111,6 +111,6 @@ fi
 # finally, invoke the appropriate command
 
 exec ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} \
-      "$CLI_JAR" $*
+      "$CLI_JAR" $args
 
 exit 0

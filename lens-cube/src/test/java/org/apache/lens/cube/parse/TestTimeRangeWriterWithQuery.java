@@ -21,6 +21,8 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -89,30 +91,45 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     }
     // hourly partitions for two days
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
-    String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
+
+    DateFormat qFmt = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
+    Calendar qCal = Calendar.getInstance();
+    Date toDate = qCal.getTime();
+    String qTo = qFmt.format(toDate);
+    qCal.setTime(TWODAYS_BACK);
+    Date from2DaysBackDate = qCal.getTime();
+    String qFrom = qFmt.format(from2DaysBackDate);
+    String twoDaysInRangeClause = " time_range_in(d_time, '"+ qFrom + "', '" + qTo + "')";
+
+    String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + twoDaysInRangeClause, conf);
     Map<String, String> whereClauses = new HashMap<String, String>();
     whereClauses.put(
-      CubeTestSetup.getDbName() + "c1_testfact2",
-      TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", CubeTestSetup.TWODAYS_BACK,
-        getOneLess(CubeTestSetup.NOW, UpdatePeriod.HOURLY.calendarField()), UpdatePeriod.HOURLY.format()));
+      CubeTestSetup.getDbName() + "c1_testfact",
+      TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", from2DaysBackDate, toDate,
+          UpdatePeriod.CONTINUOUS.format()));
     String expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     // multiple range query
+    //from date 4 days back
+    qCal.setTime(BEFORE_4_DAYS_START);
+    Date from4DaysBackDate = qCal.getTime();
+    String qFrom4Days = qFmt.format(from4DaysBackDate);
+    String fourDaysInRangeClause = " time_range_in(d_time, '"+ qFrom4Days + "', '" + qTo + "')";
+
     hqlQuery =
-      rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE + " OR "
-        + CubeTestSetup.TWO_DAYS_RANGE_BEFORE_4_DAYS, conf);
+      rewrite("select SUM(msr2) from testCube" + " where " + twoDaysInRangeClause + " OR "
+        + fourDaysInRangeClause, conf);
 
     whereClauses = new HashMap<String, String>();
     whereClauses.put(
-      CubeTestSetup.getDbName() + "c1_testfact2",
-      TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", CubeTestSetup.TWODAYS_BACK,
-        getOneLess(CubeTestSetup.NOW, UpdatePeriod.HOURLY.calendarField()), UpdatePeriod.HOURLY.format())
+      CubeTestSetup.getDbName() + "c1_testfact",
+      TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", from2DaysBackDate, toDate,
+          UpdatePeriod.CONTINUOUS.format())
         + " OR"
-        + TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", CubeTestSetup.BEFORE_4_DAYS_START,
-        getOneLess(CubeTestSetup.BEFORE_4_DAYS_END, UpdatePeriod.HOURLY.calendarField()),
-        UpdatePeriod.HOURLY.format()));
+        + TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", from4DaysBackDate, toDate,
+        UpdatePeriod.CONTINUOUS.format()));
     expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
@@ -121,9 +138,9 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     conf.set(CubeQueryConfUtil.PART_WHERE_CLAUSE_DATE_FORMAT, "yyyy-MM-dd HH:mm:ss");
     hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
     whereClauses = new HashMap<String, String>();
-    whereClauses.put(CubeTestSetup.getDbName() + "c1_testfact2", TestBetweenTimeRangeWriter.getBetweenClause(cubeName,
+    whereClauses.put(CubeTestSetup.getDbName() + "c1_testfact", TestBetweenTimeRangeWriter.getBetweenClause(cubeName,
       "dt", getUptoHour(CubeTestSetup.TWODAYS_BACK),
-      getUptoHour(getOneLess(CubeTestSetup.NOW, UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.DB_FORMAT));
+      getUptoHour(CubeTestSetup.NOW), TestTimeRangeWriter.DB_FORMAT));
     expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(expected, hqlQuery);

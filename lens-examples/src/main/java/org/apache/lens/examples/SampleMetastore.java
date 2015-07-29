@@ -159,6 +159,7 @@ public class SampleMetastore {
     createFact("sales-raw-fact.xml");
     createFact("sales-aggr-fact1.xml");
     createFact("sales-aggr-fact2.xml");
+    createFact("sales-aggr-continuous-fact.xml");
   }
 
   public static void main(String[] args) throws Exception {

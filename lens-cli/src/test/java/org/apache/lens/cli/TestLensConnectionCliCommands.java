@@ -24,6 +24,7 @@ import java.net.URI;
 
 import javax.ws.rs.BadRequestException;
 
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cli.commands.LensConnectionCommands;
 import org.apache.lens.client.LensClient;
 
@@ -89,10 +90,10 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
     return f;
   }
 
-  private String getFilePathFromUri(String uripath){
+  private String getFilePathFromUri(String uripath) {
     try {
       return new URI(uripath).getPath();
-    } catch (Exception e){
+    } catch (Exception e) {
       return null;
     }
   }
@@ -172,7 +173,7 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
 
     /* Tests input file pattern file: and file://  */
     String filenameA = "file:" + projectdir + "/target/tempdata_a.txt";
-    String filenameB = "file://" + projectdir +"/target/tempdata_b.txt";
+    String filenameB = "file://" + projectdir + "/target/tempdata_b.txt";
 
     String fileRegex = "file:" + projectdir + "/target/tempdata_*.txt";
 
@@ -326,5 +327,19 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
       }
       commands.quitShell();
     }
+  }
+
+  /**
+   * Test CLI command to get session handle
+   */
+  @Test
+  public void testGetSessionHandle() {
+    LensClient client = new LensClient();
+    LensConnectionCommands commands = new LensConnectionCommands();
+    commands.setClient(client);
+    LensSessionHandle sessionHandle = client.getConnection().getSessionHandle();
+    Assert.assertNotNull(sessionHandle);
+    String output = commands.getSessionHandle();
+    Assert.assertTrue(output.contains(sessionHandle.getPublicId().toString()), "session handle output: " + output);
   }
 }

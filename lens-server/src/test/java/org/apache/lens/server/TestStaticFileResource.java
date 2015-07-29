@@ -30,9 +30,6 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.ui.UIApp;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -43,8 +40,6 @@ import org.testng.annotations.Test;
  */
 @Test(groups = "unit-test")
 public class TestStaticFileResource extends LensJerseyTest {
-
-  public static final Log LOG = LogFactory.getLog(TestStaticFileResource.class);
 
   /*
    * (non-Javadoc)

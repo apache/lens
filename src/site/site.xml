@@ -22,21 +22,21 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
 
-	<publishDate position="right"/>
-	<version position="right"/>
-	<bannerLeft>
-    <name>Lens Analytics Platform</name>
-        <src>/images/apache-lens-logo.png</src>
-		<title>Lens Analytics Platform</title>
-		<href>http://lens.incubator.apache.org</href>
-        <height>54px</height>
+  <publishDate position="right"/>
+  <version position="right"/>
+  <bannerLeft>
+      <name>Lens Analytics Platform</name>
+      <src>/images/apache-lens-logo.png</src>
+      <title>Lens Analytics Platform</title>
+      <href>http://lens.incubator.apache.org</href>
+      <height>54px</height>
   </bannerLeft>
-	
-    <bannerRight>
-        <name>Apache Incubator</name>
-        <src>/images/apache-incubator-logo.png</src>
-        <href>http://incubator.apache.org</href>
-    </bannerRight>
+
+  <bannerRight>
+      <name>Apache Incubator</name>
+      <src>/images/apache-incubator-logo.png</src>
+      <href>http://incubator.apache.org</href>
+  </bannerRight>
 
  <body>
     <menu name="Lens" >
@@ -44,38 +44,41 @@
       <item name="Getting Started" href="./lenshome/quick-start.html" />
       <item name="Installing and Running Lens" href="./lenshome/install-and-run.html" />
       <item name="Pseudo Distributed Setup" href="./lenshome/pseudo-distributed-setup.html" />
+      <item name="20 Minute Video demo" target="_new"
+        href="http://cwiki.apache.org/confluence/display/LENS/2015/07/13/20+Minute+video+demo+of+Apache+Lens+through+examples" />
     </menu>
-      <menu name="Releases" >
+    <menu name="Releases" >
       <item name="Download" href="./releases/download.html" />
       <item name="Compatibility" href="./releases/compatibility.html" />
       <item name="All Releases" href="./releases/release-history.html" />
-      </menu>
-		<menu name="User Documentation">
+    </menu>
+    <menu name="User Documentation">
       <item name="Lens User Guide" href="./user/index.html" />
       <item name="OLAP data cube" href="./user/olap-cube.html" />
       <item name="REST API" href="./rest.html" />
       <item name="Lens CLI" href="./user/cli.html" />
-			<item name="Java Client Library" href="./user/java-client.html"/>
-			<item name="JDBC Client" href="./user/jdbc-client.html"/>
+      <item name="Java Client Library" href="./user/java-client.html"/>
+      <item name="JDBC Client" href="./user/jdbc-client.html"/>
       <item name="Lens ML" href="./user/ml.html" />
-			<item name="FAQ" href="./user/faq.html"/>
-		</menu>
-		<menu name="Developer Documentation">
+      <item name="FAQ" href="./user/faq.html"/>
+    </menu>
+    <menu name="Developer Documentation">
       <item name="Contributor Guide" href="./developer/contribute.html" />
       <item name="Committer Guide" href="./developer/commit.html" />
       <item name="Lens Design" href="./developer/design.html" />
+      <item name="Lens Code Structure" href="./developer/codestructure.html" />
       <item name="Driver Developer Guide" href="./developer/driver.html" />
     </menu>
-		<menu name="Admin Documentation">
+    <menu name="Admin Documentation">
       <item name="Admin Overview" href="./admin/index.html"/>
       <item name="Deployment" href="./admin/deployment.html"/>
       <item name="Configuration" href="./admin/config-server.html"/>
-			<item name="Admin CLI" href="./admin/cli.html" />
+      <item name="Admin CLI" href="./admin/cli.html" />
     </menu>
     <menu ref="reports"/>
     <breadcrumbs>
-      <item name="Apache" href="http://www.apache.org" />
-			<item name="Lens" href="http://lens.incubator.apache.org" />
+        <item name="Apache" href="http://www.apache.org" />
+        <item name="Lens" href="http://lens.incubator.apache.org" />
     </breadcrumbs>
   </body>
   <skin>

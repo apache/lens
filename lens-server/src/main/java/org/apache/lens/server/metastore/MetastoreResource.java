@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.metastore;
 
+import static org.apache.lens.api.APIResult.*;
+
 import java.util.List;
 
 import javax.ws.rs.*;
@@ -25,7 +27,7 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBElement;
 
 import org.apache.lens.api.*;
-import org.apache.lens.api.APIResult.Status;
+import org.apache.lens.api.APIResult.*;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
@@ -33,12 +35,11 @@ import org.apache.lens.server.api.metastore.CubeMetastoreService;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * metastore resource api
@@ -47,9 +48,8 @@ import com.google.common.collect.Lists;
  */
 @Path("metastore")
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Slf4j
 public class MetastoreResource {
-  public static final Logger LOG = LogManager.getLogger(MetastoreResource.class);
-  public static final APIResult SUCCESS = new APIResult(Status.SUCCEEDED, "");
   public static final ObjectFactory X_CUBE_OBJECT_FACTORY = new ObjectFactory();
 
   public CubeMetastoreService getSvc() {
@@ -111,7 +111,7 @@ public class MetastoreResource {
   @Path("databases/current")
   public String getDatabase(@QueryParam("sessionid") LensSessionHandle sessionid) {
     checkSessionId(sessionid);
-    LOG.info("Get database");
+    log.info("Get database");
     try {
       return getSvc().getCurrentDatabase(sessionid);
     } catch (LensException e) {
@@ -132,14 +132,14 @@ public class MetastoreResource {
   @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
   public APIResult setDatabase(@QueryParam("sessionid") LensSessionHandle sessionid, String dbName) {
     checkSessionId(sessionid);
-    LOG.info("Set database:" + dbName);
+    log.info("Set database:{}", dbName);
     try {
       getSvc().setCurrentDatabase(sessionid, dbName);
+      return success();
     } catch (LensException e) {
-      LOG.error("Error changing current database", e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error changing current database", e);
+      return failure(e);
     }
-    return SUCCESS;
   }
 
   /**
@@ -157,14 +157,14 @@ public class MetastoreResource {
     @PathParam("dbName") String dbName,
     @QueryParam("cascade") boolean cascade) {
     checkSessionId(sessionid);
-    LOG.info("Drop database " + dbName + " cascade?" + cascade);
+    log.info("Drop database {} cascade?{}", dbName, cascade);
     try {
       getSvc().dropDatabase(sessionid, dbName, cascade);
+      return success();
     } catch (LensException e) {
-      LOG.error("Error dropping " + dbName, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error dropping {}", dbName, e);
+      return failure(e);
     }
-    return SUCCESS;
   }
 
   /**
@@ -182,15 +182,15 @@ public class MetastoreResource {
     @QueryParam("ignoreIfExisting") @DefaultValue("true") boolean ignoreIfExisting,
     String dbName) {
     checkSessionId(sessionid);
-    LOG.info("Create database " + dbName + " Ignore Existing? " + ignoreIfExisting);
+    log.info("Create database {} Ignore Existing? {}", dbName, ignoreIfExisting);
 
     try {
       getSvc().createDatabase(sessionid, dbName, ignoreIfExisting);
+      return success();
     } catch (LensException e) {
-      LOG.error("Error creating database " + dbName, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error creating database {}", dbName, e);
+      return failure(e);
     }
-    return SUCCESS;
   }
 
   /**
@@ -242,7 +242,7 @@ public class MetastoreResource {
       return X_CUBE_OBJECT_FACTORY.createXNativeTable(getSvc().getNativeTable(sessionid, tableName));
     } catch (LensException e) {
       checkTableNotFound(e, tableName);
-      LOG.error("Error getting native table", e);
+      log.error("Error getting native table", e);
       throw new WebApplicationException(e);
     }
   }
@@ -273,7 +273,7 @@ public class MetastoreResource {
           + " values are 'all' or 'base' or 'derived' or 'queryable'");
       }
     } catch (LensException e) {
-      LOG.error("Error getting cube names", e);
+      log.error("Error getting cube names", e);
       throw new WebApplicationException(e);
     }
   }
@@ -289,8 +289,8 @@ public class MetastoreResource {
   @Path("cubes")
   public APIResult deleteAllCubes(@QueryParam("sessionid") LensSessionHandle sessionid) {
     checkSessionId(sessionid);
-    boolean failed = false;
     List<String> cubeNames = null;
+    LensException exc = null;
     int numDeleted = 0;
     try {
       cubeNames = getSvc().getAllCubeNames(sessionid);
@@ -299,22 +299,10 @@ public class MetastoreResource {
         numDeleted++;
       }
     } catch (LensException e) {
-      LOG.error("Error deleting cubes:", e);
-      failed = true;
+      log.error("Error deleting cubes:", e);
+      exc = e;
     }
-    if (cubeNames != null && numDeleted == cubeNames.size()) {
-      return new APIResult(Status.SUCCEEDED, "Delete of all "
-        + "cubes is successful");
-    } else {
-      assert (failed);
-      if (numDeleted == 0) {
-        return new APIResult(Status.FAILED, "Delete of all "
-          + "cubes has failed");
-      } else {
-        return new APIResult(Status.PARTIAL, "Delete of all "
-          + "cubes is partial");
-      }
-    }
+    return successOrPartialOrFailure(numDeleted, cubeNames.size(), exc);
   }
 
   /**
@@ -336,10 +324,10 @@ public class MetastoreResource {
         // parent should exist
         checkTableNotFound(e, ((XDerivedCube) cube).getParent());
       }
-      LOG.error("Error creating cube " + cube.getName(), e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error creating cube {}", cube.getName(), e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
 
@@ -363,7 +351,7 @@ public class MetastoreResource {
    * @param cubeName  The cube name
    * @param cube      The {@link XCube} representation of the updated cube definition
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
-   * state {@link Status#FAILED}, if udpate has failed
+   * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/cubes/{cubeName}")
@@ -378,10 +366,10 @@ public class MetastoreResource {
         checkTableNotFound(e, ((XDerivedCube) cube).getParent());
       }
       checkTableNotFound(e, cube.getName());
-      LOG.error("Error updating cube " + cube.getName(), e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error updating cube {}", cube.getName(), e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -400,7 +388,7 @@ public class MetastoreResource {
       return X_CUBE_OBJECT_FACTORY.createXCube(getSvc().getCube(sessionid, cubeName));
     } catch (LensException e) {
       checkTableNotFound(e, cubeName);
-      LOG.error("Error getting cube", e);
+      log.error("Error getting cube", e);
       throw new WebApplicationException(e);
     }
   }
@@ -422,10 +410,10 @@ public class MetastoreResource {
       getSvc().dropCube(sessionid, cubeName);
     } catch (LensException e) {
       checkTableNotFound(e, cubeName);
-      LOG.error("Error droping cube " + cubeName, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error droping cube {}", cubeName, e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -442,7 +430,7 @@ public class MetastoreResource {
     try {
       return new StringList(getSvc().getAllStorageNames(sessionid));
     } catch (LensException e) {
-      LOG.error("Error getting storages", e);
+      log.error("Error getting storages", e);
       throw new WebApplicationException(e);
     }
   }
@@ -462,10 +450,10 @@ public class MetastoreResource {
     try {
       getSvc().createStorage(sessionid, storage);
     } catch (LensException e) {
-      LOG.error("Error creating storage " + storage.getName(), e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error creating storage {}", storage.getName(), e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -479,8 +467,8 @@ public class MetastoreResource {
   @Path("storages")
   public APIResult deleteAllStorages(@QueryParam("sessionid") LensSessionHandle sessionid) {
     checkSessionId(sessionid);
-    boolean failed = false;
     List<String> storageNames = null;
+    LensException exc = null;
     int numDeleted = 0;
     try {
       storageNames = getSvc().getAllStorageNames(sessionid);
@@ -489,22 +477,11 @@ public class MetastoreResource {
         numDeleted++;
       }
     } catch (LensException e) {
-      LOG.error("Error deleting storages:", e);
-      failed = true;
+      log.error("Error deleting storages:", e);
+      exc = e;
     }
-    if (storageNames != null && numDeleted == storageNames.size()) {
-      return new APIResult(Status.SUCCEEDED, "Delete of all "
-        + "storages is successful");
-    } else {
-      assert (failed);
-      if (numDeleted == 0) {
-        return new APIResult(Status.FAILED, "Delete of all "
-          + "storages has failed");
-      } else {
-        return new APIResult(Status.PARTIAL, "Delete of all "
-          + "storages is partial");
-      }
-    }
+    assert (numDeleted == storageNames.size() || exc != null);
+    return successOrPartialOrFailure(numDeleted, storageNames.size(), exc);
   }
 
   /**
@@ -525,10 +502,10 @@ public class MetastoreResource {
       getSvc().alterStorage(sessionid, storageName, storage);
     } catch (LensException e) {
       checkTableNotFound(e, storageName);
-      LOG.error("Error updating storage" + storageName, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error updating storage {}", storageName, e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -568,10 +545,10 @@ public class MetastoreResource {
       getSvc().dropStorage(sessionid, storageName);
     } catch (LensException e) {
       checkTableNotFound(e, storageName);
-      LOG.error("Error dropping storage" + storageName, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error dropping storage {}", storageName, e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -588,7 +565,7 @@ public class MetastoreResource {
     try {
       return new StringList(getSvc().getAllDimensionNames(sessionid));
     } catch (LensException e) {
-      LOG.error("Error getting dimensions", e);
+      log.error("Error getting dimensions", e);
       throw new WebApplicationException(e);
     }
   }
@@ -608,10 +585,10 @@ public class MetastoreResource {
     try {
       getSvc().createDimension(sessionid, dimension);
     } catch (LensException e) {
-      LOG.error("Error creating dimension " + dimension.getName(), e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error creating dimension {}", dimension.getName(), e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -625,9 +602,9 @@ public class MetastoreResource {
   @Path("dimensions")
   public APIResult deleteAllDimensions(@QueryParam("sessionid") LensSessionHandle sessionid) {
     checkSessionId(sessionid);
-    boolean failed = false;
     List<String> dimNames = null;
     int numDeleted = 0;
+    LensException exc = null;
     try {
       dimNames = getSvc().getAllDimensionNames(sessionid);
       for (String dimName : dimNames) {
@@ -635,22 +612,10 @@ public class MetastoreResource {
         numDeleted++;
       }
     } catch (LensException e) {
-      LOG.error("Error deleting dimensions:", e);
-      failed = true;
+      log.error("Error deleting dimensions:", e);
+      exc = e;
     }
-    if (dimNames != null && numDeleted == dimNames.size()) {
-      return new APIResult(Status.SUCCEEDED, "Delete of all "
-        + "dimensions is successful");
-    } else {
-      assert (failed);
-      if (numDeleted == 0) {
-        return new APIResult(Status.FAILED, "Delete of all "
-          + "dimensions has failed");
-      } else {
-        return new APIResult(Status.PARTIAL, "Delete of all "
-          + "dimensions is partial");
-      }
-    }
+    return successOrPartialOrFailure(numDeleted, dimNames.size(), exc);
   }
 
   /**
@@ -671,10 +636,10 @@ public class MetastoreResource {
       getSvc().updateDimension(sessionid, dimName, dimension);
     } catch (LensException e) {
       checkTableNotFound(e, dimName);
-      LOG.error("Error updating dimension" + dimName, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error updating dimension {}", dimName, e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -714,10 +679,10 @@ public class MetastoreResource {
       getSvc().dropDimension(sessionid, dimName);
     } catch (LensException e) {
       checkTableNotFound(e, dimName);
-      LOG.error("Error dropping dimName" + dimName, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error dropping dimension {}", dimName, e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -789,9 +754,9 @@ public class MetastoreResource {
   public APIResult deleteAllFacts(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("false") @QueryParam("cascade") boolean cascade) {
     checkSessionId(sessionid);
-    boolean failed = false;
     List<String> factNames = null;
     int numDeleted = 0;
+    LensException exc = null;
     try {
       factNames = getSvc().getAllCubeNames(sessionid);
       for (String factName : factNames) {
@@ -799,22 +764,10 @@ public class MetastoreResource {
         numDeleted++;
       }
     } catch (LensException e) {
-      LOG.error("Error deleting cubes:", e);
-      failed = true;
+      log.error("Error deleting cubes:", e);
+      exc = e;
     }
-    if (factNames != null && numDeleted == factNames.size()) {
-      return new APIResult(Status.SUCCEEDED, "Delete of all "
-        + "fact tables is successful");
-    } else {
-      assert (failed);
-      if (numDeleted == 0) {
-        return new APIResult(Status.FAILED, "Delete of all "
-          + "fact tables has failed");
-      } else {
-        return new APIResult(Status.PARTIAL, "Delete of all "
-          + "fact tables is partial");
-      }
-    }
+    return successOrPartialOrFailure(numDeleted, factNames.size(), exc);
   }
 
   /**
@@ -854,13 +807,13 @@ public class MetastoreResource {
     throws LensException {
     checkSessionId(sessionid);
     try {
-      LOG.info("Create fact table");
+      log.info("Create fact table");
       getSvc().createFactTable(sessionid, fact);
     } catch (LensException exc) {
-      LOG.error("Exception creating fact:", exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Exception creating fact:", exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -870,7 +823,7 @@ public class MetastoreResource {
    * @param factName  name of the fact table
    * @param fact      The {@link XFactTable} representation of the updated fact table definition
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
-   * state {@link Status#FAILED}, if udpate has failed
+   * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/facts/{factName}")
@@ -882,10 +835,10 @@ public class MetastoreResource {
       getSvc().updateFactTable(sessionid, fact);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
-      LOG.error("Error updating fact" + factName, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error updating fact {}", factName, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -908,10 +861,10 @@ public class MetastoreResource {
       getSvc().dropFactTable(sessionid, factName, cascade);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
-      LOG.error("Error dropping fact" + factName, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error dropping fact {}", factName, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -952,10 +905,10 @@ public class MetastoreResource {
       getSvc().dropAllStoragesOfFact(sessionid, factName);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
-      LOG.error("Error dropping storages of fact" + factName, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error dropping storages of fact {}", factName, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -977,10 +930,10 @@ public class MetastoreResource {
       getSvc().addStorageToFact(sessionid, factName, storageTable);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
-      LOG.error("Error adding storage to fact" + factName, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error adding storage to fact {}", factName, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1003,10 +956,10 @@ public class MetastoreResource {
       getSvc().dropStorageOfFact(sessionid, factName, storage);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
-      LOG.error("Error dropping storage of fact" + factName, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error dropping storage of fact {}", factName, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1043,10 +996,8 @@ public class MetastoreResource {
     @QueryParam("filter") String filter) throws LensException {
     checkSessionId(sessionid);
     try {
-      List<XPartition> partitions = getSvc().getAllPartitionsOfFactStorage(sessionid, factName, storage, filter);
-      XPartitionList partList = X_CUBE_OBJECT_FACTORY.createXPartitionList();
-      partList.getPartition().addAll(partitions);
-      return X_CUBE_OBJECT_FACTORY.createXPartitionList(partList);
+      return X_CUBE_OBJECT_FACTORY
+        .createXPartitionList(getSvc().getAllPartitionsOfFactStorage(sessionid, factName, storage, filter));
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
       throw exc;
@@ -1074,11 +1025,11 @@ public class MetastoreResource {
     try {
       getSvc().dropPartitionFromStorageByFilter(sessionid, factName, storage, filter);
     } catch (LensException exc) {
-      LOG.warn("Got exception while dropping partition.", exc);
+      log.warn("Got exception while dropping partition.", exc);
       checkTableNotFound(exc, factName);
-      return new APIResult(Status.PARTIAL, exc.getMessage());
+      return partial(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1100,13 +1051,41 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition is null", partition);
     try {
-      getSvc().addPartitionToFactStorage(sessionid, factName, storage, partition);
+      return successOrPartialOrFailure(getSvc().addPartitionToFactStorage(sessionid, factName, storage, partition), 1);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
-      LOG.error("Error adding partition to storage of fact" + factName + ":" + storage, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error adding partition to storage of fact {}:{}", factName, storage, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+  }
+
+  /**
+   * updates an existing partition for a storage of fact
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param factName  fact table name
+   * @param storage   storage name
+   * @param partition {@link XPartition} representation of partition.
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state
+   * {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/facts/{factName}/storages/{storage}/partition")
+  public APIResult updatePartitionOfFactStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("factName") String factName,
+    @PathParam("storage") String storage,
+    XPartition partition) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition is null", partition);
+    try {
+      getSvc().updatePartition(sessionid, factName, storage, partition);
+    } catch (LensException exc) {
+      checkTableNotFound(exc, factName);
+      log.error("Error adding partition to storage of fact {}:{}", factName, storage, exc);
+      return failure(exc);
+    }
+    return success();
   }
 
   /**
@@ -1128,13 +1107,42 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition List is null", partitions);
     try {
-      getSvc().addPartitionsToFactStorage(sessionid, factName, storage, partitions);
+      return successOrPartialOrFailure(getSvc().addPartitionsToFactStorage(sessionid, factName, storage, partitions),
+        partitions.getPartition().size());
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
-      LOG.error("Error adding partition to storage of fact" + factName + ":" + storage, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error adding partition to storage of fact {}:{}", factName, storage, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+  }
+
+  /**
+   * Batch Update partitions for a storage of fact
+   *
+   * @param sessionid  The sessionid in which user is working
+   * @param factName   fact table name
+   * @param storage    storage name
+   * @param partitions {@link XPartitionList} representation of partitions
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state
+   * {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/facts/{factName}/storages/{storage}/partitions")
+  public APIResult updatePartitionsOfFactStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("factName") String factName,
+    @PathParam("storage") String storage,
+    XPartitionList partitions) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition List is null", partitions);
+    try {
+      getSvc().updatePartitions(sessionid, factName, storage, partitions);
+    } catch (LensException exc) {
+      checkTableNotFound(exc, factName);
+      log.error("Error adding partition to storage of fact {}:{}", factName, storage, exc);
+      return failure(exc);
+    }
+    return success();
   }
 
   /**
@@ -1160,10 +1168,10 @@ public class MetastoreResource {
 
     } catch (LensException e) {
       checkTableNotFound(e, factName);
-      LOG.error("Error dropping partition to storage of fact" + factName + ":" + storage, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error dropping partition to storage of fact {}:{}", factName, storage, e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1194,10 +1202,10 @@ public class MetastoreResource {
     try {
       getSvc().createDimensionTable(sessionid, dimensionTable);
     } catch (LensException exc) {
-      LOG.error("Error creating cube dimension table " + dimensionTable.getTableName(), exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error creating cube dimension table {}", dimensionTable.getTableName(), exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1206,7 +1214,7 @@ public class MetastoreResource {
    * @param sessionid      The sessionid in which user is working
    * @param dimensionTable The {@link XDimensionTable} representation of the updated dim table definition
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
-   * state {@link Status#FAILED}, if udpate has failed
+   * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/dimtables/{dimTableName}")
@@ -1218,10 +1226,10 @@ public class MetastoreResource {
       getSvc().updateDimensionTable(sessionid, dimensionTable);
     } catch (LensException exc) {
       checkTableNotFound(exc, dimTableName);
-      LOG.error("Error updating cube dimension table " + dimTableName, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error updating cube dimension table {}", dimTableName, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1243,10 +1251,10 @@ public class MetastoreResource {
       getSvc().dropDimensionTable(sessionid, dimension, cascade);
     } catch (LensException e) {
       checkTableNotFound(e, dimension);
-      LOG.error("Error dropping cube dimension table " + dimension, e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error dropping cube dimension table {}", dimension, e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1306,10 +1314,10 @@ public class MetastoreResource {
       getSvc().addDimTableStorage(sessionid, dimTableName, storageTbl);
     } catch (LensException e) {
       checkTableNotFound(e, dimTableName);
-      LOG.error("Error creating dimension table storage " + dimTableName + ":" + storageTbl.getStorageName(), e);
-      return new APIResult(Status.FAILED, e.getMessage());
+      log.error("Error creating dimension table storage {}:{}", dimTableName, storageTbl.getStorageName(), e);
+      return failure(e);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1346,10 +1354,10 @@ public class MetastoreResource {
       getSvc().dropAllStoragesOfDimTable(sessionid, dimTableName);
     } catch (LensException exc) {
       checkTableNotFound(exc, dimTableName);
-      LOG.error("Error dropping storages of dimension table " + dimTableName, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error dropping storages of dimension table {}", dimTableName, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1371,10 +1379,10 @@ public class MetastoreResource {
       getSvc().dropStorageOfDimTable(sessionid, dimTableName, storage);
     } catch (LensException exc) {
       checkTableNotFound(exc, dimTableName);
-      LOG.error("Error dropping storage of dimension table " + dimTableName + ":" + storage, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error dropping storage of dimension table {}:{}", dimTableName, storage, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1395,10 +1403,8 @@ public class MetastoreResource {
     @QueryParam("filter") String filter)
     throws LensException {
     checkSessionId(sessionid);
-    List<XPartition> partitions = getSvc().getAllPartitionsOfDimTableStorage(sessionid, dimension, storage, filter);
-    XPartitionList partList = X_CUBE_OBJECT_FACTORY.createXPartitionList();
-    partList.getPartition().addAll(partitions);
-    return X_CUBE_OBJECT_FACTORY.createXPartitionList(partList);
+    return X_CUBE_OBJECT_FACTORY
+      .createXPartitionList(getSvc().getAllPartitionsOfDimTableStorage(sessionid, dimension, storage, filter));
   }
 
   /**
@@ -1422,10 +1428,10 @@ public class MetastoreResource {
     try {
       getSvc().dropPartitionFromStorageByFilter(sessionid, dimTableName, storage, filter);
     } catch (LensException exc) {
-      LOG.error("Error dropping partition on storage of dimension table " + dimTableName + ":" + storage, exc);
-      return new APIResult(Status.PARTIAL, exc.getMessage());
+      log.error("Error dropping partition on storage of dimension table {}:{}", dimTableName, storage, exc);
+      return partial(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1449,10 +1455,10 @@ public class MetastoreResource {
       getSvc().dropPartitionFromStorageByValues(sessionid, dimTableName, storage,
         values);
     } catch (LensException exc) {
-      LOG.error("Error dropping partitions on storage of dimension table " + dimTableName + ":" + storage, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error dropping partitions on storage of dimension table {}:{}", dimTableName, storage, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+    return success();
   }
 
   /**
@@ -1474,12 +1480,40 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition is null", partition);
     try {
-      getSvc().addPartitionToDimStorage(sessionid, dimTableName, storage, partition);
+      return successOrPartialOrFailure(getSvc().addPartitionToDimStorage(sessionid, dimTableName, storage, partition),
+        1);
     } catch (LensException exc) {
-      LOG.error("Error adding partition to storage of dimension table " + dimTableName + ":" + storage, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error adding partition to storage of dimension table {}:{}", dimTableName, storage, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+  }
+
+  /**
+   * Updates an existing partition for a storage of dimension
+   *
+   * @param sessionid    The sessionid in which user is working
+   * @param dimTableName dimension table name
+   * @param storage      storage name
+   * @param partition    {@link XPartition} representation of partition
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state
+   * {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/dimtables/{dimTableName}/storages/{storage}/partition")
+  public APIResult updatePartitionOfDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("dimTableName") String dimTableName,
+    @PathParam("storage") String storage,
+    XPartition partition) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition is null", partition);
+    try {
+      getSvc().updatePartition(sessionid, dimTableName, storage, partition);
+    } catch (LensException exc) {
+      log.error("Error adding partition to storage of dimension table {}:{}", dimTableName, storage, exc);
+      return failure(exc);
+    }
+    return success();
   }
 
   /**
@@ -1501,12 +1535,40 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition list is null", partitions);
     try {
-      getSvc().addPartitionsToDimStorage(sessionid, dimTableName, storage, partitions);
+      return successOrPartialOrFailure(getSvc().addPartitionsToDimStorage(sessionid, dimTableName, storage, partitions),
+        partitions.getPartition().size());
     } catch (LensException exc) {
-      LOG.error("Error adding partition to storage of dimension table " + dimTableName + ":" + storage, exc);
-      return new APIResult(Status.FAILED, exc.getMessage());
+      log.error("Error adding partition to storage of dimension table {}:{}", dimTableName, storage, exc);
+      return failure(exc);
     }
-    return SUCCESS;
+  }
+
+  /**
+   * Add new partitions for a storage of dimension
+   *
+   * @param sessionid    The sessionid in which user is working
+   * @param dimTableName dimension table name
+   * @param storage      storage name
+   * @param partitions   {@link XPartitionList} representation of list of partitions
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state
+   * {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/dimtables/{dimTableName}/storages/{storage}/partitions")
+  public APIResult updatePartitionsOfDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("dimTableName") String dimTableName,
+    @PathParam("storage") String storage,
+    XPartitionList partitions) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition list is null", partitions);
+    try {
+      getSvc().updatePartitions(sessionid, dimTableName, storage, partitions);
+    } catch (LensException exc) {
+      log.error("Error adding partition to storage of dimension table {}:{}", dimTableName, storage, exc);
+      return failure(exc);
+    }
+    return success();
   }
 
   /**
@@ -1595,7 +1657,7 @@ public class MetastoreResource {
         updatePeriod, timeDimension));
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
-      LOG.error("Error finding partition timelines for fact: " + factName);
+      log.error("Error finding partition timelines for fact: {}", factName, exc);
       throw exc;
     }
   }

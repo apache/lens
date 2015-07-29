@@ -23,8 +23,6 @@ import java.util.Set;
 
 import org.apache.lens.cube.metadata.Dimension;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
@@ -34,8 +32,6 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
  * Updates from string with join clause expanded
  */
 class DimOnlyHQLContext extends DimHQLContext {
-
-  public static final Log LOG = LogFactory.getLog(DimOnlyHQLContext.class.getName());
 
   DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws SemanticException {
     super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(),

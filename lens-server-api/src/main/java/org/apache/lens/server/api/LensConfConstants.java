@@ -716,7 +716,7 @@ public final class LensConfConstants {
    * Interval at which lens session expiry service runs
    */
   public static final String SESSION_EXPIRY_SERVICE_INTERVAL_IN_SECS = SERVER_PFX
-      + "session.expiry.serivce.interval.secs";
+    + "session.expiry.serivce.interval.secs";
 
   public static final int DEFAULT_SESSION_EXPIRY_SERVICE_INTERVAL_IN_SECS = 3600;
 
@@ -892,4 +892,23 @@ public final class LensConfConstants {
   public static final String ESTIMATE_POOL_KEEP_ALIVE_MILLIS = SERVER_PFX + "estimate.pool.keepalive.millis";
   public static final int DEFAULT_ESTIMATE_POOL_KEEP_ALIVE_MILLIS = 60000; // 1 minute
 
+  public static final String QUERY_PHASE1_REWRITERS = SERVER_PFX + "query.phase1.rewriters";
+
+  /**
+   * Key to get the implementations of query constraint factories.
+   */
+  public static final String QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY = SERVER_PFX
+    + "query.launching.constraint.factories";
+
+  /**
+   * Key to get the total query cost ceiling per user.
+   */
+  public static final String TOTAL_QUERY_COST_CEILING_PER_USER_KEY = SERVER_PFX
+      + "total.query.cost.ceiling.per.user";
+
+  /**
+   * Key to get the implementations of waiting queries selection policy factories.
+   */
+  public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY = SERVER_PFX
+      + "waiting.queries.selection.policy.factories";
 }

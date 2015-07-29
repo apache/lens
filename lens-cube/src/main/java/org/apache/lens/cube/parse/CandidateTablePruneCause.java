@@ -36,10 +36,11 @@ import lombok.NoArgsConstructor;
 @JsonWriteNullProperties(false)
 @Data
 @NoArgsConstructor
-
 public class CandidateTablePruneCause {
 
   public enum CandidateTablePruneCode {
+    // other fact set element is removed
+    ELEMENT_IN_SET_PRUNED("Other candidate from measure covering set is pruned"),
     FACT_NOT_AVAILABLE_IN_RANGE("No facts available for all of these time ranges: %s") {
       @Override
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
@@ -70,6 +71,9 @@ public class CandidateTablePruneCause {
         return new String[]{columns.toString()};
       }
     },
+    // candidate table tries to get denormalized field from dimension and the
+    // referred dimension is invalid.
+    INVALID_DENORM_TABLE("Referred dimension is invalid in one of the candidate tables"),
     // column not valid in cube table
     COLUMN_NOT_VALID("Column not valid in cube table"),
     // column not found in cube table
@@ -92,9 +96,6 @@ public class CandidateTablePruneCause {
         }
       }
     },
-    // candidate table tries to get denormalized field from dimension and the
-    // referred dimension is invalid.
-    INVALID_DENORM_TABLE("Referred dimension is invalid in one of the candidate tables"),
     // missing storage tables for cube table
     MISSING_STORAGES("Missing storage tables for the cube table"),
     // no candidate storges for cube table, storage cause will have why each

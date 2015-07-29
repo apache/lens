@@ -23,15 +23,10 @@ import java.util.*;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.StorageConstants;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 public final class StorageUtil {
   private StorageUtil() {
 
   }
-
-  private static final Log LOG = LogFactory.getLog(StorageUtil.class.getName());
 
   public static String getWherePartClause(String timeDimName, String tableName, Collection<String> parts) {
     if (parts.size() == 0) {

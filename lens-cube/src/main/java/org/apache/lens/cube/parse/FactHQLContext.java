@@ -23,16 +23,15 @@ import java.util.Set;
 
 import org.apache.lens.cube.metadata.Dimension;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * HQL context class which passes all query strings from the fact and works with required dimensions for the fact.
  */
+@Slf4j
 public class FactHQLContext extends DimHQLContext {
-
-  public static final Log LOG = LogFactory.getLog(FactHQLContext.class.getName());
 
   private final CandidateFact fact;
   private final Set<Dimension> factDims;
@@ -43,7 +42,7 @@ public class FactHQLContext extends DimHQLContext {
       .getHavingTree(), null);
     this.fact = fact;
     this.factDims = factDims;
-    LOG.info("factDims:" + factDims + " for fact:" + fact);
+    log.info("factDims:{} for fact:{}", factDims, fact);
   }
 
   @Override

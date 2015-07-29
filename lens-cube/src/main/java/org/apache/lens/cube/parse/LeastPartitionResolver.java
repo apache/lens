@@ -22,17 +22,16 @@ import java.util.*;
 
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Prune candidate fact sets which require more partitions than minimum parts.
  */
+@Slf4j
 class LeastPartitionResolver implements ContextRewriter {
-  public static final Log LOG = LogFactory.getLog(LeastPartitionResolver.class.getName());
-
   public LeastPartitionResolver(Configuration conf) {
   }
 
@@ -54,8 +53,8 @@ class LeastPartitionResolver implements ContextRewriter {
       for (Iterator<Set<CandidateFact>> i = cubeql.getCandidateFactSets().iterator(); i.hasNext();) {
         Set<CandidateFact> facts = i.next();
         if (factPartCount.get(facts) > minPartitions) {
-          LOG.info("Not considering facts:" + facts + " from candidate fact tables as it requires more partitions to"
-            + " be queried:" + factPartCount.get(facts) + " minimum:" + minPartitions);
+          log.info("Not considering facts:{} from candidate fact tables as it requires more partitions to be"
+            + " queried:{} minimum:{}", facts, factPartCount.get(facts), minPartitions);
           i.remove();
         }
       }

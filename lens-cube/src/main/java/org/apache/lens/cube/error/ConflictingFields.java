@@ -21,6 +21,7 @@ package org.apache.lens.cube.error;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.Serializable;
 import java.util.*;
 
 import javax.xml.bind.annotation.*;
@@ -34,7 +35,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @EqualsAndHashCode
 @ToString
-public class ConflictingFields {
+public class ConflictingFields implements Serializable {
 
   private static final String SEP = ", ";
 

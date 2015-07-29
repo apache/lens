@@ -18,13 +18,15 @@
  */
 package org.apache.lens.server.api.metrics;
 
+import org.apache.lens.server.api.LensService;
+
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
 /**
  * The Interface MetricsService.
  */
-public interface MetricsService {
+public interface MetricsService extends LensService {
 
   /**
    * The Constant NAME.
@@ -118,6 +120,11 @@ public interface MetricsService {
   String RUNNING_QUERIES = "running-queries";
 
   /**
+   * The Constant WAITING_QUERIES.
+   */
+  String WAITING_QUERIES = "waiting-queries";
+
+  /**
    * The Constant FINISHED_QUERIES.
    */
   String FINISHED_QUERIES = "finished-queries";
@@ -135,6 +142,8 @@ public interface MetricsService {
   long getQueuedQueries();
 
   long getRunningQueries();
+
+  long getWaitingQueries();
 
   long getFinishedQueries();
 
@@ -186,4 +195,5 @@ public interface MetricsService {
    * Specifies the count of all opened sessions which are not closed after restarted and  the restored sessions
    */
   int getActiveSessions();
+
 }

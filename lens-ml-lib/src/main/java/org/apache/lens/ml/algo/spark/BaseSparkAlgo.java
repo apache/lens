@@ -28,20 +28,18 @@ import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLModel;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * The Class BaseSparkAlgo.
  */
+@Slf4j
 public abstract class BaseSparkAlgo implements MLAlgo {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(BaseSparkAlgo.class);
 
   /** The name. */
   private final String name;
@@ -126,7 +124,7 @@ public abstract class BaseSparkAlgo implements MLAlgo {
     }
 
     TableTrainingSpec spec = builder.build();
-    LOG.info("Training " + " with " + features.size() + " features");
+    log.info("Training with {} features", features.size());
 
     spec.createRDDs(sparkContext);
 
@@ -208,7 +206,7 @@ public abstract class BaseSparkAlgo implements MLAlgo {
       try {
         return Double.parseDouble(params.get(param));
       } catch (NumberFormatException nfe) {
-        LOG.warn("Couldn't parse param value: " + param + " as double.");
+        log.warn("Couldn't parse param value: {} as double.", param);
       }
     }
     return defaultVal;
@@ -226,7 +224,7 @@ public abstract class BaseSparkAlgo implements MLAlgo {
       try {
         return Integer.parseInt(params.get(param));
       } catch (NumberFormatException nfe) {
-        LOG.warn("Couldn't parse param value: " + param + " as integer.");
+        log.warn("Couldn't parse param value: {} as integer.", param);
       }
     }
     return defaultVal;

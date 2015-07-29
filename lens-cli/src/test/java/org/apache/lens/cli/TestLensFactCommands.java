@@ -222,40 +222,44 @@ public class TestLensFactCommands extends LensCliApplicationTest {
   /**
    * Test fact partition actions.
    */
-  private void testFactPartitionActions() {
+  private void testFactPartitionActions() throws URISyntaxException {
     LensFactCommands command = getCommand();
-    String result;
     verifyEmptyTimelines();
-    result = command.getAllPartitionsOfFact("fact1", FACT_LOCAL, null);
-    assertTrue(result.trim().isEmpty());
-    try {
-      command.addPartitionToFact("fact1", FACT_LOCAL, new File(
-        TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml").toURI()).getAbsolutePath());
-    } catch (Throwable t) {
-      log.error("Unable to locate the storage part file for adding new storage to fact table fact1", t);
-      fail("Unable to locate the storage part file for adding new storage to fact table fact1");
-    }
+    assertTrue(command.getAllPartitionsOfFact("fact1", FACT_LOCAL, null).trim().isEmpty());
+    String singlePartPath = new File(
+      TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml").toURI()).getAbsolutePath();
+    String multiplePartsPath = new File(
+      TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath();
+    assertEquals(command.addPartitionToFact("fact1", FACT_LOCAL, singlePartPath), SUCCESS_MESSAGE);
+    assertEquals(command.updatePartitionOfFact("fact1", FACT_LOCAL, new File(singlePartPath)), SUCCESS_MESSAGE);
     verifyAndDeletePartitions();
-    try {
-      command.addPartitionsToFact("fact1", FACT_LOCAL, new File(
-          TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath());
-    } catch (Throwable t) {
-      log.error("Unable to locate the storage part file for adding new storage to fact table fact1", t);
-      fail("Unable to locate the storage part file for adding new storage to fact table fact1");
-    }
+    assertEquals(command.addPartitionsToFact("fact1", FACT_LOCAL, multiplePartsPath), SUCCESS_MESSAGE);
+    assertEquals(command.updatePartitionsOfFact("fact1", FACT_LOCAL, multiplePartsPath), SUCCESS_MESSAGE);
     verifyAndDeletePartitions();
 
     // Wrong files:
     try {
-      command.addPartitionToFact("fact1", FACT_LOCAL, new File(
-        TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath());
+      command.addPartitionToFact("fact1", FACT_LOCAL, multiplePartsPath);
       fail("Should fail");
     } catch (Throwable t) {
       // pass
     }
     try {
-      command.addPartitionsToFact("fact1", FACT_LOCAL, new File(
-        TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml").toURI()).getAbsolutePath());
+      command.updatePartitionOfFact("fact1", FACT_LOCAL, new File(multiplePartsPath));
+      fail("Should fail");
+    } catch (Throwable t) {
+      // pass
+    }
+
+    try {
+      command.addPartitionsToFact("fact1", FACT_LOCAL, singlePartPath);
+      fail("Should fail");
+    } catch (Throwable t) {
+      // pass
+    }
+
+    try {
+      command.updatePartitionsOfFact("fact1", FACT_LOCAL, singlePartPath);
       fail("Should fail");
     } catch (Throwable t) {
       // pass

@@ -28,12 +28,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.DriverQueryHook;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.user.MockUserConfigLoader;
+import org.apache.lens.server.api.user.MockDriverQueryHook;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -46,6 +47,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -134,13 +136,9 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     conf.addResource("hivedriver-site.xml");
     driver = new HiveDriver();
     conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
+    conf.setClass(HiveDriver.HIVE_QUERY_HOOK_CLASS, MockDriverQueryHook.class, DriverQueryHook.class);
     driver.configure(conf);
-    driver.registerUserConfigLoader(new MockUserConfigLoader(conf));
-    drivers = new ArrayList<LensDriver>() {
-      {
-        add(driver);
-      }
-    };
+    drivers = Lists.<LensDriver>newArrayList(driver);
     System.out.println("TestRemoteHiveDriver created");
   }
 
@@ -198,7 +196,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
                 }
                 Thread.sleep(POLL_DELAY);
               } catch (LensException e) {
-                log.error("Got Exception " +e.getCause(), e);
+                log.error("Got Exception " + e.getCause(), e);
                 errCount.incrementAndGet();
                 break;
               } catch (InterruptedException e) {

@@ -27,8 +27,6 @@ import java.util.List;
 import org.apache.lens.cube.metadata.AbstractBaseTable;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -38,11 +36,13 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.Tree;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Promotes groupby to select and select to groupby.
  */
+@Slf4j
 class GroupbyResolver implements ContextRewriter {
-  private static final Log LOG = LogFactory.getLog(GroupbyResolver.class.getName());
 
   private final boolean selectPromotionEnabled;
   private final boolean groupbyPromotionEnabled;
@@ -62,7 +62,7 @@ class GroupbyResolver implements ContextRewriter {
     }
 
     if (!groupByExprs.isEmpty()) {
-      LOG.info("Not promoting select expression to groupby," + " since there are already group by expressions");
+      log.info("Not promoting select expression to groupby, since there are already group by expressions");
       return;
     }
 
@@ -132,7 +132,7 @@ class GroupbyResolver implements ContextRewriter {
     for (String expr : selectExprs) {
       expr = getExpressionWithoutAlias(cubeql, expr);
       if (!cubeql.isAggregateExpr(expr)) {
-        LOG.info("Not promoting groupby expression to select, since there are expression projected");
+        log.info("Not promoting groupby expression to select, since there are expression projected");
         return;
       }
     }

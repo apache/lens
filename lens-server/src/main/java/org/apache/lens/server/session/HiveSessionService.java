@@ -32,10 +32,11 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.server.LensService;
+import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.session.SessionClosed;
 import org.apache.lens.server.api.session.SessionExpired;
 import org.apache.lens.server.api.session.SessionOpened;
@@ -56,6 +57,7 @@ import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 
+import com.google.common.collect.Maps;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -65,7 +67,8 @@ import lombok.extern.slf4j.Slf4j;
  * The Class HiveSessionService.
  */
 @Slf4j
-public class HiveSessionService extends LensService implements SessionService {
+public class HiveSessionService extends BaseLensService implements SessionService {
+
 
   /** The restorable sessions. */
   private List<LensSessionImpl.LensSessionPersistInfo> restorableSessions;
@@ -101,7 +104,7 @@ public class HiveSessionService extends LensService implements SessionService {
   public int addResourceToAllServices(LensSessionHandle sessionid, String type, String path) {
     int numAdded = 0;
     boolean error = false;
-    for (LensService service : LensServices.get().getLensServices()) {
+    for (BaseLensService service : LensServices.get().getLensServices()) {
       try {
         service.addResource(sessionid, type, path);
         numAdded++;
@@ -205,7 +208,7 @@ public class HiveSessionService extends LensService implements SessionService {
    */
   @Override
   public LensSessionHandle openSession(String username, String password, String database,
-                                       Map<String, String> configuration)
+    Map<String, String> configuration)
     throws LensException {
     LensSessionHandle sessionid = super.openSession(username, password, configuration);
     log.info("Opened session " + sessionid + " for user " + username);
@@ -294,41 +297,55 @@ public class HiveSessionService extends LensService implements SessionService {
   public void setSessionParameter(LensSessionHandle sessionid, String key, String value) {
     setSessionParameter(sessionid, key, value, true);
   }
-
   /**
    * Sets the session parameter.
    *
    * @param sessionid    the sessionid
-   * @param key          the key
-   * @param value        the value
+   * @param config       map of string-string. each entry represents key and the value to be set for that key
    * @param addToSession the add to session
    */
-  protected void setSessionParameter(LensSessionHandle sessionid, String key, String value, boolean addToSession) {
-    log.info("Request to Set param key:" + key + " value:" + value);
-    String command = "set" + " " + key + "= " + value;
+
+  protected void setSessionParameters(LensSessionHandle sessionid, Map<String, String> config, boolean addToSession) {
+    log.info("Request to Set params:" + config);
     try {
       acquire(sessionid);
       // set in session conf
-      String var;
-      if (key.indexOf(SetProcessor.HIVECONF_PREFIX) == 0) {
-        var = key.substring(SetProcessor.HIVECONF_PREFIX.length());
-      } else {
-        var = key;
+      for(Map.Entry<String, String> entry: config.entrySet()) {
+        String var = entry.getKey();
+        if (var.indexOf(SetProcessor.HIVECONF_PREFIX) == 0) {
+          var = var.substring(SetProcessor.HIVECONF_PREFIX.length());
+        }
+        getSession(sessionid).getSessionConf().set(var, entry.getValue());
+        if (addToSession) {
+          String command = "set" + " " + entry.getKey() + "= " + entry.getValue();
+          closeCliServiceOp(getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null));
+        } else {
+          getSession(sessionid).getHiveConf().set(entry.getKey(), entry.getValue());
+        }
       }
-      getSession(sessionid).getSessionConf().set(var, value);
-      // set in underlying cli session
-      closeCliServiceOp(getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null));
-
       // add to persist
       if (addToSession) {
-        getSession(sessionid).setConfig(key, value);
+        getSession(sessionid).setConfig(config);
       }
-      log.info("Set param key:" + key + " value:" + value);
+      log.info("Set params:" + config);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } finally {
       release(sessionid);
     }
+  }
+    /**
+     * Sets the session parameter.
+     *
+     * @param sessionid    the sessionid
+     * @param key          the key
+     * @param value        the value
+     * @param addToSession the add to session
+     */
+  protected void setSessionParameter(LensSessionHandle sessionid, String key, String value, boolean addToSession) {
+    HashMap<String, String> config = Maps.newHashMap();
+    config.put(key, value);
+    setSessionParameters(sessionid, config, addToSession);
   }
 
   /*
@@ -384,13 +401,11 @@ public class HiveSessionService extends LensService implements SessionService {
         }
 
         // Add config for restored sessions
-        for (Map.Entry<String, String> cfg : session.getConfig().entrySet()) {
-          try {
-            setSessionParameter(sessionHandle, cfg.getKey(), cfg.getValue(), false);
-          } catch (Exception e) {
-            log.error("Error setting parameter " + cfg.getKey() + "=" + cfg.getValue()
-                    + " for session: " + session, e);
-          }
+        try{
+          setSessionParameters(sessionHandle, session.getConfig(), false);
+        } catch (Exception e) {
+          log.error("Error setting parameters " + session.getConfig()
+            + " for session: " + session, e);
         }
         log.info("Restored session " + persistInfo.getSessionHandle().getPublicId());
         notifyEvent(new SessionRestored(System.currentTimeMillis(), sessionHandle));
@@ -435,6 +450,16 @@ public class HiveSessionService extends LensService implements SessionService {
     log.info("Session service pesristed " + SESSION_MAP.size() + " sessions");
   }
 
+  /**
+   * @inheritDoc
+   */
+  @Override
+  public HealthStatus getHealthStatus() {
+    return this.getServiceState().equals(STATE.STARTED)
+        ? new HealthStatus(true, "Hive session service is healthy.")
+        : new HealthStatus(false, "Hive session service is down.");
+  }
+
   /*
    * (non-Javadoc)
    *
@@ -471,7 +496,7 @@ public class HiveSessionService extends LensService implements SessionService {
   private void closeInternal(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
     // Inform query service
-    LensService svc = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
+    BaseLensService svc = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
     if (svc instanceof QueryExecutionServiceImpl) {
       ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
     }

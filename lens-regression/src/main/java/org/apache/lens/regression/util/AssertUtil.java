@@ -24,14 +24,7 @@ import javax.ws.rs.core.Response;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.log4j.Logger;
-
-
-
-
 public class AssertUtil {
-
-  private static final Logger LOGGER = Logger.getLogger(AssertUtil.class);
 
   private AssertUtil() {
 

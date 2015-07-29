@@ -28,21 +28,19 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCo
 import org.apache.lens.cube.parse.CubeQueryContext.OptionalDimCtx;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
 
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JoinResolver.
  */
+@Slf4j
 class JoinResolver implements ContextRewriter {
-
-  private static final Log LOG = LogFactory.getLog(JoinResolver.class);
 
   @ToString
   public static class JoinClause implements Comparable<JoinClause> {
@@ -339,9 +337,9 @@ class JoinResolver implements ContextRewriter {
       this.autoJoinTarget = autoJoinTarget;
       this.joinTypeCfg = joinTypeCfg;
       this.joinsResolved = joinsResolved;
-      LOG.debug("All join paths:" + allPaths);
-      LOG.debug("Join path from columns:" + joinPathFromColumns);
-      LOG.debug("Join path to columns:" + joinPathToColumns);
+      log.debug("All join paths:{}", allPaths);
+      log.debug("Join path from columns:{}", joinPathFromColumns);
+      log.debug("Join path to columns:{}", joinPathToColumns);
     }
 
     public AbstractCubeTable getAutoJoinTarget() {
@@ -413,10 +411,6 @@ class JoinResolver implements ContextRewriter {
       }
     }
 
-    public void printAllPaths(String src) {
-      LOG.info(src + " All paths" + allPaths);
-    }
-
     public void removeJoinedTable(Dimension dim) {
       allPaths.remove(Aliased.create(dim));
       joinPathFromColumns.remove(dim);
@@ -429,7 +423,7 @@ class JoinResolver implements ContextRewriter {
     public String getFromString(String fromTable, CandidateFact fact, Set<Dimension> qdims,
       Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) throws SemanticException {
       String fromString = fromTable;
-      LOG.info("All paths dump:" + cubeql.getAutoJoinCtx().getAllPaths());
+      log.info("All paths dump:{}", cubeql.getAutoJoinCtx().getAllPaths());
       if (qdims == null || qdims.isEmpty()) {
         return fromString;
       }
@@ -630,7 +624,7 @@ class JoinResolver implements ContextRewriter {
               // This path requires some columns from the cube which are not
               // present in the candidate fact
               // Remove this path
-              LOG.info("Removing join path:" + jp + " as columns :" + cubeCols + " dont exist");
+              log.info("Removing join path:{} as columns :{} dont exist", jp, cubeCols);
               paths.remove(i);
               i--;
             }
@@ -666,7 +660,7 @@ class JoinResolver implements ContextRewriter {
               if (cols != null && (dimColumns.get(refTable) == null || !dimColumns.get(refTable).containsAll(cols))) {
                 // This path requires some columns from the cube which are not present in any candidate dim
                 // Remove this path
-                LOG.info("Removing join path:" + jp + " as columns :" + cols + " dont exist");
+                log.info("Removing join path:{} as columns :{} dont exist", jp, cols);
                 paths.remove(i);
                 i--;
                 break;
@@ -703,7 +697,7 @@ class JoinResolver implements ContextRewriter {
             // This path requires some columns from the cube which are not
             // present in the candidate fact
             // Remove this path
-            LOG.info("Removing join path:" + jp + " as columns :" + cubeCols + " dont exist");
+            log.info("Removing join path:{} as columns :{} dont exist", jp, cubeCols);
             paths.remove(i);
             i--;
           }
@@ -727,7 +721,7 @@ class JoinResolver implements ContextRewriter {
                 // This path requires some columns from the dimension which are
                 // not present in the candidate dim
                 // Remove this path
-                LOG.info("Removing join path:" + jp + " as columns :" + candidateDimCols + " dont exist");
+                log.info("Removing join path:{} as columns :{} dont exist", jp, candidateDimCols);
                 paths.remove(i);
                 i--;
               }
@@ -752,9 +746,9 @@ class JoinResolver implements ContextRewriter {
         allPaths = new LinkedHashMap<Aliased<Dimension>, List<SchemaGraph.JoinPath>>(this.allPaths);
       }
       // prune allPaths with qdims
-      LOG.info("pruning allPaths before generating all permutations.");
-      LOG.info("allPaths: " + allPaths);
-      LOG.info("qdims: " + qdims);
+      log.info("pruning allPaths before generating all permutations.");
+      log.info("allPaths: {}", allPaths);
+      log.info("qdims: {}", qdims);
       pruneAllPathsWithQueriedDims(allPaths, qdims);
 
       // Number of paths in each path set
@@ -828,7 +822,7 @@ class JoinResolver implements ContextRewriter {
       while (iter.hasNext()) {
         Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> cur = iter.next();
         if (!qdims.contains(cur.getKey().getObject())) {
-          LOG.info("removing from allPaths: " + cur);
+          log.info("removing from allPaths: {}", cur);
           iter.remove();
         }
       }
@@ -855,7 +849,7 @@ class JoinResolver implements ContextRewriter {
         throw new SemanticException(ErrorMsg.NO_JOIN_PATH, qdims.toString(), autoJoinTarget.getName());
       }
 
-      LOG.info("Fact:" + fact + " minCostClause:" + minCostClause);
+      log.info("Fact: {} minCostClause:{}", fact, minCostClause);
       if (fact != null) {
         cubeql.getAutoJoinCtx().getFactClauses().put(fact, minCostClause);
       } else {
@@ -875,8 +869,8 @@ class JoinResolver implements ContextRewriter {
           CubeDimensionTable dimtable = cdim.dimtable;
           if (!cdim.getColumns().containsAll(minCostClause.chainColumns.get(dim))) {
             i.remove();
-            LOG.info("Not considering dimtable:" + dimtable + " as its columns are"
-              + " not part of any join paths. Join columns:" + minCostClause.chainColumns.get(dim));
+            log.info("Not considering dimtable:{} as its columns are not part of any join paths. Join columns:{}",
+              dimtable, minCostClause.chainColumns.get(dim));
             cubeql.addDimPruningMsgs(dim, cdim.dimtable,
               CandidateTablePruneCause.noColumnPartOfAJoinPath(minCostClause.chainColumns.get(dim)));
           }
@@ -997,7 +991,7 @@ class JoinResolver implements ContextRewriter {
         String targetDimAlias = cubeql.getQb().getTabAliases().iterator().next();
         String targetDimTable = cubeql.getQb().getTabNameForAlias(targetDimAlias);
         if (targetDimTable == null) {
-          LOG.warn("Null table for alias " + targetDimAlias);
+          log.warn("Null table for alias {}", targetDimAlias);
           return;
         }
         target = cubeql.getMetastoreClient().getDimension(targetDimTable);
@@ -1005,7 +999,7 @@ class JoinResolver implements ContextRewriter {
     }
     searchDimensionTables(cubeql.getMetastoreClient(), joinClause);
     if (target == null) {
-      LOG.warn("Can't resolve joins for null target");
+      log.warn("Can't resolve joins for null target");
       return;
     }
 
@@ -1024,7 +1018,7 @@ class JoinResolver implements ContextRewriter {
     dimTables.remove(target);
     if (dimTables.isEmpty() && cubeql.getJoinchains().isEmpty()) {
       // Joins not required
-      LOG.info("No dimension tables to resolve and no join chains present!");
+      log.info("No dimension tables to resolve and no join chains present!");
       return;
     }
 
@@ -1045,10 +1039,10 @@ class JoinResolver implements ContextRewriter {
           addOptionalTables(cubeql, multipleJoinPaths.get(aliasedJoinee), cubeql.getDimensions().contains(joinee));
         } else {
           // No link to cube from this dim, can't proceed with query
-          if (LOG.isDebugEnabled()) {
+          if (log.isDebugEnabled()) {
             graph.print();
           }
-          LOG.warn("No join path between " + joinee.getName() + " and " + target.getName());
+          log.warn("No join path between {} and {}", joinee.getName(), target.getName());
           if (cubeql.getDimensions().contains(joinee)) {
             throw new SemanticException(ErrorMsg.NO_JOIN_PATH, joinee.getName(), target.getName());
           } else {
@@ -1057,13 +1051,13 @@ class JoinResolver implements ContextRewriter {
             for (CandidateTable candidate : candidates) {
               if (candidate instanceof CandidateFact) {
                 if (cubeql.getCandidateFacts().contains(candidate)) {
-                  LOG.info("Not considering fact:" + candidate + " as there is no join path to " + joinee);
+                  log.info("Not considering fact:{} as there is no join path to {}", candidate, joinee);
                   cubeql.getCandidateFacts().remove(candidate);
                   cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
                     CandidateTablePruneCode.COLUMN_NOT_FOUND));
                 }
               } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
-                LOG.info("Not considering dimtable:" + candidate + " as there is no join path to " + joinee);
+                log.info("Not considering dimtable:{} as there is no join path to {}", candidate, joinee);
                 cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
                 cubeql.addDimPruningMsgs(
                   (Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),

@@ -25,8 +25,6 @@ import java.util.List;
 
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
@@ -41,17 +39,17 @@ import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
 import com.google.common.base.Preconditions;
+
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class TableTrainingSpec.
  */
 @ToString
+@Slf4j
 public class TableTrainingSpec implements Serializable {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(TableTrainingSpec.class);
 
   /** The training rdd. */
   @Getter
@@ -324,11 +322,11 @@ public class TableTrainingSpec implements Serializable {
       HCatSchema tableSchema = HCatInputFormat.getTableSchema(conf);
       columns = tableSchema.getFields();
     } catch (IOException exc) {
-      LOG.error("Error getting table info " + toString(), exc);
+      log.error("Error getting table info {}", toString(), exc);
       return false;
     }
 
-    LOG.info(table + " columns " + columns.toString());
+    log.info("{} columns {}", table, columns.toString());
 
     boolean valid = false;
     if (columns != null && !columns.isEmpty()) {
@@ -388,7 +386,7 @@ public class TableTrainingSpec implements Serializable {
       throw new LensException("Table spec not valid: " + toString());
     }
 
-    LOG.info("Creating RDDs with spec " + toString());
+    log.info("Creating RDDs with spec {}", toString());
 
     // Get the RDD for table
     JavaPairRDD<WritableComparable, HCatRecord> tableRDD;
@@ -412,7 +410,7 @@ public class TableTrainingSpec implements Serializable {
 
     if (splitTraining) {
       // We have to split the RDD between a training RDD and a testing RDD
-      LOG.info("Splitting RDD for table " + database + "." + table + " with split fraction " + trainingFraction);
+      log.info("Splitting RDD for table {}.{} with split fraction {}", database, table, trainingFraction);
       JavaRDD<DataSample> sampledRDD = labeledRDD.map(new Function<LabeledPoint, DataSample>() {
         @Override
         public DataSample call(LabeledPoint v1) throws Exception {
@@ -423,11 +421,11 @@ public class TableTrainingSpec implements Serializable {
       trainingRDD = sampledRDD.filter(new TrainingFilter(trainingFraction)).map(new GetLabeledPoint()).rdd();
       testingRDD = sampledRDD.filter(new TestingFilter(trainingFraction)).map(new GetLabeledPoint()).rdd();
     } else {
-      LOG.info("Using same RDD for train and test");
+      log.info("Using same RDD for train and test");
       trainingRDD = labeledRDD.rdd();
       testingRDD = trainingRDD;
     }
-    LOG.info("Generated RDDs");
+    log.info("Generated RDDs");
   }
 
 }

@@ -34,12 +34,8 @@ public class MetastoreUtil {
 
   }
 
-  public static final String getFactStorageTableName(String factName, String storageName) {
+  public static final String getFactOrDimtableStorageTableName(String factName, String storageName) {
     return getStorageTableName(factName, Storage.getPrefix(storageName));
-  }
-
-  public static final String getDimStorageTableName(String dimName, String storageName) {
-    return getStorageTableName(dimName, Storage.getPrefix(storageName));
   }
 
   public static final String getStorageTableName(String cubeTableName, String storagePrefix) {

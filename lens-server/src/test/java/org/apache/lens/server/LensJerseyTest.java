@@ -33,8 +33,6 @@ import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.Service;
 import org.apache.hive.service.Service.STATE;
@@ -43,12 +41,13 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Extend this class for unit testing Lens Jersey resources
  */
+@Slf4j
 public abstract class LensJerseyTest extends JerseyTest {
-
-  public static final Log LOG = LogFactory.getLog(LensJerseyTest.class);
 
   private int port = -1;
 
@@ -63,11 +62,11 @@ public abstract class LensJerseyTest extends JerseyTest {
   }
 
   public void setUp() throws Exception {
-    LOG.info("setUp in class: " + this.getClass().getCanonicalName());
+    log.info("setUp in class: {}", this.getClass().getCanonicalName());
     super.setUp();
   }
   public void tearDown() throws Exception {
-    LOG.info("tearDown in class: " + this.getClass().getCanonicalName());
+    log.info("tearDown in class: {}", this.getClass().getCanonicalName());
     super.tearDown();
   }
   protected int getTestPort() {
@@ -79,14 +78,14 @@ public abstract class LensJerseyTest extends JerseyTest {
       socket = new ServerSocket(0);
       setPort(socket.getLocalPort());
     } catch (IOException e) {
-      LOG.info("Exception occured while creating socket. Use a default port number " + port);
+      log.info("Exception occured while creating socket. Use a default port number {}", port);
     } finally {
       try {
         if (socket != null) {
           socket.close();
         }
       } catch (IOException e) {
-        LOG.info("Exception occured while closing the socket ", e);
+        log.info("Exception occured while closing the socket", e);
       }
     }
     return port;
@@ -112,7 +111,8 @@ public abstract class LensJerseyTest extends JerseyTest {
    */
   @BeforeSuite
   public void startAll() throws Exception {
-    LOG.info("Before suite");
+    log.info("Before suite");
+    System.setProperty("lens.log.dir", "target/");
     TestRemoteHiveDriver.createHS2Service();
     System.out.println("Remote hive server started!");
     HiveConf hiveConf = new HiveConf();
@@ -141,7 +141,7 @@ public abstract class LensJerseyTest extends JerseyTest {
    */
   @AfterSuite
   public void stopAll() throws Exception {
-    LOG.info("After suite");
+    log.info("After suite");
     verifyMetrics();
     LensServices.get().stop();
     System.out.println("Lens services stopped!");

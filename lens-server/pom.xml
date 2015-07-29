@@ -19,8 +19,7 @@
   under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <name>Lens Server</name>
 
@@ -158,6 +157,16 @@
     </dependency>
 
     <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-testng</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-core</artifactId>
     </dependency>
@@ -214,10 +223,6 @@
       <artifactId>commons-dbutils</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.hsqldb</groupId>
       <artifactId>hsqldb</artifactId>
     </dependency>
@@ -232,6 +237,10 @@
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
@@ -276,6 +285,38 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare-test-additional-jars</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <property name="build.compiler" value="extJavac"/>
+                <property name="compile_classpath" refid="maven.compile.classpath"/>
+                <mkdir dir="${project.build.directory}/additional-classes"/>
+                <javac includeantruntime="false" srcdir="src/additional/java"
+                  destdir="${project.build.directory}/additional-classes" classpath="${compile_classpath}"/>
+                <mkdir dir="${project.build.directory}/testjars"/>
+                <jar destfile="${project.build.directory}/testjars/test.jar">
+                  <fileset dir="${project.build.directory}/additional-classes" includes="ClassLoaderTestClass.class"/>
+                </jar>
+                <jar destfile="${project.build.directory}/testjars/test2.jar">
+                  <fileset dir="${project.build.directory}/additional-classes" includes="ClassLoaderTestClass2.class"/>
+                </jar>
+                <jar destfile="${project.build.directory}/testjars/serde.jar">
+                  <fileset dir="${project.build.directory}/additional-classes" includes="DatabaseJarSerde.class"/>
+                </jar>
+               </target>
+             </configuration>
+          </execution>
+         </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

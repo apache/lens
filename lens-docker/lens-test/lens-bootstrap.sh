@@ -24,6 +24,11 @@ echo "LENS_CLIENT_CONF " $LENS_CLIENT_CONF
 echo "LENS_ML " $LENS_ML
 echo "SPARK_HOME " $SPARK_HOME
 
+#do the clean
+rm $LENS_HOME/*.log
+rm $LENS_HOME/logs/*
+rm -rf $LENS_HOME/metastore_db
+
 #set ml classpath into LENS_EXT_CLASSPATH
 LENS_EXT_CLASSPATH=$LENS_EXT_CLASSPATH:`$LENS_ML/bin/lens-ml-classpath.sh`
 export LENS_EXT_CLASSPATH
@@ -40,15 +45,29 @@ echo "HIVE_AUX_JARS_PATH " $HIVE_AUX_JARS_PATH
 #start hive bootstrap script
 /etc/hive-bootstrap.sh
 
-echo "Waiting for 20 secs for servers to start ..."
-sleep 20
+checkservice() {
+  servicename=$1
+  port=$2
+  up=`netstat -plnt |grep :$port.*LISTEN | wc -l`
+  while [ $up != "1" ]
+  do
+    echo "$servicename not yet up at $port. waiting for 5 sec"
+    sleep 5
+    up=`netstat -plnt |grep :$port.*LISTEN | wc -l`
+  done
+  echo "$servicename up at $port"
+}
+
+checkservice "Namenode" 9000
+checkservice "RM" 8088
+checkservice "HiveMetastore" 9083
+checkservice "HiveServer" 10000
 
 #start lens server
 echo "Starting Lens server..."
 $LENS_HOME/bin/lens-ctl start --conf $LENS_SERVER_CONF
 
-echo "Waiting for 60 secs for Lens Server to start ..."
-sleep 60
+checkservice "LensServer" 9999
 
 #Setting up client
 $LENS_CLIENT/bin/run-examples.sh sample-metastore --conf $LENS_CLIENT_CONF

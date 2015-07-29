@@ -71,3 +71,27 @@ Lens server deployment
   * METASTORE_NODROP: DELETE requests on metastore are not accepted, all other requests are accepted
 
   * OPEN: This is the default mode. All requests are accepted
+
+* Serving logs over REST
+
+  Lens server comes with LogResource which can serve logs under LENS_LOG_DIR over REST. To enable serving logs,
+  administrator can enable log resource by adding log to configuration property "lens.server.ws.resourcenames".
+  Config changes look the following :
+
+===
+
+  <property>
+    <name>lens.server.ws.resourcenames</name>
+    <value>session,metastore,query,index,log</value>
+    <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
+  </property>
+
+  <property>
+    <name>lens.server.log.ws.resource.impl</name>
+    <value>org.apache.lens.server.LogResource</value>
+    <description>Implementation class for Log Resource</description>
+  </property>
+
+===
+
+  If resourcenames does not contain "log", it is not enabled.

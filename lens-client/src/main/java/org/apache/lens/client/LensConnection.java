@@ -35,23 +35,19 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.client.exceptions.LensClientServerConnectionException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Top level client connection class which is used to connect to a lens server.
  */
+@Slf4j
 public class LensConnection {
-
-  /** The Constant LOG. */
-  private static final Log LOG = LogFactory.getLog(LensConnection.class);
 
   /** The params. */
   private final LensConnectionParams params;
@@ -148,7 +144,7 @@ public class LensConnection {
       final LensSessionHandle handle = response.readEntity(LensSessionHandle.class);
       if (handle != null) {
         sessionHandle = handle;
-        LOG.debug("Created a new session " + sessionHandle.getPublicId());
+        log.debug("Created a new session {}", sessionHandle.getPublicId());
       } else {
         throw new IllegalStateException("Unable to connect to lens " + "server with following paramters" + params);
       }
@@ -158,7 +154,7 @@ public class LensConnection {
       }
     }
 
-    LOG.debug("Successfully switched to database " + params.getDbName());
+    log.debug("Successfully switched to database {}", params.getDbName());
     open.set(true);
 
     return sessionHandle;
@@ -189,7 +185,7 @@ public class LensConnection {
     if (result.getStatus() != APIResult.Status.SUCCEEDED) {
       throw new IllegalStateException("Unable to close lens connection " + "with params " + params);
     }
-    LOG.debug("Lens connection closed.");
+    log.debug("Lens connection closed.");
     return result;
   }
 
@@ -258,7 +254,7 @@ public class LensConnection {
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("key").build(), key));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("value").build(), value));
-    LOG.debug("Setting connection params " + key + "=" + value);
+    log.debug("Setting connection params {}={}", key, value);
     APIResult result = target.path("params").request()
       .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     return result;

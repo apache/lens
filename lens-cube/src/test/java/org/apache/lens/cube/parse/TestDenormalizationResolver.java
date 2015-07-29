@@ -157,6 +157,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         {
           put("summary2,testfact2_raw,summary3",
             Arrays.asList(new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE)));
+          put("testfact_continuous",
+              Arrays.asList(CandidateTablePruneCause.columnNotFound("msr2", "msr3")));
           put("summary4", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(
               new HashMap<String, CandidateTablePruneCause.SkipStorageCause>() {
                 {
@@ -239,6 +241,20 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     Assert.assertFalse(candidateFacts.contains("testfact"));
     // summary2 contains dim2, but not test_time_dim2 - it should have been removed.
     Assert.assertFalse(candidateFacts.contains("summary2"));
+  }
+
+  @Test
+  public void testCubeQueryWithOptionalDimsRemoved() throws Exception {
+    String hqlQuery = rewrite("select cityzip.code, dim22, msr11 from basecube where " + TWO_DAYS_RANGE,
+      conf);
+    String joinExpr = " join " + getDbName()
+      + "c1_citytable citydim on basecube.cityid = citydim.id and (citydim.dt = 'latest') "
+      + " join " + getDbName() + "c1_ziptable cityzip on citydim.zipcode = cityzip.code and (cityzip.dt = 'latest')";
+    String expected =
+      getExpectedQuery("basecube", "select cityzip.code, basecube.dim22, basecube.msr11 FROM ",
+        joinExpr, null, null, null,
+        getWhereForHourly2days("basecube", "C1_testfact2_raw_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 
   @Test

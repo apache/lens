@@ -38,6 +38,7 @@ import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.annotations.MultiPurposeResource;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
+import org.apache.lens.server.api.query.cost.QueryCostTOBuilder;
 import org.apache.lens.server.error.UnSupportedQuerySubmitOpException;
 import org.apache.lens.server.model.LogSegregationContext;
 
@@ -197,7 +198,7 @@ public class QueryServiceResource {
    * {@link org.apache.lens.api.query.SubmitOp#EXECUTE} operation.
    * {@link QueryPlan} in case of {@link org.apache.lens.api.query.SubmitOp#EXPLAIN} operation.
    * {@link QueryHandleWithResultSet} in case {@link org.apache.lens.api.query.SubmitOp#EXECUTE_WITH_TIMEOUT}
-   * operation. {@link QueryCost} in case of {@link org.apache.lens.api.query.SubmitOp#ESTIMATE} operation.
+   * operation. {@link QueryCostTO} in case of {@link org.apache.lens.api.query.SubmitOp#ESTIMATE} operation.
    */
   @POST
   @Path("queries")
@@ -209,7 +210,7 @@ public class QueryServiceResource {
       @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
       @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
 
-    final String requestId = this.logSegregationContext.get();
+    final String requestId = this.logSegregationContext.getLogSegragationId();
 
     try {
       validateSessionId(sessionid);
@@ -219,7 +220,7 @@ public class QueryServiceResource {
       QuerySubmitResult result;
       switch (sop) {
       case ESTIMATE:
-        result = queryServer.estimate(requestId, sessionid, query, conf);
+        result = new QueryCostTOBuilder(queryServer.estimate(requestId, sessionid, query, conf)).build();
         break;
       case EXECUTE:
         result = queryServer.executeAsync(sessionid, query, conf, queryName);

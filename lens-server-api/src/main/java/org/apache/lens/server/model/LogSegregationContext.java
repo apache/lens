@@ -25,11 +25,34 @@ public interface LogSegregationContext {
    *
    * @param id the id to be added to every log line of current thread
    */
-  void set(final String id);
+  void setLogSegregationId(final String id);
 
   /**
    *
    * @return the id being used by the current thread for log segregation
    */
-  String get();
+  String getLogSegragationId();
+
+  /**
+   * Sets query id to be used by current thread for log segregation for identifying current query.
+   * The same id is set as log segregation in every log line as well.
+   *
+   * @param id the query id
+   */
+  void setLogSegragationAndQueryId(final String id);
+
+  /**
+   * Sets query id to be used by current thread for log segregation for identifying current query.
+   *
+   * @param id the query id
+   */
+  void setQueryId(final String id);
+
+  /**
+   * Get current query id in log segregation
+   *
+   * @return the query id being used by the current thread for log segregation
+   */
+  String getQueryId();
+
 }

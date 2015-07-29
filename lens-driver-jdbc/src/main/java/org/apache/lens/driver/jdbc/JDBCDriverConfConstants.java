@@ -33,6 +33,7 @@ public final class JDBCDriverConfConstants {
 
   /** The Constant JDBC_QUERY_REWRITER_CLASS. */
   public static final String JDBC_QUERY_REWRITER_CLASS = JDBC_DRIVER_PFX + "query.rewriter";
+  public static final String JDBC_QUERY_HOOK_CLASS = JDBC_DRIVER_PFX + "query.hook.class";
 
   /** The Constant JDBC_DRIVER_CLASS. */
   public static final String JDBC_DRIVER_CLASS = JDBC_DRIVER_PFX + "driver.class";
@@ -94,4 +95,10 @@ public final class JDBCDriverConfConstants {
 
   public static final String JDBC_FETCH_SIZE = JDBC_DRIVER_PFX + "fetch.size";
   public static final int DEFAULT_JDBC_FETCH_SIZE = 1000;
+
+  public static final String QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY = JDBC_DRIVER_PFX
+    + "query.launching.constraint.factories";
+
+  public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY = JDBC_DRIVER_PFX
+      + "waiting.queries.selection.policy.factories";
 }

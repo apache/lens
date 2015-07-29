@@ -29,8 +29,6 @@ import org.apache.lens.ml.algo.api.MLModel;
 import org.apache.lens.ml.api.MLTestReport;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,9 +37,12 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Load ML models from a FS location.
  */
+@Slf4j
 public final class ModelLoader {
   private ModelLoader() {
   }
@@ -51,9 +52,6 @@ public final class ModelLoader {
 
   /** The Constant MODEL_PATH_BASE_DIR_DEFAULT. */
   public static final String MODEL_PATH_BASE_DIR_DEFAULT = "file:///tmp";
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(ModelLoader.class);
 
   /** The Constant TEST_REPORT_BASE_DIR. */
   public static final String TEST_REPORT_BASE_DIR = "lens.ml.test.basedir";
@@ -97,8 +95,8 @@ public final class ModelLoader {
    */
   public static MLModel loadModel(Configuration conf, String algorithm, String modelID) throws IOException {
     final Path modelPath = getModelLocation(conf, algorithm, modelID);
-    LOG.info("Loading model for algorithm: " + algorithm + " modelID: " + modelID + " At path: "
-      + modelPath.toUri().toString());
+    log.info("Loading model for algorithm: {} modelID: {} At path: {}", algorithm, modelID,
+      modelPath.toUri().toString());
     try {
       return modelCache.get(modelPath, new Callable<MLModel>() {
         @Override
@@ -112,7 +110,7 @@ public final class ModelLoader {
           try {
             ois = new ObjectInputStream(fs.open(modelPath));
             MLModel model = (MLModel) ois.readObject();
-            LOG.info("Loaded model " + model.getId() + " from location " + modelPath);
+            log.info("Loaded model {} from location {}", model.getId(), modelPath);
             return model;
           } catch (ClassNotFoundException e) {
             throw new IOException(e);
@@ -158,14 +156,14 @@ public final class ModelLoader {
     FileSystem fs = reportDir.getFileSystem(conf);
 
     if (!fs.exists(reportDir)) {
-      LOG.info("Creating test report dir " + reportDir.toUri().toString());
+      log.info("Creating test report dir {}", reportDir.toUri().toString());
       fs.mkdirs(reportDir);
     }
 
     Path algoDir = new Path(reportDir, report.getAlgorithm());
 
     if (!fs.exists(algoDir)) {
-      LOG.info("Creating algorithm report dir " + algoDir.toUri().toString());
+      log.info("Creating algorithm report dir {}", algoDir.toUri().toString());
       fs.mkdirs(algoDir);
     }
 
@@ -177,12 +175,12 @@ public final class ModelLoader {
       reportOutputStream.writeObject(report);
       reportOutputStream.flush();
     } catch (IOException ioexc) {
-      LOG.error("Error saving test report " + report.getReportID(), ioexc);
+      log.error("Error saving test report {}", report.getReportID(), ioexc);
       throw ioexc;
     } finally {
       IOUtils.closeQuietly(reportOutputStream);
     }
-    LOG.info("Saved report " + report.getReportID() + " at location " + reportSaveLocation.toUri());
+    log.info("Saved report {} at location {}", report.getReportID(), reportSaveLocation.toUri());
   }
 
   /**
@@ -204,7 +202,7 @@ public final class ModelLoader {
       reportStream = new ObjectInputStream(fs.open(reportLocation));
       report = (MLTestReport) reportStream.readObject();
     } catch (IOException ioex) {
-      LOG.error("Error reading report " + reportLocation, ioex);
+      log.error("Error reading report {}", reportLocation, ioex);
     } catch (ClassNotFoundException e) {
       throw new IOException(e);
     } finally {

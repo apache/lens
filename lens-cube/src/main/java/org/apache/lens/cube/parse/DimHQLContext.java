@@ -26,8 +26,6 @@ import java.util.Set;
 import org.apache.lens.cube.metadata.Dimension;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
@@ -37,8 +35,6 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
  * dimensions queried.
  */
 abstract class DimHQLContext extends SimpleHQLContext {
-
-  public static final Log LOG = LogFactory.getLog(DimHQLContext.class.getName());
 
   private final Map<Dimension, CandidateDim> dimsToQuery;
   private final Set<Dimension> queriedDims;

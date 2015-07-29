@@ -43,19 +43,17 @@ import org.apache.lens.server.api.session.SessionRestored;
 import org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger;
 import org.apache.lens.server.stats.event.query.QueryExecutionStatistics;
 
-import org.apache.log4j.Logger;
-
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class TestEventService.
  */
 @Test(groups = "unit-test")
+@Slf4j
 public class TestEventService {
-
-  /** The Constant LOG. */
-  public static final Logger LOG = Logger.getLogger(TestEventService.class);
 
   /** The service. */
   EventServiceImpl service;
@@ -110,7 +108,7 @@ public class TestEventService {
     public void process(LensEvent event) {
       processed = true;
       latch.countDown();
-      LOG.info("LensEvent:" + event.getEventId());
+      log.info("LensEvent: {}", event.getEventId());
     }
   }
 
@@ -137,7 +135,7 @@ public class TestEventService {
     public void onEvent(QueryFailed change) throws LensException {
       processed = true;
       latch.countDown();
-      LOG.info("Query Failed event: " + change);
+      log.info("Query Failed event: {}", change);
     }
   }
 
@@ -164,7 +162,7 @@ public class TestEventService {
     public void onEvent(QueryEnded change) throws LensException {
       processed = true;
       latch.countDown();
-      LOG.info("Query ended event: " + change);
+      log.info("Query ended event: {}", change);
     }
   }
 
@@ -185,7 +183,7 @@ public class TestEventService {
     public void onEvent(QueuePositionChange change) throws LensException {
       processed = true;
       latch.countDown();
-      LOG.info("Query position changed: " + change);
+      log.info("Query position changed: {}", change);
     }
   }
 
@@ -206,7 +204,7 @@ public class TestEventService {
     public void onEvent(SessionOpened event) throws LensException {
       processed = true;
       latch.countDown();
-      LOG.info("Session opened: " + event);
+      log.info("Session opened: {}", event);
     }
   }
 
@@ -227,7 +225,7 @@ public class TestEventService {
     public void onEvent(SessionClosed event) throws LensException {
       processed = true;
       latch.countDown();
-      LOG.info("Session closed: " + event);
+      log.info("Session closed: {}", event);
     }
   }
 
@@ -248,7 +246,7 @@ public class TestEventService {
     public void onEvent(SessionExpired event) throws LensException {
       processed = true;
       latch.countDown();
-      LOG.info("Session expired: " + event);
+      log.info("Session expired: {}", event);
     }
   }
 
@@ -269,7 +267,7 @@ public class TestEventService {
     public void onEvent(SessionRestored event) throws LensException {
       processed = true;
       latch.countDown();
-      LOG.info("Session restored: " + event);
+      log.info("Session restored: {}", event);
     }
   }
 
@@ -284,7 +282,7 @@ public class TestEventService {
     LensServices.get().start();
     service = LensServices.get().getService(LensEventService.NAME);
     assertNotNull(service);
-    LOG.info("Service started " + service);
+    log.info("Service started {}", service);
   }
 
   /**
@@ -369,9 +367,9 @@ public class TestEventService {
 
     try {
       latch = new CountDownLatch(3);
-      LOG.info("Sending session opened  event: " + sessionOpenedEvent);
+      log.info("Sending session opened  event: {}", sessionOpenedEvent);
       service.notifyEvent(sessionOpenedEvent);
-      LOG.info("Sending session restored event: " + sessionRestored);
+      log.info("Sending session restored event: {}", sessionRestored);
       service.notifyEvent(sessionRestored);
       latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
@@ -387,16 +385,16 @@ public class TestEventService {
       };
 
       latch = new CountDownLatch(2);
-      LOG.info("Sending generic event " + genEvent.getEventId());
+      log.info("Sending generic event {}", genEvent.getEventId());
       service.notifyEvent(genEvent);
       latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       resetSessionListeners();
 
       latch = new CountDownLatch(3);
-      LOG.info("Sending session closed event " + sessionClosedEvent);
+      log.info("Sending session closed event {}", sessionClosedEvent);
       service.notifyEvent(sessionClosedEvent);
-      LOG.info("Sending session expired event " + sessionExpired);
+      log.info("Sending session expired event {}", sessionExpired);
       service.notifyEvent(sessionExpired);
       latch.await(5, TimeUnit.SECONDS);
       assertTrue(sessionClosedListener.processed);
@@ -425,7 +423,7 @@ public class TestEventService {
 
     try {
       latch = new CountDownLatch(3);
-      LOG.info("Sending event: " + failed);
+      log.info("Sending event: {}", failed);
       service.notifyEvent(failed);
       latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
@@ -435,7 +433,7 @@ public class TestEventService {
       resetListeners();
 
       latch = new CountDownLatch(2);
-      LOG.info("Sending event : " + success);
+      log.info("Sending event : {}", success);
       service.notifyEvent(success);
       latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
@@ -445,7 +443,7 @@ public class TestEventService {
       resetListeners();
 
       latch = new CountDownLatch(2);
-      LOG.info("Sending event: " + positionChange);
+      log.info("Sending event: {}", positionChange);
       service.notifyEvent(positionChange);
       latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
@@ -462,7 +460,7 @@ public class TestEventService {
       };
 
       latch = new CountDownLatch(1);
-      LOG.info("Sending generic event " + genEvent.getEventId());
+      log.info("Sending generic event {}", genEvent.getEventId());
       service.notifyEvent(genEvent);
       latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);

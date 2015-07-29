@@ -26,18 +26,16 @@ import javax.ws.rs.core.Application;
 
 import org.apache.lens.server.api.LensConfConstants;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class LensApplication.
  */
 @ApplicationPath("/")
+@Slf4j
 public class LensApplication extends Application {
-
-  /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(LensApplication.class);
 
   /** The conf. */
   public static final Configuration CONF = LensServerConf.getConf();
@@ -56,25 +54,25 @@ public class LensApplication extends Application {
     for (String rName : resourceNames) {
       Class wsResourceClass = CONF.getClass(LensConfConstants.getWSResourceImplConfKey(rName), null);
       classes.add(wsResourceClass);
-      LOG.info("Added resource " + wsResourceClass);
+      log.info("Added resource {}", wsResourceClass);
     }
     for (String fName : featureNames) {
       Class wsFeatureClass = CONF.getClass(LensConfConstants.getWSFeatureImplConfKey(fName), null);
       classes.add(wsFeatureClass);
-      LOG.info("Added feature " + wsFeatureClass);
+      log.info("Added feature {}", wsFeatureClass);
     }
     for (String lName : listenerNames) {
       Class wsListenerClass = CONF.getClass(LensConfConstants.getWSListenerImplConfKey(lName), null);
       classes.add(wsListenerClass);
-      LOG.info("Added listener " + wsListenerClass);
+      log.info("Added listener {}", wsListenerClass);
     }
     for (String filterName : filterNames) {
       Class wsFilterClass = CONF.getClass(LensConfConstants.getWSFilterImplConfKey(filterName), null);
       classes.add(wsFilterClass);
-      LOG.info("Added filter " + wsFilterClass);
+      log.info("Added filter {}", wsFilterClass);
     }
 
-    LOG.debug("LensRequestContextInitFilter added...");
+    log.debug("LensRequestContextInitFilter added...");
     classes.add(LensRequestContextInitFilter.class);
 
     return classes;

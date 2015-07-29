@@ -22,14 +22,18 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
 
-import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPlan;
 import org.apache.lens.api.query.QueryPrepareHandle;
+import org.apache.lens.server.api.query.cost.QueryCost;
+import org.apache.lens.server.api.query.cost.QueryCostTOBuilder;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class DriverQueryPlan.
  */
+@Slf4j
 public abstract class DriverQueryPlan {
 
   /**
@@ -126,7 +130,7 @@ public abstract class DriverQueryPlan {
   /**
    * Get the cost associated with the plan
    *
-   * @return QueryCost object
+   * @return QueryCostTO object
    */
   public abstract QueryCost getCost();
 
@@ -299,8 +303,8 @@ public abstract class DriverQueryPlan {
    * @throws UnsupportedEncodingException the unsupported encoding exception
    */
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
-    return new QueryPlan(new ArrayList<String>(tablesQueried), hasSubQuery, execMode != null ? execMode.name() : null,
+    return new QueryPlan(new ArrayList<>(tablesQueried), hasSubQuery, execMode != null ? execMode.name() : null,
       scanMode != null ? scanMode.name() : null, handle,
-      URLEncoder.encode(getPlan(), "UTF-8"), getCost(), false, null);
+      URLEncoder.encode(getPlan(), "UTF-8"), new QueryCostTOBuilder(getCost()).build(), false, null);
   }
 }
