@@ -19,7 +19,8 @@
   under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -55,6 +56,7 @@
     <joda.time.version>2.0</joda.time.version>
     <guava.version>13.0.1</guava.version>
     <lombok.version>1.12.4</lombok.version>
+    <lombok.maven.plugin.version>1.16.4.1</lombok.maven.plugin.version>
     <typesafe.config.version>1.2.1</typesafe.config.version>
 
     <jackson.asl.version>1.9.13</jackson.asl.version>
@@ -90,7 +92,7 @@
     <exec.plugin.version>1.2.1</exec.plugin.version>
     <enunciate.plugin.version>1.28</enunciate.plugin.version>
     <reports.plugin.version>2.7</reports.plugin.version>
-    <javadoc.plugin.version>2.9.1</javadoc.plugin.version>
+    <javadoc.plugin.version>2.10.3</javadoc.plugin.version>
     <surefire.plugin.version>2.15</surefire.plugin.version>
     <jdeb.plugin.version>1.0.1</jdeb.plugin.version>
     <checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
@@ -108,6 +110,7 @@
     <mvn.lens.install.dir>/usr/local/lens</mvn.lens.install.dir>
     <mvn.lens.webapp.dir>${mvn.lens.install.dir}/server/webapp</mvn.lens.webapp.dir>
     <mvn.lens.server.dir>${mvn.lens.webapp.dir}/lens-server</mvn.lens.server.dir>
+    <src.dir>src/main/java</src.dir>
 
   </properties>
 
@@ -345,7 +348,7 @@
               <show>public</show>
               <groups>
                 <group>
-                  <title>Clien api</title>
+                  <title>Client api</title>
                   <packages>org.apache.lens.api*:org.apache.lens.client*</packages>
                 </group>
                 <group>
@@ -364,7 +367,7 @@
   </reporting>
 
   <build>
-
+    <sourceDirectory>${src.dir}</sourceDirectory>
     <resources>
       <resource>
         <directory>${basedir}/src/deb/control</directory>
@@ -403,8 +406,8 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-	  <artifactId>maven-site-plugin</artifactId>
-	  <configuration>
+          <artifactId>maven-site-plugin</artifactId>
+          <configuration>
             <generateReports>true</generateReports>
           </configuration>
         </plugin>
@@ -447,6 +450,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>${checkstyle.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok-maven-plugin</artifactId>
+          <version>${lombok.maven.plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.jvnet.jaxb2.maven2</groupId>
@@ -600,22 +608,22 @@
         <artifactId>findbugs-maven-plugin</artifactId>
         <configuration>
           <xmlOutput>true</xmlOutput>
-	  <excludeFilterFile>${project.basedir}/../checkstyle/src/main/resources/findbugs-exclude.xml</excludeFilterFile>
+          <excludeFilterFile>${basedir}/../checkstyle/src/main/resources/findbugs-exclude.xml
+          </excludeFilterFile>
           <failOnError>true</failOnError>
           <skip>${skipCheck}</skip>
         </configuration>
         <executions>
           <execution>
-             <id>findbugs-check</id>
-             <goals>
-               <goal>check</goal>
-             </goals>
-             <phase>verify</phase>
-           </execution>
+            <id>findbugs-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
         </executions>
       </plugin>
     </plugins>
-
   </build>
   <repositories>
     <repository>
@@ -1287,24 +1295,24 @@
           </plugin>
 
           <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <executions>
-            <execution>
-              <phase>process-classes</phase>
-              <configuration>
-                <failOnError>false</failOnError>
-                <tasks>
-                  <propertyfile file="target/generated-classes/cobertura/cobertura.properties">
-                    <entry key="net.sourceforge.cobertura.datafile" value="${mvn.lens.install.dir}" />
-                  </propertyfile>
-                </tasks>
-              </configuration>
-              <goals>
-                <goal>run</goal>
-              </goals>
-            </execution>
-          </executions>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>process-classes</phase>
+                <configuration>
+                  <failOnError>false</failOnError>
+                  <tasks>
+                    <propertyfile file="target/generated-classes/cobertura/cobertura.properties">
+                      <entry key="net.sourceforge.cobertura.datafile" value="${mvn.lens.install.dir}"/>
+                    </propertyfile>
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
 
           <plugin>
@@ -1318,7 +1326,7 @@
 
         </plugins>
       </build>
-   </profile>
+    </profile>
     <profile>
       <id>no-checkstyle</id>
       <build>
@@ -1402,6 +1410,74 @@
       <properties>
         <skipCheck>true</skipCheck>
       </properties>
+    </profile>
+    <profile>
+      <id>lombok-needs-tools-jar</id>
+      <activation>
+        <file>
+          <exists>${java.home}/../lib/tools.jar</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-maven-plugin</artifactId>
+            <version>${lombok.maven.plugin.version}</version>
+            <dependencies>
+              <dependency>
+                <groupId>sun.jdk</groupId>
+                <artifactId>tools</artifactId>
+                <version>1.6</version>
+                <scope>system</scope>
+                <systemPath>${java.home}/../lib/tools.jar</systemPath>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>javadoc</id>
+      <properties>
+        <src.dir>target/generated-sources/delombok</src.dir>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>delombok</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>delombok</goal>
+                </goals>
+                <configuration>
+                  <formatPreferences>
+                    <javaLangAsFQN>skip</javaLangAsFQN>
+                  </formatPreferences>
+                  <verbose>true</verbose>
+                  <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                  <addOutputDirectory>true</addOutputDirectory>
+                </configuration>
+              </execution>
+              <execution>
+                <id>test-delombok</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>testDelombok</goal>
+                </goals>
+                <configuration>
+                  <verbose>true</verbose>
+                  <addOutputDirectory>true</addOutputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>
