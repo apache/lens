@@ -62,6 +62,11 @@ public class TestGenerateConfigDoc {
   public static final String JDBC_DRIVER_CONF_FILE = "../lens-driver-jdbc/src/main/resources/jdbcdriver-default.xml";
 
   /**
+   * The Constant ES_DRIVER_CONF_FILE.
+   */
+  public static final String ES_DRIVER_CONF_FILE = "../lens-driver-es/src/main/resources/esdriver-default.xml";
+
+  /**
    * The Constant CLIENT_CONF_FILE.
    */
   public static final String CLIENT_CONF_FILE = "../lens-client/src/main/resources/lens-client-default.xml";
@@ -90,6 +95,11 @@ public class TestGenerateConfigDoc {
    * The Constant JDBC_DRIVER_APT_FILE.
    */
   public static final String JDBC_DRIVER_APT_FILE = "../src/site/apt/admin/jdbcdriver-config.apt";
+
+  /**
+   * The Constant ES_DRIVER_APT_FILE.
+   */
+  public static final String ES_DRIVER_APT_FILE = "../src/site/apt/admin/esdriver-config.apt";
 
   /**
    * The Constant CLIENT_APT_FILE.
@@ -143,6 +153,17 @@ public class TestGenerateConfigDoc {
   public void generateJdbcdriverConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(JDBC_DRIVER_CONF_FILE, JDBC_DRIVER_APT_FILE);
     printer.generateDoc("Jdbc driver configuration");
+  }
+
+  /**
+   * Generate esdriver config doc.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void generateESdriverConfigDoc() throws Exception {
+    ConfigPrinter printer = new ConfigPrinter(ES_DRIVER_CONF_FILE, ES_DRIVER_APT_FILE);
+    printer.generateDoc("ES driver configuration");
   }
 
   /**

@@ -1,0 +1,18 @@
+[
+  {
+    "name" : "Ambiguous column selection",
+    "hql" : "select r, count(d), sum(z), r from a.x group by r"
+  },
+  {
+    "name" : "Order by cannot be used with group by as of now",
+    "hql" : "select count(d), sum(z), r from a.x group by r order by z"
+  },
+  {
+    "name" : "Group by col not selected",
+    "hql" : "select count(d), sum(z) from a.x group by r"
+  },
+  {
+    "name" : "Invalid columns in select and group by",
+    "hql" : "select a, b from a.x group by r"
+  }
+]

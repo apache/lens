@@ -48,6 +48,11 @@
     <spark.version>1.3.0</spark.version>
     <hive.version>0.13.3-inm</hive.version>
 
+    <!-- jest client for elasticsearch -->
+    <jest.version>0.1.5</jest.version>
+    <httpclient.version>4.4</httpclient.version>
+    <httpcore.version>4.4</httpcore.version>
+
     <!-- common library/framework versions -->
     <slf4j.version>1.7.6</slf4j.version>
     <log4j.version>1.2.16</log4j.version>
@@ -60,6 +65,7 @@
     <typesafe.config.version>1.2.1</typesafe.config.version>
 
     <jackson.asl.version>1.9.13</jackson.asl.version>
+    <jackson.guava.version>2.3.3</jackson.guava.version>
     <opencsv.version>2.3</opencsv.version>
     <jsch.version>0.1.42</jsch.version>
 
@@ -1220,6 +1226,33 @@
         <artifactId>jsch</artifactId>
         <version>${jsch.version}</version>
       </dependency>
+
+      <!-- jest elastic search deps -->
+      <dependency>
+        <groupId>io.searchbox</groupId>
+        <artifactId>jest</artifactId>
+        <version>${jest.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-guava</artifactId>
+        <version>${jackson.guava.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>${httpclient.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>${httpcore.version}</version>
+      </dependency>
+
+
     </dependencies>
   </dependencyManagement>
 
@@ -1232,6 +1265,7 @@
     <module>lens-query-lib</module>
     <module>lens-driver-hive</module>
     <module>lens-driver-jdbc</module>
+    <module>lens-driver-es</module>
     <module>lens-server</module>
     <module>lens-client</module>
     <module>lens-cli</module>

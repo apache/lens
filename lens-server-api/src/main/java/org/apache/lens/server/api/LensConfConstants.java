@@ -403,6 +403,16 @@ public final class LensConfConstants {
   public static final String NATIVE_TABLE_NAME = METASTORE_PFX + "native.table.name";
 
   /**
+   * The Constant ES_INDEX_NAME.
+   */
+  public static final String ES_INDEX_NAME = METASTORE_PFX + "es.index.name";
+
+  /**
+   * The Constant ES_TYPE_NAME.
+   */
+  public static final String ES_TYPE_NAME = METASTORE_PFX + "es.type.name";
+
+  /**
    * Gets the service impl conf key.
    *
    * @param sName the s name

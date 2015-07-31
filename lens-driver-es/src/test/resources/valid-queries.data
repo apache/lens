@@ -1,0 +1,67 @@
+[
+  {
+    "name" : "Basic simple select",
+    "hql" : "select col1 from index.type",
+    "expectedJson" : {"from":0,"size":10000,"fields":["col1"],"sort":[],"timeout":10000,"filter":{"match_all":{}}}
+  },
+  {
+    "name" : "Basic simple select with limit",
+    "hql" : "select col1 from index.type limit 10",
+    "expectedJson" : {"from":0,"size":10,"fields":["col1"],"sort":[],"timeout":10000,"filter":{"match_all":{}}}
+  },
+  {
+    "name" : "Basic simple select with limit and simple criteria",
+    "hql" : "select col1 from index.type where col2=5 limit 10 ",
+    "expectedJson" : {"from":0,"size":10,"fields":["col1"],"sort":[],"timeout":10000,"filter":{"term":{"col2":"5"}}}
+  },
+  {
+    "name" : "Basic simple select with limit and simple criteria - string literal",
+    "hql" : "select col1 from index.type where col2='z' limit 10 ",
+    "expectedJson" : {"from":0,"size":10,"fields":["col1"],"sort":[],"timeout":10000,"filter":{"term":{"col2":"z"}}}
+  },
+  {
+    "name" : "Basic simple select with limit and complex criteria",
+    "hql" : "select col1 from index.type where !(col1=5 and col2='p' and col3='wer' or (col4='9')) limit 10",
+    "expectedJson" : {"from":0,"size":10,"fields":["col1"],"sort":[],"timeout":10000,"filter":{"not":{"or":[{"and":[{"and":[{"term":{"col1":"5"}},{"term":{"col2":"p"}}]},{"term":{"col3":"wer"}}]},{"term":{"col4":"9"}}]}}}
+  },
+  {
+    "name" : "Table level Aggregation without group by",
+    "hql" : "select count(col1) from index.type",
+    "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"filter":{"match_all":{}},"aggs":{"col1":{"value_count":{"field":"col1"}}}}}}
+  },
+  {
+    "name" : "Table level Aggregation without group by and with complex criteria",
+    "hql" : "select count(col1) from index.type where !(col1=5 and col2='p' and col3='wer' or (col4='9'))",
+    "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"filter":{"not":{"or":[{"and":[{"and":[{"term":{"col1":"5"}},{"term":{"col2":"p"}}]},{"term":{"col3":"wer"}}]},{"term":{"col4":"9"}}]}},"aggs":{"col1":{"value_count":{"field":"col1"}}}}}}
+  },
+  {
+    "name" : "Table level Aggregation - multiple cols without group by and with complex criteria",
+    "hql" : "select count(col1), max(col2) from index.type where !(col1=5 and col2='p' and col3='wer' or (col4='9'))",
+    "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"filter":{"not":{"or":[{"and":[{"and":[{"term":{"col1":"5"}},{"term":{"col2":"p"}}]},{"term":{"col3":"wer"}}]},{"term":{"col4":"9"}}]}},"aggs":{"col1":{"value_count":{"field":"col1"}},"col2":{"max":{"field":"col2"}}}}}}
+  },
+  {
+    "name" : "Group by with aggregation",
+    "hql" : "select col2, count(col1) from index.type group by col2",
+    "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"aggs":{"col2":{"terms":{"field":"col2","size":100},"aggs":{"col1":{"value_count":{"field":"col1"}}}}},"filter":{"match_all":{}}}}}
+  },
+  {
+    "name" : "Group by with aggregation and complex criteria",
+    "hql" : "select col2, count(col1) from index.type where !(col1=5 and col2='p' and col3='wer' or (col4='9')) group by col2",
+    "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"aggs":{"col2":{"terms":{"field":"col2","size":100},"aggs":{"col1":{"value_count":{"field":"col1"}}}}},"filter":{"not":{"or":[{"and":[{"and":[{"term":{"col1":"5"}},{"term":{"col2":"p"}}]},{"term":{"col3":"wer"}}]},{"term":{"col4":"9"}}]}}}}}
+  },
+  {
+    "name" : "Group by with aggregation and complex criteria, select order jumbled",
+    "hql" : "select count(col1), col2 from index.type where !(col1=5 and col2='p' and col3='wer' or (col4='9')) group by col2",
+    "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"aggs":{"col2":{"terms":{"field":"col2","size":100},"aggs":{"col1":{"value_count":{"field":"col1"}}}}},"filter":{"not":{"or":[{"and":[{"and":[{"term":{"col1":"5"}},{"term":{"col2":"p"}}]},{"term":{"col3":"wer"}}]},{"term":{"col4":"9"}}]}}}}}
+  },
+  {
+    "name" : "Group by with multiple aggregation and complex criteria",
+    "hql" : "select col2, max(col3), count(col1) from index.type where !(col1=5 and col2='p' and col3='wer' or (col4='9')) group by col2",
+    "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"aggs":{"col2":{"terms":{"field":"col2","size":100},"aggs":{"col3":{"max":{"field":"col3"}},"col1":{"value_count":{"field":"col1"}}}}},"filter":{"not":{"or":[{"and":[{"and":[{"term":{"col1":"5"}},{"term":{"col2":"p"}}]},{"term":{"col3":"wer"}}]},{"term":{"col4":"9"}}]}}}}}
+  },
+  {
+    "name" : "Group by with multiple aggregation and complex criteria, select order jumbled",
+    "hql" : "select count(col1), col2, max(col3) from index.type where !(col1=5 and col2='p' and col3='wer' or (col4='9')) group by col2",
+    "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"aggs":{"col2":{"terms":{"field":"col2","size":100},"aggs":{"col1":{"value_count":{"field":"col1"}},"col3":{"max":{"field":"col3"}}}}},"filter":{"not":{"or":[{"and":[{"and":[{"term":{"col1":"5"}},{"term":{"col2":"p"}}]},{"term":{"col3":"wer"}}]},{"term":{"col4":"9"}}]}}}}}
+  }
+]
