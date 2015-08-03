@@ -143,7 +143,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   /**
    * The accepted queries.
    */
-  private FairPriorityBlockingQueue<QueryContext> queuedQueries = new FairPriorityBlockingQueue<QueryContext>();
+  private FairPriorityBlockingQueue<QueryContext> queuedQueries
+    = new FairPriorityBlockingQueue<QueryContext>(new QueryContextPriorityComparator());
 
   /**
    * The launched queries.

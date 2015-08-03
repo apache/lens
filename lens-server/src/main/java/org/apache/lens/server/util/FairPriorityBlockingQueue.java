@@ -20,9 +20,12 @@
 package org.apache.lens.server.util;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+
+import lombok.NonNull;
 
 /**
  *
@@ -32,11 +35,18 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class FairPriorityBlockingQueue<E> {
 
-  private final PriorityBlockingQueue<E> priorityBlockingQueue = new PriorityBlockingQueue<E>();
+  /* PriorityBlockingQueue#DEFAULT_INITIAL_CAPACITY is 11 */
+
+  private static final int DEFAULT_INITIAL_CAPACITY = 11;
+
+  private final PriorityBlockingQueue<E> priorityBlockingQueue;
   private final Object fairnessLock = new Object();
   private final ReentrantLock conditionalWaitLock = new ReentrantLock();
   private final Condition notEmpty = conditionalWaitLock.newCondition();
 
+  public FairPriorityBlockingQueue(@NonNull final Comparator<? super E> comparator) {
+    this.priorityBlockingQueue = new PriorityBlockingQueue<E>(DEFAULT_INITIAL_CAPACITY, comparator);
+  }
   /**
    *
    * take is implemented by using poll and a fairnessLock to synchronize removal from head of queue with bulk addAll

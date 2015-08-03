@@ -46,7 +46,7 @@ import lombok.Setter;
 /**
  * The Class QueryContext.
  */
-public class QueryContext extends AbstractQueryContext implements Comparable<QueryContext> {
+public class QueryContext extends AbstractQueryContext {
 
   /**
    * The Constant serialVersionUID.
@@ -268,21 +268,6 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
       conf.set(entry.getKey(), entry.getValue());
     }
     return conf;
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
-   */
-  @Override
-  public int compareTo(QueryContext other) {
-    int pcomp = this.priority.compareTo(other.priority);
-    if (pcomp == 0) {
-      return (int) (this.submissionTime - other.submissionTime);
-    } else {
-      return pcomp;
-    }
   }
 
   /**
