@@ -31,6 +31,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.FinishedLensQuery;
 import org.apache.lens.server.util.UtilityMethods;
 
+import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanHandler;
@@ -62,17 +63,6 @@ public class LensServerDAO {
   }
 
   /**
-   * Creates the table.
-   *
-   * @param sql the sql
-   * @throws SQLException the SQL exception
-   */
-  private void createTable(String sql) throws SQLException {
-    QueryRunner runner = new QueryRunner(ds);
-    runner.update(sql);
-  }
-
-  /**
    * Drop finished queries table.
    */
   public void dropFinishedQueriesTable() {
@@ -97,8 +87,8 @@ public class LensServerDAO {
       + "rows int, " + "errormessage varchar(10000), " + "driverstarttime bigint, " + "driverendtime bigint, "
       + "metadataclass varchar(10000)," + "queryname varchar(255)," + "submissiontime bigint" + ")";
     try {
-      createTable(sql);
-      ds.getConnection().commit();
+      QueryRunner runner = new QueryRunner(ds);
+      runner.update(sql);
       log.info("Created finished queries table");
     } catch (SQLException e) {
       log.warn("Unable to create finished queries table", e);
@@ -115,15 +105,22 @@ public class LensServerDAO {
     FinishedLensQuery alreadyExisting = getQuery(query.getHandle());
     if (alreadyExisting == null) {
       // The expected case
+      Connection conn = null;
       String sql = "insert into finished_queries (handle, userquery,submitter,"
         + "starttime,endtime,result,status,metadata,rows,"
         + "errormessage,driverstarttime,driverendtime, metadataclass, queryname, submissiontime)"
         + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-      QueryRunner runner = new QueryRunner(ds);
-      runner.update(sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getStartTime(),
-        query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(), query.getRows(),
-        query.getErrorMessage(), query.getDriverStartTime(), query.getDriverEndTime(), query.getMetadataClass(),
-        query.getQueryName(), query.getSubmissionTime());
+      try {
+        conn = getConnection();
+        QueryRunner runner = new QueryRunner();
+        runner.update(conn, sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getStartTime(),
+          query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(), query.getRows(),
+          query.getErrorMessage(), query.getDriverStartTime(), query.getDriverEndTime(), query.getMetadataClass(),
+          query.getQueryName(), query.getSubmissionTime());
+        conn.commit();
+      } finally {
+        DbUtils.closeQuietly(conn);
+      }
     } else {
       log.warn("Re insert happening in purge: " + Thread.currentThread().getStackTrace());
       if (alreadyExisting.equals(query)) {
@@ -135,8 +132,6 @@ public class LensServerDAO {
         throw new SQLException(msg);
       }
     }
-
-
   }
 
   /**
