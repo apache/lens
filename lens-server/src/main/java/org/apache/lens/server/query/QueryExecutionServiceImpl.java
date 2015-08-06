@@ -2739,9 +2739,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     String uri = res.getLocation();
     // Hive doesn't and URIs starting with file:/ correctly, so we have to change it to file:///
     // See: org.apache.hadoop.hive.ql.exec.Utilities.addToClassPath
-    if (uri.startsWith("file:") && !uri.startsWith("file://")) {
-      uri = "file://" + uri.substring("file:".length());
-    }
+    uri = removePrefixBeforeURI(uri);
+
     String command = "add " + res.getType().toLowerCase() + " " + uri;
     driver.execute(createResourceQuery(command, sessionHandle, driver));
     log.info("Added resource to hive driver for session {} cmd: {}", sessionIdentifier, command);

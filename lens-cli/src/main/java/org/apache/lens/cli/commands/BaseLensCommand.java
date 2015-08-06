@@ -22,12 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
 import java.util.Date;
 
+import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientSingletonWrapper;
-
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
@@ -143,25 +142,6 @@ public class BaseLensCommand implements ExecutionProcessor {
       .replaceAll("]", "\n").replaceAll(",", "").replaceAll("\"", "").replaceAll("\n\n", "\n");
   }
 
-  public static String getValidPath(String path, boolean shouldBeDirectory, boolean shouldExist) {
-    path = path.replaceAll("/$", "");
-    if (path.startsWith("~")) {
-      path = path.replaceFirst("~", System.getProperty("user.home"));
-    }
-    File f = new File(path);
-    if (shouldExist && !f.exists()) {
-      throw new RuntimeException("Path " + path + " doesn't exist.");
-    }
-    if (shouldBeDirectory && !f.isDirectory()) {
-      throw new RuntimeException("Path " + path + " is not a directory");
-    }
-    if (!shouldBeDirectory && f.isDirectory()) {
-      throw new RuntimeException("Path " + path + " is a directory");
-    }
-    return f.getAbsolutePath();
-  }
-
-
   /**
    * This Code piece allows lens cli to be able to parse list arguments. It can already parse keyword args.
    * More details at https://github.com/spring-projects/spring-shell/issues/72
@@ -189,4 +169,29 @@ public class BaseLensCommand implements ExecutionProcessor {
   @Override
   public void afterThrowingInvocation(ParseResult parseResult, Throwable throwable) {
   }
+
+  /**
+   * Method that uses PathValidator to get appropriate path.
+   *
+   * @param path
+   * @param shouldBeDirectory
+   * @param shouldExist
+   * @return
+   */
+  public String getValidPath(File path, boolean shouldBeDirectory, boolean shouldExist) {
+    PathValidator pathValidator = getClient().getPathValidator();
+    return pathValidator.getValidPath(path, shouldBeDirectory, shouldExist);
+  }
+
+  /**
+   * Method to remove unrequired prefix from path.
+   *
+   * @param path
+   * @return
+   */
+  public String removePrefixBeforeURI(String path) {
+    PathValidator pathValidator = getClient().getPathValidator();
+    return pathValidator.removePrefixBeforeURI(path);
+  }
+
 }

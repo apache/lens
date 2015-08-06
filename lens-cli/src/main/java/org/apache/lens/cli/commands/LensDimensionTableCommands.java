@@ -65,7 +65,7 @@ public class LensDimensionTableCommands extends PhysicalTableCrudCommand<XDimens
   @CliCommand(value = "create dimtable",
     help = "Create a new dimension table taking spec from <path-to-dimtable-spec-file>")
   public String createDimensionTable(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimtable-spec-file>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimtable-spec-file>") @NonNull final File path) {
     return create(path, false);
   }
 
@@ -92,7 +92,7 @@ public class LensDimensionTableCommands extends PhysicalTableCrudCommand<XDimens
     help = "update dimtable <dimtable_name> taking spec from <path-to-dimtable-spec>")
   public String updateDimensionTable(
     @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String name,
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimtable-spec>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimtable-spec>") @NonNull final File path) {
     return update(name, path);
   }
 
@@ -138,7 +138,7 @@ public class LensDimensionTableCommands extends PhysicalTableCrudCommand<XDimens
     help = "adds a new storage to dimtable <dimtable_name>, taking storage spec from <path-to-storage-spec>")
   public String addNewDimStorage(
     @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") @NonNull final File path) {
     return addStorage(tableName, path);
   }
 
@@ -231,7 +231,7 @@ public class LensDimensionTableCommands extends PhysicalTableCrudCommand<XDimens
   public String addPartitionToDimtable(
     @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
     @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-spec-path>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-spec-path>") @NonNull final File path) {
     return addPartition(tableName, storageName, path);
   }
   @CliCommand(value = "dimtable update single-partition",
@@ -260,8 +260,8 @@ public class LensDimensionTableCommands extends PhysicalTableCrudCommand<XDimens
   public String addPartitionsToDimtable(
     @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
     @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-list-spec-path>") String path) {
-    return addPartitions(tableName, storageName, path);
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-list-spec-path>") @NonNull final File path) {
+    return addPartitions(tableName, storageName, path.getPath());
   }
   @CliCommand(value = "dimtable update partitions",
     help = "update multiple partition to dimtable <dimtable_name>'s"

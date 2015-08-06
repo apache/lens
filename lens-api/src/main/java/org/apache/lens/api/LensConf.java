@@ -62,4 +62,14 @@ public class LensConf implements Serializable {
   public void addProperty(String key, String value) {
     properties.put(key, value);
   }
+
+  /**
+   * Adds Map of properties.
+   *
+   * @param key   the key
+   * @param value the value
+   */
+  public void addProperties(Map<String, String> props) {
+    properties.putAll(props);
+  }
 }

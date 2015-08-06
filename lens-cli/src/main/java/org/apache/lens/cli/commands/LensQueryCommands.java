@@ -209,14 +209,14 @@ public class LensQueryCommands extends BaseLensCommand {
     help = "Explain execution plan of query <query-string>. Can optionally save the plan"
       + " to a file by providing <save_location>")
   public String explainQuery(@CliOption(key = {"", "query"}, mandatory = true, help = "<query-string>") String sql,
-    @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") String location)
+    @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") final File path)
     throws IOException {
     QueryPlan plan = getClient().getQueryPlan(sql);
     if (plan.isError()) {
       return "Explain FAILED:" + plan.getErrorMsg();
     }
-    if (StringUtils.isNotBlank(location)) {
-      String validPath = getValidPath(location, false, false);
+    if (path != null && StringUtils.isNotBlank(path.getPath())) {
+      String validPath = getValidPath(path, false, false);
       try (OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(validPath), Charset.defaultCharset())) {
         osw.write(plan.getPlanString());
       }
@@ -284,20 +284,21 @@ public class LensQueryCommands extends BaseLensCommand {
       + "Can optionally save the results to a file by providing <save_location>.")
   public String getQueryResults(
     @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh,
-    @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") String location,
+    @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") final File path,
     @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "true",
       help = "<async>") boolean async) {
     QueryHandle queryHandle = new QueryHandle(UUID.fromString(qh));
     LensClient.LensClientResultSetWithStats results;
+    String location = path != null ? path.getPath() : null;
     try {
       String prefix = "";
       if (StringUtils.isNotBlank(location)) {
-        location = getValidPath(location, true, true);
+        location = getValidPath(path, true, true);
         Response response = getClient().getHttpResults(queryHandle);
         if (response.getStatus() == Response.Status.OK.getStatusCode()) {
           String disposition = (String) response.getHeaders().get("content-disposition").get(0);
           String fileName = disposition.split("=")[1].trim();
-          location = getValidPath(location + File.separator + fileName, false, false);
+          location = getValidPath(new File(location + File.separator + fileName), false, false);
           try (InputStream stream = response.readEntity(InputStream.class);
             FileOutputStream outStream = new FileOutputStream(new File(location))) {
             IOUtils.copy(stream, outStream);
@@ -312,7 +313,7 @@ public class LensQueryCommands extends BaseLensCommand {
           if (results.getResultSet() == null) {
             return "Resultset not yet available";
           } else if (results.getResultSet().getResult() instanceof InMemoryQueryResult) {
-            location = getValidPath(location + File.separator + qh + ".csv", false, false);
+            location = getValidPath(new File(location + File.separator + qh + ".csv"), false, false);
             try (OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(location),
               Charset.defaultCharset())) {
               osw.write(formatResultSet(results));

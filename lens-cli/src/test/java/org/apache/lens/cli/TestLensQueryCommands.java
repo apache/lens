@@ -192,7 +192,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
    */
   private void testExplainQuery(LensQueryCommands qCom) throws Exception {
     String sql = "cube select id, name from test_dim";
-    String result = qCom.explainQuery(sql, "");
+    String result = qCom.explainQuery(sql, null);
 
     log.debug(result);
     assertTrue(result.contains(explainPlan));
@@ -206,7 +206,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
    */
   private void testExplainFailQuery(LensQueryCommands qCom) throws Exception {
     String sql = "cube select id2, name from test_dim";
-    String result = qCom.explainQuery(sql, "");
+    String result = qCom.explainQuery(sql, null);
 
     log.debug(result);
     assertTrue(result.contains("Explain FAILED:"));
@@ -304,7 +304,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   }
 
   private void downloadResult(LensQueryCommands qCom, String qh, String expected) throws IOException {
-    assertTrue(qCom.getQueryResults(qh, resDir.getAbsolutePath(), true).contains("Saved"));
+    assertTrue(qCom.getQueryResults(qh, resDir, true).contains("Saved"));
     assertEquals(readFile(resDir.getAbsolutePath() + File.separator + qh + ".csv").trim(), expected.trim());
   }
 
@@ -324,7 +324,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     log.debug("Starting to test cube commands");
     URL cubeSpec = TestLensQueryCommands.class.getClassLoader().getResource("sample-cube.xml");
-    command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
+    command.createCube(new File(cubeSpec.toURI()));
     TestLensDimensionCommands.createDimension();
     TestLensDimensionTableCommands.addDim1Table("dim_table", "dim_table.xml", "local");
 

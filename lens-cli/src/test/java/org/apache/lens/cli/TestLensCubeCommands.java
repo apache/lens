@@ -56,7 +56,7 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
     URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
     String cubeList = command.showCubes();
     assertFalse(cubeList.contains("sample_cube"));
-    command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
+    command.createCube(new File(cubeSpec.toURI()));
     cubeList = command.showCubes();
     assertEquals(command.getLatest("sample_cube", "dt"), "No Data Available");
     assertTrue(cubeList.contains("sample_cube"));
@@ -127,7 +127,7 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
 
       assertTrue(desc.contains(propString));
 
-      command.updateCube("sample_cube", "/tmp/sample_cube1.xml");
+      command.updateCube("sample_cube", new File("/tmp/sample_cube1.xml"));
       desc = command.describeCube("sample_cube");
       LOG.debug(desc);
       assertTrue(desc.contains(propString));

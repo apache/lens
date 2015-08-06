@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cli.commands;
 
+import java.io.File;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
@@ -28,6 +29,8 @@ import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
+
+import lombok.NonNull;
 
 /**
  * The Class LensStorageCommands.
@@ -49,7 +52,7 @@ public class LensStorageCommands extends LensCRUDCommand<XStorage> implements Co
    */
   @CliCommand(value = "create storage", help = "Create a new Storage from file <path-to-storage-spec>")
   public String createStorage(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") @NonNull final File path) {
     return create(path, false);
   }
 
@@ -76,7 +79,7 @@ public class LensStorageCommands extends LensCRUDCommand<XStorage> implements Co
     help = "update storage <storage-name> with storage spec from <path-to-storage-spec>")
   public String updateStorage(
     @CliOption(key = {"", "name"}, mandatory = true, help = "<storage-name>") String name,
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") @NonNull final File path) {
     return update(name, path);
   }
 

@@ -53,7 +53,7 @@ public abstract class PhysicalTableCrudCommand<T> extends LensCRUDCommand<T> {
     return ret.isEmpty() ? "No storage found for " + tableName : ret;
   }
 
-  public String addStorage(String tableName, String path) {
+  public String addStorage(String tableName, File path) {
     return doAddStorage(tableName, getValidPath(path, false, true)).toString().toLowerCase();
   }
 
@@ -81,22 +81,24 @@ public abstract class PhysicalTableCrudCommand<T> extends LensCRUDCommand<T> {
     }
   }
 
-  public String addPartition(String tableName, String storageName, String path) {
-    return doAddPartition(tableName, storageName, getValidPath(path, false, true)).toString().toLowerCase();
+  public String addPartition(String tableName, String storageName, File path) {
+    return doAddPartition(tableName, storageName,
+        getValidPath(path, false, true)).toString().toLowerCase();
   }
 
   public String updatePartition(String tableName, String storageName, File path) {
-    // TODO: path.getPath() to be changed to path after LENS-634
-    return doUpdatePartition(tableName, storageName, getValidPath(path.getPath(), false, true)).toString()
+    return doUpdatePartition(tableName, storageName, getValidPath(path, false, true)).toString()
       .toLowerCase();
   }
 
   public String addPartitions(String tableName, String storageName, String path) {
-    return doAddPartitions(tableName, storageName, getValidPath(path, false, true)).toString().toLowerCase();
+    return doAddPartitions(tableName, storageName,
+        getValidPath(new File(path), false, true)).toString().toLowerCase();
   }
 
   public String updatePartitions(String tableName, String storageName, String path) {
-    return doUpdatePartitions(tableName, storageName, getValidPath(path, false, true)).toString().toLowerCase();
+    return doUpdatePartitions(tableName, storageName,
+        getValidPath(new File(path), false, true)).toString().toLowerCase();
   }
 
   public String dropPartitions(String tableName, String storageName, String filter) {

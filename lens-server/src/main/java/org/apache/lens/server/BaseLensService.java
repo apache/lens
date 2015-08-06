@@ -19,6 +19,7 @@
 package org.apache.lens.server;
 
 import java.io.Externalizable;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -33,6 +34,7 @@ import javax.ws.rs.NotFoundException;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.LensService;
 import org.apache.lens.server.api.error.LensException;
@@ -72,6 +74,9 @@ public abstract class BaseLensService extends CompositeService implements Extern
 
   /** The stopped. */
   protected boolean stopped = false;
+
+  /** Utility to validate and get valid paths for input paths **/
+  private PathValidator pathValidator;
 
   // Static session map which is used by query submission thread to get the
   // lens session before submitting a query to hive server
@@ -430,4 +435,33 @@ public abstract class BaseLensService extends CompositeService implements Extern
    */
   public abstract HealthStatus getHealthStatus();
 
+  /**
+   * Method that uses PathValidator to get appropriate path.
+   *
+   * @param path
+   * @param shouldBeDirectory
+   * @param shouldExist
+   * @return
+   */
+  public String getValidPath(File path, boolean shouldBeDirectory, boolean shouldExist) {
+    if (pathValidator == null) {
+      LensConf conf = new LensConf();
+      pathValidator = new PathValidator(conf);
+    }
+    return pathValidator.getValidPath(path, shouldBeDirectory, shouldExist);
+  }
+
+  /**
+   * Method to remove unrequired prefix from path.
+   *
+   * @param path
+   * @return
+   */
+  public String removePrefixBeforeURI(String path) {
+    if (pathValidator == null) {
+      LensConf conf = new LensConf();
+      pathValidator = new PathValidator(conf);
+    }
+    return pathValidator.removePrefixBeforeURI(path);
+  }
 }

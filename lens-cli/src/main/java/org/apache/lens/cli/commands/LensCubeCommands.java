@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cli.commands;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +29,8 @@ import org.apache.lens.cli.commands.annotations.UserDocumentation;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
+
+import lombok.NonNull;
 
 /**
  * The Class LensCubeCommands.
@@ -55,7 +58,7 @@ public class LensCubeCommands extends LogicalTableCrudCommand<XCube> {
    */
   @CliCommand(value = "create cube", help = "Create a new Cube, taking spec from <path-to-cube-spec-file>")
   public String createCube(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-cube-spec-file>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-cube-spec-file>") @NonNull final File path) {
     return create(path, false);
   }
 
@@ -80,7 +83,7 @@ public class LensCubeCommands extends LogicalTableCrudCommand<XCube> {
   @CliCommand(value = "update cube", help = "update cube <cube_name> with spec from <path-to-cube-spec-file>")
   public String updateCube(
     @CliOption(key = {"", "name"}, mandatory = true, help = "<cube_name>") String name,
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-cube-spec-file>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-cube-spec-file>") @NonNull final File path) {
     return update(name, path);
   }
 

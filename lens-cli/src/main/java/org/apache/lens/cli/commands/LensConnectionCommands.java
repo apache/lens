@@ -40,6 +40,7 @@ import ch.qos.logback.core.*;
 
 import com.google.common.base.Joiner;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -99,7 +100,7 @@ public class LensConnectionCommands extends BaseLensCommand {
    */
   @CliCommand(value = "add jar", help = "Adds jar resource to the session")
   public String addJar(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-server-side>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-server-side>") @NonNull String path) {
     APIResult result = getClient().addJarResource(path);
     return result.getMessage();
   }
@@ -112,7 +113,7 @@ public class LensConnectionCommands extends BaseLensCommand {
    */
   @CliCommand(value = "remove jar", help = "Removes a jar resource from session")
   public String removeJar(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-server-side>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-server-side>") @NonNull String path) {
     APIResult result = getClient().removeJarResource(path);
     return result.getMessage();
   }
@@ -125,7 +126,7 @@ public class LensConnectionCommands extends BaseLensCommand {
    */
   @CliCommand(value = "add file", help = "Adds a file resource to session")
   public String addFile(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-file-on-server-side>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-file-on-server-side>") @NonNull String path) {
     APIResult result = getClient().addFileResource(path);
     return result.getMessage();
   }
@@ -134,11 +135,11 @@ public class LensConnectionCommands extends BaseLensCommand {
    * Removes the file.
    *
    * @param path the path
-   * @return the string
+   * @return the stringadd
    */
   @CliCommand(value = "remove file", help = "removes a file resource from session")
   public String removeFile(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-file-on-server-side>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-file-on-server-side>") @NonNull String path) {
     APIResult result = getClient().removeFileResource(path);
     return result.getMessage();
   }
@@ -181,8 +182,7 @@ public class LensConnectionCommands extends BaseLensCommand {
     help = "prints all class level logs and verbose logs on cli for debugging purpose."
       + " 'debug false' to turn off all class level logging and verbose level logging ")
   public void debug(@CliOption(key = {"", "enable"},
-    mandatory = false, unspecifiedDefaultValue = "true",
-    help = "To print all logs on cli for debugging purpose") boolean enable) {
+      mandatory = false, unspecifiedDefaultValue = "true") boolean enable) {
     Logger logger = LoggerUtil.getRootLogger();
     Logger cliLogger = LoggerUtil.getCliLogger();
     if (enable) {
@@ -201,8 +201,7 @@ public class LensConnectionCommands extends BaseLensCommand {
   @CliCommand(value = {"verbose"},
     help = "Show cliLogger logs on cli. 'verbose false'  turns off the cliLogger logs on console")
   public void verbose(@CliOption(key = {"", "enable"},
-    mandatory = false, unspecifiedDefaultValue = "true",
-    help = "Print the clilogger logs on cli") boolean enable) {
+      mandatory = false, unspecifiedDefaultValue = "true") boolean enable) {
     Logger cliLogger = LoggerUtil.getCliLogger();
     if (enable) {
       LoggerUtil.addConsoleAppenderIfNotPresent(cliLogger);

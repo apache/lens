@@ -75,6 +75,7 @@ public class ScannedPaths implements Iterable<String> {
       fs = FileSystem.get(new URI(path), new Configuration());
       Path pt = new Path(new URI(path));
 
+
       if (fs.exists(pt) && fs.isFile(pt)) {
         /**
          * CASE 1 : Direct FILE provided in path

@@ -63,7 +63,7 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
    */
   public static void createDimension() throws URISyntaxException {
     URL dimensionSpec = TestLensDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
-    getCommand().createDimension(new File(dimensionSpec.toURI()).getAbsolutePath());
+    getCommand().createDimension(new File(dimensionSpec.toURI()));
   }
 
   /**
@@ -137,7 +137,7 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
       String propString1 = "name : test_dim.prop1  value : test1";
       Assert.assertTrue(desc.contains(propString));
 
-      command.updateDimension("test_dim", "/tmp/test_dim1.xml");
+      command.updateDimension("test_dim", new File("/tmp/test_dim1.xml"));
       desc = command.describeDimension("test_dim");
       log.debug(desc);
       Assert.assertTrue(desc.contains(propString));

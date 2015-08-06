@@ -28,6 +28,7 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.client.exceptions.LensBriefErrorException;
 import org.apache.lens.client.model.BriefError;
@@ -37,6 +38,7 @@ import org.apache.lens.client.model.IdBriefErrorTemplateKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import lombok.Getter;
@@ -56,6 +58,9 @@ public class LensClient {
   private final HashMap<QueryHandle, LensStatement> statementMap =
     Maps.newHashMap();
   private final LensStatement statement;
+
+  @Getter
+  private PathValidator pathValidator;
 
   public static Logger getCliLooger() {
     return LoggerFactory.getLogger(CLILOGGER);
@@ -225,12 +230,13 @@ public class LensClient {
     return new LensStatement(connection).getAllQueries(state, queryName, user, fromDate, toDate);
   }
 
-
   private void connectToLensServer() {
     log.debug("Connecting to lens server {}", new LensConnectionParams(conf));
     connection = new LensConnection(new LensConnectionParams(conf));
     connection.open(password);
     log.debug("Successfully connected to server {}", connection);
+    pathValidator = new PathValidator(connection.getLensConnectionParams().getSessionConf());
+    Preconditions.checkNotNull(pathValidator, "Error in initializing Path Validator.");
   }
 
 
