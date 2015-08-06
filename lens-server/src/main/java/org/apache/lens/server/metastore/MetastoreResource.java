@@ -53,7 +53,7 @@ public class MetastoreResource {
   public static final ObjectFactory X_CUBE_OBJECT_FACTORY = new ObjectFactory();
 
   public CubeMetastoreService getSvc() {
-    return (CubeMetastoreService) LensServices.get().getService("metastore");
+    return LensServices.get().getService(CubeMetastoreService.NAME);
   }
 
   private void checkSessionId(LensSessionHandle sessionHandle) {

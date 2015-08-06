@@ -155,7 +155,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   protected void verifyMetrics() {
     // print final metrics
     System.out.println("Final report");
-    MetricsService metrics = ((MetricsService) LensServices.get().getService(MetricsService.NAME));
+    MetricsService metrics = LensServices.get().getService(MetricsService.NAME);
     metrics.publishReport();
 
     // validate http error count

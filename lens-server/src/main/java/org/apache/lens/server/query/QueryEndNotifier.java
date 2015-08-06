@@ -220,7 +220,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
       message.setContent(multipart);
       Transport.send(message);
     } catch (Exception e) {
-      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      MetricsService metricsService = LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(QueryEndNotifier.class, EMAIL_ERROR_COUNTER);
       log.error("Error sending query end email", e);
     }

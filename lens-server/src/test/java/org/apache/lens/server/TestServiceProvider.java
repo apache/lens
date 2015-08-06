@@ -52,10 +52,10 @@ public class TestServiceProvider extends LensAllApplicationJerseyTest {
     Assert.assertNotNull(serviceProvider);
     Assert.assertTrue(serviceProvider instanceof LensServices);
 
-    QueryExecutionService querySvc = (QueryExecutionService) serviceProvider.getService(QueryExecutionService.NAME);
+    QueryExecutionService querySvc = serviceProvider.getService(QueryExecutionService.NAME);
     Assert.assertNotNull(querySvc);
 
-    LensEventService eventSvc = (LensEventService) serviceProvider.getService(LensEventService.NAME);
+    LensEventService eventSvc = serviceProvider.getService(LensEventService.NAME);
     Assert.assertNotNull(eventSvc);
   }
 }

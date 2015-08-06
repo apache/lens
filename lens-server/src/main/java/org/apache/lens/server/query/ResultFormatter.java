@@ -134,7 +134,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
         log.info("Result formatter has completed. Final path:{}", formatter.getFinalOutputPath());
       }
     } catch (Exception e) {
-      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      MetricsService metricsService = LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(ResultFormatter.class, "formatting-errors");
       log.warn("Exception while formatting result for {}", queryHandle, e);
       try {

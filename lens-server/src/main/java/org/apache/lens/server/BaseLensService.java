@@ -161,7 +161,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
   }
 
   protected LensEventService getEventService() {
-    LensEventService  eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
+    LensEventService  eventService = LensServices.get().getService(LensEventService.NAME);
     if (eventService == null) {
       throw new NullPointerException("Could not get event service");
     }

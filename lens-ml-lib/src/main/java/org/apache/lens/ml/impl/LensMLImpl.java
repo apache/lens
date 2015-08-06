@@ -710,7 +710,7 @@ public class LensMLImpl implements LensML {
   private class UDFStatusExpiryRunnable implements Runnable {
     public void run() {
       try {
-        SessionService sessionService = (SessionService) MLUtils.getServiceProvider().getService(SessionService.NAME);
+        SessionService sessionService = MLUtils.getServiceProvider().getService(SessionService.NAME);
         // Clear status of sessions which are closed.
         List<LensSessionHandle> sessions = new ArrayList<LensSessionHandle>(predictUdfStatus.keySet());
         for (LensSessionHandle sessionHandle : sessions) {

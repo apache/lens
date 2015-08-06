@@ -43,6 +43,7 @@ import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.LensApplication;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
+import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.api.metrics.MethodMetrics;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.common.TestResourceFile;
@@ -78,8 +79,8 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    metricsSvc = (MetricsServiceImpl) LensServices.get().getService(MetricsService.NAME);
-    metastoreService = (CubeMetastoreServiceImpl) LensServices.get().getService(CubeMetastoreServiceImpl.NAME);
+    metricsSvc = LensServices.get().getService(MetricsService.NAME);
+    metastoreService = LensServices.get().getService(CubeMetastoreService.NAME);
     lensSessionId = metastoreService.openSession("foo", "bar", new HashMap<String, String>());
     methodMetricsMap = metricsSvc.getMethodMetricsFactory().getMethodMetricsMap();
     //reset

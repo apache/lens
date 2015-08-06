@@ -40,9 +40,7 @@ import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.query.InMemoryOutputFormatter;
-import org.apache.lens.server.api.query.PersistedOutputFormatter;
-import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.*;
 import org.apache.lens.server.common.TestResourceFile;
 
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
@@ -80,7 +78,7 @@ public class TestResultFormatting extends LensJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
+    queryService = LensServices.get().getService(QueryExecutionService.NAME);
     lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
     LensTestUtil.createTable(testTable, target(), lensSessionId,
       "(ID INT, IDSTR STRING, IDARR ARRAY<INT>, IDSTRARR ARRAY<STRING>)");

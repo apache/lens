@@ -44,7 +44,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.codahale.metrics.servlets.AdminServlet;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,10 +88,10 @@ public class LensServer {
     serverList.add(server);
 
     WebappContext adminCtx = new WebappContext("admin", "");
-    adminCtx.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry", ((MetricsServiceImpl) LensServices
-      .get().getService(MetricsService.NAME)).getMetricRegistry());
-    adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
-      ((MetricsServiceImpl) LensServices.get().getService(MetricsService.NAME)).getHealthCheck());
+    MetricsServiceImpl metricsService = LensServices.get().getService(MetricsService.NAME);
+    adminCtx
+      .setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry", (metricsService.getMetricRegistry()));
+    adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry", metricsService.getHealthCheck());
 
     final ServletRegistration sgMetrics = adminCtx.addServlet("admin", new AdminServlet());
     sgMetrics.addMapping("/admin/*");

@@ -54,6 +54,7 @@ import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.common.ErrorResponseExpectedData;
 import org.apache.lens.server.common.TestDataUtils;
@@ -118,8 +119,8 @@ public class TestQueryService extends LensJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
-    metricsSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+    queryService = LensServices.get().getService(QueryExecutionService.NAME);
+    metricsSvc = LensServices.get().getService(MetricsService.NAME);
     Map<String, String> sessionconf = new HashMap<String, String>();
     sessionconf.put("test.session.key", "svalue");
     lensSessionId = queryService.openSession("foo@localhost", "bar", sessionconf); // @localhost should be removed

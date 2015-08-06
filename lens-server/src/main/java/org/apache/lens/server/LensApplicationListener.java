@@ -50,7 +50,7 @@ public class LensApplicationListener implements ApplicationEventListener {
   public RequestEventListener onRequest(RequestEvent requestEvent) {
     // Request start events are sent to application listener and not request listener
     if (RequestEvent.Type.START == requestEvent.getType()) {
-      MetricsService metricsSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      MetricsService metricsSvc = LensServices.get().getService(MetricsService.NAME);
       if (metricsSvc != null) {
         metricsSvc.incrCounter(LensRequestListener.class, LensRequestListener.HTTP_REQUESTS_STARTED);
       }

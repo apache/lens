@@ -111,7 +111,7 @@ public class MLServiceResource {
 
   private MLService getMlService() {
     if (mlService == null) {
-      mlService = (MLService) getServiceProvider().getService(MLService.NAME);
+      mlService = getServiceProvider().getService(MLService.NAME);
     }
     return mlService;
   }

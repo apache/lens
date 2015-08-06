@@ -238,7 +238,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   }
 
   private QueryExecutionService getQuerySvc() {
-    return (QueryExecutionService) LensServices.get().getService(QueryExecutionService.NAME);
+    return LensServices.get().getService(QueryExecutionService.NAME);
   }
 
   /** The time between polls. */
@@ -253,7 +253,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   public synchronized void init(HiveConf hiveConf) {
     queryStatusListener = new AsyncQueryStatusListener();
     sessionEventListener = new AsyncSessionEventListener();
-    LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
+    LensEventService eventService = LensServices.get().getService(LensEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     eventService.addListenerForType(sessionEventListener, SessionEvent.class);
     metricRegistry = LensMetricsRegistry.getStaticRegistry();
@@ -439,7 +439,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public synchronized void stop() {
     // unregister
-    LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
+    LensEventService eventService = LensServices.get().getService(LensEventService.NAME);
     if (eventService != null) {
       eventService.removeListener(queryStatusListener);
     }

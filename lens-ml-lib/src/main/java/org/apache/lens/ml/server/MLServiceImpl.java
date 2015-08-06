@@ -282,7 +282,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
     @Override
     public QueryHandle runQuery(String testQuery) throws LensException {
       // Run the query in query executions service
-      QueryExecutionService queryService = (QueryExecutionService) getServiceProvider().getService("query");
+      QueryExecutionService queryService = getServiceProvider().getService(QueryExecutionService.NAME);
 
       LensConf queryConf = new LensConf();
       queryConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, false + "");

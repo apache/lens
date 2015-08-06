@@ -374,7 +374,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
   private MetricsService getMetrics() {
     if (metricsService == null) {
-      metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      metricsService = LensServices.get().getService(MetricsService.NAME);
       if (metricsService == null) {
         throw new NullPointerException("Could not get metrics service");
       }
@@ -384,7 +384,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
   private StatisticsService getStatisticsService() {
     if (statisticsService == null) {
-      statisticsService = (StatisticsService) LensServices.get().getService(StatisticsService.STATS_SVC_NAME);
+      statisticsService = LensServices.get().getService(StatisticsService.STATS_SVC_NAME);
       if (statisticsService == null) {
         throw new NullPointerException("Could not get statistics service");
       }

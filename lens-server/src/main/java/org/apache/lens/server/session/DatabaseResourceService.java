@@ -327,7 +327,7 @@ public class DatabaseResourceService extends AbstractService {
 
   private MetricsService getMetrics() {
     if (metricsService == null) {
-      metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      metricsService = LensServices.get().getService(MetricsService.NAME);
       if (metricsService == null) {
         throw new NullPointerException("Could not get metrics service");
       }

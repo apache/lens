@@ -20,10 +20,7 @@ package org.apache.lens.server;
 
 import static org.apache.lens.server.api.LensConfConstants.*;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
@@ -68,7 +65,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   /** The instance. */
   private static LensServices instance = new LensServices(LENS_SERVICES_NAME,
-      new MappedDiagnosticLogSegregationContext());
+    new MappedDiagnosticLogSegregationContext());
 
   /** The conf. */
   private HiveConf conf;
@@ -450,7 +447,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   private MetricsService getMetricService() {
     if (metricsService == null) {
-      metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      metricsService = LensServices.get().getService(MetricsService.NAME);
       if (metricsService == null) {
         throw new NullPointerException("Could not get metrics service");
       }

@@ -37,6 +37,7 @@ import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
@@ -126,7 +127,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
   public void testQueryService() throws InterruptedException, IOException, LensException {
     log.info("Server restart test");
 
-    QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
+    QueryExecutionServiceImpl queryService = LensServices.get().getService(QueryExecutionService.NAME);
     Assert.assertTrue(queryService.getHealthStatus().isHealthy());
 
     LensSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
@@ -181,7 +182,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     log.info("Restarting lens server!");
     restartLensServer();
     log.info("Restarted lens server!");
-    queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
+    queryService = LensServices.get().getService(QueryExecutionService.NAME);
     Assert.assertTrue(queryService.getHealthStatus().isHealthy());
 
     // All queries should complete after server restart
@@ -221,7 +222,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
    */
   @Test
   public void testHiveServerRestart() throws Exception {
-    QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
+    QueryExecutionServiceImpl queryService = LensServices.get().getService(QueryExecutionService.NAME);
     Assert.assertTrue(queryService.getHealthStatus().isHealthy());
 
     LensSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
@@ -233,7 +234,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     createRestartTestDataFile();
 
     // Add a resource to check if its added after server restart.
-    HiveSessionService sessionService = (HiveSessionService) LensServices.get().getService(SessionService.NAME);
+    HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
     Assert.assertTrue(sessionService.getHealthStatus().isHealthy());
 
     sessionService.addResource(lensSessionId, "FILE", dataFile.toURI().toString());
@@ -399,7 +400,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     // Check resources added again
     verifyParamOnRestart(restartTestSession);
 
-    HiveSessionService sessionService = LensServices.get().getService("session");
+    HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
     Assert.assertTrue(sessionService.getHealthStatus().isHealthy());
 
     LensSessionImpl session = sessionService.getSession(restartTestSession);

@@ -81,7 +81,7 @@ public class QueryServiceUIResource {
    */
   public QueryServiceUIResource() {
     log.info("Query UI Service");
-    queryServer = (QueryExecutionService) LensServices.get().getService("query");
+    queryServer = LensServices.get().getService(QueryExecutionService.NAME);
   }
 
   /**

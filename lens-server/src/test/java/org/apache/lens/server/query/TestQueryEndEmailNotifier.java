@@ -46,6 +46,7 @@ import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.common.TestResourceFile;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -91,7 +92,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     wiser = new Wiser();
     wiser.setHostname("localhost");
     wiser.setPort(25000);
-    queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
+    queryService = LensServices.get().getService(QueryExecutionService.NAME);
     Map<String, String> sessionconf = new HashMap<String, String>();
     sessionconf.put("test.session.key", "svalue");
     sessionconf.put(LensConfConstants.QUERY_MAIL_NOTIFY, "true");

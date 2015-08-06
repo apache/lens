@@ -42,6 +42,7 @@ import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
+import org.apache.lens.server.api.metastore.CubeMetastoreService;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -73,7 +74,7 @@ public class TestMetastoreService extends LensJerseyTest {
   public void setUp() throws Exception {
     super.setUp();
     cubeObjectFactory = new ObjectFactory();
-    metastoreService = (CubeMetastoreServiceImpl) LensServices.get().getService("metastore");
+    metastoreService = LensServices.get().getService(CubeMetastoreService.NAME);
     lensSessionId = metastoreService.openSession("foo", "bar", new HashMap<String, String>());
 
   }

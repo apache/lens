@@ -124,7 +124,7 @@ public class QueryServiceResource {
    * @throws LensException the lens exception
    */
   public QueryServiceResource() throws LensException {
-    queryServer = (QueryExecutionService) LensServices.get().getService("query");
+    queryServer = LensServices.get().getService(QueryExecutionService.NAME);
     errorCollection = LensServices.get().getErrorCollection();
     logSegregationContext = LensServices.get().getLogSegregationContext();
   }

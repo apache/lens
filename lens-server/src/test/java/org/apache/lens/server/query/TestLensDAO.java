@@ -37,6 +37,7 @@ import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.query.FinishedLensQuery;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.QueryExecutionService;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -60,7 +61,7 @@ public class TestLensDAO extends LensJerseyTest {
    */
   @Test
   public void testLensServerDAO() throws Exception {
-    QueryExecutionServiceImpl service = (QueryExecutionServiceImpl) LensServices.get().getService("query");
+    QueryExecutionServiceImpl service = LensServices.get().getService(QueryExecutionService.NAME);
 
     // Test insert query
     QueryContext queryContext = service.createContext("SELECT ID FROM testTable", "foo@localhost", new LensConf(),

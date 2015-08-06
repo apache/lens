@@ -89,7 +89,7 @@ public class StatisticsLogFileScannerTask extends TimerTask {
         }
       }
     } catch (Exception exc) {
-      MetricsService svc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      MetricsService svc = LensServices.get().getService(MetricsService.NAME);
       svc.incrCounter(StatisticsLogFileScannerTask.class, LOG_SCANNER_ERRORS);
       log.error("Unknown error in log file scanner ", exc);
     }

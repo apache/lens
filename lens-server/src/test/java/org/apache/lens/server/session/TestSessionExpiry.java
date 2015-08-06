@@ -57,7 +57,7 @@ public class TestSessionExpiry {
     HiveSessionService lensService = new HiveSessionService(cliService);
     lensService.init(conf);
     lensService.start();
-    MetricsService metricSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+    MetricsService metricSvc = LensServices.get().getService(MetricsService.NAME);
 
     try {
       LensSessionHandle sessionHandle = lensService.openSession("foo", "bar", new HashMap<String, String>());
@@ -96,7 +96,7 @@ public class TestSessionExpiry {
     HiveSessionService lensService = new HiveSessionService(cliService);
     lensService.init(conf);
     lensService.start();
-    MetricsService metricSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+    MetricsService metricSvc = LensServices.get().getService(MetricsService.NAME);
     try {
       LensSessionHandle sessionHandle = lensService.openSession("foo", "bar", new HashMap<String, String>());
       LensSessionImpl session = lensService.getSession(sessionHandle);

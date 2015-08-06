@@ -69,7 +69,7 @@ public class SessionResource {
    * @throws org.apache.lens.server.api.error.LensException the lens exception
    */
   public SessionResource() throws LensException {
-    sessionService = (SessionService) LensServices.get().getService("session");
+    sessionService = LensServices.get().getService(SessionService.NAME);
   }
 
   /**

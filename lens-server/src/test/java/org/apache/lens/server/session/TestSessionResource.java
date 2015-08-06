@@ -80,7 +80,7 @@ public class TestSessionResource extends LensJerseyTest {
    */
   @BeforeTest
   public void setUp() throws Exception {
-    metricsSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+    metricsSvc = LensServices.get().getService(MetricsService.NAME);
     super.setUp();
   }
 
@@ -301,7 +301,7 @@ public class TestSessionResource extends LensJerseyTest {
       Assert.assertNotNull(handle);
 
       // verify aux jars are loaded
-      HiveSessionService service = (HiveSessionService) LensServices.get().getService(SessionService.NAME);
+      HiveSessionService service = LensServices.get().getService(SessionService.NAME);
       ClassLoader loader = service.getSession(handle).getSessionState().getConf().getClassLoader();
       boolean found = false;
       for (URL path : ((URLClassLoader) loader).getURLs()) {
