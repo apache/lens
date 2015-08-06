@@ -31,7 +31,7 @@ import org.eclipse.jetty.util.ConcurrentHashSet;
 import lombok.NonNull;
 
 /**
- * Class which handles the log4j rolled file.
+ * Class which handles the rolled log file.
  */
 public class StatisticsLogRollupHandler {
 

@@ -103,13 +103,13 @@ Installing and Running Lens
   │   ├── jdbcdriver-site.xml
   │   ├── lens-env.sh
   │   ├── lens-site.xml
-  │   └── log4j.properties
+  │   └── logback.xml
   ├── conf-pseudo-distr
   │   ├── hivedriver-site.xml
   │   ├── jdbcdriver-site.xml
   │   ├── lens-env.sh
   │   ├── lens-site.xml
-  │   └── log4j.properties
+  │   └── logback.xml
   └── webapp
       └── lens-server.war
 +---+
@@ -120,7 +120,7 @@ Installing and Running Lens
 
   Server configuration can be overridden in lens-site.xml. See {{{../admin/config.html}server configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in lens-env.sh.
 
-  The server logs go into logs/ folder in the <lens-install-dir> directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
+  The server logs go into logs/ folder in the <lens-install-dir> directory, unless overridden. The proper logging configuration can be provided in logback.xml file.
 
 *** Driver configuration
 
@@ -170,7 +170,7 @@ Installing and Running Lens
   ├── conf
   │   ├── lens-client-site.xml
   │   ├── lens-env.sh
-  │   └── log4j.properties
+  │   └── logback.xml
   ├── examples
   │   ├── data
   │   │   ├── dim1_local
@@ -212,7 +212,7 @@ Installing and Running Lens
 
   Client configuration can be overridden in lens-client-site.xml. See {{{../user/client-config.html}client configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in lens-env.sh.
 
-  The client logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
+  The client logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in logback.xml file.
 
   Examples folder contains sample resource files, data files and query files which will be used by <<run-examples.sh>> script.
 

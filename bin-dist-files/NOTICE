@@ -46,3 +46,6 @@ http://www.mchange.com/projects/c3p0/.
 
 This product includes mchange-commons-java. The details on how to obtain the library is available at
 https://github.com/swaldman/mchange-commons-java.
+
+This product includes Logback Core Module and Logback Classic Module. The details on how to obtain the library is
+available at http://www.qos.ch.

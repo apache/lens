@@ -123,7 +123,7 @@
     <name>lens.server.query.state.logger.enabled</name>
     <value>true</value>
     <description>Disable or enable the query state logger with this config.
-      The location for the logger can be specified in log4j properties for the class
+      The location for the logger can be specified in logback xml for the class
       org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger
     </description>
   </property>

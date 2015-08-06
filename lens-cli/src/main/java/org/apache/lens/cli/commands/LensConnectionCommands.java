@@ -18,7 +18,7 @@
  */
 package org.apache.lens.cli.commands;
 
-import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.ProcessingException;
@@ -28,14 +28,18 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
 import org.apache.lens.client.LensClient;
 
-import org.apache.log4j.*;
-
+import org.slf4j.LoggerFactory;
 import org.springframework.shell.core.ExitShellRequest;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
+import ch.qos.logback.classic.*;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.*;
+
 import com.google.common.base.Joiner;
+
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -213,37 +217,36 @@ public class LensConnectionCommands extends BaseLensCommand {
 
     public static Logger getRootLogger() {
       if (logger == null) {
-        logger = Logger.getRootLogger();
+        logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
       }
       return logger;
     }
 
     public static Logger getCliLogger() {
       if (cliLogger == null) {
-        cliLogger = Logger.getLogger(LensClient.CLILOGGER);
+        cliLogger = (Logger) LoggerFactory.getLogger(LensClient.CLILOGGER);
       }
       return cliLogger;
     }
 
-    public static ConsoleAppender getConsoleAppender() {
-      return getConsoleAppender(getPatternLayout());
-    }
-
-    public static ConsoleAppender getConsoleAppender(Layout layout) {
-      ConsoleAppender consoleAppender = new ConsoleAppender();
+    public static ConsoleAppender<ILoggingEvent> getConsoleAppender(PatternLayout layout, Context context) {
+      ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<ILoggingEvent>();
+      consoleAppender.setContext(context);
       consoleAppender.setLayout(layout);
-      consoleAppender.activateOptions();
+      consoleAppender.start();
       return consoleAppender;
     }
 
-    public static PatternLayout getPatternLayout() {
+    public static PatternLayout getPatternLayout(LoggerContext context) {
       String conversionPattern = "%d [%t] %F %-7p - %m%n";
-      return getPatternLayout(conversionPattern);
+      return getPatternLayout(conversionPattern, context);
     }
 
-    public static PatternLayout getPatternLayout(String conversionPattern) {
+    public static PatternLayout getPatternLayout(String conversionPattern, Context context) {
       PatternLayout layout = new PatternLayout();
-      layout.setConversionPattern(conversionPattern);
+      layout.setPattern(conversionPattern);
+      layout.setContext(context);
+      layout.start();
       return layout;
     }
 
@@ -255,35 +258,34 @@ public class LensConnectionCommands extends BaseLensCommand {
      */
     public static void addConsoleAppenderIfNotPresent(Logger logger) {
       boolean isConsoleAppenderAdded = false;
-      Layout layout = null;
-      Enumeration appenderSeries = logger.getAllAppenders();
-      while (appenderSeries.hasMoreElements()) {
-        Appender appender = (Appender) appenderSeries.nextElement();
+      PatternLayout layout = null;
+      Iterator<Appender<ILoggingEvent>> appenderSeries = logger.iteratorForAppenders();
+      while (appenderSeries.hasNext()) {
+        Appender<ILoggingEvent> appender = (Appender<ILoggingEvent>) appenderSeries.next();
         if (appender instanceof ConsoleAppender) {
           isConsoleAppenderAdded = true;
           break;
-        } else {
-          layout = appender.getLayout();
         }
       }
       if (!isConsoleAppenderAdded) {
         if (layout == null) {
-          layout = LoggerUtil.getPatternLayout();
+          layout = LoggerUtil.getPatternLayout(logger.getLoggerContext());
         }
         if (logger.getLevel() == null) {
           logger.setLevel(Level.DEBUG);
         }
-        ConsoleAppender consoleAppender = LoggerUtil.getConsoleAppender(layout);
+        ConsoleAppender<ILoggingEvent> consoleAppender = LoggerUtil.getConsoleAppender(layout,
+          logger.getLoggerContext());
         logger.addAppender(consoleAppender);
       }
     }
 
     public static void removeConsoleAppender(Logger logger) {
-      Enumeration appenderSeries = logger.getAllAppenders();
-      while (appenderSeries.hasMoreElements()) {
-        Appender appender = (Appender) appenderSeries.nextElement();
+      Iterator<Appender<ILoggingEvent>> appenderSeries = logger.iteratorForAppenders();
+      while (appenderSeries.hasNext()) {
+        Appender<ILoggingEvent> appender = (Appender<ILoggingEvent>) appenderSeries.next();
         if (appender instanceof ConsoleAppender) {
-          logger.removeAppender(appender);
+          logger.detachAppender(appender);
         }
       }
     }

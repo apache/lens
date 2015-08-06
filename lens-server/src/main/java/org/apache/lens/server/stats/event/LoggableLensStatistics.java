@@ -22,7 +22,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 /**
- * Loggable Lens Statistics which is logged to a log4j file as a JSON Object.
+ * Loggable Lens Statistics which is logged to a log file as a JSON Object.
  */
 public abstract class LoggableLensStatistics extends LensStatistics {
 

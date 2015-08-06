@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<configuration>
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="ROOT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${lens.log.dir}/lensserver.log</file>
+    <append>true</append>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- daily rollover -->
+      <fileNamePattern>${lens.log.dir}/lensserver.log.%d{yyyy-MM-dd}</fileNamePattern>
+
+      <!-- keep 30 days' worth of history -->
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+
+    <encoder>
+      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
+    </encoder>
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>100MB</maxFileSize>
+    </triggeringPolicy>
+  </appender>
+
+  <appender name="REQUEST" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${lens.log.dir}/lensserver-requests.log</file>
+    <append>true</append>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- daily rollover -->
+      <fileNamePattern>${lens.log.dir}/lensserver-requests.log.%d{yyyy-MM-dd}</fileNamePattern>
+
+      <!-- keep 30 days' worth of history -->
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+
+    <encoder>
+      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
+    </encoder>
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>100MB</maxFileSize>
+    </triggeringPolicy>
+  </appender>
+
+  <appender name="STATUS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${lens.log.dir}/lensserver-query-status.log</file>
+    <append>true</append>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- daily rollover -->
+      <fileNamePattern>${lens.log.dir}/lensserver-query-status.log.%d{yyyy-MM-dd}</fileNamePattern>
+
+      <!-- keep 30 days' worth of history -->
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+
+    <encoder>
+      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
+    </encoder>
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>100MB</maxFileSize>
+    </triggeringPolicy>
+  </appender>
+
+  <appender name="QueryExecutionStatistics" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${lens.log.dir}/query-stats.log</file>
+    <append>true</append>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- hourly rollover -->
+      <fileNamePattern>${lens.log.dir}/query-stats.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
+    </rollingPolicy>
+
+    <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+      <layout class="org.apache.lens.server.stats.store.log.StatisticsLogLayout" />
+    </encoder>
+  </appender>
+
+  <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+    <discriminator>
+      <key>queryLogId</key>
+      <defaultValue>unknown</defaultValue>
+    </discriminator>
+    <sift>
+      <appender name="FILE-${logSegregationId}" class="ch.qos.logback.core.FileAppender">
+        <file>${lens.log.dir}/${queryLogId}.log</file>
+        <append>true</append>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+          <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
+        </layout>
+      </appender>
+    </sift>
+  </appender>
+
+  <logger name="org.apache.lens.server.LensServer.request" level="INFO" additivity="false">
+    <appender-ref ref="REQUEST" />
+  </logger>
+  <logger name="org.apache.lens.server.query.QueryExecutionServiceImpl$QueryStatusLogger" additivity="false"
+    level="INFO">
+    <appender-ref ref="STATUS" />
+  </logger>
+  <logger name="org.apache.lens.server.LensServer.audit" additivity="false" level="INFO">
+    <appender-ref ref="CONSOLE" />
+  </logger>
+  <logger name="org.apache.lens.server.stats.event.query.QueryExecutionStatistics" level="INFO" additivity="false">
+    <appender-ref ref="QueryExecutionStatistics" />
+  </logger>
+  <logger name="org.apache.hadoop.util.Shell" level="OFF"/>
+  <logger name="ch.qos.logback" level="WARN"/>
+
+  <root level="INFO">
+    <appender-ref ref="ROOT" />
+    <appender-ref ref="SIFT" />
+  </root>
+</configuration>

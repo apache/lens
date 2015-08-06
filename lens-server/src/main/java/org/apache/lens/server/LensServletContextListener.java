@@ -23,19 +23,11 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.PropertyConfigurator;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Initialize the webapp.
  */
-@Slf4j
 public class LensServletContextListener implements ServletContextListener {
-
-  /** The Constant LOG_PROPERTIES_FILE_KEY. */
-  public static final String LOG_PROPERTIES_FILE_KEY = "lens.server.log4j.properties";
 
   /**
    * * Notification that the web application initialization * process is starting. * All ServletContextListeners are
@@ -45,24 +37,6 @@ public class LensServletContextListener implements ServletContextListener {
    */
   @Override
   public void contextInitialized(ServletContextEvent sce) {
-    // Initialize logging
-    try {
-      String log4jPropertyFile = sce.getServletContext().getInitParameter(LOG_PROPERTIES_FILE_KEY);
-      if (log4jPropertyFile != null && !log4jPropertyFile.isEmpty()) {
-        String basePath = sce.getServletContext().getRealPath("/");
-        System.out.println("Application BasePath:" + basePath);
-        PropertyConfigurator.configure(basePath + "/" + log4jPropertyFile);
-      } else {
-        System.err.println("WARN - Empty value for " + LOG_PROPERTIES_FILE_KEY + ", using BasicConfigurator");
-        BasicConfigurator.configure();
-      }
-    } catch (Exception exc) {
-      // Try basic configuration
-      System.err.println("WARNING - log4j property configurator gave error, falling back to basic configurator");
-      log.error("WARNING - log4j property configurator gave error, falling back to basic configurator", exc);
-      BasicConfigurator.configure();
-    }
-
     // start up all lens services
     HiveConf conf = LensServerConf.getHiveConf();
     LensServices services = LensServices.get();

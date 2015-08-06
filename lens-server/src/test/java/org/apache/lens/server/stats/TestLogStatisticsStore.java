@@ -18,7 +18,7 @@
  */
 package org.apache.lens.server.stats;
 
-import java.io.StringWriter;
+import java.io.ByteArrayOutputStream;
 
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.stats.event.LoggableLensStatistics;
@@ -27,11 +27,14 @@ import org.apache.lens.server.stats.store.log.StatisticsLogLayout;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.log4j.Logger;
-import org.apache.log4j.WriterAppender;
 
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.OutputStreamAppender;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -81,18 +84,23 @@ public class TestLogStatisticsStore {
     LogStatisticsStore store = new LogStatisticsStore();
     store.initialize(LensServerConf.getHiveConf());
     // Do some initialization work
-    StringWriter writer = new StringWriter();
-    Logger l = Logger.getLogger(MyLoggableLens.class);
-    WriterAppender appender = new WriterAppender(new StatisticsLogLayout(), writer);
-
-    appender.setName(MyLoggableLens.class.getSimpleName());
+    ByteArrayOutputStream writer = new ByteArrayOutputStream();
+    Logger l = (Logger) LoggerFactory.getLogger(MyLoggableLens.class);
+    OutputStreamAppender<ILoggingEvent> appender = new OutputStreamAppender<ILoggingEvent>();
+    appender.setLayout(new StatisticsLogLayout());
+    appender.setContext(l.getLoggerContext());
+    appender.setOutputStream(writer);
+    appender.setName(MyLoggableLens.class.getCanonicalName());
+    appender.start();
     l.addAppender(appender);
     MyLoggableLens sampleEvent = new MyLoggableLens(System.currentTimeMillis());
     store.process(sampleEvent);
     writer.flush();
-    l.removeAppender(appender);
+    l.detachAppender(appender);
+    appender.stop();
     ObjectMapper mapper = new ObjectMapper();
     String expected = mapper.writeValueAsString(sampleEvent);
-    Assert.assertEquals(writer.toString().trim(), expected.trim());
+    Assert.assertEquals(new String(writer.toByteArray(), "UTF-8").trim(), expected.trim());
+    writer.close();
   }
 }

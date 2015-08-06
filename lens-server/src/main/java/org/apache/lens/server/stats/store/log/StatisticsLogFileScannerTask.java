@@ -32,8 +32,11 @@ import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.model.LogSegregationContext;
 
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
 
 import lombok.NonNull;
 import lombok.Setter;
@@ -138,12 +141,12 @@ public class StatisticsLogFileScannerTask extends TimerTask {
       return;
     }
     String appenderName = event.substring(event.lastIndexOf(".") + 1, event.length());
-    Logger logger = Logger.getLogger(event);
+    Logger logger = (Logger) LoggerFactory.getLogger(event);
     if (logger.getAppender(appenderName) == null) {
       log.error("Unable to find statistics log appender for {}  with appender name {}", event, appenderName);
       return;
     }
-    String location = ((FileAppender) logger.getAppender(appenderName)).getFile();
+    String location = ((FileAppender<ILoggingEvent>) logger.getAppender(appenderName)).getFile();
     scanSet.put(appenderName, location);
     classSet.put(appenderName, event);
   }

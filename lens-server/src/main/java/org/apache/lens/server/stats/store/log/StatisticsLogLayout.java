@@ -18,21 +18,17 @@
  */
 package org.apache.lens.server.stats.store.log;
 
-import org.apache.log4j.SimpleLayout;
-import org.apache.log4j.spi.LoggingEvent;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.CoreConstants;
+import ch.qos.logback.core.LayoutBase;
 
 /**
- * Empty statistics log layout for log4j.
+ * Statistics log layout.
  */
-public class StatisticsLogLayout extends SimpleLayout {
+public class StatisticsLogLayout extends LayoutBase<ILoggingEvent> {
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.log4j.SimpleLayout#format(org.apache.log4j.spi.LoggingEvent)
-   */
   @Override
-  public String format(LoggingEvent event) {
-    return event.getRenderedMessage() + LINE_SEP;
+  public String doLayout(ILoggingEvent loggingEvent) {
+    return loggingEvent.getMessage() + CoreConstants.LINE_SEPARATOR;
   }
 }

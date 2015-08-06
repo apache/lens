@@ -35,8 +35,6 @@ import org.apache.lens.server.quota.QuotaServiceImpl;
 import org.apache.lens.server.scheduler.QuerySchedulerServiceImpl;
 import org.apache.lens.server.session.HiveSessionService;
 
-import org.apache.log4j.BasicConfigurator;
-
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -46,16 +44,11 @@ import org.testng.annotations.Test;
 
 import com.codahale.metrics.health.HealthCheck;
 
-
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Test(groups = "unit-test")
 public class TestHealthChecks extends LensJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    BasicConfigurator.configure();
   }
 
   @AfterTest

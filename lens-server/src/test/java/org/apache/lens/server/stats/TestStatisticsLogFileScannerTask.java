@@ -28,16 +28,18 @@ import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.stats.store.log.PartitionEvent;
 import org.apache.lens.server.stats.store.log.StatisticsLogFileScannerTask;
 
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Logger;
-
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -87,8 +89,8 @@ public class TestStatisticsLogFileScannerTask {
    */
   @Test
   public void testScanner() throws Exception {
-    Logger l = Logger.getLogger(TestStatisticsLogFileScannerTask.class);
-    FileAppender appender = new FileAppender();
+    Logger l = (Logger) LoggerFactory.getLogger(TestStatisticsLogFileScannerTask.class);
+    FileAppender<ILoggingEvent> appender = new FileAppender<ILoggingEvent>();
     String logFile = f.getParent() + File.separator + "test.log";
     appender.setFile(logFile);
     appender.setName(TestStatisticsLogFileScannerTask.class.getSimpleName());
