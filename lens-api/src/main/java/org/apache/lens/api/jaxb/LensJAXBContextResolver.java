@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.api.result;
+package org.apache.lens.api.jaxb;
 
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +29,7 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.ErrorCollectionFactory;
+import org.apache.lens.api.result.LensAPIResult;
 
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
@@ -57,19 +58,15 @@ public class LensJAXBContextResolver implements ContextResolver<JAXBContext> {
           Set<Class> classesToBeBound = Sets.newHashSet(errorCollection.getErrorPayloadClasses());
           log.debug("classesToBeBound:{}", classesToBeBound);
           classesToBeBound.add(type);
-
           Class[] classesToBeBoundArray = classesToBeBound.toArray(new Class[classesToBeBound.size()]);
-          jaxbContext = JAXBContext.newInstance(classesToBeBoundArray);
+          jaxbContext = new LensJAXBContext(classesToBeBoundArray);
         } else {
-
-          jaxbContext = JAXBContext.newInstance(type);
+          jaxbContext = new LensJAXBContext(type);
         }
         jaxbContextCache.put(type, jaxbContext);
 
-      } catch (JAXBException e) {
-        log.error("JAXBContext not initialized for "+type, e);
-      } catch (ClassNotFoundException e) {
-        log.error("JAXBContext not initialized for "+type, e);
+      } catch (JAXBException | ClassNotFoundException e) {
+        log.error("JAXBContext not initialized for " + type, e);
       }
     }
     return jaxbContext;

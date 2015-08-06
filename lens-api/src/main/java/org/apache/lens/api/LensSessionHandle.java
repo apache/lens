@@ -32,6 +32,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.lens.api.jaxb.LensJAXBContext;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -77,7 +79,7 @@ public class LensSessionHandle {
 
   static {
     try {
-      JAXB_CONTEXT = JAXBContext.newInstance(LensSessionHandle.class);
+      JAXB_CONTEXT = new LensJAXBContext(LensSessionHandle.class);
     } catch (JAXBException e) {
       throw new RuntimeException(e);
     }

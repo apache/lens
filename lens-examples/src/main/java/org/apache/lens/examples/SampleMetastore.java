@@ -21,12 +21,10 @@ package org.apache.lens.examples;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.*;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.jaxb.LensJAXBContext;
 import org.apache.lens.api.metastore.ObjectFactory;
 import org.apache.lens.client.LensClientSingletonWrapper;
 import org.apache.lens.client.LensMetadataClient;
@@ -44,7 +42,7 @@ public class SampleMetastore {
   static {
     try {
       JAXBContext jaxbContext;
-      jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
+      jaxbContext = new LensJAXBContext(ObjectFactory.class);
       JAXB_UNMARSHALLER = jaxbContext.createUnmarshaller();
     } catch (JAXBException e) {
       throw new RuntimeException("Could not initialize JAXBCOntext");
@@ -87,6 +85,7 @@ public class SampleMetastore {
       retCode = 1;
     }
   }
+
   public void createDimensions() throws JAXBException, IOException {
     createDimension("sample-dimension.xml");
     createDimension("sample-dimension2.xml");
@@ -133,6 +132,7 @@ public class SampleMetastore {
       retCode = 1;
     }
   }
+
   private void createDimensionTables() throws JAXBException, IOException {
     createDimTable("dim_table.xml");
     createDimTable("dim_table2.xml");
@@ -152,6 +152,7 @@ public class SampleMetastore {
       retCode = 1;
     }
   }
+
   private void createFacts() throws JAXBException, IOException {
     createFact("fact1.xml");
     createFact("fact2.xml");

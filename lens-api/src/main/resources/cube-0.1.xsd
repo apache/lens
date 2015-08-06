@@ -65,7 +65,7 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:element name="x_cube" abstract="true" type="x_cube"/>
+  <xs:element name="x_cube" type="x_cube"/>
 
   <xs:complexType name="x_cube" abstract="true">
     <xs:annotation>
@@ -213,7 +213,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_property" name="property" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="x_property" name="property" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -521,7 +521,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_join_chain" name="join_chain" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="x_join_chain" name="join_chain" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -664,7 +664,7 @@
       </xs:annotation>
       <xs:simpleType>
         <xs:restriction base="xs:double">
-          <xs:minExclusive value="0"></xs:minExclusive>
+          <xs:minInclusive value="0"></xs:minInclusive>
         </xs:restriction>
       </xs:simpleType>
     </xs:attribute>
@@ -672,7 +672,7 @@
 
   <xs:complexType name="x_update_periods">
     <xs:sequence>
-      <xs:element name="update_period" type="x_update_period" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element name="update_period" type="x_update_period" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -1201,7 +1201,7 @@
       </xs:annotation>
       <xs:simpleType>
         <xs:restriction base="xs:double">
-          <xs:minExclusive value="0"></xs:minExclusive>
+          <xs:minInclusive value="0"></xs:minInclusive>
         </xs:restriction>
       </xs:simpleType>
     </xs:attribute>

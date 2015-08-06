@@ -21,23 +21,17 @@ package org.apache.lens.regression.util;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Properties;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import javax.ws.rs.core.Response;
 import javax.xml.bind.*;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.StringList;
+import org.apache.lens.api.jaxb.LensJAXBContext;
 import org.apache.lens.api.metastore.ObjectFactory;
 
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-
+import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -134,12 +128,12 @@ public class Util {
 
   @SuppressWarnings("unchecked")
   public static <T> Object extractObject(String queryString, Class<T> c) throws
-      InstantiationException, IllegalAccessException {
+    InstantiationException, IllegalAccessException {
     JAXBContext jaxbContext = null;
     Unmarshaller unmarshaller = null;
     StringReader reader = new StringReader(queryString);
     try {
-      jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
+      jaxbContext = new LensJAXBContext(ObjectFactory.class) {};
       unmarshaller = jaxbContext.createUnmarshaller();
       return (T) ((JAXBElement<?>) unmarshaller.unmarshal(reader)).getValue();
     } catch (JAXBException e) {
@@ -150,12 +144,12 @@ public class Util {
 
   @SuppressWarnings("unchecked")
   public static <T> Object getObject(String queryString, Class<T> c) throws
-      InstantiationException, IllegalAccessException {
+    InstantiationException, IllegalAccessException {
     JAXBContext jaxbContext = null;
     Unmarshaller unmarshaller = null;
     StringReader reader = new StringReader(queryString);
     try {
-      jaxbContext = JAXBContext.newInstance(c);
+      jaxbContext = new LensJAXBContext(c);
       unmarshaller = jaxbContext.createUnmarshaller();
       return (T) unmarshaller.unmarshal(reader);
     } catch (JAXBException e) {
@@ -166,8 +160,8 @@ public class Util {
 
   @SuppressWarnings("unchecked")
   public static <T> String convertObjectToXml(T object, Class<T> clazz, String functionName) throws
-      SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException,
-      InvocationTargetException {
+    SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException,
+    InvocationTargetException {
     JAXBElement<T> root = null;
     StringWriter stringWriter = new StringWriter();
     ObjectFactory methodObject = new ObjectFactory();
@@ -185,7 +179,7 @@ public class Util {
   public static Marshaller getMarshaller(Class clazz) {
     JAXBContext jaxbContext = null;
     try {
-      jaxbContext = JAXBContext.newInstance(clazz);
+      jaxbContext = new LensJAXBContext(clazz);
       Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
       jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 

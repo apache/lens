@@ -40,6 +40,7 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.error.LensCommonErrorCode;
+import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.api.result.*;

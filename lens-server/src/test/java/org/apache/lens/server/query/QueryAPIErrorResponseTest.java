@@ -37,18 +37,16 @@ import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.metastore.XColumn;
-import org.apache.lens.api.metastore.XCube;
-import org.apache.lens.api.metastore.XDimAttribute;
-import org.apache.lens.api.metastore.XFactTable;
+import org.apache.lens.api.jaxb.LensJAXBContextResolver;
+import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.SupportedQuerySubmitOperations;
 import org.apache.lens.api.result.LensErrorTO;
-import org.apache.lens.api.result.LensJAXBContextResolver;
 import org.apache.lens.cube.error.ColUnAvailableInTimeRange;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensRequestContextInitFilter;
 import org.apache.lens.server.common.ErrorResponseExpectedData;
 import org.apache.lens.server.error.LensExceptionMapper;
+import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 import org.apache.lens.server.metastore.MetastoreResource;
 import org.apache.lens.server.session.SessionResource;
 
@@ -92,7 +90,8 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     enable(TestProperties.DUMP_ENTITY);
 
     return new ResourceConfig(LensRequestContextInitFilter.class, SessionResource.class, MetastoreResource.class,
-        QueryServiceResource.class, MultiPartFeature.class, LensExceptionMapper.class, LensJAXBContextResolver.class);
+      QueryServiceResource.class, MultiPartFeature.class, LensExceptionMapper.class, LensJAXBContextResolver.class,
+      LensRequestContextInitFilter.class, LensJAXBValidationExceptionMapper.class);
   }
 
   @Override
@@ -113,7 +112,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
     final String expectedErrMsg = "Session id not provided. Please provide a session id.";
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(SESSION_ID_NOT_PROVIDED.getValue(), expectedErrMsg,
-        MOCK_STACK_TRACE);
+      MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
@@ -128,7 +127,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
     final String expectedErrMsg = "Query is not provided, or it is empty or blank. Please provide a valid query.";
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(NULL_OR_EMPTY_OR_BLANK_QUERY.getValue(), expectedErrMsg,
-        MOCK_STACK_TRACE);
+      MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
@@ -143,10 +142,10 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
         Optional.of(INVALID_OPERATION));
 
     final String expectedErrMsg = "Provided Operation is not supported. Supported Operations are: "
-        + "[estimate, execute, explain, execute_with_timeout]";
+      + "[estimate, execute, explain, execute_with_timeout]";
 
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE, new SupportedQuerySubmitOperations());
+      expectedErrMsg, MOCK_STACK_TRACE, new SupportedQuerySubmitOperations());
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
@@ -163,7 +162,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     final String expectedErrMsg = "Internal Server Error.";
 
     LensErrorTO childError1 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE);
+      expectedErrMsg, MOCK_STACK_TRACE);
     LensErrorTO childError2 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
         expectedErrMsg, MOCK_STACK_TRACE);
     LensErrorTO childError3 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
@@ -173,7 +172,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
         expectedErrMsg, MOCK_STACK_TRACE, Arrays.asList(childError1, childError2, childError3));
 
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(Status.INTERNAL_SERVER_ERROR,
-        expectedLensErrorTO);
+      expectedLensErrorTO);
 
     expectedData.verify(response);
   }
@@ -187,7 +186,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
     final String expectedErrMsg = "Syntax Error: line 1:0 cannot recognize input near 'mock' '-' 'query'";
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(SYNTAX_ERROR.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE);
+      expectedErrMsg, MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
@@ -206,10 +205,10 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     DateTime queryTillThreeJan2014 = new DateTime(2014, 01, 03, 0, 0, DateTimeZone.UTC);
 
     final String expectedErrMsgSuffix = " can only be queried after Thursday, January 1, 2015 12:00:00 AM UTC and "
-        + "before Friday, January 30, 2015 11:00:00 PM UTC. Please adjust the selected time range accordingly.";
+      + "before Friday, January 30, 2015 11:00:00 PM UTC. Please adjust the selected time range accordingly.";
 
     testColUnAvailableInTimeRange(Optional.of(startDateOneJan2015),
-        Optional.of(endDateThirtyJan2015), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix);
+      Optional.of(endDateThirtyJan2015), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix);
   }
 
   @Test
@@ -224,10 +223,10 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     DateTime queryTillThreeJan2014 = new DateTime(2014, 01, 03, 0, 0, DateTimeZone.UTC);
 
     final String expectedErrMsgSuffix = " can only be queried after Thursday, January 1, 2015 12:00:00 AM UTC. "
-        + "Please adjust the selected time range accordingly.";
+      + "Please adjust the selected time range accordingly.";
 
     testColUnAvailableInTimeRange(Optional.of(startDateOneJan2015),
-        Optional.<DateTime>absent(), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix);
+      Optional.<DateTime>absent(), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix);
   }
 
   @Test
@@ -242,15 +241,15 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     DateTime queryTillThreeJan2016 = new DateTime(2016, 01, 03, 0, 0, DateTimeZone.UTC);
 
     final String expectedErrMsgSuffix = " can only be queried before Friday, January 30, 2015 11:00:00 PM UTC. "
-        + "Please adjust the selected time range accordingly.";
+      + "Please adjust the selected time range accordingly.";
 
     testColUnAvailableInTimeRange(Optional.<DateTime>absent(),
-        Optional.of(endDateThirtyJan2015), queryFromOneJan2016, queryTillThreeJan2016, expectedErrMsgSuffix);
+      Optional.of(endDateThirtyJan2015), queryFromOneJan2016, queryTillThreeJan2016, expectedErrMsgSuffix);
   }
 
   private void testColUnAvailableInTimeRange(@NonNull final Optional<DateTime> colStartDate,
-      @NonNull final Optional<DateTime> colEndDate, @NonNull DateTime queryFrom, @NonNull DateTime queryTill,
-      @NonNull final String expectedErrorMsgSuffix) throws DatatypeConfigurationException {
+    @NonNull final Optional<DateTime> colEndDate, @NonNull DateTime queryFrom, @NonNull DateTime queryTill,
+    @NonNull final String expectedErrorMsgSuffix) throws DatatypeConfigurationException {
 
     final WebTarget target = target();
     final String testDb = getRandomDbName();
@@ -279,7 +278,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
       DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd-HH");
       final String testQuery = "cube select " + testDimensionField + " from " + testCube + " where TIME_RANGE_IN(dt, "
-          + "\"" + dtf.print(queryFrom) + "\",\"" + dtf.print(queryTill) +"\")";
+        + "\"" + dtf.print(queryFrom) + "\",\"" + dtf.print(queryTill) + "\")";
 
       Response response = estimate(target, Optional.of(sessionId), Optional.of(testQuery));
 
@@ -289,10 +288,10 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       Long expecAvailableTill = colEndDate.isPresent() ? colEndDate.get().getMillis() : null;
 
       final ColUnAvailableInTimeRange expectedErrorPayload = new ColUnAvailableInTimeRange(testDimensionField,
-          expecAvailableFrom, expecAvailableTill);
+        expecAvailableFrom, expecAvailableTill);
 
       LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(COLUMN_UNAVAILABLE_IN_TIME_RANGE.getValue(),
-          expectedErrMsg, MOCK_STACK_TRACE, expectedErrorPayload, null);
+        expectedErrMsg, MOCK_STACK_TRACE, expectedErrorPayload, null);
       ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
       expectedData.verify(response);

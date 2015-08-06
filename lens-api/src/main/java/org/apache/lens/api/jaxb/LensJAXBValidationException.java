@@ -16,25 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.lens.api.error;
-
-/**
- * Common error codes. Expected to be used by all concerned modules.
+/*
+ *
  */
-public enum LensCommonErrorCode {
+package org.apache.lens.api.jaxb;
 
-  INTERNAL_SERVER_ERROR(1001),
+import javax.xml.bind.ValidationEvent;
 
-  INVALID_XML_ERROR(1002);
+import lombok.Data;
 
-  public int getValue() {
-    return this.errorCode;
-  }
-
-  private LensCommonErrorCode(final int code) {
-    this.errorCode = code;
-  }
-
-  private final int errorCode;
+@Data
+public class LensJAXBValidationException extends RuntimeException {
+  private final ValidationEvent event;
 }

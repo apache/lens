@@ -63,21 +63,20 @@ public class LensAPIResult<DATA> {
 
   public static <DATA> LensAPIResult<DATA> composedOf(final String apiVersion,
       final String id, @NonNull final DATA data) {
-
-    return new LensAPIResult<DATA>(apiVersion, id, data, null, Status.OK);
+    return composedOf(apiVersion, id, data, Status.OK);
   }
 
   public static <DATA> LensAPIResult<DATA> composedOf(final String apiVersion,
       final String id, @NonNull final DATA data, @NonNull final Status httpStatusCode) {
 
-    return new LensAPIResult<DATA>(apiVersion, id, data, null, httpStatusCode);
+    return new LensAPIResult<>(apiVersion, id, data, null, httpStatusCode);
   }
 
-  public static <PAYLOAD> LensAPIResult<NoResultData> composedOf(
+  public static LensAPIResult<NoResultData> composedOf(
       final String apiVersion, final String id, @NonNull final LensErrorTO lensErrorTO,
       @NonNull final Status httpStatusCode) {
 
-    return new LensAPIResult<NoResultData>(apiVersion, id, null, lensErrorTO, httpStatusCode);
+    return new LensAPIResult<>(apiVersion, id, null, lensErrorTO, httpStatusCode);
   }
 
   private LensAPIResult(final String apiVersion, final String id, final DATA data, final LensErrorTO lensErrorTO,
@@ -98,7 +97,7 @@ public class LensAPIResult<DATA> {
   }
 
   public boolean areValidStackTracesPresent() {
-    return (lensErrorTO == null) ? false : lensErrorTO.areValidStackTracesPresent();
+    return (lensErrorTO != null) && lensErrorTO.areValidStackTracesPresent();
   }
 
   public Status getHttpStatusCode() {

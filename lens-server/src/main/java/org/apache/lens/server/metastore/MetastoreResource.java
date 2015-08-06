@@ -70,6 +70,11 @@ public class MetastoreResource {
     }
   }
 
+  private void checkNonNullPartitionList(XPartitionList partitions) {
+    checkNonNullArgs("Partition List is null", partitions);
+    checkNonNullArgs("One partition is null", partitions.getPartition().toArray());
+  }
+
   /**
    * API to know if metastore service is up and running
    *
@@ -1105,7 +1110,7 @@ public class MetastoreResource {
     @PathParam("storage") String storage,
     XPartitionList partitions) {
     checkSessionId(sessionid);
-    checkNonNullArgs("Partition List is null", partitions);
+    checkNonNullPartitionList(partitions);
     try {
       return successOrPartialOrFailure(getSvc().addPartitionsToFactStorage(sessionid, factName, storage, partitions),
         partitions.getPartition().size());
@@ -1134,7 +1139,7 @@ public class MetastoreResource {
     @PathParam("storage") String storage,
     XPartitionList partitions) {
     checkSessionId(sessionid);
-    checkNonNullArgs("Partition List is null", partitions);
+    checkNonNullPartitionList(partitions);
     try {
       getSvc().updatePartitions(sessionid, factName, storage, partitions);
     } catch (LensException exc) {
@@ -1533,7 +1538,7 @@ public class MetastoreResource {
     @PathParam("storage") String storage,
     XPartitionList partitions) {
     checkSessionId(sessionid);
-    checkNonNullArgs("Partition list is null", partitions);
+    checkNonNullPartitionList(partitions);
     try {
       return successOrPartialOrFailure(getSvc().addPartitionsToDimStorage(sessionid, dimTableName, storage, partitions),
         partitions.getPartition().size());
@@ -1561,7 +1566,7 @@ public class MetastoreResource {
     @PathParam("storage") String storage,
     XPartitionList partitions) {
     checkSessionId(sessionid);
-    checkNonNullArgs("Partition list is null", partitions);
+    checkNonNullPartitionList(partitions);
     try {
       getSvc().updatePartitions(sessionid, dimTableName, storage, partitions);
     } catch (LensException exc) {

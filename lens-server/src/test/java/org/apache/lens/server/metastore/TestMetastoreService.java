@@ -36,7 +36,9 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.lens.api.*;
 import org.apache.lens.api.APIResult.Status;
+import org.apache.lens.api.error.LensCommonErrorCode;
 import org.apache.lens.api.metastore.*;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.server.LensJerseyTest;
@@ -1043,7 +1045,6 @@ public class TestMetastoreService extends LensJerseyTest {
     dimension.setExpressions(new XExpressions());
     dimension.setJoinChains(new XJoinChains());
     dimension.setProperties(new XProperties());
-
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("col1");
     xd1.setType("STRING");
@@ -2067,7 +2068,22 @@ public class TestMetastoreService extends LensJerseyTest {
         .queryParam("sessionid", lensSessionId).request(mediaType)
         .post(null);
       Assert.assertEquals(resp.getStatus(), 400);
-      // Add again, in batch this time
+
+      // Try adding in batch, but to a wrong endpoint
+      resp = target().path("metastore/facts/").path(table).path("storages/S2/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartitionList(toXPartitionList(xp))));
+      assertXMLError(resp);
+
+
+      // Try adding in batch, but provide just an XPartition
+      resp = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartition(xp)));
+      assertXMLError(resp);
+
+
+      // Add in batch
       partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
         .queryParam("sessionid", lensSessionId).request(mediaType)
         .post(Entity.xml(cubeObjectFactory.createXPartitionList(toXPartitionList(xp))),
@@ -2216,7 +2232,20 @@ public class TestMetastoreService extends LensJerseyTest {
         .queryParam("sessionid", lensSessionId).request(mediaType)
         .post(null);
       Assert.assertEquals(resp.getStatus(), 400);
-      // Add again, this time in batch
+
+      // Try adding in batch, but to a wrong endpoint
+      resp = target().path("metastore/dimtables/").path(table).path("storages/test/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartitionList(toXPartitionList(xp))));
+      assertXMLError(resp);
+
+      // Try adding in batch, but provide just an XPartition
+      resp = target().path("metastore/dimtables/").path(table).path("storages/test/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartition(xp)));
+      assertXMLError(resp);
+
+      // Add in batch
       partAddResult = target().path("metastore/dimtables/").path(table).path("storages/test/partitions")
         .queryParam("sessionid", lensSessionId).request(mediaType)
         .post(Entity.xml(cubeObjectFactory.createXPartitionList(toXPartitionList(xp))),
@@ -2252,6 +2281,14 @@ public class TestMetastoreService extends LensJerseyTest {
       setCurrentDatabase(prevDb);
       dropDatabase(DB);
     }
+  }
+
+  private void assertXMLError(Response resp) {
+    assertEquals(resp.getStatus(), 400);
+    LensAPIResult entity = resp.readEntity(LensAPIResult.class);
+    assertTrue(entity.isErrorResult());
+    assertEquals(entity.getLensErrorTO().getCode(), LensCommonErrorCode.INVALID_XML_ERROR.getValue());
+    assertTrue(entity.getLensErrorTO().getMessage().contains("unexpected element"));
   }
 
   private XPartitionList toXPartitionList(final XPartition... xps) {
