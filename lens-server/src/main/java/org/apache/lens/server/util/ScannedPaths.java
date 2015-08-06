@@ -23,7 +23,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -69,7 +68,8 @@ public class ScannedPaths implements Iterable<String> {
    */
   private List<String> getMatchedPaths(String path, String type) {
     List<String> finalPaths = new ArrayList<>();
-    FileSystem fs;
+    InputStream resourceOrderIStream = null;
+    FileSystem fs = null;
 
     try {
       fs = FileSystem.get(new URI(path), new Configuration());
@@ -85,7 +85,6 @@ public class ScannedPaths implements Iterable<String> {
          * CASE 2 : DIR provided in path
          **/
         Path resourceOrderFile = null;
-        InputStream resourceOrderIStream = null;
         FileStatus[] statuses;
         List<String> newMatches;
         List<String> resources;
@@ -99,8 +98,10 @@ public class ScannedPaths implements Iterable<String> {
           if (!fs.exists(resourceOrderFile)) {
             /** Get matched resources recursively for all files **/
             statuses = fs.globStatus(new Path(pt, "*"));
-            for (FileStatus st : statuses) {
-              finalPaths.add(st.getPath().toUri().toString());
+            if (statuses != null) {
+              for (FileStatus st : statuses) {
+                finalPaths.add(st.getPath().toUri().toString());
+              }
             }
           } else {
             resourceFileFound = true;
@@ -135,10 +136,12 @@ public class ScannedPaths implements Iterable<String> {
          * CASE 3 : REGEX provided in path
          * */
         FileStatus[] statuses = fs.globStatus(pt);
-        for (FileStatus st : statuses) {
-          List<String> newMatches = getMatchedPaths(st.getPath().toString(), type);
-          if (newMatches != null) {
-            finalPaths.addAll(newMatches);
+        if (statuses != null) {
+          for (FileStatus st : statuses) {
+            List<String> newMatches = getMatchedPaths(st.getPath().toString(), type);
+            if (newMatches != null) {
+              finalPaths.addAll(newMatches);
+            }
           }
         }
       }
@@ -146,11 +149,11 @@ public class ScannedPaths implements Iterable<String> {
       filterDirsAndJarType(fs, finalPaths);
 
     } catch (FileNotFoundException fex) {
-      log.error("File not found while scanning path.", fex);
-    } catch (URISyntaxException | IOException ex) {
-      log.error("Exception while initializing PathScanner.", ex);
+      log.error("File not found while scanning path. Path: {}, Type: {}", path, type, fex);
     } catch (Exception e) {
-      log.error("Exception while initializing PathScanner.", e);
+      log.error("Exception while initializing PathScanner. Path: {}, Type: {}", path, type, e);
+    } finally {
+      IOUtils.closeQuietly(resourceOrderIStream);
     }
 
     return finalPaths;
@@ -174,7 +177,7 @@ public class ScannedPaths implements Iterable<String> {
         }
       }
     } catch (IOException e) {
-      log.error("Exception while initializing filtering dirs.", e);
+      log.error("Exception while initializing filtering dirs", e);
     }
   }
 }
