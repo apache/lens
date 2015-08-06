@@ -191,12 +191,31 @@
         <role>Committer</role>
       </roles>
     </developer>
-
+    <developer>
+      <id>arshadmatin</id>
+      <email>arshadmatin@apache.org</email>
+      <name>Arshad Matin</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
     <developer>
       <id>gunther</id>
       <email>gunther@apache.org</email>
       <name>Gunther Hagleitner</name>
       <timezone>-8</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>himanshugahlaut</id>
+      <email>himanshugahlaut@apache.org</email>
+      <name>Himanshu Gahlaut</name>
+      <timezone>+5.5</timezone>
       <roles>
         <role>PPMC</role>
         <role>Committer</role>
@@ -226,6 +245,16 @@
       <id>prongs</id>
       <email>prongs@apache.org</email>
       <name>Rajat Khandelwal</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>raju</id>
+      <email>raju@apache.org</email>
+      <name>Raju Bairishetti</name>
       <timezone>+5.5</timezone>
       <roles>
         <role>PPMC</role>
@@ -283,19 +312,9 @@
       </roles>
     </developer>
     <developer>
-      <id>himanshugahlaut</id>
-      <email>himanshugahlaut@apache.org</email>
-      <name>Himanshu Gahlaut</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>arshadmatin</id>
-      <email>arshadmatin@apache.org</email>
-      <name>Arshad Matin</name>
+      <id>yash</id>
+      <email>yash@apache.org</email>
+      <name>Yash Sharma</name>
       <timezone>+5.5</timezone>
       <roles>
         <role>PPMC</role>
