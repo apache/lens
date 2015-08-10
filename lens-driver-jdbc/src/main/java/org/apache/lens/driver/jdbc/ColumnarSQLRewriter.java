@@ -116,6 +116,15 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /** The map aliases. */
   private final Map<String, String> mapAliases = new HashMap<String, String>();
 
+  /** The table to alias map. */
+  private final Map<String, String> tableToAliasMap = new HashMap<String, String>();
+
+  /** The tables to accessed column map. */
+  private final Map<String, HashSet<String>> tableToAccessedColMap = new HashMap<String, HashSet<String>>();
+
+  /** The dimension table to subquery map. */
+  private final Map<String, String> dimTableToSubqueryMap = new HashMap<String, String>();
+
   /** The where tree. */
   private String whereTree;
 
@@ -257,6 +266,11 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     if (tree.getChildCount() > 1) {
       table = table + " " + tree.getChild(1).getText();
     }
+    String[] tabSplit = table.split(" +");
+
+    if (tabSplit.length == 2) {
+      tableToAliasMap.put(tabSplit[0], tabSplit[1]);
+    }
     return table;
   }
 
@@ -283,6 +297,20 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       ASTNode right = (ASTNode) node.getChild(1);
 
       rightTable = getTableFromTabRefNode(right);
+      getAllDimColumns(fromAST);
+      getAllDimColumns(selectAST);
+      getAllDimColumns(whereAST);
+
+      buildDimSubqueries();
+      // Get the table from input db.table alias.
+      // If alias provided put the same alias in the subquery.
+      String[] tabSplit = rightTable.split(" +");
+      String subqueryForTable = "";
+      if (tabSplit.length == 2) {
+        subqueryForTable = dimTableToSubqueryMap.get(tabSplit[0]) + " " + tabSplit[1];
+      } else {
+        subqueryForTable = dimTableToSubqueryMap.get(tabSplit[0]);
+      }
       String joinType = "";
       String joinFilter = "";
       String joinToken = node.getToken().getText();
@@ -307,7 +335,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         // User has specified a join condition for filter pushdown.
         joinFilter = HQLParser.getString((ASTNode) node.getChild(2));
       }
-      joinList.add(joinType + (" ") + (rightTable) + (" on ") + (joinFilter) + (" "));
+      joinList.add(joinType + (" ") + (subqueryForTable) + (" on ") + (joinFilter) + (" "));
     }
 
     for (int i = 0; i < node.getChildCount(); i++) {
@@ -491,6 +519,62 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     if (selectAST != null) {
       getFactKeysFromNode(selectAST);
+    }
+  }
+
+  /**
+   *  Get all columns used for dimmension tables
+   * @param node
+   */
+  public void getAllDimColumns(ASTNode node) {
+
+    if (node == null) {
+      log.debug("Input AST is null ");
+      return;
+    }
+    // Assuming column is specified with table.column format
+    if (node.getToken().getType() == HiveParser.DOT) {
+      String table = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).toString();
+      String column = node.getChild(1).toString();
+
+      Iterator iterator = tableToAliasMap.keySet().iterator();
+      while (iterator.hasNext()) {
+        String tab = (String) iterator.next();
+        String alias = tableToAliasMap.get(tab);
+
+        if ((table.equals(tab) || table.equals(alias)) && column != null) {
+          HashSet<String> cols;
+          if (!tableToAccessedColMap.containsKey(tab)) {
+            cols = new HashSet<String>();
+            cols.add(column);
+            tableToAccessedColMap.put(tab, cols);
+          } else {
+            cols = tableToAccessedColMap.get(tab);
+            if (!cols.contains(column)) {
+              cols.add(column);
+            }
+          }
+        }
+      }
+    }
+    for (int i = 0; i < node.getChildCount(); i++) {
+      ASTNode child = (ASTNode) node.getChild(i);
+      getAllDimColumns(child);
+    }
+  }
+
+  /**
+   * Build dimension table subqueries
+   */
+  public void buildDimSubqueries() {
+    Iterator iterator = tableToAccessedColMap.keySet().iterator();
+    while (iterator.hasNext()) {
+      StringBuilder query = new StringBuilder();
+      String tab = (String) iterator.next();
+      HashSet<String> cols = tableToAccessedColMap.get(tab);
+      query.append("(").append("select ").append(StringUtils.join(cols, ","))
+          .append(" from ").append(tab).append(")");
+      dimTableToSubqueryMap.put(tab, query.toString());
     }
   }
 
@@ -763,6 +847,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     factFilterPush.setLength(0);
     rightFilter.clear();
     joinCondition.setLength(0);
+    tableToAliasMap.clear();
+    tableToAccessedColMap.clear();
+    dimTableToSubqueryMap.clear();
 
     selectTree = null;
     selectAST = null;
