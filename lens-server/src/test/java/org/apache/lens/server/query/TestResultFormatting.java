@@ -46,14 +46,9 @@ import org.apache.lens.server.common.TestResourceFile;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.*;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -143,7 +138,7 @@ public class TestResultFormatting extends LensJerseyTest {
   // test with execute async post with result formatter, get query, get results
 
   /**
-   * Test result formatter hdf spersistent result.
+   * Test result formatter hdfs persistent result.
    *
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
@@ -214,7 +209,7 @@ public class TestResultFormatting extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
     QueryHandle handle = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     Assert.assertNotNull(handle);
 

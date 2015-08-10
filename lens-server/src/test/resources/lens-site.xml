@@ -121,7 +121,7 @@
   </property>
 
   <property>
-    <!-- Immediately insert all finished queries to DB -->
+    <!-- Keep only the last query in memory -->
     <name>lens.server.max.finished.queries</name>
     <value>1</value>
   </property>
