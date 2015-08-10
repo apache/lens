@@ -19,19 +19,17 @@
 package org.apache.lens.server.session;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
 import java.util.*;
 
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.util.ScannedPaths;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -69,16 +67,6 @@ public class DatabaseResourceService extends AbstractService {
     getMetrics().incrCounter(DatabaseResourceService.class, counter);
   }
 
-  /**
-   * Gets counter value.
-   *
-   * @param counter the counter
-   */
-  private long getCounter(String counter) {
-    return getMetrics().getCounter(DatabaseResourceService.class, counter);
-  }
-
-
 
   public DatabaseResourceService(String name) {
     super(name);
@@ -87,8 +75,8 @@ public class DatabaseResourceService extends AbstractService {
   @Override
   public synchronized void init(HiveConf hiveConf) {
     super.init(hiveConf);
-    classLoaderCache = new HashMap<String, ClassLoader>();
-    dbResEntryMap = new HashMap<String, List<LensSessionImpl.ResourceEntry>>();
+    classLoaderCache = new HashMap<>();
+    dbResEntryMap = new HashMap<>();
   }
 
   @Override
@@ -159,20 +147,7 @@ public class DatabaseResourceService extends AbstractService {
 
   private void findResourcesInDir(FileSystem serverFs, String database, Path dbDirPath) throws IOException {
     // Check if order file is present in the directory
-    List<String> jars = null;
-    Path jarOrderFile = new Path(dbDirPath, "jar_order");
-    if (serverFs.exists(jarOrderFile)) {
-      InputStream jarOrderInputStream = null;
-      try {
-        jarOrderInputStream = serverFs.open(jarOrderFile);
-        jars = IOUtils.readLines(jarOrderInputStream, Charset.forName("UTF-8"));
-      } catch (IOException ioexc) {
-        log.error("Unable to load jar order file for {}", dbDirPath, ioexc);
-      } finally {
-        IOUtils.closeQuietly(jarOrderInputStream);
-      }
-    }
-
+    List<String> jars = new ScannedPaths(dbDirPath, "jar").getFinalPaths();
     if (jars != null && !jars.isEmpty()) {
       log.info("{} picking jar in jar_order: {}", database, jars);
       for (String jar : jars) {
@@ -212,7 +187,7 @@ public class DatabaseResourceService extends AbstractService {
     synchronized (dbResEntryMap) {
       List<LensSessionImpl.ResourceEntry> dbEntryList = dbResEntryMap.get(dbName);
       if (dbEntryList == null) {
-        dbEntryList = new ArrayList<LensSessionImpl.ResourceEntry>();
+        dbEntryList = new ArrayList<>();
         dbResEntryMap.put(dbName, dbEntryList);
       }
       dbEntryList.add(entry);
@@ -266,11 +241,9 @@ public class DatabaseResourceService extends AbstractService {
       URL[] preUrls = urlLoader.getURLs();
 
       // Add to set to remove duplicate additions
-      Set<URL> newUrls = new LinkedHashSet<URL>();
+      Set<URL> newUrls = new LinkedHashSet<>();
       // New class loader = URLs of DB jars + argument jars
-      for (URL url : preUrls) {
-        newUrls.add(url);
-      }
+      Collections.addAll(newUrls, preUrls);
 
       for (LensSessionImpl.ResourceEntry res : resources) {
         try {
@@ -308,8 +281,8 @@ public class DatabaseResourceService extends AbstractService {
 
   /**
    * Get class loader of a database added with database specific jars
-   * @param database
-   * @return
+   * @param database database
+   * @return class loader from cache of classloaders for each db
    * @throws LensException
    */
   protected ClassLoader getClassLoader(String database) throws LensException {
@@ -318,7 +291,7 @@ public class DatabaseResourceService extends AbstractService {
 
   /**
    * Get resources added statically to the database
-   * @param database
+   * @param database db
    * @return resources added to the database, or null if no resources are noted for this database
    */
   public Collection<LensSessionImpl.ResourceEntry> getResourcesForDatabase(String database) {
