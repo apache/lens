@@ -36,7 +36,7 @@ public class ESResultSet extends InMemoryResultSet {
   final Iterator<ResultRow> resultSetIterator;
   @NonNull
   final LensResultSetMetadata resultSetMetadata;
-  final int size;
+  final Integer size;
 
   public ESResultSet(int size, final Iterable<ResultRow> resultSetIterable, final LensResultSetMetadata metadata) {
     this.size = size;
@@ -60,7 +60,7 @@ public class ESResultSet extends InMemoryResultSet {
   }
 
   @Override
-  public int size() {
+  public Integer size() {
     return size;
   }
 

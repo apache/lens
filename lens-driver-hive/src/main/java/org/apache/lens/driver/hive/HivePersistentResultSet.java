@@ -59,8 +59,13 @@ public class HivePersistentResultSet extends PersistentResultSet {
    * @see org.apache.lens.server.api.driver.LensResultSet#size()
    */
   @Override
-  public int size() throws LensException {
-    return -1;
+  public Integer size() throws LensException {
+    return null;
+  }
+
+  @Override
+  public Long fileSize() throws LensException {
+    return null;
   }
 
   @Override

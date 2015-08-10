@@ -127,17 +127,20 @@ public class LensQueryCommands extends BaseLensCommand {
           numRows++;
           b.append("\n");
         }
+        b.append(numRows + " rows ");
       } else {
         PersistentQueryResult temp = (PersistentQueryResult) r;
-        numRows = temp.getNumRows();
-        b.append("Results of query stored at : ").append(temp.getPersistedURI()).append(" ");
+        b.append("Results of query stored at : ").append(temp.getPersistedURI()).append("  ");
+        if (null != temp.getNumRows()) {
+          b.append(temp.getNumRows() + " rows ");
+        }
       }
     }
 
     if (rs.getQuery() != null) {
       long submissionTime = rs.getQuery().getSubmissionTime();
       long endTime = rs.getQuery().getFinishTime();
-      b.append(numRows).append(" rows process in (").append(endTime > 0 ? ((endTime - submissionTime) / 1000) : 0)
+      b.append("processed in (").append(endTime > 0 ? ((endTime - submissionTime) / 1000) : 0)
         .append(") seconds.\n");
     }
     return b.toString();

@@ -33,7 +33,12 @@ public abstract class AbstractFileFormatter extends AbstractOutputFormatter impl
   /**
    * The num rows.
    */
-  protected int numRows = 0;
+  protected Integer numRows;
+
+  /**
+   * The file size.
+   */
+  protected Long fileSize;
 
   /**
    * The final path.
@@ -53,8 +58,13 @@ public abstract class AbstractFileFormatter extends AbstractOutputFormatter impl
   }
 
   @Override
-  public int getNumRows() {
+  public Integer getNumRows() {
     return numRows;
+  }
+
+  @Override
+  public Long getFileSize() {
+    return fileSize;
   }
 
   /*

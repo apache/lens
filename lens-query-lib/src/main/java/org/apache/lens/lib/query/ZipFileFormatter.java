@@ -93,6 +93,7 @@ public class ZipFileFormatter extends AbstractFileFormatter {
   public void setupOutputs() throws IOException {
     resultFileExtn = ctx.getOuptutFileExtn();
     maxSplitRows = ctx.getMaxResultSplitRows();
+    numRows = 0;
 
     String pathStr = ctx.getResultSetParentDir();
     if (StringUtils.isBlank(pathStr)) {
@@ -131,6 +132,7 @@ public class ZipFileFormatter extends AbstractFileFormatter {
     close();
     fs.rename(tmpPath, finalPath);
     finalPath = finalPath.makeQualified(fs);
+    fileSize = fs.getFileStatus(finalPath).getLen();
     ctx.setResultSetPath(getFinalOutputPath());
   }
 

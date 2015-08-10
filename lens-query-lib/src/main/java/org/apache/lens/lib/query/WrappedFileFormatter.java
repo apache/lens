@@ -94,8 +94,13 @@ public abstract class WrappedFileFormatter extends AbstractOutputFormatter {
   }
 
   @Override
-  public int getNumRows() {
+  public Integer getNumRows() {
     return formatter.getNumRows();
+  }
+
+  @Override
+  public Long getFileSize() {
+    return formatter.getFileSize();
   }
 
   /*

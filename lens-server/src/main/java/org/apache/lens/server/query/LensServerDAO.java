@@ -84,8 +84,9 @@ public class LensServerDAO {
     String sql = "CREATE TABLE if not exists finished_queries (handle varchar(255) not null unique,"
       + "userquery varchar(10000) not null," + "submitter varchar(255) not null," + "starttime bigint, "
       + "endtime bigint," + "result varchar(255)," + "status varchar(255), " + "metadata varchar(100000), "
-      + "rows int, " + "errormessage varchar(10000), " + "driverstarttime bigint, " + "driverendtime bigint, "
-      + "metadataclass varchar(10000)," + "queryname varchar(255)," + "submissiontime bigint" + ")";
+      + "rows int, " + "filesize bigint, " + "errormessage varchar(10000), " + "driverstarttime bigint, "
+      + "driverendtime bigint, " + "metadataclass varchar(10000), " + "queryname varchar(255), "
+      + "submissiontime bigint" + ")";
     try {
       QueryRunner runner = new QueryRunner(ds);
       runner.update(sql);
@@ -107,16 +108,16 @@ public class LensServerDAO {
       // The expected case
       Connection conn = null;
       String sql = "insert into finished_queries (handle, userquery,submitter,"
-        + "starttime,endtime,result,status,metadata,rows,"
+        + "starttime,endtime,result,status,metadata,rows,filesize,"
         + "errormessage,driverstarttime,driverendtime, metadataclass, queryname, submissiontime)"
-        + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       try {
         conn = getConnection();
         QueryRunner runner = new QueryRunner();
         runner.update(conn, sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getStartTime(),
           query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(), query.getRows(),
-          query.getErrorMessage(), query.getDriverStartTime(), query.getDriverEndTime(), query.getMetadataClass(),
-          query.getQueryName(), query.getSubmissionTime());
+          query.getFileSize(), query.getErrorMessage(), query.getDriverStartTime(), query.getDriverEndTime(),
+          query.getMetadataClass(), query.getQueryName(), query.getSubmissionTime());
         conn.commit();
       } finally {
         DbUtils.closeQuietly(conn);

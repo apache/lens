@@ -79,9 +79,15 @@ public interface QueryOutputFormatter {
   /**
    * Get total number of rows in result.
    *
-   * @return Total number of rows, return -1, if not known
+   * @return Total number of rows, return null, if not known
    */
-  int getNumRows();
+  Integer getNumRows();
+
+  /**
+   * Get size of the resultset file.
+   * @return Total number of rows, return null, if not known
+   */
+  Long getFileSize();
 
   /**
    * Get resultset metadata

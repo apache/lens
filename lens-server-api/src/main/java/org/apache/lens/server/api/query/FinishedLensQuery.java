@@ -121,7 +121,14 @@ public class FinishedLensQuery {
    */
   @Getter
   @Setter
-  private int rows;
+  private Integer rows;
+
+  /**
+   * The file size.
+   */
+  @Getter
+  @Setter
+  private Long fileSize;
 
   /**
    * The error message.

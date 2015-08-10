@@ -802,6 +802,31 @@ public class TestQueryService extends LensJerseyTest {
   }
 
   /**
+   * Returns the size of result set file when result path is a file, null otherwise
+   *
+   * @param resultset
+   * @param handle
+   * @param isDir
+   * @return
+   * @throws IOException
+   */
+  public static Long readResultFileSize(PersistentQueryResult resultset, QueryHandle handle, boolean isDir)
+    throws IOException {
+    assertTrue(resultset.getPersistedURI().contains(handle.toString()));
+    Path actualPath = new Path(resultset.getPersistedURI());
+    FileSystem fs = actualPath.getFileSystem(new Configuration());
+    FileStatus fileStatus = fs.getFileStatus(actualPath);
+    if (fileStatus.isDir()) {
+      assertTrue(isDir);
+      return null;
+    } else {
+      assertFalse(isDir);
+      return fileStatus.getLen();
+    }
+  }
+
+
+  /**
    * Adds the rows from file.
    *
    * @param actualRows the actual rows
@@ -841,6 +866,11 @@ public class TestQueryService extends LensJerseyTest {
     throws IOException {
     List<String> actualRows = readResultSet(resultset, handle, isDir);
     validatePersistentResult(actualRows);
+    if (!isDir) {
+      assertEquals(resultset.getNumRows().intValue(), actualRows.size());
+    }
+    Long fileSize = readResultFileSize(resultset, handle, isDir);
+    assertEquals(resultset.getFileSize(), fileSize);
   }
 
   static void validatePersistentResult(List<String> actualRows) {

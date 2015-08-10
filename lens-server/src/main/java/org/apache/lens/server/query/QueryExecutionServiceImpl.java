@@ -913,11 +913,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
               if (set != null && PersistentResultSet.class.isAssignableFrom(set.getClass())) {
                 LensResultSetMetadata metadata = set.getMetadata();
                 String outputPath = ((PersistentResultSet) set).getOutputPath();
-                int rows = set.size();
+                Long fileSize = ((PersistentResultSet) set).fileSize();
+                Integer rows = set.size();
                 finishedQuery.setMetadataClass(metadata.getClass().getName());
                 finishedQuery.setResult(outputPath);
                 finishedQuery.setMetadata(MAPPER.writeValueAsString(metadata));
                 finishedQuery.setRows(rows);
+                finishedQuery.setFileSize(fileSize);
               }
             }
           }
@@ -1419,7 +1421,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       try {
         Class<LensResultSetMetadata> mdKlass = (Class<LensResultSetMetadata>) Class.forName(query.getMetadataClass());
         return new LensPersistentResult(MAPPER.readValue(query.getMetadata(), mdKlass), query.getResult(),
-          query.getRows());
+          query.getRows(), query.getFileSize());
       } catch (Exception e) {
         throw new LensException(e);
       }
@@ -1451,7 +1453,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
                 new LensPersistentResult(
                   ctx.getQueryOutputFormatter().getMetadata(),
                   ctx.getQueryOutputFormatter().getFinalOutputPath(),
-                  ctx.getQueryOutputFormatter().getNumRows()));
+                  ctx.getQueryOutputFormatter().getNumRows(),
+                  ctx.getQueryOutputFormatter().getFileSize()));
           } else if (allQueries.get(queryHandle).isResultAvailableInDriver()) {
             resultSet = allQueries.get(queryHandle).getSelectedDriver().fetchResultSet(allQueries.get(queryHandle));
             resultSets.put(queryHandle, resultSet);

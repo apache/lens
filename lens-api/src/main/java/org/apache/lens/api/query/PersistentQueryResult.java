@@ -60,5 +60,13 @@ public class PersistentQueryResult extends QueryResult {
    */
   @XmlElement
   @Getter
-  private int numRows;
+  private Integer numRows;
+
+  /**
+   * The file size.
+   */
+  @XmlElement
+  @Getter
+  private Long fileSize;
+
 }

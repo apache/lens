@@ -32,7 +32,7 @@ public abstract class LensResultSet {
    * @return The size if available, -1 if not available.
    * @throws LensException the lens exception
    */
-  public abstract int size() throws LensException;
+  public abstract Integer size() throws LensException;
 
   /**
    * Get the result set metadata

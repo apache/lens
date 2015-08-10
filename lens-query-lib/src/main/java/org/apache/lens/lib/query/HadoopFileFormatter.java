@@ -60,6 +60,7 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
     try {
       rowWriter = LensFileOutputFormat.createRecordWriter(ctx.getConf(), tmpWorkPath, Reporter.NULL,
         ctx.getCompressOutput(), ctx.getOuptutFileExtn(), ctx.getResultEncoding());
+      numRows=0;
     } catch (IOException e) {
       throw new IllegalArgumentException("Could not create tmp path");
     }
@@ -119,6 +120,7 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
       finalPath = finalPath.makeQualified(fs);
       fs.rename(rowWriter.getTmpPath(), finalPath);
       ctx.setResultSetPath(finalPath.toString());
+      fileSize = fs.getFileStatus(finalPath).getLen();
     }
   }
 

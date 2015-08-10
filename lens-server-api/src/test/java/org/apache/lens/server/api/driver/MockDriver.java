@@ -249,9 +249,15 @@ public class MockDriver implements LensDriver {
     return new PersistentResultSet() {
 
       @Override
-      public int size() throws LensException {
+      public Integer size() throws LensException {
         // TODO Auto-generated method stub
-        return 0;
+        return null;
+      }
+
+      @Override
+      public Long fileSize() throws LensException {
+        // TODO Auto-generated method stub
+        return null;
       }
 
       @Override
@@ -295,9 +301,9 @@ public class MockDriver implements LensDriver {
     return new InMemoryResultSet() {
 
       @Override
-      public int size() throws LensException {
+      public Integer size() throws LensException {
         // TODO Auto-generated method stub
-        return 0;
+        return null;
       }
 
       @Override
