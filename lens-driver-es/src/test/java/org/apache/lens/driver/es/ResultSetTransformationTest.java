@@ -161,14 +161,14 @@ public class ResultSetTransformationTest extends ESDriverTest {
           + "                  \"key\": \"g2v1\",\n"
           + "                  \"doc_count\": 10432335,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 1\n"
+          + "                    \"value\": 1.0\n"
           + "                  }\n"
           + "                },\n"
           + "                {\n"
           + "                  \"key\": \"g2v2\",\n"
           + "                  \"doc_count\": 2,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 2\n"
+          + "                    \"value\": 2.0\n"
           + "                  }\n"
           + "                }\n"
           + "              ]\n"
@@ -185,7 +185,7 @@ public class ResultSetTransformationTest extends ESDriverTest {
           + "                  \"key\": \"g2v3\",\n"
           + "                  \"doc_count\": 3,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 3\n"
+          + "                    \"value\": 3.0\n"
           + "                  }\n"
           + "                }\n"
           + "              ]\n"
@@ -201,9 +201,9 @@ public class ResultSetTransformationTest extends ESDriverTest {
       new ESResultSet(
         3,
         Lists.newArrayList(
-          new ResultRow(Lists.<Object>newArrayList("g1v1", "g2v1", "1")),
-          new ResultRow(Lists.<Object>newArrayList("g1v1", "g2v2", "2")),
-          new ResultRow(Lists.<Object>newArrayList("g1v2", "g2v3", "3"))
+          new ResultRow(Lists.<Object>newArrayList("g1v1", "g2v1", 1.0)),
+          new ResultRow(Lists.<Object>newArrayList("g1v1", "g2v2", 2.0)),
+          new ResultRow(Lists.<Object>newArrayList("g1v2", "g2v3", 3.0))
         ),
         new LensResultSetMetadata() {
           @Override
@@ -211,7 +211,7 @@ public class ResultSetTransformationTest extends ESDriverTest {
             return Lists.newArrayList(
               new ColumnDescriptor("col1", "", new TypeDescriptor(Type.STRING_TYPE), 0),
               new ColumnDescriptor("col2", "", new TypeDescriptor(Type.STRING_TYPE), 1),
-              new ColumnDescriptor("aggr_col", "", new TypeDescriptor(Type.STRING_TYPE), 2)
+              new ColumnDescriptor("aggr_col", "", new TypeDescriptor(Type.DOUBLE_TYPE), 2)
             );
           }
         })
@@ -252,14 +252,14 @@ public class ResultSetTransformationTest extends ESDriverTest {
           + "                  \"key\": \"g2v1\",\n"
           + "                  \"doc_count\": 10432335,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 1\n"
+          + "                    \"value\": 1.0\n"
           + "                  }\n"
           + "                },\n"
           + "                {\n"
           + "                  \"key\": \"g2v2\",\n"
           + "                  \"doc_count\": 2,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 2\n"
+          + "                    \"value\": 2.0\n"
           + "                  }\n"
           + "                }\n"
           + "              ]\n"
@@ -276,7 +276,7 @@ public class ResultSetTransformationTest extends ESDriverTest {
           + "                  \"key\": \"g2v3\",\n"
           + "                  \"doc_count\": 3,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 3\n"
+          + "                    \"value\": 3.0\n"
           + "                  }\n"
           + "                }\n"
           + "              ]\n"
@@ -292,16 +292,16 @@ public class ResultSetTransformationTest extends ESDriverTest {
       new ESResultSet(
         3,
         Lists.newArrayList(
-          new ResultRow(Lists.<Object>newArrayList("g1v1", "1", "g2v1")),
-          new ResultRow(Lists.<Object>newArrayList("g1v1", "2", "g2v2")),
-          new ResultRow(Lists.<Object>newArrayList("g1v2", "3", "g2v3"))
+          new ResultRow(Lists.<Object>newArrayList("g1v1", 1.0, "g2v1")),
+          new ResultRow(Lists.<Object>newArrayList("g1v1", 2.0, "g2v2")),
+          new ResultRow(Lists.<Object>newArrayList("g1v2", 3.0, "g2v3"))
         ),
         new LensResultSetMetadata() {
           @Override
           public List<ColumnDescriptor> getColumns() {
             return Lists.newArrayList(
               new ColumnDescriptor("col1", "", new TypeDescriptor(Type.STRING_TYPE), 0),
-              new ColumnDescriptor("aggr_col", "", new TypeDescriptor(Type.STRING_TYPE), 1),
+              new ColumnDescriptor("aggr_col", "", new TypeDescriptor(Type.DOUBLE_TYPE), 1),
               new ColumnDescriptor("col2", "", new TypeDescriptor(Type.STRING_TYPE), 2)
             );
           }
@@ -419,14 +419,14 @@ public class ResultSetTransformationTest extends ESDriverTest {
           + "                  \"key\": \"g2v1\",\n"
           + "                  \"doc_count\": 10432335,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 1\n"
+          + "                    \"value\": 1.0\n"
           + "                  }\n"
           + "                },\n"
           + "                {\n"
           + "                  \"key\": \"g2v2\",\n"
           + "                  \"doc_count\": 2,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 2\n"
+          + "                    \"value\": 2.0\n"
           + "                  }\n"
           + "                }\n"
           + "              ]\n"
@@ -443,7 +443,7 @@ public class ResultSetTransformationTest extends ESDriverTest {
           + "                  \"key\": \"g2v3\",\n"
           + "                  \"doc_count\": 3,\n"
           + "                  \"aggr_col\": {\n"
-          + "                    \"value\": 3\n"
+          + "                    \"value\": 3.0\n"
           + "                  }\n"
           + "                }\n"
           + "              ]\n"
@@ -459,9 +459,9 @@ public class ResultSetTransformationTest extends ESDriverTest {
       new ESResultSet(
         3,
         Lists.newArrayList(
-          new ResultRow(Lists.<Object>newArrayList("g1v1", "g2v1", "1")),
-          new ResultRow(Lists.<Object>newArrayList("g1v1", "g2v2", "2")),
-          new ResultRow(Lists.<Object>newArrayList("g1v2", "g2v3", "3"))
+          new ResultRow(Lists.<Object>newArrayList("g1v1", "g2v1", 1.0)),
+          new ResultRow(Lists.<Object>newArrayList("g1v1", "g2v2", 2.0)),
+          new ResultRow(Lists.<Object>newArrayList("g1v2", "g2v3", 3.0))
         ),
         new LensResultSetMetadata() {
           @Override
@@ -469,7 +469,7 @@ public class ResultSetTransformationTest extends ESDriverTest {
             return Lists.newArrayList(
               new ColumnDescriptor("col1", "", new TypeDescriptor(Type.STRING_TYPE), 0),
               new ColumnDescriptor("col2", "", new TypeDescriptor(Type.STRING_TYPE), 1),
-              new ColumnDescriptor("aggr_col", "", new TypeDescriptor(Type.STRING_TYPE), 2)
+              new ColumnDescriptor("aggr_col", "", new TypeDescriptor(Type.DOUBLE_TYPE), 2)
             );
           }
         })

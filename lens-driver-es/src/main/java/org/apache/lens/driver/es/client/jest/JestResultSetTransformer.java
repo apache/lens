@@ -34,6 +34,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import lombok.NonNull;
 
 /**
@@ -78,16 +79,23 @@ public abstract class JestResultSetTransformer {
         final String key = entry.getKey();
         if (key.equals(ResultSetConstants.KEY_STRING)) {
           Validate.isTrue(keyCol != null, "Key not available");
-          currentPath.set(schema.indexOf(keyCol), entry.getValue().getAsString());
+          final int index = columnAliases.indexOf(keyCol);
+          currentPath.set(
+            index,
+            getTypedValue(index, entry.getValue())
+          );
           length++;
-          if (length == schema.size()) {
+          if (length == columnAliases.size()) {
             rows.add(new ResultRow(Lists.newArrayList(currentPath)));
           }
         } else if (element instanceof JsonObject && ((JsonObject) element).get(ResultSetConstants.VALUE_KEY) != null) {
-          currentPath.set(schema.indexOf(key),
-            ((JsonObject) element).get(ResultSetConstants.VALUE_KEY).getAsString());
+          final int index = columnAliases.indexOf(key);
+          currentPath.set(
+            index,
+            getTypedValue(index, ((JsonObject) element).get(ResultSetConstants.VALUE_KEY))
+          );
           length++;
-          if (length == schema.size()) {
+          if (length == columnAliases.size()) {
             rows.add(new ResultRow(Lists.newArrayList(currentPath)));
           }
         } else if (element instanceof JsonObject) {
@@ -113,7 +121,7 @@ public abstract class JestResultSetTransformer {
       return new ESResultSet(
         rows.size(),
         rows,
-        getMetaData(schema)
+        getMetaData(columnAliases)
       );
     }
   }
@@ -142,30 +150,34 @@ public abstract class JestResultSetTransformer {
             .getAsJsonObject()
             .getAsJsonObject(ResultSetConstants.FIELDS_KEY)
             .entrySet()) {
+          int index = columnNames.indexOf(entry.getKey());
           objects.set(
-            selectedColumns.indexOf(entry.getKey())
-            , entry.getValue().getAsString()
+            index
+            , getTypedValue(index, entry.getValue().getAsJsonArray().get(0))
           );
         }
         rows.add(new ResultRow(objects));
       }
-      return new ESResultSet(rows.size(), rows, getMetaData(schema));
+      return new ESResultSet(rows.size(), rows, getMetaData(columnAliases));
     }
-
 
   }
 
   @NonNull
   protected final JsonObject result;
   @NonNull
-  protected final List<String> schema;
+  protected final List<String> columnAliases;
   @NonNull
-  protected final List<String> selectedColumns;
+  protected final List<String> columnNames;
+  protected final List<Type> columnDataTypes = Lists.newArrayList();
 
-  public JestResultSetTransformer(JsonObject result, List<String> schema, List<String> selectedColumns) {
-    this.schema = schema;
+  public JestResultSetTransformer(JsonObject result, List<String> columnAliases, List<String> columnNames) {
+    this.columnAliases = columnAliases;
     this.result = result;
-    this.selectedColumns = selectedColumns;
+    this.columnNames = columnNames;
+    for(int i=0; i< columnAliases.size(); i++) {
+      columnDataTypes.add(Type.NULL_TYPE);
+    }
   }
 
   public static ESResultSet transformFrom(JsonObject jsonResult, List<String> schema, List<String> selectedColumns) {
@@ -179,10 +191,46 @@ public abstract class JestResultSetTransformer {
   protected List<Object> getEmptyRow() {
     List<Object> objects = Lists.newArrayList();
     int i = 0;
-    while (i++ < schema.size()) {
+    while (i++ < columnAliases.size()) {
       objects.add(null);
     }
     return objects;
+  }
+
+  protected Object getTypedValue(int colPosition, JsonElement jsonObjectValue) {
+    final Type type = getDataType(colPosition, jsonObjectValue);
+    switch (type) {
+    case NULL_TYPE:
+      return null;
+    case DOUBLE_TYPE:
+      return jsonObjectValue.getAsDouble();
+    case BOOLEAN_TYPE:
+      return jsonObjectValue.getAsBoolean();
+    default:
+      return jsonObjectValue.getAsString();
+    }
+  }
+
+  private Type getDataType(int colPosition, JsonElement jsonObjectValue) {
+    if (columnDataTypes.get(colPosition) != Type.NULL_TYPE) {
+      return columnDataTypes.get(colPosition);
+    }
+
+    final JsonPrimitive jsonPrimitive = jsonObjectValue.getAsJsonPrimitive();
+    if (jsonPrimitive.isJsonNull()) {
+      return Type.NULL_TYPE;
+    }
+
+    final Type type;
+    if (jsonPrimitive.isBoolean()) {
+      type = Type.BOOLEAN_TYPE;
+    } else if (jsonPrimitive.isNumber()) {
+      type = Type.DOUBLE_TYPE;
+    } else {
+      type = Type.STRING_TYPE;
+    }
+    columnDataTypes.set(colPosition, type);
+    return type;
   }
 
   public abstract ESResultSet transform();
@@ -195,8 +243,9 @@ public abstract class JestResultSetTransformer {
         int i = 0;
         for (final String col : schema) {
           descriptors.add(
-            new ColumnDescriptor(col, col, new TypeDescriptor(Type.STRING_TYPE), i++)
+            new ColumnDescriptor(col, col, new TypeDescriptor(columnDataTypes.get(i)), i)
           );
+          i++;
         }
         return descriptors;
       }
