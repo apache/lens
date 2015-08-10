@@ -54,7 +54,8 @@ public class TestGenerateCLIUserDoc {
       LensFactCommands.class,
       LensDimensionTableCommands.class,
       LensNativeTableCommands.class,
-      LensQueryCommands.class
+      LensQueryCommands.class,
+      LensLogResourceCommands.class
     );
     for (Class claz : classes) {
       UserDocumentation doc = (UserDocumentation) claz.getAnnotation(UserDocumentation.class);

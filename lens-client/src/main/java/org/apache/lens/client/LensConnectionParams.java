@@ -106,6 +106,10 @@ public class LensConnectionParams {
     return this.conf.getMetastoreResourcePath();
   }
 
+  public String getLogResourcePath() {
+    return this.conf.getLogResourcePath();
+  }
+
   public long getQueryPollInterval() {
     return this.conf.getQueryPollInterval();
   }

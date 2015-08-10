@@ -606,4 +606,7 @@ public class LensClient {
     return this.connection.listResourcesFromConnection(type);
   }
 
+  public Response getLogs(String logFile) {
+    return this.connection.getLogs(logFile);
+  }
 }

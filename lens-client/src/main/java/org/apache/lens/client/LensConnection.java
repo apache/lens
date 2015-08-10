@@ -118,6 +118,15 @@ public class LensConnection {
     return getMetastoreWebTarget(client);
   }
 
+  public WebTarget getLogWebTarget() {
+    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    return getLogWebTarget(client);
+  }
+
+  public WebTarget getLogWebTarget(Client client) {
+    return client.target(params.getBaseConnectionUrl()).path(params.getLogResourcePath());
+  }
+
   /**
    * Open.
    *
@@ -238,6 +247,17 @@ public class LensConnection {
     StringList result = target.path("resources/list").queryParam("sessionid", this.sessionHandle)
       .queryParam("type", type).request().get(StringList.class);
     return result.getElements();
+  }
+
+  /**
+   * get the logs for a given log file
+   *
+   * @param logFile log segregation
+   */
+  public Response getLogs(String logFile) {
+    WebTarget target = getLogWebTarget();
+    Response result = target.path(logFile).request(MediaType.APPLICATION_OCTET_STREAM).get();
+    return result;
   }
 
   /**

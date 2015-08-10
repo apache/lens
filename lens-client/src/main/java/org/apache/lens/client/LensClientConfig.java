@@ -66,6 +66,8 @@ public class LensClientConfig extends Configuration {
   /** The Constant DEFAULT_SESSION_RESOURCE_PATH. */
   public static final String DEFAULT_SESSION_RESOURCE_PATH = "session";
 
+  public static final String DEFAULT_LOG_RESOURCE_PATH = "logs";
+
   // server side conf properties copied here
   /** The Constant SERVER_BASE_URL. */
   public static final String SERVER_BASE_URL = "lens.server.base.url";
@@ -144,5 +146,9 @@ public class LensClientConfig extends Configuration {
 
   public void setBaseUrl(String baseUrl) {
     this.set(SERVER_BASE_URL, baseUrl);
+  }
+
+  public String getLogResourcePath() {
+    return DEFAULT_LOG_RESOURCE_PATH;
   }
 }

@@ -59,4 +59,7 @@
     class="org.apache.lens.cli.commands.LensNativeTableCommands">
   </bean>
 
+  <bean id="lensLogResourceCommands"
+    class="org.apache.lens.cli.commands.LensLogResourceCommands">
+  </bean>
 </beans>
