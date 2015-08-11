@@ -25,6 +25,7 @@ import org.apache.lens.cube.error.FieldsCannotBeQueriedTogetherException;
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.DerivedCube;
 import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
+import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
 import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -168,7 +169,9 @@ public class FieldValidator implements ContextRewriter {
               if (cube.getDimAttributeByName(colName) instanceof ReferencedDimAtrribute
                 && ((ReferencedDimAtrribute) cube.getDimAttributeByName(colName)).isChainedColumn()) {
                 ReferencedDimAtrribute rdim = (ReferencedDimAtrribute) cube.getDimAttributeByName(colName);
-                chainSourceColumns.addAll(cube.getChainByName(rdim.getChainName()).getSourceColumns());
+                for (ChainRefCol refCol : rdim.getChainRefColumns()) {
+                  chainSourceColumns.addAll(cube.getChainByName(refCol.getChainName()).getSourceColumns());
+                }
               } else {
                 // This is a dim attribute, needs to be validated
                 dimAttributes.add(colName);

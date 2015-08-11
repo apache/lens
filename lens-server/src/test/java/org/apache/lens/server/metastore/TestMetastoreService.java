@@ -295,7 +295,7 @@ public class TestMetastoreService extends LensJerseyTest {
     xcc.setChainName("chain1");
     xcc.setRefCol("col2");
     xd3.setRefSpec(cubeObjectFactory.createXDimAttributeRefSpec());
-    xd3.getRefSpec().setChainRefColumn(xcc);
+    xd3.getRefSpec().getChainRefColumn().add(xcc);
     xd3.setNumDistinctValues(1000L);
 
     // add attribute with complex type
@@ -636,7 +636,7 @@ public class TestMetastoreService extends LensJerseyTest {
       boolean chainValidated = false;
       for (XDimAttribute attr : actual.getDimAttributes().getDimAttribute()) {
         if (attr.getName().equalsIgnoreCase("testdim2col2")) {
-          assertEquals(attr.getRefSpec().getChainRefColumn().getDestTable(), "testdim");
+          assertEquals(attr.getRefSpec().getChainRefColumn().get(0).getDestTable(), "testdim");
           chainValidated = true;
           break;
         }
@@ -653,13 +653,12 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(hcube.getDimAttributeByName("testdim2col2").getDescription(), "ref chained dimension");
       assertEquals(((BaseDimAttribute) hcube.getDimAttributeByName("dim4")).getType(),
         "struct<a:int,b:array<string>,c:map<int,array<struct<x:int,y:array<int>>>");
-      assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getType(), "string");
-      assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getChainName(), "chain1");
-      assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getRefColumn(), "col2");
-      assertEquals((((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2"))
-        .getNumOfDistinctValues().get()), Long.valueOf(1000));
-      assertEquals((((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2"))
-        .getNumOfDistinctValues().get()), Long.valueOf(1000));
+      ReferencedDimAtrribute testdim2col2 = (ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2");
+      assertEquals(testdim2col2.getType(), "string");
+      assertEquals(testdim2col2.getChainRefColumns().get(0).getChainName(), "chain1");
+      assertEquals(testdim2col2.getChainRefColumns().get(0).getRefColumn(), "col2");
+      assertEquals(testdim2col2.getNumOfDistinctValues().get(), Long.valueOf(1000));
+      assertEquals((testdim2col2.getNumOfDistinctValues().get()), Long.valueOf(1000));
 
       assertEquals(((BaseDimAttribute) hcube.getDimAttributeByName("dim2")).getNumOfDistinctValues().isPresent(),
         false);

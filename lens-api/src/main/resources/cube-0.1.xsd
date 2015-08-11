@@ -403,13 +403,13 @@
                 which the attribute is refering to.
                 For ex : userid refers user.id, xuser.id, yuser.id, zuser.id.
 
-                Alternately, ref_spec could be a chained column specifed with chain name and column name.
+                Alternately, ref_spec could be list of chained columns each specifed with chain name and column name.
               </xs:documentation>
             </xs:annotation>
             <xs:complexType>
               <xs:choice maxOccurs="1" minOccurs="1">
                 <xs:element type="x_table_references" name="table_references" maxOccurs="1" minOccurs="1"/>
-                <xs:element type="x_chain_column" name="chain_ref_column" maxOccurs="1" minOccurs="1"/>
+                <xs:element type="x_chain_column" name="chain_ref_column" maxOccurs="unbounded" minOccurs="1"/>
               </xs:choice>
             </xs:complexType>
           </xs:element>

@@ -890,9 +890,17 @@ class JoinResolver implements ContextRewriter {
 
     public boolean isReachableDim(Dimension dim) {
       Aliased<Dimension> aliased = Aliased.create(dim);
-      return allPaths.containsKey(aliased) && !allPaths.get(aliased).isEmpty();
+      return isReachableDim(aliased);
     }
 
+    public boolean isReachableDim(Dimension dim, String alias) {
+      Aliased<Dimension> aliased = Aliased.create(dim, alias);
+      return isReachableDim(aliased);
+    }
+
+    private boolean isReachableDim(Aliased<Dimension> aliased) {
+      return allPaths.containsKey(aliased) && !allPaths.get(aliased).isEmpty();
+    }
   }
 
   static String getJoinTypeStr(JoinType joinType) {

@@ -29,6 +29,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
+import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
 
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -183,12 +184,12 @@ public final class JAXBUtils {
         xd.isJoinKey(),
         xd.getNumDistinctValues()
       );
-    } else if (xd.getRefSpec() != null && xd.getRefSpec().getChainRefColumn() != null) {
+    } else if (xd.getRefSpec() != null && xd.getRefSpec().getChainRefColumn() != null
+      && !xd.getRefSpec().getChainRefColumn().isEmpty()) {
       hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
         xd.getDescription()),
         xd.getDisplayString(),
-        xd.getRefSpec().getChainRefColumn().getChainName(),
-        xd.getRefSpec().getChainRefColumn().getRefCol(),
+        getChainRefColumns(xd.getRefSpec().getChainRefColumn()),
         startDate,
         endDate,
         null,
@@ -206,6 +207,14 @@ public final class JAXBUtils {
     }
 
     return hiveDim;
+  }
+
+  private static List<ChainRefCol> getChainRefColumns(List<XChainColumn> chainCols) {
+    List<ChainRefCol> chainRefCols = new ArrayList<>();
+    for (XChainColumn chainCol : chainCols) {
+      chainRefCols.add(new ChainRefCol(chainCol.getChainName(), chainCol.getRefCol()));
+    }
+    return chainRefCols;
   }
 
   /**
@@ -318,20 +327,22 @@ public final class JAXBUtils {
     xd.setEndTime(getXMLGregorianCalendar(cd.getEndTime()));
     if (cd instanceof ReferencedDimAtrribute) {
       ReferencedDimAtrribute rd = (ReferencedDimAtrribute) cd;
-      List<TableReference> dimRefs = rd.getReferences();
       XDimAttribute.RefSpec refspec = XCF.createXDimAttributeRefSpec();
-      if (rd.getChainName() != null) {
-        XChainColumn xcc = new XChainColumn();
-        xcc.setChainName(rd.getChainName());
-        xcc.setRefCol(rd.getRefColumn());
-        if (baseTable.getChainByName(rd.getChainName()) == null) {
-          log.error("Missing chain definition for " + rd.getChainName());
-        } else {
-          xcc.setDestTable(baseTable.getChainByName(rd.getChainName()).getDestTable());
+      if (!rd.getChainRefColumns().isEmpty()) {
+        for (ChainRefCol crCol : rd.getChainRefColumns()) {
+          XChainColumn xcc = new XChainColumn();
+          xcc.setChainName(crCol.getChainName());
+          xcc.setRefCol(crCol.getRefColumn());
+          if (baseTable.getChainByName(crCol.getChainName()) == null) {
+            log.error("Missing chain definition for " + crCol.getChainName());
+          } else {
+            xcc.setDestTable(baseTable.getChainByName(crCol.getChainName()).getDestTable());
+          }
+          refspec.getChainRefColumn().add(xcc);
         }
-        refspec.setChainRefColumn(xcc);
         xd.setJoinKey(Boolean.valueOf(false));
       } else {
+        List<TableReference> dimRefs = rd.getReferences();
         refspec.setTableReferences(new XTableReferences());
         refspec.getTableReferences().getTableReference().addAll(xTabReferencesFromHiveTabReferences(dimRefs));
         xd.setJoinKey(rd.useAsJoinKey());

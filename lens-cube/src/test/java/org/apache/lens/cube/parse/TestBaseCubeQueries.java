@@ -72,8 +72,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
       ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT.getErrorCode());
     // no fact has the all the dimensions queried
-    e = getSemanticExceptionInRewrite("select dim1, stateid, msr3, msr13 from basecube" + " where " + TWO_DAYS_RANGE,
-      conf);
+    e = getSemanticExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
+      + TWO_DAYS_RANGE, conf);
     assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
       ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
@@ -83,17 +83,13 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertTrue(matcher.matches(), pruneCauses.getBrief());
     assertEquals(matcher.groupCount(), 1);
     String columnSetsStr = matcher.group(1);
-    assertNotEquals(columnSetsStr.indexOf("stateid"), -1);
+    assertNotEquals(columnSetsStr.indexOf("test_time_dim"), -1, columnSetsStr);
     assertNotEquals(columnSetsStr.indexOf("msr3, msr13"), -1);
-    assertEquals(pruneCauses.getDetails().get("testfact3_base,testfact3_raw_base"),
-      Arrays.asList(CandidateTablePruneCause.columnNotFound("stateid")));
+    assertEquals(pruneCauses.getDetails().get("testfact3_base,testfact1_raw_base,testfact3_raw_base"),
+      Arrays.asList(CandidateTablePruneCause.columnNotFound("test_time_dim")));
     assertEquals(pruneCauses.getDetails().get("testfact_deprecated,testfact2_raw_base,testfact2_base"),
       Arrays.asList(CandidateTablePruneCause.columnNotFound("msr3", "msr13")));
-    assertTrue(pruneCauses.getDetails().containsKey("testfact1_base,testfact1_raw_base")
-      || pruneCauses.getDetails().containsKey("testfact1_raw_base,testfact1_base"));
-    String fact1BaseKey = pruneCauses.getDetails().containsKey("testfact1_base,testfact1_raw_base")
-      ? "testfact1_base,testfact1_raw_base" : "testfact1_raw_base,testfact1_base";
-    assertEquals(pruneCauses.getDetails().get(fact1BaseKey),
+    assertEquals(pruneCauses.getDetails().get("testfact1_base"),
       Arrays.asList(new CandidateTablePruneCause(CandidateTablePruneCode.ELEMENT_IN_SET_PRUNED)));
   }
 

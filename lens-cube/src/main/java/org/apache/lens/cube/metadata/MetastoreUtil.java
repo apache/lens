@@ -39,7 +39,7 @@ public class MetastoreUtil {
   }
 
   public static final String getStorageTableName(String cubeTableName, String storagePrefix) {
-    return storagePrefix + cubeTableName;
+    return (storagePrefix + cubeTableName).toLowerCase();
   }
 
   public static String getStorageClassKey(String name) {

@@ -24,6 +24,7 @@ import static org.testng.Assert.assertEquals;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
+import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
@@ -597,10 +598,10 @@ public class TestCubeMetastoreClient {
     assertEquals(citychain.getPaths().get(0).getReferences().get(0).toString(), "testmetastorecube.cityid");
     assertEquals(citychain.getPaths().get(0).getReferences().get(1).toString(), "citydim.id");
     Assert.assertNotNull(cube2.getDimAttributeByName("zipcityname"));
-    assertEquals(((ReferencedDimAtrribute) cube2.getDimAttributeByName("zipcityname")).getChainName(),
-      "cityfromzip");
-    assertEquals(((ReferencedDimAtrribute) cube2.getDimAttributeByName("zipcityname")).getRefColumn(),
-      "name");
+    ChainRefCol zipCityChain = ((ReferencedDimAtrribute) cube2.getDimAttributeByName("zipcityname"))
+      .getChainRefColumns().get(0);
+    assertEquals(zipCityChain.getChainName(), "cityfromzip");
+    assertEquals(zipCityChain.getRefColumn(), "name");
 
     client.createDerivedCube(CUBE_NAME, DERIVED_CUBE_NAME, measures, dimensions, new HashMap<String, String>(), 0L);
     Assert.assertTrue(client.tableExists(DERIVED_CUBE_NAME));

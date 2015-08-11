@@ -24,6 +24,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
@@ -55,20 +56,21 @@ public class DenormalizationResolver implements ContextRewriter {
   public static class ReferencedQueriedColumn {
     ReferencedDimAtrribute col;
     AbstractCubeTable srcTable;
-    transient List<TableReference> references;
+    transient List<TableReference> references = new ArrayList<>();
+    transient List<ChainRefCol> chainRefCols = new ArrayList<>();
 
     ReferencedQueriedColumn(ReferencedDimAtrribute col, AbstractCubeTable srcTable) {
       this.col = col;
       this.srcTable = srcTable;
-      references = new ArrayList<TableReference>();
       references.addAll(col.getReferences());
+      chainRefCols.addAll(col.getChainRefColumns());
     }
   }
 
   @ToString
   public static class PickedReference {
-    ReferencedDimAtrribute ref;
     TableReference reference;
+    ChainRefCol chainRef;
     String srcAlias;
     String pickedFor;
 
@@ -78,22 +80,22 @@ public class DenormalizationResolver implements ContextRewriter {
       this.pickedFor = pickedFor;
     }
 
-    PickedReference(ReferencedDimAtrribute ref, String srcAlias, String pickedFor) {
+    PickedReference(ChainRefCol chainRef, String srcAlias, String pickedFor) {
       this.srcAlias = srcAlias;
-      this.ref = ref;
+      this.chainRef = chainRef;
       this.pickedFor = pickedFor;
     }
 
     String getDestTable() {
-      if (ref != null && ref.isChainedColumn()) {
-        return ref.getChainName();
+      if (chainRef != null) {
+        return chainRef.getChainName();
       }
       return reference.getDestTable();
     }
 
     String getRefColumn() {
-      if (ref != null && ref.isChainedColumn()) {
-        return ref.getRefColumn();
+      if (chainRef != null) {
+        return chainRef.getRefColumn();
       }
       return reference.getDestColumn();
     }
@@ -150,9 +152,10 @@ public class DenormalizationResolver implements ContextRewriter {
             refCols.add(refer);
             // Add to optional tables
             if (refer.col.isChainedColumn()) {
-              cubeql.addOptionalDimTable(refer.col.getChainName(), table, false, refer.col.getName(), true,
-                refer.col.getRefColumn());
-
+              for (ChainRefCol refCol : refer.col.getChainRefColumns()) {
+                cubeql.addOptionalDimTable(refCol.getChainName(), table, false, refer.col.getName(), true,
+                  refCol.getRefColumn());
+              }
             } else {
               for (TableReference reference : refer.col.getReferences()) {
                 cubeql.addOptionalDimTable(reference.getDestTable(), table, false, refer.col.getName(), true,
@@ -255,8 +258,21 @@ public class DenormalizationResolver implements ContextRewriter {
             addPickedReference(refered.col.getName(), picked);
             pickedRefs.add(picked);
           } else {
+            Iterator<ChainRefCol> iter = refered.chainRefCols.iterator();
+            while (iter.hasNext()) {
+              // remove unreachable references
+              ChainRefCol reference = iter.next();
+              if (!cubeql.getAutoJoinCtx().isReachableDim(
+                (Dimension) cubeql.getCubeTableForAlias(reference.getChainName()), reference.getChainName())) {
+                iter.remove();
+              }
+            }
+            if (refered.chainRefCols.isEmpty()) {
+              throw new SemanticException("No chain reference column available for " + refered);
+            }
             PickedReference picked =
-              new PickedReference(refered.col, cubeql.getAliasForTableName(refered.srcTable.getName()), tbl);
+              new PickedReference(refered.chainRefCols.iterator().next(),
+                cubeql.getAliasForTableName(refered.srcTable.getName()), tbl);
             addPickedReference(refered.col.getName(), picked);
             pickedRefs.add(picked);
           }

@@ -237,10 +237,40 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     for (CandidateFact cfact : cubeql.getCandidateFacts()) {
       candidateFacts.add(cfact.getName().toLowerCase());
     }
-    // testfact contains test_time_dim_hour_id, but not dim2 - it should have been removed.
+    // testfact contains test_time_dim_day_id, but not dim2 - it should have been removed.
     Assert.assertFalse(candidateFacts.contains("testfact"));
     // summary2 contains dim2, but not test_time_dim2 - it should have been removed.
     Assert.assertFalse(candidateFacts.contains("summary2"));
+  }
+
+  @Test
+  public void testCubeQueryWithHourDimJoin() throws Exception {
+    Configuration tConf = new Configuration(conf);
+    tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C4");
+    tConf.set(CubeQueryConfUtil.getValidFactTablesKey(cubeName), "testFact2");
+    tConf.set(CubeQueryConfUtil.getValidStorageTablesKey("testFact2"), "C1_testFact2");
+    String hqlQuery = rewrite("select test_time_dim2, msr2 from testcube where " + TWO_DAYS_RANGE, tConf);
+    String expected =
+      getExpectedQuery(cubeName, "select timehourchain.full_hour, sum(testcube.msr2) FROM ", " join " + getDbName()
+        + "c4_hourDimTbl timehourchain on testcube.test_time_dim_hour_id2  = timehourchain.id", null,
+        " group by timehourchain . full_hour ", null,
+        getWhereForHourly2days("c1_testfact2"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
+  @Test
+  public void testCubeQueryWithDayDimJoin() throws Exception {
+    Configuration tConf = new Configuration(conf);
+    tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C4");
+    tConf.set(CubeQueryConfUtil.getValidFactTablesKey(cubeName), "testFact");
+    tConf.set(CubeQueryConfUtil.getValidStorageTablesKey("testFact"), "C1_testFact");
+    String hqlQuery = rewrite("select test_time_dim2, msr2 from testcube where " + TWO_DAYS_RANGE, tConf);
+    String expected =
+      getExpectedQuery(cubeName, "select timedatechain.full_date, sum(testcube.msr2) FROM ", " join " + getDbName()
+        + "c4_dayDimTbl timedatechain on testcube.test_time_dim_day_id2  = timedatechain.id", null,
+        " group by timedatechain . full_date ", null,
+        getWhereForDailyAndHourly2days(cubeName, "c1_testfact"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 
   @Test

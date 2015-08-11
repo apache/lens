@@ -30,6 +30,7 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
+import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
@@ -636,6 +637,7 @@ public class CubeTestSetup {
     // not creating test_time_dim_hour_id2 ref dim attribute to avoid the reference in schema graph for other paths
     // the column is only defined in chain
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("test_time_dim_hour_id2", "int", "ref dim")));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("test_time_dim_day_id2", "int", "ref dim")));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("testdim3id", "int", "direct id to testdim3"),
       "Timedim reference", new TableReference("testdim3", "id"), null, null, null));
 
@@ -644,16 +646,26 @@ public class CubeTestSetup {
     references.add(new TableReference("hourdim", "full_hour"));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim", "date", "ref dim"),
       "Timedim full date", references, null, null, null, false));
+    List<ChainRefCol> chainRefs = new ArrayList<>();
+    chainRefs.add(new ChainRefCol("timehourchain", "full_hour"));
+    chainRefs.add(new ChainRefCol("timedatechain", "full_date"));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim2", "date", "chained dim"),
-      "Timedim full date", "timechain", "full_hour", null, null, null));
+      "Timedim full date", chainRefs, null, null, null, null));
 
     Set<JoinChain> joinchains = new HashSet<JoinChain>();
-    JoinChain timeChain = new JoinChain("timechain", "time chain", "time dim thru dim");
+    JoinChain timeHourChain = new JoinChain("timehourchain", "time chain", "time dim thru hour dim");
     List<TableReference> paths = new ArrayList<TableReference>();
     paths.add(new TableReference("testcube", "test_time_dim_hour_id2"));
     paths.add(new TableReference("hourdim", "id"));
-    timeChain.addPath(paths);
-    joinchains.add(timeChain);
+    timeHourChain.addPath(paths);
+    joinchains.add(timeHourChain);
+
+    JoinChain timeDateChain = new JoinChain("timedatechain", "time chain", "time dim thru date dim");
+    paths = new ArrayList<TableReference>();
+    paths.add(new TableReference("testcube", "test_time_dim_day_id2"));
+    paths.add(new TableReference("daydim", "id"));
+    timeDateChain.addPath(paths);
+    joinchains.add(timeDateChain);
     joinchains.add(new JoinChain("cubeState", "cube-state", "state thru cube") {
       {
         addPath(new ArrayList<TableReference>() {
@@ -887,6 +899,7 @@ public class CubeTestSetup {
     dimensions.add("dim1");
     dimensions.add("location");
     dimensions.add("d_time");
+    dimensions.add("test_time_dim");
     client.createDerivedCube(BASE_CUBE_NAME, DERIVED_CUBE_NAME3, measures, dimensions, derivedProperties, 20L);
 
     // create base cube facts
@@ -949,6 +962,7 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("stateid", "int", "city id"));
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
+    factColumns.add(new FieldSchema("test_time_dim_hour_id", "int", "time id"));
 
     // create cube fact
     client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
@@ -1094,8 +1108,8 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
     factColumns.add(new FieldSchema("stateid", "int", "city id"));
-    factColumns.add(new FieldSchema("test_time_dim_hour_id", "int", "time id"));
-    factColumns.add(new FieldSchema("test_time_dim_hour_id2", "int", "time id"));
+    factColumns.add(new FieldSchema("test_time_dim_day_id", "int", "time id"));
+    factColumns.add(new FieldSchema("test_time_dim_day_id2", "int", "time id"));
     factColumns.add(new FieldSchema("ambigdim1", "string", "used in" + " testColumnAmbiguity"));
 
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = new HashMap<String, Set<UpdatePeriod>>();
@@ -1149,67 +1163,27 @@ public class CubeTestSetup {
     // create cube fact
     client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
       factValidityProperties, storageTables);
-
-    CubeFactTable fact = client.getFactTable(factName);
-
-    Table table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(),
-      Storage.getPrefix(c4)));
-    table.getParameters().put(MetastoreUtil.getPartitionTimelineStorageClassKey(HOURLY, "ttd"),
-      StoreAllPartitionTimeline.class.getCanonicalName());
-    table.getParameters().put(MetastoreUtil.getPartitionTimelineStorageClassKey(HOURLY, "ttd2"),
-      StoreAllPartitionTimeline.class.getCanonicalName());
-    client.pushHiveTable(table);
-    // Add all hourly partitions for two days
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(TWODAYS_BACK);
-    Date temp = cal.getTime();
-    List<StoragePartitionDesc> storagePartitionDescs = Lists.newArrayList();
-    List<String> partitions = Lists.newArrayList();
-    StoreAllPartitionTimeline ttdStoreAll =
-      new StoreAllPartitionTimeline(MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), c4), HOURLY,
-        "ttd");
-    StoreAllPartitionTimeline ttd2StoreAll =
-      new StoreAllPartitionTimeline(MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), c4), HOURLY,
-        "ttd2");
-    while (!(temp.after(NOW))) {
-      Map<String, Date> timeParts = new HashMap<String, Date>();
-      timeParts.put("ttd", temp);
-      timeParts.put("ttd2", temp);
-      TimePartition tp = TimePartition.of(HOURLY, temp);
-      ttdStoreAll.add(tp);
-      ttd2StoreAll.add(tp);
-      partitions.add(HOURLY.format().format(temp));
-      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      storagePartitionDescs.add(sPartSpec);
-      cal.add(Calendar.HOUR_OF_DAY, 1);
-      temp = cal.getTime();
-    }
-    client.addPartitions(storagePartitionDescs, c4);
+    client.getTimelines(factName, c1, null, null);
+    client.getTimelines(factName, c4, null, null);
     client.clearHiveTableCache();
-    table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(),
-      Storage.getPrefix(c4)));
+    CubeFactTable fact = client.getFactTable(factName);
+    Table table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(), Storage.getPrefix(c1)));
     assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
-    for(UpdatePeriod period: Lists.newArrayList(DAILY, MINUTELY, MONTHLY, YEARLY, QUARTERLY)) {
-      for(String partCol: Lists.newArrayList("ttd", "ttd2")) {
+    for (UpdatePeriod period: Lists.newArrayList(MINUTELY, MINUTELY, DAILY, MONTHLY, YEARLY, QUARTERLY)) {
+      for (String partCol: Lists.newArrayList("dt")) {
+        assertTimeline(client, fact.getName(), c1, period, partCol, EndsAndHolesPartitionTimeline.class);
+      }
+    }
+
+    table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(), Storage.getPrefix(c4)));
+    assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
+    for (UpdatePeriod period: Lists.newArrayList(MINUTELY, MINUTELY, DAILY, MONTHLY, YEARLY, QUARTERLY)) {
+      for (String partCol: Lists.newArrayList("ttd", "ttd2")) {
         assertTimeline(client, fact.getName(), c4, period, partCol, EndsAndHolesPartitionTimeline.class);
       }
     }
-    assertTimeline(client, fact.getName(), c4, HOURLY, "ttd", ttdStoreAll);
-    assertTimeline(client, fact.getName(), c4, HOURLY, "ttd2", ttd2StoreAll);
-
-    // Add all hourly partitions for TWO_DAYS_RANGE_BEFORE_4_DAYS
-    cal.setTime(BEFORE_4_DAYS_START);
-    temp = cal.getTime();
-    while (!(temp.after(BEFORE_4_DAYS_END))) {
-      Map<String, Date> timeParts = new HashMap<String, Date>();
-      timeParts.put("ttd", temp);
-      timeParts.put("ttd2", temp);
-      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, c4);
-      cal.add(Calendar.HOUR_OF_DAY, 1);
-      temp = cal.getTime();
-    }
   }
+
   private void assertTimeline(CubeMetastoreClient client, String factName, String storageName,
     UpdatePeriod updatePeriod, String timeDim, PartitionTimeline expectedTimeline)
     throws Exception {
@@ -1351,7 +1325,7 @@ public class CubeTestSetup {
       factValidityProperties, storageTables);
   }
 
-  private void createCubeFactOnlyHourly(CubeMetastoreClient client) throws HiveException, LensException {
+  private void createCubeFactOnlyHourly(CubeMetastoreClient client) throws Exception {
     String factName = "testFact2";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(cubeMeasures.size());
     for (CubeMeasure measure : cubeMeasures) {
@@ -1363,7 +1337,8 @@ public class CubeTestSetup {
     // add dimensions of the cube
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
-    factColumns.add(new FieldSchema("test_time_dim_day_id", "int", "time id"));
+    factColumns.add(new FieldSchema("test_time_dim_hour_id", "int", "time id"));
+    factColumns.add(new FieldSchema("test_time_dim_hour_id2", "int", "time id"));
     factColumns.add(new FieldSchema("cdim2", "int", "cycledim id"));
 
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = new HashMap<String, Set<UpdatePeriod>>();
@@ -1379,16 +1354,27 @@ public class CubeTestSetup {
     s1.setPartCols(partCols);
     s1.setTimePartCols(timePartCols);
 
+    StorageTableDesc s2 = new StorageTableDesc();
+    s2.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    ArrayList<FieldSchema> s2PartCols = new ArrayList<FieldSchema>();
+    s2PartCols.add(new FieldSchema("ttd", serdeConstants.STRING_TYPE_NAME, "test date partition"));
+    s2PartCols.add(new FieldSchema("ttd2", serdeConstants.STRING_TYPE_NAME, "test date partition"));
+    s2.setPartCols(s2PartCols);
+    s2.setTimePartCols(Arrays.asList("ttd", "ttd2"));
+
     storageAggregatePeriods.put(c1, updates);
+    storageAggregatePeriods.put(c4, updates);
 
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c1, s1);
+    storageTables.put(c4, s2);
 
     // create cube fact
     client
       .createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 10L,
         factValidityProperties, storageTables);
-    CubeFactTable fact2 = client.getFactTable(factName);
+    CubeFactTable fact = client.getFactTable(factName);
     // Add all hourly partitions for two days
     Calendar cal = Calendar.getInstance();
     cal.setTime(TWODAYS_BACK);
@@ -1396,7 +1382,7 @@ public class CubeTestSetup {
     while (!(temp.after(NOW))) {
       Map<String, Date> timeParts = new HashMap<String, Date>();
       timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), temp);
-      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact2.getName(), timeParts, null, HOURLY);
+      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       try {
         client.addPartition(sPartSpec, c1);
       } catch (HiveException e) {
@@ -1414,8 +1400,61 @@ public class CubeTestSetup {
     while (!(temp.after(BEFORE_4_DAYS_END))) {
       Map<String, Date> timeParts = new HashMap<String, Date>();
       timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), temp);
-      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact2.getName(), timeParts, null, HOURLY);
+      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       client.addPartition(sPartSpec, c1);
+      cal.add(Calendar.HOUR_OF_DAY, 1);
+      temp = cal.getTime();
+    }
+    client.clearHiveTableCache();
+
+    Table table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(),
+      Storage.getPrefix(c4)));
+    table.getParameters().put(MetastoreUtil.getPartitionTimelineStorageClassKey(HOURLY, "ttd"),
+      StoreAllPartitionTimeline.class.getCanonicalName());
+    table.getParameters().put(MetastoreUtil.getPartitionTimelineStorageClassKey(HOURLY, "ttd2"),
+      StoreAllPartitionTimeline.class.getCanonicalName());
+    client.pushHiveTable(table);
+    // Add all hourly partitions for two days on C4
+    cal = Calendar.getInstance();
+    cal.setTime(TWODAYS_BACK);
+    temp = cal.getTime();
+    List<StoragePartitionDesc> storagePartitionDescs = Lists.newArrayList();
+    List<String> partitions = Lists.newArrayList();
+    StoreAllPartitionTimeline ttdStoreAll =
+      new StoreAllPartitionTimeline(MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), c4), HOURLY,
+        "ttd");
+    StoreAllPartitionTimeline ttd2StoreAll =
+      new StoreAllPartitionTimeline(MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), c4), HOURLY,
+        "ttd2");
+    while (!(temp.after(NOW))) {
+      Map<String, Date> timeParts = new HashMap<String, Date>();
+      timeParts.put("ttd", temp);
+      timeParts.put("ttd2", temp);
+      TimePartition tp = TimePartition.of(HOURLY, temp);
+      ttdStoreAll.add(tp);
+      ttd2StoreAll.add(tp);
+      partitions.add(HOURLY.format().format(temp));
+      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
+      storagePartitionDescs.add(sPartSpec);
+      cal.add(Calendar.HOUR_OF_DAY, 1);
+      temp = cal.getTime();
+    }
+    client.addPartitions(storagePartitionDescs, c4);
+    client.clearHiveTableCache();
+    table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(), Storage.getPrefix(c4)));
+    assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
+    assertTimeline(client, fact.getName(), c4, HOURLY, "ttd", ttdStoreAll);
+    assertTimeline(client, fact.getName(), c4, HOURLY, "ttd2", ttd2StoreAll);
+
+    // Add all hourly partitions for TWO_DAYS_RANGE_BEFORE_4_DAYS
+    cal.setTime(BEFORE_4_DAYS_START);
+    temp = cal.getTime();
+    while (!(temp.after(BEFORE_4_DAYS_END))) {
+      Map<String, Date> timeParts = new HashMap<String, Date>();
+      timeParts.put("ttd", temp);
+      timeParts.put("ttd2", temp);
+      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
+      client.addPartition(sPartSpec, c4);
       cal.add(Calendar.HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }

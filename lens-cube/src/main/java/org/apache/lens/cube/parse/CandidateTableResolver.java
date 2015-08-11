@@ -243,8 +243,7 @@ class CandidateTableResolver implements ContextRewriter {
           OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(cubeql.getCubeTbls().get(chain.getName()));
           if (!checkForColumnExists(cfact, chain.getSourceColumns())) {
             // check if chain is optional or not
-            if (optdim == null || optdim.isRequiredInJoinChain
-              || (optdim != null && optdim.requiredForCandidates.contains(cfact))) {
+            if (optdim == null) {
               log.info("Not considering fact table:{} as columns {} are not available", cfact,
                 chain.getSourceColumns());
               cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(chain.getSourceColumns()));

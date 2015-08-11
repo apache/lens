@@ -1257,8 +1257,10 @@ public class CubeMetastoreClient {
 
   /** extract from table properties */
   public List<String> getTimePartColNamesOfTable(Table table) {
-    List<String> ret = Arrays.asList(StringUtils.split(table.getParameters().get(MetastoreConstants.TIME_PART_COLUMNS),
-      ","));
+    List<String> ret = null;
+    if (table.getParameters().containsKey(MetastoreConstants.TIME_PART_COLUMNS)) {
+      ret = Arrays.asList(StringUtils.split(table.getParameters().get(MetastoreConstants.TIME_PART_COLUMNS), ","));
+    }
     return ret == null ? new ArrayList<String>() : ret;
   }
 
