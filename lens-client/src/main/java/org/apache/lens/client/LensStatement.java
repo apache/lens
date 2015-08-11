@@ -21,7 +21,6 @@ package org.apache.lens.client;
 import java.util.List;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -40,7 +39,6 @@ import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 /**
  * Top level class which is used to execute lens queries.
@@ -135,7 +133,7 @@ public class LensStatement {
       throw new IllegalStateException("Lens Connection has to be " + "established before querying");
     }
 
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    Client client = connection.buildClient();
     WebTarget target = getPreparedQueriesWebTarget(client);
 
     QueryPrepareHandle handle = target.request().post(
@@ -157,7 +155,7 @@ public class LensStatement {
       throw new IllegalStateException("Lens Connection has to be " + "established before querying");
     }
 
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    Client client = connection.buildClient();
 
     WebTarget target = getPreparedQueriesWebTarget(client);
 
@@ -252,7 +250,7 @@ public class LensStatement {
    */
   public LensQuery getQuery(QueryHandle handle) {
     try {
-      Client client = ClientBuilder.newClient();
+      Client client = connection.buildClient();
       WebTarget target = getQueryWebTarget(client);
       this.query = target.path(handle.toString()).queryParam("sessionid", connection.getSessionHandle()).request()
         .get(LensQuery.class);
@@ -270,7 +268,7 @@ public class LensStatement {
    */
   public LensPreparedQuery getPreparedQuery(QueryPrepareHandle handle) {
     try {
-      Client client = ClientBuilder.newClient();
+      Client client = connection.buildClient();
       WebTarget target = getPreparedQueriesWebTarget((client));
       return target.path(handle.toString()).queryParam("sessionid", connection.getSessionHandle()).request()
         .get(LensPreparedQuery.class);
@@ -291,7 +289,7 @@ public class LensStatement {
       throw new IllegalStateException("Lens Connection has to be " + "established before querying");
     }
 
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    Client client  = connection.buildClient();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), connection
       .getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
@@ -323,7 +321,7 @@ public class LensStatement {
       throw new IllegalStateException("Lens Connection has to be " + "established before querying");
     }
 
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    Client client = connection.buildClient();
     WebTarget target = getPreparedQueriesWebTarget((client)).path(phandle.toString());
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), connection
@@ -349,7 +347,7 @@ public class LensStatement {
       throw new IllegalStateException("Lens Connection has to be " + "established before querying");
     }
 
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    Client client = connection.buildClient();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), connection
       .getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
@@ -374,7 +372,7 @@ public class LensStatement {
    * @return the all queries
    */
   public List<QueryHandle> getAllQueries(String state, String queryName, String user, long fromDate, long toDate) {
-    WebTarget target = getQueryWebTarget(ClientBuilder.newBuilder().register(MultiPartFeature.class).build());
+    WebTarget target = getQueryWebTarget(connection.buildClient());
     List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
       .queryParam("state", state).queryParam("queryName", queryName).queryParam("user", user)
       .queryParam("fromDate", fromDate).queryParam("toDate", toDate).request()
@@ -393,7 +391,7 @@ public class LensStatement {
    * @return the all prepared queries
    */
   public List<QueryPrepareHandle> getAllPreparedQueries(String userName, String queryName, long fromDate, long toDate) {
-    Client client = ClientBuilder.newClient();
+    Client client = connection.buildClient();
     WebTarget target = getPreparedQueriesWebTarget(client);
     List<QueryPrepareHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
       .queryParam("user", userName).queryParam("queryName", queryName).queryParam("fromDate", fromDate)
@@ -415,7 +413,7 @@ public class LensStatement {
     if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
       throw new IllegalArgumentException("Result set metadata " + "can be only queries for successful queries");
     }
-    Client client = ClientBuilder.newClient();
+    Client client = connection.buildClient();
 
     try {
       WebTarget target = getQueryWebTarget(client);
@@ -445,7 +443,7 @@ public class LensStatement {
     if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
       throw new IllegalArgumentException("Result set metadata " + "can be only queries for successful queries");
     }
-    Client client = ClientBuilder.newClient();
+    Client client = connection.buildClient();
 
     try {
       WebTarget target = getQueryWebTarget(client);
@@ -466,7 +464,7 @@ public class LensStatement {
     if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
       throw new IllegalArgumentException("Result set metadata " + "can be only queries for successful queries");
     }
-    Client client = ClientBuilder.newClient();
+    Client client = connection.buildClient();
 
     try {
       WebTarget target = getQueryWebTarget(client);
@@ -498,7 +496,7 @@ public class LensStatement {
       return false;
     }
 
-    Client client = ClientBuilder.newClient();
+    Client client = connection.buildClient();
     WebTarget target = getQueryWebTarget(client);
 
     APIResult result = target.path(query.getQueryHandle().toString())
@@ -516,7 +514,7 @@ public class LensStatement {
     if (!query.getStatus().isResultSetAvailable()) {
       return false;
     }
-    Client client = ClientBuilder.newClient();
+    Client client = connection.buildClient();
     WebTarget target = getQueryWebTarget(client);
 
     APIResult result = target.path(query.getQueryHandle().toString()).path("resultset")
@@ -532,7 +530,7 @@ public class LensStatement {
    * @return true, if successful
    */
   public boolean destroyPrepared(QueryPrepareHandle phandle) {
-    Client client = ClientBuilder.newClient();
+    Client client = connection.buildClient();
     WebTarget target = getPreparedQueriesWebTarget(client);
 
     APIResult result = target.path(phandle.toString()).queryParam("sessionid", connection.getSessionHandle()).request()

@@ -19,14 +19,21 @@
 package org.apache.lens.client;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.lens.api.LensConf;
+
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Top level class which encapsulates connections parameters required for lens connection.
  */
+@Slf4j
 public class LensConnectionParams {
 
   /** The lens confs. */
@@ -39,13 +46,30 @@ public class LensConnectionParams {
   private Map<String, String> sessionVars = new HashMap<String, String>();
 
   /** The conf. */
+  @Getter
   private final LensClientConfig conf;
 
+  @Getter
+  private Set<Class<?>> requestFilters = new HashSet<Class<?>>();
+
+  private void setupRequestFilters() {
+    if (this.conf.get(LensClientConfig.SESSION_FILTER_NAMES) != null) {
+      String[] filterNames = this.conf.getStrings(LensClientConfig.SESSION_FILTER_NAMES);
+      for (String filterName : filterNames) {
+        Class wsFilterClass = this.conf.getClass(LensClientConfig.getWSFilterImplConfKey(filterName), null);
+        if (wsFilterClass != null) {
+          requestFilters.add(wsFilterClass);
+        }
+        log.info("Request filter added " + filterName);
+      }
+    }
+  }
   /**
    * Construct parameters required to connect to lens server using values in lens-client-site.xml
    */
   public LensConnectionParams() {
     this.conf = new LensClientConfig();
+    setupRequestFilters();
   }
 
   /**
@@ -55,6 +79,7 @@ public class LensConnectionParams {
    */
   public LensConnectionParams(LensClientConfig conf) {
     this.conf = conf;
+    setupRequestFilters();
   }
 
   /**

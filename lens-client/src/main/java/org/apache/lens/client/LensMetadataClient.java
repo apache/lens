@@ -74,8 +74,7 @@ public class LensMetadataClient {
 
 
   private WebTarget getMetastoreWebTarget() {
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-    return getMetastoreWebTarget(client);
+    return getMetastoreWebTarget(connection.buildClient());
   }
 
   public List<String> getAlldatabases() {

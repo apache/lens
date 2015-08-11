@@ -36,4 +36,14 @@
     <value>http://0.0.0.0:9999/lensapi</value>
     <description>The base url for the lens server</description>
   </property>
+  <property>
+    <name>lens.client.ws.request.filternames</name>
+    <value>requestfilter</value>
+    <description>These JAX-RS filters would be started in the specified order when lens-client starts</description>
+  </property>
+  <property>
+    <name>lens.client.requestfilter.ws.filter.impl</name>
+    <value>org.apache.lens.client.RequestFilter</value>
+    <description>Implementation class for Request Filter</description>
+  </property>
 </configuration>

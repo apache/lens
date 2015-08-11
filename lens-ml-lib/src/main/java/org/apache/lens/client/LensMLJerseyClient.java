@@ -23,7 +23,6 @@ import java.util.Map;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
@@ -39,7 +38,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,7 +83,7 @@ public class LensMLJerseyClient {
   }
 
   protected WebTarget getMLWebTarget() {
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    Client client = connection.buildClient();
     LensConnectionParams connParams = connection.getLensConnectionParams();
     String baseURI = connParams.getBaseConnectionUrl();
     String mlURI = connParams.getConf().get(LENS_ML_RESOURCE_PATH, DEFAULT_ML_RESOURCE_PATH);
