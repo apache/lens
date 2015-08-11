@@ -246,25 +246,25 @@ public class TestCubeRewriter extends TestQueryRewrite {
   public void testCubeInsert() throws Exception {
     Configuration conf = getConf();
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
-    String hqlQuery = rewrite("insert overwrite directory" + " '/tmp/test' select SUM(msr2) from testCube where "
+    String hqlQuery = rewrite("insert overwrite directory" + " 'target/test' select SUM(msr2) from testCube where "
       + TWO_DAYS_RANGE, conf);
     Map<String, String> wh = getWhereForDailyAndHourly2days(cubeName, "C2_testfact");
-    String expected = "insert overwrite directory '/tmp/test' "
+    String expected = "insert overwrite directory 'target/test' "
       + getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, wh);
     compareQueries(expected, hqlQuery);
 
-    hqlQuery = rewrite("insert overwrite directory" + " '/tmp/test' cube select SUM(msr2) from testCube where "
+    hqlQuery = rewrite("insert overwrite directory" + " 'target/test' cube select SUM(msr2) from testCube where "
       + TWO_DAYS_RANGE, conf);
     compareQueries(expected, hqlQuery);
 
-    hqlQuery = rewrite("insert overwrite local directory" + " '/tmp/test' select SUM(msr2) from testCube where "
+    hqlQuery = rewrite("insert overwrite local directory" + " 'target/test' select SUM(msr2) from testCube where "
       + TWO_DAYS_RANGE, conf);
     wh = getWhereForDailyAndHourly2days(cubeName, "C2_testfact");
-    expected = "insert overwrite local directory '/tmp/test' "
+    expected = "insert overwrite local directory 'target/test' "
       + getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, wh);
     compareQueries(expected, hqlQuery);
 
-    hqlQuery = rewrite("insert overwrite local directory" + " '/tmp/test' cube select SUM(msr2) from testCube where "
+    hqlQuery = rewrite("insert overwrite local directory" + " 'target/test' cube select SUM(msr2) from testCube where "
       + TWO_DAYS_RANGE, conf);
     compareQueries(expected, hqlQuery);
 

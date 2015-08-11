@@ -148,10 +148,10 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
       String xmlContent = sb.toString();
 
-      xmlContent = xmlContent.replace("<property name=\"fact1.prop\" value=\"f1\" />\n",
+      xmlContent = xmlContent.replace("<property name=\"fact1.prop\" value=\"f1\"/>\n",
         "<property name=\"fact1.prop\" value=\"f1\"/>" + "\n<property name=\"fact1.prop1\" value=\"f2\"/>\n");
 
-      File newFile = new File("/tmp/local-fact1.xml");
+      File newFile = new File("target/local-fact1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
       writer.close();
@@ -163,7 +163,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
       assertTrue(desc.contains(propString));
 
-      command.updateFactTable("fact1", new File("/tmp/local-fact1.xml"));
+      command.updateFactTable("fact1", new File("target/local-fact1.xml"));
       desc = command.describeFactTable("fact1");
       log.debug(desc);
       assertTrue(desc.contains(propString), "The sample property value is not set");

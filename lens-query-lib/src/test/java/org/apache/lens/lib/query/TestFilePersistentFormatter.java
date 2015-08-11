@@ -45,12 +45,12 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
   /**
    * The part file dir.
    */
-  private Path partFileDir = new Path("file:///tmp/partcsvfiles");
+  private Path partFileDir = new Path("target/partcsvfiles");
 
   /**
    * The part file text dir.
    */
-  private Path partFileTextDir = new Path("file:///tmp/parttextfiles");
+  private Path partFileTextDir = new Path("target/parttextfiles");
 
   /**
    * Creates the part files.

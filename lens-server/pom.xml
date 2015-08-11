@@ -256,9 +256,11 @@
     <testResources>
       <testResource>
         <directory>${project.basedir}/testdata</directory>
+        <filtering>true</filtering>
       </testResource>
       <testResource>
         <directory>${project.basedir}/src/test/resources</directory>
+        <filtering>true</filtering>
       </testResource>
     </testResources>
     <plugins>

@@ -89,7 +89,6 @@
     <testng.version>6.8</testng.version>
     <mockito.version>1.9.5</mockito.version>
     <powermock.version>1.4.12</powermock.version>
-    <test.tmp.dir>${basedir}/target/tmp</test.tmp.dir>
 
     <!-- maven plugins -->
     <jaxb2.plugin.version>0.12.3</jaxb2.plugin.version>
@@ -404,6 +403,12 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
 
     <pluginManagement>
       <plugins>

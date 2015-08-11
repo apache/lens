@@ -117,7 +117,7 @@ public class TestLensFactCommandsWithMissingWeight extends LensCliApplicationTes
     LensFactCommands command = getCommand();
     String factList = command.showFacts(null);
     Assert.assertEquals(command.showFacts(CUBE_NAME), "No fact found for " + CUBE_NAME);
-    Assert.assertEquals("No fact found", factList, "Fact tables should not be found.");
+    Assert.assertEquals(factList, "No fact found", "Fact tables should not be found.");
     // add local storage before adding fact table
     TestLensStorageCommands.addLocalStorage(FACT_LOCAL);
     URL factSpec = TestLensFactCommandsWithMissingWeight.class.getClassLoader().getResource(FACT_XML_FILE);

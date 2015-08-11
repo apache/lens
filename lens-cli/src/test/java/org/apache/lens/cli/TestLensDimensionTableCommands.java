@@ -155,10 +155,10 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
     String xmlContent = sb.toString();
 
-    xmlContent = xmlContent.replace("<property name=\"dim2.prop\" value=\"d2\" />",
+    xmlContent = xmlContent.replace("<property name=\"dim2.prop\" value=\"d2\"/>",
       "<property name=\"dim2.prop\" value=\"d1\"/>" + "\n<property name=\"dim2.prop1\" value=\"d2\"/>\n");
 
-    File newFile = new File("/tmp/local-dim1.xml");
+    File newFile = new File("target/local-dim1.xml");
     try {
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
@@ -171,7 +171,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
       String propString2 = "name : dim2.prop1  value : d2";
       assertTrue(desc.contains(propString));
 
-      command.updateDimensionTable("dim_table2", new File("/tmp/local-dim1.xml"));
+      command.updateDimensionTable("dim_table2", new File("target/local-dim1.xml"));
       desc = command.describeDimensionTable("dim_table2");
       log.debug(desc);
       assertTrue(desc.contains(propString1));

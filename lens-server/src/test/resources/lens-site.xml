@@ -136,7 +136,6 @@
     <value>session,query,metastore,scheduler,quota,mocknonlens</value>
   </property>
 
-
   <property>
     <name>lens.server.mocknonlens.service.impl</name>
     <value>org.apache.lens.server.MockNonLensService</value>
@@ -158,6 +157,12 @@
   <property>
     <name>lens.server.database.resource.dir</name>
     <value>target/resources</value>
+  </property>
+
+  <property>
+    <name>lens.server.statistics.warehouse.dir</name>
+    <value>file://${project.build.directory}/lens/statistics/warehouse</value>
+    <description>Default top level location where stats are moved by the log statistics store.</description>
   </property>
 
   <property>

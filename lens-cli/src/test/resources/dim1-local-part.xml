@@ -19,10 +19,11 @@
   under the License.
 
 -->
-<x_partition fact_or_dimension_table_name="dim_table2" location="/tmp/dim_table2" update_period="DAILY"
+<x_partition fact_or_dimension_table_name="dim_table2" location="${project.build.directory}/metastore/dim_table2"
+  update_period="DAILY"
   xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
+  xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <time_partition_spec>
-    <part_spec_element key="dt" value="2014-03-27T12:00:00" />
+    <part_spec_element key="dt" value="2014-03-27T12:00:00"/>
   </time_partition_spec>
 </x_partition>

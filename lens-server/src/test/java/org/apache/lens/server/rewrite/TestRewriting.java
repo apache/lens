@@ -204,7 +204,7 @@ public class TestRewriting {
       "lens.MethodMetricGauge.TestRewriting-MockDriver-1-RewriteUtil-rewriteQuery-toHQL")));
     conf.unset(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
 
-    q2 = "insert overwrite directory '/tmp/rewrite' cube select name from table";
+    q2 = "insert overwrite directory 'target/rewrite' cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -212,7 +212,7 @@ public class TestRewriting {
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
-    q2 = "insert overwrite local directory '/tmp/rewrite' cube select name from table";
+    q2 = "insert overwrite local directory 'target/rewrite' cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -220,7 +220,7 @@ public class TestRewriting {
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
-    q2 = "insert overwrite local directory '/tmp/example-output' cube select id,name from dim_table";
+    q2 = "insert overwrite local directory 'target/example-output' cube select id,name from dim_table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -244,7 +244,7 @@ public class TestRewriting {
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
-    q2 = "insert overwrite directory '/tmp/rewrite' select * from (cube select name from table) a";
+    q2 = "insert overwrite directory 'target/rewrite' select * from (cube select name from table) a";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -321,7 +321,7 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
 
-    q2 = "insert overwrite directory '/tmp/rewrite' "
+    q2 = "insert overwrite directory 'target/rewrite' "
       + "select * from (cube select name from table union all cube select name2 from table2) u";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);

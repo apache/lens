@@ -65,8 +65,8 @@ public class TestStatisticsLogFileScannerTask {
    */
   @BeforeMethod
   public void createTestLogFile() throws Exception {
-    f = new File("/tmp/test.log.2014-08-05-11-28");
-    hidden = new File("/tmp/.test.log.2014-08-05-11-28.swp");
+    f = new File("target/test.log.2014-08-05-11-28");
+    hidden = new File("target/.test.log.2014-08-05-11-28.swp");
     hidden.createNewFile();
     f.createNewFile();
   }

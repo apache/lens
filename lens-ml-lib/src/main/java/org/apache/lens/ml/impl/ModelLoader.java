@@ -18,9 +18,7 @@
  */
 package org.apache.lens.ml.impl;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +34,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -57,7 +54,7 @@ public final class ModelLoader {
   public static final String TEST_REPORT_BASE_DIR = "lens.ml.test.basedir";
 
   /** The Constant TEST_REPORT_BASE_DIR_DEFAULT. */
-  public static final String TEST_REPORT_BASE_DIR_DEFAULT = "file:///tmp/ml_reports";
+  public static final String TEST_REPORT_BASE_DIR_DEFAULT = MODEL_PATH_BASE_DIR_DEFAULT + "/ml_reports";
 
   // Model cache settings
   /** The Constant MODEL_CACHE_SIZE. */

@@ -140,7 +140,7 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
 
     File f = null;
     try {
-      String filename = "/tmp/data";
+      String filename = "target/data";
       f = createNewPath(filename);
 
       String result = commands.addFile(filename);
@@ -208,7 +208,7 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
 
     File jar = null;
     try {
-      String filename = "/tmp/data.jar";
+      String filename = "target/data.jar";
       jar = createNewPath(filename);
 
       String result = commands.addJar(filename);
@@ -288,21 +288,21 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
     File file = null;
     File jar = null;
     try {
-      String fileName = "/tmp/data.txt";
+      String fileName = "target/data.txt";
       file = createNewPath(fileName);
       commands.addFile(fileName);
 
-      String jarName = "/tmp/data.jar";
+      String jarName = "target/data.jar";
       jar = createNewPath(jarName);
       commands.addJar(jarName);
 
       String fileResourcesList = commands.listResources("file");
       Assert.assertEquals(fileResourcesList.split("\n").length, 1);
-      Assert.assertTrue(fileResourcesList.split("\n")[0].contains("/tmp/data.txt"));
+      Assert.assertTrue(fileResourcesList.split("\n")[0].contains("target/data.txt"));
 
       String jarResourcesList = commands.listResources("jar");
       Assert.assertEquals(jarResourcesList.split("\n").length, 1);
-      Assert.assertTrue(jarResourcesList.split("\n")[0].contains("/tmp/data.jar"));
+      Assert.assertTrue(jarResourcesList.split("\n")[0].contains("target/data.jar"));
 
       String allResources = commands.listResources(null);
       Assert.assertEquals(allResources.split("\n").length, 2);

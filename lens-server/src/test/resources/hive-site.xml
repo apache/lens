@@ -34,7 +34,7 @@
 
   <property>
     <name>hive.metastore.warehouse.dir</name>
-    <value>/tmp/hive/warehouse</value>
+    <value>${project.build.directory}/hive/warehouse</value>
   </property>
 
   <property>

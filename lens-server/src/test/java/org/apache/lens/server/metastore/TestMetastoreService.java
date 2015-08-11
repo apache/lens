@@ -22,6 +22,7 @@ import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 
 import static org.testng.Assert.*;
 
+import java.io.File;
 import java.util.*;
 
 import javax.ws.rs.BadRequestException;
@@ -48,6 +49,7 @@ import org.apache.lens.server.api.metastore.CubeMetastoreService;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -944,7 +946,7 @@ public class TestMetastoreService extends LensJerseyTest {
     xs1.setFieldDelimiter("\t");
     xs1.setLineDelimiter("\n");
     xs1.setMapKeyDelimiter("\r");
-    xs1.setTableLocation("/tmp/" + name);
+    xs1.setTableLocation(new Path(new File("target").getAbsolutePath(), name).toString());
     xs1.setExternal(true);
     xs1.setPartCols(new XColumns());
     xs1.setTableParameters(new XProperties());
@@ -1849,7 +1851,7 @@ public class TestMetastoreService extends LensJerseyTest {
   private XPartition createPartition(String cubeTableName, final List<XTimePartSpecElement> timePartSpecs) {
 
     XPartition xp = cubeObjectFactory.createXPartition();
-    xp.setLocation("file:///tmp/part/test_part");
+    xp.setLocation(new Path(new File("target").getAbsolutePath(), "part/test_part").toString());
     xp.setFactOrDimensionTableName(cubeTableName);
     xp.setNonTimePartitionSpec(new XPartSpec());
     xp.setTimePartitionSpec(new XTimePartSpec());

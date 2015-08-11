@@ -159,7 +159,7 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
       "<property name=\"sample_cube.prop\" value=\"sample\" />"
         + "\n<property name=\"sample_cube.prop1\" value=\"sample1\" />\n");
 
-    File newFile = new File("/tmp/sample_cube1.xml");
+    File newFile = new File("target/sample_cube1.xml");
     try {
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
@@ -173,7 +173,7 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
 
       assertTrue(desc.contains(propString));
 
-      command.updateCube("sample_cube", new File("/tmp/sample_cube1.xml"));
+      command.updateCube("sample_cube", new File("target/sample_cube1.xml"));
       desc = command.describeCube("sample_cube");
       LOG.debug(desc);
       assertTrue(desc.contains(propString));
