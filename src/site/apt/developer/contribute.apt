@@ -188,6 +188,9 @@ Developer Documentation : How to contribute to Apache Lens?
 
     * Line wrapping: Always use a 120-column line width.
 
+  * Use slf4j framewrok for logging and use parameterized logging. Avoid commons logging and log4j fully, and those
+    should be removed from transitive dependencies of newer dependencies added.
+
   * All working files (java, xml, others) should have the ASF license header in all versioned files.
 
   * If new features requires illustrative examples, they should be added in lens-examples.
