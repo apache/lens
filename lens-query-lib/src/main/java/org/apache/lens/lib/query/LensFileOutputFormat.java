@@ -22,6 +22,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.lens.server.api.LensConfConstants;
 
@@ -58,6 +60,11 @@ public class LensFileOutputFormat extends FileOutputFormat<NullWritable, Text> {
    * The Constant NEWLINE.
    */
   public static final String NEWLINE = "\n";
+
+  /**
+   * Regex pattern for valid file path name characters
+   */
+  public static final Pattern VALID_PATTERN = Pattern.compile("[^a-zA-Z0-9_\\-\\.]");
 
   /**
    * The Class LensRowWriter.
@@ -241,5 +248,19 @@ public class LensFileOutputFormat extends FileOutputFormat<NullWritable, Text> {
   public static boolean getCompressOutput(Configuration conf) {
     return conf.getBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION,
       LensConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
+  }
+
+  /**
+   * Generates a valid output file name from the given name
+   * @param name name to be converted
+   * @return Valid output file name
+   */
+  public static String getValidOutputFileName(String name) {
+    Matcher matcher = VALID_PATTERN.matcher(name);
+    String validName = matcher.replaceAll("_");
+    if (validName.length() > 50) {
+      validName = validName.substring(0, 50);
+    }
+    return validName;
   }
 }

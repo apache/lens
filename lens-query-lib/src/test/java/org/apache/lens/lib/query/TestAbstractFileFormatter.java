@@ -207,36 +207,47 @@ public abstract class TestAbstractFileFormatter {
   }
 
   /**
-   * Test formatter.
-   *
-   * @param conf            the conf
-   * @param charsetEncoding the charset encoding
-   * @param outputParentDir the output parent dir
-   * @param fileExtn        the file extn
-   * @param columnNames     the column names
-   * @throws IOException Signals that an I/O exception has occurred.
+   * Creates the query context
+   * @param conf      the conf
+   * @param queryName the name of query
+   * @return the query context
    */
-  protected void testFormatter(Configuration conf, String charsetEncoding, String outputParentDir, String fileExtn,
-    LensResultSetMetadata columnNames) throws IOException {
-
+  protected QueryContext createContext(Configuration conf, String queryName) {
     final LensDriver mockDriver = new MockDriver();
     try {
       mockDriver.configure(conf);
     } catch (LensException e) {
       Assert.fail(e.getMessage());
     }
-    QueryContext ctx = QueryContext.createContextWithSingleDriver("test writer query", "testuser", new LensConf(),
-        conf, mockDriver, null, false);
+    QueryContext ctx = QueryContext.createContextWithSingleDriver("test writer query", "testuser",
+      new LensConf(), conf, mockDriver, null, false);
 
     ctx.setSelectedDriver(mockDriver);
-    formatter = createFormatter();
+    ctx.setQueryName(queryName);
+    return ctx;
+  }
 
+  /**
+   * Validates the formatter
+   * @param conf              the conf
+   * @param charsetEncoding   the charset encoding
+   * @param outputParentDir   the output parent dir
+   * @param fileExtn          the file extn
+   * @param columnNames       the column names
+   * @param ctx               the query context
+   * @param expectedFinalPath the final path of output
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  public void validateFormatter(Configuration conf, String charsetEncoding, String outputParentDir, String fileExtn,
+    LensResultSetMetadata columnNames, QueryContext ctx, Path expectedFinalPath) throws IOException {
+    formatter = createFormatter();
     formatter.init(ctx, columnNames);
 
     // check output spec
     Assert.assertEquals(formatter.getEncoding(), charsetEncoding);
     Path tmpPath = formatter.getTmpPath();
-    Path expectedTmpPath = new Path(outputParentDir, ctx.getQueryHandle() + ".tmp" + fileExtn);
+    Path expectedTmpPath = new Path(outputParentDir, ctx.getQueryHandle()
+      + ".tmp" + fileExtn);
     Assert.assertEquals(tmpPath, expectedTmpPath);
 
     // write header, rows and footer;
@@ -251,9 +262,46 @@ public abstract class TestAbstractFileFormatter {
     formatter.close();
     Assert.assertFalse(fs.exists(tmpPath));
     Path finalPath = new Path(formatter.getFinalOutputPath());
-    Path expectedFinalPath = new Path(outputParentDir, ctx.getQueryHandle() + fileExtn).makeQualified(fs);
     Assert.assertEquals(finalPath, expectedFinalPath);
     Assert.assertTrue(fs.exists(finalPath));
+  }
+  /**
+   * Test formatter.
+   *
+   * @param conf            the conf
+   * @param charsetEncoding the charset encoding
+   * @param outputParentDir the output parent dir
+   * @param fileExtn        the file extn
+   * @param columnNames     the column names
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  protected void testFormatter(Configuration conf, String charsetEncoding, String outputParentDir, String fileExtn,
+    LensResultSetMetadata columnNames) throws IOException {
+
+    QueryContext ctx = createContext(conf, null);
+
+    Path expectedFinalPath = new Path(outputParentDir, ctx.getQueryHandle() + fileExtn);
+    FileSystem fs = expectedFinalPath.getFileSystem(conf);
+    expectedFinalPath = expectedFinalPath.makeQualified(fs);
+    validateFormatter(conf, charsetEncoding, outputParentDir, fileExtn, columnNames, ctx, expectedFinalPath);
+  }
+
+  /**
+   * Test Formatter with a different final path
+   * @param conf              the conf
+   * @param charsetEncoding   the charset encoding
+   * @param outputParentDir   the output parent dir
+   * @param fileExtn          the file extn
+   * @param columnNames       the column names
+   * @param queryName         the name of the query
+   * @param expectedFinalPath Final path of the output
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  protected void testFormatterWithFinalPath(Configuration conf, String charsetEncoding, String outputParentDir,
+    String fileExtn, LensResultSetMetadata columnNames, String queryName, Path expectedFinalPath) throws IOException {
+    QueryContext ctx = createContext(conf, queryName);
+
+    validateFormatter(conf, charsetEncoding, outputParentDir, fileExtn, columnNames, ctx, expectedFinalPath);
   }
 
   /**
