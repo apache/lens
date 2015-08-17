@@ -33,6 +33,7 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -85,6 +86,7 @@ public class QueryTranslationTest extends ESDriverTest {
   private static final ImmutableList<ValidQuery> VALID_QUERIES;
   private static final ImmutableList<InvalidQuery> IN_VALID_QUERIES;
   static {
+    OBJECT_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true); // Jackson 1.2+
     VALID_QUERIES = ImmutableList.copyOf(loadResource(VALID_QUERIES_RESOURCE_PATH, ValidQuery[].class));
     IN_VALID_QUERIES = ImmutableList.copyOf(loadResource(INVALID_QUERIES_RESOURCE_PATH, InvalidQuery[].class));
   }
