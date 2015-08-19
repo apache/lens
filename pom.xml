@@ -541,6 +541,8 @@
             <exclude>.git/**</exclude>
             <!-- For connecting to ReviewBoard thru rbt tools-->
             <exclude>.reviewboardrc</exclude>
+            <!-- Used in apache pre-commit job -->
+            <exclude>**/patchprocess/**</exclude>
             <!-- IDE files -->
             <exclude>.idea/**</exclude>
             <exclude>**/*.iml</exclude>
