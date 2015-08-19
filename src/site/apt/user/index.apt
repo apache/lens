@@ -25,29 +25,29 @@ Lens User Guide
 
 	Lens Server runs several services which can be used from their REST endpoints.
 	This document covers some of the important services, their purpose and key API calls.
-	
-	Lens server provides metastore service for managing metadata. Metadata exposed by lens 
+
+	Lens server provides metastore service for managing metadata. Metadata exposed by lens
 	is inspired by OLAP data cubes. See {{{./olap-cube.html#Metastore_model} Metastore Model}} for metastore constructs
 	that lens provides.
-	
+
 	Lens server also provides query service for querying data exposed by lens. See
 	{{{./olap-cube.html#Query_Language} Query Language}} for the grammar of the query.
-	
-	To access any service on lens, user should be working in a session. User can also pass 
+
+	To access any service on lens, user should be working in a session. User can also pass
 	various configuration parameters from client.
-	
-	The sections below give more details on each service and configuration. 
+
+	The sections below give more details on each service and configuration.
 
 * Configuration
 
   Client configuration can be overridden in lens-client-site.xml.
   See {{{./client-config.html}client configuration}} for all the configuration parameters
   available and their default values.
-   
+
 * Session Service
 
-	To use any Lens service the user must first create a session. Each Lens session is associated with a unique session handle, which must be passed when making queries, or doing metadata operations in the same session. To check if the session service is deployed in the Lens Server, user can send a GET request to /session. An OK response means that the session service is deployed. 
-	
+	To use any Lens service the user must first create a session. Each Lens session is associated with a unique session handle, which must be passed when making queries, or doing metadata operations in the same session. To check if the session service is deployed in the Lens Server, user can send a GET request to /session. An OK response means that the session service is deployed.
+
 	Sessions also allow users to set configuration or resources which could be shared across a group of queries. For example, if a group of queries need to call a UDF available in some specific jar, then the jar file can be added as a resource in the session. All queries started within the same session can make use of the jar file.
 
 
@@ -56,18 +56,58 @@ Lens User Guide
   and {{{./cli.html#Session_management} CLI}} for doing all session level operations.
 
 	The important API calls exposed by the session resource are -
-	
-	* {{{../resource_SessionResource.html#path__session.html}/session}} - Endpoint to create or delete a session. 
+
+	* {{{../resource_SessionResource.html#path__session.html}/session}} - Endpoint to create or delete a session.
 
 	* {{{../resource_SessionResource.html#path__session_params.html}/session/params}} - Endpoint to maintain session settings
 
 	* {{{../resource_SessionResource.html#path__session_resources_add.html}/session/resources}} - Adding or removing resources from the session
 
+
+	While adding resources through client, you have to provide a path to the resource file and type. The type can either
+	be <<<jar>>> or <<<file>>>. The path has to be a path accessible by the lens server. E.g. It can be
+	a hdfs path or a local path on lens server's file system. But it can't be a path only accessible on the client
+	machine. Lens client doesn't upload the jar to the server, just passes the path through. The path can be a a path
+	to a file/jar, a path to a directory or a regex path. Given path will be converted to a list of paths of the
+	provided type and all those resources will be added.
+
+		** If Given path is a path to a file which exists, the list will be a singleton list containing only that file.
+
+		** If Given path is a directory path, server will see if a <<<jar_order>>>(for type jar) or a <<<glob_order>>>(for type file) file exists.
+
+	  		*** If yes, that file is read. The order file is supposed to list the order for adding resources. Resources will be
+	  added in that order.
+
+	  		*** else, the directory is globbed and resources will be added in glob order.
+
+		** If given path is a regex path, regex path is resolved to list of paths. Each path is then resolved to a list of
+	  paths since they can either be file or directory.
+
+		** order file can also contain regexes which are handled like the above point.
+
+
+* Database Resource Service
+
+	Lens server provides a service which automatically adds jars to a session
+	depending on which database the user is using. The idea is, that each database can store one collection of schemas
+	in it, and might have some required resources for them to work properly. So all the resources for the database
+	can be provided to the server at deployment time and server will automatically add all those to every session that
+	switches to that database.
+
+	DB resources currently only deals with jars. To use this, first decide on a directory where the jars for each db
+	will be stored. You can set the value in <<<lens.server.database.resource.dir>>> in <<<lens-site.xml>>> as
+	described in {{{../admin/config.html}Server Config}}. The default
+	is <<</tmp/lens/resources>>>. I'll explain the workings using the default directory. so /tmp/lens/resources/dbname
+	is supposed to store all jars for db <dbname>. After the user switches to <dbname>, the first command after the
+	switch will add all jars to the session. Now sometimes the order in which jars are to be added can also be
+	important. For that, you can supply a <<<jar_order>>> file as described in previous section.
+
+
 []
 
 * Query Execution Service
-	
-	The {{{../resource_QueryServiceResource.html}Query Execution Service}} is used to query data exposed by Lens. 
+
+	The {{{../resource_QueryServiceResource.html}Query Execution Service}} is used to query data exposed by Lens.
 
 ** Query Submission Workflow
 
@@ -86,7 +126,7 @@ Lens User Guide
 	To summarize, given below are steps for batch (async) queries
 
 	[[1]] Create session, note returned session handle.
-	
+
 	[[2]] Create query by passing session handle, note returned query handle.
 
 	[[3]] Poll for query status by passing session handle and query handle.
@@ -94,20 +134,20 @@ Lens User Guide
 	[[4]] If query is SUCCESSFUL, get results.
 
 []
-	
+
 	Steps for interactive queries.
 
 	[[1]] Create a session.
 
 	[[2]] Create a query by setting <<<op=EXECUTE_WITH_TIMEOUT>>>, Also set the <<<timeout>>> value.
 
-	[[3]] Check the response, if it contains only the query handle, then poll for status as is the case in async queries. If it contains both query handle and result set, then that means query did complete successfully within the timeout. 
+	[[3]] Check the response, if it contains only the query handle, then poll for status as is the case in async queries. If it contains both query handle and result set, then that means query did complete successfully within the timeout.
 
 []
 
 ** Getting query results
-	
-	A query can be run once, but its results can be fetched any number of times, 
+
+	A query can be run once, but its results can be fetched any number of times,
 	if the results are persisted, until its purged from server memory. Results
 	can be obtained by sending a GET to <<</queryapi/queries/{queryhandle}/resultset>>>.
 	This endpoint takes optional <<<fromindex>>> and <<<fetchsize>>> parameters
@@ -118,39 +158,39 @@ Lens User Guide
 
 ** Life of a Query in the Lens Server
 
-	The following diagram shows query state transition in the Lens Server 
+	The following diagram shows query state transition in the Lens Server
 
 [/images/querystate.png] Query States in Lens
 
 
-	When user submits a query to the Lens Server, its starts in the <<NEW>> state. After the query is submitted, it moves into the <<QUEUED>> state. Until Lens server is free to take up the query, it remains in the <<QUEUED>> state. As soon as Lens server starts processing the query, it enters the <<LAUNCHED>> state. At this stage Lens has decided which backend engine will be used to execute the query. 
+	When user submits a query to the Lens Server, its starts in the <<NEW>> state. After the query is submitted, it moves into the <<QUEUED>> state. Until Lens server is free to take up the query, it remains in the <<QUEUED>> state. As soon as Lens server starts processing the query, it enters the <<LAUNCHED>> state. At this stage Lens has decided which backend engine will be used to execute the query.
 
 	For each query Lens server will poll the chosen backend engine for query status. A GET on the query endpoint returns the latest status of the query.
 
 
-  The <<RUNNING>> state indicates that the query is currently being processed by the query backend. 
+  The <<RUNNING>> state indicates that the query is currently being processed by the query backend.
   After the <<RUNNING>> state, the query can enter either the <<EXECUTED>> or <<FAILED>> states, depending on the result of query execution.
   If the execution is successful, then server would format the result if required and then set the state to
   <<SUCCESSFUL>> or <<FAILED>> if formatting fails.
 
 	 If the query is <<SUCCESSFUL>>, its result set can be retrieved using the result set API call, by passing the session handle and query handle. The query can be executed once, and its results can be fetched multiple times unless the query has been purged from Lens server state.
 
-	In any state, if the user requests that the query be cancelled, the query will enter into <<CANCELLED>> state. Query can be cancelled by sending a DELETE at the query endpoint. 
+	In any state, if the user requests that the query be cancelled, the query will enter into <<CANCELLED>> state. Query can be cancelled by sending a DELETE at the query endpoint.
 
 	<<FAILED>>, <<SUCCESSFUL>> and <<CANCELLED>> are end states for a query. Once a query reaches these states, it becomes eligible to purging. The query is purged when its purge delay expires, after which it is not possible to retrieve results of the query. This purge delay is configurable. After purging the query enters the <<CLOSED>> state.
 
 ** Prepared queries
 
   A query can be prepared for execution. Once prepared the query can be submitted for execution as many times as required. When prepared query is no longer required, it should be destroyed. REST api, JavaClient api and CLI commands are available for all the operations supported.
-  
+
   * {{{../resource_QueryServiceResource.html#path__queryapi_preparedqueries.html}Rest api for prepared queries}}
 
   * {{{../resource_QueryServiceResource.html#path__queryapi_preparedqueries_-prepareHandle-.html}Rest api for handling a prepared query}}
-  
+
   * {{{../apidocs/org/apache/lens/client/LensStatement.html} Java client api}}
-  
+
   * {{{./cli.html#Query_Management} CLI query management}}
-  
+
 * Metastore service
 
 	The Metastore service is used for DDL operations like creating, updating cubes, fact tables and dimensions. It also pprovides endpoints to create storage tables and to add partitions to a storage table. For more detailed information see the {{{../resource_MetastoreResource.html}metastore service resource}} documentation.
