@@ -34,6 +34,7 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
 
 import org.mockito.Matchers;
@@ -76,7 +77,7 @@ public class TestRewriting {
   // change the number, if more tests for success needs to be added
   static final int NUM_SUCCESS = 36;
 
-  private CubeQueryRewriter getMockedRewriter() throws SemanticException, ParseException, LensException {
+  private CubeQueryRewriter getMockedRewriter() throws ParseException, LensException, HiveException {
     CubeQueryRewriter mockwriter = Mockito.mock(CubeQueryRewriter.class);
     Mockito.when(mockwriter.rewrite(Matchers.any(String.class))).thenAnswer(new Answer<CubeQueryContext>() {
       @Override
@@ -106,11 +107,11 @@ public class TestRewriting {
    *
    * @param query the query
    * @return the mocked cube context
-   * @throws SemanticException the semantic exception
+   * @throws LensException the lens exception
    * @throws ParseException    the parse exception
    */
   private CubeQueryContext getMockedCubeContext(String query)
-    throws SemanticException, ParseException, LensException {
+    throws ParseException, LensException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
     Mockito.when(context.toHQL()).thenReturn(query.substring(4));
     Mockito.when(context.toAST(Matchers.any(Context.class))).thenReturn(HQLParser.parseHQL(query.substring(4), hconf));
@@ -122,10 +123,10 @@ public class TestRewriting {
    *
    * @param ast the ast
    * @return the mocked cube context
-   * @throws SemanticException the semantic exception
    * @throws ParseException    the parse exception
+   * @throws LensException  the lens exception
    */
-  private CubeQueryContext getMockedCubeContext(ASTNode ast) throws SemanticException, ParseException {
+  private CubeQueryContext getMockedCubeContext(ASTNode ast) throws ParseException, LensException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
     if (ast.getToken().getType() == HiveParser.TOK_QUERY) {
       if (((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
@@ -167,11 +168,11 @@ public class TestRewriting {
    * Test cube query.
    *
    * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
+   * @throws HiveException
    */
   @Test
-  public void testCubeQuery() throws ParseException, SemanticException, LensException {
+  public void testCubeQuery() throws ParseException, LensException, HiveException {
     List<LensDriver> drivers = new ArrayList<LensDriver>();
     MockDriver driver = new MockDriver();
     LensConf lensConf = new LensConf();

@@ -746,7 +746,8 @@ public class CubeTestSetup {
       .createDerivedCube(TEST_CUBE_NAME, DERIVED_CUBE_NAME, measures, dimensions, new HashMap<String, String>(), 5L);
   }
 
-  private void createBaseAndDerivedCubes(CubeMetastoreClient client) throws HiveException, ParseException {
+  private void createBaseAndDerivedCubes(CubeMetastoreClient client)
+    throws HiveException, ParseException, LensException {
     Set<CubeMeasure> cubeMeasures2 = new HashSet<CubeMeasure>(cubeMeasures);
     Set<CubeDimAttribute> cubeDimensions2 = new HashSet<CubeDimAttribute>(cubeDimensions);
     cubeMeasures2.add(new ColumnMeasure(new FieldSchema("msr11", "int", "first measure")));
@@ -906,7 +907,7 @@ public class CubeTestSetup {
     createBaseCubeFacts(client);
   }
 
-  private void createBaseCubeFacts(CubeMetastoreClient client) throws HiveException {
+  private void createBaseCubeFacts(CubeMetastoreClient client) throws HiveException, LensException {
 
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = new HashMap<String, Set<UpdatePeriod>>();
     Set<UpdatePeriod> updates = new HashSet<UpdatePeriod>();

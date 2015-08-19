@@ -18,8 +18,9 @@
  */
 package org.apache.lens.cube.parse;
 
+import org.apache.lens.server.api.error.LensException;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 public abstract class ValidationRule {
   Configuration conf;
@@ -29,7 +30,7 @@ public abstract class ValidationRule {
     this.conf = conf;
   }
 
-  public abstract boolean validate(CubeQueryContext ctx) throws SemanticException;
+  public abstract boolean validate(CubeQueryContext ctx) throws  LensException;
 
   public String getErrorMessage() {
     return error;

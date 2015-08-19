@@ -26,7 +26,6 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -147,7 +146,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDimOnlyDistinctQuery() throws SemanticException, ParseException, LensException {
+  public void testDimOnlyDistinctQuery() throws ParseException, LensException {
 
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, false);
 
@@ -196,7 +195,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testAggregateResolverOff() throws SemanticException, ParseException, LensException {
+  public void testAggregateResolverOff() throws ParseException, LensException {
     Configuration conf2 = getConfWithStorages("C1,C2");
     conf2.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, true);
 
@@ -218,7 +217,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
     rawFactSelectionTests(conf2);
   }
 
-  private void aggregateFactSelectionTests(Configuration conf) throws SemanticException, ParseException, LensException {
+  private void aggregateFactSelectionTests(Configuration conf) throws ParseException, LensException {
     String query = "SELECT count(distinct cityid) from testcube where " + TWO_DAYS_RANGE;
     CubeQueryContext cubeql = rewriteCtx(query, conf);
     String hQL = cubeql.toHQL();
@@ -262,7 +261,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
     compareQueries(expectedQL, hQL);
   }
 
-  private void rawFactSelectionTests(Configuration conf) throws SemanticException, ParseException, LensException {
+  private void rawFactSelectionTests(Configuration conf) throws ParseException, LensException {
     // Check a query with non default aggregate function
     String query = "SELECT cityid, avg(testCube.msr2) FROM testCube WHERE " + TWO_DAYS_RANGE;
     CubeQueryContext cubeql = rewriteCtx(query, conf);

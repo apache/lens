@@ -22,8 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.Dimension;
-
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * HQL context class which passes all query strings from {@link CubeQueryContext} and works with all dimensions to be
@@ -33,23 +32,23 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
  */
 class DimOnlyHQLContext extends DimHQLContext {
 
-  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws SemanticException {
+  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws LensException {
     super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(),
       query.getWhereTree(), query.getGroupByTree(), query.getOrderByTree(),
       query.getHavingTree(), query.getLimitValue());
   }
 
   DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, String whereClause)
-    throws SemanticException {
+    throws LensException {
     super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), whereClause, query.getGroupByTree(), query
         .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
   }
 
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws LensException {
     return query.getInsertClause() + super.toHQL();
   }
 
-  protected String getFromTable() throws SemanticException {
+  protected String getFromTable() throws LensException {
     if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
       return getDimsToQuery().get(query.getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
         query.getAliasForTableName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));

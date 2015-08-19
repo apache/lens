@@ -22,9 +22,9 @@ package org.apache.lens.cube.parse;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -42,12 +42,12 @@ public class AbridgedTimeRangeWriter implements TimeRangeWriter {
    * @param tableName
    * @param parts
    * @return
-   * @throws SemanticException
+   * @throws LensException
    */
   @Override
   public String getTimeRangeWhereClause(CubeQueryContext cubeQueryContext,
     String tableName,
-    Set<FactPartition> parts) throws SemanticException {
+    Set<FactPartition> parts) throws LensException {
     if (parts == null || parts.isEmpty()) {
       return "";
     }
@@ -73,7 +73,7 @@ public class AbridgedTimeRangeWriter implements TimeRangeWriter {
 
   private String getClause(CubeQueryContext cubeQueryContext,
     String tableName,
-    Set<FactPartition> parts) throws SemanticException {
+    Set<FactPartition> parts) throws LensException {
     Map<String, List<String>> partFilterMap = new HashMap<String, List<String>>();
     List<String> allTimeRangeFilters = new ArrayList<String>();
 

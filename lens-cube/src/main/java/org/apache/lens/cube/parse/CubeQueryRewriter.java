@@ -18,6 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.error.LensCubeErrorCode.SYNTAX_ERROR;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -185,27 +187,37 @@ public class CubeQueryRewriter {
     rewriters.add(new LightestDimensionResolver(conf));
   }
 
-  public CubeQueryContext rewrite(ASTNode astnode) throws SemanticException, LensException {
-    CubeSemanticAnalyzer analyzer = new CubeSemanticAnalyzer(conf, hconf);
-    analyzer.analyze(astnode, qlCtx);
-    CubeQueryContext ctx = analyzer.getQueryContext();
+  public CubeQueryContext rewrite(ASTNode astnode) throws LensException {
+    CubeSemanticAnalyzer analyzer;
+    try {
+      analyzer = new CubeSemanticAnalyzer(conf, hconf);
+      analyzer.analyze(astnode, qlCtx);
+    } catch (SemanticException e) {
+      throw new LensException(SYNTAX_ERROR.getValue(), e, e.getMessage());
+    }
+    CubeQueryContext ctx = new CubeQueryContext(astnode, analyzer.getCubeQB(), conf, hconf);
     rewrite(rewriters, ctx);
     return ctx;
   }
 
-  public CubeQueryContext rewrite(String command) throws ParseException, SemanticException, LensException {
+  public CubeQueryContext rewrite(String command) throws LensException {
     if (command != null) {
       command = command.replace("\n", "");
     }
-    ParseDriver pd = new ParseDriver();
-    ASTNode tree = pd.parse(command, qlCtx, false);
-    tree = ParseUtils.findRootNonNullToken(tree);
+    ASTNode tree;
+    try {
+      ParseDriver pd = new ParseDriver();
+      tree = pd.parse(command, qlCtx, false);
+      tree = ParseUtils.findRootNonNullToken(tree);
+    } catch (ParseException e) {
+      throw new LensException(SYNTAX_ERROR.getValue(), e, e.getMessage());
+    }
     return rewrite(tree);
   }
 
   private static final String ITER_STR = "-ITER-";
 
-  private void rewrite(List<ContextRewriter> rewriters, CubeQueryContext ctx) throws SemanticException, LensException {
+  private void rewrite(List<ContextRewriter> rewriters, CubeQueryContext ctx) throws LensException {
     int i = 0;
     for (ContextRewriter rewriter : rewriters) {
       /*

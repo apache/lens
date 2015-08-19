@@ -21,9 +21,9 @@ package org.apache.lens.cube.parse;
 import java.util.*;
 
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +36,7 @@ class LeastPartitionResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     if (cubeql.getCube() != null && !cubeql.getCandidateFactSets().isEmpty()) {
       Map<Set<CandidateFact>, Integer> factPartCount = new HashMap<Set<CandidateFact>, Integer>();
 

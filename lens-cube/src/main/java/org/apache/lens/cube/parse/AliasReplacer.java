@@ -25,15 +25,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 
@@ -50,7 +50,7 @@ class AliasReplacer implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     Map<String, String> colToTableAlias = cubeql.getColToTableAlias();
 
     extractTabAliasForCol(cubeql);
@@ -93,9 +93,9 @@ class AliasReplacer implements ContextRewriter {
   /**
    * Figure out queried dim attributes and measures from the cube query context
    * @param cubeql
-   * @throws SemanticException
+   * @throws LensException
    */
-  private void findDimAttributesAndMeasures(CubeQueryContext cubeql) throws SemanticException {
+  private void findDimAttributesAndMeasures(CubeQueryContext cubeql) throws LensException {
     CubeInterface cube = cubeql.getCube();
     if (cube != null) {
       Set<String> cubeColsQueried = cubeql.getColumnsQueried(cube.getName());
@@ -119,11 +119,11 @@ class AliasReplacer implements ContextRewriter {
     }
   }
 
-  private void extractTabAliasForCol(CubeQueryContext cubeql) throws SemanticException {
+  private void extractTabAliasForCol(CubeQueryContext cubeql) throws LensException {
     extractTabAliasForCol(cubeql, cubeql);
   }
 
-  static void extractTabAliasForCol(CubeQueryContext cubeql, TrackQueriedColumns tqc) throws SemanticException {
+  static void extractTabAliasForCol(CubeQueryContext cubeql, TrackQueriedColumns tqc) throws LensException {
     Map<String, String> colToTableAlias = cubeql.getColToTableAlias();
     Set<String> columns = tqc.getTblAliasToColumns().get(CubeQueryContext.DEFAULT_TABLE);
     if (columns == null) {
@@ -145,19 +145,20 @@ class AliasReplacer implements ContextRewriter {
           if (!inCube) {
             String prevDim = colToTableAlias.get(col.toLowerCase());
             if (prevDim != null && !prevDim.equals(dim.getName())) {
-              throw new SemanticException(ErrorMsg.AMBIGOUS_DIM_COLUMN, col, prevDim, dim.getName());
+              throw new LensException(LensCubeErrorCode.AMBIGOUS_DIM_COLUMN.getValue(), col, prevDim, dim.getName());
             }
             String dimAlias = cubeql.getAliasForTableName(dim.getName());
             colToTableAlias.put(col.toLowerCase(), dimAlias);
             tqc.addColumnsQueried(dimAlias, col.toLowerCase());
           } else {
             // throw error because column is in both cube and dimension table
-            throw new SemanticException(ErrorMsg.AMBIGOUS_CUBE_COLUMN, col, cubeql.getCube().getName(), dim.getName());
+            throw new LensException(LensCubeErrorCode.AMBIGOUS_CUBE_COLUMN.getValue(), col,
+                cubeql.getCube().getName(), dim.getName());
           }
         }
       }
       if (colToTableAlias.get(col.toLowerCase()) == null) {
-        throw new SemanticException(ErrorMsg.COLUMN_NOT_FOUND, col);
+        throw new LensException(LensCubeErrorCode.COLUMN_NOT_FOUND.getValue(), col);
       }
     }
   }

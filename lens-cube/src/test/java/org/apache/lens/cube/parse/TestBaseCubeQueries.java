@@ -32,15 +32,14 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 import org.testng.Assert;
@@ -66,16 +65,16 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
 
   @Test
   public void testColumnErrors() throws Exception {
-    SemanticException e;
+    LensException e;
 
-    e = getSemanticExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
-      ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT.getErrorCode());
+    e = getLensExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
+    assertEquals(e.getErrorCode(),
+        LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getValue());
     // no fact has the all the dimensions queried
-    e = getSemanticExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
+    e = getLensExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
       + TWO_DAYS_RANGE, conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
-      ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+    assertEquals(e.getErrorCode(),
+        LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
     String regexp = String.format(CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND.errorFormat,
       "Column Sets: (.*?)", "queriable together");
@@ -438,8 +437,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     // If going to fallback timedim, and partitions are missing, then error should be missing partition on that
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C4");
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
-    SemanticException exc =
-      getSemanticExceptionInRewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
+    LensException exc =
+      getLensExceptionInRewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
     PruneCauses.BriefAndDetailedError pruneCause = extractPruneCause(exc);
     assertTrue(pruneCause.getBrief().contains("Missing partitions"));
     assertEquals(pruneCause.getDetails().get("testfact2_base").iterator().next().getCause(), MISSING_PARTITIONS);

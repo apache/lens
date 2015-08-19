@@ -21,13 +21,13 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -50,15 +50,19 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
   @Test
   public void testColumnErrors() throws Exception {
-    SemanticException th;
-    th = getSemanticExceptionInRewrite("select nocolexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("nonexist"));
+    LensException th;
+    th = getLensExceptionInRewrite("select nocolexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
 
-    th = getSemanticExceptionInRewrite("select invalidexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE,
-      conf);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("invalidexpr"));
+    Assert.assertTrue(getLensExceptionErrorMessageInRewrite(
+        "select nocolexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf).contains("nonexist"));
+
+    Assert.assertTrue(getLensExceptionErrorMessageInRewrite(
+        "select invalidexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf).contains("invalidexpr"));
+
+    th = getLensExceptionInRewrite("select invalidexpr, " + "SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE,
+        conf);
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
   }
 
   @Test
@@ -330,10 +334,10 @@ public class TestExpressionResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDerivedCube() throws SemanticException, ParseException, LensException {
-    SemanticException th =
-      getSemanticExceptionInRewrite("select avgmsr from derivedCube" + " where " + TWO_DAYS_RANGE, conf);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
+  public void testDerivedCube() throws ParseException, LensException, HiveException {
+    LensException th =
+      getLensExceptionInRewrite("select avgmsr from derivedCube" + " where " + TWO_DAYS_RANGE, conf);
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
   }
 
   @Test

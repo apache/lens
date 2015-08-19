@@ -52,7 +52,7 @@ public final class HQLParser {
   public static final Pattern P_WSPACE = Pattern.compile("\\s+");
 
   public interface ASTNodeVisitor {
-    void visit(TreeNode node) throws SemanticException;
+    void visit(TreeNode node) throws LensException;
   }
 
   public static class TreeNode {
@@ -293,9 +293,9 @@ public final class HQLParser {
    *
    * @param root
    * @param visitor
-   * @throws SemanticException
+   * @throws LensException
    */
-  public static void bft(ASTNode root, ASTNodeVisitor visitor) throws SemanticException {
+  public static void bft(ASTNode root, ASTNodeVisitor visitor) throws LensException {
     if (root == null) {
       throw new NullPointerException("Root cannot be null");
     }

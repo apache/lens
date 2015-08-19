@@ -25,13 +25,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.lens.cube.metadata.AbstractBaseTable;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.Tree;
@@ -56,7 +56,7 @@ class GroupbyResolver implements ContextRewriter {
   }
 
   private void promoteSelect(CubeQueryContext cubeql, List<String> nonMsrNonAggSelExprsWithoutAlias,
-    List<String> groupByExprs) throws SemanticException {
+    List<String> groupByExprs) throws LensException {
     if (!selectPromotionEnabled) {
       return;
     }
@@ -77,7 +77,7 @@ class GroupbyResolver implements ContextRewriter {
             try {
               exprAST = HQLParser.parseExpr(expr);
             } catch (ParseException e) {
-              throw new SemanticException(e);
+              throw new LensException(e);
             }
             ASTNode groupbyAST = cubeql.getGroupByAST();
             if (!isConstantsUsed(exprAST)) {
@@ -124,7 +124,7 @@ class GroupbyResolver implements ContextRewriter {
   }
 
   private void promoteGroupby(CubeQueryContext cubeql, List<String> selectExprs, List<String> groupByExprs)
-    throws SemanticException {
+    throws LensException {
     if (!groupbyPromotionEnabled) {
       return;
     }
@@ -144,7 +144,7 @@ class GroupbyResolver implements ContextRewriter {
         try {
           exprAST = HQLParser.parseExpr(expr);
         } catch (ParseException e) {
-          throw new SemanticException(e);
+          throw new LensException(e);
         }
         addChildAtIndex(index, cubeql.getSelectAST(), exprAST);
         index++;
@@ -168,7 +168,7 @@ class GroupbyResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     // Process Aggregations by making sure that all group by keys are projected;
     // and all projection fields are added to group by keylist;
     List<String> selectExprs = new ArrayList<String>();

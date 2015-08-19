@@ -34,7 +34,6 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -50,7 +49,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithDimensionAndMeasure() throws SemanticException, ParseException, LensException {
+  public void testQueryWithDimensionAndMeasure() throws ParseException, LensException {
 
     /* If all the queried dimensions are present in a derived cube, and one of the queried measure is not present in
     the same derived cube, then query shall be disallowed.
@@ -63,7 +62,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithDimensionAndMeasureInExpression() throws SemanticException, ParseException, LensException {
+  public void testQueryWithDimensionAndMeasureInExpression() throws ParseException, LensException {
 
     /* If all the queried dimensions are present in a derived cube, and one of the queried measure is not present in
     the same derived cube, then query shall be disallowed.
@@ -76,7 +75,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithDimensionInExpressionAndMeasure() throws SemanticException, ParseException, LensException {
+  public void testQueryWithDimensionInExpressionAndMeasure() throws ParseException, LensException {
 
     /* If all the queried dimensions are present in a derived cube, and one of the queried measure is not present in
     the same derived cube, then query shall be disallowed.
@@ -89,7 +88,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithDimensionAndMeasureInExpressions() throws SemanticException, ParseException, LensException {
+  public void testQueryWithDimensionAndMeasureInExpressions() throws ParseException, LensException {
 
     /* If all the queried dimensions are present in a derived cube, and one of the queried measure is not present in
     the same derived cube, then query shall be disallowed.
@@ -102,7 +101,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithChainReferencedDimensionAttributeAndMeasure() throws SemanticException, ParseException,
+  public void testQueryWithChainReferencedDimensionAttributeAndMeasure() throws ParseException,
       LensException {
 
     /* In this query a dimension attribute referenced through join chain name is used in select. If the
@@ -118,7 +117,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithChainReferencedDimensionAttributeAndExprMeasure() throws SemanticException, ParseException,
+  public void testQueryWithChainReferencedDimensionAttributeAndExprMeasure() throws ParseException,
       LensException {
 
     /* In this query a dimension attribute referenced through join chain name is used in select. If the
@@ -134,7 +133,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithDimExprWithChainRefAndExprMeasure() throws SemanticException, ParseException,
+  public void testQueryWithDimExprWithChainRefAndExprMeasure() throws ParseException,
       LensException {
 
     /* In this query a dimension attribute referenced through join chain name is used in select. If the
@@ -150,7 +149,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithMeasureAndChainReferencedDimAttributeInFilter() throws SemanticException, ParseException,
+  public void testQueryWithMeasureAndChainReferencedDimAttributeInFilter() throws ParseException,
       LensException {
 
     /* In this query a dimension attribute referenced through join chain name is used in filter. If the
@@ -166,7 +165,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithExprMeasureAndChainReferencedDimAttributeInFilter() throws SemanticException, ParseException,
+  public void testQueryWithExprMeasureAndChainReferencedDimAttributeInFilter() throws ParseException,
       LensException {
 
     /* In this query a dimension attribute referenced through join chain name is used in filter. If the
@@ -182,7 +181,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithExprMeasureAndDimExprWithChainRefInFilter() throws SemanticException, ParseException,
+  public void testQueryWithExprMeasureAndDimExprWithChainRefInFilter() throws ParseException,
       LensException {
 
     /* In this query a dimension attribute referenced through join chain name is used in filter. If the
@@ -199,7 +198,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithOnlyMeasure() throws ParseException, SemanticException, LensException {
+  public void testQueryWithOnlyMeasure() throws ParseException, LensException {
 
     /* A query which contains only measure should pass, if the measure is present in some derived cube.
     msr1 is present in one of the derived cubes, hence query shall pass without any exception. */
@@ -208,7 +207,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithOnlyExprMeasure() throws ParseException, SemanticException, LensException {
+  public void testQueryWithOnlyExprMeasure() throws ParseException, LensException {
 
     /* A query which contains only measure should pass, if the measure is present in some derived cube.
     roundedmsr1 ( an expression over msr1) is present in one of the derived cubes, hence query shall pass without
@@ -219,7 +218,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
 
   @Test
   public void testQueryWithMeasureAndChainReferencedDimAttributeInCaseStatement() throws ParseException,
-      SemanticException, LensException {
+      LensException {
 
     /* In this query a dimension attribute referenced through join chain name is used in case statement.
     A query which contains such a dim attribute and a measure is allowed even if the source column of the used dim
@@ -233,7 +232,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithDimAttributesNotInSameDerviedCube() throws ParseException, SemanticException, LensException {
+  public void testQueryWithDimAttributesNotInSameDerviedCube() throws ParseException, LensException {
 
     /* dim2 and countryid are not present in the same derived cube, hence query should be disallowed */
 
@@ -243,7 +242,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
 
   @Test
   public void testQueryWithDimExpressionssNotInSameDerviedCube()
-    throws ParseException, SemanticException, LensException {
+    throws ParseException, LensException {
 
     /* dim2, source columns of cubestate and countryid are not present in the same derived cube, hence query should be
      *  disallowed */
@@ -253,7 +252,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithMeasureNotInAnyDerviedCube() throws ParseException, SemanticException, LensException {
+  public void testQueryWithMeasureNotInAnyDerviedCube() throws ParseException, LensException {
 
     /* newmeasure is not present in any derived cube, hence the query should be disallowed. */
 
@@ -262,7 +261,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithExprMeasureNotInAnyDerviedCube() throws ParseException, SemanticException, LensException {
+  public void testQueryWithExprMeasureNotInAnyDerviedCube() throws ParseException, LensException {
 
     /* newexpr : expression over newmeasure is not present in any derived cube, hence the query should be disallowed. */
 
@@ -271,7 +270,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithReferencedDimAttributeAndMeasure() throws SemanticException, ParseException,
+  public void testQueryWithReferencedDimAttributeAndMeasure() throws ParseException,
       LensException {
 
     /* In this query a referenced dimension attribute is used in select statement. If the source column for such a
@@ -288,8 +287,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWtihTimeDimAndReplaceTimeDimSwitchTrue() throws ParseException, SemanticException,
-      LensException {
+  public void testQueryWtihTimeDimAndReplaceTimeDimSwitchTrue() throws ParseException, LensException {
 
     /* If a time dimension and measure are not present in the same derived cube, then query shall be disallowed.
 
@@ -309,8 +307,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWtihTimeDimAndReplaceTimeDimSwitchFalse() throws ParseException, SemanticException,
-      LensException {
+  public void testQueryWtihTimeDimAndReplaceTimeDimSwitchFalse() throws ParseException, LensException {
 
     /* If a time dimension and measure are not present in the same derived cube, then query shall be disallowed.
 
@@ -330,13 +327,13 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
   }
 
   private void testFieldsCannotBeQueriedTogetherError(final String testQuery, final List<String> conflictingFields)
-    throws ParseException, SemanticException, LensException {
+    throws ParseException, LensException {
     testFieldsCannotBeQueriedTogetherError(testQuery, conflictingFields, conf);
   }
 
   private void testFieldsCannotBeQueriedTogetherError(final String testQuery, final List<String> conflictingFields,
       final Configuration queryConf)
-    throws ParseException, SemanticException, LensException {
+    throws ParseException, LensException {
 
     try {
 

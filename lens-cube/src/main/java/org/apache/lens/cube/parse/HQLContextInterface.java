@@ -18,7 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.server.api.error.LensException;
+
 
 /**
  * HQL context holding the ql expressions
@@ -29,9 +30,9 @@ public interface HQLContextInterface {
    * Get the HQL query.
    *
    * @return query string
-   * @throws SemanticException
+   * @throws LensException
    */
-  String toHQL() throws SemanticException;
+  String toHQL() throws LensException;
 
   /**
    * Get select expression.

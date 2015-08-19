@@ -27,11 +27,11 @@ import org.apache.lens.cube.metadata.DerivedCube;
 import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
 import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
 import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -41,11 +41,11 @@ import com.google.common.collect.ImmutableSet;
 public class FieldValidator implements ContextRewriter {
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws FieldsCannotBeQueriedTogetherException, SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     validateFields(cubeql);
   }
 
-  public void validateFields(CubeQueryContext cubeql) throws FieldsCannotBeQueriedTogetherException, SemanticException {
+  public void validateFields(CubeQueryContext cubeql) throws LensException {
     CubeInterface cube = cubeql.getCube();
     if (cube == null) {
       return;
@@ -57,7 +57,7 @@ public class FieldValidator implements ContextRewriter {
       try {
         dcubes = cubeql.getMetastoreClient().getAllDerivedQueryableCubes(cube);
       } catch (HiveException e) {
-        throw new SemanticException(e);
+        throw new LensException(e);
       }
 
       ImmutableSet<String> queriedTimeDimCols = cubeql.getQueriedTimeDimCols();
@@ -135,7 +135,7 @@ public class FieldValidator implements ContextRewriter {
                                                  final ASTNode tree,
                                                  final Set<String> dimAttributes,
                                                  final Set<String> chainSourceColumns,
-                                                 final Set<String> nonQueryableColumns) throws SemanticException {
+                                                 final Set<String> nonQueryableColumns) throws LensException {
     if (tree == null || !cubeql.hasCubeInQuery()) {
       return;
     }
@@ -144,7 +144,7 @@ public class FieldValidator implements ContextRewriter {
 
     HQLParser.bft(tree, new HQLParser.ASTNodeVisitor() {
       @Override
-      public void visit(HQLParser.TreeNode treeNode) throws SemanticException {
+      public void visit(HQLParser.TreeNode treeNode) throws LensException {
         ASTNode astNode = treeNode.getNode();
         if (astNode.getToken().getType() == HiveParser.DOT) {
           // At this point alias replacer has run, so all columns are of the type table.column name

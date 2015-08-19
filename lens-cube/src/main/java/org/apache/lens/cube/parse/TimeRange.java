@@ -24,12 +24,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TreeSet;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
@@ -104,13 +104,13 @@ public class TimeRange {
 
   }
 
-  public void validate() throws SemanticException {
+  public void validate() throws LensException {
     if (partitionColumn == null || fromDate == null || toDate == null || fromDate.equals(toDate)) {
-      throw new SemanticException(ErrorMsg.INVALID_TIME_RANGE);
+      throw new LensException(LensCubeErrorCode.INVALID_TIME_RANGE.getValue());
     }
 
     if (fromDate.after(toDate)) {
-      throw new SemanticException(ErrorMsg.FROM_AFTER_TO, fromDate.toString(), toDate.toString());
+      throw new LensException(LensCubeErrorCode.FROM_AFTER_TO.getValue(), fromDate.toString(), toDate.toString());
     }
   }
 

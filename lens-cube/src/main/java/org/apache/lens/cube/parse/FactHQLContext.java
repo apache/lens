@@ -22,8 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.Dimension;
-
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.server.api.error.LensException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +36,7 @@ public class FactHQLContext extends DimHQLContext {
   private final Set<Dimension> factDims;
 
   FactHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> factDims,
-    CubeQueryContext query) throws SemanticException {
+    CubeQueryContext query) throws LensException {
     super(query, dimsToQuery, factDims, fact.getSelectTree(), fact.getWhereTree(), fact.getGroupByTree(), null, fact
       .getHavingTree(), null);
     this.fact = fact;
@@ -55,7 +54,7 @@ public class FactHQLContext extends DimHQLContext {
     return fact;
   }
 
-  protected String getFromTable() throws SemanticException {
+  protected String getFromTable() throws LensException {
     return query.getQBFromString(fact, getDimsToQuery());
   }
 

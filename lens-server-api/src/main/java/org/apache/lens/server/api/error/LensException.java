@@ -119,6 +119,16 @@ public class LensException extends Exception {
   }
 
   /**
+   * Constructs a new Lens Exception with error code and error msg formatting arguments.
+   *
+   * @see Exception#Exception(Throwable)
+   */
+  public LensException(final int errorCode, @NonNull final Object... errorMsgFormattingArgs) {
+    this(null, errorCode, null, errorMsgFormattingArgs);
+  }
+
+
+  /**
    * Constructs a new Lens Exception with exception error message, error code, cause and error msg formatting arguments.
    *
    * @see Exception#Exception(Throwable)
@@ -179,7 +189,7 @@ public class LensException extends Exception {
     return false;
   }
 
-  protected String getFormattedErrorMsg(LensError lensError) {
+  public String getFormattedErrorMsg(LensError lensError) {
 
     return lensError.getFormattedErrorMsg(errorMsgFormattingArgs);
   }

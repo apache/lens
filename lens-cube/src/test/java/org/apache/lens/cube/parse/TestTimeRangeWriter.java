@@ -24,11 +24,10 @@ import java.text.SimpleDateFormat;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
-
-import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.server.api.error.LensException;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -57,11 +56,11 @@ public abstract class TestTimeRangeWriter {
     answeringParts.add(new FactPartition("dt", CubeTestSetup.TWODAYS_BACK, UpdatePeriod.DAILY, null, null));
     answeringParts.add(new FactPartition("dt", CubeTestSetup.NOW, UpdatePeriod.HOURLY, null, null));
 
-    SemanticException th = null;
+    LensException th = null;
     String whereClause = null;
     try {
       whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       log.error("Semantic exception while testing disjoint parts.", e);
       th = e;
     }
@@ -69,7 +68,7 @@ public abstract class TestTimeRangeWriter {
     if (failDisjoint()) {
       Assert.assertNotNull(th);
       Assert
-        .assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.CANNOT_USE_TIMERANGE_WRITER.getErrorCode());
+        .assertEquals(th.getErrorCode(), LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue());
     } else {
       Assert.assertNull(th);
       validateDisjoint(whereClause, null);
@@ -84,7 +83,7 @@ public abstract class TestTimeRangeWriter {
     th = null;
     try {
       whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       th = e;
     }
 
@@ -98,7 +97,7 @@ public abstract class TestTimeRangeWriter {
   }
 
   @Test
-  public void testConsecutiveDayParts() throws SemanticException {
+  public void testConsecutiveDayParts() throws LensException {
     Set<FactPartition> answeringParts = new LinkedHashSet<FactPartition>();
     answeringParts.add(new FactPartition("dt", CubeTestSetup.ONE_DAY_BACK, UpdatePeriod.DAILY, null, null));
     answeringParts.add(new FactPartition("dt", CubeTestSetup.TWODAYS_BACK, UpdatePeriod.DAILY, null, null));
@@ -117,7 +116,7 @@ public abstract class TestTimeRangeWriter {
   }
 
   @Test
-  public void testSinglePart() throws SemanticException {
+  public void testSinglePart() throws LensException {
     Set<FactPartition> answeringParts = new LinkedHashSet<FactPartition>();
     answeringParts.add(new FactPartition("dt", CubeTestSetup.ONE_DAY_BACK, UpdatePeriod.DAILY, null, null));
     String whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);

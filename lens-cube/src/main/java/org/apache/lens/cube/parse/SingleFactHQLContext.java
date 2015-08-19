@@ -22,10 +22,11 @@ import java.util.Map;
 
 import org.apache.lens.cube.metadata.Dimension;
 
+import org.apache.lens.server.api.error.LensException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
  * HQL context class which passes down all query strings to come from DimOnlyHQLContext and works with fact being
@@ -39,13 +40,13 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
   private String storageAlias;
 
   SingleFactHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query)
-    throws SemanticException {
+    throws LensException {
     super(dimsToQuery, query);
     this.fact = fact;
   }
 
   SingleFactHQLContext(CandidateFact fact, String storageAlias, Map<Dimension, CandidateDim> dimsToQuery,
-      CubeQueryContext query, String whereClause) throws SemanticException {
+      CubeQueryContext query, String whereClause) throws LensException {
     super(dimsToQuery, query, whereClause);
     this.fact = fact;
     this.storageAlias = storageAlias;
@@ -56,7 +57,7 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
     return fact;
   }
 
-  static void addRangeClauses(CubeQueryContext query, CandidateFact fact) throws SemanticException {
+  static void addRangeClauses(CubeQueryContext query, CandidateFact fact) throws LensException {
     if (fact != null) {
       // resolve timerange positions and replace it by corresponding where
       // clause
@@ -70,7 +71,7 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
             try {
               rangeAST = HQLParser.parseExpr(rangeWhere);
             } catch (ParseException e) {
-              throw new SemanticException(e);
+              throw new LensException(e);
             }
             rangeAST.setParent(range.getParent());
             range.getParent().setChild(range.getChildIndex(), rangeAST);
@@ -83,7 +84,7 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
 
 
   @Override
-  protected String getFromTable() throws SemanticException {
+  protected String getFromTable() throws LensException {
     if (getQuery().getAutoJoinCtx() != null && getQuery().getAutoJoinCtx().isJoinsResolved()) {
       if (storageAlias != null) {
         return storageAlias;

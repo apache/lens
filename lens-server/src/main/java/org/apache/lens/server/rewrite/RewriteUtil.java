@@ -40,7 +40,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -84,11 +83,10 @@ public final class RewriteUtil {
    *
    * @param query the query
    * @return the list
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lensexception
    */
   static List<CubeQueryInfo> findCubePositions(String query, HiveConf conf)
-    throws SemanticException, LensException {
+    throws LensException {
 
     ASTNode ast = HQLParser.parseHQL(query, conf);
     if (log.isDebugEnabled()) {
@@ -108,10 +106,10 @@ public final class RewriteUtil {
    * @param ast           the ast
    * @param cubeQueries   the cube queries
    * @param originalQuery the original query
-   * @throws SemanticException the semantic exception
+   * @throws LensException the lens exception
    */
   private static void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries, String originalQuery)
-    throws SemanticException {
+    throws LensException {
     int childCount = ast.getChildCount();
     if (ast.getToken() != null) {
       if (log.isDebugEnabled() && ast.getChild(0) != null) {
@@ -140,7 +138,7 @@ public final class RewriteUtil {
             } else {
               // Not expected to reach here
               log.warn("Unknown query pattern found with AST:{}", ast.dump());
-              throw new SemanticException("Unknown query pattern");
+              throw new LensException("Unknown query pattern");
             }
           } else {
             // last child of union all query
@@ -195,9 +193,9 @@ public final class RewriteUtil {
    *
    * @param queryConf the query conf
    * @return the rewriter
-   * @throws SemanticException the semantic exception
+   * @throws LensException the lens exception
    */
-  static CubeQueryRewriter getCubeRewriter(Configuration queryConf, HiveConf hconf) throws SemanticException {
+  static CubeQueryRewriter getCubeRewriter(Configuration queryConf, HiveConf hconf) throws LensException {
     return new CubeQueryRewriter(queryConf, hconf);
   }
 

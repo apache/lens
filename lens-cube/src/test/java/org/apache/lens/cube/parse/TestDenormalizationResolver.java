@@ -31,8 +31,8 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCo
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -54,7 +54,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDenormsAsDirectFields() throws SemanticException, ParseException, LensException {
+  public void testDenormsAsDirectFields() throws ParseException, LensException, HiveException {
     // denorm fields directly available
     String twoDaysITRange =
       "time_range_in(it, '" + CubeTestSetup.getDateUptoHours(TWODAYS_BACK) + "','"
@@ -104,7 +104,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDenormsWithJoins() throws SemanticException, ParseException, LensException {
+  public void testDenormsWithJoins() throws ParseException, LensException, HiveException, ClassNotFoundException {
     // all following queries use joins to get denorm fields
     Configuration tconf = new Configuration(this.conf);
     tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
@@ -149,7 +149,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         null, " group by testdim3.name, (testdim2.bigid1)", null,
         getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
-    SemanticException e = getSemanticExceptionInRewrite(
+    LensException e = getLensExceptionInRewrite(
       "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
     Assert.assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
       CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat,
@@ -206,26 +206,23 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
   public void testDimensionQuery() throws Exception {
     String hqlQuery = rewrite("select citydim.name, citydim.statename from" + " citydim", conf);
 
-    String joinExpr =
-      " join " + getDbName() + "c1_statetable statedim on"
+    String joinExpr = " join " + getDbName() + "c1_statetable statedim on"
         + " citydim.stateid = statedim.id and (statedim.dt = 'latest')";
-    String expected =
-      getExpectedQuery("citydim", "SELECT citydim.name, statedim.name FROM ", joinExpr, null, null, "c1_citytable",
-        true);
+    String expected = getExpectedQuery("citydim", "SELECT citydim.name, statedim.name FROM ", joinExpr, null, null,
+        "c1_citytable", true);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select citydim.statename, citydim.name  from" + " citydim", conf);
 
-    expected =
-      getExpectedQuery("citydim", "SELECT statedim.name, citydim.name FROM ", joinExpr, null, null, "c1_citytable",
-        true);
+    expected = getExpectedQuery("citydim", "SELECT statedim.name, citydim.name FROM ", joinExpr, null, null,
+        "c1_citytable", true);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
-    // Query would fail because citydim.nocandidatecol does not exist in any candidate
-    SemanticException e = getSemanticExceptionInRewrite(
-      "select citydim.name, citydim.statename, citydim.nocandidatecol from citydim", conf);
-    Assert.assertEquals(e.getMessage(),
-      "No dimension table has the queried columns for citydim, columns: [name, statename, nocandidatecol]");
+    // Query would fail because citydim.nocandidatecol does not exist in any
+    // candidate
+    Assert.assertEquals(getLensExceptionErrorMessageInRewrite(
+        "select citydim.name, citydim.statename, citydim.nocandidatecol " + "from citydim", conf),
+        "No dimension table has the queried columns " + "for citydim, columns: [name, statename, nocandidatecol]");
   }
 
   @Test
@@ -314,8 +311,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
 
   @Test
   public void testNonExistingDimension() throws Exception {
-    SemanticException e = getSemanticExceptionInRewrite("select nonexist.name, msr2 from testCube where "
-      + TWO_DAYS_RANGE, conf);
-    Assert.assertEquals(e.getMessage(), "Neither cube nor dimensions accessed in the query");
+    Assert.assertEquals(getLensExceptionErrorMessageInRewrite("select nonexist.name, msr2 from testCube where "
+        + TWO_DAYS_RANGE, conf), "Neither cube nor dimensions accessed in the query");
   }
 }

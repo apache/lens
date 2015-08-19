@@ -42,7 +42,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import com.google.common.collect.Lists;
@@ -126,7 +125,7 @@ class StorageTableResolver implements ContextRewriter {
   Map<String, List<String>> storagePartMap = new HashMap<String, List<String>>();
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     client = cubeql.getMetastoreClient();
 
     switch (phase) {
@@ -159,7 +158,7 @@ class StorageTableResolver implements ContextRewriter {
     phase = phase.next();
   }
 
-  private void resolveDimStorageTablesAndPartitions(CubeQueryContext cubeql) throws SemanticException {
+  private void resolveDimStorageTablesAndPartitions(CubeQueryContext cubeql) throws LensException {
     Set<Dimension> allDims = new HashSet<Dimension>(cubeql.getDimensions());
     allDims.addAll(cubeql.getOptionalDimensions());
     for (Dimension dim : allDims) {
@@ -234,7 +233,7 @@ class StorageTableResolver implements ContextRewriter {
   }
 
   // Resolves all the storage table names, which are valid for each updatePeriod
-  private void resolveFactStorageTableNames(CubeQueryContext cubeql) throws SemanticException {
+  private void resolveFactStorageTableNames(CubeQueryContext cubeql) throws LensException {
     Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator();
     while (i.hasNext()) {
       CubeFactTable fact = i.next().fact;
@@ -317,7 +316,7 @@ class StorageTableResolver implements ContextRewriter {
   }
 
   private TimeRange getFallbackRange(TimeRange range, CandidateFact cfact, CubeQueryContext cubeql)
-    throws SemanticException {
+    throws LensException {
     Cube baseCube = cubeql.getBaseCube();
     try {
       ArrayList<String> tableNames = Lists.newArrayList(cfact.fact.getName(), cubeql.getCube().getName());
@@ -349,11 +348,11 @@ class StorageTableResolver implements ContextRewriter {
         .toDate(diff1.negativeOffsetFrom(range.getToDate()))
         .partitionColumn(fallbackPartCol).build();
     } catch (HiveException e) {
-      throw new SemanticException(e);
+      throw new LensException(e);
     }
   }
 
-  private void resolveFactStoragePartitions(CubeQueryContext cubeql) throws SemanticException {
+  private void resolveFactStoragePartitions(CubeQueryContext cubeql) throws LensException {
     // Find candidate tables wrt supported storages
     Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator();
     Map<TimeRange, String> whereClauseForFallback = new LinkedHashMap<TimeRange, String>();
@@ -505,12 +504,12 @@ class StorageTableResolver implements ContextRewriter {
 
   private Set<FactPartition> getPartitions(CubeFactTable fact, TimeRange range,
     HashMap<String, SkipStorageCause> skipStorageCauses,
-    PartitionRangesForPartitionColumns missingPartitions) throws SemanticException {
+    PartitionRangesForPartitionColumns missingPartitions) throws LensException {
     try {
       return getPartitions(fact, range, getValidUpdatePeriods(fact), true, skipStorageCauses,
         missingPartitions);
     } catch (Exception e) {
-      throw new SemanticException(e);
+      throw new LensException(e);
     }
   }
 

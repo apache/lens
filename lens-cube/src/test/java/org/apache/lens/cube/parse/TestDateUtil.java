@@ -35,9 +35,9 @@ import java.util.Date;
 import java.util.Set;
 
 import org.apache.lens.cube.parse.DateUtil.*;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -250,7 +250,7 @@ public class TestDateUtil {
   }
 
   @Test
-  public void testTimeDiff() throws SemanticException {
+  public void testTimeDiff() throws LensException {
     ArrayList<String> minusFourDays =
       Lists.newArrayList("-4 days", "-4days", "-4day", "-4 day", "- 4days", "- 4 day");
     ArrayList<String> plusFourDays =
@@ -280,7 +280,7 @@ public class TestDateUtil {
   }
 
   @Test
-  public void testRelativeToAbsolute() throws SemanticException {
+  public void testRelativeToAbsolute() throws LensException {
     Date now = new Date();
     Date nowDay = DateUtils.truncate(now, DAY_OF_MONTH);
     Date nowDayMinus2Days = DateUtils.add(nowDay, DAY_OF_MONTH, -2);

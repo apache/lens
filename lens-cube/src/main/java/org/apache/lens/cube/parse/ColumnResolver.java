@@ -23,13 +23,13 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import com.google.common.base.Optional;
 
@@ -39,11 +39,11 @@ class ColumnResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     extractColumns(cubeql);
   }
 
-  private void extractColumns(CubeQueryContext cubeql) throws SemanticException {
+  private void extractColumns(CubeQueryContext cubeql) throws LensException {
     // Check if its 'select * from...'
     ASTNode selTree = cubeql.getSelectAST();
     if (selTree.getChildCount() == 1) {
@@ -55,7 +55,7 @@ class ColumnResolver implements ContextRewriter {
       if (star != null) {
         int starType = star.getToken().getType();
         if (TOK_FUNCTIONSTAR == starType || TOK_ALLCOLREF == starType) {
-          throw new SemanticException(ErrorMsg.ALL_COLUMNS_NOT_SUPPORTED);
+          throw new LensException(LensCubeErrorCode.ALL_COLUMNS_NOT_SUPPORTED.getValue());
         }
       }
     }
@@ -70,7 +70,7 @@ class ColumnResolver implements ContextRewriter {
     for (String table : cubeql.getTblAliasToColumns().keySet()) {
       if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table)) {
         if (!cubeql.addQueriedTable(table)) {
-          throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+          throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getValue());
         }
       }
     }
@@ -78,7 +78,7 @@ class ColumnResolver implements ContextRewriter {
 
   // finds columns in AST passed.
   static void getColsForTree(final CubeQueryContext cubeql, ASTNode tree, final TrackQueriedColumns tqc)
-    throws SemanticException {
+    throws LensException {
     if (tree == null) {
       return;
     }
@@ -124,7 +124,7 @@ class ColumnResolver implements ContextRewriter {
   // added
   // only if timerange clause shouldn't be replaced with its correspodning
   // partition column
-  private void getColsForWhereTree(final CubeQueryContext cubeql) throws SemanticException {
+  private void getColsForWhereTree(final CubeQueryContext cubeql) throws LensException {
     if (cubeql.getWhereAST() == null) {
       return;
     }
@@ -152,7 +152,7 @@ class ColumnResolver implements ContextRewriter {
   // and user given alias is the final alias of the expression.
   private static final String SELECT_ALIAS_PREFIX = "expr";
 
-  private void getColsForSelectTree(final CubeQueryContext cubeql) throws SemanticException {
+  private void getColsForSelectTree(final CubeQueryContext cubeql) throws LensException {
     int exprInd = 1;
     for (int i = 0; i < cubeql.getSelectAST().getChildCount(); i++) {
       ASTNode selectExpr = (ASTNode) cubeql.getSelectAST().getChild(i);

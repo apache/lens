@@ -22,10 +22,10 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.server.api.error.LensException;
 
-import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
  * Writes partitions queried in timerange as between clause.
@@ -34,7 +34,7 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
 
   @Override
   public String getTimeRangeWhereClause(CubeQueryContext cubeQueryContext, String tableName,
-    Set<FactPartition> rangeParts) throws SemanticException {
+    Set<FactPartition> rangeParts) throws LensException {
     if (rangeParts.size() == 0) {
       return "";
     }
@@ -52,18 +52,19 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
       while (it.hasNext()) {
         FactPartition part = it.next();
         if (part.hasContainingPart()) {
-          throw new SemanticException(ErrorMsg.CANNOT_USE_TIMERANGE_WRITER, "Partition has containing part");
+          throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue(),
+              "Partition has containing part");
         }
         if (first == null) {
           first = part;
         } else {
           // validate partcol, update period are same for both
           if (!first.getPartCol().equalsIgnoreCase(part.getPartCol())) {
-            throw new SemanticException(ErrorMsg.CANNOT_USE_TIMERANGE_WRITER,
+            throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue(),
               "Part columns are different in partitions");
           }
           if (!first.getPeriod().equals(part.getPeriod())) {
-            throw new SemanticException(ErrorMsg.CANNOT_USE_TIMERANGE_WRITER,
+            throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue(),
               "Partitions are in different update periods");
           }
         }

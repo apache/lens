@@ -35,12 +35,11 @@ import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 
@@ -79,7 +78,7 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     ExpressionContext(CubeQueryContext cubeql, ExprColumn exprCol, AbstractBaseTable srcTable, String srcAlias)
-      throws SemanticException {
+      throws LensException {
       this.srcTable = srcTable;
       this.exprCol = exprCol;
       this.srcAlias = srcAlias;
@@ -89,19 +88,16 @@ class ExpressionResolver implements ContextRewriter {
       resolveColumnsAndAlias(cubeql);
       log.debug("All exprs for {} are {}", exprCol.getName(), allExprs);
     }
-    private void resolveColumnsAndAlias(CubeQueryContext cubeql) throws SemanticException {
+
+    private void resolveColumnsAndAlias(CubeQueryContext cubeql) throws LensException {
       for (ExprSpecContext esc : allExprs) {
         esc.resolveColumns(cubeql);
         esc.replaceAliasInAST(cubeql);
         for (String table : esc.getTblAliasToColumns().keySet()) {
-          try {
-            if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
-              cubeql.addOptionalDimTable(table, null,
-                false, null, false, esc.getTblAliasToColumns().get(table).toArray(new String[0]));
-              esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
-            }
-          } catch (HiveException e) {
-            throw new SemanticException(e);
+          if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
+            cubeql.addOptionalDimTable(table, null, false, null, false,
+                esc.getTblAliasToColumns().get(table).toArray(new String[0]));
+            esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
           }
         }
       }
@@ -109,14 +105,14 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     private void resolveColumnsAndReplaceAlias(CubeQueryContext cubeql, Set<ExprSpecContext> exprs)
-      throws SemanticException {
+      throws LensException {
       Set<ExprSpecContext> nestedExpressions = new LinkedHashSet<ExprSpecContext>();
       for (ExprSpecContext esc : exprs) {
         for (Map.Entry<String, Set<String>> entry : esc.getTblAliasToColumns().entrySet()) {
           if (entry.getKey().equals(CubeQueryContext.DEFAULT_TABLE)) {
             continue;
           }
-          AbstractBaseTable baseTable = (AbstractBaseTable)cubeql.getCubeTableForAlias(entry.getKey());
+          AbstractBaseTable baseTable = (AbstractBaseTable) cubeql.getCubeTableForAlias(entry.getKey());
           Set<String> exprCols = new HashSet<String>();
           for (String col : entry.getValue()) {
             // col is an expression
@@ -132,14 +128,10 @@ class ExpressionResolver implements ContextRewriter {
         esc.resolveColumns(cubeql);
         esc.replaceAliasInAST(cubeql);
         for (String table : esc.getTblAliasToColumns().keySet()) {
-          try {
-            if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
-              cubeql.addOptionalDimTable(table, null, false, null, false,
+          if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
+            cubeql.addOptionalDimTable(table, null, false, null, false,
                 esc.getTblAliasToColumns().get(table).toArray(new String[0]));
-              esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
-            }
-          } catch (HiveException e) {
-            throw new SemanticException(e);
+            esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
           }
         }
       }
@@ -147,7 +139,7 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     private void addAllNestedExpressions(CubeQueryContext cubeql, ExprSpecContext baseEsc, AbstractBaseTable baseTable,
-      Set<ExprSpecContext> nestedExpressions, Set<String> exprCols) throws SemanticException {
+      Set<ExprSpecContext> nestedExpressions, Set<String> exprCols) throws LensException {
       for (String col : exprCols) {
         Set<ExprSpecContext> replacedExpressions = new LinkedHashSet<ExprSpecContext>();
         for (ExprSpec es : baseTable.getExpressionByName(col).getExpressionSpecs()) {
@@ -168,7 +160,8 @@ class ExpressionResolver implements ContextRewriter {
     void addDirectlyAvailable(CandidateTable cTable) {
       directlyAvailableIn.add(cTable);
     }
-    void addEvaluable(CubeQueryContext cubeql, CandidateTable cTable, ExprSpecContext esc) throws SemanticException {
+
+    void addEvaluable(CubeQueryContext cubeql, CandidateTable cTable, ExprSpecContext esc) throws LensException {
       Set<ExprSpecContext> evalSet = evaluableExpressions.get(cTable);
       if (evalSet == null) {
         evalSet = new LinkedHashSet<ExprSpecContext>();
@@ -176,14 +169,10 @@ class ExpressionResolver implements ContextRewriter {
       }
       // add optional dimensions involved in expressions
       for (String table : esc.getTblAliasToColumns().keySet()) {
-        try {
-          if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
-            cubeql.addOptionalExprDimTable(table, exprCol.getName(), srcAlias, cTable,
+        if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table) && !srcAlias.equals(table)) {
+          cubeql.addOptionalExprDimTable(table, exprCol.getName(), srcAlias, cTable,
               esc.getTblAliasToColumns().get(table).toArray(new String[0]));
-            esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
-          }
-        } catch (HiveException e) {
-          throw new SemanticException(e);
+          esc.exprDims.add((Dimension) cubeql.getCubeTableForAlias(table));
         }
       }
       evalSet.add(esc);
@@ -228,19 +217,19 @@ class ExpressionResolver implements ContextRewriter {
     @Getter
     private Map<String, Set<String>> tblAliasToColumns = new HashMap<String, Set<String>>();
 
-    ExprSpecContext(ExprSpec exprSpec, CubeQueryContext cubeql) throws SemanticException {
+    ExprSpecContext(ExprSpec exprSpec, CubeQueryContext cubeql) throws LensException {
       // replaces table names in expression with aliases in the query
       finalAST = replaceAlias(exprSpec.getASTNode(), cubeql);
       exprSpecs.add(exprSpec);
     }
     public ExprSpecContext(ExprSpecContext nested, ExprSpec current, ASTNode node,
-      CubeQueryContext cubeql) throws SemanticException {
+      CubeQueryContext cubeql) throws LensException {
       exprSpecs.addAll(nested.exprSpecs);
       exprSpecs.add(current);
       finalAST = replaceAlias(node, cubeql);
     }
     public void replaceAliasInAST(CubeQueryContext cubeql)
-      throws SemanticException {
+      throws LensException {
       AliasReplacer.extractTabAliasForCol(cubeql, this);
       AliasReplacer.replaceAliases(finalAST, 0, cubeql.getColToTableAlias());
     }
@@ -253,7 +242,7 @@ class ExpressionResolver implements ContextRewriter {
       cols.add(column);
     }
 
-    void resolveColumns(CubeQueryContext cubeql) throws SemanticException {
+    void resolveColumns(CubeQueryContext cubeql) throws LensException {
       // finds all columns and table aliases in the expression
       ColumnResolver.getColsForTree(cubeql, finalAST, this);
     }
@@ -371,7 +360,7 @@ class ExpressionResolver implements ContextRewriter {
 
     //updates all expression specs which are evaluable
     public void updateEvaluables(String expr, CandidateTable cTable)
-      throws SemanticException {
+      throws LensException {
       String alias = cubeql.getAliasForTableName(cTable.getBaseTable().getName());
       ExpressionContext ec = getExpressionContext(expr, alias);
       if (cTable.getColumns().contains(expr)) {
@@ -450,7 +439,7 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     public Set<Dimension> rewriteExprCtx(CandidateFact cfact, Map<Dimension, CandidateDim> dimsToQuery,
-      boolean replaceFact) throws SemanticException {
+      boolean replaceFact) throws LensException {
       Set<Dimension> exprDims = new HashSet<Dimension>();
       if (!allExprsQueried.isEmpty()) {
         // pick expressions for fact
@@ -476,7 +465,7 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     private void replacePickedExpressions(CandidateFact cfact, boolean replaceFact)
-      throws SemanticException {
+      throws LensException {
       if (replaceFact) {
         replaceAST(cubeql, cfact.getSelectAST());
         replaceAST(cubeql, cfact.getWhereAST());
@@ -493,14 +482,14 @@ class ExpressionResolver implements ContextRewriter {
       replaceAST(cubeql, cubeql.getOrderByAST());
     }
 
-    private void replaceAST(final CubeQueryContext cubeql, ASTNode node) throws SemanticException {
+    private void replaceAST(final CubeQueryContext cubeql, ASTNode node) throws LensException {
       if (node == null) {
         return;
       }
       // Traverse the tree and resolve expression columns
       HQLParser.bft(node, new ASTNodeVisitor() {
         @Override
-        public void visit(TreeNode visited) throws SemanticException {
+        public void visit(TreeNode visited) throws LensException {
           ASTNode node = visited.getNode();
           int childcount = node.getChildCount();
           for (int i = 0; i < childcount; i++) {
@@ -637,7 +626,7 @@ class ExpressionResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     ExpressionResolverContext exprCtx = cubeql.getExprCtx();
     if (exprCtx == null) {
       exprCtx = new ExpressionResolverContext(cubeql);
@@ -735,7 +724,7 @@ class ExpressionResolver implements ContextRewriter {
     }
   }
 
-  private static ASTNode replaceAlias(final ASTNode expr, final CubeQueryContext cubeql) throws SemanticException {
+  private static ASTNode replaceAlias(final ASTNode expr, final CubeQueryContext cubeql) throws LensException {
     ASTNode finalAST = HQLParser.copyAST(expr);
     HQLParser.bft(finalAST, new ASTNodeVisitor() {
       @Override
@@ -762,14 +751,14 @@ class ExpressionResolver implements ContextRewriter {
   }
 
   private static void replaceColumnInAST(ASTNode expr, final String toReplace, final ASTNode columnAST)
-    throws SemanticException {
+    throws LensException {
     if (expr == null) {
       return;
     }
     // Traverse the tree and resolve expression columns
     HQLParser.bft(expr, new ASTNodeVisitor() {
       @Override
-      public void visit(TreeNode visited) throws SemanticException {
+      public void visit(TreeNode visited) throws LensException {
         ASTNode node = visited.getNode();
         int childcount = node.getChildCount();
         for (int i = 0; i < childcount; i++) {

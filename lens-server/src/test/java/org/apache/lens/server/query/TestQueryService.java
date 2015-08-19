@@ -18,7 +18,7 @@
  */
 package org.apache.lens.server.query;
 
-import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 import static org.apache.lens.server.common.RestAPITestUtil.execute;
 import static org.apache.lens.server.common.RestAPITestUtil.waitForQueryToFinish;
@@ -36,11 +36,11 @@ import javax.ws.rs.core.*;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.error.LensCommonErrorCode;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.api.result.*;
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
@@ -1425,9 +1425,9 @@ public class TestQueryService extends LensJerseyTest {
     final Response response = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
 
-    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(LensCommonErrorCode.INTERNAL_SERVER_ERROR.getValue(),
-      "Internal Server Error.", TestDataUtils.MOCK_STACK_TRACE);
-    ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(INTERNAL_SERVER_ERROR, expectedLensErrorTO);
+    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getValue(),
+      "Neither cube nor dimensions accessed in the query", TestDataUtils.MOCK_STACK_TRACE);
+    ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
   }

@@ -24,16 +24,16 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 
 import java.util.Iterator;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.CubeMeasure;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 
@@ -51,7 +51,7 @@ class AggregateResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     if (cubeql.getCube() == null) {
       return;
     }
@@ -110,7 +110,7 @@ class AggregateResolver implements ContextRewriter {
   // We need to traverse the clause looking for eligible measures which can be
   // wrapped inside aggregates
   // We have to skip any columns that are already inside an aggregate UDAF
-  private String resolveClause(CubeQueryContext cubeql, ASTNode clause) throws SemanticException {
+  private String resolveClause(CubeQueryContext cubeql, ASTNode clause) throws LensException {
 
     if (clause == null) {
       return null;
@@ -123,7 +123,7 @@ class AggregateResolver implements ContextRewriter {
     return HQLParser.getString(clause);
   }
 
-  private void transform(CubeQueryContext cubeql, ASTNode parent, ASTNode node, int nodePos) throws SemanticException {
+  private void transform(CubeQueryContext cubeql, ASTNode parent, ASTNode node, int nodePos) throws LensException {
     if (node == null) {
       return;
     }
@@ -158,7 +158,7 @@ class AggregateResolver implements ContextRewriter {
 
   // Wrap an aggregate function around the node if its a measure, leave it
   // unchanged otherwise
-  private ASTNode wrapAggregate(CubeQueryContext cubeql, ASTNode node) throws SemanticException {
+  private ASTNode wrapAggregate(CubeQueryContext cubeql, ASTNode node) throws LensException {
 
     String tabname = null;
     String colname;
@@ -188,7 +188,7 @@ class AggregateResolver implements ContextRewriter {
         String aggregateFn = measure.getAggregate();
 
         if (StringUtils.isBlank(aggregateFn)) {
-          throw new SemanticException(ErrorMsg.NO_DEFAULT_AGGREGATE, colname);
+          throw new LensException(LensCubeErrorCode.NO_DEFAULT_AGGREGATE.getValue(), colname);
         }
         ASTNode fnroot = new ASTNode(new CommonToken(HiveParser.TOK_FUNCTION));
         fnroot.setParent(node.getParent());

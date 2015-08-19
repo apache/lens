@@ -28,8 +28,8 @@ import org.apache.lens.driver.cube.RewriterPlan;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -108,7 +108,7 @@ public class TestRewriterPlan extends TestQueryRewrite {
   }
 
   @Test
-  public void testUnimplemented() throws SemanticException, ParseException, LensException {
+  public void testUnimplemented() throws ParseException, LensException, HiveException {
     CubeQueryContext ctx = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
     ctx.toHQL();
     RewriterPlan plan = new RewriterPlan(Collections.singleton(ctx));

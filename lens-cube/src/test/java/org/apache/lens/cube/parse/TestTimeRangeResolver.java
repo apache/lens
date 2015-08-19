@@ -30,7 +30,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -57,9 +56,9 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testFactValidity() throws ParseException, SemanticException, LensException {
-    SemanticException e =
-      getSemanticExceptionInRewrite("cube select msr2 from " + cubeName + " where " + LAST_YEAR_RANGE,
+  public void testFactValidity() throws ParseException, LensException, HiveException, ClassNotFoundException {
+    LensException e =
+      getLensExceptionInRewrite("cube select msr2 from " + cubeName + " where " + LAST_YEAR_RANGE,
         getConf());
     PruneCauses.BriefAndDetailedError causes = extractPruneCause(e);
     assertTrue(causes.getBrief().contains("Columns [msr2] are not present in any table"));

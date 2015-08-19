@@ -24,9 +24,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.lens.server.api.error.LensException;
+
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -42,7 +43,7 @@ public abstract class UnionHQLContext implements HQLContextInterface {
   List<HQLContextInterface> hqlContexts = new ArrayList<HQLContextInterface>();
 
   @Override
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws LensException {
     Set<String> queryParts = new LinkedHashSet<String>();
     for (HQLContextInterface ctx : hqlContexts) {
       queryParts.add(ctx.toHQL());

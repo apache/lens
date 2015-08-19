@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.apache.lens.cube.error.ColUnAvailableInTimeRange;
 import org.apache.lens.cube.error.ColUnAvailableInTimeRangeException;
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.CubeColumn;
 import org.apache.lens.cube.metadata.Dimension;
@@ -35,9 +36,7 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.PlanUtils;
 
 import com.google.common.collect.Lists;
@@ -52,7 +51,7 @@ class TimerangeResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException, LensException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     if (cubeql.getCube() == null) {
       return;
     }
@@ -62,19 +61,19 @@ class TimerangeResolver implements ContextRewriter {
   }
 
 
-  private void extractTimeRange(CubeQueryContext cubeql) throws SemanticException {
+  private void extractTimeRange(CubeQueryContext cubeql) throws LensException {
     // get time range -
     // Time range should be direct child of where condition
     // TOK_WHERE.TOK_FUNCTION.Identifier Or, it should be right hand child of
     // AND condition TOK_WHERE.KW_AND.TOK_FUNCTION.Identifier
     if (cubeql.getWhereAST() == null || cubeql.getWhereAST().getChildCount() < 1) {
-      throw new SemanticException(ErrorMsg.NO_TIMERANGE_FILTER);
+      throw new LensException(LensCubeErrorCode.NO_TIMERANGE_FILTER.getValue());
     }
     searchTimeRanges(cubeql.getWhereAST(), cubeql, null, 0);
   }
 
   private void searchTimeRanges(ASTNode root, CubeQueryContext cubeql, ASTNode parent, int childIndex)
-    throws SemanticException {
+    throws LensException {
     if (root == null) {
       return;
     } else if (root.getToken().getType() == TOK_FUNCTION) {
@@ -104,7 +103,7 @@ class TimerangeResolver implements ContextRewriter {
   }
 
   private void processTimeRangeFunction(CubeQueryContext cubeql, ASTNode timenode, ASTNode parent, int childIndex)
-    throws SemanticException {
+    throws LensException {
     TimeRange.TimeRangeBuilder builder = TimeRange.getBuilder();
     builder.astNode(timenode);
     builder.parent(parent);
@@ -113,7 +112,7 @@ class TimerangeResolver implements ContextRewriter {
     String timeDimName = getColumnName((ASTNode) timenode.getChild(1));
 
     if (!cubeql.getCube().getTimedDimensions().contains(timeDimName)) {
-      throw new SemanticException(ErrorMsg.NOT_A_TIMED_DIMENSION, timeDimName);
+      throw new LensException(LensCubeErrorCode.NOT_A_TIMED_DIMENSION.getValue(), timeDimName);
     }
     // Replace timeDimName with column which is used for partitioning. Assume
     // the same column
@@ -143,7 +142,7 @@ class TimerangeResolver implements ContextRewriter {
     cubeql.getTimeRanges().add(range);
   }
 
-  private void doColLifeValidation(CubeQueryContext cubeql) throws SemanticException,
+  private void doColLifeValidation(CubeQueryContext cubeql) throws LensException,
     ColUnAvailableInTimeRangeException {
     Set<String> cubeColumns = cubeql.getColumnsQueried(cubeql.getCube().getName());
     if (cubeColumns == null || cubeColumns.isEmpty()) {
@@ -156,7 +155,7 @@ class TimerangeResolver implements ContextRewriter {
       for (TimeRange range : cubeql.getTimeRanges()) {
         if (column == null) {
           if (!cubeql.getCube().getTimedDimensions().contains(col)) {
-            throw new SemanticException(ErrorMsg.NOT_A_CUBE_COLUMN, col);
+            throw new LensException(LensCubeErrorCode.NOT_A_CUBE_COLUMN.getValue(), col);
           }
           continue;
         }
@@ -214,8 +213,9 @@ class TimerangeResolver implements ContextRewriter {
                 joinPathIterator.remove();
                 if (joinPaths.isEmpty()) {
                   // This dimension doesn't have any paths left
-                  throw new SemanticException(ErrorMsg.NO_JOIN_PATH, "No valid join path available for dimension "
-                    + dimension + " which would satisfy time range " + range.getFromDate() + "-" + range.getToDate());
+                  throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getValue(),
+                      "No valid join path available for dimension " + dimension + " which would satisfy time range "
+                          + range.getFromDate() + "-" + range.getToDate());
                 }
               }
             } // End loop to remove path

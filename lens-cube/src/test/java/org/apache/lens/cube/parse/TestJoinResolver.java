@@ -25,6 +25,7 @@ import static org.testng.Assert.*;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
 import org.apache.lens.server.api.error.LensException;
@@ -32,10 +33,8 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -161,7 +160,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     }
   }
 
-  private String getAutoResolvedFromString(CubeQueryContext query) throws SemanticException {
+  private String getAutoResolvedFromString(CubeQueryContext query) throws LensException {
     return query.getHqlContext().getFrom();
   }
 
@@ -219,7 +218,7 @@ public class TestJoinResolver extends TestQueryRewrite {
 
     // Test 3 Dim only query should throw error
     String errDimOnlyQuery = "select citydim.id, testDim4.name FROM citydim where " + TWO_DAYS_RANGE;
-    getSemanticExceptionInRewrite(errDimOnlyQuery, hconf);
+    getLensExceptionInRewrite(errDimOnlyQuery, hconf);
   }
 
   @Test
@@ -376,7 +375,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testJoinChains() throws SemanticException, ParseException, LensException {
+  public void testJoinChains() throws ParseException, LensException, HiveException {
     String query, hqlQuery, expected;
 
     // Single joinchain with direct link
@@ -574,14 +573,14 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testConflictingJoins() throws ParseException, LensException {
+  public void testConflictingJoins() throws ParseException, LensException, HiveException {
     // Single joinchain with two paths, intermediate dimension accessed separately by name.
     String query = "select cityState.name, citydim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
     try {
       rewrite(query, hconf);
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
@@ -592,7 +591,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       rewrite(query, hconf);
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
@@ -605,7 +604,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       Assert.fail("Should have failed. "
         + "It's not possible to resolve which statedim is being asked for when cityState and cubeState both end at"
         + " statedim table.");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(
         e.getMessage().indexOf("Table statedim has 2 different paths through joinchains"), 0);
     }
@@ -617,7 +616,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       rewrite(query, hconf);
       Assert.fail("Should have failed. "
         + "The table statedim is getting accessed as both cubeState and statedim ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table statedim is getting accessed via two different names: [cubestate, statedim]".toLowerCase());
     }
@@ -627,7 +626,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       rewrite(query, hconf);
       Assert.fail("Should have failed. "
         + "The table statedim is getting accessed as both cubeState and statedim ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table statedim is getting accessed via two different names: [citystate, statedim]".toLowerCase());
     }
@@ -640,14 +639,14 @@ public class TestJoinResolver extends TestQueryRewrite {
       rewrite(failingQuery, conf);
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
   }
 
   @Test
-  public void testMultiPaths() throws SemanticException, ParseException, LensException {
+  public void testMultiPaths() throws ParseException, LensException, HiveException {
     String query, hqlQuery, expected;
 
     query = "select testdim3.name, sum(msr2) from testcube where " + TWO_DAYS_RANGE;
@@ -744,13 +743,13 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testUnreachableDim() throws ParseException, LensException {
-    SemanticException e1 = getSemanticExceptionInRewrite("select urdimid from testdim2", hconf);
+  public void testUnreachableDim() throws ParseException, LensException, HiveException {
+    LensException e1 = getLensExceptionInRewrite("select urdimid from testdim2", hconf);
     assertNotNull(e1);
-    assertEquals(e1.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_DIM_HAS_COLUMN.getErrorCode());
+    assertEquals(e1.getErrorCode(), LensCubeErrorCode.NO_DIM_HAS_COLUMN.getValue());
 
-    SemanticException e2 = getSemanticExceptionInRewrite("select urdimid from testcube where " + TWO_DAYS_RANGE, hconf);
+    LensException e2 = getLensExceptionInRewrite("select urdimid from testcube where " + TWO_DAYS_RANGE, hconf);
     assertNotNull(e2);
-    assertEquals(e2.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+    assertEquals(e2.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue());
   }
 }

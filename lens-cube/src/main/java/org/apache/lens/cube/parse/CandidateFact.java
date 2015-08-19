@@ -28,6 +28,7 @@ import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -35,7 +36,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.antlr.runtime.CommonToken;
@@ -118,7 +118,7 @@ public class CandidateFact implements CandidateTable {
     numQueriedParts += incr;
   }
 
-  private void updateTimeRanges(ASTNode root, ASTNode parent, int childIndex) throws SemanticException {
+  private void updateTimeRanges(ASTNode root, ASTNode parent, int childIndex) throws LensException {
     if (root == null) {
       return;
     } else if (root.getToken().getType() == TOK_FUNCTION) {
@@ -135,7 +135,7 @@ public class CandidateFact implements CandidateTable {
   }
 
   // copy ASTs from CubeQueryContext
-  public void copyASTs(CubeQueryContext cubeql) throws SemanticException {
+  public void copyASTs(CubeQueryContext cubeql) throws LensException {
     this.selectAST = HQLParser.copyAST(cubeql.getSelectAST());
     this.whereAST = HQLParser.copyAST(cubeql.getWhereAST());
     if (cubeql.getJoinTree() != null) {
@@ -155,7 +155,7 @@ public class CandidateFact implements CandidateTable {
     return getStorgeWhereClauseMap().get(storageTable);
   }
 
-  public void updateTimeranges(CubeQueryContext cubeql) throws SemanticException {
+  public void updateTimeranges(CubeQueryContext cubeql) throws LensException {
     // Update WhereAST with range clause
     // resolve timerange positions and replace it by corresponding where clause
     for (int i = 0; i < cubeql.getTimeRanges().size(); i++) {
@@ -166,7 +166,7 @@ public class CandidateFact implements CandidateTable {
         try {
           rangeAST = HQLParser.parseExpr(rangeWhere);
         } catch (ParseException e) {
-          throw new SemanticException(e);
+          throw new LensException(e);
         }
         rangeAST.setParent(timenodes.get(i).parent);
         timenodes.get(i).parent.setChild(timenodes.get(i).childIndex, rangeAST);
@@ -178,9 +178,9 @@ public class CandidateFact implements CandidateTable {
    * Update the ASTs to include only the fields queried from this fact, in all the expressions
    *
    * @param cubeql
-   * @throws SemanticException
+   * @throws LensException
    */
-  public void updateASTs(CubeQueryContext cubeql) throws SemanticException {
+  public void updateASTs(CubeQueryContext cubeql) throws LensException {
     Set<String> cubeCols = cubeql.getCube().getAllFieldNames();
 
     // update select AST with selected fields
@@ -223,7 +223,7 @@ public class CandidateFact implements CandidateTable {
   }
 
   private Set<String> getColsInExpr(final CubeQueryContext cubeql, final Set<String> cubeCols,
-    ASTNode expr) throws SemanticException {
+    ASTNode expr) throws LensException {
     final Set<String> cubeColsInExpr = new HashSet<String>();
     HQLParser.bft(expr, new ASTNodeVisitor() {
       @Override
@@ -405,7 +405,7 @@ public class CandidateFact implements CandidateTable {
     return null;
   }
 
-  public Set<String> getTimePartCols(CubeQueryContext query) throws SemanticException {
+  public Set<String> getTimePartCols(CubeQueryContext query) throws LensException {
     Set<String> cubeTimeDimensions = baseTable.getTimedDimensions();
     Set<String> timePartDimensions = new HashSet<String>();
     String singleStorageTable = storageTables.iterator().next();
@@ -413,7 +413,7 @@ public class CandidateFact implements CandidateTable {
     try {
       partitionKeys = query.getMetastoreClient().getTable(singleStorageTable).getPartitionKeys();
     } catch (HiveException e) {
-      throw new SemanticException(e);
+      throw new LensException(e);
     }
     for (FieldSchema fs : partitionKeys) {
       if (cubeTimeDimensions.contains(CubeQueryContext.getTimeDimOfPartitionColumn(baseTable, fs.getName()))) {

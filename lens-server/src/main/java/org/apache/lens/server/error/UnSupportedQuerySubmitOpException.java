@@ -39,7 +39,7 @@ public class UnSupportedQuerySubmitOpException extends LensException {
   }
 
   @Override
-  protected String getFormattedErrorMsg(LensError lensError) {
+  public String getFormattedErrorMsg(LensError lensError) {
 
     final String supportedOpsStr = supportedOps.getSupportedOperationsAsString();
     return lensError.getFormattedErrorMsg(supportedOpsStr);

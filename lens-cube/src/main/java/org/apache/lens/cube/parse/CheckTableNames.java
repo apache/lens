@@ -18,8 +18,9 @@
  */
 package org.apache.lens.cube.parse;
 
+import org.apache.lens.server.api.error.LensException;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 public class CheckTableNames extends ValidationRule {
 
@@ -28,7 +29,7 @@ public class CheckTableNames extends ValidationRule {
   }
 
   @Override
-  public boolean validate(CubeQueryContext ctx) throws SemanticException {
+  public boolean validate(CubeQueryContext ctx) throws LensException {
     // TODO
     return true;
   }

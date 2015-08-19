@@ -28,11 +28,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -77,17 +77,17 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
 
   @Test
   public void testCubeQueryContinuousUpdatePeriod() throws Exception {
-    SemanticException th = null;
+    LensException th = null;
     try {
       rewrite("cube select" + " SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       th = e;
       log.error("Semantic exception while testing cube query.", e);
     }
     if (!CubeTestSetup.isZerothHour()) {
       Assert.assertNotNull(th);
       Assert
-        .assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.CANNOT_USE_TIMERANGE_WRITER.getErrorCode());
+      .assertEquals(th.getErrorCode(), LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue());
     }
     // hourly partitions for two days
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);

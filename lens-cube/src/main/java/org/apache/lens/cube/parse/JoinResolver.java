@@ -22,14 +22,15 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.CubeQueryContext.OptionalDimCtx;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
 
@@ -421,7 +422,7 @@ class JoinResolver implements ContextRewriter {
     }
 
     public String getFromString(String fromTable, CandidateFact fact, Set<Dimension> qdims,
-      Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) throws SemanticException {
+      Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) throws LensException {
       String fromString = fromTable;
       log.info("All paths dump:{}", cubeql.getAutoJoinCtx().getAllPaths());
       if (qdims == null || qdims.isEmpty()) {
@@ -829,7 +830,7 @@ class JoinResolver implements ContextRewriter {
     }
 
     public Set<Dimension> pickOptionalTables(final CandidateFact fact,
-      Set<Dimension> qdims, CubeQueryContext cubeql) throws SemanticException {
+      Set<Dimension> qdims, CubeQueryContext cubeql) throws LensException {
       // Find the min cost join clause and add dimensions in the clause as optional dimensions
       Set<Dimension> joiningOptionalTables = new HashSet<Dimension>();
       if (qdims == null) {
@@ -846,7 +847,7 @@ class JoinResolver implements ContextRewriter {
       }
 
       if (minCostClause == null) {
-        throw new SemanticException(ErrorMsg.NO_JOIN_PATH, qdims.toString(), autoJoinTarget.getName());
+        throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getValue(), qdims.toString(), autoJoinTarget.getName());
       }
 
       log.info("Fact: {} minCostClause:{}", fact, minCostClause);
@@ -876,7 +877,7 @@ class JoinResolver implements ContextRewriter {
           }
         }
         if (cubeql.getCandidateDimTables().get(dim).size() == 0) {
-          throw new SemanticException(ErrorMsg.NO_DIM_HAS_COLUMN, dim.getName(),
+          throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getValue(), dim.getName(),
             minCostClause.chainColumns.get(dim).toString());
         }
       }
@@ -936,28 +937,26 @@ class JoinResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     partialJoinConditions = new HashMap<AbstractCubeTable, String>();
     tableJoinTypeMap = new HashMap<AbstractCubeTable, JoinType>();
-    resolveJoins(cubeql);
+    try {
+      resolveJoins(cubeql);
+    } catch (HiveException e) {
+      throw new LensException(e);
+    }
   }
 
-  private void resolveJoins(CubeQueryContext cubeql) throws SemanticException {
+  private void resolveJoins(CubeQueryContext cubeql) throws LensException, HiveException {
     QB cubeQB = cubeql.getQb();
-    boolean joinResolverDisabled =
-      cubeql.getConf().getBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
+    boolean joinResolverDisabled = cubeql.getConf().getBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS,
+        CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
     if (joinResolverDisabled) {
       if (cubeql.getJoinTree() != null) {
         cubeQB.setQbJoinTree(genJoinTree(cubeQB, cubeql.getJoinTree(), cubeql));
       }
     } else {
-      try {
-        autoResolveJoins(cubeql);
-      } catch (SemanticException e) {
-        throw e;
-      } catch (HiveException e) {
-        throw new SemanticException(e);
-      }
+      autoResolveJoins(cubeql);
     }
   }
 
@@ -980,9 +979,10 @@ class JoinResolver implements ContextRewriter {
    * Resolve joins automatically for the given query.
    *
    * @param cubeql
-   * @throws SemanticException
+   * @throws LensException
+   * @throws HiveException
    */
-  private void autoResolveJoins(CubeQueryContext cubeql) throws HiveException {
+  private void autoResolveJoins(CubeQueryContext cubeql) throws LensException, HiveException {
     // Check if this query needs a join -
     // A join is needed if there is a cube and at least one dimension, or, 0
     // cubes and more than one
@@ -1052,7 +1052,7 @@ class JoinResolver implements ContextRewriter {
           }
           log.warn("No join path between {} and {}", joinee.getName(), target.getName());
           if (cubeql.getDimensions().contains(joinee)) {
-            throw new SemanticException(ErrorMsg.NO_JOIN_PATH, joinee.getName(), target.getName());
+            throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getValue(), joinee.getName(), target.getName());
           } else {
             // if joinee is optional dim table, remove those candidate facts
             Set<CandidateTable> candidates = cubeql.getOptionalDimensionMap().get(joinee).requiredForCandidates;
@@ -1076,19 +1076,19 @@ class JoinResolver implements ContextRewriter {
           }
         }
       } else if (dimensionInJoinChain.get(joinee).size() > 1) {
-        throw new SemanticException("Table " + joinee.getName() + " has "
+        throw new LensException("Table " + joinee.getName() + " has "
           +dimensionInJoinChain.get(joinee).size() + " different paths through joinchains "
           +"(" + dimensionInJoinChain.get(joinee) + ")"
           +" used in query. Couldn't determine which one to use");
       } else {
         // the case when dimension is used only once in all joinchains.
         if (isJoinchainDestination(cubeql, joinee)) {
-          throw new SemanticException("Table " + joinee.getName() + " is getting accessed via two different names: "
+          throw new LensException("Table " + joinee.getName() + " is getting accessed via two different names: "
             + "[" + dimensionInJoinChain.get(joinee).get(0).getName() + ", " + joinee.getName() + "]");
         }
         // table is accessed with chain and no chain
         if (cubeql.getNonChainedDimensions().contains(joinee)) {
-          throw new SemanticException("Table " + joinee.getName() + " is getting accessed via joinchain: "
+          throw new LensException("Table " + joinee.getName() + " is getting accessed via joinchain: "
             + dimensionInJoinChain.get(joinee).get(0).getName() + " and no chain at all");
         }
       }
@@ -1119,7 +1119,7 @@ class JoinResolver implements ContextRewriter {
   }
 
   private void addOptionalTables(CubeQueryContext cubeql, List<SchemaGraph.JoinPath> joinPathList, boolean required)
-    throws SemanticException {
+    throws LensException {
     for (SchemaGraph.JoinPath joinPath : joinPathList) {
       for (TableRelationship rel : joinPath.getEdges()) {
         // Add the joined tables to the queries table sets so that they are
@@ -1129,18 +1129,18 @@ class JoinResolver implements ContextRewriter {
     }
   }
 
-  private void setTarget(CubeMetastoreClient metastore, ASTNode node) throws HiveException {
+  private void setTarget(CubeMetastoreClient metastore, ASTNode node) throws  HiveException, LensException  {
     String targetTableName = HQLParser.getString(HQLParser.findNodeByPath(node, TOK_TABNAME, Identifier));
     if (metastore.isDimension(targetTableName)) {
       target = metastore.getDimension(targetTableName);
     } else if (metastore.isCube(targetTableName)) {
       target = (AbstractCubeTable) metastore.getCube(targetTableName);
     } else {
-      throw new SemanticException(ErrorMsg.JOIN_TARGET_NOT_CUBE_TABLE, targetTableName);
+      throw new LensException(LensCubeErrorCode.JOIN_TARGET_NOT_CUBE_TABLE.getValue(), targetTableName);
     }
   }
 
-  private void searchDimensionTables(CubeMetastoreClient metastore, ASTNode node) throws HiveException {
+  private void searchDimensionTables(CubeMetastoreClient metastore, ASTNode node) throws HiveException, LensException {
     if (node == null) {
       return;
     }
@@ -1195,7 +1195,7 @@ class JoinResolver implements ContextRewriter {
   }
 
   // Recursively find out join conditions
-  private QBJoinTree genJoinTree(QB qb, ASTNode joinParseTree, CubeQueryContext cubeql) throws SemanticException {
+  private QBJoinTree genJoinTree(QB qb, ASTNode joinParseTree, CubeQueryContext cubeql) throws LensException {
     QBJoinTree joinTree = new QBJoinTree();
     JoinCond[] condn = new JoinCond[1];
 
@@ -1290,7 +1290,7 @@ class JoinResolver implements ContextRewriter {
       cubeql.setJoinCond(joinTree, HQLParser.getString(joinCond));
     } else {
       // No join condition specified. this should be an error
-      throw new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);
+      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getValue());
     }
     return joinTree;
   }

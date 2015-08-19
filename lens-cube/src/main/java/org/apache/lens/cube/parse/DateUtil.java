@@ -29,12 +29,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -120,17 +120,17 @@ public final class DateUtil {
     throw new IllegalArgumentException("Unsupported formatting for date" + str);
   }
 
-  public static Date resolveDate(String str, Date now) throws SemanticException {
+  public static Date resolveDate(String str, Date now) throws LensException {
     if (RELDATE_VALIDATOR.matcher(str).matches()) {
       return resolveRelativeDate(str, now);
     } else {
       return resolveAbsoluteDate(str);
     }
   }
-  public static String relativeToAbsolute(String relative) throws SemanticException {
+  public static String relativeToAbsolute(String relative) throws LensException {
     return relativeToAbsolute(relative, new Date());
   }
-  public static String relativeToAbsolute(String relative, Date now) throws SemanticException {
+  public static String relativeToAbsolute(String relative, Date now) throws LensException {
     if (RELDATE_VALIDATOR.matcher(relative).matches()) {
       return ABSDATE_PARSER.get().format(resolveRelativeDate(relative, now));
     } else {
@@ -138,18 +138,18 @@ public final class DateUtil {
     }
   }
 
-  public static Date resolveAbsoluteDate(String str) throws SemanticException {
+  public static Date resolveAbsoluteDate(String str) throws LensException {
     try {
       return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
     } catch (ParseException e) {
       log.error("Invalid date format. expected only {} date provided:{}", ABSDATE_FMT, str, e);
-      throw new SemanticException(e, ErrorMsg.WRONG_TIME_RANGE_FORMAT, ABSDATE_FMT, str);
+      throw new LensException(LensCubeErrorCode.WRONG_TIME_RANGE_FORMAT.getValue(), ABSDATE_FMT, str);
     }
   }
 
-  public static Date resolveRelativeDate(String str, Date now) throws SemanticException {
+  public static Date resolveRelativeDate(String str, Date now) throws LensException {
     if (StringUtils.isBlank(str)) {
-      throw new SemanticException(ErrorMsg.NULL_DATE_VALUE);
+      throw new LensException(LensCubeErrorCode.NULL_DATE_VALUE.getValue());
     }
 
     // Resolve NOW with proper granularity
@@ -182,7 +182,7 @@ public final class DateUtil {
         } else if ("second".equals(unit)) {
           calendar = DateUtils.truncate(calendar, Calendar.SECOND);
         } else {
-          throw new SemanticException(ErrorMsg.INVALID_TIME_UNIT, unit);
+          throw new LensException(LensCubeErrorCode.INVALID_TIME_UNIT.getValue(), unit);
         }
       }
     }
@@ -443,7 +443,7 @@ public final class DateUtil {
       this.calendarField = calendarField;
     }
 
-    static TimeDiff parseFrom(String diffStr) throws SemanticException {
+    static TimeDiff parseFrom(String diffStr) throws LensException {
       // Get the relative diff part to get eventual date based on now.
       Matcher qtyMatcher = P_QUANTITY.matcher(diffStr);
       int qty = 1;
@@ -477,7 +477,7 @@ public final class DateUtil {
         } else if ("second".equals(unit)) {
           return new TimeDiff(qty, SECOND);
         } else {
-          throw new SemanticException(ErrorMsg.INVALID_TIME_UNIT, unit);
+          throw new LensException(LensCubeErrorCode.INVALID_TIME_UNIT.getValue(), unit);
         }
       }
       return new TimeDiff(0, SECOND);

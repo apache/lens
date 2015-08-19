@@ -20,11 +20,11 @@ package org.apache.lens.cube.parse;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.server.api.error.LensException;
 
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import com.google.common.collect.Lists;
 
@@ -40,7 +40,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
   private Map<CandidateFact, Set<Dimension>> factDimMap;
 
   MultiFactHQLContext(Set<CandidateFact> facts, Map<Dimension, CandidateDim> dimsToQuery,
-    Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
+    Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws LensException {
     super();
     this.query = query;
     this.facts = facts;
@@ -48,7 +48,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     this.factDimMap = factDimMap;
   }
 
-  protected void setMissingExpressions() throws SemanticException {
+  protected void setMissingExpressions() throws LensException {
     setSelect(getSelectString());
     setFrom(getFromString());
     setWhere(getWhereString());
@@ -73,11 +73,11 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return null;
   }
 
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws LensException {
     return query.getInsertClause() + super.toHQL();
   }
 
-  private String getSelectString() throws SemanticException {
+  private String getSelectString() throws LensException {
     Map<Integer, List<Integer>> selectToFactIndex =
       new HashMap<Integer, List<Integer>>(query.getSelectAST().getChildCount());
     int fi = 1;
@@ -93,8 +93,8 @@ class MultiFactHQLContext extends SimpleHQLContext {
     StringBuilder select = new StringBuilder();
     for (int i = 0; i < query.getSelectAST().getChildCount(); i++) {
       if (selectToFactIndex.get(i) == null) {
-        throw new SemanticException(ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT, HQLParser.getString((ASTNode) query
-          .getSelectAST().getChild(i)));
+        throw new LensException(LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getValue(),
+            HQLParser.getString((ASTNode) query.getSelectAST().getChild(i)));
       }
       if (selectToFactIndex.get(i).size() == 1) {
         select.append("mq").append(selectToFactIndex.get(i).get(0)).append(".")
@@ -124,7 +124,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return facts;
   }
 
-  private String getFromString() throws SemanticException {
+  private String getFromString() throws LensException {
     StringBuilder fromBuilder = new StringBuilder();
     int aliasCount = 1;
     Iterator<CandidateFact> iter = facts.iterator();

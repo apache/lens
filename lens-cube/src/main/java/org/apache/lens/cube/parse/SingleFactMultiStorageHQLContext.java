@@ -23,8 +23,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.lens.cube.metadata.Dimension;
-
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.server.api.error.LensException;
 
 import lombok.Getter;
 
@@ -36,14 +35,14 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
   private CandidateFact fact = null;
 
   SingleFactMultiStorageHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query)
-    throws SemanticException {
+    throws LensException {
     this.query = query;
     this.fact = fact;
     setUnionContexts(fact, dimsToQuery, query);
   }
 
   private void setUnionContexts(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query)
-    throws SemanticException {
+    throws LensException {
     hqlContexts = new ArrayList<HQLContextInterface>();
     String alias = getQuery().getAliasForTableName(getQuery().getCube().getName());
     for (String storageTable : fact.getStorageTables()) {

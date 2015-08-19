@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
  * Dimension HQLContext.
@@ -47,7 +47,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
 
   DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery,
     Set<Dimension> queriedDims, String select, String where,
-    String groupby, String orderby, String having, Integer limit) throws SemanticException {
+    String groupby, String orderby, String having, Integer limit) throws LensException {
     super(select, groupby, orderby, having, limit);
     this.query = query;
     this.dimsToQuery = dimsToQuery;
@@ -55,7 +55,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
     this.queriedDims = queriedDims;
   }
 
-  protected void setMissingExpressions() throws SemanticException {
+  protected void setMissingExpressions() throws LensException {
     setFrom(getFromString());
     setWhere(joinWithAnd(
       genWhereClauseWithDimPartitions(where), getQuery().getConf().getBoolean(
@@ -63,13 +63,13 @@ abstract class DimHQLContext extends SimpleHQLContext {
         ? getPostSelectionWhereClause() : null));
   }
 
-  protected String getPostSelectionWhereClause() throws SemanticException {
+  protected String getPostSelectionWhereClause() throws LensException {
     return null;
   }
 
 
 
-  protected String getFromString() throws SemanticException {
+  protected String getFromString() throws LensException {
     String fromString = getFromTable();
     if (query.isAutoJoinResolved()) {
       fromString =
@@ -82,7 +82,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
 
   protected abstract CandidateFact getQueriedFact();
 
-  protected abstract String getFromTable() throws SemanticException;
+  protected abstract String getFromTable() throws LensException;
 
   public Map<Dimension, CandidateDim> getDimsToQuery() {
     return dimsToQuery;

@@ -37,8 +37,6 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.testng.Assert;
@@ -214,13 +212,11 @@ public class TestColumnarSQLRewriter {
   /**
    * Test no rewrite.
    *
-   * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
    */
   @Test
   // Testing multiple queries in one instance
-  public void testNoRewrite() throws ParseException, SemanticException, LensException {
+  public void testNoRewrite() throws LensException {
 
     SessionState.start(hconf);
 
@@ -256,12 +252,10 @@ public class TestColumnarSQLRewriter {
   /**
    * Test join cond.
    *
-   * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
    */
   @Test
-  public void testJoinCond() throws ParseException, SemanticException, LensException {
+  public void testJoinCond() throws LensException {
 
     String query =
 
@@ -290,12 +284,10 @@ public class TestColumnarSQLRewriter {
   /**
    * Test all filter cond.
    *
-   * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
    */
   @Test
-  public void testAllFilterCond() throws ParseException, SemanticException, LensException {
+  public void testAllFilterCond() throws LensException {
 
     String query =
 
@@ -322,12 +314,10 @@ public class TestColumnarSQLRewriter {
   /**
    * Test all agg column.
    *
-   * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
    */
   @Test
-  public void testAllAggColumn() throws ParseException, SemanticException, LensException {
+  public void testAllAggColumn() throws LensException {
 
     String query =
 
@@ -355,12 +345,10 @@ public class TestColumnarSQLRewriter {
   /**
    * Test all fact keys.
    *
-   * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
    */
   @Test
-  public void testAllFactKeys() throws ParseException, SemanticException, LensException {
+  public void testAllFactKeys() throws LensException {
 
     String query =
 
@@ -385,12 +373,10 @@ public class TestColumnarSQLRewriter {
   /**
    * Test fact sub queries.
    *
-   * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
    */
   @Test
-  public void testFactSubQueries() throws ParseException, SemanticException, LensException {
+  public void testFactSubQueries() throws LensException {
 
     String query =
 
@@ -420,12 +406,10 @@ public class TestColumnarSQLRewriter {
   /**
    * Test rewritten query.
    *
-   * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
    */
   @Test
-  public void testRewrittenQuery() throws ParseException, SemanticException, LensException {
+  public void testRewrittenQuery() throws LensException {
 
     String query =
 
@@ -472,12 +456,10 @@ public class TestColumnarSQLRewriter {
   /**
    * Test union query.
    *
-   * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
    */
   @Test
-  public void testUnionQuery() throws ParseException, SemanticException, LensException {
+  public void testUnionQuery() throws LensException {
 
     String query =
 
@@ -544,7 +526,7 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
-  public void testNoAggCol() throws ParseException, SemanticException, LensException {
+  public void testNoAggCol() throws LensException {
 
     String query = "SELECT  distinct ( location_dim . id ) FROM location_dim "
       + "location_dim join time_dim time_dim on location_dim.time_id = time_dim.id "
@@ -564,7 +546,7 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
-  public void testSkipExpression() throws ParseException, SemanticException, LensException {
+  public void testSkipExpression() throws LensException {
 
     String query = "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
         + "sum(case when fact.dollars_sold = 0 then 0.0 else fact.dollars_sold end) dollars_sold, "
@@ -602,7 +584,7 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
-  public void testAlias() throws ParseException, SemanticException, LensException {
+  public void testAlias() throws LensException {
 
     String query = "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
         + "sum(case when fact.dollars_sold = 0 then 0.0 end) as dollars_sold, "
@@ -654,7 +636,7 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
-  public void testFilter() throws ParseException, SemanticException, LensException {
+  public void testFilter() throws LensException {
 
     String query = "select max(fact.dollars_sold) from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
@@ -696,7 +678,7 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
-  public void testCountReplace() throws ParseException, SemanticException, LensException {
+  public void testCountReplace() throws LensException {
 
     String query = "SELECT  count(location_dim.name) FROM location_dim "
         + "location_dim join time_dim time_dim on location_dim.time_id = time_dim.id "
@@ -717,7 +699,7 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
-  public void testReplaceAlias() throws ParseException, SemanticException, LensException {
+  public void testReplaceAlias() throws LensException {
 
     String query = "select fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
@@ -747,7 +729,7 @@ public class TestColumnarSQLRewriter {
 
 
   @Test
-  public void testSkipSnowflakeJoinFact() throws ParseException, SemanticException, LensException {
+  public void testSkipSnowflakeJoinFact() throws LensException {
 
     String query = "SELECT (dim1 . date) date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name, "
         + "(dim3 . name) dim3_name , (dim4 . name) dim4_name " + "FROM fact f "
@@ -779,7 +761,7 @@ public class TestColumnarSQLRewriter {
 
 
   @Test
-  public void testFactFilterPushDown() throws ParseException, SemanticException, LensException {
+  public void testFactFilterPushDown() throws LensException {
 
     String query = "SELECT (dim1 . date) date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name  "
         + "FROM fact f  INNER JOIN dim1 dim1 ON f.dim1_id = dim1.id  and f.m2 = '1234' "
@@ -807,7 +789,7 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
-  public void testOrderByAlias() throws ParseException, SemanticException, LensException {
+  public void testOrderByAlias() throws LensException {
 
     String query = "SELECT (dim1 . date) dim1_date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name  "
         + "FROM fact f  INNER JOIN dim1 dim1 ON f.dim1_id = dim1.id  and f.m2 = '1234' "
@@ -836,7 +818,7 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
-  public void testExcludeJoinFilterFromFactQuery() throws ParseException, SemanticException, LensException {
+  public void testExcludeJoinFilterFromFactQuery() throws LensException {
 
     String query = "SELECT (dim1 . date) dim1_date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name  "
         + "FROM fact f  INNER JOIN dim1 dim1 ON f.dim1_id = dim1.id  and f.m2 = '1234' "

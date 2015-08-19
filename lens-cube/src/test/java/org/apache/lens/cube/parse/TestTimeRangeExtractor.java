@@ -23,14 +23,14 @@ import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import java.util.List;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -54,7 +54,7 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
   }
 
   public static String rewrite(CubeQueryRewriter driver, String query)
-    throws SemanticException, ParseException, LensException {
+    throws ParseException, LensException, HiveException {
     CubeQueryContext rewrittenQuery = driver.rewrite(query);
     return rewrittenQuery.toHQL();
   }
@@ -66,9 +66,9 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
       // this should throw exception because from date is after to date
       driver.rewrite("SELECT cityid, testCube.msr2 from" + " testCube where " + timeRange2);
       Assert.fail("Should not reach here");
-    } catch (SemanticException exc) {
+    } catch (LensException exc) {
       Assert.assertNotNull(exc);
-      Assert.assertEquals(exc.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FROM_AFTER_TO.getErrorCode());
+      Assert.assertEquals(exc.getErrorCode(), LensCubeErrorCode.FROM_AFTER_TO.getValue());
     }
   }
 
@@ -79,9 +79,9 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
       // this should throw exception because from date and to date are same
       driver.rewrite("SELECT cityid, testCube.msr2 from" + " testCube where " + equalTimeRange);
       Assert.fail("Should not reach here");
-    } catch (SemanticException exc) {
+    } catch (LensException exc) {
       Assert.assertNotNull(exc);
-      Assert.assertEquals(exc.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.INVALID_TIME_RANGE.getErrorCode());
+      Assert.assertEquals(exc.getErrorCode(), LensCubeErrorCode.INVALID_TIME_RANGE.getValue());
     }
   }
 
