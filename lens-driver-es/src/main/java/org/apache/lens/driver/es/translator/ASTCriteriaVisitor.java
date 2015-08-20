@@ -25,13 +25,6 @@ import org.apache.lens.driver.es.exceptions.InvalidQueryException;
 public interface ASTCriteriaVisitor {
   /**
    *
-   * @param logicalOp The unary operator
-   * @param visitedSubTree The visited subtree of unary operator
-   */
-  void visitUnaryLogicalOp(String logicalOp, ASTCriteriaVisitor visitedSubTree) throws InvalidQueryException;
-
-  /**
-   *
    * @param logicalOp The logical operator
    * @param visitedSubTrees The visited subtree of logical operator
    */

@@ -22,6 +22,8 @@ import java.util.Map;
 
 import org.apache.lens.driver.es.ESDriverConfig;
 import org.apache.lens.driver.es.ESQuery;
+import org.apache.lens.driver.es.exceptions.InvalidQueryException;
+import org.apache.lens.driver.es.grammar.Aggregations;
 import org.apache.lens.driver.es.translator.ESVisitor;
 
 import org.apache.commons.lang3.Validate;
@@ -56,16 +58,13 @@ public class ESAggregateVisitor extends ESVisitor {
   }
 
   @Override
-  public void visitAggregation(String aggregationType, String columnName, String alias) {
+  public void visitAggregation(String aggregationType, String columnName, String alias) throws InvalidQueryException {
     columnName = visitColumn(columnName);
     final String aliasName = alias == null ? columnName : alias;
     querySchema.add(aliasName);
     selectedColumnNames.add(columnName);
-    final ObjectNode aggMeasures = JSON_NODE_FACTORY.objectNode();
-    final ObjectNode fieldNode = JSON_NODE_FACTORY.objectNode();
-    fieldNode.put(ESDriverConfig.FIELD, columnName);
-    aggMeasures.put(ESDriverConfig.AGGREGATIONS.get(aggregationType), fieldNode);
-    aggNode.put(aliasName, aggMeasures);
+    Aggregations.getFor(aggregationType)
+      .build(aggNode, columnName, aliasName);
   }
 
   @Override

@@ -165,6 +165,14 @@ public final class ASTTraverserForES {
       rightExpressions.add(whereClause.getChildren().get(4).toString());
       leftCol = whereClause.getChildren().get(2).getChildren().get(1).toString();
       break;
+    case IN:
+    case NOT_IN:
+      Validate.isTrue(rightExpList.size()>2, "Atleast one right expression needed");
+      for (Node node : whereClause.getChildren().subList(2, whereClause.getChildren().size())) {
+        rightExpressions.add(node.toString());
+      }
+      leftCol = whereClause.getChildren().get(1).getChildren().get(0).toString();
+      break;
     case SIMPLE:
       Validate.isTrue(rightExpList.size()>1, "Atleast one right expression needed");
       for(Node rightExp : rightExpList.subList(1, rightExpList.size())) {
@@ -188,14 +196,7 @@ public final class ASTTraverserForES {
     for (Node node : whereClause.getChildren()) {
       childVisitors.add(traverseCriteriaRecursively(node));
     }
-    switch (logicalOpInfo.logicalOpType) {
-    case UNARY:
-      childVisitor.visitUnaryLogicalOp(logicalOpInfo.logicalOperator, childVisitors.get(0));
-      break;
-    case BINARY:
-      childVisitor.visitLogicalOp(logicalOpInfo.logicalOperator, childVisitors);
-      break;
-    }
+    childVisitor.visitLogicalOp(logicalOpInfo.logicalOperator, childVisitors);
     return childVisitor;
   }
 
@@ -268,7 +269,7 @@ public final class ASTTraverserForES {
     }
   }
 
-  private enum PredicateType {SIMPLE, BETWEEN};
+  private enum PredicateType {SIMPLE, IN, NOT_IN, BETWEEN};
   private enum CriteriaType {PREDICATE, LOGICAL}
   private enum LogicalOpType {UNARY, BINARY}
   private static class CriteriaInfo {
@@ -302,7 +303,8 @@ public final class ASTTraverserForES {
 
   private static class Helper {
 
-    private static List<String> predicates = Lists.newArrayList("=", ">", "<", "<=", ">=", "between");
+    private static List<String> predicates
+      = Lists.newArrayList("!=", "=", ">", "<", "<=", ">=", "between", "in", "not in");
     private static List<String> unaryLogicalOps = Lists.newArrayList("not", "!");
     private static List<String> binaryLogicalOps = Lists.newArrayList("and", "or", "&", "|", "&&", "||");
     private static List<String> logicalOps = Lists.newArrayList();
@@ -329,6 +331,10 @@ public final class ASTTraverserForES {
         return new PredicateInfo(whereRoot, PredicateType.SIMPLE);
       } else if (whereRoot.equals("TOK_FUNCTION") && whereClause.getChildren().get(0).toString().equals("between")) {
         return new PredicateInfo("between", PredicateType.BETWEEN);
+      } else if (whereRoot.equals("TOK_FUNCTION") && whereClause.getChildren().get(0).toString().equals("in")) {
+        return new PredicateInfo("in", PredicateType.IN);
+      } else if (whereRoot.equals("TOK_FUNCTION") && whereClause.getChildren().get(0).toString().equals("not in")) {
+        return new PredicateInfo("not in", PredicateType.NOT_IN);
       } else {
         throw new InvalidQueryException("Could not get criteria info for where clause " + whereRoot);
       }

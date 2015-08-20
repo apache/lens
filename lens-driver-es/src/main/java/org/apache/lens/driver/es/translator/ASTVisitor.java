@@ -18,6 +18,8 @@
  */
 package org.apache.lens.driver.es.translator;
 
+import org.apache.lens.driver.es.exceptions.InvalidQueryException;
+
 /**
  * The visitor interface for ASTInorderTraversal
  * It covers only simple queries (no joins or sub queries)
@@ -29,7 +31,7 @@ public interface ASTVisitor {
 
   void visitSimpleSelect(String columnName, String alias);
 
-  void visitAggregation(String aggregationType, String columnName, String alias);
+  void visitAggregation(String aggregationType, String columnName, String alias) throws InvalidQueryException;
 
   void visitFrom(String database, String table);
 

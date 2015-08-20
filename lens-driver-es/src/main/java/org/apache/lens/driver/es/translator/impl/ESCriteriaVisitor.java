@@ -20,15 +20,15 @@ package org.apache.lens.driver.es.translator.impl;
 
 import java.util.List;
 
-import org.apache.lens.driver.es.ESDriverConfig;
 import org.apache.lens.driver.es.exceptions.InvalidQueryException;
+import org.apache.lens.driver.es.grammar.LogicalOperators;
+import org.apache.lens.driver.es.grammar.Predicates;
 import org.apache.lens.driver.es.translator.ASTCriteriaVisitor;
 
-import org.apache.commons.lang.Validate;
-
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 
 public final class ESCriteriaVisitor implements ASTCriteriaVisitor {
@@ -38,55 +38,29 @@ public final class ESCriteriaVisitor implements ASTCriteriaVisitor {
   private ObjectNode node = jsonNodeFactory.objectNode();
 
   @Override
-  public void visitLogicalOp(String logicalOp, List<ASTCriteriaVisitor> visitedSubTrees) {
-    final ArrayNode subTrees = jsonNodeFactory.arrayNode();
-    for (ASTCriteriaVisitor criteriaVisitor : visitedSubTrees) {
-      subTrees.add(((ESCriteriaVisitor) criteriaVisitor).node);
-    }
-    node.put(ESDriverConfig.LOGICAL_OPS.get(logicalOp), subTrees);
-  }
-
-  @Override
-  public void visitUnaryLogicalOp(String logicalOp, ASTCriteriaVisitor visitedSubTree) {
-    node.put(ESDriverConfig.LOGICAL_OPS.get(logicalOp), ((ESCriteriaVisitor) visitedSubTree).node);
+  public void visitLogicalOp(String logicalOp, List<ASTCriteriaVisitor> visitedSubTrees) throws InvalidQueryException {
+    LogicalOperators.getFor(logicalOp)
+      .build(node, collectNodesFromVisitors(visitedSubTrees));
   }
 
   @Override
   public void visitPredicate(String predicateOp, String leftColCanonical, List<String> rightExps)
     throws InvalidQueryException {
     final String leftCol = visitColumn(leftColCanonical);
-    String elasticPredicateOp = ESDriverConfig.PREDICATES.get(predicateOp);
-    if (elasticPredicateOp.equals(ESDriverConfig.TERM)) {
-      final ObjectNode termNode = jsonNodeFactory.objectNode();
-      termNode.put(leftCol, removeSingleQuotesFromLiteral(rightExps.get(0)));
-      node.put(ESDriverConfig.TERM, termNode);
-    } else if (elasticPredicateOp.equals(ESDriverConfig.TERMS)) {
-      final ObjectNode termsNode = jsonNodeFactory.objectNode();
-      final ArrayNode arrayNode = jsonNodeFactory.arrayNode();
-      for (String right : rightExps) {
-        arrayNode.add(removeSingleQuotesFromLiteral(right));
-      }
-      termsNode.put(leftCol, arrayNode);
-      node.put(ESDriverConfig.TERMS, termsNode);
-    } else if (ESDriverConfig.RANGE_PREDICATES.containsValue(elasticPredicateOp)) {
-      final ObjectNode rangeNode = jsonNodeFactory.objectNode();
-      final ObjectNode rangeInnerNode = jsonNodeFactory.objectNode();
-      if (predicateOp.equals("between")) {
-        Validate.isTrue(rightExps.size() == 2);
-        rangeInnerNode.put("gt", removeSingleQuotesFromLiteral(rightExps.get(0)));
-        rangeInnerNode.put("lt", removeSingleQuotesFromLiteral(rightExps.get(1)));
-      } else {
-        rangeInnerNode.put(elasticPredicateOp, removeSingleQuotesFromLiteral(rightExps.get(0)));
-      }
-      rangeNode.put(leftCol, rangeInnerNode);
-      node.put(ESDriverConfig.RANGE, rangeNode);
-    } else {
-      throw new InvalidQueryException("No handlers for the registered predicate" + predicateOp);
-    }
+    Predicates.getFor(predicateOp)
+      .build(node, leftCol, rightExps);
   }
 
   public ObjectNode getNode() {
     return node;
+  }
+
+  private static List<JsonNode> collectNodesFromVisitors(List<ASTCriteriaVisitor> visitedSubTrees) {
+    final List<JsonNode> subTrees = Lists.newArrayList();
+    for(ASTCriteriaVisitor visitor: visitedSubTrees) {
+      subTrees.add(((ESCriteriaVisitor)visitor).node);
+    }
+    return subTrees;
   }
 
   private static String visitColumn(String cannonicalColName) {
@@ -94,7 +68,4 @@ public final class ESCriteriaVisitor implements ASTCriteriaVisitor {
     return colParts[colParts.length - 1];
   }
 
-  private static String removeSingleQuotesFromLiteral(String rightExp) {
-    return rightExp.replaceAll("^\'|\'$", "");
-  }
 }

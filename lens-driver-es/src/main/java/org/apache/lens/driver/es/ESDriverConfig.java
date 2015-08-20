@@ -49,10 +49,6 @@ public final class ESDriverConfig {
   public static final String SIZE = "size";
   public static final String QUERY_TIME_OUT_STRING = "timeout";
 
-  public static final ImmutableMap<String, String> LOGICAL_OPS;
-  public static final ImmutableMap<String, String> RANGE_PREDICATES;
-  public static final ImmutableMap<String, String> PREDICATES;
-  public static final ImmutableMap<String, String> AGGREGATIONS;
   public static final ImmutableMap<ASTVisitor.OrderBy, String> ORDER_BYS;
   public static final int AGGR_TERM_FETCH_SIZE = 0;
   public static final int DEFAULT_TERM_QUERY_OFFSET = 0;
@@ -63,37 +59,6 @@ public final class ESDriverConfig {
   private static final int TERM_FETCH_SIZE_DEFAULT = 5000;
 
   static {
-    final ImmutableMap.Builder<String, String> logicalOpsBuilder = ImmutableMap.builder();
-    logicalOpsBuilder.put("and", "and");
-    logicalOpsBuilder.put("&&", "and");
-    logicalOpsBuilder.put("&", "and");
-    logicalOpsBuilder.put("or", "or");
-    logicalOpsBuilder.put("||", "or");
-    logicalOpsBuilder.put("|", "or");
-    logicalOpsBuilder.put("!", "not");
-    LOGICAL_OPS = logicalOpsBuilder.build();
-
-    final ImmutableMap.Builder<String, String> predicatesBuilder = ImmutableMap.builder();
-    predicatesBuilder.put(">", "gt");
-    predicatesBuilder.put(">=", "gte");
-    predicatesBuilder.put("<", "lt");
-    predicatesBuilder.put("<=", "lte");
-    predicatesBuilder.put("between", "range");
-    RANGE_PREDICATES = predicatesBuilder.build();
-    predicatesBuilder.put("=", "term");
-    predicatesBuilder.put("in", "terms");
-    PREDICATES = predicatesBuilder.build();
-
-    final ImmutableMap.Builder<String, String> aggregationsBuilder = ImmutableMap.builder();
-    aggregationsBuilder.put("count", "value_count");
-    aggregationsBuilder.put("count_distinct", "cardinality");
-    aggregationsBuilder.put("max", "max");
-    aggregationsBuilder.put("sum", "sum");
-    aggregationsBuilder.put("min", "min");
-    aggregationsBuilder.put("avg", "avg");
-    aggregationsBuilder.put("percentile", "percentiles");
-    AGGREGATIONS = aggregationsBuilder.build();
-
     final ImmutableMap.Builder<ASTVisitor.OrderBy, String> orderByBuilder = ImmutableMap.builder();
     orderByBuilder.put(ASTVisitor.OrderBy.ASC, "asc");
     orderByBuilder.put(ASTVisitor.OrderBy.DESC, "desc");
@@ -118,5 +83,6 @@ public final class ESDriverConfig {
     queryTimeOutMs = conf.getInt(QUERY_TIME_OUT_LENS_KEY, QUERY_TIME_OUT_MS_DEFAULT);
     termFetchSize = conf.getInt(TERM_FETCH_SIZE_KEY, TERM_FETCH_SIZE_DEFAULT);
   }
+
 
 }

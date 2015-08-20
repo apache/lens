@@ -82,5 +82,20 @@
     "name" : "Group by with multiple aggregation and complex criteria, select order jumbled",
     "hql" : "select count(col1), col2, max(col3) from index.type where !(col1=5 and col2='p' and col3='wer' or (col4='9')) group by col2",
     "expectedJson" : {"size":0,"timeout":10000,"aggs":{"filter_wrapper":{"aggs":{"col2":{"terms":{"field":"col2","size":100},"aggs":{"col1":{"value_count":{"field":"col1"}},"col3":{"max":{"field":"col3"}}}}},"filter":{"not":{"or":[{"and":[{"and":[{"term":{"col1":"5"}},{"term":{"col2":"p"}}]},{"term":{"col3":"wer"}}]},{"term":{"col4":"9"}}]}}}}}
+  },
+  {
+    "name" : "Check in predicate",
+    "hql" : "select col1 from index.type where col2 in ('val1', 'val2')",
+    "expectedJson" : {"from":0,"size":10000,"fields":["col1"],"sort":[],"timeout":10000,"filter":{"terms":{"col2":["val1","val2"]}}}
+  },
+  {
+    "name" : "Check not in predicate",
+    "hql" : "select col1 from index.type where col2 not in ('val1', 'val2')",
+    "expectedJson" : {"from":0,"size":10000,"fields":["col1"],"sort":[],"timeout":10000,"filter":{"not":{"terms":{"col2":["val1","val2"]}}}}
+  },
+  {
+    "name" : "Check not equals predicate",
+    "hql" : "select col1 from index.type where col2 != 'val1'",
+    "expectedJson" : {"from":0,"size":10000,"fields":["col1"],"sort":[],"timeout":10000,"filter":{"not":{"term":{"col2":"val1"}}}}
   }
 ]
