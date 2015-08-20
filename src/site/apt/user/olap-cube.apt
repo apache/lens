@@ -23,108 +23,250 @@ OLAP Data cube concepts
 
 * Introduction
 
-  Typical data layout in a data ware house is to have fact data rolled up with time and 
+  Typical data layout in a data ware house is to have fact data rolled up with time and
   reduce dimensions at each level. Fact data will have dimension keys sothat it can be
   joined with actual dimension tables to get more information on dimension attributes.
-  
+
   The typical data layout is depicted in the following diagram.
-  
+
 [/images/data-layout.png] Fact data and dimension data
-  
+
   Lens provides an abstraction to represent above layout, and allows user to define schema
   of the data at conceptual level and also query the same, without knowing
   the physical storages and rollups, which is described in below sections.
 
 * Metastore model
 
-  Metastore model introduces constructs Storage, Cube, Fact table and Dimension table, Partition.
- 
-** Storage
+  Metastore model introduces constructs Storage, Cube, Dimension, Fact table and Dimtable, Partition. Below we'll
+  provide a brief indroduction of the constructs. You're welcome to checkout the
+  {{{../apidocs/org/apache/lens/api/metastore/package-summary.html}javadoc}}. You'll find corresponding classes for
+  each of the construct. The entities can be defined by either creating objects of these classes, or by writing
+  <<<xml>>>s according to their schema. The schema is also available in javadoc.
 
-  Storage represents a physical storage. It can be Hadoop File system or a data base. It is defined by 
+  We have followed a convention in naming classes for constructs, class for a Storage is called XStorage and the xml
+  root tag is <<<x_storage>>>. If storage is part of a bigger xml where root tag is some other construct, then the tag
+  is <<<storage>>>. So in all <<<xml>>>s for lens, all and only the outer most tag are <<<x_*>>> and other tags are not.
+
+** {{{../apidocs/org/apache/lens/api/metastore/XStorage.html}Storage}}
+
+  Storage represents a physical storage. It can be Hadoop File system or a data base. It is defined by
   name, endpoint and properties associated with.
 
-** Cube
+** {{{../apidocs/org/apache/lens/api/metastore/XField.html}Field}}
 
-  A cube is a set of dimensions and measures in a particular subject, which users can query.
-  Cubes also have timed dimensions, which can be used query cube for a time range.
+  A Field has a name, a display string and a description. Field has the following sub types
 
-*** Measure
+
+*** {{{../apidocs/org/apache/lens/api/metastore/XMeasure.html}Measure}}
 
   A measure is a quantity that you are interested in measuring.
-  
-  Measure will have name, type, default aggregator, a format string, start time and end time. Measure can be
-  simple column measure or an expression measure which is associated with an expression.
-  
-*** Dimension
+  Measure is a field having a default aggregator, a format string, unit, start time and end time. Can also have min and
+  max value.
 
-  A dimension is an attribute, or set of attributes, by which you can divide measures into sub-categories.
+*** {{{../apidocs/org/apache/lens/api/metastore/XDimAttribute.html}Dim Attribute}}
 
-  * A dimension can be as simple as having name and type. // BaseDimension
-  
-  * A dimension can also refer to a dimension table // ReferencedDimension
-  
-  * A dimension can be associated with an expression  // ExpressionDimension
+  Dim Attributes are not measured, they are more like properties of your data. e.g. Location, user name etc.
 
-  * A dimension can be a hierarchy of dimensions. // HierachicalDimension
-  
-  * A dimension can define all the possible values it can take. // InlineDimension
+  * A dim attribute can be as simple as having name and type. // Base Dim Attribute
 
-** Derived Cube
+  * A dim attribute can also refer to a dimension // Referenced Dim Atrribute
+
+  * A dim attribute can be associated with an expression  // Expression Column
+
+  * A dim attribute can be a hierarchy of dim attributes. // Hierarchical Dim Attribute
+
+  * A dim attribute can define all the possible values it can take. // Inline Dim Attribute
+
+*** {{{../apidocs/org/apache/lens/api/metastore/XExprColumn.html}Expression Column}}
+
+  Expression column has one or many {{{../apidocs/org/apache/lens/api/metastore/XExprSpec.html}expression spec}}s.
+  So you can declare one expression field is specified by one expression for some time, and another for other times.
+
+*** {{{../apidocs/org/apache/lens/api/metastore/XJoinChain.html}Join Chain}}
+
+  A join chain is a directional path between two {{{#Conceptual_Tables}conceptual tables}}. So if a conceptual table
+  <<<t1>>> has a chain <<<jc>>> to conceptual table <<<t2>>>, <<<t1>>> can access <<<t2>>>'s fields by
+  saying <<<jc.<t2_field_name>.>>>. A join chain consists of one or more
+  {{{../apidocs/org/apache/lens/api/metastore/XJoinPath.html}Join path}}s. A path is defined by sequence of edges
+  where an edge is defined like <<<table1.some_field=table2.some_field>>>. In a path, end table of one edge should be
+  same as start table of next edge.
+
+** Conceptual Tables
+
+  Conceptual tables are a {{{../apidocs/org/apache/lens/api/metastore/XFields.html}set of fields}}.
+  Two types of conceptual tables are defined:
+
+
+*** {{{../apidocs/org/apache/lens/api/metastore/XDimension.html}Dimension}}
+
+  A Dimension is a a conceptual table which only contains
+  {{{../apidocs/org/apache/lens/api/metastore/XDimAttributes.html}dim attributes}},
+  {{{../apidocs/org/apache/lens/api/metastore/XExpressions.html}expressions}} and
+  {{{../apidocs/org/apache/lens/api/metastore/XJoinChains.html}join chains}}.
+
+*** {{{../apidocs/org/apache/lens/api/metastore/XCube.html}Cube}}
+
+  A cube is a conceptual table which contains
+  {{{../apidocs/org/apache/lens/api/metastore/XDimAttributes.html}dim attributes}},
+  {{{../apidocs/org/apache/lens/api/metastore/XMeasures.html}measures}},
+  {{{../apidocs/org/apache/lens/api/metastore/XExpressions.html}expressions}} and
+  {{{../apidocs/org/apache/lens/api/metastore/XJoinChains.html}join chains}}.
+
+  Cubes are of two types:
+
+
+**** {{{../apidocs/org/apache/lens/api/metastore/XBaseCube.html}Base Cube}}
+
+  Base cubes contain full description of all its fields.
+
+
+**** {{{../apidocs/org/apache/lens/api/metastore/XDerivedCube.html}Derived Cube}}
 
   A derived cube will have subset of measures and dimensions of a base cube.
-  User can query derived cube as well, very similar to cube. For a derived cube,
+  User can query derived cube as well, very similar to base cube. For a derived cube,
   user would specify set of measure names and dimension names only,
   the definition of measure/dimension will be derived from base cube. All the
   measures and dimensions of derived cube can always be queried together, whereas
   all measures and dimensions of parent cube may not be allowed to query together.
 
-** Fact Tables
+  Derived cubes can act as a constraint over which fields can be queried together.
 
-  A fact table is table having columns. Columns are subset of measures and dimensions.
-  The fact table is associated with cube, specified by name. Fact can be available
+** Logical Tables
+
+  Cubes and dimensions are just collection of fields, it's the highest level abstraction on the underlying data.
+  Logical tables are one level down in the heirarchy of abstraction. A logical table belongs to a conceptual table
+  and can have a subset of fields of the conceptual table. There are logical tables for both the types of
+  conceptual tables. conceptual tables
+  have fields, at logical table level we call them {{{../apidocs/org/apache/lens/api/metastore/XColumn.html}column}}s.
+  A column is not a measure or dim attribute or expression. A column just has name and data-type. At this level, the
+  distinction of dim attribute, measure and expression goes away. A logical table can declare to have any of these
+  as a column. Logical tables drop the concern of of join chains fully, they are taken care at conceptual table level.
+  Logical tables also drop the concern of expressions partially. Expression fields can
+  be present on a Logical table as a column. Or the sub-fields of the expression field can be present on a logical table
+  as columns and the expression field can be derived using them.
+
+  A logical table can be present on {{{../apidocs/org/apache/lens/api/metastore/XStorageTables.html}multiple storages}}.
+  A logical table present on a storage is called a physical table or a storage table.
+  The corresponding two types of logical table for conceptual tables are as below:
+
+*** {{{../apidocs/org/apache/lens/api/metastore/XDimensionTable.html}Dimension tables}}
+
+  Dimension Tables are associated with Dimensions. They can be available in multiple storages.
+
+*** {{{../apidocs/org/apache/lens/api/metastore/XFactTable.html}Fact Tables}}
+
+  The fact table is associated with cube, specified by name. Fact can also be available
   in multiple storages. The fact will be used to answer the queries on derived
-  cubes as well.
+  cubes as well. Typically facts will belong to only base cubes and derived cubes will
+  inherit all the facts of the base cube.
 
-** Dimension tables
 
-  A table with list of columns. It can have references to other dimension tables. 
-  Theses tables can be joined with cubes while querying. These tables can be available in multiple storages. 
 
-** Update Period
+** {{{../apidocs/org/apache/lens/api/metastore/XStorageTableElement.html}Storage table}}
 
-  Fact or dimension tables can be updated at regular intervals. Supports SECONDLY, MINUTELY, HOURLY, DAILY, WEEKLY, MONTHLY,
-QUARTERLY, YEARLY update periods.
+  The logical tables present on a storage is called a storage table
+  It will have the same schema as fact/dimension table definition. Each storage table can have
+  its own {{{../apidocs/org/apache/lens/api/metastore/XStorageTableDesc.html}storage descriptor}}.
+  As mentioned below, each storage table has any choice of {{{#Update_Period}update periods}}.
+  A storage table can be partitioned by
+  columns. Usually partition columns are dim attributes. They can be timed dim attributes or non time dim attributes.
+  Other properties can be found in the javadoc for storage descriptor.
 
-** Storage tables
+  Physical tables are not defined separately, they are part of the schema of logical tables as <<<storage_tables>>>.
 
-  The physical tables, either fact or dimension tables, present on a storage.
-  It will have the same schema as fact/dimension table definition. Each physical table can have
-  its own storage descriptor. These tables can be partitioned by
-  columns. Usually partition columns are dimensions. They can be timed dimensions or other dimensions.
+   * Naming convention
 
-*** Fact storage table
+     The name of the storage table is storage name followed fact/dimensions table, seperated by '_".
+     Ex: For fact table name: FACT1, for storage:S1, the storage table name is S1_FACT1
+     For dimension table name: DIM1, for storage:S1, the storage table name is S1_DIM1
 
-  Fact storage table is the physical fact table for the associated storage, for the specified update
-  period.  The storage table can be associated with multiple update periods.
+   * {{{../apidocs/org/apache/lens/api/metastore/XUpdatePeriod.html}Update Period}}
 
-*** Dimension storage table
+     Fact or dimension tables are available on some storages, on each storage, the <physical table>
+     can be updated at regular intervals. Supports SECONDLY, MINUTELY, HOURLY, DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+     update periods. Support for CONTINUOUS update period is also added but might be incomplete till 2.4 release.
 
-  Dimension storage table is the physical dimension table for the associated storage. Dimension storage
-  table can have snapshot dumps at specified regular intervals or a table with no dumps, so the storage
-  table can have zero or one update period.
+   * {{{..//apidocs/org/apache/lens/api/metastore/XPartition.html}Partition}}
 
-*** Naming convention
+      So given a storage table and one of its update periods, data is supposed to be registered at a fixed interval. The
+      construct for this is called a <<<partition>>>. You can register a single partition or
+      {{{../apidocs/org/apache/lens/api/metastore/XPartitions.html}multiple partitions}} together.
+      Once registered, the partition(s) can be updated as well.
 
-   The name of the storage table is storage name followed fact/dimensions table, seperated by '_".
-   
-   Ex: For fact table name: FACT1, for storage:S1, the storage table name is S1_FACT1
-   For dimension table name: DIM1, for storage:S1, the storage table name is S1_DIM1
+  So implementation-wise the partitions are stored as partitions in hive metastore. For optimization purposes, lens
+  also keeps the most crucial info cached. Here the difference between fact storage tables and dim storage tables
+  becomes significant.
 
-*** Partition
 
-  Each partition on the storage table can have its own storage descriptor.
+  The corresponding physical tables for the logical tables defined above are:
 
+*** Dim storage tables
+
+  Dimension storage table is the physical dimension table for the associated storage.
+  Dimension storage table can have snapshot dumps at specified regular intervals or a table with no dumps,
+  so the storage table can have zero or one update period.
+
+  If the dimension storage table is being updated regularly, older partitions are expected to have lesser data than
+  <<<latest>>> partitions. Examples could be, country id to
+  country name mappings. Newer partitions are supposed to contain at least equal --- or, possibly more --- number
+  of mappings than older partitions. Once a partition is registered, all the older partitions become obsolete.
+
+  So in accordance with this, while registering partition, lens registers an additional partition with value
+  <<<latest>>> which has path same as the <actual> latest partition. So promoting that dim storage tables are always
+  supposed to be queried with <<<latest>>> partition. This is reflected in lens's query translation logic where
+  only <<<latest>>> partition is queried.
+
+  Since only one partition is relevant for dim storage tables, lens maintains a hash map for quicker lookup of latest
+  partition.
+
+
+*** Fact storage tables
+
+  Unlike dim storage tables, all partitions in fact storage tables are relevant and queryable. So there is no <<<latest>>>
+  partition. Instead, lens maintains something called
+  {{{../apidocs/org/apache/lens/cube/metadata/timeline/PartitionTimeline.html} <<<Partition Timeline>>>}}.
+  They are better explained in {{{https://cwiki.apache.org/confluence/display/LENS/Partition+Timeline}this wiki page}}
+
+  Here we'll explore some of the things that you need to be aware of to interact with timelines as a lens user.
+
+  Timelines are stored in storage table's properties, which is again cached in memory. Since one
+  fact storage table can have multiple update periods and partitions registered for them can be different, there is need
+  to have timelines for all update periods. Also one storage table can have multiple partition columns. So timelines
+  need to be present for all partition columns too. So for one fact storage table, if <<<x>>> is number of
+  update periods and <<<y>>> is number of partition columns, there will be <<<x*y>>> timelines for it.
+
+
+  You can see the current timeline of the fact by {{{../resource_MetastoreResource.html#path__metastore_facts_-factName-_timelines.html}this rest api}}
+
+  Alternatively, on cli you can view like this:
+
++--+
+lens-shell>fact timelines --fact_name sales_aggr_fact2
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=mydb_sales_aggr_fact2, updatePeriod=DAILY, partCol=dt, all=null), first=2015-04-12, holes=[], latest=2015-04-12)
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=mydb_sales_aggr_fact2, updatePeriod=DAILY, partCol=ot, all=null), first=2015-04-12, holes=[], latest=2015-04-12)
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=mydb_sales_aggr_fact2, updatePeriod=DAILY, partCol=pt, all=null), first=2015-04-13, holes=[], latest=2015-04-13)
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=local_sales_aggr_fact2, updatePeriod=HOURLY, partCol=dt, all=null), first=2015-04-13-04, holes=[], latest=2015-04-13-05)
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=local_sales_aggr_fact2, updatePeriod=DAILY, partCol=dt, all=null), first=2015-04-11, holes=[], latest=2015-04-12)
+
+lens-shell>fact timelines --fact_name sales_aggr_fact2 --storage_name local
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=local_sales_aggr_fact2, updatePeriod=HOURLY, partCol=dt, all=null), first=2015-04-13-04, holes=[], latest=2015-04-13-05)
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=local_sales_aggr_fact2, updatePeriod=DAILY, partCol=dt, all=null), first=2015-04-11, holes=[], latest=2015-04-12)
+
+lens-shell>fact timelines --fact_name sales_aggr_fact2 --storage_name local --update_period HOURLY
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=local_sales_aggr_fact2, updatePeriod=HOURLY, partCol=dt, all=null), first=2015-04-13-04, holes=[], latest=2015-04-13-05)
+
+lens-shell>fact timelines --fact_name sales_aggr_fact2 --storage_name local --update_period HOURLY --time_dimension delivery_time
+EndsAndHolesPartitionTimeline(super=PartitionTimeline(storageTableName=local_sales_aggr_fact2, updatePeriod=HOURLY, partCol=dt, all=null), first=2015-04-13-04, holes=[], latest=2015-04-13-05)
+lens-shell>
++--+
+
+
+
+  Any time you feel that the timeline is out of sync with the actual partitions registered, just set
+  <<<cube.storagetable.partition.timeline.cache.present = false>>> in the storage table's properties
+  and restart lens server. Now this will read all
+  partitions registered for the storage table and re-create the timeline. After creation, it'll update table properties
+  to reflect the correct value.
 
 * Metastore API
 
@@ -136,7 +278,7 @@ QUARTERLY, YEARLY update periods.
 * Query Language
 
   User can query the lens through OLAP Cube QL, which is subset of Hive QL.
-  
+
   Here is the grammar:
 
 +---+
@@ -148,7 +290,7 @@ QUARTERLY, YEARLY update periods.
   [HAVING having_expr]
   [ORDER BY colList]
   [LIMIT number]
-  
+
   cube_table_reference:
   cube_table_factor
   | join_table
@@ -164,7 +306,7 @@ QUARTERLY, YEARLY update periods.
   expression = expression
   colOrder: ( ASC | DESC )
   colList : colName colOrder? (',' colName colOrder?)*
-  
+
   TIME_RANGE_IN(colName, from, to) : The time range inclusive of ‘from’ and exclusive of ‘to’.
   time range clause is applicable only if cube_table_reference has cube_name.
   Format of the time range is <yyyy-MM-dd-HH:mm:ss,SSS>
@@ -174,28 +316,44 @@ QUARTERLY, YEARLY update periods.
   OLAP Cube QL supports all the functions that hive supports as documented in Hive Functions
 
   Query engine provides following features :
-  
+
   * Figure out which dimension tables contain data needed to satisfy the query.
-  
+
   * Figure out the exact fact tables and their partitions based on the time range in the query.
    While doing this, it will try to minimize computation needed to complete the queries.
-  
+
   * If No Join condition is passed for Joins,join condition will be inferred from the relationship definition.
-  
-  * Projected fields can be added to group by col list automatically, if not present and 
+
+  * Projected fields can be added to group by col list automatically, if not present and
   if the group by keys specified are not projected, they can be projected
 
   * Automatically add aggregate functions to measures specified as measure's default aggregate.
-  
-  Various configurations available for running an OLAP query are documented at {{{./olap-query-conf.html} OLAP query configurations}} 
+
+  Various configurations available for running an OLAP query are documented at {{{./olap-query-conf.html} OLAP query configurations}}
+
 
 <<How to pass timerange in cubeQL>>
 
  Users have the capability to specify the time range as absolute and relative time in lens cube query.
  Lens cube query language allows passing timerange at different granularities like secondly, minutely, hourly, daily, weekly, monthly and yearly.
- Relative timerange is helpful to the users in scheduling their queries
+ Time range is passed in query with the syntax <<<time_range_in(time_dim_name, start_time, end_time)>>>. The range
+ is half open. The start time is inclusive and the end time is exclusive.
 
- User can specify the HOURLY granularity with 'now.hour'.
++--+
+
+  time_range_in(time_dim_name, start_time, end_time) === start_time <= time_dim_name < end_time
+
++--+
+
+
+
+  {{{http://mail-archives.apache.org/mod_mbox/incubator-lens-dev/201508.mbox/%3CCANGGtCPnZ8ML-Gd9x6HooB20j0q%3DpjxHcDqOgf8jYjo0YJdFMg%40mail.gmail.com%3E}Here}} is a link to a discussion on time range behaviour
+
+* Relative time range
+
+
+  Relative timerange is helpful to the users in scheduling their queries. We'll explain here with example.
+  User can specify the HOURLY granularity with 'now.hour'.
 
  The follwong table tells the available <<unit granularities>> and how to specify those granualarities for relative timerange
 
@@ -217,7 +375,6 @@ QUARTERLY, YEARLY update periods.
 |Yearly | now.year | now.year{+/-}2years|
 *--+--+--+
 
-<<Example queries with relative timerange>>:
 
 +---+
 
@@ -225,6 +382,9 @@ QUARTERLY, YEARLY update periods.
 
  The above queries for the last 4hours data.
 +---+
+
+* Absolute time range
+
 
  Users can query the data with absolute timerange at different granularities.
  The following table describes how to specify absoulte timerange at different granularities
@@ -245,7 +405,6 @@ QUARTERLY, YEARLY update periods.
 |Yearly | yyyy|
 *--+--+
 
-<<Example queries with absolute timerange>>:
 
 +---+
 
@@ -256,10 +415,13 @@ QUARTERLY, YEARLY update periods.
  It queries the data between 29th Dec 2014 and 30th Dec 2014.
 
 +---+
-* Query API
+
+
+
+<< Query API >>
 
   LENS provides {{{../resource_QueryServiceResource.html} REST api}},
   {{{../apidocs/org/apache/lens/client/LensStatement.html} Java client api}},
-  {{{./jdbc-client.html} JDBC client}} 
+  {{{./jdbc-client.html} JDBC client}}
   and {{{./cli.html#Query_Management} CLI}} for doing submitting queries, checking status and fetching results.
 
