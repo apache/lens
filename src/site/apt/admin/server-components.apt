@@ -19,8 +19,10 @@
 
 Lens server components
 
-  Lens server comes up with embedded http server. It offers services for
-  session management, metastore and query. 
+  Lens server by default comes up with an embedded Jersey server. Lens server is composed of multiple services
+  which are responsible for different functions. The key services inside Lens are Session Management, Query life cycle management,
+  Schema management, Data availability management, Query schedule management (in progress), Metrics Registry, Besides, it also offers
+  a simple UI for the users.
   
   Here is the diagram describing all the components:
 
@@ -28,32 +30,47 @@ Lens server components
 
 * Lens services
 
-** Session service
+** Session Management
+   All operations in Lens are performed in the context of a session. This would essentially be the first
+   thing a client would need before any operation can be be performed in the lens system. Session management
+   component facilitates creation, session specific configuration management, session resource management
+   within a session and termination of a session. Session info is periodically written out a file (could be a
+   local file or a file on HDFS) and the same is read during Lens restart. Frequency of this flush to persistent storage is
+   configurable. Sessions are kept alive for a configurable period (24 hours by default) since last activity on
+    the session.
 
-   Allows user to start a session, close a session,
-   add/delete resources in session, set session level parameters.
+** Schema Management
+   This component allows for cubes, fact tables, dimension tables and storages to be managed. While Storages can
+   be managed only by the administrator, other objects can be managed directly by the lens users. Lens currently
+   extends and uses Hive Metastore for managing lens objects. Lens server has to be configured appropriately to point
+   to the hive metastore end point. See {{{../resource_MetastoreResource.html#path__metastore_storages.html}Storages API}}
+   and {{{../resource_MetastoreResource.html#path__metastore_storages_-storage-.html}Storage API}} for details about
+   storage administration.
 
-** Metastore service
+** Data Availability Management
+   Once schema is registered with Lens through the Schema management API, data can be made available in the form of partitions.
+   The Lens data availability management (logical component) manages the partitions available for each fact and maintains an
+   active timeline of data. This can be consulted by the query execution and managment components. Like the Schema management
+   component, Lens currently uses the Hive metastore for data availability management as well.
 
-   Allows user to do crud on cubes, fact tables, dimension tables, partitions.
-   Administrator would be managing the storages available. So, all the crud for
-   storages will be done by administrator. See 
-   {{{../resource_MetastoreResource.html#path__metastore_storages.html}Storages API}} and
-   {{{../resource_MetastoreResource.html#path__metastore_storages_-storage-.html}Storage API}} for details.
+** Query life cycle management
+   Servicing user queries over cubes, fact, dimension or native tables across different storages by choosing the best storage
+   and execution engine is the most critical capability of the lens. Lens maintains state of queries submitted and tracks the progress
+   through the system and also maintains a history of queries submitted and the its status. Unique query handle is issued to each
+   query submitted and this can be used to track status, retrieve results or kill. Details of query maintained in the history can be
+   used for performing various analysis on the actual usage.
+
+** Query schedule management (in progress)
+   Lens should allow for users to schedule their queries with some periodicity. This scheduling capability should allow users to
+   express the time schedule. Additionally Lens server would apply gating criteria based on data availability. Also any throttling
+   that needs to be effected would be considered before a scheduled query moves into running state.
+
+** Metrics Registry
+   Lens today includes support for instrumenting various functions at a server level and at a query level through gauges and metrics.
+   This can be used to understand the performance characteristics of the lens server and a single query.
+
+** Pluggable query drivers
+   Lens server allows pluggable execution drivers for running queries. Available execution engines are Hive and JDBC.
+   For configuring Hive as an execution engine, administrator should configure the HiveServer2 end point. More details on
+   configuring multiple drivers will be covered in {{{./config-server.html} configuration guide}}
    
-      Metastore service talks to Hive metastore server.Hive metastore server end point
-   has to be configured for lens server.
-
-** Query service
-
-   Allows user to launch query, monitor the query and get results. User can also look
-   at history of his queries.
-   
-   Lens server allows pluggable execution drivers for running queries. Available
-   execution engines are Hive and JDBC. For configuring Hive as an execution engine,
-   administrator should configure the HiveServer2 end point. More details on configuring multiple drivers
-   will be covered in {{{./config-server.html} configuration guide}}
-   
-* Authentication and authorization
-
-   Currently no authentication and authorization is built in lens server
