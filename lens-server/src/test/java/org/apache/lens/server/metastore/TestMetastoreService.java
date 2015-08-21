@@ -1065,7 +1065,6 @@ public class TestMetastoreService extends LensJerseyTest {
     dimension.getAttributes().getDimAttribute().add(xd1);
     dimension.getAttributes().getDimAttribute().add(xd2);
 
-
     XExprColumn xe1 = new XExprColumn();
     xe1.setName("dimexpr");
     xe1.setType("STRING");
@@ -1087,6 +1086,60 @@ public class TestMetastoreService extends LensJerseyTest {
     XDimension dimension = createDimension("testdim");
     XDimension dimension2 = createDimension("testdim2");
 
+    XDimAttribute xd3 = cubeObjectFactory.createXDimAttribute();
+    xd3.setName("col3");
+    xd3.setType("STRING");
+    xd3.setDescription("inline column");
+    xd3.setDisplayString("Column3");
+    xd3.getValues().add("Val1");
+    xd3.getValues().add("Val2");
+    xd3.getValues().add("Val3");
+
+    XDimAttribute xd4 = cubeObjectFactory.createXDimAttribute();
+    xd4.setName("col4");
+    xd4.setDescription("hierarchical column");
+    xd4.setDisplayString("Column4");
+    XDimAttributes hierarchy = new XDimAttributes();
+    XDimAttribute hd1 = cubeObjectFactory.createXDimAttribute();
+    hd1.setName("col4-h1");
+    hd1.setType("STRING");
+    hd1.setDescription("inline column");
+    hd1.setDisplayString("Column4-h1");
+    hd1.getValues().add("Val1-h1");
+    hd1.getValues().add("Val2-h1");
+    hd1.getValues().add("Val3-h1");
+    hierarchy.getDimAttribute().add(hd1);
+    XDimAttribute hd2 = cubeObjectFactory.createXDimAttribute();
+    hd2.setName("col4-h2");
+    hd2.setType("STRING");
+    hd2.setDescription("base column");
+    hd2.setDisplayString("Column4-h2");
+    hierarchy.getDimAttribute().add(hd2);
+    XDimAttribute hd3 = cubeObjectFactory.createXDimAttribute();
+    hd3.setName("col4-h3");
+    hd3.setType("STRING");
+    hd3.setDescription("ref column");
+    hd3.setDisplayString("Column4-h3");
+    XChainColumn xcc = new XChainColumn();
+    xcc.setChainName("chain1");
+    xcc.setRefCol("col2");
+    hd3.setRefSpec(cubeObjectFactory.createXDimAttributeRefSpec());
+    hd3.getRefSpec().getChainRefColumn().add(xcc);
+    hd3.setNumDistinctValues(1000L);
+    hierarchy.getDimAttribute().add(hd3);
+    xd4.setHierarchy(hierarchy);
+
+    XDimAttribute xd5 = cubeObjectFactory.createXDimAttribute();
+    xd5.setName("col5");
+    xd5.setType("INT");
+    xd5.setDescription("ref column");
+    xd5.setDisplayString("Column5");
+    xd5.setRefSpec(cubeObjectFactory.createXDimAttributeRefSpec());
+    xd5.getRefSpec().getChainRefColumn().add(xcc);
+    xd5.getValues().add("1");
+    xd5.getValues().add("2");
+    xd5.getValues().add("3");
+
     XJoinChain xj1 = new XJoinChain();
     xj1.setName("chain1");
     xj1.setDescription("first chain");
@@ -1106,6 +1159,9 @@ public class TestMetastoreService extends LensJerseyTest {
     path1.getEdges().getEdge().add(edge1);
     xj1.getPaths().getPath().add(path1);
     dimension.getJoinChains().getJoinChain().add(xj1);
+    dimension.getAttributes().getDimAttribute().add(xd3);
+    dimension.getAttributes().getDimAttribute().add(xd4);
+    dimension.getAttributes().getDimAttribute().add(xd5);
 
     final WebTarget target = target().path("metastore").path("dimensions");
 
@@ -1120,7 +1176,6 @@ public class TestMetastoreService extends LensJerseyTest {
       mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dimension2)), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
   }
 
   @Test
@@ -1153,7 +1208,7 @@ public class TestMetastoreService extends LensJerseyTest {
       assertTrue(testDim.getProperties().getProperty().size() >= 1);
       assertTrue(JAXBUtils.mapFromXProperties(testDim.getProperties()).containsKey("dimension.foo"));
       assertEquals(JAXBUtils.mapFromXProperties(testDim.getProperties()).get("dimension.foo"), "dim.bar");
-      assertEquals(testDim.getAttributes().getDimAttribute().size(), 2);
+      assertEquals(testDim.getAttributes().getDimAttribute().size(), 5);
       assertEquals(testDim.getExpressions().getExpression().size(), 1);
       assertEquals(testDim.getJoinChains().getJoinChain().size(), 1);
       assertEquals(testDim.getJoinChains().getJoinChain().get(0).getPaths().getPath().size(), 1);
@@ -1172,6 +1227,51 @@ public class TestMetastoreService extends LensJerseyTest {
       assertNotNull(dim.getExpressionByName("dimexpr"));
       assertEquals(dim.getExpressionByName("dimexpr").getDescription(), "dimension expression");
       assertEquals(dim.getExpressionByName("dimexpr").getDisplayString(), "Dim Expression");
+      assertNotNull(dim.getAttributeByName("col3"));
+      BaseDimAttribute col3 = (BaseDimAttribute) dim.getAttributeByName("col3");
+      assertEquals(col3.getDescription(), "inline column");
+      assertEquals(col3.getDisplayString(), "Column3");
+      assertEquals(col3.getType(), "string");
+      assertEquals(col3.getValues().get().get(0), "Val1");
+      assertEquals(col3.getValues().get().get(1), "Val2");
+      assertEquals(col3.getValues().get().get(2), "Val3");
+      assertEquals(col3.getNumOfDistinctValues().get(), (Long) 3L);
+      assertNotNull(dim.getAttributeByName("col4"));
+      HierarchicalDimAttribute col4 = (HierarchicalDimAttribute) dim.getAttributeByName("col4");
+      assertEquals(col4.getDescription(), "hierarchical column");
+      BaseDimAttribute col4h1 = (BaseDimAttribute) col4.getHierarchy().get(0);
+      assertEquals(col4h1.getName(), "col4-h1");
+      assertEquals(col4h1.getType(), "string");
+      assertEquals(col4h1.getDescription(), "inline column");
+      assertEquals(col4h1.getDisplayString(), "Column4-h1");
+      assertEquals(col4h1.getValues().get().get(0), "Val1-h1");
+      assertEquals(col4h1.getValues().get().get(1), "Val2-h1");
+      assertEquals(col4h1.getValues().get().get(2), "Val3-h1");
+      assertEquals(col4h1.getNumOfDistinctValues().get(), (Long) 3L);
+      BaseDimAttribute col4h2 = (BaseDimAttribute) col4.getHierarchy().get(1);
+      assertEquals(col4h2.getName(), "col4-h2");
+      assertEquals(col4h2.getType(), "string");
+      assertEquals(col4h2.getDescription(), "base column");
+      assertEquals(col4h2.getDisplayString(), "Column4-h2");
+      ReferencedDimAtrribute col4h3 = (ReferencedDimAtrribute) col4.getHierarchy().get(2);
+      assertEquals(col4h3.getName(), "col4-h3");
+      assertEquals(col4h3.getDescription(), "ref column");
+      assertEquals(col4h3.getDisplayString(), "Column4-h3");
+      assertEquals(col4h3.getType(), "string");
+      assertEquals(col4h3.getChainRefColumns().get(0).getChainName(), "chain1");
+      assertEquals(col4h3.getChainRefColumns().get(0).getRefColumn(), "col2");
+      assertEquals(col4h3.getNumOfDistinctValues().get(), (Long)1000L);
+      assertNotNull(dim.getAttributeByName("col5"));
+      ReferencedDimAtrribute col5 = (ReferencedDimAtrribute) dim.getAttributeByName("col5");
+      assertEquals(col5.getDescription(), "ref column");
+      assertEquals(col5.getDisplayString(), "Column5");
+      assertEquals(col5.getType(), "int");
+      assertEquals(col5.getChainRefColumns().get(0).getChainName(), "chain1");
+      assertEquals(col5.getChainRefColumns().get(0).getRefColumn(), "col2");
+      assertEquals(col5.getValues().get().get(0), "1");
+      assertEquals(col5.getValues().get().get(1), "2");
+      assertEquals(col5.getValues().get().get(2), "3");
+      assertEquals(col5.getNumOfDistinctValues().get(), (Long) 3L);
 
       // alter dimension
       XProperty prop = cubeObjectFactory.createXProperty();
@@ -1181,7 +1281,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       testDim.getAttributes().getDimAttribute().remove(1);
       XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
-      xd1.setName("col3");
+      xd1.setName("col3Added");
       xd1.setType("STRING");
       testDim.getAttributes().getDimAttribute().add(xd1);
 
@@ -1198,11 +1298,13 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(JAXBUtils.mapFromXProperties(altered.getProperties()).get("dim.prop2.name"), "dim.prop2.value");
       assertTrue(JAXBUtils.mapFromXProperties(altered.getProperties()).containsKey("dimension.foo"));
       assertEquals(JAXBUtils.mapFromXProperties(altered.getProperties()).get("dimension.foo"), "dim.bar");
-      assertEquals(testDim.getAttributes().getDimAttribute().size(), 2);
+      assertEquals(testDim.getAttributes().getDimAttribute().size(), 5);
 
       dim = JAXBUtils.dimensionFromXDimension(altered);
-      assertNotNull(dim.getAttributeByName("col3"));
-      assertTrue(dim.getAttributeByName("col2") == null || dim.getAttributeByName("col1") == null);
+      assertNotNull(dim.getAttributeByName("col3Added"));
+      assertTrue(dim.getAttributeByName("col2") == null || dim.getAttributeByName("col1") == null
+        || dim.getAttributeByName("col3") == null || dim.getAttributeByName("col4") == null
+        || dim.getAttributeByName("col5") == null);
 
       // drop the dimension
       result = target.path("testdim")
@@ -2462,6 +2564,9 @@ public class TestMetastoreService extends LensJerseyTest {
         "flattestcube.expr2",
         "chain1-testdim.col2",
         "chain1-testdim.col1",
+        "chain1-testdim.col3",
+        "chain1-testdim.col4",
+        "chain1-testdim.col5",
         "chain1-testdim.dimexpr",
         "dim2chain-testdim2.col2",
         "dim2chain-testdim2.col1",
@@ -2487,6 +2592,9 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(colSet, new HashSet<String>(Arrays.asList(
         "testdim.col2",
         "testdim.col1",
+        "testdim.col3",
+        "testdim.col4",
+        "testdim.col5",
         "testdim.dimexpr",
         "chain1-testdim2.col2",
         "chain1-testdim2.col1",

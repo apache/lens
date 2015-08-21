@@ -61,11 +61,19 @@
         <chain_ref_column chain_name="customer_details" ref_col="customer_city_name" />
       </ref_spec>
     </dim_attribute>
-    <dim_attribute name="production_city_name" type="STRING" description="City name in which the product was produced"
-                   display_string="Production City">
-      <ref_spec>
-        <chain_ref_column chain_name="production_city" ref_col="name" />
-      </ref_spec>
+    <dim_attribute name="production_location">
+      <hierarchy>
+      <dim_attribute name="production_city_name" type="STRING" description="City name in which the product was produced"
+                     display_string="Production City">
+        <ref_spec>
+          <chain_ref_column chain_name="production_city" ref_col="name" />
+        </ref_spec>
+      </dim_attribute>
+      <dim_attribute name="production_state" type="STRING" description="State name in which the product was produced"
+                     display_string="Production State"/>
+      <dim_attribute name="production_country" type="STRING" description="Country name in which the product was produced"
+                     display_string="Production Country"/>
+      </hierarchy>
     </dim_attribute>
     <dim_attribute name="delivery_city_name" type="STRING" description="City name to which the product was delivered"
                    display_string="Delivery City">

@@ -80,10 +80,6 @@ public class MetastoreUtil {
     return getDimensionKeyPrefix(dimName) + CLASS_SFX;
   }
 
-  public static String getInlineDimensionSizeKey(String name) {
-    return getDimensionKeyPrefix(name) + INLINE_SIZE_SFX;
-  }
-
   public static String getInlineDimensionValuesKey(String name) {
     return getDimensionKeyPrefix(name) + INLINE_VALUES_SFX;
   }

@@ -191,7 +191,8 @@ public class TestCubeMetastoreClient {
     locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("countryid", "int", "country"), "Country refer",
       new TableReference("countrydim", "id")));
     List<String> regions = Arrays.asList("APAC", "EMEA", "USA");
-    locationHierarchy.add(new InlineDimAttribute(new FieldSchema("regionname", "string", "region"), regions));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("regionname", "string", "region"), "regionname", null,
+      null, null, null, regions));
     cubeDimensions.add(new HierarchicalDimAttribute("location", "location hierarchy", locationHierarchy));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim1", "string", "basedim")));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2", "id", "ref dim"), "Dim2 refer",
@@ -231,8 +232,8 @@ public class TestCubeMetastoreClient {
       "state refer2", new TableReference("statedim", "id"), now, null, 100.0));
     locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("countryid2", "int", "country"),
       "Country refer2", new TableReference("countrydim", "id"), null, null, null));
-    locationHierarchyWithStartTime.add(new InlineDimAttribute(new FieldSchema("regionname2", "string", "region"),
-      regions));
+    locationHierarchyWithStartTime.add(new BaseDimAttribute(new FieldSchema("regionname2", "string", "region"),
+      "regionname2", null, null, null, null, regions));
 
     cubeDimensions
       .add(new HierarchicalDimAttribute("location2", "localtion hierarchy2", locationHierarchyWithStartTime));
@@ -251,9 +252,10 @@ public class TestCubeMetastoreClient {
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim3start", "string", "multi ref dim"),
       "Dim3 with starttime", multiRefs, now, null, 100.0));
 
-    cubeDimensions.add(new InlineDimAttribute(new FieldSchema("region", "string", "region dim"), regions));
-    cubeDimensions.add(new InlineDimAttribute(new FieldSchema("regionstart", "string", "region dim"),
-      "Region with starttime", now, null, 100.0, regions));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("region", "string", "region dim"), "region", null, null,
+      null, null, regions));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("regionstart", "string", "region dim"),
+      "Region with starttime", now, null, 100.0, null, regions));
     JoinChain zipCity = new JoinChain("cityFromZip", "Zip City", "zip city desc");
     List<TableReference> chain = new ArrayList<TableReference>();
     chain.add(new TableReference(cubeName, "zipcode"));

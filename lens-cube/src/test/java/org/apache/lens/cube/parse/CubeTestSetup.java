@@ -610,7 +610,8 @@ public class CubeTestSetup {
     locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("countryid", "int", "country"), "Country refer",
       new TableReference("countrydim", "id")));
     List<String> regions = Arrays.asList("APAC", "EMEA", "USA");
-    locationHierarchy.add(new InlineDimAttribute(new FieldSchema("regionname", "string", "region"), regions));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("regionname", "string", "region"), "regionname", null,
+      null, null, null, regions));
 
     cubeDimensions.add(new HierarchicalDimAttribute("location", "Location hierarchy", locationHierarchy));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim1", "string", "basedim")));

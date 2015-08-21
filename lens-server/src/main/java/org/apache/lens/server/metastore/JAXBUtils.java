@@ -164,7 +164,13 @@ public final class JAXBUtils {
 
     CubeDimAttribute hiveDim;
 
-    if (xd.getRefSpec() != null && xd.getRefSpec().getTableReferences() != null
+    if (xd.getHierarchy() != null) {
+      List<CubeDimAttribute> hierarchy = new ArrayList<>();
+      for (XDimAttribute hd : xd.getHierarchy().getDimAttribute()) {
+        hierarchy.add(hiveDimAttrFromXDimAttr(hd));
+      }
+      hiveDim = new HierarchicalDimAttribute(xd.getName(), xd.getDescription(), hierarchy);
+    } else if (xd.getRefSpec() != null && xd.getRefSpec().getTableReferences() != null
       && !xd.getRefSpec().getTableReferences().getTableReference().isEmpty()) {
 
       List<TableReference> dimRefs = new ArrayList<TableReference>(
@@ -182,7 +188,8 @@ public final class JAXBUtils {
         endDate,
         null,
         xd.isJoinKey(),
-        xd.getNumDistinctValues()
+        xd.getNumDistinctValues(),
+        xd.getValues()
       );
     } else if (xd.getRefSpec() != null && xd.getRefSpec().getChainRefColumn() != null
       && !xd.getRefSpec().getChainRefColumn().isEmpty()) {
@@ -193,7 +200,8 @@ public final class JAXBUtils {
         startDate,
         endDate,
         null,
-        xd.getNumDistinctValues()
+        xd.getNumDistinctValues(),
+        xd.getValues()
       );
     } else {
       hiveDim = new BaseDimAttribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
@@ -202,10 +210,10 @@ public final class JAXBUtils {
         startDate,
         endDate,
         null,
-        xd.getNumDistinctValues()
+        xd.getNumDistinctValues(),
+        xd.getValues()
       );
     }
-
     return hiveDim;
   }
 
@@ -353,6 +361,9 @@ public final class JAXBUtils {
       if (numOfDistinctValues.isPresent()) {
         xd.setNumDistinctValues(numOfDistinctValues.get());
       }
+      if (rd.getValues().isPresent()) {
+        xd.getValues().addAll(rd.getValues().get());
+      }
     } else if (cd instanceof BaseDimAttribute) {
       BaseDimAttribute bd = (BaseDimAttribute) cd;
       xd.setType(bd.getType());
@@ -360,6 +371,16 @@ public final class JAXBUtils {
       if (numOfDistinctValues.isPresent()) {
         xd.setNumDistinctValues(numOfDistinctValues.get());
       }
+      if (bd.getValues().isPresent()) {
+        xd.getValues().addAll(bd.getValues().get());
+      }
+    } else if (cd instanceof HierarchicalDimAttribute) {
+      HierarchicalDimAttribute hd = (HierarchicalDimAttribute) cd;
+      XDimAttributes hierarchy = new XDimAttributes();
+      for (CubeDimAttribute hdDim : hd.getHierarchy()) {
+        hierarchy.getDimAttribute().add(xDimAttrFromHiveDimAttr(hdDim, baseTable));
+      }
+      xd.setHierarchy(hierarchy);
     }
     return xd;
   }

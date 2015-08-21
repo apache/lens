@@ -95,8 +95,8 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
 
   private void testFields(LensDimensionCommands qCom) {
     String testDimFields = qCom.showQueryableFields("test_dim", true);
-    for (String field : Arrays.asList("detail", "id", "d2id", "name")) {
-      assertTrue(testDimFields.contains(field));
+    for (String field : Arrays.asList("detail", "id", "d2id", "name", "inline", "location")) {
+      assertTrue(testDimFields.contains(field), "Got " + testDimFields);
     }
     assertFalse(testDimFields.contains("measure"));
   }

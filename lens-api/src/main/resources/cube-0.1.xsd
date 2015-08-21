@@ -413,8 +413,30 @@
               </xs:choice>
             </xs:complexType>
           </xs:element>
+          <xs:element name="hierarchy" type="x_dim_attributes" maxOccurs="1" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>
+                If the dim attribute is a hierarchical attribute consisting of more dim attribute. This specification
+                is supplied in the definition. When cube or dimension has a hierarchy defined, the underlying fact or
+                dimtables, can have one or more elements in the hierarchy.
+                For example, location can be hierarchical dim attribute with its hierarchy defined as zipcode, city,
+                state and country; A fact can have zipcode and city as columns in the table and another fact can have
+                city alone.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="values" type="xs:string" maxOccurs="unbounded" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>
+                These values specified here represent what actual values the dim attribute can take. This value is
+                usually specified if the values the attribute can take are minimal and can be listed. This is more
+                indicative information specified, for user to understand what values the attribute can hold.
+                For example, a gender attribute can enumerate the values attribute can take and specify them here.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
         </xs:sequence>
-        <xs:attribute type="xs:string" name="type" use="required">
+        <xs:attribute type="xs:string" name="type">
           <xs:annotation>
             <xs:documentation>
               The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN,TINYINT,

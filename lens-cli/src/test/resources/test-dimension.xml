@@ -32,6 +32,18 @@
         </table_references>
       </ref_spec>
     </dim_attribute>
+    <dim_attribute name="inline" type="STRING" >
+      <values>A</values>
+      <values>B</values>
+      <values>C</values>
+    </dim_attribute>
+    <dim_attribute name="location">
+      <hierarchy>
+        <dim_attribute name="zipcode" type="INT" />
+        <dim_attribute name="city" type="STRING" />
+        <dim_attribute name="state" type="STRING" />
+      </hierarchy>
+    </dim_attribute>
   </attributes>
 
   <properties>
