@@ -26,11 +26,11 @@ Getting started with Lens
 *----------+----------------------------------------------+-------------------------------------------------+
 |          | Subscribe                                    | Unsubscribe                                     |
 *----------+----------------------------------------------+-------------------------------------------------+
-| User     | user-subscribe@lens.incubator.apache.org     | user-unsubscribe@lens.incubator.apache.org      |
+| User     | user-subscribe@lens.apache.org     | user-unsubscribe@lens.apache.org      |
 *----------+----------------------------------------------+-------------------------------------------------+
-| Dev      | dev-subscribe@lens.incubator.apache.org      | dev-unsubscribe@lens.incubator.apache.org       |
+| Dev      | dev-subscribe@lens.apache.org      | dev-unsubscribe@lens.apache.org       |
 *----------+----------------------------------------------+-------------------------------------------------+
-| Commits  | commits-subscribe@lens.incubator.apache.org  | commits-unsubscribe@lens.incubator.apache.org   |
+| Commits  | commits-subscribe@lens.apache.org  | commits-unsubscribe@lens.apache.org   |
 *----------+----------------------------------------------+-------------------------------------------------+
 
 

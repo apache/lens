@@ -20,8 +20,8 @@ Build the project :
   # mvn clean package
 
 
-See [Development Environment Setup] (http://lens.incubator.apache.org/developer/contribute.html#Development_Environment_Setup)
-and [Building from source] (http://lens.incubator.apache.org/developer/contribute.html#Building_from_source) docs for
+See [Development Environment Setup] (http://lens.apache.org/developer/contribute.html#Development_Environment_Setup)
+and [Building from source] (http://lens.apache.org/developer/contribute.html#Building_from_source) docs for
 more details.
 
-[Detailed documentation for the project is available here](https://lens.incubator.apache.org)
+[Detailed documentation for the project is available here](https://lens.apache.org)

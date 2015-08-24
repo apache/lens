@@ -81,7 +81,7 @@ public class PathValidator {
   /**
    * The CLI erroneously appends absolute path for URI's.
    * It also replaces the double slashes to single slashes.
-   * Eg. /home/some/path/file:/home/git/incubator-lens/target/tempdata_*.txt
+   * Eg. /home/some/path/file:/home/git/lens/target/tempdata_*.txt
    *
    * This Util method removes the erroneously appended absolute path for URI's.
    * And appends :/// for the URI's.

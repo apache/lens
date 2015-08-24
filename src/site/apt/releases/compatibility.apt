@@ -22,9 +22,9 @@ Compatibility in Apache Lens
   Apache Lens tries to offer backward compatibility across releases with respect to the following
 
   * <<lens-api>> module dependency :
-  {{{http://lens.incubator.apache.org/apidocs/index.html} API for org.apache.lens.api.*}}
+  {{{http://lens.apache.org/apidocs/index.html} API for org.apache.lens.api.*}}
 
-  * REST api provided : {{{http://lens.incubator.apache.org/rest.html} Published REST api}}
+  * REST api provided : {{{http://lens.apache.org/rest.html} Published REST api}}
 
   * Configuration options provided at {{{../user/client-config.html} Client configuration}},
   {{{../user/olap-query-conf.html} OLAP query configuration}} and
