@@ -22,7 +22,7 @@
 <enunciate label="lens" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.25.xsd">
   <namespaces>
-    <namespace uri="https://git-wip-us.apache.org/repos/asf/incubator-lens.git" id="lens"/>
+    <namespace uri="https://git-wip-us.apache.org/repos/asf/lens.git" id="lens"/>
   </namespaces>
   <services>
     <rest defaultRestSubcontext="/">

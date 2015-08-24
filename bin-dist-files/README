@@ -6,10 +6,10 @@ across multiple tiered data stores and optimal execution environment for the ana
 
 This distribution is a convenient binary distribution for users to try out server and client packages of Apache Lens.
 
-Detailed install and run steps available at http://lens.incubator.apache.org/lenshome/install-and-run.html and
-docker setup details available at http://lens.incubator.apache.org/lenshome/pseudo-distributed-setup.html
+Detailed install and run steps available at http://lens.apache.org/lenshome/install-and-run.html and
+docker setup details available at http://lens.apache.org/lenshome/pseudo-distributed-setup.html
 
-Detailed documentation for the project is available at https://lens.incubator.apache.org
+Detailed documentation for the project is available at https://lens.apache.org
 
 Here are quick start steps :
 

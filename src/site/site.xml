@@ -28,14 +28,14 @@
       <name>Lens Analytics Platform</name>
       <src>/images/apache-lens-logo.png</src>
       <title>Lens Analytics Platform</title>
-      <href>http://lens.incubator.apache.org</href>
+      <href>http://lens.apache.org</href>
       <height>54px</height>
   </bannerLeft>
 
   <bannerRight>
-      <name>Apache Incubator</name>
-      <src>/images/apache-incubator-logo.png</src>
-      <href>http://incubator.apache.org</href>
+      <name>Apache</name>
+      <src>/images/apache-feather-tm.gif</src>
+      <href>http://www.apache.org</href>
   </bannerRight>
 
  <body>
@@ -78,7 +78,7 @@
     <menu ref="reports"/>
     <breadcrumbs>
         <item name="Apache" href="http://www.apache.org" />
-        <item name="Lens" href="http://lens.incubator.apache.org" />
+        <item name="Lens" href="http://lens.apache.org" />
     </breadcrumbs>
   </body>
   <skin>

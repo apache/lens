@@ -20,11 +20,7 @@
 Download
 
   The latest release of Apache Lens can be
-  {{{http://www.apache.org/dyn/closer.cgi/incubator/lens/2.2-beta-incubating}downloaded from the ASF}}.
+  {{{http://www.apache.org/dyn/closer.cgi/lens/2.3-beta}downloaded from the ASF}}.
 
-  Older releases may be found {{{http://archive.apache.org/dist/incubator/lens} in the archives}}.
-
-+---
-Disclaimer
-Apache Lens is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by the Apache Incubator. Incubation is required of all newly accepted projects until a further review indicates that the infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it does indicate that the project has yet to be fully endorsed by the ASF.
-+---
+  Older releases may be found {{{http://archive.apache.org/dist/lens}in the archives}}.
+  Releases prior to graduation may be found {{{http://archive.apache.org/dist/incubator/lens}in the incubator archives}}.

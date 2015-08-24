@@ -78,7 +78,7 @@ Committer Guide
 * Commit
 
   The commit repo is at
-  {{{https://git-wip-us.apache.org/repos/asf/incubator-lens.git} https://git-wip-us.apache.org/repos/asf/incubator-lens.git}}
+  {{{https://git-wip-us.apache.org/repos/asf/lens.git} https://git-wip-us.apache.org/repos/asf/lens.git}}
   When you commit a patch, please:
 
   * Ensure that all tests pass with patch applied.
@@ -155,11 +155,11 @@ git revert a4r9593432 # To revert particular commit by commit id.
   Lens uses Apache SVN Pub-Sub system to maintain its website. The script tools/scripts/generate-site-public.sh can be used to generate the
 	documentation, which has to be committed to website svn. Steps are as follows -
 
-	* Checkout website svn: svn co https://svn.apache.org/repos/asf/incubator/lens/ $SVN_SITE_DIR
+	* Checkout website svn: svn co https://svn.apache.org/repos/asf/lens/ $SVN_SITE_DIR
 
 	* Run tools/scripts/generate-site-public.sh $SVN_SITE_DIR
 
 	* Add newly created files to SVN
 
-	* Commit. (Please contact one of the committers for incubator site SVN access)
+	* Commit. (Please contact one of the committers for site SVN access)
 

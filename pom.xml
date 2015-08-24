@@ -125,7 +125,7 @@
   <name>Lens</name>
   <packaging>pom</packaging>
   <description>Unified Analytics Platform</description>
-  <url>http://lens.incubator.apache.org</url>
+  <url>http://lens.apache.org</url>
   <inceptionYear>2014</inceptionYear>
   <licenses>
     <license>
@@ -152,30 +152,30 @@
   <distributionManagement>
     <site>
       <id>lens-site</id>
-      <url>http://lens.incubator.apache.org/</url>
+      <url>http://lens.apache.org/</url>
     </site>
   </distributionManagement>
 
   <mailingLists>
     <mailingList>
       <name>lens-user</name>
-      <subscribe>user-subscribe@lens.incubator.apache.org</subscribe>
-      <unsubscribe>user-unsubscribe@lens.incubator.apache.org</unsubscribe>
-      <post>user@lens.incubator.apache.org</post>
+      <subscribe>user-subscribe@lens.apache.org</subscribe>
+      <unsubscribe>user-unsubscribe@lens.apache.org</unsubscribe>
+      <post>user@lens.apache.org</post>
       <archive>http://mail-archives.apache.org/mod_mbox/lens-user/</archive>
     </mailingList>
     <mailingList>
       <name>lens-dev</name>
-      <subscribe>dev-subscribe@lens.incubator.apache.org</subscribe>
-      <unsubscribe>dev-unsubscribe@lens.incubator.apache.org</unsubscribe>
-      <post>dev@lens.incubator.apache.org</post>
+      <subscribe>dev-subscribe@lens.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@lens.apache.org</unsubscribe>
+      <post>dev@lens.apache.org</post>
       <archive>http://mail-archives.apache.org/mod_mbox/lens-dev/</archive>
     </mailingList>
     <mailingList>
       <name>lens-commits</name>
-      <subscribe>commits-subscribe@lens.incubator.apache.org</subscribe>
-      <unsubscribe>commits-unsubscribe@lens.incubator.apache.org</unsubscribe>
-      <post>commits@lens.incubator.apache.org</post>
+      <subscribe>commits-subscribe@lens.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@lens.apache.org</unsubscribe>
+      <post>commits@lens.apache.org</post>
       <archive>http://mail-archives.apache.org/mod_mbox/lens-commits/</archive>
     </mailingList>
   </mailingLists>
@@ -322,9 +322,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</developerConnection>
-    <url>https://git-wip-us.apache.org/repos/asf/incubator-lens.git</url>
+    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</connection>
+    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</developerConnection>
+    <url>https://git-wip-us.apache.org/repos/asf/lens.git</url>
     <tag>HEAD</tag>
   </scm>
 

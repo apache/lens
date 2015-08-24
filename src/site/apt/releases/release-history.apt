@@ -23,6 +23,8 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |Release version|Major features|Release documentation|Release Notes|Download|Incompatibilities|More Info |
 *--+--+---+--+--+--+--+
+|2.3.0-beta | Per Query Logs, Server side XML validation, File size in query result, File name suggestions in CLI, Phase 1 Query rewriter, Elastic Search driver, Query launching constraints, Update partition api, Lens Service Health check, Doc/javadoc improvements, Code cleanup, bug fixes| {{{../versions/2.3.0-beta/index.html} 2.3.x docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12332350&projectId=12315923} 2.3 release notes}}| {{{http://archive.apache.org/dist/lens/2.3-beta/} Download}} | {{{#a2.3.x_from_2.2.x} 2.3.x-incompatibilities}} | - |
+*--+--+---+--+--+--+--+
 |2.2.0-beta-incubating| CLI Improvements, Support for multiple expressions and and union queries, More descriptive error codes, Zeppelin integration, Code cleanup| {{{../versions/2.2.0-beta-incubating/index.html} 2.2.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12329586&projectId=12315923} 2.2 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.2-beta-incubating/} Download}} | {{{#a2.2.x_from_2.1.x} 2.2.x-incompatibilities}} | - |
 *--+--+---+--+--+--+--+
 |2.1.0-beta-incubating| Estimate api, Partition timeline, DB resources, Timers on REST api| {{{../versions/2.1.0-beta-incubating/index.html} 2.1.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12328991} 2.1 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.1-beta-incubating/} Download}} | {{{#a2.1.x_from_2.0.x} 2.1.x-incompatibilities}} | - |
@@ -37,6 +39,24 @@ All Apache Lens releases
   ganglia metrics reporting, the jar needs to be downloaded and used.
 
 * Incompatibilities
+
+** 2.3.x from 2.2.x
+
+  * LENS-681 : Passing a malformed xml doesn't succeed anymore.
+
+  * LENS-666 : Log4j to Logback migration: log4j.properties files are not used anymore,
+    use logback.xml for specifying loggers.
+
+  * LENS-700 : Syntax and semantic errors in query no longer generate a query id, they fail at submission itself
+
+  * LENS-686 : Adding same partition will fail if the partition is already added. Adding multiple partitions
+    gives succeess or partial result depending on whether all the partitions were added or not.
+
+  * LENS-630 : Cost of a query on Hive Driver is not a constant 1 now. It now reflects the resource cost based on
+    partitions chosen for the query.
+
+  * LENS-650 : Pre submit hook is separate from User Config Loader. User Config Loader is no longer an abstract class.
+
 
 ** 2.2.x from 2.1.x
 
