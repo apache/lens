@@ -408,13 +408,6 @@
       <outputDirectory>/server/webapp/</outputDirectory>
       <destName>lens-server.war</destName>
     </file>
-
-    <file>
-      <source>../DISCLAIMER</source>
-      <outputDirectory>/</outputDirectory>
-      <destName>DISCLAIMER</destName>
-    </file>
-
   </files>
 
 </assembly>
