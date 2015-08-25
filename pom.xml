@@ -120,7 +120,7 @@
 
   <groupId>org.apache.lens</groupId>
   <artifactId>apache-lens</artifactId>
-  <version>2.3.0-beta</version>
+  <version>2.3.1-beta-SNAPSHOT</version>
   <name>Lens</name>
   <packaging>pom</packaging>
   <description>Unified Analytics Platform</description>
@@ -324,7 +324,7 @@
     <connection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</connection>
     <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</developerConnection>
     <url>https://git-wip-us.apache.org/repos/asf/lens.git</url>
-    <tag>apache-lens-2.3.0-beta</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <reporting>
@@ -611,7 +611,7 @@
           <dependency>
             <groupId>org.apache.lens</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>2.3.0-beta</version>
+            <version>2.3.1-beta-SNAPSHOT</version>
           </dependency>
         </dependencies>
         <executions>
@@ -1618,7 +1618,7 @@
               <dependency>
                 <groupId>org.apache.lens</groupId>
                 <artifactId>checkstyle</artifactId>
-                <version>2.3.0-beta</version>
+                <version>2.3.1-beta-SNAPSHOT</version>
               </dependency>
             </dependencies>
             <executions>
