@@ -57,6 +57,10 @@ All Apache Lens releases
 
   * LENS-650 : Pre submit hook is separate from User Config Loader. User Config Loader is no longer an abstract class.
 
+  * LENS-651 : In /resultset api, file size is added. File size and the already existing field num-rows are only
+    populated if needed. Default value is no more -1, it's null(unpopulated).
+    Finished queries table has one more column now, so existing tables need to be updated.
+    The following sql should work: <<< ALTER TABLE finished_queries ADD filesize bigint AFTER rows>>>
 
 ** 2.2.x from 2.1.x
 
