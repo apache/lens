@@ -615,8 +615,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
       checkEstimatedQueriesState(query);
       QueryStatus oldStatus = query.getStatus();
-      QueryStatus newStatus = new QueryStatus(query.getStatus().getProgress(), QueryStatus.Status.LAUNCHED,
-          "Query is launched on driver", false, null, null, null);
+      QueryStatus newStatus = new QueryStatus(query.getStatus().getProgress(), query.getStatus().getQueueNumber(),
+        QueryStatus.Status.LAUNCHED, "Query is launched on driver", false, null, null, null);
       query.validateTransition(newStatus);
 
       // Check if we need to pass session's effective resources to selected driver
@@ -717,7 +717,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     throws LensException {
 
     QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(0.0f, FAILED, statusMsg, false, null, reason, lensErrorTO));
+    ctx.setStatus(new QueryStatus(0.0f, 0, FAILED, statusMsg, false, null, reason, lensErrorTO));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
@@ -731,7 +731,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   private void setCancelledStatus(QueryContext ctx, String statusMsg) throws LensException {
     QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(0.0f, CANCELED, statusMsg, false, null, null, null));
+    ctx.setStatus(new QueryStatus(0.0f, 0, CANCELED, statusMsg, false, null, null, null));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
@@ -765,7 +765,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
   void setSuccessState(QueryContext ctx) throws LensException {
     QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(1.0f, SUCCESSFUL, "Query is successful!", ctx
+    ctx.setStatus(new QueryStatus(1.0f, 0, SUCCESSFUL, "Query is successful!", ctx
       .isResultAvailableInDriver(), null, null, null));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
@@ -786,6 +786,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           log.info("Updating status for {}", ctx.getQueryHandle());
           try {
             ctx.getSelectedDriver().updateStatus(ctx);
+            ctx.getDriverStatus().setQueueNumber(launchedQueries.getQueryIndex(ctx));
             ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
           } catch (LensException exc) {
             // Driver gave exception while updating status
@@ -946,7 +947,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             resultSets.remove(finished.getCtx().getQueryHandle());
           }
           fireStatusChangeEvent(finished.getCtx(),
-            new QueryStatus(1f, CLOSED, "Query purged", false, null, null, null), finished.getCtx().getStatus());
+            new QueryStatus(1f, 0, CLOSED, "Query purged", false, null, null, null), finished.getCtx().getStatus());
           log.info("Query purged: {}", finished.getCtx().getQueryHandle());
 
         } catch (LensException e) {
@@ -1700,7 +1701,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   private QueryHandle submitQuery(final QueryContext ctx) throws LensException {
 
     QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(0.0, QUEUED, "Query is queued", false, null, null, null));
+    ctx.setStatus(new QueryStatus(0.0, 0, QUEUED, "Query is queued", false, null, null, null));
     queuedQueries.add(ctx);
     log.debug("Added to Queued Queries:{}", ctx.getQueryHandleString());
     allQueries.put(ctx.getQueryHandle(), ctx);

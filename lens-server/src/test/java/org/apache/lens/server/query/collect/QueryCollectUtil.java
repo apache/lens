@@ -27,8 +27,10 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
 
 import java.lang.reflect.Method;
+import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.api.query.QueryContext;
 
 import com.google.common.collect.Sets;
@@ -75,6 +77,34 @@ public class QueryCollectUtil {
 
     final Set<QueryContext> mockQueries = createQueriesSetWithUserStubbing(reqNoOfMockQueries, mockUser);
     return new DefaultQueryCollection(mockQueries);
+  }
+
+  public static QueryCollection createQueriesInstanceWithQueryHandleStubbing(final int reqNoOfMockQueries,
+    final String handlePrefix) {
+
+    Set<QueryContext> mockQueries = Sets.newLinkedHashSet();
+
+    for (int index = 1; index <= reqNoOfMockQueries; ++index) {
+      mockQueries.add(createQueryInstanceWithQueryHandleStubbing(handlePrefix, index));
+    }
+    return new DefaultQueryCollection(mockQueries);
+  }
+
+  public static QueryContext createQueryInstanceWithQueryHandleStubbing(String handlePrefix, int index) {
+    QueryContext mockQuery = mock(QueryContext.class);
+    when(mockQuery.getQueryHandle()).thenReturn(QueryHandle.fromString(handlePrefix + index));
+    return mockQuery;
+  }
+
+  public static QueryContext getMockedQueryFromQueries(Set<QueryContext> queries, String mockHandle, int index) {
+    Iterator iterator = queries.iterator();
+    while (iterator.hasNext()) {
+      QueryContext queuedQuery = (QueryContext) iterator.next();
+      if (queuedQuery.getQueryHandle().equals(QueryHandle.fromString(mockHandle + index))) {
+        return queuedQuery;
+      }
+    }
+    return null;
   }
 
   public static QueryCollection stubMockQueryAndCreateQueriesInstance(final QueryContext mockQuery,

@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 public class DefaultQueryCollectionTest {
 
   private static final String MOCK_USER = "MockUserEmail";
+  private static final String MOCK_HANDLE = "0-0-0-0-";
 
   /* Note: Since verification of addition/removal required calling get methods,
   hence methods getQueriesCount and getQueries(user) are indirectly getting tested in these tests */
@@ -73,6 +74,28 @@ public class DefaultQueryCollectionTest {
     which gets information from queries per user map */
 
     assertEquals(queries.getQueries(MOCK_USER).size(), 0);
+  }
+
+  @Test
+  public void testRemoveMethodMustChangeQueryIndices() {
+
+    /* Initialization */
+    final int noOfQueriesUsedInTest = 10;
+    QueryCollection queries = createQueriesInstanceWithQueryHandleStubbing(noOfQueriesUsedInTest, MOCK_HANDLE);
+
+    QueryContext completedQuery = getMockedQueryFromQueries(queries.getQueries(), MOCK_HANDLE, 4);
+    QueryContext runningQuery = getMockedQueryFromQueries(queries.getQueries(), MOCK_HANDLE, 5);
+
+    /* Execution */
+    queries.remove(completedQuery);
+
+     /* Verification 1: Verifies that queries were removed from queries list by calling getQueriesCount which gets
+    results from queries list */
+    assertEquals(queries.getQueriesCount(), 9);
+
+    /* Verification 2: Verifies that query index is decreased after removal of queries which were present before
+     them in the queries list */
+    assertEquals(queries.getQueryIndex(runningQuery), 4);
   }
 
   @Test

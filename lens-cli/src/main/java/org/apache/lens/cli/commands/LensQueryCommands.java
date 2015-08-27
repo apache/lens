@@ -170,6 +170,9 @@ public class LensQueryCommands extends BaseLensCommand {
         sb.append("Progress Message : ").append(status.getProgressMessage()).append("\n");
       }
     }
+    if (status.getQueueNumber() != 0) {
+      sb.append("Queue Number : ").append(status.getQueueNumber()).append("\n");
+    }
 
     if (status.getErrorMessage() != null) {
       sb.append("Error : ").append(status.getErrorMessage()).append("\n");
