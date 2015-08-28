@@ -98,17 +98,16 @@
             </goals>
             <configuration>
               <target>
-                <property name="build.compiler" value="extJavac"/>
-                <property name="compile_classpath" refid="maven.compile.classpath"/>
-                <mkdir dir="${project.build.directory}/additional-classes"/>
-                <javac includeantruntime="false" srcdir="src/additional/java"
-                  destdir="${project.build.directory}/additional-classes" classpath="${compile_classpath}"/>
-                <mkdir dir="${project.build.directory}/testjars"/>
+                <property name="build.compiler" value="extJavac" />
+                <property name="compile_classpath" refid="maven.compile.classpath" />
+                <mkdir dir="${project.build.directory}/additional-classes" />
+                <javac includeantruntime="false" srcdir="src/additional/java" destdir="${project.build.directory}/additional-classes" classpath="${compile_classpath}" />
+                <mkdir dir="${project.build.directory}/testjars" />
                 <jar destfile="${project.build.directory}/testjars/test.jar">
-                  <fileset dir="${project.build.directory}/additional-classes" includes="ClassLoaderTestClass.class"/>
+                  <fileset dir="${project.build.directory}/additional-classes" includes="ClassLoaderTestClass.class" />
                 </jar>
                 <jar destfile="${project.build.directory}/testjars/serde.jar">
-                  <fileset dir="${project.build.directory}/additional-classes" includes="DatabaseJarSerde.class"/>
+                  <fileset dir="${project.build.directory}/additional-classes" includes="DatabaseJarSerde.class" />
                 </jar>
                </target>
              </configuration>
