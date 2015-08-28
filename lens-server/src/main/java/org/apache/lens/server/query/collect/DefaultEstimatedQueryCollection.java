@@ -138,11 +138,6 @@ public class DefaultEstimatedQueryCollection implements EstimatedQueryCollection
     return this.queries.getQueriesCount();
   }
 
-  @Override
-  public int getQueryIndex(QueryContext query) {
-    return this.queries.getQueryIndex(query);
-  }
-
   @VisibleForTesting
   void checkState(final QueryContext query) {
     Preconditions.checkState(query.getSelectedDriver() != null);

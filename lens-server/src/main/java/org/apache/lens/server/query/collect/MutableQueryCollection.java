@@ -62,5 +62,4 @@ public interface MutableQueryCollection {
    * @param queries
    */
   boolean removeAll(final Set<QueryContext> queries);
-
 }

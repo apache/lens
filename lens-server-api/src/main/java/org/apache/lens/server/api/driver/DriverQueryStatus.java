@@ -89,13 +89,6 @@ public class DriverQueryStatus implements Serializable {
   private double progress = 0.0f;
 
   /**
-   * The running queue number.
-   */
-  @Getter
-  @Setter
-  private int queueNumber = 0;
-
-  /**
    * The state.
    */
   @Getter
@@ -174,8 +167,7 @@ public class DriverQueryStatus implements Serializable {
       break;
     }
 
-    return new QueryStatus(progress, queueNumber, qstate, statusMessage, isResultSetAvailable, progressMessage,
-            errorMessage, null);
+    return new QueryStatus(progress, qstate, statusMessage, isResultSetAvailable, progressMessage, errorMessage, null);
   }
 
   /**
@@ -186,8 +178,8 @@ public class DriverQueryStatus implements Serializable {
    * @return the query status
    */
   public static QueryStatus createQueryStatus(QueryStatus.Status state, DriverQueryStatus dstatus) {
-    return new QueryStatus(dstatus.progress, dstatus.queueNumber, state, dstatus.statusMessage,
-            dstatus.isResultSetAvailable, dstatus.progressMessage, dstatus.errorMessage, null);
+    return new QueryStatus(dstatus.progress, state, dstatus.statusMessage, dstatus.isResultSetAvailable,
+      dstatus.progressMessage, dstatus.errorMessage, null);
   }
 
   /*

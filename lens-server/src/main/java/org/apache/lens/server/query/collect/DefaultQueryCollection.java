@@ -96,26 +96,6 @@ public class DefaultQueryCollection implements QueryCollection {
     return queries.size();
   }
 
-
-  /**
-   *  Since the collection is a linkedHashSet, the order of queries is always maintained.
-   * @param query
-   * @return
-   */
-  @Override
-  public int getQueryIndex(QueryContext query) {
-    Iterator iterator = queries.iterator();
-    int index = 1;
-    while (iterator.hasNext()) {
-      QueryContext queuedQuery = (QueryContext) iterator.next();
-      if (queuedQuery.getQueryHandle().equals(query.getQueryHandle())) {
-        return index;
-      }
-      index += 1;
-    }
-    return 0;
-  }
-
   private Collection<QueryContext> getQueriesCollectionForUser(final String user) {
 
     final Collection<QueryContext> userQueries = queriesByUser.getCollection(user);

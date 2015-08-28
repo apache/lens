@@ -39,8 +39,6 @@ import lombok.*;
  *
  * @param progress
  *          the progress
- * @param queueNumber
- *          the queue number
  * @param status
  *          the status
  * @param statusMessage
@@ -123,14 +121,6 @@ public class QueryStatus implements Serializable {
   private double progress;
 
   /**
-   * The running queue number. A non zero value gives the queue number. Queue number zero mean either the query is in
-   * waiting or completed state.
-   */
-  @XmlElement
-  @Getter
-  private int queueNumber;
-
-  /**
    * The status.
    */
   @XmlElement
@@ -178,7 +168,6 @@ public class QueryStatus implements Serializable {
     StringBuilder str = new StringBuilder(status.toString()).append(':').append(statusMessage);
     if (status.equals(Status.RUNNING)) {
       str.append(" - Progress:").append(progress).append(":").append(progressMessage);
-      str.append(" - Queue number:").append(queueNumber);
     }
     if (status.equals(Status.SUCCESSFUL)) {
       if (isResultSetAvailable) {
