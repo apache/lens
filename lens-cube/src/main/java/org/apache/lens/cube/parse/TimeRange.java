@@ -197,7 +197,7 @@ public class TimeRange {
       @Override
       public Date next() {
         Date cur = calendar.getTime();
-        calendar.add(updatePeriod.calendarField(), increment);
+        updatePeriod.increment(calendar, increment);
         counter++;
         return cur;
       }

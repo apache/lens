@@ -28,6 +28,7 @@ import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
+import org.apache.lens.cube.metadata.timeline.TestPartitionTimelines;
 import org.apache.lens.cube.parse.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
@@ -1447,26 +1448,12 @@ public class TestCubeMetastoreClient {
   private void assertSameTimelines(String factName, String[] storages, UpdatePeriod updatePeriod, String[] partCols)
     throws HiveException, LensException {
     for (String partCol : partCols) {
-      PartitionTimeline[] timelines = new PartitionTimeline[storages.length];
+      ArrayList<PartitionTimeline> timelines = Lists.newArrayList();
       for (int i = 0; i < storages.length; i++) {
-        timelines[i] = client.partitionTimelineCache.get(factName, storages[i], updatePeriod, partCol);
+        timelines.add(client.partitionTimelineCache.get(factName, storages[i], updatePeriod, partCol));
       }
-      for (int i = 0; i < timelines.length; i++) {
-        for (int j = i + 1; j < timelines.length; j++) {
-          assertSameTimelines(timelines[i], timelines[j]);
-        }
-      }
+      TestPartitionTimelines.assertSameTimelines(timelines);
     }
-  }
-
-  private void assertSameTimelines(PartitionTimeline timeline1, PartitionTimeline timeline2) {
-    Iterator<TimePartition> iter1 = timeline1.iterator();
-    Iterator<TimePartition> iter2 = timeline2.iterator();
-    while (iter1.hasNext()) {
-      Assert.assertTrue(iter2.hasNext());
-      assertEquals(iter1.next(), iter2.next());
-    }
-    Assert.assertFalse(iter2.hasNext());
   }
 
   private StoragePartitionDesc getStoragePartSpec(String cubeFactName, UpdatePeriod updatePeriod,

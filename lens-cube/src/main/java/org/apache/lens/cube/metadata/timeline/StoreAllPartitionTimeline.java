@@ -84,11 +84,10 @@ public class StoreAllPartitionTimeline extends PartitionTimeline {
     if (partitionsStr == null) {
       return true;
     }
-    boolean ret = true;
     for (String s : StringUtils.split(partitionsStr, ",")) {
-      ret &= add(TimePartition.of(getUpdatePeriod(), s));
+      add(TimePartition.of(getUpdatePeriod(), s));
     }
-    return ret;
+    return true;
   }
 
   @Override

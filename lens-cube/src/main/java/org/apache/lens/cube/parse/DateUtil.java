@@ -50,7 +50,18 @@ public final class DateUtil {
    * NOW -> new java.util.Date() NOW-7DAY -> a date one week earlier NOW (+-)
    * <NUM>UNIT or Hardcoded dates in DD-MM-YYYY hh:mm:ss,sss
    */
-  public static final String UNIT = "year|month|week|day|hour|minute|second";
+  public static final String UNIT;
+
+  static {
+    StringBuilder sb = new StringBuilder();
+    String sep = "";
+    for (UpdatePeriod up : UpdatePeriod.values()) {
+      sb.append(sep).append(up.getUnitName());
+      sep = "|";
+    }
+    UNIT = sb.toString();
+  }
+
   public static final String GRANULARITY = "\\.(" + UNIT + ")";
   public static final String RELATIVE = "(now){1}(" + GRANULARITY + "){0,1}";
   public static final Pattern P_RELATIVE = Pattern.compile(RELATIVE, Pattern.CASE_INSENSITIVE);
@@ -127,9 +138,11 @@ public final class DateUtil {
       return resolveAbsoluteDate(str);
     }
   }
+
   public static String relativeToAbsolute(String relative) throws LensException {
     return relativeToAbsolute(relative, new Date());
   }
+
   public static String relativeToAbsolute(String relative, Date now) throws LensException {
     if (RELDATE_VALIDATOR.matcher(relative).matches()) {
       return ABSDATE_PARSER.get().format(resolveRelativeDate(relative, now));
@@ -166,24 +179,7 @@ public final class DateUtil {
       Matcher granularityMatcher = P_UNIT.matcher(nowWithGranularity);
       if (granularityMatcher.find()) {
         String unit = granularityMatcher.group().toLowerCase();
-        if ("year".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, YEAR);
-        } else if ("month".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, MONTH);
-        } else if ("week".equals(unit)) {
-          calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-          calendar = DateUtils.truncate(calendar, DAY_OF_MONTH);
-        } else if ("day".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, DAY_OF_MONTH);
-        } else if ("hour".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, Calendar.HOUR_OF_DAY);
-        } else if ("minute".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, Calendar.MINUTE);
-        } else if ("second".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, Calendar.SECOND);
-        } else {
-          throw new LensException(LensCubeErrorCode.INVALID_TIME_UNIT.getValue(), unit);
-        }
+        calendar = UpdatePeriod.fromUnitName(granularityMatcher.group().toLowerCase()).truncate(calendar);
       }
     }
 
@@ -386,11 +382,9 @@ public final class DateUtil {
     case CONTINUOUS:
       return getMilliSecondCoveringInfo(from, to, 1000);
     case MINUTELY:
-      return getMilliSecondCoveringInfo(from, to, 1000 * 60);
     case HOURLY:
-      return getMilliSecondCoveringInfo(from, to, 1000 * 60 * 60);
     case DAILY:
-      return getMilliSecondCoveringInfo(from, to, 1000 * 60 * 60 * 24);
+      return getMilliSecondCoveringInfo(from, to, interval.weight());
     case WEEKLY:
       return getWeeklyCoveringInfo(from, to);
     case MONTHLY:
@@ -404,7 +398,7 @@ public final class DateUtil {
     }
   }
 
-  private static CoveringInfo getMilliSecondCoveringInfo(Date from, Date to, int millisInInterval) {
+  private static CoveringInfo getMilliSecondCoveringInfo(Date from, Date to, long millisInInterval) {
     long diff = to.getTime() - from.getTime();
     return new CoveringInfo((int) (diff / millisInInterval), diff % millisInInterval == 0);
   }
@@ -419,7 +413,11 @@ public final class DateUtil {
   }
 
   public static int getTimeDiff(Date fromDate, Date toDate, UpdatePeriod updatePeriod) {
-    return getCoveringInfo(fromDate, toDate, updatePeriod).getCountBetween();
+    if (fromDate.before(toDate)) {
+      return getCoveringInfo(fromDate, toDate, updatePeriod).getCountBetween();
+    } else {
+      return -getCoveringInfo(toDate, fromDate, updatePeriod).getCountBetween();
+    }
   }
 
   @Data
@@ -436,11 +434,11 @@ public final class DateUtil {
   @EqualsAndHashCode
   static class TimeDiff {
     int quantity;
-    int calendarField;
+    UpdatePeriod updatePeriod;
 
-    public TimeDiff(int quantity, int calendarField) {
+    private TimeDiff(int quantity, UpdatePeriod updatePeriod) {
       this.quantity = quantity;
-      this.calendarField = calendarField;
+      this.updatePeriod = updatePeriod;
     }
 
     static TimeDiff parseFrom(String diffStr) throws LensException {
@@ -461,34 +459,17 @@ public final class DateUtil {
 
       Matcher unitMatcher = P_UNIT.matcher(diffStr);
       if (unitMatcher.find()) {
-        String unit = unitMatcher.group().toLowerCase();
-        if ("year".equals(unit)) {
-          return new TimeDiff(qty, YEAR);
-        } else if ("month".equals(unit)) {
-          return new TimeDiff(qty, MONTH);
-        } else if ("week".equals(unit)) {
-          return new TimeDiff(7 * qty, DAY_OF_MONTH);
-        } else if ("day".equals(unit)) {
-          return new TimeDiff(qty, DAY_OF_MONTH);
-        } else if ("hour".equals(unit)) {
-          return new TimeDiff(qty, HOUR_OF_DAY);
-        } else if ("minute".equals(unit)) {
-          return new TimeDiff(qty, MINUTE);
-        } else if ("second".equals(unit)) {
-          return new TimeDiff(qty, SECOND);
-        } else {
-          throw new LensException(LensCubeErrorCode.INVALID_TIME_UNIT.getValue(), unit);
-        }
+        return new TimeDiff(qty, UpdatePeriod.fromUnitName(unitMatcher.group().toLowerCase()));
       }
-      return new TimeDiff(0, SECOND);
+      return new TimeDiff(0, UpdatePeriod.CONTINUOUS);
     }
 
     public Date offsetFrom(Date time) {
-      return DateUtils.add(time, calendarField, quantity);
+      return DateUtils.add(time, updatePeriod.calendarField(), quantity);
     }
 
     public Date negativeOffsetFrom(Date time) {
-      return DateUtils.add(time, calendarField, -quantity);
+      return DateUtils.add(time, updatePeriod.calendarField(), -quantity);
     }
   }
 

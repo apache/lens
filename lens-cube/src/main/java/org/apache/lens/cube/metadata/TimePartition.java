@@ -37,8 +37,6 @@ public class TimePartition implements Comparable<TimePartition>, Named {
 
   private TimePartition(@NonNull UpdatePeriod updatePeriod, @NonNull Date date) {
     this.updatePeriod = updatePeriod;
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(date);
     this.date = updatePeriod.truncate(date);
     this.dateString = updatePeriod.format().format(this.date);
   }

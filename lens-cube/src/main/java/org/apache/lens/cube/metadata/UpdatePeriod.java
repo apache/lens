@@ -27,22 +27,28 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.parse.DateUtil;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang3.time.DateUtils;
 
+import lombok.Getter;
+
 public enum UpdatePeriod implements Named {
-  SECONDLY(SECOND, 1000, 1.4f, "yyyy-MM-dd-HH-mm-ss"),
-  MINUTELY(MINUTE, 60 * SECONDLY.weight(), 1.35f, "yyyy-MM-dd-HH-mm"),
-  HOURLY(HOUR_OF_DAY, 60 * MINUTELY.weight(), 1.3f, "yyyy-MM-dd-HH"),
-  DAILY(DAY_OF_MONTH, 24 * HOURLY.weight(), 1f, "yyyy-MM-dd"),
-  WEEKLY(WEEK_OF_YEAR, 7 * DAILY.weight(), 0.7f, "yyyy-'W'ww"),
-  MONTHLY(MONTH, 30 * DAILY.weight(), 0.6f, "yyyy-MM"),
-  QUARTERLY(MONTH, 3 * MONTHLY.weight(), 0.55f, "yyyy-MM"),
-  YEARLY(YEAR, 12 * MONTHLY.weight(), 0.52f, "yyyy"),
-  CONTINUOUS(Calendar.SECOND, 1, 1.5f, "yyyy-MM-dd-HH-mm-ss");
+  SECONDLY("second", SECOND, 1000, 1.4f, "yyyy-MM-dd-HH-mm-ss"),
+  MINUTELY("minute", MINUTE, 60 * SECONDLY.weight(), 1.35f, "yyyy-MM-dd-HH-mm"),
+  HOURLY("hour", HOUR_OF_DAY, 60 * MINUTELY.weight(), 1.3f, "yyyy-MM-dd-HH"),
+  DAILY("day", DAY_OF_MONTH, 24 * HOURLY.weight(), 1f, "yyyy-MM-dd"),
+  WEEKLY("week", WEEK_OF_YEAR, 7 * DAILY.weight(), 0.7f, "YYYY-'W'ww"),
+  MONTHLY("month", MONTH, 30 * DAILY.weight(), 0.6f, "yyyy-MM"),
+  QUARTERLY("quarter", MONTH, 3 * MONTHLY.weight(), 0.55f, "yyyy-MM"),
+  YEARLY("year", YEAR, 12 * MONTHLY.weight(), 0.52f, "yyyy"),
+  CONTINUOUS("continuous", Calendar.SECOND, 1, 1.5f, "yyyy-MM-dd-HH-mm-ss");
 
   public static final long MIN_INTERVAL = values()[0].weight();
+  @Getter
+  private String unitName;
   private final int calendarField;
   private final long weight;
   /**
@@ -159,7 +165,8 @@ public enum UpdatePeriod implements Named {
   private static ThreadLocal<DateFormat> quarterlyFormat;
   private static ThreadLocal<DateFormat> yearlyFormat;
 
-  UpdatePeriod(int calendarField, long diff, float normalizationFactor, String format) {
+  UpdatePeriod(String unitName, int calendarField, long diff, float normalizationFactor, String format) {
+    this.unitName = unitName;
     this.calendarField = calendarField;
     this.weight = diff;
     this.normalizationFactor = normalizationFactor;
@@ -176,6 +183,15 @@ public enum UpdatePeriod implements Named {
 
   public long monthWeight(Date date) {
     return DateUtil.getNumberofDaysInMonth(date) * DAILY.weight();
+  }
+
+  public static UpdatePeriod fromUnitName(String unitName) throws LensException {
+    for (UpdatePeriod up : values()) {
+      if (up.getUnitName().equals(unitName)) {
+        return up;
+      }
+    }
+    throw new LensException(LensCubeErrorCode.INVALID_TIME_UNIT.getValue(), unitName);
   }
 
   public DateFormat format() {
@@ -221,19 +237,34 @@ public enum UpdatePeriod implements Named {
   }
 
   public Date truncate(Date date) {
-    if (this.equals(UpdatePeriod.WEEKLY)) {
+    switch (this) {
+    case WEEKLY:
       Date truncDate = DateUtils.truncate(date, Calendar.DAY_OF_MONTH);
       Calendar cal = Calendar.getInstance();
       cal.setTime(truncDate);
       cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
       return cal.getTime();
-    } else if (this.equals(UpdatePeriod.QUARTERLY)) {
+    case QUARTERLY:
       Date dt = DateUtils.truncate(date, this.calendarField());
       dt.setMonth(dt.getMonth() - dt.getMonth() % 3);
       return dt;
-    } else {
+    default:
       return DateUtils.truncate(date, this.calendarField());
     }
+  }
+
+  public Calendar truncate(Calendar calendar) {
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(truncate(calendar.getTime()));
+    return cal;
+  }
+
+  public void increment(Calendar calendar, int increment) {
+    switch (this) {
+    case QUARTERLY:
+      increment *= 3;
+    }
+    calendar.add(calendarField(), increment);
   }
 
   public static class UpdatePeriodComparator implements Comparator<UpdatePeriod> {

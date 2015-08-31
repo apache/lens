@@ -25,44 +25,46 @@ import java.util.Date;
 
 import org.apache.lens.server.api.error.LensException;
 
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class TestTimePartition {
   public static final Date NOW = new Date();
 
-  @Test
-  public void test() throws LensException {
-    // Test for all update periods
-    for (UpdatePeriod up : UpdatePeriod.values()) {
-      // Normal date object parsable
-      String nowStr = up.format().format(NOW);
+  @DataProvider(name = "update-periods")
+  public Object[][] provideUpdatePeriods() {
+    return UpdatePeriodTest.provideUpdatePeriods();
+  }
 
-      // Create partition by date object or it's string representation -- both should be same.
-      TimePartition nowPartition = TimePartition.of(up, NOW);
-      TimePartition nowStrPartition = TimePartition.of(up, nowStr);
-      assertEquals(nowPartition, nowStrPartition);
+  @Test(dataProvider = "update-periods")
+  public void test(UpdatePeriod up) throws LensException {
+    // Normal date object parsable
+    String nowStr = up.format().format(NOW);
+    // Create partition by date object or it's string representation -- both should be same.
+    TimePartition nowPartition = TimePartition.of(up, NOW);
+    TimePartition nowStrPartition = TimePartition.of(up, nowStr);
+    assertEquals(nowPartition, nowStrPartition);
 
-      // Test next and previous
-      assertTrue(nowPartition.next().after(nowPartition));
-      assertTrue(nowPartition.previous().before(nowPartition));
+    // Test next and previous
+    assertTrue(nowPartition.next().after(nowPartition));
+    assertTrue(nowPartition.previous().before(nowPartition));
 
-      // date parse failures should give lens exception
-      assertEquals(getLensExceptionFromPartitionParsing(up, "garbage").getMessage(),
-        TimePartition.getWrongUpdatePeriodMessage(up, "garbage"));
-      getLensExceptionFromPartitionParsing(up, (Date) null);
-      getLensExceptionFromPartitionParsing(up, (String) null);
-      getLensExceptionFromPartitionParsing(up, "");
+    // date parse failures should give lens exception
+    assertEquals(getLensExceptionFromPartitionParsing(up, "garbage").getMessage(),
+      TimePartition.getWrongUpdatePeriodMessage(up, "garbage"));
+    getLensExceptionFromPartitionParsing(up, (Date) null);
+    getLensExceptionFromPartitionParsing(up, (String) null);
+    getLensExceptionFromPartitionParsing(up, "");
 
-      // parse with other update periods
-      for (UpdatePeriod up2 : UpdatePeriod.values()) {
-        // handles the equality case and the case where monthly-quarterly have same format strings.
-        if (up.formatStr().equals(up2.formatStr())) {
-          continue;
-        }
-        // Parsing a string representation with differnet update period should give lens exception.
-        assertEquals(getLensExceptionFromPartitionParsing(up2, nowStr).getMessage(),
-          TimePartition.getWrongUpdatePeriodMessage(up2, nowStr));
+    // parse with other update periods
+    for (UpdatePeriod up2 : UpdatePeriod.values()) {
+      // handles the equality case and the case where monthly-quarterly have same format strings.
+      if (up.formatStr().equals(up2.formatStr())) {
+        continue;
       }
+      // Parsing a string representation with differnet update period should give lens exception.
+      assertEquals(getLensExceptionFromPartitionParsing(up2, nowStr).getMessage(),
+        TimePartition.getWrongUpdatePeriodMessage(up2, nowStr));
     }
   }
 

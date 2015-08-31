@@ -262,7 +262,7 @@ public class TestDateUtil {
     assertEquals(diffs.size(), 1);
     TimeDiff minusFourDaysDiff = diffs.iterator().next();
     assertEquals(minusFourDaysDiff.quantity, -4);
-    assertEquals(minusFourDaysDiff.calendarField, DAY_OF_MONTH);
+    assertEquals(minusFourDaysDiff.updatePeriod, DAILY);
 
     diffs.clear();
     for (String diffStr : plusFourDays) {
@@ -271,7 +271,7 @@ public class TestDateUtil {
     assertEquals(diffs.size(), 1);
     TimeDiff plusFourDaysDiff = diffs.iterator().next();
     assertEquals(plusFourDaysDiff.quantity, 4);
-    assertEquals(plusFourDaysDiff.calendarField, DAY_OF_MONTH);
+    assertEquals(plusFourDaysDiff.updatePeriod, DAILY);
     Date now = new Date();
     assertEquals(minusFourDaysDiff.offsetFrom(plusFourDaysDiff.offsetFrom(now)), now);
     assertEquals(plusFourDaysDiff.offsetFrom(minusFourDaysDiff.offsetFrom(now)), now);
