@@ -34,7 +34,7 @@
 
   <bannerRight>
       <name>Apache</name>
-      <src>/images/apache-feather-tm.gif</src>
+      <src>http://www.apache.org/images/feather-small.gif</src>
       <href>http://www.apache.org</href>
   </bannerRight>
 
