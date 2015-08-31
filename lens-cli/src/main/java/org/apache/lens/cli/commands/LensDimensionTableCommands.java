@@ -40,7 +40,7 @@ import lombok.NonNull;
 @Component
 @UserDocumentation(title = "Commands for Dimension Tables",
   description = "These commands provide CRUD for dimension tables, associated storages, and fact partitions")
-public class LensDimensionTableCommands extends PhysicalTableCrudCommand<XDimensionTable>
+public class LensDimensionTableCommands extends LogicalTableCrudCommand<XDimensionTable>
   implements CommandMarker {
 
   /**

@@ -38,7 +38,7 @@ import lombok.NonNull;
 @Component
 @UserDocumentation(title = "OLAP Data cube metadata management",
   description = "These commands provide CRUD for cubes")
-public class LensCubeCommands extends LogicalTableCrudCommand<XCube> {
+public class LensCubeCommands extends ConceptualTableCrudCommand<XCube> {
 
   /**
    * Show cubes.

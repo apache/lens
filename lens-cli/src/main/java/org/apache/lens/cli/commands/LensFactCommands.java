@@ -39,7 +39,7 @@ import lombok.NonNull;
 @Component
 @UserDocumentation(title = "Management of Facts",
   description = "These command provide CRUD for facts, associated storages, and fact partitions")
-public class LensFactCommands extends PhysicalTableCrudCommand<XFactTable> {
+public class LensFactCommands extends LogicalTableCrudCommand<XFactTable> {
 
   /**
    * Show facts.
