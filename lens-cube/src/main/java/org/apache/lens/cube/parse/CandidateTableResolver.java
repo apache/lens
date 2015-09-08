@@ -92,8 +92,8 @@ class CandidateTableResolver implements ContextRewriter {
       if (cubeql.getCube() != null) {
         List<CubeFactTable> factTables = cubeql.getMetastoreClient().getAllFacts(cubeql.getCube());
         if (factTables.isEmpty()) {
-          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue(), cubeql.getCube().getName()
-            + " does not have any facts");
+          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
+              cubeql.getCube().getName() + " does not have any facts");
         }
         for (CubeFactTable fact : factTables) {
           CandidateFact cfact = new CandidateFact(fact, cubeql.getCube());
@@ -122,7 +122,7 @@ class CandidateTableResolver implements ContextRewriter {
       List<CubeDimensionTable> dimtables = cubeql.getMetastoreClient().getAllDimensionTables(dim);
       if (dimtables.isEmpty()) {
         if (!optional) {
-          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getValue(), dim.getName(),
+          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo(), dim.getName(),
             "Dimension tables do not exist");
         } else {
           log.info("Not considering optional dimension {}  as, No dimension tables exist", dim);
@@ -284,7 +284,7 @@ class CandidateTableResolver implements ContextRewriter {
       Set<String> dimExprs = new HashSet<String>(cubeql.getQueriedExprs());
       dimExprs.removeAll(cubeql.getQueriedExprsWithMeasures());
       if (cubeql.getCandidateFacts().size() == 0) {
-        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getValue(),
+        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
           (!queriedDimAttrs.isEmpty() ? queriedDimAttrs.toString() : "")
           +  (!dimExprs.isEmpty() ? dimExprs.toString() : ""));
       }
@@ -308,14 +308,14 @@ class CandidateTableResolver implements ContextRewriter {
         String msrString = (!queriedMsrs.isEmpty() ? queriedMsrs.toString() : "")
           + (!cubeql.getQueriedExprsWithMeasures().isEmpty() ? cubeql.getQueriedExprsWithMeasures().toString() : "");
         if (cfactset.isEmpty()) {
-          throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getValue(), msrString);
+          throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(), msrString);
         }
         cubeql.getCandidateFactSets().addAll(cfactset);
         cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.columnNotFound(queriedMsrs,
           cubeql.getQueriedExprsWithMeasures()));
 
         if (cubeql.getCandidateFacts().size() == 0) {
-          throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getValue(), msrString);
+          throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(), msrString);
         }
       }
     }
@@ -431,7 +431,7 @@ class CandidateTableResolver implements ContextRewriter {
           OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(dim);
           if ((cubeql.getDimensions() != null && cubeql.getDimensions().contains(dim))
             || (optdim != null && optdim.isRequiredInJoinChain)) {
-            throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getValue(), dim.getName(),
+            throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getLensErrorInfo(), dim.getName(),
                 cubeql.getAutoJoinCtx().getAllJoinPathColumnsOfTable(dim).toString());
           } else {
             // remove it from optional tables
@@ -474,7 +474,7 @@ class CandidateTableResolver implements ContextRewriter {
         }
       }
       if (cubeql.getCandidateFacts().size() == 0) {
-        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getValue(),
+        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
             colSet == null ? "NULL" : colSet.toString());
       }
     }
@@ -669,7 +669,7 @@ class CandidateTableResolver implements ContextRewriter {
         }
 
         if (cubeql.getCandidateDimTables().get(dim).size() == 0) {
-          throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getValue(), dim.getName(), cubeql
+          throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getLensErrorInfo(), dim.getName(), cubeql
             .getColumnsQueried(dim.getName()).toString());
         }
       }

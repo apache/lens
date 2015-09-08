@@ -156,13 +156,13 @@ public final class DateUtil {
       return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
     } catch (ParseException e) {
       log.error("Invalid date format. expected only {} date provided:{}", ABSDATE_FMT, str, e);
-      throw new LensException(LensCubeErrorCode.WRONG_TIME_RANGE_FORMAT.getValue(), ABSDATE_FMT, str);
+      throw new LensException(LensCubeErrorCode.WRONG_TIME_RANGE_FORMAT.getLensErrorInfo(), ABSDATE_FMT, str);
     }
   }
 
   public static Date resolveRelativeDate(String str, Date now) throws LensException {
     if (StringUtils.isBlank(str)) {
-      throw new LensException(LensCubeErrorCode.NULL_DATE_VALUE.getValue());
+      throw new LensException(LensCubeErrorCode.NULL_DATE_VALUE.getLensErrorInfo());
     }
 
     // Resolve NOW with proper granularity

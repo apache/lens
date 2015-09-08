@@ -18,7 +18,9 @@
  */
 package org.apache.lens.driver.es.exceptions;
 
+import org.apache.lens.server.api.LensErrorInfo;
 import org.apache.lens.server.api.error.LensException;
+
 
 import lombok.NonNull;
 
@@ -40,22 +42,22 @@ public class InvalidQueryException extends LensException {
     super(cause);
   }
 
-  public InvalidQueryException(int errorCode) {
-    super(errorCode);
+  public InvalidQueryException(LensErrorInfo errorInfo) {
+    super(errorInfo);
   }
 
-  public InvalidQueryException(String errorMsg, int errorCode) {
-    super(errorMsg, errorCode);
+  public InvalidQueryException(String errorMsg, LensErrorInfo errorInfo) {
+    super(errorMsg, errorInfo);
   }
 
-  public InvalidQueryException(int errorCode, Throwable cause,
+  public InvalidQueryException(LensErrorInfo errorInfo, Throwable cause,
                                @NonNull Object... errorMsgFormattingArgs) {
-    super(errorCode, cause, errorMsgFormattingArgs);
+    super(errorInfo, cause, errorMsgFormattingArgs);
   }
 
-  public InvalidQueryException(String errorMsg, int errorcode, Throwable cause,
+  public InvalidQueryException(String errorMsg, LensErrorInfo errorInfo, Throwable cause,
                                @NonNull Object... errorMsgFormattingArgs) {
-    super(errorMsg, errorcode, cause, errorMsgFormattingArgs);
+    super(errorMsg, errorInfo, cause, errorMsgFormattingArgs);
   }
 
   public InvalidQueryException(String s, Exception e) {

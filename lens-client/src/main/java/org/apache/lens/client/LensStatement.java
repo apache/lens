@@ -127,8 +127,9 @@ public class LensStatement {
    * @param sql       the sql
    * @param queryName the query name
    * @return the query prepare handle
+   * @throws LensAPIException
    */
-  public QueryPrepareHandle prepareQuery(String sql, String queryName) {
+  public LensAPIResult<QueryPrepareHandle> prepareQuery(String sql, String queryName) throws LensAPIException {
     if (!connection.isOpen()) {
       throw new IllegalStateException("Lens Connection has to be " + "established before querying");
     }
@@ -136,11 +137,14 @@ public class LensStatement {
     Client client = connection.buildClient();
     WebTarget target = getPreparedQueriesWebTarget(client);
 
-    QueryPrepareHandle handle = target.request().post(
-        Entity.entity(prepareForm(sql, "PREPARE", queryName), MediaType.MULTIPART_FORM_DATA_TYPE),
-        QueryPrepareHandle.class);
-    getPreparedQuery(handle);
-    return handle;
+    Response response = target.request().post(Entity.entity(prepareForm(sql, "PREPARE", queryName),
+        MediaType.MULTIPART_FORM_DATA_TYPE));
+
+    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+      return response.readEntity(new GenericType<LensAPIResult<QueryPrepareHandle>>() {});
+    }
+
+    throw new LensAPIException(response.readEntity(LensAPIResult.class));
   }
 
   /**
@@ -149,8 +153,9 @@ public class LensStatement {
    * @param sql       the sql
    * @param queryName the query name
    * @return the query plan
+   * @throws LensAPIException
    */
-  public QueryPlan explainAndPrepare(String sql, String queryName) {
+  public LensAPIResult<QueryPlan> explainAndPrepare(String sql, String queryName) throws LensAPIException {
     if (!connection.isOpen()) {
       throw new IllegalStateException("Lens Connection has to be " + "established before querying");
     }
@@ -159,10 +164,15 @@ public class LensStatement {
 
     WebTarget target = getPreparedQueriesWebTarget(client);
 
-    QueryPlan plan = target.request().post(
-      Entity.entity(prepareForm(sql, "EXPLAIN_AND_PREPARE", queryName), MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryPlan.class);
-    return plan;
+    Response response = target.request().post(
+        Entity.entity(prepareForm(sql, "EXPLAIN_AND_PREPARE", queryName), MediaType.MULTIPART_FORM_DATA_TYPE),
+        Response.class);
+    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+      return response.readEntity(new GenericType<LensAPIResult<QueryPlan>>() {});
+    }
+
+    throw new LensAPIException(response.readEntity(LensAPIResult.class));
+
   }
 
   /**
@@ -341,10 +351,11 @@ public class LensStatement {
    *
    * @param sql the sql
    * @return the query plan
+   * @throws LensAPIException
    */
-  public QueryPlan explainQuery(String sql) {
+  public LensAPIResult<QueryPlan> explainQuery(String sql) throws LensAPIException {
     if (!connection.isOpen()) {
-      throw new IllegalStateException("Lens Connection has to be " + "established before querying");
+      throw new IllegalStateException("Lens Connection has to be established before querying");
     }
 
     Client client = connection.buildClient();
@@ -356,9 +367,13 @@ public class LensStatement {
 
     WebTarget target = getQueryWebTarget(client);
 
-    QueryPlan handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensAPIResult<QueryPlan>>() {}).getData();
-    return handle;
+    Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+
+    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+      return response.readEntity(new GenericType<LensAPIResult<QueryPlan>>() {});
+    }
+
+    throw new LensAPIException(response.readEntity(LensAPIResult.class));
   }
 
   /**

@@ -68,7 +68,7 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
       Assert.fail("Should not reach here");
     } catch (LensException exc) {
       Assert.assertNotNull(exc);
-      Assert.assertEquals(exc.getErrorCode(), LensCubeErrorCode.FROM_AFTER_TO.getValue());
+      Assert.assertEquals(exc.getErrorCode(), LensCubeErrorCode.FROM_AFTER_TO.getLensErrorInfo().getErrorCode());
     }
   }
 
@@ -81,7 +81,7 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
       Assert.fail("Should not reach here");
     } catch (LensException exc) {
       Assert.assertNotNull(exc);
-      Assert.assertEquals(exc.getErrorCode(), LensCubeErrorCode.INVALID_TIME_RANGE.getValue());
+      Assert.assertEquals(exc.getErrorCode(), LensCubeErrorCode.INVALID_TIME_RANGE.getLensErrorInfo().getErrorCode());
     }
   }
 

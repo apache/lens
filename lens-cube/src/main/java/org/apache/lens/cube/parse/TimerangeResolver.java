@@ -67,7 +67,7 @@ class TimerangeResolver implements ContextRewriter {
     // TOK_WHERE.TOK_FUNCTION.Identifier Or, it should be right hand child of
     // AND condition TOK_WHERE.KW_AND.TOK_FUNCTION.Identifier
     if (cubeql.getWhereAST() == null || cubeql.getWhereAST().getChildCount() < 1) {
-      throw new LensException(LensCubeErrorCode.NO_TIMERANGE_FILTER.getValue());
+      throw new LensException(LensCubeErrorCode.NO_TIMERANGE_FILTER.getLensErrorInfo());
     }
     searchTimeRanges(cubeql.getWhereAST(), cubeql, null, 0);
   }
@@ -112,7 +112,7 @@ class TimerangeResolver implements ContextRewriter {
     String timeDimName = getColumnName((ASTNode) timenode.getChild(1));
 
     if (!cubeql.getCube().getTimedDimensions().contains(timeDimName)) {
-      throw new LensException(LensCubeErrorCode.NOT_A_TIMED_DIMENSION.getValue(), timeDimName);
+      throw new LensException(LensCubeErrorCode.NOT_A_TIMED_DIMENSION.getLensErrorInfo(), timeDimName);
     }
     // Replace timeDimName with column which is used for partitioning. Assume
     // the same column
@@ -155,7 +155,7 @@ class TimerangeResolver implements ContextRewriter {
       for (TimeRange range : cubeql.getTimeRanges()) {
         if (column == null) {
           if (!cubeql.getCube().getTimedDimensions().contains(col)) {
-            throw new LensException(LensCubeErrorCode.NOT_A_CUBE_COLUMN.getValue(), col);
+            throw new LensException(LensCubeErrorCode.NOT_A_CUBE_COLUMN.getLensErrorInfo(), col);
           }
           continue;
         }
@@ -213,7 +213,7 @@ class TimerangeResolver implements ContextRewriter {
                 joinPathIterator.remove();
                 if (joinPaths.isEmpty()) {
                   // This dimension doesn't have any paths left
-                  throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getValue(),
+                  throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getLensErrorInfo(),
                       "No valid join path available for dimension " + dimension + " which would satisfy time range "
                           + range.getFromDate() + "-" + range.getToDate());
                 }

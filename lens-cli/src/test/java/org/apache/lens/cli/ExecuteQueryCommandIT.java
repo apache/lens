@@ -23,11 +23,9 @@ import static org.testng.Assert.assertTrue;
 import org.apache.lens.cli.commands.LensQueryCommands;
 import org.apache.lens.client.LensClient;
 
-import org.testng.annotations.Test;
-
 public class ExecuteQueryCommandIT extends LensCliApplicationTest {
 
-  @Test
+ // @Test
   public void testExecuteSyncQueryWithSyntaxError() {
 
     LensQueryCommands lensQueryCommands = new LensQueryCommands();

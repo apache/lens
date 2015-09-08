@@ -191,7 +191,7 @@ public enum UpdatePeriod implements Named {
         return up;
       }
     }
-    throw new LensException(LensCubeErrorCode.INVALID_TIME_UNIT.getValue(), unitName);
+    throw new LensException(LensCubeErrorCode.INVALID_TIME_UNIT.getLensErrorInfo(), unitName);
   }
 
   public DateFormat format() {

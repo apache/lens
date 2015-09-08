@@ -52,7 +52,7 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
       while (it.hasNext()) {
         FactPartition part = it.next();
         if (part.hasContainingPart()) {
-          throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue(),
+          throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getLensErrorInfo(),
               "Partition has containing part");
         }
         if (first == null) {
@@ -60,11 +60,11 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
         } else {
           // validate partcol, update period are same for both
           if (!first.getPartCol().equalsIgnoreCase(part.getPartCol())) {
-            throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue(),
+            throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getLensErrorInfo(),
               "Part columns are different in partitions");
           }
           if (!first.getPeriod().equals(part.getPeriod())) {
-            throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue(),
+            throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getLensErrorInfo(),
               "Partitions are in different update periods");
           }
         }

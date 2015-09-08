@@ -55,7 +55,7 @@ class ColumnResolver implements ContextRewriter {
       if (star != null) {
         int starType = star.getToken().getType();
         if (TOK_FUNCTIONSTAR == starType || TOK_ALLCOLREF == starType) {
-          throw new LensException(LensCubeErrorCode.ALL_COLUMNS_NOT_SUPPORTED.getValue());
+          throw new LensException(LensCubeErrorCode.ALL_COLUMNS_NOT_SUPPORTED.getLensErrorInfo());
         }
       }
     }
@@ -70,7 +70,7 @@ class ColumnResolver implements ContextRewriter {
     for (String table : cubeql.getTblAliasToColumns().keySet()) {
       if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table)) {
         if (!cubeql.addQueriedTable(table)) {
-          throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getValue());
+          throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getLensErrorInfo());
         }
       }
     }

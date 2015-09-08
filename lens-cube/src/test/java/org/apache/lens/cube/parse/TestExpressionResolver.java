@@ -52,7 +52,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   public void testColumnErrors() throws Exception {
     LensException th;
     th = getLensExceptionInRewrite("select nocolexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
 
     Assert.assertTrue(getLensExceptionErrorMessageInRewrite(
         "select nocolexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf).contains("nonexist"));
@@ -62,7 +62,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
     th = getLensExceptionInRewrite("select invalidexpr, " + "SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE,
         conf);
-    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -337,7 +337,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   public void testDerivedCube() throws ParseException, LensException, HiveException {
     LensException th =
       getLensExceptionInRewrite("select avgmsr from derivedCube" + " where " + TWO_DAYS_RANGE, conf);
-    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
   }
 
   @Test

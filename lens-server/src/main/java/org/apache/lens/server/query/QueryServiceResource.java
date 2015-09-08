@@ -77,7 +77,7 @@ public class QueryServiceResource {
 
   private void validateSessionId(final LensSessionHandle sessionHandle) throws LensException {
     if (sessionHandle == null) {
-      throw new LensException(SESSION_ID_NOT_PROVIDED.getValue());
+      throw new LensException(SESSION_ID_NOT_PROVIDED.getLensErrorInfo());
     }
   }
 
@@ -104,7 +104,7 @@ public class QueryServiceResource {
 
   private void validateQuery(String query) throws LensException {
     if (StringUtils.isBlank(query)) {
-      throw new LensException(NULL_OR_EMPTY_OR_BLANK_QUERY.getValue());
+      throw new LensException(NULL_OR_EMPTY_OR_BLANK_QUERY.getLensErrorInfo());
     }
   }
   /**
@@ -340,19 +340,24 @@ public class QueryServiceResource {
    * @return {@link QueryPrepareHandle} incase of {link org.apache.lens.api.query.SubmitOp#PREPARE} operation.
    *         {@link QueryPlan} incase of {@link org.apache.lens.api.query.SubmitOp#EXPLAIN_AND_PREPARE}
    *         and the query plan will contain the prepare handle as well.
+   * @throws LensException
    */
   @POST
   @Path("preparedqueries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
-  public QuerySubmitResult prepareQuery(@FormDataParam("sessionid") LensSessionHandle sessionid,
-    @FormDataParam("query") String query, @DefaultValue("") @FormDataParam("operation") String operation,
-    @FormDataParam("conf") LensConf conf, @DefaultValue("") @FormDataParam("queryName") String queryName) {
+  public LensAPIResult<? extends QuerySubmitResult> prepareQuery(
+      @FormDataParam("sessionid") LensSessionHandle sessionid, @FormDataParam("query") String query,
+      @DefaultValue("") @FormDataParam("operation") String operation, @FormDataParam("conf") LensConf conf,
+      @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
+    final String requestId = this.logSegregationContext.getLogSegragationId();
+
     try {
       checkSessionId(sessionid);
       checkQuery(query);
       SubmitOp sop = null;
+      QuerySubmitResult result;
       try {
         sop = SubmitOp.valueOf(operation.toUpperCase());
       } catch (IllegalArgumentException e) {
@@ -363,17 +368,20 @@ public class QueryServiceResource {
       }
       switch (sop) {
       case PREPARE:
-        return queryServer.prepare(sessionid, query, conf, queryName);
+        result = queryServer.prepare(sessionid, query, conf, queryName);
+        break;
       case EXPLAIN_AND_PREPARE:
-        return queryServer.explainAndPrepare(sessionid, query, conf, queryName);
+        result = queryServer.explainAndPrepare(sessionid, query, conf, queryName);
+        break;
       default:
         throw new BadRequestException("Invalid operation type: " + operation + prepareClue);
       }
+      return LensAPIResult.composedOf(null, requestId, result);
     } catch (LensException e) {
-      throw new WebApplicationException(e);
+      e.buildLensErrorResponse(errorCollection, null, requestId);
+      throw e;
     }
   }
-
   /**
    * Destroy all the prepared queries; Can be filtered with user.
    *
@@ -390,10 +398,11 @@ public class QueryServiceResource {
    */
   @DELETE
   @Path("preparedqueries")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN })
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
-    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+      @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
+      @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
+      @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     int numDestroyed = 0;
     boolean failed = false;
