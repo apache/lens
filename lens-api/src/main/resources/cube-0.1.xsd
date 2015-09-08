@@ -811,6 +811,15 @@
         <xs:annotation>
           <xs:documentation>
             Table properties.
+            The following properties can be specified for DBStorage table :
+            1. lens.metastore.native.db.name : The underlying databse name in DB storage.
+            2. lens.metastore.native.table.name : The underlying table name in DB storage.
+            3. lens.metastore.native.table.column.mapping : The column mapping for columns of the table if they are
+            different in underlying DB storage. The value is specified with comma separated map entries specified with
+            key-values separated by equalto. Example value: id=id1,name=name1
+            The following properties can be specified for Elastic search tables :
+            1. lens.metastore.es.index.name : The underlying ES index name.
+            2. lens.metastore.es.type.name : The underlying ES type name.
           </xs:documentation>
         </xs:annotation>
       </xs:element>

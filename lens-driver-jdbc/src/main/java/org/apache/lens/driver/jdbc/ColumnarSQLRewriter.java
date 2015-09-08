@@ -42,6 +42,8 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -147,24 +149,31 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   private String fromTree;
 
   /** The join ast. */
+  @Getter
   private ASTNode joinAST;
 
   /** The having ast. */
+  @Getter
   private ASTNode havingAST;
 
   /** The select ast. */
+  @Getter
   private ASTNode selectAST;
 
   /** The where ast. */
+  @Getter
   private ASTNode whereAST;
 
   /** The order by ast. */
+  @Getter
   private ASTNode orderByAST;
 
   /** The group by ast. */
+  @Getter
   private ASTNode groupByAST;
 
   /** The from ast. */
+  @Getter
   protected ASTNode fromAST;
 
   /**
@@ -944,7 +953,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    */
   public void buildQuery(Configuration conf, HiveConf hconf) throws SemanticException {
     analyzeInternal(conf, hconf);
-    replaceWithUnderlyingStorage(hconf, fromAST);
+    replaceWithUnderlyingStorage(hconf);
     replaceAliasInAST();
     getFilterInJoinCond(fromAST);
     getAggregateColumns(selectAST, new MutableInt(0));
@@ -1187,67 +1196,143 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     return queryReplacedUdf;
   }
 
-  // Replace Lens database names with storage's proper DB and table name based
-  // on table properties.
+
+  @NoArgsConstructor
+  private static class NativeTableInfo {
+    private Map<String, String> columnMapping = new HashMap<>();
+    NativeTableInfo(Table tbl) {
+      String columnMappingProp = tbl.getProperty(LensConfConstants.NATIVE_TABLE_COLUMN_MAPPING);
+      if (StringUtils.isNotBlank(columnMappingProp)) {
+        String[] columnMapArray = StringUtils.split(columnMappingProp, ",");
+        for (String columnMapEntry : columnMapArray) {
+          String[] mapEntry = StringUtils.split(columnMapEntry, "=");
+          columnMapping.put(mapEntry[0].trim(), mapEntry[1].trim());
+        }
+      }
+    }
+    String getNativeColumn(String col) {
+      String retCol = columnMapping.get(col);
+      return retCol != null ? retCol : col;
+    }
+  }
+
+  private Map<String, NativeTableInfo> aliasToNativeTableInfo = new HashMap<>();
 
   /**
    * Replace with underlying storage.
    *
-   * @param tree the AST tree
+   * @param metastoreConf the metastore configuration
    */
-  protected void replaceWithUnderlyingStorage(HiveConf metastoreConf, ASTNode tree) {
+  protected void replaceWithUnderlyingStorage(HiveConf metastoreConf) {
+    replaceDBAndTableNames(metastoreConf, fromAST);
+    if (aliasToNativeTableInfo.isEmpty()) {
+      return;
+    }
+    replaceColumnNames(selectAST);
+    replaceColumnNames(fromAST);
+    replaceColumnNames(whereAST);
+    replaceColumnNames(groupByAST);
+    replaceColumnNames(orderByAST);
+    replaceColumnNames(havingAST);
+  }
+  // Replace Lens database names with storage's proper DB and table name based
+  // on table properties.
+  protected void replaceDBAndTableNames(HiveConf metastoreConf, ASTNode tree) {
     if (tree == null) {
       return;
     }
 
-    if (TOK_TABNAME == tree.getToken().getType()) {
-      // If it has two children, the first one is the DB name and second one is
-      // table identifier
-      // Else, we have to add the DB name as the first child
-      try {
-        if (tree.getChildCount() == 2) {
-          ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
-          ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
-          String lensTable = dbIdentifier.getText() + "." + tableIdentifier.getText();
-          Table tbl = CubeMetastoreClient.getInstance(metastoreConf).getHiveTable(lensTable);
-          String table = getUnderlyingTableName(tbl);
-          String db = getUnderlyingDBName(tbl);
+    if (TOK_TABREF == tree.getToken().getType()) {
+      // TOK_TABREF will have TOK_TABNAME as first child and alias as second child.
+      String alias;
+      String tblName = null;
+      Table tbl = null;
+      ASTNode tabNameChild = (ASTNode) tree.getChild(0);
+      if (TOK_TABNAME == tabNameChild.getToken().getType()) {
+        // If it has two children, the first one is the DB name and second one is
+        // table identifier
+        // Else, we have to add the DB name as the first child
+        try {
+          if (tabNameChild.getChildCount() == 2) {
+            ASTNode dbIdentifier = (ASTNode) tabNameChild.getChild(0);
+            ASTNode tableIdentifier = (ASTNode) tabNameChild.getChild(1);
+            tblName = tableIdentifier.getText();
+            String lensTable = dbIdentifier.getText() + "." + tblName;
+            tbl = CubeMetastoreClient.getInstance(metastoreConf).getHiveTable(lensTable);
+            String table = getUnderlyingTableName(tbl);
+            String db = getUnderlyingDBName(tbl);
 
-          // Replace both table and db names
-          if ("default".equalsIgnoreCase(db)) {
-            // Remove the db name for this case
-            tree.deleteChild(0);
-          } else if (StringUtils.isNotBlank(db)) {
-            dbIdentifier.getToken().setText(db);
-          } // If db is empty, then leave the tree untouched
+            // Replace both table and db names
+            if ("default".equalsIgnoreCase(db)) {
+              // Remove the db name for this case
+              tabNameChild.deleteChild(0);
+            } else if (StringUtils.isNotBlank(db)) {
+              dbIdentifier.getToken().setText(db);
+            } // If db is empty, then leave the tree untouched
 
-          if (StringUtils.isNotBlank(table)) {
-            tableIdentifier.getToken().setText(table);
+            if (StringUtils.isNotBlank(table)) {
+              tableIdentifier.getToken().setText(table);
+            }
+          } else {
+            ASTNode tableIdentifier = (ASTNode) tabNameChild.getChild(0);
+            tblName = tableIdentifier.getText();
+            tbl = CubeMetastoreClient.getInstance(metastoreConf).getHiveTable(tblName);
+            String table = getUnderlyingTableName(tbl);
+            // Replace table name
+            if (StringUtils.isNotBlank(table)) {
+              tableIdentifier.getToken().setText(table);
+            }
+
+            // Add db name as a new child
+            String dbName = getUnderlyingDBName(tbl);
+            if (StringUtils.isNotBlank(dbName) && !"default".equalsIgnoreCase(dbName)) {
+              ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier, dbName));
+              dbIdentifier.setParent(tabNameChild);
+              tabNameChild.insertChild(0, dbIdentifier);
+            }
           }
-        } else {
-          ASTNode tableIdentifier = (ASTNode) tree.getChild(0);
-          String lensTable = tableIdentifier.getText();
-          Table tbl = CubeMetastoreClient.getInstance(metastoreConf).getHiveTable(lensTable);
-          String table = getUnderlyingTableName(tbl);
-          // Replace table name
-          if (StringUtils.isNotBlank(table)) {
-            tableIdentifier.getToken().setText(table);
-          }
-
-          // Add db name as a new child
-          String dbName = getUnderlyingDBName(tbl);
-          if (StringUtils.isNotBlank(dbName) && !"default".equalsIgnoreCase(dbName)) {
-            ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier, dbName));
-            dbIdentifier.setParent(tree);
-            tree.insertChild(0, dbIdentifier);
+        } catch (HiveException e) {
+          log.warn("No corresponding table in metastore:", e);
+        }
+      }
+      if (tree.getChildCount() == 2) {
+        alias = tree.getChild(1).getText();
+      } else {
+        alias = tblName;
+      }
+      if (StringUtils.isNotBlank(alias)) {
+        alias = alias.toLowerCase();
+        if (!aliasToNativeTableInfo.containsKey(alias)) {
+          if (tbl != null) {
+            aliasToNativeTableInfo.put(alias, new NativeTableInfo(tbl));
           }
         }
-      } catch (HiveException e) {
-        log.warn("No corresponding table in metastore:", e);
       }
     } else {
       for (int i = 0; i < tree.getChildCount(); i++) {
-        replaceWithUnderlyingStorage(metastoreConf, (ASTNode) tree.getChild(i));
+        replaceDBAndTableNames(metastoreConf, (ASTNode) tree.getChild(i));
+      }
+    }
+  }
+
+  void replaceColumnNames(ASTNode node) {
+    if (node == null) {
+      return;
+    }
+    int nodeType = node.getToken().getType();
+    if (nodeType == HiveParser.DOT) {
+      ASTNode tabident = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier);
+      ASTNode colIdent = (ASTNode) node.getChild(1);
+      String column = colIdent.getText().toLowerCase();
+      String alias = tabident.getText().toLowerCase();
+      if (aliasToNativeTableInfo.get(alias) != null) {
+        colIdent.getToken().setText(aliasToNativeTableInfo.get(alias).getNativeColumn(column));
+      }
+    } else {
+      // recurse down
+      for (int i = 0; i < node.getChildCount(); i++) {
+        ASTNode child = (ASTNode) node.getChild(i);
+        replaceColumnNames(child);
       }
     }
   }

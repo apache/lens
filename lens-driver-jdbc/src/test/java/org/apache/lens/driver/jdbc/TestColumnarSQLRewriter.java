@@ -886,7 +886,7 @@ public class TestColumnarSQLRewriter {
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(hconf, rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(hconf);
     String joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println("joinTreeAfterRewrite:" + joinTreeAfterRewrite);
 
@@ -914,7 +914,7 @@ public class TestColumnarSQLRewriter {
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(hconf, rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(hconf);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
@@ -933,7 +933,7 @@ public class TestColumnarSQLRewriter {
     rewriter.query = defaultQuery;
     rewriter.analyzeInternal(conf, hconf);
     joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
-    rewriter.replaceWithUnderlyingStorage(hconf, rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(hconf);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     assertTrue(joinTreeBeforeRewrite.contains("examples"), joinTreeBeforeRewrite);
     assertFalse(joinTreeAfterRewrite.contains("examples"), joinTreeAfterRewrite);
@@ -949,22 +949,103 @@ public class TestColumnarSQLRewriter {
   }
 
   /**
+   * Test replace column mapping.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void testReplaceColumnMapping() throws Exception {
+    SessionState.start(hconf);
+    String testDB = "testrcm";
+
+    // Create test table
+    Database database = new Database();
+    database.setName(testDB);
+
+    Hive.get(hconf).createDatabase(database);
+    try {
+      SessionState.get().setCurrentDatabase(testDB);
+      Map<String, String> columnMap = new HashMap<>();
+      columnMap.put("id", "id1");
+      columnMap.put("name", "name1");
+      createTable(hconf, testDB, "mytable", "testDB", "testTable_1", false, columnMap);
+      columnMap.put("id", "id2");
+      columnMap.put("name", "name2");
+      createTable(hconf, testDB, "mytable_2", "testDB", "testTable_2", false, columnMap);
+      columnMap.put("id", "id3");
+      columnMap.put("name", "name3");
+      createTable(hconf, "default", "mytable_3", "testDB", "testTable_3", false, columnMap);
+
+      String query = "SELECT t1.id, t2.id, t3.id, t1.name, t2.name, t3.name, count(1) FROM " + testDB
+        + ".mytable t1 JOIN mytable_2 t2 ON t1.t2id = t2.id   left outer join default.mytable_3 t3 on t2.t3id = t3.id"
+        + " WHERE t1.id = 100 GROUP BY t2.id HAVING count(t1.id) > 2 ORDER BY t3.id";
+
+      ColumnarSQLRewriter rewriter = new ColumnarSQLRewriter();
+      rewriter.init(conf);
+      rewriter.ast = HQLParser.parseHQL(query, hconf);
+      rewriter.query = query;
+      rewriter.analyzeInternal(conf, hconf);
+
+      // Rewrite
+      rewriter.replaceWithUnderlyingStorage(hconf);
+      String fromStringAfterRewrite = HQLParser.getString(rewriter.fromAST);
+      log.info("fromStringAfterRewrite:{}", fromStringAfterRewrite);
+
+      assertEquals(HQLParser.getString(rewriter.getSelectAST()).trim(), "( t1 . id1 ), ( t2 . id2 ), ( t3 . id3 ),"
+        + " ( t1 . name1 ), ( t2 . name2 ), ( t3 . name3 ), count( 1 )",
+        "Found :" + HQLParser.getString(rewriter.getSelectAST()));
+      assertEquals(HQLParser.getString(rewriter.getWhereAST()).trim(), "(( t1 . id1 ) =  100 )",
+        "Found: " + HQLParser.getString(rewriter.getWhereAST()));
+      assertEquals(HQLParser.getString(rewriter.getGroupByAST()).trim(), "( t2 . id2 )",
+        "Found: " + HQLParser.getString(rewriter.getGroupByAST()));
+      assertEquals(HQLParser.getString(rewriter.getOrderByAST()).trim(), "t3 . id3   asc",
+        "Found: " + HQLParser.getString(rewriter.getOrderByAST()));
+      assertEquals(HQLParser.getString(rewriter.getHavingAST()).trim(), "(count(( t1 . id1 )) >  2 )",
+        "Found: " + HQLParser.getString(rewriter.getHavingAST()));
+      assertTrue(fromStringAfterRewrite.contains("( t1 . t2id ) = ( t2 . id2 )")
+        && fromStringAfterRewrite.contains("( t2 . t3id ) = ( t3 . id3 )"), fromStringAfterRewrite);
+      assertFalse(fromStringAfterRewrite.contains(testDB), fromStringAfterRewrite);
+      assertTrue(fromStringAfterRewrite.contains("testdb"), fromStringAfterRewrite);
+      assertTrue(fromStringAfterRewrite.contains("testtable_1") && fromStringAfterRewrite.contains("testtable_2")
+        && fromStringAfterRewrite.contains("testtable_3"), fromStringAfterRewrite);
+    } finally {
+      Hive.get().dropTable("default", "mytable_3", true, true);
+      Hive.get().dropDatabase(testDB, true, true, true);
+      SessionState.get().setCurrentDatabase("default");
+    }
+  }
+
+  void createTable(HiveConf conf, String db, String table, String udb, String utable) throws Exception {
+    createTable(conf, db, table, udb, utable, true, null);
+  }
+
+  /**
    * Creates the table.
    *
    * @param db     the db
    * @param table  the table
    * @param udb    the udb
    * @param utable the utable
+   * @param setCustomSerde whether to set custom serde or not
+   * @param columnMapping columnmapping for the table
+   *
    * @throws Exception the exception
    */
-  void createTable(HiveConf conf, String db, String table, String udb, String utable) throws Exception {
+  void createTable(HiveConf conf, String db, String table, String udb, String utable, boolean setCustomSerde,
+    Map<String, String> columnMapping) throws Exception {
     Table tbl1 = new Table(db, table);
-    tbl1.setSerializationLib("DatabaseJarSerde");
+    if (setCustomSerde) {
+      tbl1.setSerializationLib("DatabaseJarSerde");
+    }
     if (StringUtils.isNotBlank(udb)) {
       tbl1.setProperty(LensConfConstants.NATIVE_DB_NAME, udb);
     }
     if (StringUtils.isNotBlank(utable)) {
       tbl1.setProperty(LensConfConstants.NATIVE_TABLE_NAME, utable);
+    }
+    if (columnMapping != null && !columnMapping.isEmpty()) {
+      tbl1.setProperty(LensConfConstants.NATIVE_TABLE_COLUMN_MAPPING, StringUtils.join(columnMapping.entrySet(), ","));
+      log.info("columnMapping property:{}", tbl1.getProperty(LensConfConstants.NATIVE_TABLE_COLUMN_MAPPING));
     }
 
     List<FieldSchema> columns = new ArrayList<FieldSchema>();
