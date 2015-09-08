@@ -34,7 +34,7 @@ public class FailingQueryDriver extends MockDriver {
     if (ctx.getUserQuery().contains("fail")) {
       return new FactPartitionBasedQueryCost(0.0);
     } else {
-      throw new LensException();
+      throw new LensException("Simulated Estimate Failure");
     }
   }
 

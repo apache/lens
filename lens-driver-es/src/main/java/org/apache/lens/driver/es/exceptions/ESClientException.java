@@ -18,6 +18,7 @@
  */
 package org.apache.lens.driver.es.exceptions;
 
+import org.apache.lens.server.api.LensErrorInfo;
 import org.apache.lens.server.api.error.LensException;
 
 import lombok.NonNull;
@@ -42,21 +43,21 @@ public class ESClientException extends LensException {
     super(cause);
   }
 
-  public ESClientException(int errorCode) {
-    super(errorCode);
+  public ESClientException(LensErrorInfo errorInfo) {
+    super(errorInfo);
   }
 
-  public ESClientException(String errorMsg, int errorCode) {
-    super(errorMsg, errorCode);
+  public ESClientException(String errorMsg, LensErrorInfo errorInfo) {
+    super(errorMsg, errorInfo);
   }
 
-  public ESClientException(int errorCode, Throwable cause,
+  public ESClientException(LensErrorInfo errorInfo, Throwable cause,
                            @NonNull Object... errorMsgFormattingArgs) {
-    super(errorCode, cause, errorMsgFormattingArgs);
+    super(errorInfo, cause, errorMsgFormattingArgs);
   }
 
-  public ESClientException(String errorMsg, int errorcode, Throwable cause,
+  public ESClientException(String errorMsg, LensErrorInfo errorInfo, Throwable cause,
                            @NonNull Object... errorMsgFormattingArgs) {
-    super(errorMsg, errorcode, cause, errorMsgFormattingArgs);
+    super(errorMsg, errorInfo, cause, errorMsgFormattingArgs);
   }
 }

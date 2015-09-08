@@ -111,8 +111,8 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     Response response = estimate(target(), Optional.<LensSessionHandle>absent(), Optional.of(MOCK_QUERY));
 
     final String expectedErrMsg = "Session id not provided. Please provide a session id.";
-    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(SESSION_ID_NOT_PROVIDED.getValue(), expectedErrMsg,
-      MOCK_STACK_TRACE);
+    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
+        SESSION_ID_NOT_PROVIDED.getLensErrorInfo().getErrorCode(), expectedErrMsg, MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
@@ -126,8 +126,8 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     Response response = estimate(target(), Optional.of(sessionId), testQuery);
 
     final String expectedErrMsg = "Query is not provided, or it is empty or blank. Please provide a valid query.";
-    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(NULL_OR_EMPTY_OR_BLANK_QUERY.getValue(), expectedErrMsg,
-      MOCK_STACK_TRACE);
+    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
+        NULL_OR_EMPTY_OR_BLANK_QUERY.getLensErrorInfo().getErrorCode(), expectedErrMsg, MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
@@ -144,7 +144,8 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     final String expectedErrMsg = "Provided Operation is not supported. Supported Operations are: "
       + "[estimate, execute, explain, execute_with_timeout]";
 
-    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getValue(),
+    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
+        UNSUPPORTED_QUERY_SUBMIT_OPERATION.getLensErrorInfo().getErrorCode(),
       expectedErrMsg, MOCK_STACK_TRACE, new SupportedQuerySubmitOperations());
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
@@ -165,11 +166,9 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       expectedErrMsg, MOCK_STACK_TRACE);
     LensErrorTO childError2 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
         expectedErrMsg, MOCK_STACK_TRACE);
-    LensErrorTO childError3 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE);
 
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE, Arrays.asList(childError1, childError2, childError3));
+        expectedErrMsg, MOCK_STACK_TRACE, Arrays.asList(childError1, childError2));
 
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(Status.INTERNAL_SERVER_ERROR,
       expectedLensErrorTO);
@@ -185,7 +184,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     Response response = estimate(target(), Optional.of(sessionId), Optional.of(MOCK_QUERY));
 
     final String expectedErrMsg = "Syntax Error: line 1:0 cannot recognize input near 'mock' '-' 'query'";
-    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(SYNTAX_ERROR.getValue(),
+    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(SYNTAX_ERROR.getLensErrorInfo().getErrorCode(),
       expectedErrMsg, MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
@@ -290,8 +289,9 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       final ColUnAvailableInTimeRange expectedErrorPayload = new ColUnAvailableInTimeRange(testDimensionField,
         expecAvailableFrom, expecAvailableTill);
 
-      LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(COLUMN_UNAVAILABLE_IN_TIME_RANGE.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE, expectedErrorPayload, null);
+      LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
+          COLUMN_UNAVAILABLE_IN_TIME_RANGE.getLensErrorInfo().getErrorCode(),
+          expectedErrMsg, MOCK_STACK_TRACE, expectedErrorPayload, null);
       ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
       expectedData.verify(response);

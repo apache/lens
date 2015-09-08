@@ -93,7 +93,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     StringBuilder select = new StringBuilder();
     for (int i = 0; i < query.getSelectAST().getChildCount(); i++) {
       if (selectToFactIndex.get(i) == null) {
-        throw new LensException(LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getValue(),
+        throw new LensException(LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getLensErrorInfo(),
             HQLParser.getString((ASTNode) query.getSelectAST().getChild(i)));
       }
       if (selectToFactIndex.get(i).size() == 1) {

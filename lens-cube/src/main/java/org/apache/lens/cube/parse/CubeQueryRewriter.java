@@ -193,7 +193,7 @@ public class CubeQueryRewriter {
       analyzer = new CubeSemanticAnalyzer(conf, hconf);
       analyzer.analyze(astnode, qlCtx);
     } catch (SemanticException e) {
-      throw new LensException(SYNTAX_ERROR.getValue(), e, e.getMessage());
+      throw new LensException(SYNTAX_ERROR.getLensErrorInfo(), e, e.getMessage());
     }
     CubeQueryContext ctx = new CubeQueryContext(astnode, analyzer.getCubeQB(), conf, hconf);
     rewrite(rewriters, ctx);
@@ -210,7 +210,7 @@ public class CubeQueryRewriter {
       tree = pd.parse(command, qlCtx, false);
       tree = ParseUtils.findRootNonNullToken(tree);
     } catch (ParseException e) {
-      throw new LensException(SYNTAX_ERROR.getValue(), e, e.getMessage());
+      throw new LensException(SYNTAX_ERROR.getLensErrorInfo(), e, e.getMessage());
     }
     return rewrite(tree);
   }

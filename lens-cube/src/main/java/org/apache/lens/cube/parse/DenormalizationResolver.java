@@ -251,7 +251,7 @@ public class DenormalizationResolver implements ContextRewriter {
               }
             }
             if (refered.references.isEmpty()) {
-              throw new LensException(LensCubeErrorCode.NO_REF_COL_AVAILABLE.getValue(), refered);
+              throw new LensException(LensCubeErrorCode.NO_REF_COL_AVAILABLE.getLensErrorInfo(), refered);
             }
             PickedReference picked = new PickedReference(refered.references.iterator().next(),
               cubeql.getAliasForTableName(refered.srcTable.getName()), tbl);
@@ -400,7 +400,7 @@ public class DenormalizationResolver implements ContextRewriter {
           }
         }
         if (cubeql.getCandidateFacts().size() == 0) {
-          throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getValue(),
+          throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
               cubeql.getColumnsQueried(cubeql.getCube().getName()).toString());
         }
         cubeql.pruneCandidateFactSet(CandidateTablePruneCode.COLUMN_NOT_FOUND);
@@ -422,7 +422,7 @@ public class DenormalizationResolver implements ContextRewriter {
           }
 
           if (cubeql.getCandidateDimTables().get(dim).size() == 0) {
-            throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getValue(),
+            throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getLensErrorInfo(),
               dim.toString(), cubeql.getColumnsQueried(dim.getName()).toString());
           }
         }

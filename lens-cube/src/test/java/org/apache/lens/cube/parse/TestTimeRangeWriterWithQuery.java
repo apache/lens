@@ -87,7 +87,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     if (!CubeTestSetup.isZerothHour()) {
       Assert.assertNotNull(th);
       Assert
-      .assertEquals(th.getErrorCode(), LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue());
+      .assertEquals(th.getErrorCode(), LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getLensErrorInfo().getErrorCode());
     }
     // hourly partitions for two days
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);

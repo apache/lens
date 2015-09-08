@@ -1275,7 +1275,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           final LensException firstCause = causes.get(0);
           for (LensException cause : causes) {
             if (!cause.equals(firstCause)) {
-              throw new LensMultiCauseException(StringUtils.join(failureCauses, '\n'), ImmutableList.copyOf(causes));
+              throw new LensMultiCauseException(ImmutableList.copyOf(causes));
             }
           }
           throw firstCause;
@@ -1555,15 +1555,11 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       if (prepared != null) {
         destroyPreparedQuery(prepared);
       }
-      log.error("Explain and prepare failed", e);
-      QueryPlan plan;
-      if (e.getCause() != null && e.getCause().getMessage() != null) {
-        plan = new QueryPlan(true, e.getCause().getMessage());
-      } else {
-        plan = new QueryPlan(true, e.getMessage());
-      }
-      return plan;
+      throw e;
     } catch (UnsupportedEncodingException e) {
+      if (prepared != null) {
+        destroyPreparedQuery(prepared);
+      }
       throw new LensException(e);
     } finally {
       release(sessionHandle);
@@ -2259,25 +2255,16 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   public QueryPlan explain(final String requestId, LensSessionHandle sessionHandle, String query, LensConf lensConf)
     throws LensException {
     try {
-      log.info("Explain: session:{} query:{}",  sessionHandle, query);
+      log.info("Explain: session:{} query:{}", sessionHandle, query);
       acquire(sessionHandle);
       Configuration qconf = getLensConf(sessionHandle, lensConf);
-      ExplainQueryContext explainQueryContext = new ExplainQueryContext(requestId, query,
-        getSession(sessionHandle).getLoggedInUser(), lensConf, qconf, drivers.values());
+      ExplainQueryContext explainQueryContext = new ExplainQueryContext(requestId, query, getSession(sessionHandle)
+          .getLoggedInUser(), lensConf, qconf, drivers.values());
       explainQueryContext.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
       accept(query, qconf, SubmitOp.EXPLAIN);
       rewriteAndSelect(explainQueryContext);
       addSessionResourcesToDriver(explainQueryContext);
       return explainQueryContext.getSelectedDriver().explain(explainQueryContext).toQueryPlan();
-    } catch (LensException e) {
-      log.error("Error during explain :", e);
-      QueryPlan plan;
-      if (e.getCause() != null && e.getCause().getMessage() != null) {
-        plan = new QueryPlan(true, e.getCause().getMessage());
-      } else {
-        plan = new QueryPlan(true, e.getMessage());
-      }
-      return plan;
     } catch (UnsupportedEncodingException e) {
       throw new LensException(e);
     } finally {

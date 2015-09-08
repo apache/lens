@@ -145,20 +145,21 @@ class AliasReplacer implements ContextRewriter {
           if (!inCube) {
             String prevDim = colToTableAlias.get(col.toLowerCase());
             if (prevDim != null && !prevDim.equals(dim.getName())) {
-              throw new LensException(LensCubeErrorCode.AMBIGOUS_DIM_COLUMN.getValue(), col, prevDim, dim.getName());
+              throw new LensException(LensCubeErrorCode.AMBIGOUS_DIM_COLUMN.getLensErrorInfo(),
+                  col, prevDim, dim.getName());
             }
             String dimAlias = cubeql.getAliasForTableName(dim.getName());
             colToTableAlias.put(col.toLowerCase(), dimAlias);
             tqc.addColumnsQueried(dimAlias, col.toLowerCase());
           } else {
             // throw error because column is in both cube and dimension table
-            throw new LensException(LensCubeErrorCode.AMBIGOUS_CUBE_COLUMN.getValue(), col,
+            throw new LensException(LensCubeErrorCode.AMBIGOUS_CUBE_COLUMN.getLensErrorInfo(), col,
                 cubeql.getCube().getName(), dim.getName());
           }
         }
       }
       if (colToTableAlias.get(col.toLowerCase()) == null) {
-        throw new LensException(LensCubeErrorCode.COLUMN_NOT_FOUND.getValue(), col);
+        throw new LensException(LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo(), col);
       }
     }
   }

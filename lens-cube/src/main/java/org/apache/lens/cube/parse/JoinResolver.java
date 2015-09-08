@@ -847,7 +847,8 @@ class JoinResolver implements ContextRewriter {
       }
 
       if (minCostClause == null) {
-        throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getValue(), qdims.toString(), autoJoinTarget.getName());
+        throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getLensErrorInfo(),
+            qdims.toString(), autoJoinTarget.getName());
       }
 
       log.info("Fact: {} minCostClause:{}", fact, minCostClause);
@@ -877,7 +878,7 @@ class JoinResolver implements ContextRewriter {
           }
         }
         if (cubeql.getCandidateDimTables().get(dim).size() == 0) {
-          throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getValue(), dim.getName(),
+          throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getLensErrorInfo(), dim.getName(),
             minCostClause.chainColumns.get(dim).toString());
         }
       }
@@ -1052,7 +1053,8 @@ class JoinResolver implements ContextRewriter {
           }
           log.warn("No join path between {} and {}", joinee.getName(), target.getName());
           if (cubeql.getDimensions().contains(joinee)) {
-            throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getValue(), joinee.getName(), target.getName());
+            throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getLensErrorInfo(),
+                joinee.getName(), target.getName());
           } else {
             // if joinee is optional dim table, remove those candidate facts
             Set<CandidateTable> candidates = cubeql.getOptionalDimensionMap().get(joinee).requiredForCandidates;
@@ -1136,7 +1138,7 @@ class JoinResolver implements ContextRewriter {
     } else if (metastore.isCube(targetTableName)) {
       target = (AbstractCubeTable) metastore.getCube(targetTableName);
     } else {
-      throw new LensException(LensCubeErrorCode.JOIN_TARGET_NOT_CUBE_TABLE.getValue(), targetTableName);
+      throw new LensException(LensCubeErrorCode.JOIN_TARGET_NOT_CUBE_TABLE.getLensErrorInfo(), targetTableName);
     }
   }
 
@@ -1290,7 +1292,7 @@ class JoinResolver implements ContextRewriter {
       cubeql.setJoinCond(joinTree, HQLParser.getString(joinCond));
     } else {
       // No join condition specified. this should be an error
-      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getValue());
+      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo());
     }
     return joinTree;
   }

@@ -74,7 +74,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
   public void testQueryWithNow() throws Exception {
     LensException e = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube where" + " time_range_in(d_time, 'NOW - 2DAYS', 'NOW')", getConf());
-    assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue());
+    assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -118,19 +118,19 @@ public class TestCubeRewriter extends TestQueryRewrite {
     String qFrom4DaysBackDate = qFmt.format(from4DaysBackDate);
     LensException th = getLensExceptionInRewrite("select SUM(msr15) from testCube where"
       + " time_range_in(d_time, '"+ qFrom4DaysBackDate + "', '" + qTo + "')", getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue());
+    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
   }
 
   @Test
   public void testCandidateTables() throws Exception {
     LensException th = getLensExceptionInRewrite(
       "select dim12, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
+    assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
 
     // this query should through exception because invalidMsr is invalid
     th = getLensExceptionInRewrite(
       "SELECT cityid, invalidMsr from testCube " + " where " + TWO_DAYS_RANGE, getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
+    assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -187,7 +187,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     LensException th = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue());
+    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(th);
     int endIndex = MISSING_PARTITIONS.errorFormat.length() - 3;
     assertEquals(
@@ -212,7 +212,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     LensException th = getLensExceptionInRewrite(
       "select SUM(msr4) from derivedCube" + " where " + TWO_DAYS_RANGE, getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getValue());
+    assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
 
     // test join
     Configuration conf = getConf();
@@ -630,7 +630,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     LensException th = getLensExceptionInRewrite(
       "select name, SUM(msr2) from testCube" + " join citydim" + " where " + TWO_DAYS_RANGE
         + " group by name", getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getValue());
+    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -979,7 +979,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     LensException e = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
-    assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue());
+    assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
 
     assertEquals(
@@ -1027,7 +1027,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     // state table is present on c1 with partition dumps and partitions added
     LensException e = getLensExceptionInRewrite("select name, capital from statedim ", conf);
-    assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getValue());
+    assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo().getErrorCode());
     assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
       NO_CANDIDATE_STORAGES.errorFormat,
       new HashMap<String, List<CandidateTablePruneCause>>() {
@@ -1168,13 +1168,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
         + TWO_DAYS_RANGE;
 
     LensException th = getLensExceptionInRewrite(query, getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.AMBIGOUS_CUBE_COLUMN.getValue());
+    assertEquals(th.getErrorCode(), LensCubeErrorCode.AMBIGOUS_CUBE_COLUMN.getLensErrorInfo().getErrorCode());
 
     String q2 =
       "SELECT ambigdim2 from citydim join" + " statedim on citydim.stateid = statedim.id join countrydim on"
         + " statedim.countryid = countrydim.id";
     th = getLensExceptionInRewrite(q2, getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.AMBIGOUS_DIM_COLUMN.getValue());
+    assertEquals(th.getErrorCode(), LensCubeErrorCode.AMBIGOUS_DIM_COLUMN.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -1467,7 +1467,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       System.out.println("TestJoinPathTimeRange: " + context.toHQL());
       fail("Expected query to fail because of invalid column life");
     } catch (LensException exc) {
-      assertEquals(exc.getErrorCode(), LensCubeErrorCode.NO_JOIN_PATH.getValue());
+      assertEquals(exc.getErrorCode(), LensCubeErrorCode.NO_JOIN_PATH.getLensErrorInfo().getErrorCode());
     } finally {
       // Add old column back
       cube.alterDimension(col);

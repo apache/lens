@@ -16,25 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cli;
 
-import static org.testng.Assert.assertTrue;
+package org.apache.lens.server.api;
 
-import org.apache.lens.cli.commands.LensQueryCommands;
-import org.apache.lens.client.LensClient;
+import lombok.*;
 
-public class ExecuteQueryCommandIT extends LensCliApplicationTest {
+@AllArgsConstructor
+public class LensErrorInfo {
 
- // @Test
-  public void testExecuteSyncQueryWithSyntaxError() {
+  @Getter
+  private int errorCode;
+  @Getter
+  private int errorWeight;
+  @Getter
+  private String errorName;
 
-    LensQueryCommands lensQueryCommands = new LensQueryCommands();
-    lensQueryCommands.setClient(new LensClient());
-
-    final String actualResult = lensQueryCommands.executeQuery("mock-query", false, "testQuery");
-
-    assertTrue(actualResult.contains("Query Id: "));
-    assertTrue(actualResult.contains("\n" + "Error Code: 3001\n"
-        + "Error Message: Syntax Error: line 1:0 cannot recognize input near 'mock' '-' 'query'"));
-  }
 }

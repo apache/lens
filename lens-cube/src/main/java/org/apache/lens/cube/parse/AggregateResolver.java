@@ -188,7 +188,7 @@ class AggregateResolver implements ContextRewriter {
         String aggregateFn = measure.getAggregate();
 
         if (StringUtils.isBlank(aggregateFn)) {
-          throw new LensException(LensCubeErrorCode.NO_DEFAULT_AGGREGATE.getValue(), colname);
+          throw new LensException(LensCubeErrorCode.NO_DEFAULT_AGGREGATE.getLensErrorInfo(), colname);
         }
         ASTNode fnroot = new ASTNode(new CommonToken(HiveParser.TOK_FUNCTION));
         fnroot.setParent(node.getParent());

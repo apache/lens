@@ -224,7 +224,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       boolean added = addJoinChain(alias, false);
       if (!added) {
         log.info("Queried tables do not exist. Missing table:{}", alias);
-        throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getValue());
+        throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getLensErrorInfo());
       }
     }
   }
@@ -259,7 +259,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       boolean added = addQueriedTable(alias, destTable, isOptional, true);
       if (!added) {
         log.info("Queried tables do not exist. Missing tables:{}", destTable);
-        throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getValue());
+        throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getLensErrorInfo());
       }
       log.info("Added join chain for {}", destTable);
       return true;
@@ -308,7 +308,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       if (metastoreClient.isCube(tblName)) {
         if (cube != null) {
           if (!cube.getName().equalsIgnoreCase(tblName)) {
-            throw new LensException(LensCubeErrorCode.MORE_THAN_ONE_CUBE.getValue(), cube.getName(), tblName);
+            throw new LensException(LensCubeErrorCode.MORE_THAN_ONE_CUBE.getLensErrorInfo(), cube.getName(), tblName);
           }
         }
         cube = metastoreClient.getCube(tblName);
@@ -687,7 +687,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
         fromString = fact.getStorageString(getAliasForTableName(cube.getName()));
       } else {
         if (dimensions.size() != 1) {
-          throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getValue());
+          throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo());
         }
         Dimension dim = dimensions.iterator().next();
         fromString = dimsToQuery.get(dim).getStorageString(getAliasForTableName(dim.getName()));
@@ -740,7 +740,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
         dimsToQuery.get(cubeTbls.get(joiningTable)).setWhereClauseAdded();
       }
     } else {
-      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getValue());
+      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo());
     }
   }
 
@@ -804,7 +804,8 @@ public class CubeQueryContext implements TrackQueriedColumns {
               }
             }
           }
-          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getValue(), dim.getName(), reason);
+          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo(),
+              dim.getName(), reason);
         }
       }
     }
@@ -839,7 +840,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
             }
           }
         }
-        throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue(), reason);
+        throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(), reason);
       }
     }
     return facts;

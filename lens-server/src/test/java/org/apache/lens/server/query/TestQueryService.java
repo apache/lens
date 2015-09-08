@@ -375,7 +375,7 @@ public class TestQueryService extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
 
     final QueryPlan plan2 = ptarget.request().post(Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryPlan.class);
+        new GenericType<LensAPIResult<QueryPlan>>() {}).getData();
     assertEquals(plan2.getTablesQueried().size(), 1);
     assertTrue(plan2.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     assertNotNull(plan2.getPrepareHandle());
@@ -387,47 +387,41 @@ public class TestQueryService extends LensJerseyTest {
    * Test explain failure.
    *
    * @throws InterruptedException the interrupted exception
+   * @throws UnsupportedEncodingException
    */
   @Test
-  public void testExplainFailure() throws InterruptedException {
+  public void testExplainFailure() throws InterruptedException, UnsupportedEncodingException {
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
-      MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-      "select NO_ID from " + TEST_TABLE));
+        MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select NO_ID from "
+        + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "explain"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
-      MediaType.APPLICATION_XML_TYPE));
+        MediaType.APPLICATION_XML_TYPE));
 
-    final QueryPlan plan = target.request()
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensAPIResult<QueryPlan>>() {}).getData();
-    assertTrue(plan.isError());
-    assertNotNull(plan.getErrorMsg());
-    assertTrue(plan.getErrorMsg()
-      .contains("Invalid table alias or column reference 'NO_ID': " + "(possible column names are: id, idstr)"));
+    final Response responseExplain = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+
+    assertEquals(responseExplain.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 
     // Test explain and prepare
     final WebTarget ptarget = target().path("queryapi/preparedqueries");
 
     final FormDataMultiPart mp2 = new FormDataMultiPart();
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
-      MediaType.APPLICATION_XML_TYPE));
+        MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select NO_ID from "
-      + TEST_TABLE));
+        + TEST_TABLE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "explain_and_prepare"));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
-      MediaType.APPLICATION_XML_TYPE));
+        MediaType.APPLICATION_XML_TYPE));
 
-    final QueryPlan plan2 = ptarget.request().post(Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryPlan.class);
-    assertTrue(plan2.isError());
-    assertNotNull(plan2.getErrorMsg());
-    assertNull(plan2.getPrepareHandle());
-    assertTrue(plan2.getErrorMsg().contains("Invalid table alias or column reference 'NO_ID': "
-      + "(possible column names are: id, idstr)"));
+    final Response responseExplainAndPrepare = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+
+    assertEquals(responseExplainAndPrepare.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
   }
 
   // post to preparedqueries
@@ -457,7 +451,7 @@ public class TestQueryService extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
 
     final QueryPrepareHandle pHandle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryPrepareHandle.class);
+        new GenericType<LensAPIResult<QueryPrepareHandle>>() {}).getData();
 
     // Get all prepared queries
     List<QueryPrepareHandle> allQueries = (List<QueryPrepareHandle>) target.queryParam("sessionid", lensSessionId)
@@ -555,7 +549,9 @@ public class TestQueryService extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
 
     final QueryPlan plan = target.request()
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+          new GenericType<LensAPIResult<QueryPlan>>() {}).getData();
+
     assertEquals(plan.getTablesQueried().size(), 1);
     assertTrue(plan.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     assertNotNull(plan.getPrepareHandle());
@@ -1425,7 +1421,9 @@ public class TestQueryService extends LensJerseyTest {
     final Response response = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
 
-    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getValue(),
+
+    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
+        LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getLensErrorInfo().getErrorCode(),
       "Neither cube nor dimensions accessed in the query", TestDataUtils.MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
