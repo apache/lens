@@ -746,10 +746,10 @@ public class TestJoinResolver extends TestQueryRewrite {
   public void testUnreachableDim() throws ParseException, LensException, HiveException {
     LensException e1 = getLensExceptionInRewrite("select urdimid from testdim2", hconf);
     assertNotNull(e1);
-    assertEquals(e1.getErrorCode(), LensCubeErrorCode.NO_DIM_HAS_COLUMN.getLensErrorInfo().getErrorCode());
+    assertEquals(e1.getErrorCode(), LensCubeErrorCode.NO_DIM_HAS_COLUMN.getValue());
 
     LensException e2 = getLensExceptionInRewrite("select urdimid from testcube where " + TWO_DAYS_RANGE, hconf);
     assertNotNull(e2);
-    assertEquals(e2.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
+    assertEquals(e2.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue());
   }
 }

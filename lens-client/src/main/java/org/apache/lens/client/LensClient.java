@@ -207,7 +207,7 @@ public class LensClient {
     return getQueryDetails(QueryHandle.fromString(handle));
   }
 
-  public LensAPIResult<QueryPlan> getQueryPlan(String q) throws LensAPIException {
+  public QueryPlan getQueryPlan(String q) {
     return new LensStatement(connection).explainQuery(q);
   }
 
@@ -569,11 +569,11 @@ public class LensClient {
     return mc.updatePartitionsOfDimensionTable(table, storage, partsSpec);
   }
 
-  public LensAPIResult<QueryPrepareHandle> prepare(String sql, String queryName) throws LensAPIException {
+  public QueryPrepareHandle prepare(String sql, String queryName) {
     return statement.prepareQuery(sql, queryName);
   }
 
-  public LensAPIResult<QueryPlan> explainAndPrepare(String sql, String queryName) throws LensAPIException {
+  public QueryPlan explainAndPrepare(String sql, String queryName) {
     return statement.explainAndPrepare(sql, queryName);
   }
 

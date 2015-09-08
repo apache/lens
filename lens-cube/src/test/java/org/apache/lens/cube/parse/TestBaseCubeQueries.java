@@ -69,12 +69,12 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
 
     e = getLensExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     assertEquals(e.getErrorCode(),
-        LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getLensErrorInfo().getErrorCode());
+        LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getValue());
     // no fact has the all the dimensions queried
     e = getLensExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
       + TWO_DAYS_RANGE, conf);
     assertEquals(e.getErrorCode(),
-        LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
+        LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getValue());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
     String regexp = String.format(CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND.errorFormat,
       "Column Sets: (.*?)", "queriable together");

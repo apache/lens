@@ -68,8 +68,7 @@ public abstract class TestTimeRangeWriter {
     if (failDisjoint()) {
       Assert.assertNotNull(th);
       Assert
-        .assertEquals(th.getErrorCode(), LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.
-            getLensErrorInfo().getErrorCode());
+        .assertEquals(th.getErrorCode(), LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getValue());
     } else {
       Assert.assertNull(th);
       validateDisjoint(whereClause, null);

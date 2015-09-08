@@ -31,9 +31,7 @@ import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.LensError;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.result.LensErrorTO;
-import org.apache.lens.server.api.LensErrorInfo;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import lombok.Getter;
@@ -43,27 +41,13 @@ import lombok.NonNull;
  * The Class LensException.
  */
 @SuppressWarnings("serial")
-public class LensException extends Exception implements Comparable<LensException> {
+public class LensException extends Exception {
 
   private static final int DEFAULT_LENS_EXCEPTION_ERROR_CODE = INTERNAL_SERVER_ERROR.getValue();
-  private static final int DEFAULT_LENS_EXCEPTION_WEIGHT = 0;
-
-  private static  LensErrorInfo defaultErrorInfo =
-      new LensErrorInfo(DEFAULT_LENS_EXCEPTION_ERROR_CODE, DEFAULT_LENS_EXCEPTION_WEIGHT, INTERNAL_SERVER_ERROR.name());
-
-  private Object[] errorMsgFormattingArgs = new Object[0];
 
   @Getter
-  private final LensErrorInfo errorInfo;
-
-  public int getErrorCode() {
-    return errorInfo.getErrorCode();
-  }
-
-  public int getErrorWeight() {
-    return errorInfo.getErrorWeight();
-  }
-
+  private final int errorCode;
+  private Object[] errorMsgFormattingArgs = new Object[0];
 
   /**
    * The lensResponse prepared by {@link #buildLensErrorResponse(ErrorCollection, String, String)}
@@ -77,7 +61,7 @@ public class LensException extends Exception implements Comparable<LensException
    * @see Exception#Exception(String)
    */
   public LensException(String errorMsg) {
-    this(errorMsg, defaultErrorInfo);
+    this(errorMsg, DEFAULT_LENS_EXCEPTION_ERROR_CODE);
   }
 
   /**
@@ -86,7 +70,7 @@ public class LensException extends Exception implements Comparable<LensException
    * @see Exception#Exception(String, Throwable)
    */
   public LensException(String errorMsg, Throwable cause) {
-    this(errorMsg, defaultErrorInfo, cause);
+    this(errorMsg, DEFAULT_LENS_EXCEPTION_ERROR_CODE, cause);
   }
 
   /**
@@ -95,7 +79,7 @@ public class LensException extends Exception implements Comparable<LensException
    * @see Exception#Exception()
    */
   public LensException() {
-    this(null, defaultErrorInfo);
+    this(null, DEFAULT_LENS_EXCEPTION_ERROR_CODE);
   }
 
   /**
@@ -104,100 +88,79 @@ public class LensException extends Exception implements Comparable<LensException
    * @see Exception#Exception(Throwable)
    */
   public LensException(Throwable cause) {
-    this(defaultErrorInfo, cause);
+    this(null, DEFAULT_LENS_EXCEPTION_ERROR_CODE, cause);
   }
 
   /**
-   * Constructs a new Lens Exception with error info.
+   * Constructs a new Lens Exception with error code.
    *
    * @see Exception#Exception()
    */
-  public LensException(final LensErrorInfo errorInfo) {
-    this(null, errorInfo);
+  public LensException(final int errorCode) {
+    this(null, errorCode);
   }
 
   /**
-   * Constructs a new Lens Exception with error msg and error info.
+   * Constructs a new Lens Exception with error msg and error code.
    *
    * @see Exception#Exception()
    */
-  public LensException(final String errorMsg, final LensErrorInfo errorInfo) {
-    this(errorMsg, errorInfo, null);
+  public LensException(final String errorMsg, final int errorCode) {
+    this(errorMsg, errorCode, null);
   }
 
   /**
-   * Constructs a new Lens Exception with error info, cause and error msg formatting arguments.
+   * Constructs a new Lens Exception with error code, cause and error msg formatting arguments.
    *
    * @see Exception#Exception(Throwable)
    */
-  public LensException(final LensErrorInfo errorInfo, final Throwable cause,
-      @NonNull final Object... errorMsgFormattingArgs) {
-    this(null, errorInfo, cause, errorMsgFormattingArgs);
+  public LensException(final int errorCode, final Throwable cause, @NonNull final Object... errorMsgFormattingArgs) {
+    this(null, errorCode, cause, errorMsgFormattingArgs);
   }
 
   /**
-   * Constructs a new Lens Exception with error info and error msg formatting arguments.
+   * Constructs a new Lens Exception with error code and error msg formatting arguments.
    *
    * @see Exception#Exception(Throwable)
    */
-  public LensException(final LensErrorInfo errorInfo, @NonNull final Object... errorMsgFormattingArgs) {
-    this(null, errorInfo, null, errorMsgFormattingArgs);
+  public LensException(final int errorCode, @NonNull final Object... errorMsgFormattingArgs) {
+    this(null, errorCode, null, errorMsgFormattingArgs);
   }
 
+
   /**
-   * Constructs a new Lens Exception with exception error message, error info, cause and error msg formatting arguments.
+   * Constructs a new Lens Exception with exception error message, error code, cause and error msg formatting arguments.
    *
    * @see Exception#Exception(Throwable)
    */
-  public LensException(final String errorMsg, final LensErrorInfo errorInfo, final Throwable cause,
+  public LensException(final String errorMsg, final int errorcode, final Throwable cause,
     @NonNull final Object... errorMsgFormattingArgs) {
 
-    super(getErrorMessage(errorMsg, errorInfo, errorMsgFormattingArgs), cause);
-    checkArgument(errorInfo.getErrorCode() > 0);
+    super(errorMsg, cause);
+    checkArgument(errorcode > 0);
 
-    this.errorInfo =  errorInfo;
+    this.errorCode = errorcode;
     this.errorMsgFormattingArgs = errorMsgFormattingArgs;
-  }
-
-  private static String getErrorMessage(final String errorMsg, final LensErrorInfo errorInfo,
-      @NonNull final Object... errorMsgFormattingArgs) {
-
-    if (StringUtils.isBlank(errorMsg)) {
-      StringBuilder error = new StringBuilder(errorInfo.getErrorName());
-      if (errorMsgFormattingArgs != null && errorMsgFormattingArgs.length != 0) {
-        error.append(Arrays.asList(errorMsgFormattingArgs));
-      }
-      return error.toString();
-    }
-    return errorMsg;
-  }
-
-  /**
-   * Copy Constructor
-   * @param e
-   */
-  public LensException(LensException e) {
-    this(e.getMessage(), e.getErrorInfo(), e.getCause(), e.errorMsgFormattingArgs);
   }
 
   public final void buildLensErrorResponse(final ErrorCollection errorCollection,
     final String apiVersion, final String id) {
 
-    final LensError lensError = errorCollection.getLensError(getErrorCode());
+    final LensError lensError = errorCollection.getLensError(errorCode);
     final LensErrorTO lensErrorTO = buildLensErrorTO(errorCollection, lensError);
     lensAPIResult = LensAPIResult.composedOf(apiVersion, id, lensErrorTO, lensError.getHttpStatusCode());
   }
 
   public final LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection) {
 
-    final LensError lensError = errorCollection.getLensError(getErrorCode());
+    final LensError lensError = errorCollection.getLensError(errorCode);
     return buildLensErrorTO(errorCollection, lensError);
   }
 
   protected LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection, final String errorMsg,
     final String stackTrace) {
 
-    return LensErrorTO.composedOf(getErrorCode(), errorMsg, stackTrace);
+    return LensErrorTO.composedOf(errorCode, errorMsg, stackTrace);
   }
 
   private LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection, final LensError lensError) {
@@ -219,7 +182,7 @@ public class LensException extends Exception implements Comparable<LensException
     }
 
     LensException e = (LensException) o;
-    if (errorInfo.equals(e.errorInfo) && isErrorMsgEqual(e)
+    if (errorCode == e.errorCode && isErrorMsgEqual(e)
       && Arrays.deepEquals(errorMsgFormattingArgs, e.errorMsgFormattingArgs)) {
       return true;
     }
@@ -253,7 +216,7 @@ public class LensException extends Exception implements Comparable<LensException
     final int PRIME = 59;
     int result = 1;
 
-    result = result * PRIME + errorInfo.hashCode();
+    result = result * PRIME + errorCode;
     result = result * PRIME + (this.getMessage() == null ? 0 : this.getMessage().hashCode());
     result = result * PRIME + Arrays.deepHashCode(errorMsgFormattingArgs);
     return result;
@@ -264,10 +227,5 @@ public class LensException extends Exception implements Comparable<LensException
       return (LensException) e;
     }
     return new LensException(e);
-  }
-
-  @Override
-  public int compareTo(LensException e) {
-    return this.getErrorWeight() - e.getErrorWeight();
   }
 }

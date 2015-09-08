@@ -31,11 +31,11 @@ public class UnSupportedQuerySubmitOpException extends LensException {
   private final SupportedQuerySubmitOperations supportedOps = new SupportedQuerySubmitOperations();
 
   public UnSupportedQuerySubmitOpException() {
-    super(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getLensErrorInfo());
+    super(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getValue());
   }
 
   public UnSupportedQuerySubmitOpException(final Throwable cause) {
-    super(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getLensErrorInfo(), cause);
+    super(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getValue(), cause);
   }
 
   @Override

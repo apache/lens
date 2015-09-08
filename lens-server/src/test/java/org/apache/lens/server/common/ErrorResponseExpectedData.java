@@ -49,7 +49,7 @@ public class ErrorResponseExpectedData {
 
     /* Assert Equal LensErrorTO (stack trace gets excluded in equality check) */
     final LensErrorTO actualLensErrorTO = lensAPIResult.getLensErrorTO();
-    assertEquals(actualLensErrorTO.getMessage(), expectedLensErrorTO.getMessage());
+    assertEquals(actualLensErrorTO, expectedLensErrorTO);
 
     /* Assert receipt of valid stacktraces */
     assertTrue(lensAPIResult.areValidStackTracesPresent(), "Received Lens Response:" + lensAPIResult);
