@@ -29,17 +29,25 @@ import java.util.Set;
 
 import org.apache.lens.server.api.query.QueryContext;
 
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 public class DefaultQueryCollectionTest {
 
   private static final String MOCK_USER = "MockUserEmail";
+  private static final String MOCK_HANDLE = "0-0-0-0-";
+
+  @DataProvider
+  public Object[][] dpQueryCosts() {
+    return new Object[][]{{new double[]{20.0, 50.0, 10.0, 80.0, 40.0, }, }, };
+
+  }
 
   /* Note: Since verification of addition/removal required calling get methods,
   hence methods getQueriesCount and getQueries(user) are indirectly getting tested in these tests */
 
   @Test
-  public void testAddMethodAddsQueriesToAllViews(){
+  public void testAddMethodAddsQueriesToAllViews() {
 
     /* Initialization */
     final int noOfQueriesUsedInTest = 2;
@@ -73,6 +81,30 @@ public class DefaultQueryCollectionTest {
     which gets information from queries per user map */
 
     assertEquals(queries.getQueries(MOCK_USER).size(), 0);
+  }
+
+  @Test(dataProvider = "dpQueryCosts")
+  public void testRemoveMethodMustChangeQueryIndices(final double[] queryCosts) {
+
+    /* Initialization */
+    int numberOfQueries = queryCosts.length;
+    QueryCollection collection = createQueriesTreeSetWithQueryHandleAndCostStubbing(queryCosts, MOCK_HANDLE);
+
+    QueryContext completedQuery = getMockedQueryFromQueries(collection.getQueries(), MOCK_HANDLE, 1);
+    QueryContext queuedQuery = getMockedQueryFromQueries(collection.getQueries(), MOCK_HANDLE, 5);
+
+     /* Verification 1: Verifies that all queries were added into the collection*/
+    assertEquals(collection.getQueriesCount(), numberOfQueries);
+
+    /* Execution */
+    collection.remove(completedQuery);
+
+     /* Verification 2: Verifies that queries were removed from the collection */
+    assertEquals(collection.getQueriesCount(), numberOfQueries - 1);
+
+    /* Verification 3: Verifies that query index is decreased after removal of queries which were present before
+     them in the queries list */
+    assertEquals(collection.getQueryIndex(queuedQuery).intValue(), 2);
   }
 
   @Test

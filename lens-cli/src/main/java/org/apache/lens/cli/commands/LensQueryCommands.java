@@ -156,26 +156,10 @@ public class LensQueryCommands extends BaseLensCommand {
   public String getStatus(
     @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh) {
     QueryStatus status = getClient().getQueryStatus(new QueryHandle(UUID.fromString(qh)));
-    StringBuilder sb = new StringBuilder();
     if (status == null) {
       return "Unable to find status for " + qh;
     }
-    sb.append("Status : ").append(status.getStatus()).append("\n");
-    if (status.getStatusMessage() != null) {
-      sb.append("Message : ").append(status.getStatusMessage()).append("\n");
-    }
-    if (status.getProgress() != 0) {
-      sb.append("Progress : ").append(status.getProgress()).append("\n");
-      if (status.getProgressMessage() != null) {
-        sb.append("Progress Message : ").append(status.getProgressMessage()).append("\n");
-      }
-    }
-
-    if (status.getErrorMessage() != null) {
-      sb.append("Error : ").append(status.getErrorMessage()).append("\n");
-    }
-
-    return sb.toString();
+    return status.toString();
   }
 
   /**

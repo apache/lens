@@ -204,7 +204,7 @@ public class FinishedLensQuery {
     qctx.setQueryHandle(QueryHandle.fromString(handle));
     qctx.setLaunchTime(this.startTime);
     qctx.setEndTime(getEndTime());
-    qctx.setStatusSkippingTransitionTest(new QueryStatus(0.0, QueryStatus.Status.valueOf(getStatus()),
+    qctx.setStatusSkippingTransitionTest(new QueryStatus(0.0, null, QueryStatus.Status.valueOf(getStatus()),
         getErrorMessage() == null ? "" : getErrorMessage(), getResult() != null, null, null, null));
     qctx.getDriverStatus().setDriverStartTime(getDriverStartTime());
     qctx.getDriverStatus().setDriverFinishTime(getDriverEndTime());

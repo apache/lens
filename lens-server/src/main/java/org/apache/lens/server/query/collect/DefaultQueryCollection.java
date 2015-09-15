@@ -26,7 +26,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.map.MultiValueMap;
 
 import com.google.common.collect.Sets;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,15 +35,26 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @see QueryCollection
  */
-@NoArgsConstructor
 @Slf4j
 public class DefaultQueryCollection implements QueryCollection {
 
-  private final Set<QueryContext> queries = Sets.newLinkedHashSet();
+  private final Set<QueryContext> queries;
   private final MultiValueMap queriesByUser = MultiValueMap.decorate(new HashMap(), LinkedHashSet.class);
 
+  public DefaultQueryCollection() {
+    this.queries = Sets.newLinkedHashSet();
+  }
+
   public DefaultQueryCollection(@NonNull final Set<QueryContext> queries) {
+    this();
     addAll(queries);
+  }
+
+  public DefaultQueryCollection(final TreeSet<QueryContext> treeSet) {
+    this.queries = treeSet;
+    for (QueryContext query : treeSet) {
+      queriesByUser.put(query.getSubmittedUser(), query);
+    }
   }
 
   @Override
@@ -94,6 +104,26 @@ public class DefaultQueryCollection implements QueryCollection {
   @Override
   public int getQueriesCount() {
     return queries.size();
+  }
+
+
+  /**
+   *  Since the collection is a linkedHashSet, the order of queries is always maintained.
+   * @param query
+   * @return
+   */
+  @Override
+  public Integer getQueryIndex(QueryContext query) {
+    Iterator iterator = queries.iterator();
+    int index = 1;
+    while (iterator.hasNext()) {
+      QueryContext queuedQuery = (QueryContext) iterator.next();
+      if (queuedQuery.getQueryHandle().equals(query.getQueryHandle())) {
+        return index;
+      }
+      index += 1;
+    }
+    return null;
   }
 
   private Collection<QueryContext> getQueriesCollectionForUser(final String user) {

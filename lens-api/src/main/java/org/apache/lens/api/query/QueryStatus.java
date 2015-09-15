@@ -39,6 +39,8 @@ import lombok.*;
  *
  * @param progress
  *          the progress
+ * @param queueNumber
+ *          the queue number
  * @param status
  *          the status
  * @param statusMessage
@@ -121,6 +123,13 @@ public class QueryStatus implements Serializable {
   private double progress;
 
   /**
+   * Queue number of a query when it is in waiting state.
+   */
+  @Getter
+  @Setter
+  private Integer queueNumber;
+
+  /**
    * The status.
    */
   @XmlElement
@@ -165,20 +174,33 @@ public class QueryStatus implements Serializable {
    */
   @Override
   public String toString() {
-    StringBuilder str = new StringBuilder(status.toString()).append(':').append(statusMessage);
-    if (status.equals(Status.RUNNING)) {
-      str.append(" - Progress:").append(progress).append(":").append(progressMessage);
+
+    StringBuilder str = new StringBuilder(" Status : ").append(status.toString()).append("\n");
+    if (statusMessage != null) {
+      str.append(" Message : ").append(statusMessage).append("\n");
     }
+
+    str.append(" Progress : ").append(progress).append("\n");
+    if (progressMessage != null) {
+      str.append(" Progress Message : ").append(progressMessage).append("\n");
+    }
+
+    if (queueNumber != null) {
+      str.append(" Position in queue : ").append(queueNumber).append("\n");
+    }
+
+    if (errorMessage != null) {
+      str.append(" Error : ").append(errorMessage).append("\n");
+    }
+
     if (status.equals(Status.SUCCESSFUL)) {
       if (isResultSetAvailable) {
-        str.append(" - Result Available");
+        str.append(" Result Available");
       } else {
-        str.append(" - Result Not Available");
+        str.append(" Result Not Available");
       }
     }
-    if (status.equals(Status.FAILED)) {
-      str.append(" - Cause:").append(errorMessage);
-    }
+
     return str.toString();
   }
 

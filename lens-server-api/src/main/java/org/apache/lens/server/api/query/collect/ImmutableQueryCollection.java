@@ -50,4 +50,10 @@ public interface ImmutableQueryCollection {
    * @return Count of existing queries
    */
   int getQueriesCount();
+
+  /**
+   *
+   * @return Index of a query within collection
+   */
+  Integer getQueryIndex(final QueryContext query);
 }

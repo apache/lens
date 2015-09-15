@@ -217,7 +217,7 @@ public class QueryContext extends AbstractQueryContext {
     super(userQuery, user, qconf, conf, drivers, mergeDriverConf);
     this.submissionTime = submissionTime;
     this.queryHandle = new QueryHandle(UUID.randomUUID());
-    this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null, null);
+    this.status = new QueryStatus(0.0f, null, Status.NEW, "Query just got created", false, null, null, null);
     this.priority = Priority.NORMAL;
     this.lensConf = qconf;
     this.conf = conf;

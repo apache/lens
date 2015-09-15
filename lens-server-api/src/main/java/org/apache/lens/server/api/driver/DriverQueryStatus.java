@@ -167,7 +167,8 @@ public class DriverQueryStatus implements Serializable {
       break;
     }
 
-    return new QueryStatus(progress, qstate, statusMessage, isResultSetAvailable, progressMessage, errorMessage, null);
+    return new QueryStatus(progress, null, qstate, statusMessage, isResultSetAvailable, progressMessage,
+            errorMessage, null);
   }
 
   /**
@@ -178,8 +179,8 @@ public class DriverQueryStatus implements Serializable {
    * @return the query status
    */
   public static QueryStatus createQueryStatus(QueryStatus.Status state, DriverQueryStatus dstatus) {
-    return new QueryStatus(dstatus.progress, state, dstatus.statusMessage, dstatus.isResultSetAvailable,
-      dstatus.progressMessage, dstatus.errorMessage, null);
+    return new QueryStatus(dstatus.progress, null, state, dstatus.statusMessage,
+            dstatus.isResultSetAvailable, dstatus.progressMessage, dstatus.errorMessage, null);
   }
 
   /*

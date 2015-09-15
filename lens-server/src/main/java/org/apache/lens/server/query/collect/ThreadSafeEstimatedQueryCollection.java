@@ -70,6 +70,11 @@ public class ThreadSafeEstimatedQueryCollection implements EstimatedQueryCollect
   }
 
   @Override
+  public synchronized Integer getQueryIndex(QueryContext query) {
+    return this.estimatedQueries.getQueryIndex(query);
+  }
+
+  @Override
   public synchronized boolean add(QueryContext query) {
     return this.estimatedQueries.add(query);
   }
