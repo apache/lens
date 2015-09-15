@@ -16,33 +16,55 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.api.query.save;
 
-package org.apache.lens.api.error;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * Common error codes. Expected to be used by all concerned modules.
+ * The response of CRUD action on resource.
  */
-public enum LensCommonErrorCode {
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@XmlRootElement
+public class ResourceModifiedResponse {
 
-  INTERNAL_SERVER_ERROR(1001),
+  /**
+   * Action enum that denotes the operation performed
+   */
+  public enum Action {
+    /**
+     * Resource is created
+     */
+    CREATED,
 
-  INVALID_XML_ERROR(1002),
+    /**
+     * Resource is updated
+     */
+    UPDATED,
 
-  RESOURCE_NOT_FOUND(1003),
-
-  NOT_AUTHORIZED(1004),
-
-  MISSING_PARAMETERS(1005),
-
-  INVALID_PARAMETER_VALUE(1006);
-
-  public int getValue() {
-    return this.errorCode;
+    /**
+     * Resource is updated
+     */
+    DELETED
   }
 
-  private LensCommonErrorCode(final int code) {
-    this.errorCode = code;
-  }
+  /**
+   * ID of the affected resource
+   */
+  private long id;
 
-  private final int errorCode;
+  /**
+   * The resource type
+   */
+  private String resource;
+
+  /**
+   * The action performed on the reource
+   */
+  private Action status;
 }

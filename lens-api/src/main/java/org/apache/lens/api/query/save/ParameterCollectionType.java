@@ -16,33 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.api.query.save;
 
-package org.apache.lens.api.error;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Common error codes. Expected to be used by all concerned modules.
+ * The enum ParameterCollectionType
+ * Collection type of a parameter has to be chosen based on its context.
+ * - If it is occurring next to an IN/NOT IN clause, its multiple
+ * - If it is found with EQ/NEQ..>,<,>=,<=,like etc, its single
  */
-public enum LensCommonErrorCode {
+@XmlRootElement
+public enum ParameterCollectionType {
+  /**
+   * Single valued parameter.
+   */
+  SINGLE,
 
-  INTERNAL_SERVER_ERROR(1001),
-
-  INVALID_XML_ERROR(1002),
-
-  RESOURCE_NOT_FOUND(1003),
-
-  NOT_AUTHORIZED(1004),
-
-  MISSING_PARAMETERS(1005),
-
-  INVALID_PARAMETER_VALUE(1006);
-
-  public int getValue() {
-    return this.errorCode;
-  }
-
-  private LensCommonErrorCode(final int code) {
-    this.errorCode = code;
-  }
-
-  private final int errorCode;
+  /**
+   * Multivalued parameter.
+   */
+  MULTIPLE;
 }

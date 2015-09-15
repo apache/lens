@@ -926,4 +926,20 @@ public final class LensConfConstants {
    */
   public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY = SERVER_PFX
       + "waiting.queries.selection.policy.factories";
+
+  /**
+   * Key denoting the dialect class property of saved query service.
+   */
+  public static final String JDBC_DIALECT_PROVIDER_CLASS_KEY = "lens.server.savedquery.jdbc.dialectclass";
+
+  /**
+   * Key denoting the default fetch value of saved query list api.
+   */
+  public static final String FETCH_COUNT_SAVED_QUERY_LIST_KEY = "lens.server.savedquery.list.default.count";
+
+  /**
+   * Default fetch count of saved query list api.
+   */
+  public static final int DEFAULT_FETCH_COUNT_SAVED_QUERY_LIST = 20;
+
 }

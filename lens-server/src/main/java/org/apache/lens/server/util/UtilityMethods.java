@@ -29,9 +29,10 @@ import javax.sql.DataSource;
 
 import org.apache.lens.server.api.LensConfConstants;
 
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp.*;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.hadoop.conf.Configuration;
 
 
@@ -139,6 +140,22 @@ public final class UtilityMethods {
       LensConfConstants.DEFAULT_SERVER_DB_VALIDATION_QUERY));
     tmp.setDefaultAutoCommit(false);
     return tmp;
+  }
+
+  public static DataSource getPoolingDataSourceFromConf(Configuration conf) {
+    final ConnectionFactory cf = new DriverManagerConnectionFactory(
+      conf.get(LensConfConstants.SERVER_DB_JDBC_URL, LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL),
+      conf.get(LensConfConstants.SERVER_DB_JDBC_USER, LensConfConstants.DEFAULT_SERVER_DB_USER),
+      conf.get(LensConfConstants.SERVER_DB_JDBC_PASS, LensConfConstants.DEFAULT_SERVER_DB_PASS));
+    final GenericObjectPool connectionPool = new GenericObjectPool();
+    connectionPool.setTestOnBorrow(false);
+    connectionPool.setTestOnReturn(false);
+    connectionPool.setTestWhileIdle(true);
+    new PoolableConnectionFactory(cf, connectionPool, null
+      , conf.get(LensConfConstants.SERVER_DB_VALIDATION_QUERY,
+        LensConfConstants.DEFAULT_SERVER_DB_VALIDATION_QUERY), false, false)
+      .setDefaultAutoCommit(true);
+    return new PoolingDataSource(connectionPool);
   }
 
   /**

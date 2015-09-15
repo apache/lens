@@ -191,6 +191,29 @@ Lens User Guide
 
   * {{{./cli.html#Query_Management} CLI query management}}
 
+** Saved queries
+
+  A query can be saved for future execution.
+
+  * Parts of a query could also be parameterised. Values for the parameters can be provided at the time of executing the saved query. If value is not provided, the default value provided at the time of saving the query will be used.
+
+  * Any part of the query could be parameterised. The parameters are mapped with a data type and collection type.
+
+  * During the execution,
+   - STRING parameter will be replaced with a single quoted value
+   - NUMBER, DECIMAL and BOOLEAN will be parsed and resolved (exception will be thrown if the given value is not parsable as the data types mentioned)
+
+  * And collection types,
+	 - SINGLE will be replaced by the simple encoded value
+	 - MULTIPLE will be replaced by (<v1>, <v2>... <vn>)
+	Eg. {select col from table where col = :param}  (param is the parameter)
+	 - If :param is SINGLE and STRING, the query would be resolved to {select col from table where col = '<val>'}
+	 - If :param is SINGLE and NUMBER per se, the query would be resolved to {select col from table where col = 5}
+
+	* A query handle is returned when a saved query is ran.
+
+  * {{{../resource_SavedQueryResource.html}Rest api for saved queries}}
+
 * Metastore service
 
 	The Metastore service is used for DDL operations like creating, updating cubes, fact tables and dimensions. It also pprovides endpoints to create storage tables and to add partitions to a storage table. For more detailed information see the {{{../resource_MetastoreResource.html}metastore service resource}} documentation.

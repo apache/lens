@@ -16,33 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.api.query.save;
 
-package org.apache.lens.api.error;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import com.google.common.collect.ImmutableSet;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * Common error codes. Expected to be used by all concerned modules.
+ * Response of parsing a parameterised HQL query
  */
-public enum LensCommonErrorCode {
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@XmlRootElement
+public class ParameterParserResponse {
+  /**
+   * Flag that denotes if the query and the parameters are valid
+   */
+  private boolean valid;
 
-  INTERNAL_SERVER_ERROR(1001),
+  /**
+   * The message
+   */
+  private String message;
 
-  INVALID_XML_ERROR(1002),
-
-  RESOURCE_NOT_FOUND(1003),
-
-  NOT_AUTHORIZED(1004),
-
-  MISSING_PARAMETERS(1005),
-
-  INVALID_PARAMETER_VALUE(1006);
-
-  public int getValue() {
-    return this.errorCode;
-  }
-
-  private LensCommonErrorCode(final int code) {
-    this.errorCode = code;
-  }
-
-  private final int errorCode;
+  /**
+   * The immutable set of parameters parsed from a parameterised HQL query
+   */
+  private ImmutableSet<Parameter> parameters;
 }

@@ -16,33 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.server.api.query.save.exception;
 
-package org.apache.lens.api.error;
+import static org.apache.lens.api.error.LensCommonErrorCode.RESOURCE_NOT_FOUND;
+
+import org.apache.lens.api.query.save.SavedQuery;
+import org.apache.lens.server.api.LensErrorInfo;
+import org.apache.lens.server.api.error.LensException;
+
+import lombok.Getter;
 
 /**
- * Common error codes. Expected to be used by all concerned modules.
+ * The class SavedQueryNotFound.
+ * Thrown when the requested saved query is not found.
  */
-public enum LensCommonErrorCode {
+public class SavedQueryNotFound extends LensException {
 
-  INTERNAL_SERVER_ERROR(1001),
+  @Getter
+  private long id;
 
-  INVALID_XML_ERROR(1002),
-
-  RESOURCE_NOT_FOUND(1003),
-
-  NOT_AUTHORIZED(1004),
-
-  MISSING_PARAMETERS(1005),
-
-  INVALID_PARAMETER_VALUE(1006);
-
-  public int getValue() {
-    return this.errorCode;
+  public SavedQueryNotFound(long id) {
+    super(
+      new LensErrorInfo(RESOURCE_NOT_FOUND.getValue(), 0, RESOURCE_NOT_FOUND.toString())
+      , SavedQuery.class.getSimpleName()
+      , String.valueOf(id));
+    this.id = id;
   }
-
-  private LensCommonErrorCode(final int code) {
-    this.errorCode = code;
-  }
-
-  private final int errorCode;
 }

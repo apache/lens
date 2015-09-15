@@ -55,7 +55,7 @@
 
   <property>
     <name>lens.server.servicenames</name>
-    <value>session,query,metastore,scheduler,quota</value>
+    <value>session,query,metastore,scheduler,quota,savedquery</value>
     <description>These services would be started in the specified order when lens-server starts up</description>
   </property>
 
@@ -69,6 +69,12 @@
     <name>lens.server.query.service.impl</name>
     <value>org.apache.lens.server.query.QueryExecutionServiceImpl</value>
     <description>Implementation class for query execution service</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.service.impl</name>
+    <value>org.apache.lens.server.query.save.SavedQueryServiceImpl</value>
+    <description>Implementation class for saved query service</description>
   </property>
 
   <property>
@@ -360,7 +366,7 @@
 
   <property>
     <name>lens.server.ws.resourcenames</name>
-    <value>session,metastore,query,quota,scheduler,index,log</value>
+    <value>session,metastore,query,quota,scheduler,index,log,savedquery</value>
     <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
   </property>
 
@@ -368,6 +374,12 @@
     <name>lens.server.session.ws.resource.impl</name>
     <value>org.apache.lens.server.session.SessionResource</value>
     <description>Implementation class for Session Resource</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.ws.resource.impl</name>
+    <value>org.apache.lens.server.query.save.SavedQueryResource</value>
+    <description>Implementation class for Saved query Resource</description>
   </property>
 
   <property>
@@ -751,6 +763,23 @@
     <description>Factories used to instantiate waiting queries selection policies. Every factory should
       be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an
       implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.jdbc.dialectclass</name>
+    <value>org.apache.lens.server.query.save.SavedQueryDao$HSQLDialect</value>
+    <description>Dialect of the target DB, Default is HSQL. Override with the target DB used.</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.list.default.offset</name>
+    <value>0</value>
+    <description>Key denoting the default start value of saved query list api.</description>
+  </property>
+  <property>
+    <name>lens.server.savedquery.list.default.count</name>
+    <value>20</value>
+    <description>Key denoting the default fetch value of saved query list api.</description>
   </property>
 
 </configuration>

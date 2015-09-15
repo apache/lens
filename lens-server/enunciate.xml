@@ -31,6 +31,7 @@
   </services>
   <api-classes>
     <include pattern="org.apache.lens.server.query.*"/>
+    <include pattern="org.apache.lens.server.query.save.*"/>
     <include pattern="org.apache.lens.server.metastore.*"/>
     <include pattern="org.apache.lens.server.quota.*"/>
     <include pattern="org.apache.lens.server.scheduler.*"/>

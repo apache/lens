@@ -97,7 +97,7 @@
 
   <property>
     <name>lens.server.ws.resourcenames</name>
-    <value>session,metastore,query,quota,scheduler,index,log,test</value>
+    <value>session,metastore,query,quota,scheduler,index,log,test,savedquery</value>
     <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
   </property>
 
@@ -105,6 +105,12 @@
     <name>lens.server.test.ws.resource.impl</name>
     <value>org.apache.lens.server.TestResource</value>
     <description>Implementation class for Test Resource</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.ws.resource.impl</name>
+    <value>org.apache.lens.server.query.save.SavedQueryResource</value>
+    <description>Implementation class for saved query Resource</description>
   </property>
 
   <property>
@@ -132,14 +138,26 @@
   </property>
 
   <property>
+    <name>lens.server.savedquery.jdbc.dialectclass</name>
+    <value>org.apache.lens.server.query.save.SavedQueryDao$HSQLDialect</value>
+    <description>Dialect of the target DB, Default is HSQL</description>
+  </property>
+
+  <property>
     <name>lens.server.servicenames</name>
-    <value>session,query,metastore,scheduler,quota,mocknonlens</value>
+    <value>session,query,metastore,scheduler,quota,mocknonlens,savedquery</value>
   </property>
 
   <property>
     <name>lens.server.mocknonlens.service.impl</name>
     <value>org.apache.lens.server.MockNonLensService</value>
     <description>Implementation class for session service</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.service.impl</name>
+    <value>org.apache.lens.server.query.save.SavedQueryServiceImpl</value>
+    <description>Implementation class for saved query service</description>
   </property>
 
   <property>
