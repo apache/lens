@@ -21,9 +21,7 @@ package org.apache.lens.regression.core.helpers;
 
 import java.io.IOException;
 
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-
 import javax.xml.bind.JAXBException;
 
 import org.apache.lens.regression.util.AssertUtil;
@@ -36,9 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LensServerHelper extends ServiceManagerHelper {
-
-  private WebTarget servLens = ServiceManagerHelper.getServerLens();
-  private String sessionHandleString = ServiceManagerHelper.getSessionHandle();
 
   public LensServerHelper() {
   }

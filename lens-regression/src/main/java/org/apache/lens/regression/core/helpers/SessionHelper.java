@@ -22,10 +22,8 @@ package org.apache.lens.regression.core.helpers;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.APIResult;
@@ -40,8 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SessionHelper extends ServiceManagerHelper {
 
-  private WebTarget servLens = ServiceManagerHelper.getServerLens();
-  private String sessionHandleString = ServiceManagerHelper.getSessionHandle();
 
   public SessionHelper() {
   }

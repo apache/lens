@@ -21,16 +21,13 @@ package org.apache.lens.regression.core.helpers;
 
 import java.util.List;
 
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.api.result.QueryCostTO;
 import org.apache.lens.regression.core.constants.QueryURL;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
@@ -48,8 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class QueryHelper extends ServiceManagerHelper {
 
-  private WebTarget servLens = ServiceManagerHelper.getServerLens();
-  private String sessionHandleString = ServiceManagerHelper.getSessionHandle();
 
   public QueryHelper() {
   }
@@ -57,6 +52,7 @@ public class QueryHelper extends ServiceManagerHelper {
   public QueryHelper(String envFileName) {
     super(envFileName);
   }
+
 
   /**
    * Execute with conf
@@ -67,8 +63,8 @@ public class QueryHelper extends ServiceManagerHelper {
    * @param conf
    * @return the query Handle
    */
-  public QueryHandle executeQuery(String queryString, String queryName, String sessionHandleString, String conf) throws
-      InstantiationException, IllegalAccessException, JAXBException, LensException {
+  public LensAPIResult executeQuery(String queryString, String queryName, String sessionHandleString,
+      String conf) throws InstantiationException, IllegalAccessException, JAXBException, LensException {
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
     formData.add("query", queryString);
@@ -79,30 +75,24 @@ public class QueryHelper extends ServiceManagerHelper {
     }
     Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
-    AssertUtil.assertSucceededResponse(response);
     String queryHandleString = response.readEntity(String.class);
     log.info("QueryHandle String:{}", queryHandleString);
-    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
-    QueryHandle queryHandle = (QueryHandle) successResponse.getData();
-    if (queryHandle == null) {
-      throw new LensException("Query Execute Failed");
-    }
-    log.info("Query Handle : {}", queryHandle);
-    return queryHandle;
+    LensAPIResult result = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
+    return result;
   }
 
-  public QueryHandle executeQuery(String queryString, String queryName, String sessionHandleString) throws
+  public LensAPIResult executeQuery(String queryString, String queryName, String sessionHandleString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return executeQuery(queryString, queryName, sessionHandleString,
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
   }
 
-  public QueryHandle executeQuery(String queryString, String queryName) throws
+  public LensAPIResult executeQuery(String queryString, String queryName) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return executeQuery(queryString, queryName, sessionHandleString);
   }
 
-  public QueryHandle executeQuery(String queryString) throws
+  public LensAPIResult executeQuery(String queryString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return executeQuery(queryString, null);
   }
@@ -118,7 +108,7 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the queryHandleWithResultSet
    */
 
-  public QueryHandleWithResultSet executeQueryTimeout(String queryString, String timeout, String queryName,
+  public LensAPIResult executeQueryTimeout(String queryString, String timeout, String queryName,
       String sessionHandleString, String conf) throws InstantiationException, IllegalAccessException, JAXBException,
       LensException {
     FormBuilder formData = new FormBuilder();
@@ -134,35 +124,29 @@ public class QueryHelper extends ServiceManagerHelper {
     }
     Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
-    AssertUtil.assertSucceededResponse(response);
     String queryHandleString = response.readEntity(String.class);
     log.info("QueryHandle String:{}", queryHandleString);
-    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
-    QueryHandleWithResultSet queryHandleWithResultSet = (QueryHandleWithResultSet) successResponse.getData();
-    if (queryHandleWithResultSet==null) {
-      throw new LensException("Query Execute Failed");
-    }
-    log.info("Query Handle with ResultSet : {}", queryHandleWithResultSet);
-    return queryHandleWithResultSet;
+    LensAPIResult result = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
+    return result;
   }
 
-  public QueryHandleWithResultSet executeQueryTimeout(String queryString, String timeout, String queryName,
+  public LensAPIResult executeQueryTimeout(String queryString, String timeout, String queryName,
       String sessionHandleString) throws InstantiationException, IllegalAccessException, JAXBException, LensException {
     return executeQueryTimeout(queryString, timeout, queryName, sessionHandleString,
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
   }
 
-  public QueryHandleWithResultSet executeQueryTimeout(String queryString, String timeout, String queryName) throws
+  public LensAPIResult executeQueryTimeout(String queryString, String timeout, String queryName) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return executeQueryTimeout(queryString, timeout, queryName, sessionHandleString);
   }
 
-  public QueryHandleWithResultSet executeQueryTimeout(String queryString, String timeout) throws
+  public LensAPIResult executeQueryTimeout(String queryString, String timeout) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return executeQueryTimeout(queryString, timeout, null);
   }
 
-  public QueryHandleWithResultSet executeQueryTimeout(String queryString) throws
+  public LensAPIResult executeQueryTimeout(String queryString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return executeQueryTimeout(queryString, null);
   }
@@ -178,7 +162,7 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the query Handle
    */
 
-  public QueryHandle executeQuery(String queryString, String queryName, String user, String sessionHandleString,
+  public LensAPIResult executeQuery(String queryString, String queryName, String user, String sessionHandleString,
       LensConf conf) throws JAXBException, InstantiationException, IllegalAccessException, LensException {
 
     FormBuilder formData = new FormBuilder();
@@ -196,12 +180,10 @@ public class QueryHelper extends ServiceManagerHelper {
             MediaType.APPLICATION_XML_TYPE));
     Response response = this.exec("post", "/queryapi/queries", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
-    AssertUtil.assertSucceededResponse(response);
     String queryHandleString = response.readEntity(String.class);
     log.info("QueryHandle String:{}", queryHandleString);
-    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
-    QueryHandle queryHandle = (QueryHandle) successResponse.getData();
-    return queryHandle;
+    LensAPIResult result = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
+    return result;
   }
 
   /**
@@ -213,7 +195,7 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the query Plan
    */
 
-  public QueryPlan explainQuery(String queryString, String sessionHandleString, String conf) throws
+  public LensAPIResult explainQuery(String queryString, String sessionHandleString, String conf) throws
       JAXBException, InstantiationException, IllegalAccessException, LensException {
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
@@ -224,21 +206,19 @@ public class QueryHelper extends ServiceManagerHelper {
             MediaType.APPLICATION_XML_TYPE));
     Response response = this.exec("post", "/queryapi/queries", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
-    AssertUtil.assertSucceededResponse(response);
     String queryPlanString = response.readEntity(String.class);
     log.info("QueryPlan String:{}", queryPlanString);
-    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryPlanString, LensAPIResult.class);
-    QueryPlan queryPlan = (QueryPlan) successResponse.getData();
-    return queryPlan;
+    LensAPIResult result = (LensAPIResult) Util.getObject(queryPlanString, LensAPIResult.class);
+    return result;
   }
 
-  public QueryPlan explainQuery(String queryString, String sessionHandleString) throws
+  public LensAPIResult explainQuery(String queryString, String sessionHandleString) throws
       JAXBException, InstantiationException, IllegalAccessException, LensException {
     return explainQuery(queryString, sessionHandleString,
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
   }
 
-  public QueryPlan explainQuery(String queryString) throws
+  public LensAPIResult explainQuery(String queryString) throws
       JAXBException, InstantiationException, IllegalAccessException, LensException {
     return explainQuery(queryString, sessionHandleString);
   }
@@ -252,7 +232,7 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the Estimate result
    */
 
-  public QueryCostTO estimateQuery(String queryString, String sessionHandleString, String conf) throws
+  public LensAPIResult estimateQuery(String queryString, String sessionHandleString, String conf) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
@@ -261,24 +241,19 @@ public class QueryHelper extends ServiceManagerHelper {
     formData.add("conf", conf);
     Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
-    AssertUtil.assertSucceededResponse(response);
     String queryCostString = response.readEntity(String.class);
     log.info("QueryCost String:{}", queryCostString);
-    LensAPIResult successResponse = (LensAPIResult) Util.getObject(queryCostString, LensAPIResult.class);
-    QueryCostTO queryCostTO = (QueryCostTO) successResponse.getData();
-    if (queryCostTO == null) {
-      throw new LensException("Estimate Failed");
-    }
-    return queryCostTO;
+    LensAPIResult result = (LensAPIResult) Util.getObject(queryCostString, LensAPIResult.class);
+    return result;
   }
 
-  public QueryCostTO estimateQuery(String queryString, String sessionHandleString) throws
+  public LensAPIResult estimateQuery(String queryString, String sessionHandleString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return estimateQuery(queryString, sessionHandleString,
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
   }
 
-  public QueryCostTO estimateQuery(String queryString) throws
+  public LensAPIResult estimateQuery(String queryString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return estimateQuery(queryString, sessionHandleString);
   }

@@ -19,17 +19,20 @@
 
 package org.apache.lens.regression.core.helpers;
 
-
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+
 import javax.xml.bind.JAXBException;
 
+import org.apache.lens.api.DateTime;
 import org.apache.lens.api.StringList;
+import org.apache.lens.api.metastore.*;
 import org.apache.lens.regression.core.constants.MetastoreURL;
+import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
 import org.apache.lens.regression.util.AssertUtil;
+import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.error.LensException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,8 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MetastoreHelper extends ServiceManagerHelper {
 
-  private WebTarget servLens = ServiceManagerHelper.getServerLens();
-  private String sessionHandleString = ServiceManagerHelper.getSessionHandle();
 
   public MetastoreHelper() {
   }
@@ -147,6 +148,215 @@ public class MetastoreHelper extends ServiceManagerHelper {
 
   public void dropDatabase(String dbName) throws JAXBException, LensException {
     dropDatabase(dbName, sessionHandleString);
+  }
+
+  public void createStorage(XStorage storage, String sessionHandleString) throws Exception {
+
+    String storageString = Util.convertObjectToXml(storage, XStorage.class, "createXStorage");
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+
+    Response response = this
+        .exec("post", MetastoreURL.METASTORE_STORAGES_URL, servLens, null, query, MediaType.APPLICATION_XML_TYPE, null,
+            storageString);
+    AssertUtil.assertSucceeded(response);
+  }
+
+  public void createStorage(XStorage storage) throws Exception {
+    createStorage(storage, sessionHandleString);
+  }
+
+  public void dropStorage(String storageName, String sessionHandleString) throws JAXBException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this
+        .exec("delete", MetastoreURL.METASTORE_STORAGES_URL + "/" + storageName, servLens, null, query,
+            MediaType.APPLICATION_XML_TYPE, null);
+    AssertUtil.assertSucceeded(response);
+  }
+
+  public void dropStorage(String storageName) throws JAXBException, LensException {
+    dropStorage(storageName, sessionHandleString);
+  }
+
+  public StringList listStorages(String sessionHandleString) throws JAXBException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("get", MetastoreURL.METASTORE_STORAGES_URL, servLens, null, query);
+    AssertUtil.assertSucceededResponse(response);
+    StringList cubeList = response.readEntity(StringList.class);
+    return cubeList;
+  }
+
+  public StringList listStorages() throws JAXBException, LensException {
+    return listStorages(sessionHandleString);
+  }
+
+  public void createCube(XCube cube, String sessionHandleString) throws Exception {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    String cubeString = Util.convertObjectToXml(cube, XCube.class, "createXCube");
+    Response response = this
+        .exec("post", MetastoreURL.METASTORE_CUBES_URL, servLens, null, query, MediaType.APPLICATION_XML_TYPE, null,
+            cubeString);
+    AssertUtil.assertSucceeded(response);
+  }
+
+  public void createCube(XCube cube) throws Exception {
+    createCube(cube, sessionHandleString);
+  }
+
+  public void createFacts(XFactTable facts, String sessionHandleString) throws Exception {
+    String factString = Util.convertObjectToXml(facts, XFactTable.class, "createXFactTable");
+
+    FormBuilder formData = new FormBuilder();
+    formData.add("sessionid", sessionHandleString);
+    formData.add("fact", factString);
+
+    Response response = this
+        .exec("post", MetastoreURL.METASTORE_FACTS_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
+            MediaType.APPLICATION_XML, formData.getForm());
+    AssertUtil.assertSucceeded(response);
+  }
+
+  public void createFacts(XFactTable facts) throws Exception {
+    createFacts(facts, sessionHandleString);
+  }
+
+  public StringList listCubes(String type, String sessionHandleString) throws Exception {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    if (type != null) {
+      query.put("type", type);
+    }
+    Response response = this.exec("get", MetastoreURL.METASTORE_CUBES_URL, servLens, null, query);
+    AssertUtil.assertSucceededResponse(response);
+    StringList cubeList = response.readEntity(StringList.class);
+    return cubeList;
+  }
+
+  public StringList listCubes(String type) throws Exception {
+    return listCubes(type, sessionHandleString);
+  }
+
+  public StringList listCubes() throws Exception {
+    return listCubes(null);
+  }
+
+  public XCube getCube(String cubeName, String sessionHandleString)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("get", MetastoreURL.METASTORE_CUBES_URL + "/" + cubeName, servLens, null, query,
+        MediaType.APPLICATION_XML_TYPE);
+    AssertUtil.assertSucceededResponse(response);
+    String responseString = response.readEntity(String.class);
+    log.info(responseString);
+    XCube cube = (XCube) Util.extractObject(responseString, XCube.class);
+    return cube;
+  }
+
+  public XCube getCube(String cubeName)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    return getCube(cubeName, sessionHandleString);
+  }
+
+  public XFactTable getFact(String factName, String sessionHandleString)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("get", MetastoreURL.METASTORE_FACTS_URL + "/" + factName, servLens, null, query,
+        MediaType.APPLICATION_XML_TYPE);
+    AssertUtil.assertSucceededResponse(response);
+    String responseString = response.readEntity(String.class);
+    log.info(responseString);
+    XFactTable fact = (XFactTable) Util.extractObject(responseString, XFactTable.class);
+    return fact;
+  }
+
+  public XFactTable getFact(String factName)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    return getFact(factName, sessionHandleString);
+  }
+
+  public XDimension getDimension(String dimName, String sessionHandleString)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("get", MetastoreURL.METASTORE_DIMENSIONS_URL + "/" + dimName, servLens, null, query,
+        MediaType.APPLICATION_XML_TYPE);
+    AssertUtil.assertSucceededResponse(response);
+    String responseString = response.readEntity(String.class);
+    log.info(responseString);
+    XDimension dim = (XDimension) Util.extractObject(responseString, XDimension.class);
+    return dim;
+  }
+
+  public XDimension getDimension(String dimName)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    return getDimension(dimName, sessionHandleString);
+  }
+
+  public XDimensionTable getDimensionTable(String dimName, String sessionHandleString)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("get", MetastoreURL.METASTORE_DIMTABLES_URL + "/" + dimName, servLens, null, query,
+        MediaType.APPLICATION_XML_TYPE);
+    AssertUtil.assertSucceededResponse(response);
+    String responseString = response.readEntity(String.class);
+    log.info(responseString);
+    XDimensionTable dim = (XDimensionTable) Util.extractObject(responseString, XDimensionTable.class);
+    return dim;
+  }
+
+  public XDimensionTable getDimensionTable(String dimName)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    return getDimensionTable(dimName, sessionHandleString);
+  }
+
+  public void updateCube(XCube cube, String cubeName, String sessionHandleString) throws Exception {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    String cubeString = Util.convertObjectToXml(cube, XCube.class, "createXCube");
+    Response response = this.exec("put", MetastoreURL.METASTORE_CUBES_URL + "/" + cubeName, servLens, null, query,
+        MediaType.APPLICATION_XML_TYPE, null, cubeString);
+    AssertUtil.assertSucceeded(response);
+  }
+
+  public void updateCube(XCube cube, String cubeName) throws Exception {
+    updateCube(cube, cubeName, sessionHandleString);
+  }
+
+  public void dropCube(String cubeName, String sessionHandleString) throws JAXBException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("delete", MetastoreURL.METASTORE_CUBES_URL + "/" + cubeName, servLens, null, query,
+        MediaType.APPLICATION_XML_TYPE, null);
+    AssertUtil.assertSucceeded(response);
+  }
+
+  public void dropCube(String cubeName) throws JAXBException, LensException {
+    dropCube(cubeName, sessionHandleString);
+  }
+
+  public void createDimTable(XDimensionTable dt, String sessionHandleString) throws Exception {
+    String dimTable = Util.convertObjectToXml(dt, XDimensionTable.class, "createDimensionTable");
+
+    FormBuilder formData = new FormBuilder();
+    formData.add("sessionid", sessionHandleString);
+    formData.add("dimensionTable", dimTable);
+
+    Response response = this
+        .exec("post", MetastoreURL.METASTORE_DIMTABLES_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
+            MediaType.APPLICATION_XML, formData.getForm());
+    AssertUtil.assertSucceeded(response);
+  }
+
+  public void createDimTable(XDimensionTable dt) throws Exception {
+    createDimTable(dt, sessionHandleString);
+  }
+
+  public void getLatestDate(String sessionHandleString) throws Exception {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    query.put("timeDimension", "event_time");
+    Response response = this
+        .exec("get", "/metastore/cubes/rrcube/latestdate", servLens, null, query, MediaType.APPLICATION_XML_TYPE, null,
+            query);
+    DateTime dt = (DateTime) Util.getObject(response.readEntity(String.class), DateTime.class);
+  }
+
+  public void getLatestDate() throws Exception {
+    getLatestDate(sessionHandleString);
   }
 
 }

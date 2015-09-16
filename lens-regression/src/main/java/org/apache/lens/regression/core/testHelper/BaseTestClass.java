@@ -16,8 +16,49 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.lens.regression.core.testHelper;
 
+import org.apache.lens.regression.core.helpers.LensHelper;
+import org.apache.lens.regression.core.helpers.LensServerHelper;
+import org.apache.lens.regression.core.helpers.MetastoreHelper;
+import org.apache.lens.regression.core.helpers.QueryHelper;
+import org.apache.lens.regression.core.helpers.SessionHelper;
+
 public class BaseTestClass {
+
+  private LensHelper lensHelper;
+  private QueryHelper qHelper;
+  private MetastoreHelper mHelper;
+  private SessionHelper sHelper;
+  private LensServerHelper lens;
+
+  public static final String LENS_PROPERTIES = "lens.properties";
+
+  public BaseTestClass() {
+
+    lensHelper = new LensHelper(LENS_PROPERTIES);
+    qHelper = lensHelper.getQueryHelper();
+    mHelper = lensHelper.getMetastoreHelper();
+    sHelper = lensHelper.getSessionHelper();
+    lens = lensHelper.getServerHelper();
+  }
+
+  public QueryHelper getQueryHelper() {
+    return qHelper;
+  }
+
+  public MetastoreHelper getMetastoreHelper() {
+    return mHelper;
+  }
+
+  public SessionHelper getSessionHelper() {
+    return sHelper;
+  }
+
+  public LensServerHelper getLensServerHelper() {
+    return lens;
+  }
+
 
 }
