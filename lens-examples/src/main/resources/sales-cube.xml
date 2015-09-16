@@ -58,7 +58,6 @@
                    display_string="Customer City">
       <ref_spec>
         <chain_ref_column chain_name="customer_city" ref_col="name" />
-        <chain_ref_column chain_name="customer_details" ref_col="customer_city_name" />
       </ref_spec>
     </dim_attribute>
     <dim_attribute name="production_location">
