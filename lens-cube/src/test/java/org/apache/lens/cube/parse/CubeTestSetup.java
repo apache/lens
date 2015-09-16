@@ -19,6 +19,10 @@
 
 package org.apache.lens.cube.parse;
 
+import static java.util.Calendar.DAY_OF_MONTH;
+import static java.util.Calendar.HOUR_OF_DAY;
+import static java.util.Calendar.MONTH;
+
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 
 import static org.testng.Assert.assertEquals;
@@ -142,31 +146,31 @@ public class CubeTestSetup {
     log.debug("Test now:{}", NOW);
 
     // Figure out if current hour is 0th hour
-    zerothHour = (cal.get(Calendar.HOUR_OF_DAY) == 0);
+    zerothHour = (cal.get(HOUR_OF_DAY) == 0);
 
     // Figure out last hour
-    cal.add(Calendar.HOUR_OF_DAY, -1);
+    cal.add(HOUR_OF_DAY, -1);
     LAST_HOUR = cal.getTime();
     log.debug("LastHour:{}", LAST_HOUR);
 
     cal.setTime(NOW);
-    cal.add(Calendar.DAY_OF_MONTH, -1);
+    cal.add(DAY_OF_MONTH, -1);
     ONE_DAY_BACK = cal.getTime();
-    cal.add(Calendar.DAY_OF_MONTH, -1);
+    cal.add(DAY_OF_MONTH, -1);
     TWODAYS_BACK = cal.getTime();
     System.out.println("Test TWODAYS_BACK:" + TWODAYS_BACK);
 
     // two months back
     cal.setTime(NOW);
-    cal.add(Calendar.MONTH, -2);
+    cal.add(MONTH, -2);
     TWO_MONTHS_BACK = cal.getTime();
     System.out.println("Test TWO_MONTHS_BACK:" + TWO_MONTHS_BACK);
 
     // Before 4days
     cal.setTime(NOW);
-    cal.add(Calendar.DAY_OF_MONTH, -4);
+    cal.add(DAY_OF_MONTH, -4);
     BEFORE_4_DAYS_END = cal.getTime();
-    cal.add(Calendar.DAY_OF_MONTH, -2);
+    cal.add(DAY_OF_MONTH, -2);
     BEFORE_4_DAYS_START = cal.getTime();
 
 
@@ -426,7 +430,7 @@ public class CubeTestSetup {
     }
     Calendar cal = new GregorianCalendar();
     cal.setTime(dayStart);
-    if (cal.get(Calendar.DAY_OF_MONTH) != 1) {
+    if (cal.get(DAY_OF_MONTH) != 1) {
       addParts(dailyparts, DAILY, dayStart, DateUtil.getCeilDate(TWO_MONTHS_BACK, MONTHLY));
       monthStart = DateUtil.getCeilDate(TWO_MONTHS_BACK, MONTHLY);
     }
@@ -478,7 +482,7 @@ public class CubeTestSetup {
     }
     Calendar cal = new GregorianCalendar();
     cal.setTime(dayStart);
-    if (cal.get(Calendar.DAY_OF_MONTH) != 1) {
+    if (cal.get(DAY_OF_MONTH) != 1) {
       addParts(dailyparts, DAILY, dayStart, DateUtil.getCeilDate(TWO_MONTHS_BACK, MONTHLY));
       monthStart = DateUtil.getCeilDate(TWO_MONTHS_BACK, MONTHLY);
     }
@@ -1277,7 +1281,7 @@ public class CubeTestSetup {
       timeParts.put("ttd2", temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       client.addPartition(sPartSpec, c99);
-      cal.add(Calendar.HOUR_OF_DAY, 1);
+      cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
 
@@ -1290,7 +1294,7 @@ public class CubeTestSetup {
       timeParts.put("ttd2", temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       client.addPartition(sPartSpec, c99);
-      cal.add(Calendar.HOUR_OF_DAY, 1);
+      cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
   }
@@ -1392,7 +1396,7 @@ public class CubeTestSetup {
       } catch (LensException e) {
         log.error("Encountered Lens exception.", e);
       }
-      cal.add(Calendar.HOUR_OF_DAY, 1);
+      cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
 
@@ -1404,7 +1408,7 @@ public class CubeTestSetup {
       timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       client.addPartition(sPartSpec, c1);
-      cal.add(Calendar.HOUR_OF_DAY, 1);
+      cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
     client.clearHiveTableCache();
@@ -1438,7 +1442,7 @@ public class CubeTestSetup {
       partitions.add(HOURLY.format().format(temp));
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       storagePartitionDescs.add(sPartSpec);
-      cal.add(Calendar.HOUR_OF_DAY, 1);
+      cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
     client.addPartitions(storagePartitionDescs, c4);
@@ -1457,7 +1461,7 @@ public class CubeTestSetup {
       timeParts.put("ttd2", temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       client.addPartition(sPartSpec, c4);
-      cal.add(Calendar.HOUR_OF_DAY, 1);
+      cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
   }
@@ -1516,7 +1520,7 @@ public class CubeTestSetup {
       timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact2.getName(), timeParts, null, HOURLY);
       client.addPartition(sPartSpec, c3);
-      cal.add(Calendar.HOUR_OF_DAY, 1);
+      cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
   }
@@ -2309,10 +2313,10 @@ public class CubeTestSetup {
     // Add partitions in PIE storage
     Calendar pcal = Calendar.getInstance();
     pcal.setTime(TWODAYS_BACK);
-    pcal.set(Calendar.HOUR, 0);
+    pcal.set(HOUR_OF_DAY, 0);
     Calendar ical = Calendar.getInstance();
     ical.setTime(TWODAYS_BACK);
-    ical.set(Calendar.HOUR, 0);
+    ical.set(HOUR_OF_DAY, 0);
 
     Map<UpdatePeriod, TreeSet<Date>> pTimes = Maps.newHashMap();
     pTimes.put(DAILY, Sets.<Date>newTreeSet());
@@ -2343,8 +2347,8 @@ public class CubeTestSetup {
         pTimes.get(DAILY).add(ptime);
         iTimes.get(DAILY).add(itime);
         client.addPartition(sPartSpec, storageName);
-        pcal.add(Calendar.DAY_OF_MONTH, 1);
-        ical.add(Calendar.HOUR_OF_DAY, 20);
+        pcal.add(DAY_OF_MONTH, 1);
+        ical.add(HOUR_OF_DAY, 20);
       } else if (p == 2) { // day2
         // pt=day2-hour[0-3] it = day1-hour[20-23]
         // pt=day2 and it=day1
@@ -2372,8 +2376,8 @@ public class CubeTestSetup {
           pTimes.get(HOURLY).add(ptime);
           iTimes.get(HOURLY).add(itime);
           client.addPartition(sPartSpec, storageName);
-          pcal.add(Calendar.HOUR_OF_DAY, 1);
-          ical.add(Calendar.HOUR_OF_DAY, 1);
+          pcal.add(HOUR_OF_DAY, 1);
+          ical.add(HOUR_OF_DAY, 1);
         }
         // pt=day2 and it=day2
         sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, DAILY);
@@ -2394,8 +2398,8 @@ public class CubeTestSetup {
           pTimes.get(HOURLY).add(ptime);
           iTimes.get(HOURLY).add(itime);
           client.addPartition(sPartSpec, storageName);
-          pcal.add(Calendar.HOUR_OF_DAY, 1);
-          ical.add(Calendar.HOUR_OF_DAY, 1);
+          pcal.add(HOUR_OF_DAY, 1);
+          ical.add(HOUR_OF_DAY, 1);
         }
       }
     }

@@ -132,9 +132,9 @@ public class RangesPartitionTimeline extends PartitionTimeline {
 
   private void mergeRanges() {
     for (int i = 0; i < ranges.size() - 1; i++) {
-      if (ranges.get(i).getEnd().equals(ranges.get(i + 1).getBegin())) {
+      if (ranges.get(i).getEnd().compareTo(ranges.get(i + 1).getBegin()) >= 0) {
         TimePartitionRange removed = ranges.remove(i + 1);
-        ranges.get(i).setEnd(removed.getEnd());
+        ranges.get(i).setEnd(TimePartition.max(removed.getEnd(), ranges.get(i).getEnd()));
         i--; // check again at same index
       } else if (ranges.get(i).isEmpty()) {
         ranges.remove(i);

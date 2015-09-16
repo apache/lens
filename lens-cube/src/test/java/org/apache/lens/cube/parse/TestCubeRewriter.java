@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.UpdatePeriod.DAILY;
+import static org.apache.lens.cube.metadata.UpdatePeriod.HOURLY;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
@@ -46,6 +48,8 @@ import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -91,14 +95,14 @@ public class TestCubeRewriter extends TestQueryRewrite {
     String qFrom = qFmt.format(from2DaysBackDate);
 
     CubeQueryContext rewrittenQuery = rewriteCtx("select SUM(msr15) from testCube where"
-      + " time_range_in(d_time, '"+ qFrom + "', '" + qTo + "')", conf);
+      + " time_range_in(d_time, '" + qFrom + "', '" + qTo + "')", conf);
 
     DateFormat fmt = UpdatePeriod.CONTINUOUS.format();
     String to = fmt.format(toDate);
     String from = fmt.format(from2DaysBackDate);
 
     String expected = "select SUM((testCube.msr15)) from TestQueryRewrite.c0_testFact_CONTINUOUS testcube"
-        + " WHERE ((( testcube . dt ) between  '" + from + "'  and  '" + to + "' ))";
+      + " WHERE ((( testcube . dt ) between  '" + from + "'  and  '" + to + "' ))";
     System.out.println("rewrittenQuery.toHQL() " + rewrittenQuery.toHQL());
     System.out.println("expected " + expected);
     compareQueries(expected, rewrittenQuery.toHQL());
@@ -107,7 +111,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     rewrittenQuery = rewriteCtx("select SUM(msr2) from testCube where" + " time_range_in(d_time, '"
       + qFrom + "', '" + qTo + "')", conf);
     expected = "select SUM((testCube.msr2)) from TestQueryRewrite.c0_testFact testcube"
-        + " WHERE ((( testcube . dt ) between  '" + from + "'  and  '" + to + "' ))";
+      + " WHERE ((( testcube . dt ) between  '" + from + "'  and  '" + to + "' ))";
     System.out.println("rewrittenQuery.toHQL() " + rewrittenQuery.toHQL());
     System.out.println("expected " + expected);
     compareQueries(expected, rewrittenQuery.toHQL());
@@ -117,7 +121,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Date from4DaysBackDate = qCal.getTime();
     String qFrom4DaysBackDate = qFmt.format(from4DaysBackDate);
     LensException th = getLensExceptionInRewrite("select SUM(msr15) from testCube where"
-      + " time_range_in(d_time, '"+ qFrom4DaysBackDate + "', '" + qTo + "')", getConf());
+      + " time_range_in(d_time, '" + qFrom4DaysBackDate + "', '" + qTo + "')", getConf());
     assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
   }
 
@@ -427,9 +431,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
       System.out.println("HQL: " + hqlQuery);
 
       String expected1 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c1_testfact"));
+        getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c1_testfact"));
       String expected2 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c2_testfact"));
+        getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c2_testfact"));
 
       System.out.println("Expected1 : " + expected1);
       System.out.println("Expected2 : " + expected2);
@@ -460,9 +464,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
       System.out.println("HQL:" + hqlQuery);
 
       String expected1 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForDailyAndHourly2days(cubeName, "c1_testfact"));
+        getWhereForDailyAndHourly2days(cubeName, "c1_testfact"));
       String expected2 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForDailyAndHourly2days(cubeName, "c2_testfact"));
+        getWhereForDailyAndHourly2days(cubeName, "c2_testfact"));
 
       System.out.println("Expected1 : " + expected1);
       System.out.println("Expected2 : " + expected2);
@@ -496,11 +500,11 @@ public class TestCubeRewriter extends TestQueryRewrite {
       System.out.println("HQL:" + hqlQuery);
 
       String expected1 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c1_testfact"));
+        getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c1_testfact"));
       String expected2 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c2_testfact"));
+        getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c2_testfact"));
       String expected3 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c3_testfact"));
+        getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c3_testfact"));
 
       System.out.println("Expected1 : " + expected1);
       System.out.println("Expected2 : " + expected2);
@@ -1325,7 +1329,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
-  public void testFactsWithTimedDimensionWithProcessTimeCol() throws Exception {
+  public void testLookAhead() throws Exception {
     String twoDaysITRange =
       "time_range_in(it, '" + CubeTestSetup.getDateUptoHours(TWODAYS_BACK) + "','"
         + CubeTestSetup.getDateUptoHours(NOW) + "')";
@@ -1333,41 +1337,40 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Configuration conf = getConf();
     conf.set(CubeQueryConfUtil.PROCESS_TIME_PART_COL, "pt");
     conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS, AbridgedTimeRangeWriter.class, TimeRangeWriter.class);
-    String hqlQuery = rewrite("select dim1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
-    System.out.println("Query With process time col:" + hqlQuery);
-    String expected = getExpectedQuery(cubeName, "select testcube.dim1, max(testcube.msr3), sum(testcube.msr2) FROM ",
-      null, " GROUP BY ( testcube . dim1 )",
-      getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary1"),
-      null);
-    // TODO compare queries
-    // compareQueries(expected, hqlQuery);
-    hqlQuery =
-      rewrite("select dim1, dim2, COUNT(msr4)," + " SUM(msr2), msr3 from testCube" + " where " + twoDaysITRange, conf);
-    System.out.println("Query With process time col:" + hqlQuery);
-    // TODO compare queries
-    // compareQueries(expected, hqlQuery);
-    hqlQuery =
-      rewrite("select dim1, dim2, cityid, count(msr4)," + " SUM(msr2), msr3 from testCube" + " where "
-        + twoDaysITRange, conf);
-    System.out.println("Query With process time col:" + hqlQuery);
-    // TODO compare queries
-    // compareQueries(expected, hqlQuery);
-    conf.setInt(CubeQueryConfUtil.getLookAheadPTPartsKey(UpdatePeriod.DAILY), 3);
-    hqlQuery = rewrite("select dim1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
-    System.out.println("Query With process time col:" + hqlQuery);
-    // TODO compare queries
-    // compareQueries(expected, hqlQuery);
-    hqlQuery =
-      rewrite("select dim1, dim2, COUNT(msr4)," + " SUM(msr2), msr3 from testCube" + " where " + twoDaysITRange, conf);
-    System.out.println("Query With process time col:" + hqlQuery);
-    // TODO compare queries
-    // compareQueries(expected, hqlQuery);
-    hqlQuery =
-      rewrite("select dim1, dim2, cityid, count(msr4)," + " SUM(msr2), msr3 from testCube" + " where "
-        + twoDaysITRange, conf);
-    System.out.println("Query With process time col:" + hqlQuery);
-    // TODO compare queries
-    // compareQueries(expected, hqlQuery);
+    CubeQueryContext ctx = rewriteCtx("select dim1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange,
+      conf);
+    assertEquals(ctx.candidateFacts.size(), 1);
+    CandidateFact candidateFact = ctx.candidateFacts.iterator().next();
+    Set<FactPartition> partsQueried = new TreeSet<>(candidateFact.getPartsQueried());
+    Date ceilDay = DateUtil.getCeilDate(TWODAYS_BACK, DAILY);
+    Date nextDay = DateUtils.addDays(ceilDay, 1);
+    Date nextToNextDay = DateUtils.addDays(nextDay, 1);
+    HashSet<String> storageTables = Sets.newHashSet();
+    for (String storageTable : candidateFact.getStorageTables()) {
+      storageTables.add(storageTable.split("\\.")[1]);
+    }
+    TreeSet<FactPartition> expectedPartsQueried = Sets.newTreeSet();
+    for (TimePartition p : Iterables.concat(
+      TimePartition.of(HOURLY, TWODAYS_BACK).rangeUpto(TimePartition.of(HOURLY, ceilDay)),
+      TimePartition.of(DAILY, ceilDay).rangeUpto(TimePartition.of(DAILY, nextDay)),
+      TimePartition.of(HOURLY, nextDay).rangeUpto(TimePartition.of(HOURLY, NOW)))) {
+      FactPartition fp = new FactPartition("it", p, null, storageTables);
+      expectedPartsQueried.add(fp);
+    }
+    for (TimePartition it : TimePartition.of(HOURLY, ceilDay).rangeUpto(TimePartition.of(HOURLY, nextDay))) {
+      for (TimePartition pt : TimePartition.of(HOURLY, nextDay).rangeUpto(TimePartition.of(HOURLY, nextToNextDay))) {
+        FactPartition ptPartition = new FactPartition("pt", pt, null, storageTables);
+        FactPartition itPartition = new FactPartition("it", it, ptPartition, storageTables);
+        expectedPartsQueried.add(itPartition);
+      }
+    }
+    assertEquals(partsQueried, expectedPartsQueried);
+    conf.setInt(CubeQueryConfUtil.LOOK_AHEAD_PT_PARTS_PFX, 3);
+    ctx = rewriteCtx("select dim1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange,
+      conf);
+    partsQueried = new TreeSet<>(ctx.candidateFacts.iterator().next().getPartsQueried());
+    // pt does not exist beyond 1 day. So in this test, max look ahead possible is 3
+    assertEquals(partsQueried, expectedPartsQueried);
   }
 
   @Test

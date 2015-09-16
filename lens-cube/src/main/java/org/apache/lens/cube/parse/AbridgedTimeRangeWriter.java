@@ -121,11 +121,12 @@ public class AbridgedTimeRangeWriter implements TimeRangeWriter {
     Map<FactPartition, Set<FactPartition>> partitionSetMap = new HashMap<FactPartition, Set<FactPartition>>();
     for (FactPartition part : parts) {
       FactPartition key = part.getContainingPart();
-      part.setContainingPart(null);
+      FactPartition part2 = new FactPartition(part.getPartCol(), part.getPartSpec(), part.getPeriod(), null, part
+        .getPartFormat(), part.getStorageTables());
       if (partitionSetMap.get(key) == null) {
         partitionSetMap.put(key, Sets.<FactPartition>newTreeSet());
       }
-      partitionSetMap.get(key).add(part);
+      partitionSetMap.get(key).add(part2);
     }
     Map<Set<FactPartition>, Set<FactPartition>> setSetOppositeMap = Maps.newHashMap();
     for (Map.Entry<FactPartition, Set<FactPartition>> entry : partitionSetMap.entrySet()) {

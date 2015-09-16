@@ -42,6 +42,7 @@ public class FactPartition implements Comparable<FactPartition> {
   @Getter
   @Setter
   private FactPartition containingPart;
+  @Getter
   private final DateFormat partFormat;
   @Getter
   @Setter
@@ -59,7 +60,18 @@ public class FactPartition implements Comparable<FactPartition> {
   public FactPartition(String partCol, Date partSpec, UpdatePeriod period, FactPartition containingPart,
     DateFormat partFormat, Set<String> storageTables) {
     this(partCol, partSpec, period, containingPart, partFormat);
-    this.storageTables.addAll(storageTables);
+    if (storageTables != null) {
+      this.storageTables.addAll(storageTables);
+    }
+  }
+
+  public FactPartition(String partCol, TimePartition timePartition) {
+    this(partCol, timePartition, null, null);
+  }
+
+  public FactPartition(String partCol, TimePartition timePartition, FactPartition containingPart, Set<String>
+    storageTables) {
+    this(partCol, timePartition.getDate(), timePartition.getUpdatePeriod(), containingPart, null, storageTables);
   }
 
   public boolean hasContainingPart() {

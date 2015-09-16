@@ -121,6 +121,7 @@ public class TimePartition implements Comparable<TimePartition>, Named {
     return rangeUpto(next());
   }
 
+
   @Override
   public String getName() {
     return getDateString();
@@ -128,5 +129,13 @@ public class TimePartition implements Comparable<TimePartition>, Named {
 
   public TimePartitionRange emptyRange() throws LensException {
     return this.rangeUpto(this);
+  }
+
+  public static TimePartition max(TimePartition p1, TimePartition p2) {
+    return p1.compareTo(p2) >= 0 ? p1 : p2;
+  }
+
+  public static TimePartition min(TimePartition p1, TimePartition p2) {
+    return p1.compareTo(p2) < 0 ? p1 : p2;
   }
 }
