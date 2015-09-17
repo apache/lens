@@ -135,7 +135,9 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
    */
   @Override
   public void close() throws IOException {
-    rowWriter.close(Reporter.NULL);
+    if (null != rowWriter) {
+      rowWriter.close(Reporter.NULL);
+    }
   }
 
   @Override
