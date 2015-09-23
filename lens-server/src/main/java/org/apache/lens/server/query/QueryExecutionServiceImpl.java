@@ -1026,7 +1026,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies = getImplementations(
       WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY, hiveConf);
 
-    this.waitingQueriesSelector = new IntersectingWaitingQueriesSelector(selectionPolicies);
+    this.waitingQueriesSelector = new UnioningWaitingQueriesSelector(selectionPolicies);
 
     try {
       this.userQueryToCubeQueryRewriter = new UserQueryToCubeQueryRewriter(conf);

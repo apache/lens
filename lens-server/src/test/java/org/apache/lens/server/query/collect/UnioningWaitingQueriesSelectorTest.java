@@ -25,7 +25,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.lens.server.api.query.FinishedLensQuery;
@@ -36,59 +35,9 @@ import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.testng.annotations.Test;
 import org.testng.collections.Sets;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableSet;
 
-public class IntersectingWaitingQueriesSelectorTest {
-
-  @Test
-  public void testFindCommonQueriesWhenInputIsEmptyListOfSets() {
-
-    List<Set<QueryContext>> candidateQueriesSets = Lists.newArrayList();
-    Set<QueryContext> expectedEligibleQueries = Sets.newHashSet();
-
-    testFindCommonQueries(candidateQueriesSets, expectedEligibleQueries);
-  }
-
-  @Test
-  public void testFindCommonQueriesWhenNoCommonQueryIsPresent() {
-
-    QueryContext eligibleQuery1 = mock(QueryContext.class);
-    QueryContext eligibleQuery2 = mock(QueryContext.class);
-
-    Set<QueryContext> eligibleQueriesSetA = Sets.newHashSet(Arrays.asList(eligibleQuery1));
-    Set<QueryContext> eligibleQueriesSetB = Sets.newHashSet(Arrays.asList(eligibleQuery2));
-
-    List<Set<QueryContext>> candidateQueriesSets = Arrays.asList(eligibleQueriesSetA, eligibleQueriesSetB);
-    Set<QueryContext> expectedEligibleQueries = Sets.newHashSet();
-
-    testFindCommonQueries(candidateQueriesSets, expectedEligibleQueries);
-  }
-
-  @Test
-  public void testFindCommonQueriesWhenACommonQueryIsPresent() {
-
-    QueryContext eligibleQuery1 = mock(QueryContext.class);
-    QueryContext eligibleQuery2 = mock(QueryContext.class);
-    QueryContext eligibleQuery3 = mock(QueryContext.class);
-
-    Set<QueryContext> eligibleQueriesSetA = Sets.newHashSet(Arrays.asList(eligibleQuery1, eligibleQuery2));
-    Set<QueryContext> eligibleQueriesSetB = Sets.newHashSet(Arrays.asList(eligibleQuery1, eligibleQuery3));
-
-    List<Set<QueryContext>> candidateQueriesSets = Arrays.asList(eligibleQueriesSetA, eligibleQueriesSetB);
-    Set<QueryContext> expectedEligibleQueries = Sets.newHashSet(Arrays.asList(eligibleQuery1));
-
-    testFindCommonQueries(candidateQueriesSets, expectedEligibleQueries);
-  }
-
-  private void testFindCommonQueries(final List<Set<QueryContext>> queriesSets,
-      final Set<QueryContext> expectedEligibleQueries) {
-
-    IntersectingWaitingQueriesSelector selector = new IntersectingWaitingQueriesSelector(mock(ImmutableSet.class));
-
-    Set<QueryContext> actualCommonQueries = selector.findCommonQueries(queriesSets);
-    assertEquals(actualCommonQueries, expectedEligibleQueries);
-  }
+public class UnioningWaitingQueriesSelectorTest {
 
   @Test
   public void testPrepareAllSelectionPolicies() {
@@ -101,7 +50,7 @@ public class IntersectingWaitingQueriesSelectorTest {
     FinishedLensQuery mockFinishedQuery = mock(FinishedLensQuery.class);
     when(mockFinishedQuery.getDriverSelectionPolicies()).thenReturn(ImmutableSet.of(dp1, dp2));
 
-    IntersectingWaitingQueriesSelector selector = new IntersectingWaitingQueriesSelector(ImmutableSet.of(p1, p2));
+    UnioningWaitingQueriesSelector selector = new UnioningWaitingQueriesSelector(ImmutableSet.of(p1, p2));
     assertEquals(selector.prepareAllSelectionPolicies(mockFinishedQuery), ImmutableSet.of(p1, p2, dp1, dp2));
   }
 
@@ -112,18 +61,18 @@ public class IntersectingWaitingQueriesSelectorTest {
     WaitingQueriesSelectionPolicy p2 = mock(WaitingQueriesSelectionPolicy.class);
 
     final ImmutableSet<WaitingQueriesSelectionPolicy> emptySet = ImmutableSet.copyOf(
-        Sets.<WaitingQueriesSelectionPolicy>newHashSet());
+      Sets.<WaitingQueriesSelectionPolicy>newHashSet());
 
     FinishedLensQuery mockFinishedQuery = mock(FinishedLensQuery.class);
     when(mockFinishedQuery.getDriverSelectionPolicies()).thenReturn(emptySet);
 
-    IntersectingWaitingQueriesSelector selector = new IntersectingWaitingQueriesSelector(ImmutableSet.of(p1, p2));
+    UnioningWaitingQueriesSelector selector = new UnioningWaitingQueriesSelector(ImmutableSet.of(p1, p2));
 
     assertEquals(selector.prepareAllSelectionPolicies(mockFinishedQuery), ImmutableSet.of(p1, p2));
   }
 
   @Test
-  public void testSelectQueriesCommonBetweenAllSelectionPolicies(){
+  public void testSelectQueriesWithAllSelectionPolicies(){
 
     QueryContext q1 = mock(QueryContext.class);
     QueryContext q2 = mock(QueryContext.class);
@@ -151,19 +100,19 @@ public class IntersectingWaitingQueriesSelectorTest {
     /* driver selection policy will return eligibleQueriesSet3 */
     when(driverSelectionPolicy.selectQueries(mockFinishedQuery, mockWaitingQueries)).thenReturn(eligibleQueriesSet3);
 
-    WaitingQueriesSelector selector = new IntersectingWaitingQueriesSelector(ImmutableSet.of(policy1, policy2));
+    WaitingQueriesSelector selector = new UnioningWaitingQueriesSelector(ImmutableSet.of(policy1, policy2));
 
     /* selector should return only eligibleQuery1, as this is the only common eligible waiting query returned
     * by both selection policies */
     Set<QueryContext> actualEligibleQueries = selector.selectQueries(mockFinishedQuery, mockWaitingQueries);
-    Set<QueryContext> expectedEligibleQueries = Sets.newHashSet(Arrays.asList(q1));
+    Set<QueryContext> expectedEligibleQueries = Sets.newHashSet(Arrays.asList(q1, q2, q3));
 
     assertEquals(actualEligibleQueries, expectedEligibleQueries);
   }
 
   @Test(expectedExceptions = NullPointerException.class)
   public void testSelectorMustNotAcceptNullAsSelectionPolicies() {
-    new IntersectingWaitingQueriesSelector(null);
+    new UnioningWaitingQueriesSelector(null);
   }
 
   @Test
@@ -175,11 +124,12 @@ public class IntersectingWaitingQueriesSelectorTest {
 
     when(mockFinishedQuery.getDriverSelectionPolicies()).thenReturn(ImmutableSet.copyOf(emptySetOfPolicies));
 
-    WaitingQueriesSelector selector = new IntersectingWaitingQueriesSelector(ImmutableSet.copyOf(emptySetOfPolicies));
+    WaitingQueriesSelector selector = new UnioningWaitingQueriesSelector(ImmutableSet.copyOf(emptySetOfPolicies));
 
     /* selector should return an empty set as no selection policy is available */
     Set<QueryContext> actualEligibleQueries = selector.selectQueries(mockFinishedQuery, mockWaitingQueries);
 
     assertTrue(actualEligibleQueries.isEmpty());
   }
+
 }

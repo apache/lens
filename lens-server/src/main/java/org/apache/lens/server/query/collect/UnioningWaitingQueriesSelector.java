@@ -37,12 +37,12 @@ import lombok.NonNull;
  * Selects queries eligible by all {@link WaitingQueriesSelectionPolicy} to move them out of waiting state.
  *
  */
-public class IntersectingWaitingQueriesSelector implements WaitingQueriesSelector {
+public class UnioningWaitingQueriesSelector implements WaitingQueriesSelector {
 
   private final ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies;
 
-  public IntersectingWaitingQueriesSelector(
-      @NonNull final ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies) {
+  public UnioningWaitingQueriesSelector(
+    @NonNull final ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies) {
     this.selectionPolicies = selectionPolicies;
   }
 
@@ -64,7 +64,7 @@ public class IntersectingWaitingQueriesSelector implements WaitingQueriesSelecto
     List<Set<QueryContext>> candiateQueriesSets = getAllCandidateQueriesSets(finishedQuery, waitingQueries,
         allSelectionPolicies);
 
-    return findCommonQueries(candiateQueriesSets);
+    return Sets.newHashSet(Iterables.concat(candiateQueriesSets));
   }
 
   @VisibleForTesting
@@ -90,18 +90,4 @@ public class IntersectingWaitingQueriesSelector implements WaitingQueriesSelecto
     return candidateQueriesSets;
   }
 
-  @VisibleForTesting
-  Set<QueryContext> findCommonQueries(final List<Set<QueryContext>> candiateQueriesSets) {
-
-    Set<QueryContext> commonQueries = Sets.newLinkedHashSet();
-
-    if (!candiateQueriesSets.isEmpty()) {
-      commonQueries = Iterables.get(candiateQueriesSets, 0);
-
-      for (Set<QueryContext> candidateEligibleQueries : candiateQueriesSets) {
-        commonQueries.retainAll(candidateEligibleQueries);
-      }
-    }
-    return commonQueries;
-  }
 }
