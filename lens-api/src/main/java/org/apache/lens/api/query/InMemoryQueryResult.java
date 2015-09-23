@@ -27,10 +27,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * The Class InMemoryQueryResult.
@@ -48,11 +45,26 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InMemoryQueryResult extends QueryResult {
-
+  public static final String DECLARATION = "Result available in memory, attaching here: \n\n";
   /**
    * The rows.
    */
   @XmlElementWrapper
   @Getter
-  private List<ResultRow> rows = new ArrayList<ResultRow>();
+  private List<ResultRow> rows = new ArrayList<>();
+
+  public String toPrettyString() {
+    StringBuilder b = new StringBuilder();
+    b.append(DECLARATION);
+    int numRows = 0;
+    for (ResultRow row : getRows()) {
+      for (Object col : row.getValues()) {
+        b.append(col).append("\t");
+      }
+      numRows++;
+      b.append("\n");
+    }
+    b.append(numRows).append(" rows ");
+    return b.toString();
+  }
 }

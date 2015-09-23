@@ -127,9 +127,9 @@
   </property>
 
   <property>
-    <!-- Keep only the last query in memory -->
-    <name>lens.server.max.finished.queries</name>
-    <value>1</value>
+    <!-- run every second -->
+    <name>lens.server.purge.interval</name>
+    <value>1000</value>
   </property>
 
   <property>

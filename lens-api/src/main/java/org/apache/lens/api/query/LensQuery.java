@@ -27,10 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.Priority;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * The Class LensQuery.
@@ -81,6 +78,7 @@ import lombok.NoArgsConstructor;
  * Instantiates a new lens query.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode
 public class LensQuery {
 
   /**
@@ -214,7 +212,7 @@ public class LensQuery {
   }
 
   public String getErrorMessage() {
-    return (this.status!=null) ? this.status.getLensErrorTOErrorMsg() : null;
+    return (this.status != null) ? this.status.getLensErrorTOErrorMsg() : null;
   }
 
   public String getQueryHandleString() {

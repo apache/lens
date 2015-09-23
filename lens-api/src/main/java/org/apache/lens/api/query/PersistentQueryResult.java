@@ -69,4 +69,22 @@ public class PersistentQueryResult extends QueryResult {
   @Getter
   private Long fileSize;
 
+  @XmlElement
+  @Getter
+  private String httpResultUrl;
+
+  @Override
+  public String toPrettyString() {
+    StringBuilder sb = new StringBuilder().append("Result available at ").append(persistedURI).append(".");
+    if (numRows != null) {
+      sb.append(" Number of rows: ").append(numRows).append(".");
+    }
+    if (fileSize != null) {
+      sb.append(" File size: ").append(fileSize).append(".");
+    }
+    if (httpResultUrl != null) {
+      sb.append(" Downloadable from ").append(httpResultUrl).append(".");
+    }
+    return sb.toString();
+  }
 }

@@ -793,7 +793,7 @@ public class TestHiveDriver {
     assertEquals(0, driver.getHiveHandleSize());
     HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
     String path = persistentResultSet.getOutputPath();
-    assertEquals(ctx.getHdfsoutPath(), path);
+    assertEquals(ctx.getDriverResultPath(), path);
     driver.closeQuery(plan2.getHandle());
   }
 

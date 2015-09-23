@@ -39,20 +39,15 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
   /** The Constant LOG. */
   private static final Logger LOG = LoggerFactory.getLogger(QueryExecutionStatisticsGenerator.class);
 
-  /** The query service. */
-  private final QueryExecutionServiceImpl queryService;
-
   /** The event service. */
   private final LensEventService eventService;
 
   /**
    * Instantiates a new query execution statistics generator.
    *
-   * @param queryService the query service
    * @param eventService the event service
    */
-  public QueryExecutionStatisticsGenerator(QueryExecutionServiceImpl queryService, LensEventService eventService) {
-    this.queryService = queryService;
+  public QueryExecutionStatisticsGenerator(LensEventService eventService) {
     this.eventService = eventService;
   }
 
@@ -68,7 +63,7 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
     }
     QueryHandle handle = ended.getQueryHandle();
     QueryExecutionStatistics event = new QueryExecutionStatistics(System.currentTimeMillis());
-    QueryContext ctx = queryService.getQueryContext(handle);
+    QueryContext ctx = ended.getQueryContext();
     if (ctx == null) {
       LOG.warn("Could not find the context for " + handle + " for event:" + ended.getCurrentValue()
         + ". No stat generated");
@@ -88,7 +83,7 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
     QueryDriverStatistics driverStats = new QueryDriverStatistics();
     driverStats.setDriverQuery(ctx.getSelectedDriverQuery());
     driverStats.setStartTime(ctx.getDriverStatus().getDriverStartTime());
-    driverStats.setEndTime(ctx.getDriverStatus().getDriverStartTime());
+    driverStats.setEndTime(ctx.getDriverStatus().getDriverFinishTime());
     event.setDriverStats(driverStats);
     try {
       if (LOG.isDebugEnabled()) {

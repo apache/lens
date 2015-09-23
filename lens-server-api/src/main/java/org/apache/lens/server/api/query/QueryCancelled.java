@@ -29,6 +29,7 @@ public class QueryCancelled extends QueryEnded {
   /**
    * Instantiates a new query cancelled.
    *
+   * @param ctx       the query context
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
@@ -36,10 +37,15 @@ public class QueryCancelled extends QueryEnded {
    * @param user      the user
    * @param cause     the cause
    */
-  public QueryCancelled(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
+  public QueryCancelled(QueryContext ctx, long eventTime, QueryStatus.Status prev, QueryStatus.Status current,
+    QueryHandle handle,
     String user, String cause) {
-    super(eventTime, prev, current, handle, user, cause);
+    super(ctx, eventTime, prev, current, handle, user, cause);
     checkCurrentState(QueryStatus.Status.CANCELED);
   }
 
+  public QueryCancelled(QueryContext ctx, QueryStatus.Status prevState, QueryStatus.Status currState, String cause) {
+    // TODO: correct username. put who cancelled it, not the submitter. Similar for others
+    this(ctx, ctx.getEndTime(), prevState, currState, ctx.getQueryHandle(), ctx.getSubmittedUser(), cause);
+  }
 }

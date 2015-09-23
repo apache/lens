@@ -255,7 +255,7 @@ public class MockDriver implements LensDriver {
       }
 
       @Override
-      public Long fileSize() throws LensException {
+      public Long getFileSize() throws LensException {
         // TODO Auto-generated method stub
         return null;
       }
@@ -297,7 +297,7 @@ public class MockDriver implements LensDriver {
    * @see org.apache.lens.server.api.driver.LensDriver#fetchResultSet(org.apache.lens.server.api.query.QueryContext)
    */
   @Override
-  public LensResultSet fetchResultSet(QueryContext context) throws LensException {
+  public LensResultSet fetchResultSet(final QueryContext context) throws LensException {
     return new InMemoryResultSet() {
 
       @Override
@@ -339,6 +339,11 @@ public class MockDriver implements LensDriver {
       public boolean hasNext() throws LensException {
         // TODO Auto-generated method stub
         return false;
+      }
+
+      @Override
+      public boolean canBePurged() {
+        return true;
       }
     };
   }

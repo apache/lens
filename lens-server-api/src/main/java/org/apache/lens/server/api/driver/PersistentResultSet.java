@@ -19,7 +19,6 @@
 package org.apache.lens.server.api.driver;
 
 import org.apache.lens.api.query.PersistentQueryResult;
-import org.apache.lens.api.query.QueryResult;
 import org.apache.lens.server.api.error.LensException;
 
 /**
@@ -27,22 +26,32 @@ import org.apache.lens.server.api.error.LensException;
  */
 public abstract class PersistentResultSet extends LensResultSet {
 
+  @Override
+  public boolean canBePurged() {
+    return true;
+  }
+
   /**
    * Get the size of the result set file.
    *
    * @return The size if available, null if not available.
    * @throws LensException the lens exception
    */
-  public abstract Long fileSize() throws LensException;
+  public abstract Long getFileSize() throws LensException;
 
-  public abstract String getOutputPath() throws LensException;
+  public String getHttpResultUrl() {
+    return null;
+  }
 
   /*
    * (non-Javadoc)
    *
    * @see org.apache.lens.server.api.driver.LensResultSet#toQueryResult()
    */
-  public QueryResult toQueryResult() throws LensException {
-    return new PersistentQueryResult(getOutputPath(), size(), fileSize());
+  public PersistentQueryResult toQueryResult() throws LensException {
+    return new PersistentQueryResult(getOutputPath(), size(), getFileSize(), getHttpResultUrl());
+  }
+  public boolean isHttpResultAvailable() throws LensException {
+    return false;
   }
 }

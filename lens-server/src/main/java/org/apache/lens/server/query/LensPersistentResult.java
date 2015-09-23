@@ -18,13 +18,27 @@
  */
 package org.apache.lens.server.query;
 
+import java.io.IOException;
+
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.PersistentResultSet;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.FinishedLensQuery;
+import org.apache.lens.server.api.query.QueryContext;
 
-/**
- * The Class LensPersistentResult.
- */
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import org.codehaus.jackson.map.ObjectMapper;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+/** The Class LensPersistentResult. */
+@Slf4j
 public class LensPersistentResult extends PersistentResultSet {
 
   /** The metadata. */
@@ -38,19 +52,45 @@ public class LensPersistentResult extends PersistentResultSet {
 
   /** The file size. */
   private final Long fileSize;
+  private final Configuration conf;
+  @Getter
+  private String httpResultUrl = null;
 
   /**
    * Instantiates a new lens persistent result.
-   *
-   * @param metadata   the metadata
-   * @param outputPath the output path
-   * @param numRows    the num rows
+   *  @param queryHandle the query handle
+   * @param metadata    the metadata
+   * @param outputPath  the output path
+   * @param numRows     the num rows
+   * @param conf        the lens server conf
    */
-  public LensPersistentResult(LensResultSetMetadata metadata, String outputPath, Integer numRows, Long fileSize) {
+  public LensPersistentResult(QueryHandle queryHandle, LensResultSetMetadata metadata, String outputPath, Integer
+    numRows, Long fileSize,
+    Configuration conf) {
     this.metadata = metadata;
     this.outputPath = outputPath;
     this.numRows = numRows;
     this.fileSize = fileSize;
+    this.conf = conf;
+    if (isHttpResultAvailable()) {
+      this.httpResultUrl = conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL)
+        + "queryapi/queries/" + queryHandle + "/httpresultset";
+    }
+  }
+
+  public LensPersistentResult(QueryContext ctx, Configuration conf) {
+    this(ctx.getQueryHandle(),
+      ctx.getQueryOutputFormatter().getMetadata(),
+      ctx.getQueryOutputFormatter().getFinalOutputPath(),
+      ctx.getQueryOutputFormatter().getNumRows(),
+      ctx.getQueryOutputFormatter().getFileSize(), conf);
+  }
+
+  public LensPersistentResult(FinishedLensQuery query, Configuration conf, ObjectMapper mapper) throws
+    ClassNotFoundException, IOException {
+    this(QueryHandle.fromString(query.getHandle()),
+      mapper.readValue(query.getMetadata(), (Class<LensResultSetMetadata>) Class.forName(query.getMetadataClass())),
+      query.getResult(), query.getRows(), query.getFileSize(), conf);
   }
 
   @Override
@@ -69,12 +109,27 @@ public class LensPersistentResult extends PersistentResultSet {
   }
 
   @Override
-  public Long fileSize() throws LensException {
+  public Long getFileSize() throws LensException {
     return fileSize;
   }
 
   @Override
   public LensResultSetMetadata getMetadata() throws LensException {
     return metadata;
+  }
+
+  @Override
+  public boolean isHttpResultAvailable() {
+    try {
+      final Path resultPath = new Path(getOutputPath());
+      FileSystem fs = resultPath.getFileSystem(conf);
+      if (fs.isDirectory(resultPath)) {
+        return false;
+      }
+    } catch (IOException | LensException e) {
+      log.warn("Unable to get status for Result Directory", e);
+      return false;
+    }
+    return true;
   }
 }

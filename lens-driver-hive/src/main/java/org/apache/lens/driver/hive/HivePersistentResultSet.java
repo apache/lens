@@ -64,7 +64,7 @@ public class HivePersistentResultSet extends PersistentResultSet {
   }
 
   @Override
-  public Long fileSize() throws LensException {
+  public Long getFileSize() throws LensException {
     return null;
   }
 

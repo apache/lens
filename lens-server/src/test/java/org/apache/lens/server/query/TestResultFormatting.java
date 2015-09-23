@@ -130,9 +130,9 @@ public class TestResultFormatting extends LensJerseyTest {
     conf.addProperty(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, null);
 
-    conf.addProperty(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
+    queryService.conf.set(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
-
+    queryService.conf.unset(LensConfConstants.RESULT_FS_READ_URL);
   }
 
   // test with execute async post with result formatter, get query, get results
@@ -149,8 +149,9 @@ public class TestResultFormatting extends LensJerseyTest {
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, null);
 
-    conf.addProperty(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
+    queryService.conf.set(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
+    queryService.conf.unset(LensConfConstants.RESULT_FS_READ_URL);
   }
 
   /**
@@ -262,4 +263,8 @@ public class TestResultFormatting extends LensJerseyTest {
     }
   }
 
+  @AfterTest
+  public void waitForPurge() throws InterruptedException {
+    waitForPurge(0, queryService.finishedQueries);
+  }
 }

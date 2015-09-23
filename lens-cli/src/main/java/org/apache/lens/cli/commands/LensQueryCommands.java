@@ -120,14 +120,7 @@ public class LensQueryCommands extends BaseLensCommand {
       QueryResult r = rs.getResultSet().getResult();
       if (r instanceof InMemoryQueryResult) {
         InMemoryQueryResult temp = (InMemoryQueryResult) r;
-        for (ResultRow row : temp.getRows()) {
-          for (Object col : row.getValues()) {
-            b.append(col).append("\t");
-          }
-          numRows++;
-          b.append("\n");
-        }
-        b.append(numRows + " rows ");
+        b.append(temp.toPrettyString());
       } else {
         PersistentQueryResult temp = (PersistentQueryResult) r;
         b.append("Results of query stored at : ").append(temp.getPersistedURI()).append("  ");

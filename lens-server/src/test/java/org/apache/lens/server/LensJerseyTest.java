@@ -23,15 +23,17 @@ import static org.testng.Assert.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
-import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.LensMetricsUtil;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
+import org.apache.lens.server.query.QueryExecutionServiceImpl;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.Service;
@@ -41,6 +43,7 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -186,7 +189,6 @@ public abstract class LensJerseyTest extends JerseyTest {
    */
   public void restartLensServer() {
     HiveConf h = getServerConf();
-    h.set(LensConfConstants.MAX_NUMBER_OF_FINISHED_QUERY, "0");
     restartLensServer(h);
   }
 
@@ -203,5 +205,20 @@ public abstract class LensJerseyTest extends JerseyTest {
     LensServices.get().init(conf);
     LensServices.get().start();
     System.out.println("Lens services restarted!");
+  }
+  public static void waitForPurge(int allowUnpurgable,
+    ConcurrentLinkedQueue<QueryExecutionServiceImpl.FinishedQuery> finishedQueries) throws InterruptedException {
+    List<QueryExecutionServiceImpl.FinishedQuery> unPurgable = Lists.newArrayList();
+    for (QueryExecutionServiceImpl.FinishedQuery finishedQuery : finishedQueries) {
+      if (!finishedQuery.canBePurged()) {
+        unPurgable.add(finishedQuery);
+      }
+    }
+    if (unPurgable.size() > allowUnpurgable) {
+      throw new RuntimeException("finished queries can't be purged: " + unPurgable);
+    }
+    while (finishedQueries.size() > allowUnpurgable) {
+      Thread.sleep(5000);
+    }
   }
 }

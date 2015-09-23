@@ -279,9 +279,9 @@
 
   <!-- Finished Query Purging Configurations -->
   <property>
-    <name>lens.server.max.finished.queries</name>
-    <value>100</value>
-    <description>Maximum number of finished queries which lens server will keep in memory before purging.</description>
+    <name>lens.server.querypurger.sleep.interval</name>
+    <value>10000</value>
+    <description>The interval(milliseconds) with which purger to run periodically. Default 10 sec. </description>
   </property>
   <property>
     <name>lens.server.domain</name>

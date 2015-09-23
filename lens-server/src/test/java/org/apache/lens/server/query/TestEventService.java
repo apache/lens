@@ -92,7 +92,6 @@ public class TestEventService {
    * the genericEvent event occurs, that object's appropriate
    * method is invoked.
    *
-   * @see GenericEventEvent
    */
   class GenericEventListener extends AsyncEventListener<LensEvent> {
 
@@ -119,7 +118,6 @@ public class TestEventService {
    * the mockFailed event occurs, that object's appropriate
    * method is invoked.
    *
-   * @see MockFailedEvent
    */
   class MockFailedListener implements LensEventListener<QueryFailed> {
 
@@ -146,7 +144,6 @@ public class TestEventService {
    * the mockEnded event occurs, that object's appropriate
    * method is invoked.
    *
-   * @see MockEndedEvent
    */
   class MockEndedListener implements LensEventListener<QueryEnded> {
 
@@ -290,7 +287,7 @@ public class TestEventService {
    */
   @Test
   public void testAddListener() {
-    int listenersBefore = ((EventServiceImpl) service).getEventListeners().keySet().size();
+    int listenersBefore = service.getEventListeners().keySet().size();
     genericEventListener = new GenericEventListener();
     service.addListenerForType(genericEventListener, LensEvent.class);
     endedListener = new MockEndedListener();
@@ -417,8 +414,10 @@ public class TestEventService {
     QueryHandle query = new QueryHandle(UUID.randomUUID());
     String user = "user";
     long now = System.currentTimeMillis();
-    QueryFailed failed = new QueryFailed(now, QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, null);
-    QuerySuccess success = new QuerySuccess(now, QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
+    QueryFailed failed
+      = new QueryFailed(null, now, QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, null);
+    QuerySuccess success
+      = new QuerySuccess(null, now, QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
     QueuePositionChange positionChange = new QueuePositionChange(now, 1, 0, query);
 
     try {

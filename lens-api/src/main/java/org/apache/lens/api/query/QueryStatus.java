@@ -264,6 +264,7 @@ public class QueryStatus implements Serializable {
       break;
     case EXECUTED:
       switch (newState) {
+      case EXECUTED:
       case SUCCESSFUL:
       case FAILED:
       case CANCELED:

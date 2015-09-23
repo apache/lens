@@ -42,10 +42,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * The Class QueryContext.
  */
+@ToString
 public class QueryContext extends AbstractQueryContext {
 
   /**
@@ -95,7 +97,7 @@ public class QueryContext extends AbstractQueryContext {
    */
   @Getter
   @Setter
-  private String hdfsoutPath;
+  private String driverResultPath;
 
   /**
    * The submission time.
@@ -326,7 +328,7 @@ public class QueryContext extends AbstractQueryContext {
   /*
    * Introduced for Recovering finished query.
    */
-  public void setStatusSkippingTransitionTest(final QueryStatus newStatus) throws LensException {
+  public void setStatusSkippingTransitionTest(final QueryStatus newStatus) {
     this.status = newStatus;
   }
 
