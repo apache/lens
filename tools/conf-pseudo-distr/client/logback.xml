@@ -33,14 +33,16 @@
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
-      <fileNamePattern>${lens.log.dir}/lensclient.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <fileNamePattern>${lens.log.dir}/lensclient.log.%d{yyyy-MM-dd}.%i</fileNamePattern>
 
+      <timeBasedFileNamingAndTriggeringPolicy
+              class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <!-- or whenever the file size reaches 10MB -->
+        <maxFileSize>10MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
       <!-- keep 30 days' worth of history -->
       <maxHistory>30</maxHistory>
     </rollingPolicy>
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <MaxFileSize>100MB</MaxFileSize>
-    </triggeringPolicy>
   </appender>
   <logger name="org.springframework" level="OFF"/>
   <logger name="ch.qos.logback" level="WARN"/>

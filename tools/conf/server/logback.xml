@@ -31,18 +31,18 @@
     <append>true</append>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
-      <fileNamePattern>${lens.log.dir}/lensserver.log.%d{yyyy-MM-dd}</fileNamePattern>
-
+      <fileNamePattern>${lens.log.dir}/lensserver.log.%d{yyyy-MM-dd}.%i</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy
+          class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+          <!-- or whenever the file size reaches 10MB -->
+        <maxFileSize>10MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
       <!-- keep 30 days' worth of history -->
       <maxHistory>30</maxHistory>
     </rollingPolicy>
-
     <encoder>
       <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
     </encoder>
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <maxFileSize>100MB</maxFileSize>
-    </triggeringPolicy>
   </appender>
 
   <appender name="REQUEST" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -50,18 +50,18 @@
     <append>true</append>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
-      <fileNamePattern>${lens.log.dir}/lensserver-requests.log.%d{yyyy-MM-dd}</fileNamePattern>
-
+      <fileNamePattern>${lens.log.dir}/lensserver-requests.log.%d{yyyy-MM-dd}.%i</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy
+          class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+          <!-- or whenever the file size reaches 10MB -->
+        <maxFileSize>10MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
       <!-- keep 30 days' worth of history -->
       <maxHistory>30</maxHistory>
     </rollingPolicy>
-
     <encoder>
       <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
     </encoder>
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <maxFileSize>100MB</maxFileSize>
-    </triggeringPolicy>
   </appender>
 
   <appender name="STATUS" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -69,8 +69,12 @@
     <append>true</append>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
-      <fileNamePattern>${lens.log.dir}/lensserver-query-status.log.%d{yyyy-MM-dd}</fileNamePattern>
-
+      <fileNamePattern>${lens.log.dir}/lensserver-query-status.log.%d{yyyy-MM-dd}.%i</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy
+          class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+          <!-- or whenever the file size reaches 10MB -->
+        <maxFileSize>10MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
       <!-- keep 30 days' worth of history -->
       <maxHistory>30</maxHistory>
     </rollingPolicy>
@@ -78,9 +82,6 @@
     <encoder>
       <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
     </encoder>
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-      <maxFileSize>100MB</maxFileSize>
-    </triggeringPolicy>
   </appender>
 
   <appender name="QueryExecutionStatistics" class="ch.qos.logback.core.rolling.RollingFileAppender">
