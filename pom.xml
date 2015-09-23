@@ -107,6 +107,11 @@
     <antrun.plugin.version>1.8</antrun.plugin.version>
     <cobertura.plugin.version>2.7</cobertura.plugin.version>
 
+    <!-- UI -->
+    <frontend.maven.plugin>0.0.23</frontend.maven.plugin>
+    <nodeVersion>v4.0.0</nodeVersion>
+    <npmVersion>2.7.6</npmVersion>
+
     <!-- debian -->
     <mvn.deb.build.dir>${project.build.directory}/debian</mvn.deb.build.dir>
 
@@ -547,6 +552,8 @@
             <exclude>**/*.iml</exclude>
             <exclude>**/.classpath</exclude>
             <exclude>**/.project</exclude>
+            <exclude>**/node/**</exclude>
+            <exclude>**/node_modules/**</exclude>
             <exclude>**/.checkstyle</exclude>
             <exclude>**/.settings/**</exclude>
             <exclude>**/maven-eclipse.xml</exclude>
@@ -567,6 +574,7 @@
             <exclude>**/codemirror.min.*</exclude>
             <exclude>**/*.js</exclude>
             <exclude>**/*.properties</exclude>
+            <exclude>**/*.json</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -1522,6 +1530,7 @@
     <module>lens-ml-lib</module>
     <module>lens-ml-dist</module>
     <module>lens-regression</module>
+    <module>lens-ui</module>
   </modules>
 
   <profiles>
