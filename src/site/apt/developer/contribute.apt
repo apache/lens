@@ -483,11 +483,34 @@ Developer Documentation : How to contribute to Apache Lens?
 
 ** Feature documentation
 
-  TODO
+  End users of Lens include :
 
-** Design and architecture documentation
+  * Querying users : mostly un-aware of system details, and un-aware of underlying data layout.
 
-  TODO
+  * Schema designer : Schema designer would understand the data model and come up with schema for their data.
+
+  * Server administrator : Lens server administrator understands the server setup, how multiple execution engines can be
+  added/removed and how to support multiple storage.
+
+  * Developer : Developers can develop new drivers, new features on server or client or anything to do with code.
+
+
+  Whenever a new feature is added to Lens, the developer should understand to whom the feature is applicable and put
+  it in proper menu - "User Menu" for Querying users and schema designers; "Admin Menu" for server administrators and
+  "Developer Menu" for developer related features.
+
+  The following details about the feature should be documented :
+
+  * The use case : Explaining Why the feature is required.
+
+  * The feature itself : What the feature is.
+
+  * How to enable the feature, if any.
+
+  * Who are the users of feature and who are not, if any.
+
+  The design documentation related to the feature can go in developer documentation or
+  {{{https://cwiki.apache.org/confluence/display/LENS/DesignDocs} Design docs}}.
 
 ** Confluence usage
 
