@@ -145,7 +145,7 @@ public class QueryContext extends AbstractQueryContext {
 
   @Getter
   @Setter
-  private transient QueryOutputFormatter queryOutputFormatter;
+  private QueryOutputFormatter queryOutputFormatter;
 
   /**
    * The finished query persisted.

@@ -32,8 +32,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -86,10 +84,10 @@ public class LensPersistentResult extends PersistentResultSet {
       ctx.getQueryOutputFormatter().getFileSize(), conf);
   }
 
-  public LensPersistentResult(FinishedLensQuery query, Configuration conf, ObjectMapper mapper) throws
+  public LensPersistentResult(FinishedLensQuery query, Configuration conf) throws
     ClassNotFoundException, IOException {
     this(QueryHandle.fromString(query.getHandle()),
-      mapper.readValue(query.getMetadata(), (Class<LensResultSetMetadata>) Class.forName(query.getMetadataClass())),
+      LensResultSetMetadata.fromJson(query.getMetadata()),
       query.getResult(), query.getRows(), query.getFileSize(), conf);
   }
 

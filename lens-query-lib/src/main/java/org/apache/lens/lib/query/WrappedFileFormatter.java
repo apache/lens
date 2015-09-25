@@ -19,6 +19,8 @@
 package org.apache.lens.lib.query;
 
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
@@ -136,5 +138,16 @@ public abstract class WrappedFileFormatter extends AbstractOutputFormatter {
 
   public String getEncoding() {
     return formatter.getEncoding();
+  }
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    out.writeObject(formatter);
+  }
+
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    formatter = (AbstractFileFormatter) in.readObject();
+    metadata = formatter.getMetadata();
   }
 }

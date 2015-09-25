@@ -19,8 +19,13 @@
 package org.apache.lens.lib.query;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -37,10 +42,8 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.hive.service.cli.ColumnDescriptor;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -189,6 +192,39 @@ public abstract class TestAbstractFileFormatter {
   }
 
   /**
+   * Test formatter persistence
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  @Test
+  public void testFormatterPersistence() throws IOException, ClassNotFoundException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv", getMockedResultSet());
+
+    // Write formatter to stream
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    try {
+      new ObjectOutputStream(outputStream).writeObject(formatter);
+    } finally {
+      outputStream.close();
+    }
+    // Create another formatter from the stream
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+    WrappedFileFormatter newFormatter = createFormatter();
+    try {
+      newFormatter=(WrappedFileFormatter)new ObjectInputStream(inputStream).readObject();
+    } finally {
+      inputStream.close();
+    }
+
+    Assert.assertEquals(formatter.getFinalOutputPath(), newFormatter.getFinalOutputPath());
+    Assert.assertEquals(formatter.getFileSize(), newFormatter.getFileSize());
+    Assert.assertEquals(formatter.getNumRows(), newFormatter.getNumRows());
+    Assert.assertEquals(formatter.getMetadata().toJson(), newFormatter.getMetadata().toJson());
+  }
+
+  /**
    * Creates the formatter.
    *
    * @return the wrapped file formatter
@@ -265,6 +301,7 @@ public abstract class TestAbstractFileFormatter {
     Assert.assertEquals(finalPath, expectedFinalPath);
     Assert.assertTrue(fs.exists(finalPath));
   }
+
   /**
    * Test formatter.
    *
@@ -356,39 +393,11 @@ public abstract class TestAbstractFileFormatter {
   }
 
   protected LensResultSetMetadata getMockedResultSet() {
-    return new LensResultSetMetadata() {
-
-      @Override
-      public List<ColumnDescriptor> getColumns() {
-        List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>();
-        columns.add(new ColumnDescriptor(new FieldSchema("firstcol", "int", ""), 0));
-        columns.add(new ColumnDescriptor(new FieldSchema("format(secondcol,2)", "string", ""), 1));
-        columns.add(new ColumnDescriptor(new FieldSchema("thirdcol", "varchar(20)", ""), 2));
-        columns.add(new ColumnDescriptor(new FieldSchema("fourthcol", "char(15)", ""), 3));
-        columns.add(new ColumnDescriptor(new FieldSchema("fifthcol", "array<tinyint>", ""), 4));
-        columns.add(new ColumnDescriptor(new FieldSchema("sixthcol", "struct<a:int,b:varchar(10)>", ""), 5));
-        columns.add(new ColumnDescriptor(new FieldSchema("seventhcol", "map<int,char(10)>", ""), 6));
-        return columns;
-      }
-    };
+    return MockLensResultSetMetadata.createMockedResultSet();
   }
 
   protected LensResultSetMetadata getMockedResultSetWithoutComma() {
-    return new LensResultSetMetadata() {
-
-      @Override
-      public List<ColumnDescriptor> getColumns() {
-        List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>();
-        columns.add(new ColumnDescriptor(new FieldSchema("firstcol", "int", ""), 0));
-        columns.add(new ColumnDescriptor(new FieldSchema("secondcol", "string", ""), 1));
-        columns.add(new ColumnDescriptor(new FieldSchema("thirdcol", "varchar(20)", ""), 2));
-        columns.add(new ColumnDescriptor(new FieldSchema("fourthcol", "char(15)", ""), 3));
-        columns.add(new ColumnDescriptor(new FieldSchema("fifthcol", "array<tinyint>", ""), 4));
-        columns.add(new ColumnDescriptor(new FieldSchema("sixthcol", "struct<a:int,b:varchar(10)>", ""), 5));
-        columns.add(new ColumnDescriptor(new FieldSchema("seventhcol", "map<int,char(10)>", ""), 6));
-        return columns;
-      }
-    };
+    return MockLensResultSetMetadata.createMockedResultSetWithoutComma();
   }
 
   /**

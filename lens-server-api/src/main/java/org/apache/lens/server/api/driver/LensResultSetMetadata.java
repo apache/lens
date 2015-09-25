@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.api.driver;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,10 +31,50 @@ import org.apache.hadoop.hive.serde2.typeinfo.VarcharTypeInfo;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.TypeDescriptor;
 
+import org.codehaus.jackson.*;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
+import org.codehaus.jackson.map.*;
+import org.codehaus.jackson.map.module.SimpleModule;
+
 /**
  * The Class LensResultSetMetadata.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public abstract class LensResultSetMetadata {
+
+  protected static final ObjectMapper MAPPER;
+
+  /**
+   * Registering custom serializer
+   */
+  static {
+    MAPPER = new ObjectMapper();
+    SimpleModule module = new SimpleModule("HiveColumnModule", new Version(1, 0, 0, null));
+    module.addSerializer(ColumnDescriptor.class, new JsonSerializer<ColumnDescriptor>() {
+      @Override
+      public void serialize(ColumnDescriptor columnDescriptor, JsonGenerator jsonGenerator,
+                            SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField("name", columnDescriptor.getName());
+        jsonGenerator.writeStringField("comment", columnDescriptor.getComment());
+        jsonGenerator.writeNumberField("position", columnDescriptor.getOrdinalPosition());
+        jsonGenerator.writeStringField("type", columnDescriptor.getType().getName());
+        jsonGenerator.writeEndObject();
+      }
+    });
+    module.addDeserializer(ColumnDescriptor.class, new JsonDeserializer<ColumnDescriptor>() {
+      @Override
+      public ColumnDescriptor deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+        throws IOException {
+        ObjectCodec oc = jsonParser.getCodec();
+        JsonNode node = oc.readTree(jsonParser);
+        org.apache.hive.service.cli.Type t = org.apache.hive.service.cli.Type.getType(node.get("type").asText());
+        return new ColumnDescriptor(node.get("name").asText(), node.get("comment").asText(), new TypeDescriptor(t),
+          node.get("position").asInt());
+      }
+    });
+    MAPPER.registerModule(module);
+  }
 
   public abstract List<ColumnDescriptor> getColumns();
 
@@ -78,5 +119,13 @@ public abstract class LensResultSetMetadata {
       }
     }
     return typeDesc.getTypeName().toLowerCase();
+  }
+
+  public static LensResultSetMetadata fromJson(String json) throws IOException {
+    return MAPPER.readValue(json, LensResultSetMetadata.class);
+  }
+
+  public String toJson() throws IOException {
+    return MAPPER.writeValueAsString(this);
   }
 }
