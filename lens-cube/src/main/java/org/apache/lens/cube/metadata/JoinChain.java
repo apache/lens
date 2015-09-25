@@ -178,7 +178,8 @@ public class JoinChain implements Named {
         relationShip = new TableRelationship(from.getDestColumn(),
           client.getDimension(from.getDestTable()),
           to.getDestColumn(),
-          client.getDimension(to.getDestTable()));
+          client.getDimension(to.getDestTable()),
+          to.isMapsToMany());
       }
       return relationShip;
     }
@@ -203,7 +204,8 @@ public class JoinChain implements Named {
           relationShip = new TableRelationship(from.getDestColumn(),
             fromTable,
             to.getDestColumn(),
-            client.getDimension(to.getDestTable()));
+            client.getDimension(to.getDestTable()),
+            to.isMapsToMany());
         }
       }
       return relationShip;

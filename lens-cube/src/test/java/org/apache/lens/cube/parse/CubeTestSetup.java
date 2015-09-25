@@ -768,6 +768,9 @@ public class CubeTestSetup {
       new TableReference("testdim2", "id")));
     cubeDimensions2.add(new ReferencedDimAtrribute(new FieldSchema("dim22", "int", "ref dim"), "Dim2 refer",
       "dim2chain", "id", null, null, null));
+    cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("userid", "int", "userid")));
+    cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("xuserid", "int", "userid")));
+    cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("yuserid", "int", "userid")));
 
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(BASE_CUBE_NAME),
@@ -862,13 +865,67 @@ public class CubeTestSetup {
             });
           }
         });
+        add(new JoinChain("userSports", "user-sports", "user sports") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("basecube", "userid"));
+                add(new TableReference("userdim", "id"));
+                add(new TableReference("userdim", "id"));
+                add(new TableReference("user_interests", "user_id", true));
+                add(new TableReference("user_interests", "sport_id"));
+                add(new TableReference("sports", "id"));
+              }
+            });
+          }
+        });
+        add(new JoinChain("userInterestIds", "user-interestsIds", "user interest ids") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("basecube", "userid"));
+                add(new TableReference("userdim", "id"));
+                add(new TableReference("userdim", "id"));
+                add(new TableReference("user_interests", "user_id", true));
+              }
+            });
+          }
+        });
+        add(new JoinChain("xuserSports", "xuser-sports", "xuser sports") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("basecube", "xuserid"));
+                add(new TableReference("userdim", "id"));
+                add(new TableReference("userdim", "id"));
+                add(new TableReference("user_interests", "user_id", true));
+                add(new TableReference("user_interests", "sport_id"));
+                add(new TableReference("sports", "id"));
+              }
+            });
+          }
+        });
+        add(new JoinChain("yuserSports", "user-sports", "user sports") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("basecube", "yuserid"));
+                add(new TableReference("userdim", "id"));
+                add(new TableReference("userdim", "id"));
+                add(new TableReference("user_interests", "user_id", true));
+                add(new TableReference("user_interests", "sport_id"));
+                add(new TableReference("sports", "id"));
+              }
+            });
+          }
+        });
       }
     };
 
     // add ref dim through chain
     cubeDimensions2.add(
-        new ReferencedDimAtrribute(new FieldSchema("cityStateCapital", "string", "State's capital thru city"),
-            "State's capital thru city", "cityState", "capital", null, null, null));
+      new ReferencedDimAtrribute(new FieldSchema("cityStateCapital", "string", "State's capital thru city"),
+        "State's capital thru city", "cityState", "capital", null, null, null));
     client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, exprs, joinchains, cubeProperties);
 
     Map<String, String> derivedProperties = new HashMap<String, String>();
@@ -890,6 +947,9 @@ public class CubeTestSetup {
     dimensions = new HashSet<String>();
     dimensions.add("cityid");
     dimensions.add("stateid");
+    dimensions.add("userid");
+    dimensions.add("xuserid");
+    dimensions.add("yuserid");
     dimensions.add("dim1");
     dimensions.add("dim2");
     dimensions.add("dim11");
@@ -965,7 +1025,10 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
-    factColumns.add(new FieldSchema("stateid", "int", "city id"));
+    factColumns.add(new FieldSchema("stateid", "int", "state id"));
+    factColumns.add(new FieldSchema("userid", "int", "user id"));
+    factColumns.add(new FieldSchema("xuserid", "int", "user id"));
+    factColumns.add(new FieldSchema("yuserid", "int", "user id"));
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
     factColumns.add(new FieldSchema("test_time_dim_hour_id", "int", "time id"));
@@ -985,7 +1048,9 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
     factColumns.add(new FieldSchema("dim2", "int", "dim2 id"));
-
+    factColumns.add(new FieldSchema("userid", "int", "user id"));
+    factColumns.add(new FieldSchema("xuserid", "int", "user id"));
+    factColumns.add(new FieldSchema("yuserid", "int", "user id"));
     // create cube fact
     client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
       factValidityProperties, storageTables);
@@ -2160,6 +2225,140 @@ public class CubeTestSetup {
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
 
+  private void createUserTable(CubeMetastoreClient client) throws Exception {
+    String dimName = "userdim";
+
+    Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "id")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("age", "string", "age")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("gender", "string", "gender")));
+    Map<String, String> dimProps = new HashMap<String, String>();
+    dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
+    Set<JoinChain> joinChains = new HashSet<JoinChain>();
+    joinChains.add(new JoinChain("userSports", "user-sports", "user sports") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("user_interests", "user_id", true));
+            add(new TableReference("user_interests", "sport_id"));
+            add(new TableReference("sports", "id"));
+          }
+        });
+      }
+    });
+    Dimension userDim = new Dimension(dimName, dimAttrs, null, joinChains, dimProps,  0L);
+    client.createDimension(userDim);
+
+    String dimTblName = "usertable";
+    List<FieldSchema> dimColumns = new ArrayList<FieldSchema>();
+    dimColumns.add(new FieldSchema("id", "int", "id"));
+    dimColumns.add(new FieldSchema("name", "string", "name"));
+    dimColumns.add(new FieldSchema("age", "string", "age"));
+    dimColumns.add(new FieldSchema("gender", "string", "gender"));
+
+    Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
+    StorageTableDesc s1 = new StorageTableDesc();
+    s1.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    dumpPeriods.put(c1, null);
+
+    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    List<String> timePartCols = new ArrayList<String>();
+    partCols.add(TestCubeMetastoreClient.getDatePartition());
+    timePartCols.add(TestCubeMetastoreClient.getDatePartitionKey());
+    StorageTableDesc s2 = new StorageTableDesc();
+    s2.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    s2.setPartCols(partCols);
+    s2.setTimePartCols(timePartCols);
+    dumpPeriods.put(c2, HOURLY);
+    Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.put(c1, s1);
+    storageTables.put(c2, s2);
+
+    client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+  }
+
+  private void createUserInterests(CubeMetastoreClient client) throws Exception {
+    String dimName = "user_interests";
+
+    Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "id")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("user_id", "int", "user id")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("sport_id", "int", "sport id")));
+    Map<String, String> dimProps = new HashMap<String, String>();
+    dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
+    Dimension interestDim = new Dimension(dimName, dimAttrs, dimProps, 0L);
+    client.createDimension(interestDim);
+
+    String dimTblName = "user_interests_tbl";
+    List<FieldSchema> dimColumns = new ArrayList<FieldSchema>();
+    dimColumns.add(new FieldSchema("id", "int", "id"));
+    dimColumns.add(new FieldSchema("user_id", "int", "user id"));
+    dimColumns.add(new FieldSchema("sport_id", "int", "sport id"));
+
+    Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
+    StorageTableDesc s1 = new StorageTableDesc();
+    s1.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    dumpPeriods.put(c1, null);
+
+    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    List<String> timePartCols = new ArrayList<String>();
+    partCols.add(TestCubeMetastoreClient.getDatePartition());
+    timePartCols.add(TestCubeMetastoreClient.getDatePartitionKey());
+    StorageTableDesc s2 = new StorageTableDesc();
+    s2.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    s2.setPartCols(partCols);
+    s2.setTimePartCols(timePartCols);
+    dumpPeriods.put(c2, HOURLY);
+    Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.put(c1, s1);
+    storageTables.put(c2, s2);
+    client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+  }
+
+  private void createSports(CubeMetastoreClient client) throws Exception {
+    String dimName = "sports";
+
+    Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "id")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
+    Map<String, String> dimProps = new HashMap<String, String>();
+    dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
+    Dimension interestDim = new Dimension(dimName, dimAttrs, dimProps, 0L);
+    client.createDimension(interestDim);
+
+    String dimTblName = "sports_tbl";
+    List<FieldSchema> dimColumns = new ArrayList<FieldSchema>();
+    dimColumns.add(new FieldSchema("id", "int", "id"));
+    dimColumns.add(new FieldSchema("name", "string", "name"));
+
+    Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
+    StorageTableDesc s1 = new StorageTableDesc();
+    s1.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    dumpPeriods.put(c1, null);
+
+    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    List<String> timePartCols = new ArrayList<String>();
+    partCols.add(TestCubeMetastoreClient.getDatePartition());
+    timePartCols.add(TestCubeMetastoreClient.getDatePartitionKey());
+    StorageTableDesc s2 = new StorageTableDesc();
+    s2.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    s2.setPartCols(partCols);
+    s2.setTimePartCols(timePartCols);
+    dumpPeriods.put(c2, HOURLY);
+    Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.put(c1, s1);
+    storageTables.put(c2, s2);
+
+    client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+  }
   public void createSources(HiveConf conf, String dbName) throws Exception {
     try {
       Database database = new Database();
@@ -2201,6 +2400,9 @@ public class CubeTestSetup {
       createStateTable(client);
       createCubeFactsWithValidColumns(client);
       createUnReachabletable(client);
+      createUserTable(client);
+      createSports(client);
+      createUserInterests(client);
     } catch (Exception exc) {
       log.error("Exception while creating sources.", exc);
       throw exc;

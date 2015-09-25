@@ -104,4 +104,8 @@ public final class CubeQueryConfUtil {
   public static final Class<? extends TimeRangeWriter> DEFAULT_TIME_RANGE_WRITER = ORTimeRangeWriter.class
     .asSubclass(TimeRangeWriter.class);
   public static final String PART_WHERE_CLAUSE_DATE_FORMAT = "lens.cube.query.partition.where.clause.format";
+  public static final String ENABLE_FLATTENING_FOR_BRIDGETABLES = "lens.cube.query.enable.flattening.bridge.tables";
+  public static final boolean DEFAULT_ENABLE_FLATTENING_FOR_BRIDGETABLES = false;
+  public static final String BRIDGE_TABLE_FIELD_AGGREGATOR = "lens.cube.query.bridge.table.field.aggregator";
+  public static final String DEFAULT_BRIDGE_TABLE_FIELD_AGGREGATOR = "collect_set";
 }

@@ -177,7 +177,7 @@ public final class JAXBUtils {
         xd.getRefSpec().getTableReferences().getTableReference().size());
 
       for (XTableReference xRef : xd.getRefSpec().getTableReferences().getTableReference()) {
-        dimRefs.add(new TableReference(xRef.getTable(), xRef.getColumn()));
+        dimRefs.add(new TableReference(xRef.getTable(), xRef.getColumn(), xRef.isMapsToMany()));
       }
 
       hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
@@ -427,6 +427,7 @@ public final class JAXBUtils {
     XTableReference xref = XCF.createXTableReference();
     xref.setTable(ref.getDestTable());
     xref.setColumn(ref.getDestColumn());
+    xref.setMapsToMany(ref.isMapsToMany());
     return xref;
   }
 
@@ -467,8 +468,9 @@ public final class JAXBUtils {
       List<TableReference> chain = new ArrayList<TableReference>(xchain.getEdges().getEdge().size() * 2);
 
       for (XJoinEdge xRef : xchain.getEdges().getEdge()) {
-        chain.add(new TableReference(xRef.getFrom().getTable(), xRef.getFrom().getColumn()));
-        chain.add(new TableReference(xRef.getTo().getTable(), xRef.getTo().getColumn()));
+        chain.add(new TableReference(xRef.getFrom().getTable(), xRef.getFrom().getColumn(),
+          xRef.getFrom().isMapsToMany()));
+        chain.add(new TableReference(xRef.getTo().getTable(), xRef.getTo().getColumn(), xRef.getTo().isMapsToMany()));
       }
       jc.addPath(chain);
     }
@@ -651,6 +653,7 @@ public final class JAXBUtils {
         XTableReference xRef = XCF.createXTableReference();
         xRef.setColumn(ref.getDestColumn());
         xRef.setTable(ref.getDestTable());
+        xRef.setMapsToMany(ref.isMapsToMany());
         xTabRefs.add(xRef);
       }
       return xTabRefs;

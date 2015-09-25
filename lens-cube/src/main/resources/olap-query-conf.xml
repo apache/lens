@@ -180,4 +180,20 @@
       projection wont be changed, result might include duplicate values.
     </description>
   </property>
+  <property>
+    <name>lens.cube.query.enable.flattening.bridge.tables</name>
+    <value>false</value>
+    <description>Flag specifies if fields selected have to be flattened or not, if they are coming from tables with many
+      to many relationship in join. If false, field selection will be simple join and selecting the field. If true, the
+      fields from bridge tables will be aggregated grouped by join key.
+    </description>
+  </property>
+  <property>
+    <name>lens.cube.query.bridge.table.field.aggregator</name>
+    <value>collect_set</value>
+    <description>The field aggregator function to be used for aggregating fields from bridge tables. Would be used
+      only when flattening is enabled. The value can be passed for each query. During typical deployments it would
+      be passed for each driver, as the function could be different for each driver.
+    </description>
+  </property>
 </configuration>

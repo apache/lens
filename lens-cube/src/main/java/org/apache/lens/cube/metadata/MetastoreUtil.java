@@ -130,6 +130,7 @@ public class MetastoreUtil {
     for (int i = 0; i < references.size(); i++) {
       TableReference reference = references.get(i);
       toks[i] = reference.getDestTable() + TABLE_COLUMN_SEPERATOR + reference.getDestColumn();
+      toks[i] += TABLE_COLUMN_SEPERATOR + reference.isMapsToMany();
     }
 
     return StringUtils.join(toks, ',');

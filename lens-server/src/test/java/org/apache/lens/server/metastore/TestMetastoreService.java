@@ -347,6 +347,7 @@ public class TestMetastoreService extends LensJerseyTest {
     XTableReference link2 = new XTableReference();
     link2.setTable("testdim");
     link2.setColumn("col1");
+    link2.setMapsToMany(true);
     XJoinEdge edge1 = cubeObjectFactory.createXJoinEdge();
     edge1.setFrom(link1);
     edge1.setTo(link2);
@@ -702,7 +703,8 @@ public class TestMetastoreService extends LensJerseyTest {
       List<TableReference> links = chain1.getPaths().get(0).getReferences();
       Assert.assertEquals(links.size(), 2);
       Assert.assertEquals(links.get(0).toString(), "testgetcube.col1");
-      Assert.assertEquals(links.get(1).toString(), "testdim.col1");
+      Assert.assertTrue(links.get(1).isMapsToMany());
+      Assert.assertEquals(links.get(1).toString(), "testdim.col1[n]");
 
       final XDerivedCube dcube = createDerivedCube("testGetDerivedCube", "testGetCube");
       target = target().path("metastore").path("cubes");

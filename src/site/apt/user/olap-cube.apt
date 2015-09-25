@@ -416,7 +416,106 @@ lens-shell>
 
 +---+
 
+<<Bridge tables>>
 
+* Bridge Table
+
+ A bridge table sits between a cube and a dimension or between two dimensions and is used to resolve
+ many-to-many relationships. Refer following for more details :
+
+ * {{{http://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/multivalued-dimension-bridge-table/}
+ Kimball group's definition}}
+
+ * {{{http://www.kimballgroup.com/2012/02/design-tip-142-building-bridges/} Kimball group's design tip}}
+
+ * {{{http://www.pythian.com/blog/implementing-many-to-many-relationships-in-data-warehousing/} Pythian blog}}
+
+
+ User can specify if any destination link in join-chain maps to many-many relationship during the creation of
+ cube/dimension.
+
+* Flattening feature
+
+ When we look at the following example :
+
+ User :
+
+*--+--+--+
+||ID||	Name||	Gender||
+*--+--+--+
+|1|	A|	M|
+*--+--+--+
+|2|	B|	M|
+*--+--+--+
+|3|	C|	F|
+*--+--+--+
+
+ User interests :
+
+*--+--+
+||UserID||	Sports ID||
+*--+--+
+|1|	1|
+*--+--+
+|1|	2|
+*--+--+
+|2|	1|
+*--+--+
+|2|	2|
+*--+--+
+|2|	3|
+*--+--+
+
+ Sports :
+
+*--+--+
+||SportsID||	Description||
+*--+--+
+|1|	Football|
+*--+--+
+|2|	Cricket|
+*--+--+
+|3|	Basketball|
+*--+--+
+
+ User Interests is the bridge table which is capturing the many-to-many relationship between Users and Sports.
+ And if we have a fact as follows :
+
+*--+--+
+||UserId||	Revenue||
+*--+--+
+|1|	100|
+*--+--+
+|2|	50|
+*--+--+
+
+ If analyst is interested in analyzing with respect to user's interested sport, then the report would look the
+ following :
+
+*--+--+
+||User's sport||	Revenue||
+*--+--+
+|Football|	150|
+*--+--+
+|Cricket|	150|
+*--+--+
+|BasketBall|	50|
+*--+--+
+
+ Though the individual rows are correct and the overall revenue is actually 150, looking at above report makes people
+ assume that overall revenue is 350. The flattening feature to optionally flatten the selected fields, if
+ fields involved are coming from bridge tables in join path. If flattening is enabled, the report would be the following :
+
+*--+--+
+||User Interest||	Revenue||
+*--+--+
+|Football, Cricket|	100|
+*--+--+
+|Football, Cricket, BasketBall|	50|
+*--+--+
+
+ See configuration params available at {{{./olap-query-conf.html} OLAP query configurations}} and look for config
+ related to bridge tables, for turning this on.
 
 << Query API >>
 
