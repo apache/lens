@@ -338,7 +338,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       for (Class<?> driverClass : driverClasses) {
         try {
           LensDriver driver = (LensDriver) driverClass.newInstance();
-          driver.configure(LensServerConf.getConf());
+          driver.configure(LensServerConf.getConfForDrivers());
           if (driver instanceof HiveDriver) {
             driver.registerDriverEventListener(driverEventListener);
           }

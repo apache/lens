@@ -1167,6 +1167,8 @@ public class TestQueryService extends LensJerseyTest {
     assertNull(conf.get("hive.metastore.warehouse.dir"));
     // core default should not be loaded
     assertNull(conf.get("fs.default.name"));
+    // server configuration should not set
+    assertNull(conf.get("lens.server.persist.location"));
 
     // Test server config. Hive configs overriden should be set
     assertFalse(Boolean.parseBoolean(queryService.getHiveConf().get("hive.server2.log.redirection.enabled")));
@@ -1202,6 +1204,8 @@ public class TestQueryService extends LensJerseyTest {
       assertEquals(dconf.get("lens.driver.test.key"), "set");
       // core default should not be loaded
       assertNull(dconf.get("fs.default.name"));
+      // server configuration should not set
+      assertNull(dconf.get("lens.server.persist.location"));
     }
   }
 

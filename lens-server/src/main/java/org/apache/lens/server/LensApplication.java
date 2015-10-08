@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LensApplication extends Application {
 
   /** The conf. */
-  public static final Configuration CONF = LensServerConf.getConf();
+  public static final Configuration CONF = LensServerConf.getHiveConf();
 
   @Override
   public Set<Class<?>> getClasses() {

@@ -65,7 +65,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   private long sessionTimeout;
 
   /** The conf. */
-  private Configuration conf = createDefaultConf();
+  private Configuration conf = new Configuration(createDefaultConf());
 
   /**
    * Keep track of DB static resources which failed to be added to this session
@@ -102,16 +102,27 @@ public class LensSessionImpl extends HiveSessionImpl {
     persistInfo.setSessionConf(sessionConf);
   }
 
+  private static Configuration sessionDefaultConfig;
   /**
    * Creates the default conf.
    *
    * @return the configuration
    */
-  public static Configuration createDefaultConf() {
-    Configuration conf = new Configuration(false);
-    conf.addResource("lenssession-default.xml");
-    conf.addResource("lens-site.xml");
-    return conf;
+  public static synchronized Configuration createDefaultConf() {
+    if (sessionDefaultConfig == null) {
+      Configuration conf = new Configuration(false);
+      conf.addResource("lenssession-default.xml");
+      conf.addResource("lens-site.xml");
+      sessionDefaultConfig = new Configuration(false);
+      Iterator<Map.Entry<String, String>> confItr = conf.iterator();
+      while (confItr.hasNext()) {
+        Map.Entry<String, String> prop = confItr.next();
+        if (!prop.getKey().startsWith(LensConfConstants.SERVER_PFX)) {
+          sessionDefaultConfig.set(prop.getKey(), prop.getValue());
+        }
+      }
+    }
+    return sessionDefaultConfig;
   }
 
   /** The default hive session conf. */

@@ -169,7 +169,14 @@ public class TestSessionResource extends LensJerseyTest {
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
     Assert.assertTrue(sessionParams.getElements().contains("my.conf=myvalue"));
-
+    // get server params on session
+    try {
+      paramtarget.queryParam("sessionid", handle).queryParam("key", "lens.server.persist.location").request()
+        .get(StringList.class);
+      Assert.fail("Expected 404");
+    } catch (Exception ne) {
+      Assert.assertTrue(ne instanceof NotFoundException);
+    }
     // get all params verbose
     sessionParams = paramtarget.queryParam("sessionid", handle).queryParam("verbose", true).request()
       .get(StringList.class);
