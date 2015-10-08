@@ -70,28 +70,28 @@ class DatabaseComponent extends React.Component {
     });
 
     databaseComponent = (<div>
-        <label className="control-label" id="db">Select a Database</label>
-        <select className="form-control" id="db" onChange={this.setDatabase}>
-          <option value="">Select</option>
+        <label className='control-label' id='db'>Select a Database</label>
+        <select className='form-control' id='db' onChange={this.setDatabase}>
+          <option value=''>Select</option>
           {this.state.databases.map(database => {
-            return <option value={database}>{database}</option>;
+            return <option key={database} value={database}>{database}</option>;
           })}
         </select>
       </div>);
 
     if (this.state.loading) {
-      databaseComponent = <Loader size="4px" margin="2px"></Loader>;
+      databaseComponent = <Loader size='4px' margin='2px' />;
     } else if (!this.state.databases.length) {
-      databaseComponent = (<div className="alert-danger"
+      databaseComponent = (<div className='alert-danger'
           style={{padding: '8px 5px'}}>
           <strong>Sorry, we couldn&#39;t find any databases.</strong>
         </div>);
     }
 
     return (
-      <div className="panel panel-default">
-        <div className="panel-heading">
-          <h3 className="panel-title">
+      <div className='panel panel-default'>
+        <div className='panel-heading'>
+          <h3 className='panel-title'>
             Tables
             <span className={collapseClass} onClick={this.toggle}></span>
           </h3>

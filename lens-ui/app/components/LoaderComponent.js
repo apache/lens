@@ -25,7 +25,7 @@ class Loader extends React.Component {
   render () {
     return (
       <section style={{margin: '0 auto', maxWidth: '12%'}}>
-        <GridLoader {...this.props} color="#337ab7"/>
+        <GridLoader {...this.props} color='#337ab7'/>
       </section>
     );
   }

@@ -25,50 +25,22 @@ import Sidebar from './SidebarComponent';
 import RequireAuthentication from './RequireAuthenticationComponent';
 
 class AdhocQuery extends React.Component {
-  constructor (props) {
-    super(props);
-    this.state = {toggleQueryBox: true}; // show box when true, hide on false
-    this.toggleQueryBox = this.toggleQueryBox.bind(this);
-  }
-
-  render() {
-    let toggleButtonClass = this.state.toggleQueryBox ? 'default' : 'primary';
-
+  render () {
     return (
-      <section className="row">
-        <div className="col-md-4">
+      <section className='row'>
+        <div className='col-md-4'>
           <Sidebar />
         </div>
 
-        <div className="col-md-8">
-          <div className="panel panel-default">
-            <div className="panel-heading">
-              <h3 className="panel-title">
-                Compose
-                <button
-                  className={'btn btn-xs pull-right btn-' + toggleButtonClass}
-                  onClick={this.toggleQueryBox}>
-                  {this.state.toggleQueryBox ? 'Hide': 'Show'} Query Box
-                </button>
-              </h3>
-            </div>
-            <div className="panel-body" style={{padding: '0px'}}>
-              <QueryBox toggleQueryBox={this.state.toggleQueryBox} {...this.props}/>
-            </div>
-          </div>
+        <div className='col-md-8'>
+          <QueryBox {...this.props}/>
 
-          <RouteHandler toggleQueryBox={this.state.toggleQueryBox}/>
+          <RouteHandler/>
         </div>
       </section>
     );
   }
-
-  // FIXME persist the state in the URL as well
-  toggleQueryBox () {
-    this.setState({toggleQueryBox: !this.state.toggleQueryBox});
-  }
-};
+}
 
 let AuthenticatedAdhocQuery = RequireAuthentication(AdhocQuery);
-
 export default AuthenticatedAdhocQuery;

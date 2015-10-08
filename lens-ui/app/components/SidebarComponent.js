@@ -24,7 +24,7 @@ import Database from './DatabaseComponent';
 import QueryOperations from './QueryOperationsComponent';
 
 class Sidebar extends React.Component {
-  render() {
+  render () {
     return (
       <section>
         <QueryOperations />
@@ -33,6 +33,6 @@ class Sidebar extends React.Component {
       </section>
     );
   }
-};
+}
 
 export default Sidebar;

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import KeyMirror from 'keyMirror';
+import KeyMirror from 'keymirror';
 
 const AdhocQueryConstants = KeyMirror({
   RECEIVE_CUBES: null,
@@ -45,7 +45,14 @@ const AdhocQueryConstants = KeyMirror({
   RECEIVE_QUERY_FAILED: null,
 
   RECEIVE_DATABASES: null,
-  RECEIVE_DATABASES_FAILED: null
+  RECEIVE_DATABASES_FAILED: null,
+
+  RECEIVE_QUERY_PARAMS_META: null,
+
+  SAVE_QUERY_SUCCESS: null,
+  SAVE_QUERY_FAILED: null,
+
+  RECEIVE_SAVED_QUERY: null
 });
 
 export default AdhocQueryConstants;

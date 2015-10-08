@@ -53,19 +53,19 @@ class Login extends React.Component {
 
   render () {
     return (
-      <section class="row" style={{margin: 'auto'}}>
-        <form className="form-signin" onSubmit={this.handleSubmit}>
-          <h2 className="form-signin-heading">Sign in</h2>
-          <label for="inputEmail" className="sr-only">Email address</label>
-          <input ref="email" id="inputEmail" className="form-control"
-            placeholder="Email address" required autofocus/>
-          <label for="inputPassword" className="sr-only">Password</label>
-          <input ref="pass" type="password" id="inputPassword"
-            className="form-control" placeholder="Password" required/>
-          <button className="btn btn-primary btn-block"
-            type="submit">Sign in</button>
+      <section className='row' style={{margin: 'auto'}}>
+        <form className='form-signin' onSubmit={this.handleSubmit}>
+          <h2 className='form-signin-heading'>Sign in</h2>
+          <label htmlFor='inputEmail' className='sr-only'>Email address</label>
+          <input ref='email' id='inputEmail' className='form-control'
+            placeholder='Email address' required autoFocus/>
+          <label htmlFor='inputPassword' className='sr-only'>Password</label>
+          <input ref='pass' type='password' id='inputPassword'
+            className='form-control' placeholder='Password' required/>
+          <button className='btn btn-primary btn-block'
+            type='submit'>Sign in</button>
           {this.state.error && (
-            <div className="alert-danger text-center"
+            <div className='alert-danger text-center'
               style={{marginTop: '5px', padding: '0px 3px'}}>
               <h5>Sorry, authentication failed.</h5>
               <small>{this.state.errorMessage}</small>

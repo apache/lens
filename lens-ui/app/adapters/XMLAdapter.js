@@ -17,6 +17,21 @@
 * under the License.
 */
 
-// IMPORTS
+// converts string to XML and vice-versa
+// http://stackoverflow.com/questions/3054108/how-to-convert-string-to-xml-object-in-javascript
 
-@import "~bootstrap/less/bootstrap.less";
+let XMLAdapter = {
+  stringToXML (string) {
+    if (window.DOMParser) {
+      return new DOMParser().parseFromString(string, 'text/xml');
+    }
+
+    // IE?
+    var xmlDoc = new window.ActiveXObject('Microsoft.XMLDOM');
+    xmlDoc.async = 'false';
+    xmlDoc.loadXML(string);
+    return xmlDoc;
+  }
+};
+
+export default XMLAdapter;

@@ -24,10 +24,14 @@ import Config from 'config.json';
 
 let baseUrl = Config.baseURL;
 let urls = {
-  'getDatabases': 'metastore/databases',
-  'getCubes': 'metastore/cubes',
-  'query': 'queryapi/queries', // POST on this to execute, GET to fetch all
-  'getTables': 'metastore/nativetables'
+  getDatabases: 'metastore/databases',
+  getCubes: 'metastore/cubes',
+  query: 'queryapi/queries', // POST on this to execute, GET to fetch all
+  getTables: 'metastore/nativetables',
+  getSavedQueries: 'queryapi/savedqueries',
+  parameters: 'queryapi/savedqueries/parameters',
+  saveQuery: 'queryapi/savedqueries', // POST to save, PUT to update, {id} for GET
+  runSavedQuery: 'queryapi/savedqueries'
 };
 
 let AdhocQueryAdapter = {
@@ -54,11 +58,37 @@ let AdhocQueryAdapter = {
     formData.append('query', query);
     formData.append('operation', 'execute');
 
-    if (queryName)  formData.append('queryName', queryName);
+    if (queryName) formData.append('queryName', queryName);
 
     return BaseAdapter.post(url, formData, {
       contentType: 'multipart/form-data'
     });
+  },
+
+  saveQuery (secretToken, user, query, options) {
+    let url = baseUrl + urls.saveQuery;
+    let queryToBeSaved = {
+      owner: user,
+      name: options.name || '',
+      query: query,
+      description: options.description || '',
+      parameters: options.parameters || []
+    };
+
+    return BaseAdapter.post(url, queryToBeSaved);
+  },
+
+  updateSavedQuery (secretToken, user, query, options, id) {
+    let url = baseUrl + urls.saveQuery + '/' + id;
+    let queryToBeSaved = {
+      owner: user,
+      name: options.name || '',
+      query: query,
+      description: options.description || '',
+      parameters: options.parameters || []
+    };
+
+    return BaseAdapter.put(url, queryToBeSaved);
   },
 
   getQuery (secretToken, handle) {
@@ -79,9 +109,8 @@ let AdhocQueryAdapter = {
 
     return BaseAdapter.get(url, queryOptions)
       .then(function (queryHandles) {
-
         // FIXME limiting to 10 for now
-        //let handles = queryHandles.slice(0, 10);
+        // let handles = queryHandles.slice(0, 10);
         return Promise.all(queryHandles.map((handle) => {
           return BaseAdapter.get(url + '/' + handle.handleId, {
             sessionid: secretToken,
@@ -92,13 +121,12 @@ let AdhocQueryAdapter = {
   },
 
   getQueryResult (secretToken, handle, queryMode) {
-
     // on page refresh, the store won't have queryMode so fetch query
     // this is needed as we won't know in which mode the query was fired
     if (!queryMode) {
       this.getQuery(secretToken, handle).then((query) => {
         queryMode = query.isPersistent;
-        queryMode = queryMode ? 'PERSISTENT': 'INMEMORY';
+        queryMode = queryMode ? 'PERSISTENT' : 'INMEMORY';
         return this._inMemoryOrPersistent(secretToken, handle, queryMode);
       });
     } else {
@@ -106,8 +134,6 @@ let AdhocQueryAdapter = {
     }
   },
 
-  // a method used only internally to figure out
-  // whether to fetch INMEMORY or PERSISTENT results
   _inMemoryOrPersistent (secretToken, handle, queryMode) {
     return queryMode === 'PERSISTENT' ?
       this.getDownloadURL(secretToken, handle) :
@@ -139,6 +165,11 @@ let AdhocQueryAdapter = {
     return Promise.resolve(downloadURL);
   },
 
+  getSavedQueryById (secretToken, id) {
+    let url = baseUrl + urls.saveQuery + '/' + id;
+    return BaseAdapter.get(url, {sessionid: secretToken});
+  },
+
   getInMemoryResults (secretToken, handle) {
     let resultUrl = baseUrl + urls.query + '/' + handle + '/resultset';
     let results = BaseAdapter.get(resultUrl, {
@@ -151,6 +182,33 @@ let AdhocQueryAdapter = {
     });
 
     return Promise.all([results, meta]);
+  },
+
+  getSavedQueries (secretToken, user, options = {}) {
+    let url = baseUrl + urls.getSavedQueries;
+    return BaseAdapter.get(url, {
+      user: user,
+      sessionid: secretToken,
+      start: options.offset || 0,
+      count: options.pageSize || 10
+    });
+  },
+
+  getParams (secretToken, query) {
+    let url = baseUrl + urls.parameters;
+    return BaseAdapter.get(url, {query: query});
+  },
+
+  runSavedQuery (secretToken, id, params) {
+    let queryParamString = BaseAdapter.jsonToQueryParams(params);
+    let url = baseUrl + urls.runSavedQuery + '/' + id + queryParamString;
+
+    let formData = new FormData();
+    formData.append('sessionid', secretToken);
+
+    return BaseAdapter.post(url, formData, {
+      contentType: 'multipart/form-data'
+    });
   }
 };
 

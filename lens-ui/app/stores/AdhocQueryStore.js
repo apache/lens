@@ -33,7 +33,6 @@ var adhocDetails = {
   dbName: Config.dbName
 };
 
-// TODO remove this.
 function receiveQueryHandle (payload) {
   let id = payload.queryHandle.getElementsByTagName('handleId')[0].textContent;
   adhocDetails.queryHandle = id;
@@ -69,7 +68,6 @@ function receiveQueryResult (payload) {
     adhocDetails.queryResults[payload.handle].results = resultRows;
     adhocDetails.queryResults[payload.handle].columns = columns;
   } else {
-
     // persistent
     adhocDetails.queryResults[payload.handle] = {};
     adhocDetails.queryResults[payload.handle].downloadURL = payload.downloadURL;
@@ -87,19 +85,13 @@ let AdhocQueryStore = assign({}, EventEmitter.prototype, {
 
   // always returns the last-run-query's handle
   getQueryHandle () {
-    return adhocDetails.queryHandle;
-  },
-
-  clearQueryHandle () {
+    let handle = adhocDetails.queryHandle;
     adhocDetails.queryHandle = null;
+    return handle;
   },
 
-  getDbName () {
-    return adhocDetails.dbName
-  },
-
-  emitChange () {
-    this.emit(CHANGE_EVENT);
+  emitChange (hash) {
+    this.emit(CHANGE_EVENT, hash);
   },
 
   addChangeListener (callback) {
@@ -112,7 +104,7 @@ let AdhocQueryStore = assign({}, EventEmitter.prototype, {
 });
 
 AppDispatcher.register((action) => {
-  switch(action.actionType) {
+  switch (action.actionType) {
 
     case AdhocQueryConstants.RECEIVE_QUERY_HANDLE:
       receiveQueryHandle(action.payload);
@@ -132,6 +124,11 @@ AppDispatcher.register((action) => {
     case AdhocQueryConstants.RECEIVE_QUERY:
       receiveQuery(action.payload);
       AdhocQueryStore.emitChange();
+      break;
+
+    case AdhocQueryConstants.RECEIVE_QUERY_HANDLE_FAILED:
+      AdhocQueryStore.emitChange(action.payload);
+      break;
   }
 });
 

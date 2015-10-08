@@ -26,7 +26,7 @@ function receiveDatabases (payload) {
   databases = [];
 
   databases = payload.databases.elements &&
-    payload.databases.elements.slice()
+    payload.databases.elements.slice();
 }
 
 let CHANGE_EVENT = 'change';
@@ -51,7 +51,7 @@ let DatabaseStore = assign({}, EventEmitter.prototype, {
 });
 
 AppDispatcher.register((action) => {
-  switch(action.actionType) {
+  switch (action.actionType) {
     case AdhocQueryConstants.RECEIVE_DATABASES:
       receiveDatabases(action.payload);
       DatabaseStore.emitChange();

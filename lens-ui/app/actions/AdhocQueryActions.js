@@ -20,6 +20,48 @@
 import AppDispatcher from '../dispatcher/AppDispatcher';
 import AdhocQueryConstants from '../constants/AdhocQueryConstants';
 import AdhocQueryAdapter from '../adapters/AdhocQueryAdapter';
+import ErrorParser from '../utils/ErrorParser';
+import _ from 'lodash';
+
+function _executeQuery (secretToken, query, queryName) {
+  AdhocQueryAdapter.executeQuery(secretToken, query, queryName)
+    .then(queryHandle => {
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE,
+        payload: { queryHandle: queryHandle }
+      });
+    }, (error) => {
+      // error details contain array of objects {code, message}
+      var errorDetails = ErrorParser.getMessage(error);
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE_FAILED,
+        payload: {
+          type: 'Error',
+          texts: errorDetails
+        }
+      });
+    });
+}
+
+function _saveQuery (secretToken, user, query, options) {
+  AdhocQueryAdapter.saveQuery(secretToken, user, query, options)
+    .then(response => {
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.SAVE_QUERY_SUCCESS,
+        payload: {
+          type: 'Success',
+          text: 'Query was successfully saved!',
+          id: response.id
+        }
+      });
+    }, error => {
+      error = error.error;
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.SAVE_QUERY_FAILED,
+        payload: {type: 'Error', text: error.code + ': ' + error.message}
+      });
+    }).catch(e => { console.error(e); });
+}
 
 let AdhocQueryActions = {
   getDatabases (secretToken) {
@@ -30,7 +72,6 @@ let AdhocQueryActions = {
           payload: { databases: databases }
         });
       }, function (error) {
-
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_DATABASES_FAILED,
           payload: {
@@ -49,7 +90,6 @@ let AdhocQueryActions = {
           payload: { cubes: cubes }
         });
       }, function (error) {
-
         // propagating the error message, couldn't fetch cubes
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_CUBES_FAILED,
@@ -61,22 +101,117 @@ let AdhocQueryActions = {
       });
   },
 
-  executeQuery (secretToken, query, queryName) {
-    AdhocQueryAdapter.executeQuery(secretToken, query, queryName)
-      .then(function (queryHandle) {
+  getSavedQueries (secretToken, user, options) {
+    AdhocQueryAdapter.getSavedQueries(secretToken, user, options)
+      .then(savedQueries => {
         AppDispatcher.dispatch({
-          actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE,
-          payload: { queryHandle: queryHandle }
+          actionType: AdhocQueryConstants.RECEIVE_SAVED_QUERIES,
+          payload: savedQueries
         });
-      }, function (error) {
+      });
+  },
+
+  getSavedQueryById (secretToken, id) {
+    AdhocQueryAdapter.getSavedQueryById(secretToken, id)
+      .then(savedQuery => {
+        AppDispatcher.dispatch({
+          actionType: AdhocQueryConstants.RECEIVE_SAVED_QUERY,
+          payload: savedQuery
+        });
+      });
+  },
+
+  updateSavedQuery (secretToken, user, query, options, id) {
+    AdhocQueryAdapter.getParams(secretToken, query).then(response => {
+      let serverParams = response.parameters
+        .map(item => item.name)
+        .sort();
+      let clientParams = options && options.parameters && options.parameters
+        .map(item => item.name)
+        .sort();
+      if (!clientParams) clientParams = [];
+      if (_.isEqual(serverParams, clientParams)) {
+        AdhocQueryAdapter.updateSavedQuery(secretToken, user, query, options, id)
+          .then(response => {
+            AppDispatcher.dispatch({
+              actionType: AdhocQueryConstants.SAVE_QUERY_SUCCESS,
+              payload: {
+                type: 'Success',
+                text: 'Query was successfully updated!',
+                id: response.id
+              }
+            });
+          }, error => {
+            error = error.error;
+            AppDispatcher.dispatch({
+              actionType: AdhocQueryConstants.SAVE_QUERY_FAILED,
+              payload: {type: 'Error', text: error.code + ': ' + error.message}
+            });
+          }).catch(e => { console.error(e); });
+      } else {
+        // get parameters' meta
+        AppDispatcher.dispatch({
+          actionType: AdhocQueryConstants.RECEIVE_QUERY_PARAMS_META,
+          payload: response.parameters
+        });
+      }
+    });
+  },
+
+  saveQuery (secretToken, user, query, options) {
+    AdhocQueryAdapter.getParams(secretToken, query).then(response => {
+      let serverParams = response.parameters
+        .map(item => item.name)
+        .sort();
+      let clientParams = options && options.parameters && options.parameters
+        .map(item => item.name)
+        .sort();
+      if (!clientParams) clientParams = [];
+      if (_.isEqual(serverParams, clientParams)) {
+        _saveQuery(secretToken, user, query, options);
+      } else {
+        // get parameters' meta
+        AppDispatcher.dispatch({
+          actionType: AdhocQueryConstants.RECEIVE_QUERY_PARAMS_META,
+          payload: response.parameters
+        });
+      }
+    }, error => {
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE_FAILED,
+        payload: {
+          type: 'Error',
+          text: 'Please enable Saved Queries feature in the LENS Server to proceed.'
+        }
+      });
+    });
+  },
+
+  // first calls parameters API and sees if the query has any params,
+  // as we can't run a query with params, it needs to be saved first.
+  runQuery (secretToken, query, queryName) {
+    AdhocQueryAdapter.getParams(secretToken, query).then(response => {
+      if (!response.parameters.length) {
+        _executeQuery(secretToken, query, queryName);
+      } else {
+        // ask user to save the query maybe?
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE_FAILED,
           payload: {
-            responseCode: error.status,
-            responseMessage: error.statusText
+            type: 'Error',
+            text: 'You can\'t run a query with parameters, save it first.'
           }
         });
+      }
+    }, error => {
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE_FAILED,
+        payload: {
+          type: 'Error',
+          text: 'Please enable Saved Queries feature in the LENS Server to proceed.'
+        }
       });
+    });
   },
 
   getCubeDetails (secretToken, cubeName) {
@@ -138,11 +273,9 @@ let AdhocQueryActions = {
       .then(function (result) {
         let payload;
         if (Object.prototype.toString.call(result).match('String')) {
-
           // persistent
           payload = { downloadURL: result, type: 'PERSISTENT', handle: handle };
         } else if (Object.prototype.toString.call(result).match('Array')) {
-
           // in-memory gives array
           payload = {
             queryResult: result[0],
@@ -174,7 +307,6 @@ let AdhocQueryActions = {
           payload: { tables: tables, database: database }
         });
       }, function (error) {
-
         // propagating the error message, couldn't fetch cubes
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_TABLES_FAILED,
@@ -207,6 +339,27 @@ let AdhocQueryActions = {
   cancelQuery (secretToken, handle) {
     AdhocQueryAdapter.cancelQuery(secretToken, handle);
     // TODO finish this up
+  },
+
+  runSavedQuery (secretToken, id, params) {
+    AdhocQueryAdapter.runSavedQuery(secretToken, id, params)
+      .then(handle => {
+        AppDispatcher.dispatch({
+          actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE,
+          payload: { queryHandle: handle }
+        });
+      }, (error) => {
+        // error response contains an error XML with code, message and
+        // stacktrace
+        AppDispatcher.dispatch({
+          actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE_FAILED,
+          payload: {
+            type: 'Error',
+            text: error.getElementsByTagName('code')[0].textContent + ': ' +
+              error.getElementsByTagName('message')[0].textContent
+          }
+        });
+      });
   }
 };
 

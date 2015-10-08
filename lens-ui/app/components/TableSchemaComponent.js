@@ -22,7 +22,7 @@ import React from 'react';
 import TableStore from '../stores/TableStore';
 import UserStore from '../stores/UserStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
-import Loader from '../components/LoaderComponent';
+import Loader from './LoaderComponent';
 
 function getTable (tableName, database) {
   let tables = TableStore.getTables(database);
@@ -71,15 +71,14 @@ class TableSchema extends React.Component {
   render () {
     let schemaSection = null;
 
-
     if (this.state.table && !this.state.table.isLoaded) {
-      schemaSection = <Loader size="8px" margin="2px" />;
+      schemaSection = <Loader size='8px' margin='2px' />;
     } else {
-      schemaSection = (<div className="row">
-          <div className="table-responsive">
-            <table className="table table-striped">
+      schemaSection = (<div className='row'>
+          <div className='table-responsive'>
+            <table className='table table-striped'>
               <thead>
-              <caption className="bg-primary text-center">Columns</caption>
+              <caption className='bg-primary text-center'>Columns</caption>
                 <tr><th>Name</th><th>Type</th><th>Description</th></tr>
               </thead>
               <tbody>
@@ -91,8 +90,9 @@ class TableSchema extends React.Component {
                         <td>{col.type}</td>
                         <td>{col.comment || 'No description available'}</td>
                       </tr>
-                    )
-                })}
+                    );
+                  })
+                }
               </tbody>
             </table>
           </div>
@@ -101,16 +101,15 @@ class TableSchema extends React.Component {
 
     return (
       <section>
-        <div className="panel panel-default">
-          <div className="panel-heading">
-            <h3 className="panel-title">Schema Details: &nbsp;
-              <strong className="text-primary">
+        <div className='panel panel-default'>
+          <div className='panel-heading'>
+            <h3 className='panel-title'>Schema Details: &nbsp;
+              <strong className='text-primary'>
                  {this.props.query.database}.{this.props.params.tableName}
               </strong>
             </h3>
           </div>
-          <div className="panel-body" style={{overflowY: 'auto',
-            maxHeight: this.props.toggleQueryBox ? '260px': '480px'}}>
+          <div className='panel-body'>
             {schemaSection}
           </div>
         </div>
@@ -127,5 +126,10 @@ class TableSchema extends React.Component {
     });
   }
 }
+
+TableSchema.propTypes = {
+  query: React.PropTypes.object,
+  params: React.PropTypes.object
+};
 
 export default TableSchema;

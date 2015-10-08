@@ -19,40 +19,41 @@
 
 var express = require('express');
 var path = require('path');
-var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
 var session = require('express-session');
 
 var app = express();
 var httpProxy = require('http-proxy');
 var proxy = httpProxy.createProxyServer();
+
 var port = process.env['port'] || 8082;
 
 app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 
-if(!process.env['lensserver']){
+if (!process.env['lensserver']) {
   throw new Error('Specify LENS Server address in `lensserver` argument');
 }
 
 console.log('Using this as your LENS Server Address: ', process.env['lensserver']);
 console.log('If this seems wrong, please edit `lensserver` argument in package.json. Do not forget to append http://\n');
 
-app.use( session({
-   secret            : 'SomethingYouKnow',
-   resave            : false,
-   saveUninitialized : true
+app.use(session({
+  secret            : 'SomethingYouKnow',
+  resave            : false,
+  saveUninitialized : true
 }));
 
-var fs = require('fs');
-
+var fs = require('fs')
+;
 app.use(express.static(path.resolve(__dirname, 'target', 'assets')));
+
+app.get('/health', function (req, res) {
+  res.status(200).send('Adhoc Query UI is up and running.');
+});
 
 app.get('/target/assets/*', function (req, res) {
   res.setHeader('Cache-Control', 'public');
@@ -62,18 +63,18 @@ app.get('/target/assets/*', function (req, res) {
 app.all('/serverproxy/*', function (req, res) {
   req.url = req.url.replace('serverproxy', '');
   proxy.web(req, res, {
-      target: process.env['lensserver']
-  }, function (e) { console.log('Handled error.'); });
+    target: process.env['lensserver']
+  }, function (e) {
+    console.error('Proxy Error: ', e);
+  });
 });
 
-app.get('*', function(req, res) {
+app.get('*', function (req, res) {
   res.end(fs.readFileSync(__dirname + '/index.html'));
 });
 
-var server = app.listen(port, function(err) {
-  if(err) throw err;
+var server = app.listen(port, function (err) {
+  if (err) throw err;
 
-  var port = server.address().port;
-
-  console.log('Ad hoc UI server listening at port: ', port);
+  console.log('Ad hoc UI server listening at %s', port);
 });

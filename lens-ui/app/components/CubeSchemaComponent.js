@@ -41,9 +41,9 @@ function constructMeasureTable (cubeName, measures) {
   });
 
   return (
-    <div class="table-responsive">
-      <table className="table table-striped table-condensed">
-        <caption className="bg-primary text-center">Measures</caption>
+    <div className='table-responsive'>
+      <table className='table table-striped table-condensed'>
+        <caption className='bg-primary text-center'>Measures</caption>
         <thead>
           <tr>
             <th>Name</th>
@@ -76,9 +76,9 @@ function constructDimensionTable (cubeName, dimensions) {
   });
 
   return (
-    <div class="table-responsive">
-      <table className="table table-striped">
-        <caption className="bg-primary text-center">Dimensions</caption>
+    <div className='table-responsive'>
+      <table className='table table-striped'>
+        <caption className='bg-primary text-center'>Dimensions</caption>
         <thead>
           <tr>
             <th>Name</th>
@@ -119,6 +119,7 @@ class CubeSchema extends React.Component {
   }
 
   componentWillReceiveProps (props) {
+    // TODO are props updated automatically, unlike state?
     let cubeName = props.params.cubeName;
     let cube = getCubes()[cubeName];
 
@@ -132,7 +133,6 @@ class CubeSchema extends React.Component {
 
     // empty the previous state
     this.setState({ cube: {} });
-
   }
 
   render () {
@@ -140,21 +140,17 @@ class CubeSchema extends React.Component {
 
     // this will be empty if it's the first time so show a loader
     if (!this.state.cube.isLoaded) {
-      schemaSection = <Loader size="8px" margin="2px" />;
+      schemaSection = <Loader size='8px' margin='2px' />;
     } else {
-
       // if we have cube state
       let cube = this.state.cube;
       if (this.props.query.type === 'measures') {
-
         // show only measures
         schemaSection = constructMeasureTable(cube.name, cube.measures);
       } else if (this.props.query.type === 'dimensions') {
-
         // show only dimensions
         schemaSection = constructDimensionTable(cube.name, cube.dimensions);
       } else {
-
         // show both measures, dimensions
         schemaSection = (
           <div>
@@ -170,16 +166,15 @@ class CubeSchema extends React.Component {
     return (
 
       <section>
-        <div className="panel panel-default">
-          <div className="panel-heading">
-            <h3 className="panel-title">Schema Details: &nbsp;
-              <strong className="text-primary">
+        <div className='panel panel-default'>
+          <div className='panel-heading'>
+            <h3 className='panel-title'>Schema Details: &nbsp;
+              <strong className='text-primary'>
                  {this.props.params.cubeName}
               </strong>
             </h3>
           </div>
-          <div className="panel-body" style={{overflowY: 'auto',
-            maxHeight: this.props.toggleQueryBox ? '260px': '480px'}}>
+          <div className='panel-body'>
             {schemaSection}
           </div>
         </div>
@@ -192,5 +187,10 @@ class CubeSchema extends React.Component {
     this.setState({cube: getCubes()[this.props.params.cubeName]});
   }
 }
+
+CubeSchema.propTypes = {
+  query: React.PropTypes.object,
+  params: React.PropTypes.object
+};
 
 export default CubeSchema;

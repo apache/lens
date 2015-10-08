@@ -17,8 +17,6 @@
 * under the License.
 */
 
-import React from 'react';
-
 import AppDispatcher from '../dispatcher/AppDispatcher';
 import AppConstants from '../constants/AppConstants';
 import assign from 'object-assign';
@@ -28,8 +26,7 @@ var CHANGE_EVENT = 'change';
 var userDetails = {
   isUserLoggedIn: false,
   email: '',
-  secretToken: '',
-  publicKey: ''
+  secretToken: ''
 };
 
 // keeping these methods out of the UserStore class as
@@ -38,13 +35,10 @@ function authenticateUser (details) {
   userDetails = {
     isUserLoggedIn: true,
     email: details.email,
-    secretToken: new XMLSerializer().serializeToString(details.secretToken),
-    publicKey: details.secretToken.getElementsByTagName('publicId')[0]
-      .textContent
+    secretToken: new XMLSerializer().serializeToString(details.secretToken)
   };
 
   // store the details in localStorage if available
-
   if (window.localStorage) {
     let adhocCred = assign({}, userDetails, { timestamp: Date.now() });
     window.localStorage.setItem('adhocCred', JSON.stringify(adhocCred));
@@ -52,7 +46,6 @@ function authenticateUser (details) {
 }
 
 function unauthenticateUser (details) {
-
   // details contains error code and message
   // which are not stored but passsed along
   // during emitChange()
@@ -69,12 +62,9 @@ function unauthenticateUser (details) {
 // exposing only necessary methods for the components.
 var UserStore = assign({}, EventEmitter.prototype, {
   isUserLoggedIn () {
-
     if (userDetails && userDetails.isUserLoggedIn) {
-
       return userDetails.isUserLoggedIn;
     } else if (window.localStorage && localStorage.getItem('adhocCred')) {
-
       // check in localstorage
       let credentials = JSON.parse(localStorage.getItem('adhocCred'));
 
@@ -114,7 +104,7 @@ var UserStore = assign({}, EventEmitter.prototype, {
 
 // registering callbacks with the dispatcher. So verbose?? I know right!
 AppDispatcher.register((action) => {
-  switch(action.actionType) {
+  switch (action.actionType) {
     case AppConstants.AUTHENTICATION_SUCCESS:
       authenticateUser(action.payload);
       UserStore.emitChange();

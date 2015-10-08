@@ -18,7 +18,6 @@
 */
 
 import React from 'react';
-import Alert from 'react-bootstrap';
 import TreeView from 'react-treeview';
 import assign from 'object-assign';
 import { Link } from 'react-router';
@@ -66,8 +65,7 @@ class CubeTree extends React.Component {
     CubeStore.removeChangeListener(this._onChange);
   }
 
-  render() {
-
+  render () {
     // cube tree structure sample
     // [{
     //   name: 'Cube-1',
@@ -79,50 +77,56 @@ class CubeTree extends React.Component {
     var cubeTree = Object.keys(this.state.cubes).map((cubeName, i) => {
       let cube = cubeHash[cubeName];
 
-      let label = <Link to="cubeschema" params={{cubeName: cubeName}}>
-          <span className="node">{cube.name}</span>
+      let label = <Link to='cubeschema' params={{cubeName: cubeName}}>
+          <span className='node'>{cube.name}</span>
         </Link>;
 
-      let measureLabel = <Link to="cubeschema" params={{cubeName: cubeName}}
+      let measureLabel = <Link to='cubeschema' params={{cubeName: cubeName}}
         query={{type: 'measures'}}>
-          <span className="quiet">Measures</span>
+          <span className='quiet'>Measures</span>
         </Link>;
 
-      let dimensionLabel = <Link to="cubeschema" params={{cubeName: cubeName}}
+      let dimensionLabel = <Link to='cubeschema' params={{cubeName: cubeName}}
         query={{type: 'dimensions'}}>
-          <span className="quiet">Dimensions</span>
-        </Link>
+          <span className='quiet'>Dimensions</span>
+        </Link>;
       return (
         <TreeView key={cube.name + '|' + i} nodeLabel={label}
-          defaultCollapsed={true} onClick={this.getDetails.bind(this, cube.name)}>
+          defaultCollapsed={!cube.isLoaded} onClick={this.getDetails.bind(this, cube.name)}>
 
           <TreeView key={cube.name + '|measures'} nodeLabel={measureLabel}
             defaultCollapsed={!cube.isLoaded}>
             { cube.measures ? cube.measures.map(measure => {
               return (
-                <div key={measure.name} className="treeNode measureNode">
+                <div key={measure.name} className='treeNode measureNode'>
                   {measure.name} ({measure.default_aggr})
                 </div>
               );
-            }): null }
+            }) : null }
           </TreeView >
 
           <TreeView key={cube.name + '|dimensions'} nodeLabel={dimensionLabel}
             defaultCollapsed={!cube.isLoaded}>
             { cube.dimensions ? cube.dimensions.map(dimension => {
               return (
-                <div className="treeNode dimensionNode" key={dimension.name}>
+                <div className='treeNode dimensionNode' key={dimension.name}>
                   {dimension.name}
                 </div>
               );
-            }): null }
+            }) : null }
           </TreeView >
 
         </TreeView >
       );
     });
 
-    if (this.state.loading) cubeTree = <Loader size="4px" margin="2px"/>;
+    if (this.state.loading) {
+      cubeTree = <Loader size='4px' margin='2px'/>;
+    } else if (!this.state.cubes.length) {
+      cubeTree = (<div className='alert-danger' style={{padding: '8px 5px'}}>
+          <strong>Sorry, we couldn&#39;t find any cubes.</strong>
+        </div>);
+    }
 
     let collapseClass = ClassNames({
       'pull-right': true,
@@ -137,9 +141,9 @@ class CubeTree extends React.Component {
     });
 
     return (
-      <div className="panel panel-default">
-        <div className="panel-heading">
-          <h3 className="panel-title">
+      <div className='panel panel-default'>
+        <div className='panel-heading'>
+          <h3 className='panel-title'>
             Cubes
             <span className={collapseClass} onClick={this.toggle}></span>
           </h3>

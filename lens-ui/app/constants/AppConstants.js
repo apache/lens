@@ -17,11 +17,12 @@
 * under the License.
 */
 
-import KeyMirror from 'keyMirror';
+import KeyMirror from 'keymirror';
 
 const AppConstants = KeyMirror({
   AUTHENTICATION_SUCCESS: null,
-  AUTHENTICATION_FAILED: null
+  AUTHENTICATION_FAILED: null,
+  RECEIVE_USERNAME: null
 });
 
 export default AppConstants;

@@ -19,7 +19,7 @@
 
 import React from 'react';
 
-import Loader from '../components/LoaderComponent';
+import Loader from './LoaderComponent';
 import AdhocQueryStore from '../stores/AdhocQueryStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
 import UserStore from '../stores/UserStore';
@@ -28,7 +28,6 @@ import QueryPreview from './QueryPreviewComponent';
 let interval = null;
 
 function isResultAvailableOnServer (handle) {
-
   // always check before polling
   let query = AdhocQueryStore.getQueries()[handle];
   if (query && query.status && query.status.status === 'SUCCESSFUL') {
@@ -38,9 +37,6 @@ function isResultAvailableOnServer (handle) {
 }
 
 function fetchResult (secretToken, handle) {
-
-  // this condition checks the query object, else
-  // we fetch it with the handle that we have
   if (isResultAvailableOnServer(handle)) {
     let query = AdhocQueryStore.getQueries()[handle];
     let mode = query.isPersistent ? 'PERSISTENT' : 'INMEMORY';
@@ -60,7 +56,7 @@ function constructTable (tableData) {
       return (<tr>{row.values.values.map(cell => {
         return <td>{(cell && cell.value) || <span style={{color: 'red'}}>NULL</span>}</td>;
       })}</tr>);
-  });
+    });
 
   // in case the results are empty, happens when LENS server has restarted
   // all in-memory results are wiped clean
@@ -73,8 +69,8 @@ function constructTable (tableData) {
   }
 
   return (
-    <div class="table-responsive">
-      <table className="table table-striped table-condensed">
+    <div className='table-responsive'>
+      <table className='table table-striped table-condensed'>
         <thead>
           <tr>{header}</tr>
         </thead>
@@ -118,9 +114,9 @@ class QueryDetailResult extends React.Component {
 
     // check if the query was persistent or in-memory
     if (query && query.isPersistent && query.status.status === 'SUCCESSFUL') {
-      result = (<div className="text-center">
+      result = (<div className='text-center'>
         <a href={queryResult.downloadURL} download>
-          <span className="glyphicon glyphicon-download-alt	"></span> Click
+          <span className='glyphicon glyphicon-download-alt	'></span> Click
           here to download the results as a CSV file
         </a>
       </div>);
@@ -128,16 +124,14 @@ class QueryDetailResult extends React.Component {
       result = constructTable(this.state.queryResult);
     }
 
-
-    if (this.state.loading) result = <Loader size="8px" margin="2px"></Loader>;
+    if (this.state.loading) result = <Loader size='8px' margin='2px' />;
 
     return (
-      <div className="panel panel-default">
-      <div className="panel-heading">
-        <h3 className="panel-title">Query Result</h3>
+      <div className='panel panel-default'>
+      <div className='panel-heading'>
+        <h3 className='panel-title'>Query Result</h3>
       </div>
-      <div className="panel-body" style={{overflowY: 'auto', padding: '0px',
-        maxHeight: this.props.toggleQueryBox ? '260px': '480px'}}>
+      <div className='panel-body no-padding'>
         <div>
           <QueryPreview key={query && query.queryHandle.handleId}
             {...query} />
@@ -149,7 +143,6 @@ class QueryDetailResult extends React.Component {
   }
 
   pollForResult (secretToken, handle) {
-
     // fetch results immediately if present, don't wait for 5 seconds
     // in setInterval below.
     // FIXME if I put a return in if construct, setInterval won't execute which
@@ -182,11 +175,15 @@ class QueryDetailResult extends React.Component {
       loading: loading,
       queryResult: result || {}, // result can be undefined so guarding it
       query: query
-    }
+    };
 
     this.setState(state);
-
   }
 }
+
+QueryDetailResult.propTypes = {
+  query: React.PropTypes.object,
+  params: React.PropTypes.object
+};
 
 export default QueryDetailResult;

@@ -17,74 +17,69 @@
 * under the License.
 */
 
-import reqwest from 'reqwest';
+import reqwest from 'qwest';
 import Promise from 'bluebird';
 
 import Config from 'config.json';
+import XMLAdapter from './XMLAdapter';
 
 function makeReqwest (url, method, data, options = {}) {
-  let reqwestOptions = {
-    url: url,
-    method: method,
-    contentType: 'application/json',
-    type: 'json',
-    headers: {}
-  };
-
+  let reqwestOptions = { headers: {}, timeout: 200000 }; // a large enough for native tables
   if (Config.headers) reqwestOptions.headers = Config.headers;
+  reqwestOptions.responseType = !options.contentType ? 'json' : 'document';
 
-  // delete Content-Type and add Accept
-  reqwestOptions.headers['Accept'] = 'application/json';
-  delete reqwestOptions.headers['Content-Type'];
-  if (data) reqwestOptions.data = data;
-  if (options.contentType === 'multipart/form-data') {
-    reqwestOptions.processData = false;
-    reqwestOptions.contentType = 'multipart/form-data';
-
-    // because server can't handle JSON response on POST
-    delete reqwestOptions.type;
-    delete reqwestOptions.headers['Accept'];
+  if (reqwestOptions.responseType !== 'document') {
+    if (method === 'post' || method === 'put') reqwestOptions.dataType = 'json';
+  } else {
+    delete reqwestOptions.headers['Content-Type'];
   }
 
-  return new Promise ((resolve, reject) => {
-    reqwest(reqwestOptions)
-      .then ((response) => {
+  return new Promise((resolve, reject) => {
+    reqwest[method](url, data, reqwestOptions)
+      .then((response) => {
+        response = reqwestOptions.responseType === 'json' ?
+          response.response :
+          XMLAdapter.stringToXML(response.response);
+
         resolve(response);
       }, (error) => {
-        reject(error);
-      });
+        let response = error.responseType !== 'json' ?
+          XMLAdapter.stringToXML(error.response) :
+          error.response;
+        reject(response);
+      }).catch(e => console.error(e));
   });
 }
 
-function deleteRequest (url, dataArray) {
-  return makeReqwest(url, 'delete', dataArray);
-}
-
-function get (url, dataArray, options) {
-  return makeReqwest(url, 'get', dataArray, options);
-}
-
-// TODO need to fix this unused 'options'. What params can it have?
-function postJson (url, data, options = {}) {
-  return makeReqwest(url, 'post', data, {contentType: 'application/json'});
-}
-
-function postFormData (url, data, options = {}) {
-  return makeReqwest(url, 'post', data, options);
-}
-
 let BaseAdapter = {
-  get: get,
-
-  post (url, data, options = {}) {
-    if (options.contentType) {
-      return postFormData(url, data, options);
-    } else {
-      return postJson(url, data, options);
-    }
+  get (url, data, options) {
+    return makeReqwest(url, 'get', data, options);
   },
 
-  delete: deleteRequest
+  post (url, data, options = {}) {
+    return makeReqwest(url, 'post', data, options);
+  },
+
+  put (url, data, options = {}) {
+    return makeReqwest(url, 'put', data, options);
+  },
+
+  delete (url, data) {
+    return makeReqwest(url, 'delete', data);
+  },
+
+  jsonToQueryParams (json) {
+    // if json is an array?
+    var queryParams = '?';
+    if (!Object.prototype.toString.call(json).match('Array')) json = [json];
+
+    json.forEach(object => {
+      Object.keys(object).forEach(key => {
+        queryParams += key + '=' + object[key] + '&';
+      });
+    });
+    return queryParams.slice(0, -1);
+  }
 };
 
 export default BaseAdapter;

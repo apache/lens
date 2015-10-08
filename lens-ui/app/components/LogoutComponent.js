@@ -19,7 +19,6 @@
 
 import React from 'react';
 import { Link } from 'react-router';
-import Config from 'config.json';
 
 import UserStore from '../stores/UserStore';
 
@@ -31,9 +30,9 @@ class Logout extends React.Component {
 
   render () {
     return (
-      <div className="jumbotron text-center">
+      <div className='jumbotron text-center'>
         <h3>You&#39;ve succesfully logged out.</h3>
-        <p><Link to="/">Login</Link> to use this awesome app!</p>
+        <p><Link to='/'>Login</Link> to use this awesome app!</p>
       </div>
     );
   }

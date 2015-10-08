@@ -19,32 +19,36 @@
 
 import React from 'react';
 import Router from 'react-router';
-import { DefaultRoute, Route, RouteHandler } from 'react-router';
+import { DefaultRoute, Route } from 'react-router';
 
+import './styles/less/globals.less';
+import './styles/css/global.css';
+
+import Login from './components/LoginComponent';
+import Logout from './components/LogoutComponent';
 import About from './components/AboutComponent';
 import App from './components/AppComponent';
 import AdhocQuery from './components/AdhocQueryComponent';
-import Login from './components/LoginComponent';
-import Logout from './components/LogoutComponent';
 import QueryResults from './components/QueryResultsComponent';
 import CubeSchema from './components/CubeSchemaComponent';
 import QueryDetailResult from './components/QueryDetailResultComponent';
 import TableSchema from './components/TableSchemaComponent';
-import LoginActions from './actions/LoginActions';
+import SavedQueries from './components/SavedQueriesComponent';
 
 let routes = (
-  <Route name="app" path="/" handler={App} >
-    <Route name="login" handler={Login}/>
-    <Route name="logout" handler={Logout}/>
-    <Route name="query" path="query" handler={AdhocQuery} >
-      <Route name="results" handler={QueryResults}/>
-      <Route name="result" path="/results/:handle" handler={QueryDetailResult}/>
-      <Route name="cubeschema" path="schema/cube/:cubeName" handler={CubeSchema}/>
-      <Route name="tableschema" path="schema/table/:tableName"
+  <Route name='app' path='/' handler={App} >
+    <Route name='login' handler={Login}/>
+    <Route name='logout' handler={Logout}/>
+    <Route name='query' path='query' handler={AdhocQuery} >
+      <Route name='results' handler={QueryResults}/>
+      <Route name='savedqueries' handler={SavedQueries}/>
+      <Route name='result' path='/results/:handle' handler={QueryDetailResult}/>
+      <Route name='cubeschema' path='schema/cube/:cubeName' handler={CubeSchema}/>
+      <Route name='tableschema' path='schema/table/:tableName'
         handler={TableSchema}/>
 
     </Route>
-    <Route name="about" handler={About} />
+    <Route name='about' handler={About} />
     <DefaultRoute handler={AdhocQuery} />
   </Route>
 );

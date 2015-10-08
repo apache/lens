@@ -24,13 +24,12 @@ import CodeMirror from 'codemirror';
 import 'codemirror/mode/sql/sql.js';
 import 'codemirror/addon/runmode/runmode.js';
 
-import Loader from '../components/LoaderComponent';
 import UserStore from '../stores/UserStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
 
 class QueryPreview extends React.Component {
   constructor (props) {
-    super (props);
+    super(props);
     this.state = {showDetail: false};
     this.toggleQueryDetails = this.toggleQueryDetails.bind(this);
     this.cancelQuery = this.cancelQuery.bind(this);
@@ -48,11 +47,9 @@ class QueryPreview extends React.Component {
     CodeMirror
       .runMode(query.userQuery,
         'text/x-mysql', function (text, style) {
-
         // this method is called for every token and gives the
         // token and style class for it.
         codeTokens.push(<span className={'cm-' + style}>{text}</span>);
-
       });
 
     // figuring out the className for query status
@@ -70,36 +67,35 @@ class QueryPreview extends React.Component {
     let statusClass = 'label-' + statusTypes[query.status.status] ||
       'label-info';
     let handle = query.queryHandle.handleId;
-    let executionTime = (query.finishTime - query.submissionTime)/(1000*60);
-    let statusType = query.status.status === 'ERROR'? 'Error: ' : 'Status: ';
+    let executionTime = (query.finishTime - query.submissionTime) / (1000 * 60);
+    let statusType = query.status.status === 'ERROR' ? 'Error: ' : 'Status: ';
     let seeResult = '';
-    let statusMessage = query.status.status === 'SUCCESSFUL'?
+    let statusMessage = query.status.status === 'SUCCESSFUL' ?
       query.status.statusMessage :
       query.status.errorMessage;
 
     if (query.status.status === 'SUCCESSFUL') {
-      seeResult = (<Link to="result" params={{handle: handle}}
-        className="btn btn-success btn-xs pull-right" style={{marginLeft: '5px'}}>
+      seeResult = (<Link to='result' params={{handle: handle}}
+        className='btn btn-success btn-xs pull-right' style={{marginLeft: '5px'}}>
         See Result
       </Link>);
     }
 
-
     return (
       <section>
-        <div className="panel panel-default">
-          <pre className="cm-s-default" style={{cursor: 'pointer',
+        <div className='panel panel-default'>
+          <pre className='cm-s-default' style={{cursor: 'pointer',
             border: '0px', marginBottom: '0px'}}
             onClick={this.toggleQueryDetails}>
 
             {codeTokens}
 
-            <label className={"pull-right label " + statusClass}>
+            <label className={'pull-right label ' + statusClass}>
               {query.status.status}
             </label>
 
             {query.queryName && (
-              <label className="pull-right label label-primary"
+              <label className='pull-right label label-primary'
                 style={{marginRight: '5px'}}>
                 {query.queryName}
               </label>
@@ -108,32 +104,31 @@ class QueryPreview extends React.Component {
           </pre>
 
           {this.state.showDetail && (
-            <div className="panel-body" style={{borderTop: '1px solid #cccccc',
+            <div className='panel-body' style={{borderTop: '1px solid #cccccc',
             paddingBottom: '0px'}} key={'preview' + handle}>
-              <div className="row">
-                <div className="col-lg-4 col-sm-4">
-                  <span className="text-muted">Name </span>
+              <div className='row'>
+                <div className='col-lg-4 col-sm-4'>
+                  <span className='text-muted'>Name </span>
                   <strong>{ query.queryName || 'Not specified'}</strong>
                 </div>
-                <div className="col-lg-4 col-sm-4">
-                  <span className="text-muted">Submitted </span>
+                <div className='col-lg-4 col-sm-4'>
+                  <span className='text-muted'>Submitted </span>
                   <strong>
                     { Moment(query.submissionTime).format('Do MMM YY, hh:mm:ss a')}
                   </strong>
                 </div>
-                <div className="col-lg-4 col-sm-4">
-                  <span className="text-muted">Execution time </span>
+                <div className='col-lg-4 col-sm-4'>
+                  <span className='text-muted'>Execution time </span>
                   <strong>
 
                     { executionTime > 0 ?
-                        Math.ceil(executionTime) +
-                          (executionTime > 1 ? ' mins': ' min') :
-                        'Still running'
+                      Math.ceil(executionTime) +
+                        (executionTime > 1 ? ' mins' : ' min') : 'Still running'
                     }
                   </strong>
                 </div>
               </div>
-              <div className="row">
+              <div className='row'>
                 <div
                   className={'alert alert-' + statusTypes[query.status.status]}
                   style={{marginBottom: '0px', padding: '5px 15px 5px 15px'}}>
@@ -143,8 +138,8 @@ class QueryPreview extends React.Component {
 
                       {seeResult}
 
-                      <Link to="query" query={{handle: query.queryHandle.handleId}}
-                        className="pull-right">
+                      <Link to='query' query={{handle: query.queryHandle.handleId}}
+                        className='pull-right'>
                         Edit Query
                       </Link>
 
@@ -167,10 +162,14 @@ class QueryPreview extends React.Component {
     let handle = this.props && this.props.queryHandle &&
       this.props.queryHandle.handleId;
 
-    if (!handle)  return;
+    if (!handle) return;
 
     AdhocQueryActions.cancelQuery(secretToken, handle);
   }
 }
+
+QueryPreview.propTypes = {
+  queryHandle: React.PropTypes.string
+};
 
 export default QueryPreview;

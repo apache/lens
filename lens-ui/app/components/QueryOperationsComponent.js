@@ -46,9 +46,9 @@ class QueryOperations extends React.Component {
     });
 
     return (
-      <div className="panel panel-default">
-        <div className="panel-heading">
-          <h3 className="panel-title">
+      <div className='panel panel-default'>
+        <div className='panel-heading'>
+          <h3 className='panel-title'>
             Queries
             <span className={collapseClass} onClick={this.toggle}></span>
           </h3>
@@ -56,25 +56,30 @@ class QueryOperations extends React.Component {
         <div className={panelBodyClassName}>
           <ul style={{listStyle: 'none', paddingLeft: '0px',
             marginBottom: '0px'}}>
-            <li><Link to="results">All</Link></li>
+            <li><Link to='results'>All</Link></li>
             <li>
-              <Link to="results" query={{category: 'running'}}>
+              <Link to='results' query={{category: 'running'}}>
                 Running
               </Link>
             </li>
             <li>
-              <Link to="results" query={{category: 'successful'}}>
+              <Link to='results' query={{category: 'successful'}}>
                 Completed
               </Link>
             </li>
             <li>
-              <Link to="results" query={{category: 'queued'}}>
+              <Link to='results' query={{category: 'queued'}}>
                 Queued
               </Link>
             </li>
             <li>
-              <Link to="results" query={{category: 'failed'}}>
+              <Link to='results' query={{category: 'failed'}}>
                 Failed
+              </Link>
+            </li>
+            <li>
+              <Link to='savedqueries'>
+                Saved Queries
               </Link>
             </li>
           </ul>

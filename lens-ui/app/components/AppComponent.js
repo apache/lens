@@ -22,14 +22,13 @@ import { RouteHandler } from 'react-router';
 
 import Header from './HeaderComponent';
 
-export default class AppComponent extends React.Component {
-
-  render() {
+export default class App extends React.Component {
+  render () {
     return (
       <section>
         <Header />
 
-        <div className="container-fluid">
+        <div className='container-fluid'>
           <RouteHandler />
         </div>
       </section>
@@ -37,4 +36,4 @@ export default class AppComponent extends React.Component {
   }
 }
 
-export default AppComponent;
+export default App;

@@ -21,12 +21,11 @@ import React from 'react';
 import TreeView from 'react-treeview';
 import { Link } from 'react-router';
 import 'react-treeview/react-treeview.css';
-import ClassNames from 'classnames';
 
 import TableStore from '../stores/TableStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
 import UserStore from '../stores/UserStore';
-import Loader from '../components/LoaderComponent';
+import Loader from './LoaderComponent';
 import '../styles/css/tree.css';
 
 let filterString = '';
@@ -39,8 +38,7 @@ function getState (page, filterString, database) {
 }
 
 function getTables (page, filterString, database) {
-
-  // get all the tables
+  // get all the native tables
   let tables = TableStore.getTables(database);
   let pageSize = 10;
   let allTables;
@@ -49,11 +47,9 @@ function getTables (page, filterString, database) {
   let pageTables;
 
   if (!filterString) {
-
     // no need for filtering
     allTables = Object.keys(tables);
   } else {
-
     // filter
     allTables = Object.keys(tables).map(name => {
       if (name.match(filterString)) return name;
@@ -67,7 +63,7 @@ function getTables (page, filterString, database) {
   });
 
   return {
-    totalPages: Math.ceil(allTables.length/pageSize),
+    totalPages: Math.ceil(allTables.length / pageSize),
     tables: pageTables
   };
 }
@@ -123,20 +119,20 @@ class TableTree extends React.Component {
 
     // construct tree
     tableTree = this.state.tables.map(table => {
-      let label = (<Link to="tableschema" params={{tableName: table.name}}
+      let label = (<Link to='tableschema' params={{tableName: table.name}}
         title={table.name} query={{database: this.props.database}}>
           {table.name}</Link>);
       return (
         <TreeView key={table.name} nodeLabel={label}
-          defaultCollapsed={true}>
+          defaultCollapsed={!table.isLoaded}>
 
           {table.isLoaded ? table.columns.map(col => {
             return (
-              <div className="treeNode" key={name + '|' + col.name}>
+              <div className='treeNode' key={table.name + '|' + col.name}>
                 {col.name} ({col.type})
               </div>
             );
-          }) : <Loader size="4px" margin="2px" />}
+          }) : <Loader size='4px' margin='2px' />}
 
         </TreeView>
       );
@@ -144,42 +140,41 @@ class TableTree extends React.Component {
 
     // show a loader when tree is loading
     if (this.state.loading) {
-      tableTree = <Loader size="4px" margin="2px" />;
+      tableTree = <Loader size='4px' margin='2px' />;
     } else if (!this.state.tables.length) {
-      tableTree = (<div className="alert-danger" style={{padding: '8px 5px'}}>
-          <strong>Sorry, we couldn&#39;t find any tables.</strong>
+      tableTree = (<div className='alert-danger' style={{padding: '8px 5px'}}>
+          <strong>Sorry, we couldn&#39;t find any.</strong>
         </div>);
     }
 
     let pagination = this.state.tables.length ?
       (
         <div>
-          <div className="text-center">
-            <button className="btn btn-link glyphicon glyphicon-triangle-left page-back"
+          <div className='text-center'>
+            <button className='btn btn-link glyphicon glyphicon-triangle-left page-back'
               onClick={this.prevPage}>
             </button>
             <span>{this.state.page} of {this.state.totalPages}</span>
-            <button className="btn btn-link glyphicon glyphicon-triangle-right page-next"
+            <button className='btn btn-link glyphicon glyphicon-triangle-right page-next'
               onClick={this.nextPage}>
             </button>
           </div>
         </div>
-      ) :
-      null;
+      ) : null;
 
     return (
       <div>
         { !this.state.loading &&
-          <div className="form-group">
-            <input type="search" className="form-control"
-              placeholder="Type to filter tables"
+          <div className='form-group'>
+            <input type='search' className='form-control'
+              placeholder='Type to filter tables'
               onChange={this._filter.bind(this)}/>
           </div>
         }
 
         {pagination}
 
-        <div ref="tableTree" style={{maxHeight: '350px', overflowY: 'auto'}}>
+        <div ref='tableTree' style={{maxHeight: '350px', overflowY: 'auto'}}>
           {tableTree}
         </div>
       </div>
@@ -187,14 +182,12 @@ class TableTree extends React.Component {
   }
 
   _onChange (page) {
-
     // so that page doesn't reset to beginning
     page = page || this.state.page || 1;
     this.setState(getState(page, filterString, this.props.database));
   }
 
   getDetails (tableName, database) {
-
     // find the table
     let table = this.state.tables.filter(table => {
       return tableName === table.name;
@@ -234,5 +227,9 @@ class TableTree extends React.Component {
   }
 
 }
+
+TableTree.propTypes = {
+  database: React.PropTypes.string.isRequired
+};
 
 export default TableTree;

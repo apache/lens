@@ -44,7 +44,6 @@ function receiveCubeDetails (payload) {
   cubes[cubeDetails.name].isLoaded = true;
 }
 
-
 let CHANGE_EVENT = 'change';
 var cubes = {};
 
@@ -67,7 +66,7 @@ let CubeStore = assign({}, EventEmitter.prototype, {
 });
 
 AppDispatcher.register((action) => {
-  switch(action.actionType) {
+  switch (action.actionType) {
     case AdhocQueryConstants.RECEIVE_CUBES:
       receiveCubes(action.payload);
       CubeStore.emitChange();

@@ -19,7 +19,7 @@
 
 import React from 'react';
 
-import Loader from '../components/LoaderComponent';
+import Loader from './LoaderComponent';
 import AdhocQueryStore from '../stores/AdhocQueryStore';
 import UserStore from '../stores/UserStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
@@ -31,12 +31,10 @@ function getResults (props) {
   let secretToken = UserStore.getUserDetails().secretToken;
 
   if (props.query.category) {
-
     // fetch either running or completed results
     AdhocQueryActions
       .getQueries(secretToken, email, { state: props.query.category });
   } else {
-
     // fetch all
     AdhocQueryActions.getQueries(secretToken, email);
   }
@@ -77,12 +75,12 @@ class QueryResults extends React.Component {
         return queryMap[b].submissionTime - queryMap[a].submissionTime;
       })
       .map((queryHandle) => {
-      let query = queryMap[queryHandle];
+        let query = queryMap[queryHandle];
 
-      return (
-        <QueryPreview key={query.queryHandle.handleId} {...query} />
-      );
-    }); // end of map
+        return (
+          <QueryPreview key={query.queryHandle.handleId} {...query} />
+        );
+      }); // end of map
 
     // FIXME find a better way to do it.
     // show a loader when queries are empty, or no queries.
@@ -93,9 +91,9 @@ class QueryResults extends React.Component {
     let queriesLength = Object.keys(this.state.queries).length;
 
     if (!queriesLength && !this.state.queriesReceived) {
-      queries = <Loader size="8px" margin="2px" />;
+      queries = <Loader size='8px' margin='2px' />;
     } else if (!queriesLength && this.state.queriesReceived) {
-      queries = <div className="alert alert-danger">
+      queries = <div className='alert alert-danger'>
         <strong>Sorry</strong>, there were no queries to be shown.
       </div>;
     }
@@ -105,9 +103,8 @@ class QueryResults extends React.Component {
         <div style={{border: '1px solid #dddddd', borderRadius: '4px',
           padding: '0px 8px 8px 8px'}}>
           <h3 style={{margin: '8px 10px'}}>Results</h3>
-          <hr style={{marginTop: '6px' }}/>
-          <div style={{overflowY: 'auto',
-            maxHeight: this.props.toggleQueryBox ? '300px': '600px'}}>
+          <hr style={{marginTop: '6px'}}/>
+          <div>
             {queries}
           </div>
         </div>
@@ -116,7 +113,7 @@ class QueryResults extends React.Component {
   }
 
   _onChange () {
-    this.setState({ queries: getQueries(), queriesReceived: true});
+    this.setState({queries: getQueries(), queriesReceived: true});
   }
 }
 
