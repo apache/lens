@@ -509,8 +509,14 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * Who are the users of feature and who are not, if any.
 
+  * Illustration with example would be very welcome
+
   The design documentation related to the feature can go in developer documentation or
-  {{{https://cwiki.apache.org/confluence/display/LENS/DesignDocs} Design docs}}.
+  {{{https://cwiki.apache.org/confluence/display/LENS/DesignDocs} Design docs}}. It would be necessary to add in which
+  version the feature is available if the documentation is in confluence. Also when behavior is modified or improved on
+  existing features, version tagging is quite useful. Any defaults (in terms of config or behavior) assumed with the
+  feature should also be highlighted. Configuration descriptions should be linked to config apt files, so that they
+  are always in sync with code.
 
 ** Confluence usage
 

@@ -670,7 +670,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             }
 
             logSegregationContext.setLogSegragationAndQueryId(ctx.getQueryHandleString());
-            log.info("Polling status for {}", ctx.getQueryHandle());
+            log.debug("Polling status for {}", ctx.getQueryHandle());
             try {
               // session is not required to update status of the query
               // don't need to wrap this with acquire/release
@@ -770,7 +770,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       synchronized (ctx) {
         QueryStatus before = ctx.getStatus();
         if (!ctx.queued() && !ctx.finished() && !ctx.getDriverStatus().isFinished()) {
-          log.info("Updating status for {}", ctx.getQueryHandle());
+          log.debug("Updating status for {}", ctx.getQueryHandle());
           try {
             ctx.getSelectedDriver().updateStatus(ctx);
             ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
