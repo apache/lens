@@ -67,7 +67,43 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-exec</artifactId>
+    </dependency>
   </dependencies>
+
+  <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>hive-udf-jars</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <property name="build.compiler" value="extJavac"/>
+                                <property name="compile_classpath" refid="maven.compile.classpath"/>
+                                <mkdir dir="${project.build.directory}/additional-classes"/>
+                                <javac includeantruntime="false" srcdir="src/additional/java"
+                                       destdir="${project.build.directory}/additional-classes" classpath="${compile_classpath}"/>
+                                <mkdir dir="${project.build.directory}/testjars"/>
+                                <jar destfile="${project.build.directory}/testjars/hiveudftest.jar">
+                                    <fileset dir="${project.build.directory}/additional-classes" includes="SampleUdf.class"/>
+                                </jar>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
 
 </project>
