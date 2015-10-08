@@ -36,7 +36,7 @@ import lombok.NonNull;
  * The Class LensCubeCommands.
  */
 @Component
-@UserDocumentation(title = "OLAP Data cube metadata management",
+@UserDocumentation(title = "Commands for OLAP Data Cube Management",
   description = "These commands provide CRUD for cubes")
 public class LensCubeCommands extends ConceptualTableCrudCommand<XCube> {
 

@@ -49,7 +49,7 @@ import com.google.common.base.Joiner;
  * SUSPEND CHECKSTYLE CHECK InnerAssignmentCheck
  */
 @Component
-@UserDocumentation(title = "Query Management",
+@UserDocumentation(title = "Commands for Query Management",
   description = "This section provides commands for query life cycle - "
     + "submit, check status,\n"
     + "  fetch results, kill or list all the queries. Also provides commands for\n"

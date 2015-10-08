@@ -31,7 +31,8 @@ import org.springframework.stereotype.Component;
  * The Class LensDatabaseCommands.
  */
 @Component
-@UserDocumentation(title = "Database management commands", description = "These commands provide CRUD for databases")
+@UserDocumentation(title = "Commands for Database Management",
+  description = "These commands provide CRUD for databases")
 public class LensDatabaseCommands extends LensCRUDCommand {
 
   /**

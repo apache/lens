@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-@UserDocumentation(title = "Session management",
+@UserDocumentation(title = "Commands for Session Management",
   description = "Opening the lens CLI shell is equivalent to open a session with lens server."
     + "This section provides all the commands available for in shell which are applicable for the full session.")
 public class LensConnectionCommands extends BaseLensCommand {

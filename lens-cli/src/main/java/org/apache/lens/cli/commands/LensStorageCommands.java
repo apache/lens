@@ -36,7 +36,7 @@ import lombok.NonNull;
  * The Class LensStorageCommands.
  */
 @Component
-@UserDocumentation(title = "Storage Management", description = "These commands provide CRUD for Storages")
+@UserDocumentation(title = "Commands for Storage Management", description = "These commands provide CRUD for Storages")
 public class LensStorageCommands extends LensCRUDCommand<XStorage> implements CommandMarker {
 
   @CliCommand(value = "show storages", help = "list all storages")

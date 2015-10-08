@@ -54,12 +54,6 @@ User CLI Commands
   with <<<arg3>>>. arg4 can be omitted, or if passed, it has to be passed with <<<--arg4>>>.
 
 
-=========================
-
-
-* LENS Commands
-
-
 ** Argument Passing in LENS
 
   Lens supports both the approaches of passing arguments but advises the usage of keyword arguments over list arguments.
@@ -72,7 +66,24 @@ User CLI Commands
   * Arguments are of any type, but there is only one argument of type arg2 or arg3 and that's the argument you intend
      to pass value to.
 
+
+** About the huge number of commands below
+
+  The commands given below is an exhaustive list of commands available in lens cli. The good thing is, you probably
+  don't need to remember any of them. In lens-cli, pressing <<<tab>>> anytime will give you possible keywords.
+  For example, if you don't know the exact command but have an idea that it's related to facts,
+  type fact and press <<<tab>>>. You'll be provided with all possible next keywords.
+  Looking at the options should be helpful to know which to pick
+  for the action you want to perform. Similarly, when you don't know what arguments the command takes, type <<<-->>>
+  and then <<<tab>>> will also provide you with with the arguments of the command.
+  Also, there's a special command <<<help>>> which displays all possible commands with the arguments they expect.
+
+
 ** Known bugs
 
   * If all arguments have same value, Something weird will happen.
+
+================
+
+* LENS CLI Commands
 

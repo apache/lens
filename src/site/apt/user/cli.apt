@@ -54,12 +54,6 @@ User CLI Commands
   with <<<arg3>>>. arg4 can be omitted, or if passed, it has to be passed with <<<--arg4>>>.
 
 
-=========================
-
-
-* LENS Commands
-
-
 ** Argument Passing in LENS
 
   Lens supports both the approaches of passing arguments but advises the usage of keyword arguments over list arguments.
@@ -72,14 +66,31 @@ User CLI Commands
   * Arguments are of any type, but there is only one argument of type arg2 or arg3 and that's the argument you intend
      to pass value to.
 
+
+** About the huge number of commands below
+
+  The commands given below is an exhaustive list of commands available in lens cli. The good thing is, you probably
+  don't need to remember any of them. In lens-cli, pressing <<<tab>>> anytime will give you possible keywords.
+  For example, if you don't know the exact command but have an idea that it's related to facts,
+  type fact and press <<<tab>>>. You'll be provided with all possible next keywords.
+  Looking at the options should be helpful to know which to pick
+  for the action you want to perform. Similarly, when you don't know what arguments the command takes, type <<<-->>>
+  and then <<<tab>>> will also provide you with with the arguments of the command.
+  Also, there's a special command <<<help>>> which displays all possible commands with the arguments they expect.
+
+
 ** Known bugs
 
   * If all arguments have same value, Something weird will happen.
 
+================
+
+* LENS CLI Commands
 
 
 
-** Session management
+
+** Commands for Session Management
 
   Opening the lens CLI shell is equivalent to open a session with lens server.This section provides all the commands available for in shell which are applicable for the full session.
 
@@ -114,7 +125,7 @@ User CLI Commands
 
 ===
 
-** Database management commands
+** Commands for Database Management
 
   These commands provide CRUD for databases
 
@@ -133,7 +144,7 @@ User CLI Commands
 
 ===
 
-** Storage Management
+** Commands for Storage Management
 
   These commands provide CRUD for Storages
 
@@ -154,7 +165,7 @@ User CLI Commands
 
 ===
 
-** OLAP Data cube metadata management
+** Commands for OLAP Data Cube Management
 
   These commands provide CRUD for cubes
 
@@ -181,7 +192,7 @@ User CLI Commands
 
 ===
 
-** Dimension Management
+** Commands for Dimension Management
 
   These commands provide CRUD for Dimensions
 
@@ -206,7 +217,7 @@ User CLI Commands
 
 ===
 
-** Management of Facts
+** Commands for Facts Management
 
   These command provide CRUD for facts, associated storages, and fact partitions
 
@@ -251,7 +262,7 @@ User CLI Commands
 
 ===
 
-** Commands for Dimension Tables
+** Commands for Dimension Tables Management
 
   These commands provide CRUD for dimension tables, associated storages, and fact partitions
 
@@ -294,7 +305,7 @@ User CLI Commands
 
 ===
 
-** Native Table management
+** Commands for Native Table Management
 
   Read operations on native tables
 
@@ -309,7 +320,7 @@ User CLI Commands
 
 ===
 
-** Query Management
+** Commands for Query Management
 
   This section provides commands for query life cycle - submit, check status,
   fetch results, kill or list all the queries. Also provides commands for
@@ -354,14 +365,14 @@ User CLI Commands
 
 ===
 
-** Access to Log Resouces
+** Commands for Accessing Logs
 
   This section provides commands for fetching logs under LENS_LOG_DIR.
 
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|show logs [--log_handle] log handle can be be query_handle for queries [--save_location \<save_location\>]|show logs for a given query handle or log file|
+|show logs [--log_handle] \<log_handle\> [--save_location \<save_location\>]|show logs for the given handle <<<log_handle>>>. Handle can either be a query handle or request id. You can optionally provide a location to save the logs as <<<save_location>>>|
 *--+--+
   <<Lens Log Resource Commands>>
 

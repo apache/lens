@@ -36,7 +36,8 @@ import lombok.NonNull;
  * The Class LensDimensionCommands.
  */
 @Component
-@UserDocumentation(title = "Dimension Management", description = "These commands provide CRUD for Dimensions")
+@UserDocumentation(title = "Commands for Dimension Management",
+  description = "These commands provide CRUD for Dimensions")
 public class LensDimensionCommands extends ConceptualTableCrudCommand<XDimension> {
 
   /**

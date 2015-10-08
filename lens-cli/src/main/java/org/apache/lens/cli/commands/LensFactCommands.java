@@ -37,7 +37,7 @@ import lombok.NonNull;
  * The Class LensFactCommands.
  */
 @Component
-@UserDocumentation(title = "Management of Facts",
+@UserDocumentation(title = "Commands for Facts Management",
   description = "These command provide CRUD for facts, associated storages, and fact partitions")
 public class LensFactCommands extends LogicalTableCrudCommand<XFactTable> {
 

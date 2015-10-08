@@ -40,29 +40,30 @@ import org.springframework.stereotype.Component;
  * SUSPEND CHECKSTYLE CHECK InnerAssignmentCheck
  */
 @Component
-@UserDocumentation(title = "Access to Log Resouces",
+@UserDocumentation(title = "Commands for Accessing Logs",
   description = "This section provides commands for fetching logs under LENS_LOG_DIR.")
 public class LensLogResourceCommands extends BaseLensCommand {
 
-  @CliCommand(value = "show logs", help = "show logs for a given query handle or log file")
+  @CliCommand(value = "show logs",
+    help = "show logs for the given handle <log_handle>. Handle can either be a query handle or request id. "
+      + "You can optionally provide a location to save the logs as <save_location>")
   public String getLogs(
-    @CliOption(key = {"", "log_handle"}, mandatory = true, help = "log handle can be be query_handle for queries")
+    @CliOption(key = {"", "log_handle"}, mandatory = true, help = "<log_handle>")
     String logFile, @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") String location) {
     try {
       Response response = getClient().getLogs(logFile);
       if (response.getStatus() == Response.Status.OK.getStatusCode()) {
         if (StringUtils.isBlank(location)) {
           OutputStream outStream = new PrintStream(System.out, true, "UTF-8");
-          try (InputStream stream = response.readEntity(InputStream.class);) {
+          try (InputStream stream = response.readEntity(InputStream.class)) {
             IOUtils.copy(stream, outStream);
             return "printed complete log content";
           }
         } else {
-          location = getValidPath(new File(location), true, true);
-          String fileName = logFile;
-          location = getValidPath(new File(location + File.separator + fileName), false, false);
+          String existingDirectoryLocation = getValidPath(new File(location), true, true);
+          location = getValidPath(new File(existingDirectoryLocation + File.separator + logFile), false, false);
           try (InputStream stream = response.readEntity(InputStream.class);
-              FileOutputStream outStream = new FileOutputStream(new File(location));) {
+              FileOutputStream outStream = new FileOutputStream(new File(location))) {
             IOUtils.copy(stream, outStream);
             return "Saved to " + location;
           }
