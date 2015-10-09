@@ -29,7 +29,7 @@
   <groupId>org.apache.lens</groupId>
   <artifactId>checkstyle</artifactId>
   <name>Lens Checkstyle Rules</name>
-  <version>2.4.0-beta-SNAPSHOT</version>
+  <version>2.5.0-beta-SNAPSHOT</version>
 
   <build>
     <plugins>
