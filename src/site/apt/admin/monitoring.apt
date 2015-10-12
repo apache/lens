@@ -19,6 +19,10 @@
 
 Lens server monitoring
 
+  This section documents all the metrics available from lens server, admin rest end points and more on query statistics.
+
+* Metrics
+
   Lens server emits following metrics for query service
 
   * Number of queued queries;
@@ -103,6 +107,26 @@ Lens server monitoring
  Reporting to the chosen reporting methods will happen periodically. That period can be configured by:
  <lens.server.metrics.reporting.period>
 
+** Critical Metrics
+
+  When resource method metering is enabled you would see different metrics upto 1000 being emitted and might
+  be confusing to admins - which one to look at.
+
+  Along with jvm, memory, thread count gauges, the following are some critical metrics that admin can monitor
+
+  * lens.gauges.org.apache.lens.server.api.query.QueryExecutionService.running-queries.value
+
+  * lens.gauges.org.apache.lens.server.api.query.QueryExecutionService.queued-queries.value
+
+  * lens.gauges.org.apache.lens.server.api.query.QueryExecutionService.finished-queries.value
+
+  For all timers, admin can look at mean or/and p99 values and exception.timer count. For example :
+
+  * lens.timers.org.apache.lens.server.metastore.MetastoreResource.getLatestDateOfCube.GET.exception.timer.count
+
+  * lens.timers.org.apache.lens.server.metastore.MetastoreResource.getLatestDateOfCube.GET.timer.mean
+
+  * lens.timers.org.apache.lens.server.metastore.MetastoreResource.getLatestDateOfCube.GET.timer.p99
 
 * REST end points
 
@@ -119,5 +143,11 @@ Lens server monitoring
 
 * Query Statistics:
 
-  Lens Server can be configured to emit query related statistics to a hive table <QueryExecutionStatistics>.The statistics service can be configured by providing values to <lens.statistics.warehouse.dir> set to a HDFS location where your query statistics log file will be persisted, <lens.statistics.db> the database which will contain all statistics related tables and <lens.log.rollover.interval> time interval which service will be monitoring for rollover in log file.The statistics can be disabled by setting, <lens.server.statistics.store.class> to empty string. The statistics service works by monitoring for rollups of <query-stats.log> file and adds an appropriate partition based on the rolled over file. The statistics can be queried using Hive queries.
+  Lens Server can be configured to emit query related statistics to a hive table <QueryExecutionStatistics>.The
+  statistics service can be configured by providing values to <lens.statistics.warehouse.dir> set to a HDFS location
+  where your query statistics log file will be persisted, <lens.statistics.db> the database which will contain all
+  statistics related tables and <lens.log.rollover.interval> time interval which service will be monitoring for rollover
+  in log file.The statistics can be disabled by setting, <lens.server.statistics.store.class> to empty string. The
+  statistics service works by monitoring for rollups of <query-stats.log> file and adds an appropriate partition based
+  on the rolled over file. The statistics can be queried using Hive queries.
 
