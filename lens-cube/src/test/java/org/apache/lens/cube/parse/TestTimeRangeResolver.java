@@ -19,11 +19,15 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+
+import java.util.List;
+import java.util.Set;
 
 import org.apache.lens.server.api.error.LensException;
 
@@ -33,6 +37,8 @@ import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.Sets;
 
 public class TestTimeRangeResolver extends TestQueryRewrite {
 
@@ -63,9 +69,16 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     PruneCauses.BriefAndDetailedError causes = extractPruneCause(e);
     assertTrue(causes.getBrief().contains("Columns [msr2] are not present in any table"));
     assertEquals(causes.getDetails().size(), 2);
-    assertEquals(causes.getDetails().values().iterator().next().size(), 1);
-    assertEquals(causes.getDetails().values().iterator().next().iterator().next().getCause(),
-      FACT_NOT_AVAILABLE_IN_RANGE);
+
+    Set<CandidateTablePruneCause.CandidateTablePruneCode> expectedPruneCodes = Sets.newTreeSet();
+    expectedPruneCodes.add(FACT_NOT_AVAILABLE_IN_RANGE);
+    expectedPruneCodes.add(COLUMN_NOT_FOUND);
+    Set<CandidateTablePruneCause.CandidateTablePruneCode> actualPruneCodes = Sets.newTreeSet();
+    for (List<CandidateTablePruneCause> cause : causes.getDetails().values()) {
+      assertEquals(cause.size(), 1);
+      actualPruneCodes.add(cause.iterator().next().getCause());
+    }
+    assertEquals(actualPruneCodes, expectedPruneCodes);
   }
 
   @Test
