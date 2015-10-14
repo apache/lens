@@ -41,7 +41,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @BeforeTest
   public void setupDriver() throws Exception {
     conf = new Configuration();
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2");
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
@@ -289,6 +289,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testMultipleExpressionsPickingFirstExpression() throws Exception {
     Configuration newConf = new Configuration(conf);
+    newConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
     newConf.set(CubeQueryConfUtil.getValidFactTablesKey(cubeName), "testFact");
     String hqlQuery = rewrite("select equalsums from testCube where " + TWO_DAYS_RANGE, newConf);
     String expected =
@@ -317,6 +318,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testMaterializedExpressionPickingMaterializedValue() throws Exception {
     Configuration newConf = new Configuration(conf);
+    newConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
     newConf.set(CubeQueryConfUtil.getValidFactTablesKey(cubeName), "testFact");
     String hqlQuery = rewrite("select msr5 from testCube where " + TWO_DAYS_RANGE, newConf);
     String expected = getExpectedQuery(cubeName, "select testcube.msr5 FROM ", null, null,

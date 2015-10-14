@@ -48,6 +48,13 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-cube</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.mchange</groupId>
       <artifactId>c3p0</artifactId>
     </dependency>

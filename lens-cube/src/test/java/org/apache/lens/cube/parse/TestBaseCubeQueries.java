@@ -46,6 +46,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Splitter;
+
 import lombok.Getter;
 
 public class TestBaseCubeQueries extends TestQueryRewrite {
@@ -56,7 +58,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   @BeforeTest
   public void setupDriver() throws Exception {
     conf = new Configuration();
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2");
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
@@ -84,12 +86,38 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     String columnSetsStr = matcher.group(1);
     assertNotEquals(columnSetsStr.indexOf("test_time_dim"), -1, columnSetsStr);
     assertNotEquals(columnSetsStr.indexOf("msr3, msr13"), -1);
-    assertEquals(pruneCauses.getDetails().get("testfact3_base,testfact1_raw_base,testfact3_raw_base"),
-      Arrays.asList(CandidateTablePruneCause.columnNotFound("test_time_dim")));
-    assertEquals(pruneCauses.getDetails().get("testfact_deprecated,testfact2_raw_base,testfact2_base"),
-      Arrays.asList(CandidateTablePruneCause.columnNotFound("msr3", "msr13")));
+
+    /**
+     * Verifying the BriefAndDetailedError:
+     * 1. Check for missing columns(COLUMN_NOT_FOUND)
+     *    and check the respective tables for each COLUMN_NOT_FOUND
+     * 2. check for ELEMENT_IN_SET_PRUNED
+     *
+     */
+    boolean columnNotFound = false;
+    List<String> testTimeDimFactTables = Arrays.asList("testfact3_base", "testfact1_raw_base", "testfact3_raw_base");
+    List<String> factTablesForMeasures = Arrays.asList("testfact_deprecated", "testfact2_raw_base", "testfact2_base");
+    for (Map.Entry<String, List<CandidateTablePruneCause>> entry : pruneCauses.getDetails().entrySet()) {
+      if (entry.getValue().contains(CandidateTablePruneCause.columnNotFound("test_time_dim"))) {
+        columnNotFound = true;
+        compareStrings(testTimeDimFactTables, entry);
+      }
+      if (entry.getValue().contains(CandidateTablePruneCause.columnNotFound("msr3", "msr13"))) {
+        columnNotFound = true;
+        compareStrings(factTablesForMeasures, entry);
+      }
+    }
+    Assert.assertTrue(columnNotFound);
     assertEquals(pruneCauses.getDetails().get("testfact1_base"),
       Arrays.asList(new CandidateTablePruneCause(CandidateTablePruneCode.ELEMENT_IN_SET_PRUNED)));
+  }
+
+  private void compareStrings(List<String> factTablesList, Map.Entry<String, List<CandidateTablePruneCause>> entry) {
+    String factTablesString = entry.getKey();
+    Iterable<String> factTablesIterator = Splitter.on(',').split(factTablesString);
+    for (String factTable : factTablesIterator) {
+      Assert.assertTrue(factTablesList.contains(factTable), "Not selecting" + factTable + "fact table");
+    }
   }
 
   @Test
@@ -425,7 +453,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
 
   @Test
   public void testFallbackPartCol() throws Exception {
-    Configuration conf = getConfWithStorages("C1,C2,C3,C4");
+    Configuration conf = getConfWithStorages("C1");
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
     String hql, expected;
     // Prefer fact that has a storage with part col on queried time dim
