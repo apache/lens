@@ -34,6 +34,8 @@ import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
+import org.apache.lens.server.api.query.cost.QueryCostCalculator;
+import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -79,7 +81,8 @@ public class QueryContext extends AbstractQueryContext {
   /**
    * The is driver persistent.
    */
-  @Getter private boolean isDriverPersistent;
+  @Getter
+  private boolean isDriverPersistent;
 
   /**
    * The status.
@@ -201,10 +204,11 @@ public class QueryContext extends AbstractQueryContext {
    * @param drivers All the drivers
    * @param selectedDriver SelectedDriver
    */
-  private QueryContext(String userQuery, String user, LensConf qconf, Configuration conf,
-      Collection<LensDriver> drivers, LensDriver selectedDriver, boolean mergeDriverConf) {
+  QueryContext(String userQuery, String user, LensConf qconf, Configuration conf,
+    Collection<LensDriver> drivers, LensDriver selectedDriver, boolean mergeDriverConf) {
     this(userQuery, user, qconf, conf, drivers, selectedDriver, System.currentTimeMillis(), mergeDriverConf);
   }
+
   /**
    * Instantiates a new query context.
    *
@@ -250,7 +254,7 @@ public class QueryContext extends AbstractQueryContext {
    * @return QueryContext object
    */
   public static QueryContext createContextWithSingleDriver(String query, String user, LensConf qconf,
-      Configuration conf, LensDriver driver, String lensSessionPublicId, boolean mergeDriverConf) {
+    Configuration conf, LensDriver driver, String lensSessionPublicId, boolean mergeDriverConf) {
     QueryContext ctx = new QueryContext(query, user, qconf, conf, Lists.newArrayList(driver), driver, mergeDriverConf);
     ctx.setLensSessionIdentifier(lensSessionPublicId);
     return ctx;
@@ -358,12 +362,12 @@ public class QueryContext extends AbstractQueryContext {
 
   public boolean getCompressOutput() {
     return conf.getBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION,
-        LensConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
+      LensConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
   }
 
   public long getMaxResultSplitRows() {
     return conf.getLong(LensConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS,
-        LensConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
+      LensConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
   }
 
   /**
@@ -373,7 +377,7 @@ public class QueryContext extends AbstractQueryContext {
    */
   public boolean splitResultIntoMultipleFiles() {
     return conf.getBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE,
-        LensConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
+      LensConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
   }
 
   public String getClusterUser() {
@@ -397,7 +401,7 @@ public class QueryContext extends AbstractQueryContext {
   public void validateTransition(final QueryStatus newStatus) throws LensException {
     if (!this.status.isValidTransition(newStatus.getStatus())) {
       throw new LensException("Invalid state transition:from[" + this.status.getStatus() + " to "
-          + newStatus.getStatus() + "]");
+        + newStatus.getStatus() + "]");
     }
   }
 
@@ -423,5 +427,18 @@ public class QueryContext extends AbstractQueryContext {
 
   public ImmutableSet<WaitingQueriesSelectionPolicy> getSelectedDriverSelectionPolicies() {
     return getSelectedDriver().getWaitingQuerySelectionPolicies();
+  }
+
+  public Priority decidePriority(LensDriver driver, QueryPriorityDecider queryPriorityDecider) throws LensException {
+    priority = queryPriorityDecider.decidePriority(getDriverQueryCost(driver));
+    return priority;
+  }
+
+  public Priority calculateCostAndDecidePriority(LensDriver driver, QueryCostCalculator queryCostCalculator,
+    QueryPriorityDecider queryPriorityDecider) throws LensException {
+    if (getDriverQueryCost(driver) == null) {
+      setDriverCost(driver, queryCostCalculator.calculateCost(this, driver));
+    }
+    return decidePriority(driver, queryPriorityDecider);
   }
 }

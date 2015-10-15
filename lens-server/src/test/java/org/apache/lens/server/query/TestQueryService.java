@@ -20,6 +20,7 @@ package org.apache.lens.server.query;
 
 import static javax.ws.rs.core.Response.Status.*;
 
+import static org.apache.lens.server.api.util.TestLensUtil.getLensConf;
 import static org.apache.lens.server.common.RestAPITestUtil.*;
 
 import static org.testng.Assert.*;

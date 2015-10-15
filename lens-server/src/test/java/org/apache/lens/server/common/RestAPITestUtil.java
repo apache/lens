@@ -252,13 +252,4 @@ public class RestAPITestUtil {
     return target.path("queryapi/queries").path(handle.toString()).path("httpresultset")
       .queryParam("sessionid", lensSessionHandle).request().get(Response.class);
   }
-
-  public static LensConf getLensConf(Object... args) {
-    assertEquals(args.length % 2, 0);
-    LensConf conf = new LensConf();
-    for (int i = 0; i < args.length; i += 2) {
-      conf.addProperty(args[i], args[i + 1]);
-    }
-    return conf;
-  }
 }

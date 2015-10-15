@@ -818,7 +818,7 @@ public class TestHiveDriver {
 
       final Set<FactPartition> partitions = getFactParts(Arrays.asList(kv[0].trim().split("\\s*,\\s*")));
       final Priority expected = Priority.valueOf(kv[1]);
-      AbstractQueryContext ctx = createContext("test priority query", conf);
+      QueryContext ctx = createContext("test priority query", conf);
       ctx.getDriverContext().setDriverRewriterPlan(driver, new DriverQueryPlan() {
 
         @Override
@@ -847,9 +847,10 @@ public class TestHiveDriver {
             }
           });
       }
-      ctx.setDriverCost(driver, driver.queryCostCalculator.calculateCost(ctx, driver));
-      assertEquals(expected, driver.queryPriorityDecider.decidePriority(ctx.getDriverQueryCost(driver)));
-      assertEquals(Priority.NORMAL, alwaysNormalPriorityDecider.decidePriority(ctx.getDriverQueryCost(driver)));
+      assertEquals(ctx.calculateCostAndDecidePriority(driver, driver.queryCostCalculator,
+        driver.queryPriorityDecider), expected);
+      assertEquals(ctx.calculateCostAndDecidePriority(driver, driver.queryCostCalculator,
+        alwaysNormalPriorityDecider), Priority.NORMAL);
       i++;
     }
     // test priority without fact partitions

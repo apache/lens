@@ -533,10 +533,8 @@ public class HiveDriver implements LensDriver {
       if (whetherCalculatePriority) {
         try {
           // Inside try since non-data fetching queries can also be executed by async method.
-          if (ctx.getDriverQueryCost(this) == null) {
-            ctx.setDriverCost(this, queryCostCalculator.calculateCost(ctx, this));
-          }
-          String priority = queryPriorityDecider.decidePriority(ctx.getDriverQueryCost(this)).toString();
+          String priority = ctx.calculateCostAndDecidePriority(this, queryCostCalculator, queryPriorityDecider)
+            .toString();
           qdconf.set("mapred.job.priority", priority);
           log.info("set priority to {}", priority);
         } catch (Exception e) {
