@@ -1005,6 +1005,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     // Construct the final fact in-line query with keys,
     // measures and individual sub queries built.
+
     if (whereTree == null || joinTree == null || allSubQueries.length() == 0
         || aggColumn.isEmpty() || !isExpressionsAnswerableFromFact(selectAST)) {
       log.info("@@@Query not eligible for inner subquery rewrite");
