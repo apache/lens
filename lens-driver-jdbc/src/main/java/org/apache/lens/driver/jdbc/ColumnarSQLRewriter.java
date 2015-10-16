@@ -389,22 +389,56 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   }
 
   /**
-   * Check if expression is used in select
+   * Check if expression is answerable from fact, then push it to fact pushdown subquery
    *
    * @param node
    * @return true if expressions is used
    */
-  public boolean isExpressionsUsed(ASTNode node) {
+  public boolean isExpressionsAnswerableFromFact(ASTNode node) {
+    boolean isAnswerable = true;
     for (int i = 0; i < node.getChildCount(); i++) {
       if (node.getChild(i).getType() == HiveParser.TOK_SELEXPR) {
         int cnt = getColumnCount((ASTNode) node.getChild(i));
         if (cnt >= 2) {
-          return true;
+          if (cnt == getNumFactTableInExpressions((ASTNode) node.getChild(i), new MutableInt(0))) {
+            isAnswerable = true;
+          } else {
+            isAnswerable = false;
+          }
         }
       }
     }
-    return false;
+    return isAnswerable;
   }
+
+  /**
+   * Get number of fact columns used in the an expression
+   *
+   * @param node
+   * @param count
+   * @return Number of fact columns used in expression
+   */
+  private int getNumFactTableInExpressions(ASTNode node, MutableInt count) {
+
+    if (node == null) {
+      log.debug("ASTNode is null ");
+      return 0;
+    }
+    if (node.getToken().getType() == HiveParser.TOK_TABLE_OR_COL) {
+      String factAlias = getFactAlias();
+      String table = node.getChild(0).getText();
+      if (table.equals(factAlias)) {
+        count.add(1);
+      }
+    }
+    for (int i = 0; i < node.getChildCount(); i++) {
+      ASTNode child = (ASTNode) node.getChild(i);
+      getNumFactTableInExpressions(child, count);
+    }
+
+    return count.intValue();
+  }
+
 
   /*
    * Get filter conditions if user has specified a join condition for filter pushdown.
@@ -971,10 +1005,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     // Construct the final fact in-line query with keys,
     // measures and individual sub queries built.
-
-
     if (whereTree == null || joinTree == null || allSubQueries.length() == 0
-        || aggColumn.isEmpty() || isExpressionsUsed(selectAST)) {
+        || aggColumn.isEmpty() || !isExpressionsAnswerableFromFact(selectAST)) {
       log.info("@@@Query not eligible for inner subquery rewrite");
       // construct query without fact sub query
       constructQuery(selectTree, whereTree, groupByTree, havingTree, orderByTree, limit);
