@@ -152,13 +152,6 @@ public class FinishedLensQuery {
   private long driverEndTime;
 
   /**
-   * The metadata class.
-   */
-  @Getter
-  @Setter
-  private String metadataClass;
-
-  /**
    * The query name.
    */
   @Getter

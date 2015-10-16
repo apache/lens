@@ -92,7 +92,6 @@ public class TestLensDAO extends LensJerseyTest {
       log.info("@@@JSON {}" + jsonMetadata);
 
       finishedLensQuery.setMetadata(MAPPER.writeValueAsString(jdbcRsMeta));
-      finishedLensQuery.setMetadataClass(JDBCResultSet.JDBCResultSetMetadata.class.getName());
     } catch (SQLException ex) {
       log.error("Error creating result set ", ex);
     } finally {

@@ -906,7 +906,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
                         String outputPath = set.getOutputPath();
                         Long fileSize = ((PersistentResultSet) set).getFileSize();
                         Integer rows = set.size();
-                        finishedQuery.setMetadataClass(metadata.getClass().getName());
                         finishedQuery.setResult(outputPath);
                         finishedQuery.setMetadata(metadata.toJson());
                         finishedQuery.setRows(rows);
