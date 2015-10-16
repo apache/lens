@@ -692,7 +692,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       ref = keyString.substring(0, keyString.indexOf("__")).replaceAll("[(,)]", "");
     }
     if (type.equals("alias")) {
-      ref = keyString.substring(0, keyString.lastIndexOf(".")).replaceAll("[(,)]", "");
+      ref = keyString.substring(0, keyString.indexOf(".")).replaceAll("[(,)]", "");
     }
     return ref;
   }
