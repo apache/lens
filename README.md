@@ -5,7 +5,8 @@ Apache Lens is a unified Analytics Platform. Lens aims to cut the Data Analytics
 across multiple tiered data stores and optimal execution environment for the analytical query.
 
 Prerequisites :
-Apache Lens requires JDK(1.7) and Apache Maven(3.x) to be installed for the build. Build does not pass with JDK(1.8) yet.
+Apache Lens requires JDK(>=1.7) and Apache Maven(3.x) to be installed for the build.
+
 JAVA_HOME is required for running tests.
 
 Confirm versions :
