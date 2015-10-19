@@ -145,6 +145,7 @@ public class QueryServiceResource {
    *                  all the queries will be returned
    * @param user      Returns queries submitted by this user. If set to "all", returns queries of all users. By default,
    *                  returns queries of the current user.
+   * @param driver    Get queries submitted on a specific driver.
    * @param fromDate  from date to search queries in a time range, the range is inclusive(submitTime &gt;= fromDate)
    * @param toDate    to date to search queries in a time range, the range is inclusive(toDate &gt;= submitTime)
    * @return List of {@link QueryHandle} objects
@@ -154,14 +155,14 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("queryName") String queryName,
-    @DefaultValue("") @QueryParam("user") String user, @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
-    @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+    @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("driver") String driver,
+    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     try {
       if (toDate == -1L) {
         toDate = Long.MAX_VALUE;
       }
-      return queryServer.getAllQueries(sessionid, state, user, queryName, fromDate, toDate);
+      return queryServer.getAllQueries(sessionid, state, user, driver, queryName, fromDate, toDate);
     } catch (LensException e) {
       throw new WebApplicationException(e);
     }
@@ -254,6 +255,7 @@ public class QueryServiceResource {
    *                  {@link org.apache.lens.api.query.QueryStatus.Status#SUCCESSFUL} cannot be cancelled
    * @param user      If any user is passed, all the queries submitted by the user will be cancelled, otherwise all the
    *                  queries will be cancelled
+   * @param driver    Get queries submitted on a specific driver.
    * @param queryName Cancel queries matching the query name
    * @param fromDate  the from date, inclusive(submitTime&gt;=fromDate)
    * @param toDate    the to date, inclusive(toDate&gt;=submitTime)
@@ -267,14 +269,15 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult cancelAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("user") String user,
-    @DefaultValue("") @QueryParam("queryName") String queryName,
+    @DefaultValue("") @QueryParam("queryName") String queryName, @DefaultValue("") @QueryParam("driver") String driver,
     @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     int numCancelled = 0;
     List<QueryHandle> handles = null;
     boolean failed = false;
     try {
-      handles = getAllQueries(sessionid, state, queryName, user, fromDate, toDate == -1L ? Long.MAX_VALUE : toDate);
+      handles = getAllQueries(sessionid, state, queryName, user, driver, fromDate,
+        toDate == -1L ? Long.MAX_VALUE : toDate);
       for (QueryHandle handle : handles) {
         if (cancelQuery(sessionid, handle)) {
           numCancelled++;

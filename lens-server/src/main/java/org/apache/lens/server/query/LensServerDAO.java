@@ -158,14 +158,15 @@ public class LensServerDAO {
    *
    * @param state     the state
    * @param user      the user
+   * @param driverName the driverClass
    * @param queryName the query name
    * @param fromDate  the from date
    * @param toDate    the to date
    * @return the list
    * @throws LensException the lens exception
    */
-  public List<QueryHandle> findFinishedQueries(String state, String user, String queryName, long fromDate, long toDate)
-    throws LensException {
+  public List<QueryHandle> findFinishedQueries(String state, String user, String driverName, String queryName,
+    long fromDate, long toDate) throws LensException {
     boolean addFilter = StringUtils.isNotBlank(state) || StringUtils.isNotBlank(user)
       || StringUtils.isNotBlank(queryName);
     StringBuilder builder = new StringBuilder("SELECT handle FROM finished_queries");
@@ -188,6 +189,11 @@ public class LensServerDAO {
       if (StringUtils.isNotBlank(queryName)) {
         filters.add("queryname like ?");
         params.add("%" + queryName + "%");
+      }
+
+      if (StringUtils.isNotBlank(driverName)) {
+        filters.add("lower(driverclass)=?");
+        params.add(driverName.toLowerCase());
       }
 
       filters.add("submissiontime BETWEEN ? AND ?");

@@ -2040,10 +2040,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * (non-Javadoc)
    *
    * @see org.apache.lens.server.api.query.QueryExecutionService#getAllQueries(org.apache.lens.api.LensSessionHandle,
-   * java.lang.String, java.lang.String, java.lang.String, long, long)
+   * java.lang.String, java.lang.String, java.lang.String, java.lang.String, long, long)
    */
   @Override
-  public List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle, String state, String userName,
+  public List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle, String state, String userName, String driver,
     String queryName, long fromDate, long toDate) throws LensException {
     validateTimeRange(fromDate, toDate);
     userName = UtilityMethods.removeDomain(userName);
@@ -2062,6 +2062,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       if (StringUtils.isBlank(userName)) {
         userName = getSession(sessionHandle).getLoggedInUser();
       }
+      boolean filterByDriver = StringUtils.isNotBlank(driver);
 
       List<QueryHandle> all = new ArrayList<QueryHandle>(allQueries.keySet());
       Iterator<QueryHandle> itr = all.iterator();
@@ -2071,6 +2072,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         long querySubmitTime = context.getSubmissionTime();
         if ((filterByStatus && status != context.getStatus().getStatus())
           || (filterByQueryName && !context.getQueryName().toLowerCase().contains(queryName))
+          || (filterByDriver && !context.getSelectedDriver().getClass().getName().equalsIgnoreCase(driver))
           || (!"all".equalsIgnoreCase(userName) && !userName.equalsIgnoreCase(context.getSubmittedUser()))
           || (!(fromDate <= querySubmitTime && querySubmitTime <= toDate))) {
           itr.remove();
@@ -2082,8 +2084,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         if ("all".equalsIgnoreCase(userName)) {
           userName = null;
         }
-        List<QueryHandle> persistedQueries = lensServerDao.findFinishedQueries(state, userName, queryName, fromDate,
-          toDate);
+        List<QueryHandle> persistedQueries = lensServerDao.findFinishedQueries(state, userName, driver, queryName,
+          fromDate, toDate);
         if (persistedQueries != null && !persistedQueries.isEmpty()) {
           log.info("Adding persisted queries {}", persistedQueries.size());
           all.addAll(persistedQueries);

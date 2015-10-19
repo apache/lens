@@ -106,6 +106,7 @@ public class QueryServiceUIResource {
    *                  be returned. Possible states are {@link org.apache.lens.api.query.QueryStatus.Status#values()}
    * @param user      return queries matching the user. If set to "all", return queries of all users. By default,
    *                  returns queries of the current user.
+   * @param driver    Get queries submitted on a specific driver.
    * @param queryName human readable query name set by user (optional)
    * @param fromDate  the from date
    * @param toDate    the to date
@@ -116,13 +117,13 @@ public class QueryServiceUIResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("publicId") UUID publicId,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("user") String user,
-    @DefaultValue("") @QueryParam("queryName") String queryName,
+    @DefaultValue("") @QueryParam("driver") String driver, @DefaultValue("") @QueryParam("queryName") String queryName,
     @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
     checkSessionHandle(sessionHandle);
     try {
-      return queryServer.getAllQueries(sessionHandle, state, user, queryName, fromDate, toDate == -1L ? Long.MAX_VALUE
-        : toDate);
+      return queryServer.getAllQueries(sessionHandle, state, user, driver, queryName, fromDate,
+        toDate == -1L ? Long.MAX_VALUE : toDate);
     } catch (LensException e) {
       throw new WebApplicationException(e);
     }
