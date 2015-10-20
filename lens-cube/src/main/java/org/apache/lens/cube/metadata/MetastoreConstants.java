@@ -54,6 +54,7 @@ public final class MetastoreConstants {
   public static final String FACT_ABSOLUTE_START_TIME = "cube.fact.absolute.start.time";
   public static final String FACT_RELATIVE_START_TIME = "cube.fact.relative.start.time";
   public static final String FACT_ABSOLUTE_END_TIME = "cube.fact.absolute.end.time";
+  public static final String FACT_RELATIVE_END_TIME = "cube.fact.relative.end.time";
 
   // dim table constants
   // TODO: remove this and move to "dimtable."
