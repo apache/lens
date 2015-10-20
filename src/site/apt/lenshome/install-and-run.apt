@@ -109,6 +109,8 @@ Installing and Running Lens
   │   ├── lens-env.sh
   │   ├── lens-site.xml
   │   └── logback.xml
+  └── shipjars
+      └── lens-ship-jars.jar
   └── webapp
       └── lens-server.war
 +---+

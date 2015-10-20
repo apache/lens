@@ -1541,6 +1541,7 @@
     <module>lens-client</module>
     <module>lens-cli</module>
     <module>lens-examples</module>
+    <module>lens-ship-jars</module>
     <module>lens-dist</module>
     <module>lens-ml-lib</module>
     <module>lens-ml-dist</module>
