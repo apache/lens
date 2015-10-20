@@ -408,6 +408,11 @@
       <outputDirectory>/server/webapp/</outputDirectory>
       <destName>lens-server.war</destName>
     </file>
+    <file>
+      <source>../lens-ship-jars/target/lens-ship-jars-${project.version}.jar</source>
+      <outputDirectory>/server/shipjars/</outputDirectory>
+      <destName>lens-ship-jars.jar</destName>
+    </file>
   </files>
 
 </assembly>
