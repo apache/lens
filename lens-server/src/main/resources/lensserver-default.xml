@@ -277,6 +277,31 @@
     <description>Database to which statistics tables are created and partitions are added.</description>
   </property>
 
+  <!-- Query Result Purger Configurations -->
+  <property>
+    <name>lens.server.resultset.purge.enabled</name>
+    <value>false</value>
+    <description>Whether to purge the query results </description>
+  </property>
+
+  <property>
+    <name>lens.server.resultsetpurger.sleep.interval.secs</name>
+    <value>3600</value>
+    <description>Periodicity for Query result purger runs. Default 1 hour. </description>
+  </property>
+
+  <property>
+    <name>lens.server.query.resultset.retention</name>
+    <value>1 day</value>
+    <description>Lens query resultset retention period. Default 1 day </description>
+  </property>
+
+  <property>
+    <name>lens.server.hdfs.output.retention</name>
+    <value>1 day</value>
+    <description>hdfs output retention period. Default 1 day</description>
+  </property>
+
   <!-- Finished Query Purging Configurations -->
   <property>
     <name>lens.server.querypurger.sleep.interval</name>

@@ -942,4 +942,44 @@ public final class LensConfConstants {
    */
   public static final int DEFAULT_FETCH_COUNT_SAVED_QUERY_LIST = 20;
 
+  /**
+   * The Constant RESULTSET_PURGE_ENABLED.
+   */
+  public static final String RESULTSET_PURGE_ENABLED = SERVER_PFX + "resultset.purge.enabled";
+
+  /**
+   * The Constant DEFAULT_RESULTSET_PURGE_ENABLED
+   */
+  public static final boolean DEFAULT_RESULTSET_PURGE_ENABLED = false;
+
+  /**
+   * The Constant RESULTSET_PURGE_INTERVAL_IN_SECONDS.
+   */
+  public static final String RESULTSET_PURGE_INTERVAL_IN_SECONDS = SERVER_PFX + "resultsetpurger.sleep.interval.secs";
+
+  /*
+   * The Constant DEFAULT_RESULTSET_PURGE_INTERVAL_IN_SECONDS.
+   */
+  public static final int DEFAULT_RESULTSET_PURGE_INTERVAL_IN_SECONDS = 3600;
+
+  /**
+   * The Constant QUERY_RESULTSET_RETENTION.
+   */
+  public static final String QUERY_RESULTSET_RETENTION = SERVER_PFX + "query.resultset.retention";
+
+  /**
+   * The Constant DEFAULT_QUERY_RESULTSET_RETENTION.
+   */
+  public static final String DEFAULT_QUERY_RESULTSET_RETENTION = "1 day";
+
+  /**
+   * The Constant HDFS_OUTPUT_RETENTION.
+   */
+  public static final String HDFS_OUTPUT_RETENTION = SERVER_PFX + "hdfs.output.retention";
+
+  /**
+   * The Constant DEFAULT_HDFS_OUTPUT_RETENTION.
+   */
+  public static final String DEFAULT_HDFS_OUTPUT_RETENTION = "1 day";
+
 }

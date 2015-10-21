@@ -239,4 +239,12 @@ Lens server configuration
 *--+--+---+--+
 |105|lens.server.ws.resourcenames|session,metastore,query,quota,scheduler,index,log|These JAX-RS resources would be started in the specified order when lens-server starts up|
 *--+--+---+--+
+|106|lens.server.resultset.purge.enabled|false|Whether the query results will be purged|
+*--+--+---+--+
+|107|lens.server.resultsetpurger.sleep.interval.secs|3600|Interval at which query result purger runs|
+*--+--+---+--+
+|108|lens.server.query.resultset.retention|1 day|Lens query resultset retention period in days|
+*--+--+---+--+
+|109|lens.server.hdfs.output.retention|1 day|Hdfs output retention period|
+*--+--+---+--+
 The configuration parameters and their default values

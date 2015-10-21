@@ -432,7 +432,7 @@ public final class DateUtil {
   }
 
   @EqualsAndHashCode
-  static class TimeDiff {
+  public static class TimeDiff {
     int quantity;
     UpdatePeriod updatePeriod;
 
@@ -441,7 +441,7 @@ public final class DateUtil {
       this.updatePeriod = updatePeriod;
     }
 
-    static TimeDiff parseFrom(String diffStr) throws LensException {
+    public static TimeDiff parseFrom(String diffStr) throws LensException {
       // Get the relative diff part to get eventual date based on now.
       Matcher qtyMatcher = P_QUANTITY.matcher(diffStr);
       int qty = 1;
