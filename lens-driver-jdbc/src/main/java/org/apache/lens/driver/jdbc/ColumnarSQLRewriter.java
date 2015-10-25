@@ -1171,8 +1171,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     rewrittenQuery.append("select ").append(selecttree).append(" from ");
     if (factInLineQuery.length() != 0) {
-      rewrittenQuery.append(finalJoinClause.replaceFirst(factNameAndAlias.substring(0, factNameAndAlias.indexOf(' ')),
-        factInLineQuery.toString()));
+      finalJoinClause = finalJoinClause.substring(finalJoinClause.indexOf(" "));
+      rewrittenQuery.append(factInLineQuery);
+      rewrittenQuery.append(finalJoinClause);
     } else {
       rewrittenQuery.append(finalJoinClause);
     }

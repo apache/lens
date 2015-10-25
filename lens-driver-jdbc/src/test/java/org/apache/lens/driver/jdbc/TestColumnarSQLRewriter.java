@@ -1021,6 +1021,59 @@ public class TestColumnarSQLRewriter {
   }
 
 
+  @Test
+  public void testEscapeQuote() throws LensException {
+
+    String query = "select fact.time_key,time_dim.day_of_week,time_dim.day, ((sum( fact . item_count ) + 0 ) + "
+            + "(sum(fact . product_count ) + 0 )) as expr1, "
+            + "(sum(case when fact.status_id is null then 0 when fact.status_id = 1 then fact.item_sold else 0 end)"
+            + " * 1000) / sum(case when fact.status_id is null then 0 when fact.status_id = 2 "
+            + "then fact.dollars_sold else 0 end) as expr2 from db.sales_fact as fact "
+            + "inner join time_dim as time_dim on fact.time_key = time_dim.time_key inner "
+            + "join db.location_dim ld on fact.location_key = ld.location_key "
+            + " where time_dim.time_key between '2013-01-01' and '2013-01-31' "
+            + " and ld.location_name in ('test\\'123') "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
+            + "order by dollars_sold desc";
+
+    SessionState.start(hconf);
+
+    String actual = qtest.rewrite(query, conf, hconf);
+    String expected = "select ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ),"
+            + " ( time_dim___time_dim . day ), ((sum(alias1) +  0 ) + (sum(alias2) +  0 )) expr1 , "
+            + "((sum(alias3) *  1000 ) / sum(alias4)) expr2  from  "
+            + "(select sales_fact__db_sales_fact_fact.time_key, sales_fact__db_sales_fact_fact."
+            + "location_key,sum(( sales_fact__db_sales_fact_fact . item_count )) as alias1, "
+            + "sum(( sales_fact__db_sales_fact_fact . product_count )) as alias2, "
+            + "sum( case  when ( sales_fact__db_sales_fact_fact . status_id ) is null  "
+            + "then  0  when (( sales_fact__db_sales_fact_fact . status_id ) =  1 ) then "
+            + "( sales_fact__db_sales_fact_fact . item_sold ) else  0  end ) as alias3, "
+            + "sum( case  when ( sales_fact__db_sales_fact_fact . status_id ) is null  then  0  "
+            + "when (( sales_fact__db_sales_fact_fact . status_id ) =  2 ) then "
+            + "( sales_fact__db_sales_fact_fact . dollars_sold ) else  0  end ) as"
+            + " alias4 from db.sales_fact sales_fact__db_sales_fact_fact where "
+            + "sales_fact__db_sales_fact_fact.time_key in  "
+            + "(  select time_dim .time_key from time_dim where ( time_dim. time_key ) "
+            + "between  '2013-01-01'  and  '2013-01-31'  ) and "
+            + "sales_fact__db_sales_fact_fact.location_key in  (  select location_dim ."
+            + "location_key from location_dim where ( location_dim. location_name ) in "
+            + "( 'test\'123' ) )  group by sales_fact__db_sales_fact_fact.time_key, "
+            + "sales_fact__db_sales_fact_fact.location_key) sales_fact__db_sales_fact_fact  "
+            + "inner join (select time_key,day_of_week,day from time_dim) time_dim___time_dim "
+            + "on (( sales_fact__db_sales_fact_fact . time_key ) = ( time_dim___time_dim . time_key )) "
+            + " inner join (select location_key,location_name from db.location_dim)"
+            + " location_dim__db_location_dim_ld on (( sales_fact__db_sales_fact_fact . "
+            + "location_key ) = ( location_dim__db_location_dim_ld . location_key )) "
+            + " where (( time_dim___time_dim . time_key ) between  '2013-01-01'  and  "
+            + "'2013-01-31'  and ( location_dim__db_location_dim_ld . location_name ) "
+            + "in ( 'test\'123' )) group by ( sales_fact__db_sales_fact_fact . time_key ), "
+            + "( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day )"
+            + " order by dollars_sold  desc";
+
+    compareQueries(expected, actual);
+  }
+
+
   /**
    * Test replace db name.
    *
