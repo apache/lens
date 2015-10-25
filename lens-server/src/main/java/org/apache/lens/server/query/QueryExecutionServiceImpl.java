@@ -2345,6 +2345,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         if (driverAvailable) {
           String clsName = in.readUTF();
           ctx.getDriverContext().setSelectedDriver(drivers.get(clsName));
+          ctx.setDriverQuery(ctx.getSelectedDriver(), ctx.getSelectedDriverQuery());
         }
         allQueries.put(ctx.getQueryHandle(), ctx);
       }

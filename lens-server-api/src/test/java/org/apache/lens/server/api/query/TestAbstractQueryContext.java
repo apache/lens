@@ -26,13 +26,17 @@ import static org.testng.Assert.*;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.lens.api.Priority;
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.query.cost.MockQueryCostCalculator;
 import org.apache.lens.server.api.query.priority.MockQueryPriorityDecider;
+
+import org.apache.hadoop.conf.Configuration;
 
 import org.testng.annotations.Test;
 
@@ -103,4 +107,46 @@ public class TestAbstractQueryContext {
     assertEquals(ctx.getPriority(), HIGH);
   }
 
+  @Test
+  public void testReadAndWriteExternal() throws Exception {
+    Configuration conf = new Configuration();
+    List<LensDriver> drivers = MockQueryContext.getDrivers(conf);
+    MockQueryContext ctx = new MockQueryContext(drivers);
+    String driverQuery = "driver query";
+    ctx.setSelectedDriverQuery(driverQuery);
+    assertNotNull(ctx.getSelectedDriverQuery());
+    assertEquals(ctx.getSelectedDriverQuery(), driverQuery);
+    assertEquals(ctx.getDriverQuery(ctx.getSelectedDriver()), driverQuery);
+
+    ByteArrayOutputStream bios = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(bios);
+    byte[] ctxBytes = null;
+    try {
+      out.writeObject(ctx);
+      ctxBytes = bios.toByteArray();
+    } finally {
+      out.close();
+    }
+    ByteArrayInputStream bais = new ByteArrayInputStream(ctxBytes);
+    ObjectInputStream in = new ObjectInputStream(bais);
+    MockQueryContext ctxRead = null;
+    try {
+      ctxRead = (MockQueryContext) in.readObject();
+    } finally {
+      in.close();
+    }
+    ctxRead.initTransientState();
+    ctxRead.setConf(ctx.getConf());
+    assertNotNull(ctxRead.getHiveConf());
+    assertNotNull(ctxRead.getSelectedDriverQuery());
+    assertEquals(ctxRead.getSelectedDriverQuery(), driverQuery);
+
+    //Create DriverSelectorQueryContext by passing all the drivers and the user query
+    DriverSelectorQueryContext driverCtx = new DriverSelectorQueryContext(ctxRead.getUserQuery(), ctxRead.getConf(),
+      drivers);
+    ctxRead.setDriverContext(driverCtx);
+    ctxRead.getDriverContext().setSelectedDriver(ctx.getSelectedDriver());
+    ctxRead.setDriverQuery(ctxRead.getSelectedDriver(), ctxRead.getSelectedDriverQuery());
+    assertEquals(ctxRead.getDriverQuery(ctxRead.getSelectedDriver()), driverQuery);
+  }
 }

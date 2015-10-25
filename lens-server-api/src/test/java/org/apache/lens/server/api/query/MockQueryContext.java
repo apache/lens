@@ -43,6 +43,10 @@ public class MockQueryContext extends QueryContext {
     this(new Configuration());
   }
 
+  public MockQueryContext(final Collection<LensDriver> drivers) throws LensException {
+    this("mock query", new LensConf(), new Configuration(), drivers);
+  }
+
   public MockQueryContext(Configuration conf) throws LensException {
     this("mock query", new LensConf(), conf, getDrivers(conf));
   }
