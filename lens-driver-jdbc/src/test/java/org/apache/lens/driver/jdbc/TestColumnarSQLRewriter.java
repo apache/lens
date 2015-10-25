@@ -1073,6 +1073,35 @@ public class TestColumnarSQLRewriter {
     compareQueries(expected, actual);
   }
 
+  @Test
+  public void testHavingClause() throws LensException {
+
+    String query =  "select fact.time_key time_key, time_dim.day_of_week, "
+            + "sum(fact.item_sold) as total_item_sold from db.sales_fact as fact "
+            + "inner join time_dim as time_dim on fact.time_key = time_dim.time_key "
+            + "where time_dim.time_key between '2013-01-01' and '2013-01-31'"
+            + "group by fact.time_key "
+            + "having sum(fact.dollar_sold) > 100 ";
+
+    SessionState.start(hconf);
+
+    String actual = qtest.rewrite(query, conf, hconf);
+    String expected = "select ( sales_fact__db_sales_fact_fact . time_key ) time_key , "
+            + "( time_dim___time_dim . day_of_week ), sum(alias1) total_item_sold  from "
+            + " (select sales_fact__db_sales_fact_fact.time_key,sum(( sales_fact__db_sales_fact_fact ."
+            + " item_sold )) as alias1, sum(( sales_fact__db_sales_fact_fact . dollar_sold )) "
+            + "as alias2 from db.sales_fact sales_fact__db_sales_fact_fact where "
+            + "sales_fact__db_sales_fact_fact.time_key in  (  select time_dim .time_key "
+            + "from time_dim where ( time_dim. time_key ) between  '2013-01-01'  and  '2013-01-31'  )  "
+            + "group by sales_fact__db_sales_fact_fact.time_key) sales_fact__db_sales_fact_fact  "
+            + "inner join (select time_key,day_of_week from time_dim) time_dim___time_dim on "
+            + "(( sales_fact__db_sales_fact_fact . time_key ) = ( time_dim___time_dim . time_key ))  "
+            + "where ( time_dim___time_dim . time_key ) between  '2013-01-01'  and  '2013-01-31' "
+            + " group by ( sales_fact__db_sales_fact_fact . time_key ) "
+            + "having (sum(alias2) >  100 )";
+
+    compareQueries(expected, actual);
+  }
 
   /**
    * Test replace db name.

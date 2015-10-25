@@ -995,7 +995,11 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     replaceWithUnderlyingStorage(hconf);
     replaceAliasInAST();
     getFilterInJoinCond(fromAST);
-    getAggregateColumns(selectAST, new MutableInt(0));
+    MutableInt alaisCount = new MutableInt(0);
+    getAggregateColumns(selectAST, alaisCount);
+    if (havingAST != null) {
+      getAggregateColumns(havingAST, alaisCount);
+    }
     constructJoinChain();
     getAllFilters(whereAST);
     buildSubqueries(fromAST);
