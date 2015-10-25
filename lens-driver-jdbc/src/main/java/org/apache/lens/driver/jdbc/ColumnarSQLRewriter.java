@@ -533,15 +533,19 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       log.debug("AST is null ");
       return;
     }
-    if (node.getToken().getType() == HiveParser.DOT
-      && node.getParent().getChild(0).getType() != HiveParser.Identifier) {
-      String table = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).toString();
-      String column = node.getChild(1).toString().toLowerCase();
+    if (HQLParser.isAggregateAST(node)) {
+      return;
+    } else {
+      if (node.getToken().getType() == HiveParser.DOT
+              && node.getParent().getChild(0).getType() != HiveParser.Identifier) {
+        String table = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).toString();
+        String column = node.getChild(1).toString().toLowerCase();
 
-      String factAlias = getFactAlias();
+        String factAlias = getFactAlias();
 
-      if (table.equals(factAlias)) {
-        factKeys.add(factAlias + "." + column);
+        if (table.equals(factAlias)) {
+          factKeys.add(factAlias + "." + column);
+        }
       }
     }
 
