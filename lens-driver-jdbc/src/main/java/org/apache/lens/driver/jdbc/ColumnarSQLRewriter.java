@@ -176,6 +176,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /** The from ast. */
   @Getter
   protected ASTNode fromAST;
+  private HashMap<String, String> regexReplaceMap = new HashMap<>();
 
   /**
    * Instantiates a new columnar sql rewriter.
@@ -185,6 +186,14 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   @Override
   public void init(Configuration conf) {
+    if (conf.get(JDBCDriverConfConstants.REGEX_REPLACEMENT_VALUES) != null) {
+      for (String kv : conf.get(JDBCDriverConfConstants.REGEX_REPLACEMENT_VALUES).split("(?<!\\\\),")) {
+        String[] kvArray = kv.split("=");
+        String key = kvArray[0].replaceAll("\\\\,", ",").trim();
+        String value = kvArray[1].replaceAll("\\\\,", ",").trim();
+        regexReplaceMap.put(key, value);
+      }
+    }
   }
 
   public String getClause() {
@@ -936,13 +945,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @return the string
    */
   public String replaceUDFForDB(String query) {
-    Map<String, String> imputnmatch = new LinkedHashMap<String, String>();
-    imputnmatch.put("to_date", "date");
-    imputnmatch.put("format_number", "format");
-    imputnmatch.put("date_sub\\((.*?),\\s*([0-9]+\\s*)\\)", "date_sub($1, interval $2 day)");
-    imputnmatch.put("date_add\\((.*?),\\s*([0-9]+\\s*)\\)", "date_add($1, interval $2 day)");
-
-    for (Map.Entry<String, String> entry : imputnmatch.entrySet()) {
+    for (Map.Entry<String, String> entry : regexReplaceMap.entrySet()) {
       query = query.replaceAll(entry.getKey(), entry.getValue());
     }
     return query;
@@ -1212,8 +1215,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     reset();
 
     try {
+      String finalRewrittenQuery;
       if (query.toLowerCase().matches("(.*)union all(.*)")) {
-        String finalRewrittenQuery = "";
+        finalRewrittenQuery = "";
         String[] queries = query.toLowerCase().split("union all");
         for (int i = 0; i < queries.length; i++) {
           log.info("Union Query Part {} : {}", i, queries[i]);
@@ -1223,16 +1227,14 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           finalRewrittenQuery = mergedQuery.toString().substring(0, mergedQuery.lastIndexOf("union all"));
           reset();
         }
-        queryReplacedUdf = replaceUDFForDB(finalRewrittenQuery);
-        log.info("Input Query : {}", query);
-        log.info("Rewritten Query : {}", queryReplacedUdf);
       } else {
         ast = HQLParser.parseHQL(query, metastoreConf);
         buildQuery(conf, metastoreConf);
-        queryReplacedUdf = replaceUDFForDB(rewrittenQuery.toString());
-        log.info("Input Query : {}", query);
-        log.info("Rewritten Query :  {}", queryReplacedUdf);
+        finalRewrittenQuery = rewrittenQuery.toString();
       }
+      queryReplacedUdf = replaceUDFForDB(finalRewrittenQuery);
+      log.info("Input Query : {}", query);
+      log.info("Rewritten Query : {}", queryReplacedUdf);
     } catch (SemanticException e) {
       throw new LensException(e);
     }

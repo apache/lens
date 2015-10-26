@@ -134,6 +134,8 @@ public class TestColumnarSQLRewriter {
    */
   @BeforeTest
   public void setup() throws Exception {
+    conf.addResource("jdbcdriver-default.xml");
+    conf.addResource("jdbcdriver-site.xml");
     qtest.init(conf);
 
     List<FieldSchema> factColumns = new ArrayList<>();
@@ -205,7 +207,7 @@ public class TestColumnarSQLRewriter {
     String query = "select count(distinct id) from location_dim";
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select count( distinct  id ) from location_dim ";
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
 
     String query2 = "select count(distinct id) from location_dim  location_dim";
     String actual2 = qtest.rewrite(query2, conf, hconf);
@@ -260,7 +262,7 @@ public class TestColumnarSQLRewriter {
       + "and (( location_dim___location_dim . location_name ) =  'test123' ))";
     String actual = qtest.joinCondition.toString();
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   /**
@@ -289,7 +291,7 @@ public class TestColumnarSQLRewriter {
       + ", , ( time_dim___time_dim . time_key ) between  '2013-01-01'  and  '2013-01-31' ]";
     String actual = qtest.rightFilter.toString();
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
 
   }
 
@@ -349,7 +351,7 @@ public class TestColumnarSQLRewriter {
     String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "sales_fact___fact.time_key,sales_fact___fact.location_key,sales_fact___fact.item_key,";
     String actual = qtest.factKeys.toString();
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   /**
@@ -382,7 +384,7 @@ public class TestColumnarSQLRewriter {
       + "and sales_fact___fact.item_key in  (  select item_dim .item_key from "
       + "item_dim where (( item_dim. item_name ) =  'item_1' ) ) and";
     String actual = qtest.allSubQueries.toString();
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   /**
@@ -395,7 +397,7 @@ public class TestColumnarSQLRewriter {
 
     String query =
 
-      "select fact.time_key,time_dim.day_of_week,to_date(time_dim.day),item_dim.item_key, "
+      "select fact.time_key,time_dim.day_of_week, weekofyear(time_dim.day), to_date(time_dim.day),item_dim.item_key, "
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "format_number(sum(fact.units_sold),4),format_number(avg(fact.dollars_sold),'##################.###'),"
         + "min(fact.dollars_sold),max(fact.dollars_sold)" + "from sales_fact fact "
@@ -413,6 +415,7 @@ public class TestColumnarSQLRewriter {
     String actual = qtest.rewrite(query, conf, hconf);
 
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
+            + "week((time_dim__time_dim . day )), "
             + "date(( time_dim___time_dim . day )), ( item_dim___item_dim . item_key ),  "
             + "case  when (sum(alias2) =  0 ) then  0.0  else sum(alias2) end  dollars_sold , "
             + "format(sum(alias3),  4 ), format(avg(alias4),  '##################.###' ), "
@@ -442,7 +445,7 @@ public class TestColumnarSQLRewriter {
             + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) "
             + "order by dollars_sold  asc";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   /**
@@ -535,7 +538,7 @@ public class TestColumnarSQLRewriter {
             + "where ( time_dim___time_dim . time_key ) between  '2013-03-01'  and  '2013-03-05'  "
             + "group by ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ) order by dollars_sold  asc";
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -554,7 +557,7 @@ public class TestColumnarSQLRewriter {
       + "(( location_dim___location_dim . time_id ) = ( time_dim___time_dim . id ))  "
       + "where ( time_dim___time_dim . full_date ) "
       + "between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  limit 10";
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
 
   }
 
@@ -605,7 +608,7 @@ public class TestColumnarSQLRewriter {
             + "group by ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) "
             + "order by dollars_sold  desc";
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
 
   }
 
@@ -658,7 +661,7 @@ public class TestColumnarSQLRewriter {
             + "( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ),"
             + " ( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) "
             + "order by dollars_sold  desc";
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
 
   }
 
@@ -701,7 +704,7 @@ public class TestColumnarSQLRewriter {
         + "and date_sub( '2013-01-31' , interval 3  day) and (( item_dim___item_dim . item_name ) =  'item_1' )) "
         + "group by ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
         + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) order by dollars_sold  asc";
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -722,7 +725,7 @@ public class TestColumnarSQLRewriter {
         + "(select id, full_date from time_dim) time_dim___time_dim on (( location_dim___location_dim . time_id ) = "
         + "( time_dim___time_dim . id ))  where ( time_dim___time_dim . full_date ) "
         + "between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  limit 10";
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -759,7 +762,7 @@ public class TestColumnarSQLRewriter {
             + "( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day ) "
             + "order by dollars_sold  desc";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
 
@@ -791,7 +794,7 @@ public class TestColumnarSQLRewriter {
         + "where (( dim1___dim1 . date ) =  '2014-11-25 00:00:00' ) "
         + "group by ( dim1___dim1 . date ), ( dim2___dim2 . name ), ( dim3___dim3 . name ), ( dim4___dim4 . name )";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
 
@@ -820,7 +823,7 @@ public class TestColumnarSQLRewriter {
         + " =  '2014-11-25 00:00:00' ) and ( fact___f . m4 ) is not null ) "
         + "group by ( dim1___dim1 . date ), ( dim2___dim2 . name )";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -850,7 +853,7 @@ public class TestColumnarSQLRewriter {
         + "where ((( dim1___dim1 . date ) =  '2014-11-25 00:00:00' ) and ( fact___f . m4 ) is not null ) "
         + "group by ( dim1___dim1 . date ), ( dim2___dim2 . name ) order by dim1_date  asc";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -878,7 +881,7 @@ public class TestColumnarSQLRewriter {
         + "'2014-11-25 00:00:00' ) and ( fact___f . m4 ) is not null ) group by ( dim1___dim1 . date ), "
         + "( dim2___dim2 . name ) order by dim1_date  asc";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -929,7 +932,7 @@ public class TestColumnarSQLRewriter {
             + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) "
             + "order by dollars_sold  desc";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -978,7 +981,7 @@ public class TestColumnarSQLRewriter {
             + "group by ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ) order by dollars_sold  desc";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -1017,7 +1020,7 @@ public class TestColumnarSQLRewriter {
             + "( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day ) "
             + "order by dollars_sold  desc";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
 
@@ -1070,7 +1073,7 @@ public class TestColumnarSQLRewriter {
             + "( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day )"
             + " order by dollars_sold  desc";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   @Test
@@ -1100,7 +1103,7 @@ public class TestColumnarSQLRewriter {
             + " group by ( sales_fact__db_sales_fact_fact . time_key ) "
             + "having (sum(alias2) >  100 )";
 
-    compareQueries(expected, actual);
+    compareQueries(actual, expected);
   }
 
   /**
