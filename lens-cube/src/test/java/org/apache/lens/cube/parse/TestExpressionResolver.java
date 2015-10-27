@@ -316,6 +316,17 @@ public class TestExpressionResolver extends TestQueryRewrite {
   }
 
   @Test
+  public void testExpressionFieldWithOtherFields() throws Exception {
+    // select with expression which requires dimension tables. And there is a candidate, which is removed because
+    // the other fields which require the dimension tables as expression ones, are not reachable and
+    // the expression is not evaluable on the candidate.
+    LensException th =
+      getLensExceptionInRewrite("select cityStateName, msr2expr, msr5, msr15 from testCube where "
+        + TWO_DAYS_RANGE, conf);
+    Assert.assertEquals(th.getErrorCode(),
+      LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
+  }
+  @Test
   public void testMaterializedExpressionPickingMaterializedValue() throws Exception {
     Configuration newConf = new Configuration(conf);
     newConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
@@ -371,7 +382,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
     // since zipdim is not available in storage C2, first expression should be have been pruned
     // And joining with statedim for second expression is not possible because of stateid missing in C2 tables
     // or citydim.name missing in c2 tables.
-    CubeQueryContext ctx = rewriteCtx("select citydim.name, cityaddress from" + " citydim", newConf);
+    CubeQueryContext ctx = rewriteCtx("select citydim.name, cityaddress from citydim", newConf);
     Assert.assertEquals(ctx.getDimPruningMsgs().get(ctx.getMetastoreClient().getDimension("citydim"))
       .get(ctx.getMetastoreClient().getDimensionTable("citytable")).size(), 1);
     CandidateTablePruneCause pruningMsg =

@@ -698,6 +698,8 @@ public class CubeTestSetup {
       new ExprSpec("avg(roundedmsr2)", null, null), new ExprSpec("avg(equalsums)", null, null),
       new ExprSpec("case when substrexpr = 'xyz' then avg(msr5) when substrexpr = 'abc' then avg(msr4)/100 end",
         null, null)));
+    exprs.add(new ExprColumn(new FieldSchema("msr2expr", "double", "nested expr"), "Nested expr",
+      new ExprSpec("case when cityStateName = 'xyz' then msr2 else 0 end", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("nestedExprWithTimes", "double", "nested expr"), "Nested expr",
       new ExprSpec("avg(roundedmsr2)", null, null), new ExprSpec("avg(equalsums)", null, null),
       new ExprSpec("case when substrexpr = 'xyz' then avg(msr5) when substrexpr = 'abc' then avg(msr4)/100 end",

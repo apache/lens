@@ -72,12 +72,14 @@ public class TestQuery {
      * Get the join query part, pre-join query and post-join query part from the trimmed query.
      *
      */
-    if (trimmedQuery.indexOf(joinQueryPart) != -1) {
+    if (StringUtils.isNotBlank(joinQueryPart)) {
       this.preJoinQueryPart = trimmedQuery.substring(0, trimmedQuery.indexOf(joinQueryPart));
-      if (getMinIndexOfClause() != -1) {
-        this.postJoinQueryPart = trimmedQuery.substring(getMinIndexOfClause());
-      }
+      this.postJoinQueryPart = trimmedQuery.substring(getMinIndexOfClause());
       prepareJoinStrings(trimmedQuery);
+    } else {
+      int minIndex = getMinIndexOfClause();
+      this.preJoinQueryPart = trimmedQuery.substring(0, minIndex);
+      this.postJoinQueryPart = trimmedQuery.substring(minIndex);
     }
   }
 
@@ -162,7 +164,7 @@ public class TestQuery {
       }
       minClauseIndex = clauseIndex < minClauseIndex ? clauseIndex : minClauseIndex;
     }
-    return minClauseIndex == Integer.MAX_VALUE ? -1 : minClauseIndex;
+    return (minClauseIndex == Integer.MAX_VALUE || minClauseIndex == -1) ? query.length() : minClauseIndex;
   }
 
   private int getMinIndexOfJoinType() {
