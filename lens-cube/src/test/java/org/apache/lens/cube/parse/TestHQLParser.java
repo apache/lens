@@ -60,7 +60,7 @@ public class TestHQLParser {
 
     ASTNode select = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
     String selectStr = HQLParser.getString(select).trim();
-    String expectedSelect = "'abc'  col1 ,  'DEF'  col2";
+    String expectedSelect = "'abc'  as `col1` ,  'DEF'  as `col2`";
     Assert.assertEquals(expectedSelect, selectStr);
 
     ASTNode where = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_WHERE);
@@ -80,7 +80,7 @@ public class TestHQLParser {
     System.out.println("reconstructed clause ");
     System.out.println(selectStr);
     Assert.assertEquals("case ((( col1  *  100 ) /  200 ) +  5 ) "
-        + "when  'ABC'  then  'def'  when  'EFG'  then  'hij'  " + "else  'XyZ'  end  complexcasestatement",
+        + "when  'ABC'  then  'def'  when  'EFG'  then  'hij'  " + "else  'XyZ'  end  as `ComplexCaseStatement`",
       selectStr.trim());
 
     String q2 = "SELECT " + "CASE WHEN col1 = 'abc' then 'def' " + "when col1 = 'ghi' then 'jkl' "
@@ -92,7 +92,7 @@ public class TestHQLParser {
     System.out.println("reconstructed clause 2");
     System.out.println(selectStr);
     Assert.assertEquals("case  when ( col1  =  'abc' ) then  'def'  " + "when ( col1  =  'ghi' ) then  'jkl'  "
-      + "else  'none'  end  complex_case_statement_2", selectStr.trim());
+      + "else  'none'  end  as `Complex_Case_Statement_2`", selectStr.trim());
 
     String q3 = "SELECT  " + "CASE (col1 * 100)/200 + 5 " + "WHEN 'ABC' THEN 'def' " + "WHEN 'EFG' THEN 'hij' "
       + "END AS ComplexCaseStatement FROM FOO";
@@ -103,7 +103,7 @@ public class TestHQLParser {
     System.out.println("reconstructed clause ");
     System.out.println(selectStr);
     Assert.assertEquals("case ((( col1  *  100 ) /  200 ) +  5 ) " + "when  'ABC'  then  'def'  when  'EFG'  "
-      + "then  'hij'  end  complexcasestatement", selectStr.trim());
+      + "then  'hij'  end  as `ComplexCaseStatement`", selectStr.trim());
 
     String q4 = "SELECT " + "CASE WHEN col1 = 'abc' then 'def' " + "when col1 = 'ghi' then 'jkl' "
       + "END AS Complex_Case_Statement_2" + " from FOO";
@@ -114,7 +114,7 @@ public class TestHQLParser {
     System.out.println("reconstructed clause 2");
     System.out.println(selectStr);
     Assert.assertEquals("case  when ( col1  =  'abc' ) then  " + "'def'  when ( col1  =  'ghi' ) then  'jkl'  "
-      + "end  complex_case_statement_2", selectStr.trim());
+      + "end  as `Complex_Case_Statement_2`", selectStr.trim());
 
   }
 
@@ -245,6 +245,22 @@ public class TestHQLParser {
       log.error("should not have thrown npe", exc);
       Assert.fail("should not have thrown npe");
     }
+  }
+
+  @Test
+  public void testAliasShouldBeQuoted() throws Exception {
+    Assert.assertEquals(getSelectStrForQuery("select id as identity from sample_dim"), "id  as `identity`");
+    Assert.assertEquals(getSelectStrForQuery("select id as `column identity` from sample_dim"),
+        "id  as `column identity`");
+    Assert.assertEquals(getSelectStrForQuery("select id identity from sample_dim"), "id  as `identity`");
+    Assert.assertEquals(getSelectStrForQuery("select id `column identity` from sample_dim"),
+        "id  as `column identity`");
+  }
+
+  private String getSelectStrForQuery(String query) throws Exception {
+    ASTNode tree = HQLParser.parseHQL(query, conf);
+    ASTNode select = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
+    return HQLParser.getString(select).trim();
   }
 
   @Test

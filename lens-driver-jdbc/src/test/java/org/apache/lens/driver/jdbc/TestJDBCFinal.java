@@ -181,10 +181,10 @@ public class TestJDBCFinal {
     testCreateJdbcDriver();
     final String query =
 
-      "select fact.time_key,time_dim.day_of_week,time_dim.day," + "sum(fact.dollars_sold) dollars_sold "
+      "select fact.time_key,time_dim.day_of_week,time_dim.day," + "sum(fact.dollars_sold) "
         + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "where time_dim.day between '1900-01-01' and '1900-01-03' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc";
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by fact.time_key desc";
 
     QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
 
@@ -210,7 +210,7 @@ public class TestJDBCFinal {
 
       ColumnDescriptor col4 = rsMeta.getColumns().get(3);
       assertEquals(col4.getTypeName().toLowerCase(), "double");
-      assertEquals(col4.getName(), "dollars_sold".toUpperCase());
+      assertEquals(col4.getName(), "c4".toUpperCase());
 
       while (rs.hasNext()) {
         ResultRow row = rs.next();
@@ -234,14 +234,14 @@ public class TestJDBCFinal {
     testCreateJdbcDriver();
     final String query =
 
-      "select fact.time_key,time_dim.day_of_week,time_dim.day, " + "sum(fact.dollars_sold) dollars_sold "
+      "select fact.time_key,time_dim.day_of_week,time_dim.day, " + "sum(fact.dollars_sold)  "
         + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join item_dim item_dim on fact.item_key = item_dim.item_key and item_dim.item_name = 'item2' "
         + "inner join branch_dim branch_dim on fact.branch_key = branch_dim.branch_key "
         + "and branch_dim.branch_name = 'branch2' "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "where time_dim.day between '1900-01-01' and '1900-01-04' " + "and location_dim.location_name = 'loc2' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold  desc ";
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by fact.time_key  desc ";
 
     QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
     LensResultSet resultSet = driver.execute(context);
@@ -266,7 +266,7 @@ public class TestJDBCFinal {
 
       ColumnDescriptor col4 = rsMeta.getColumns().get(3);
       assertEquals(col4.getTypeName().toLowerCase(), "double");
-      assertEquals(col4.getName(), "dollars_sold".toUpperCase());
+      assertEquals(col4.getName(), "c4".toUpperCase());
 
       while (rs.hasNext()) {
         ResultRow row = rs.next();

@@ -835,23 +835,22 @@ public class TestJoinResolver extends TestQueryRewrite {
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
     String query = "select usersports.name, sum(msr2), sum(msr12) from basecube where " + TWO_DAYS_RANGE;
     String hqlQuery = rewrite(query, conf);
-    String expected1 = getExpectedQuery("basecube", "select usersports.name name, sum(basecube.msr2) msr2 FROM ",
-      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
-        + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name"
-        + " from " + getDbName() + "c1_user_interests_tbl user_interests"
-        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
-        + " group by user_interests.user_id) usersports"
-        + " on userdim.id = usersports.user_id ",
-      null, "group by usersports.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
-    String expected2 = getExpectedQuery("basecube", "select usersports.name name, sum(basecube.msr12) msr12 FROM ",
-      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
-        + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name"
-        + " from " + getDbName() + "c1_user_interests_tbl user_interests"
-        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
-        + " group by user_interests.user_id) usersports"
-        + " on userdim.id = usersports.user_id ",
-      null, "group by usersports.name", null,
+    String expected1 = getExpectedQuery("basecube",
+        "select usersports.name as `name`, sum(basecube.msr2) as `msr2` FROM ", " join " + getDbName()
+            + "c1_usertable userdim ON basecube.userid = userdim.id "
+            + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name" + " from "
+            + getDbName() + "c1_user_interests_tbl user_interests" + " join " + getDbName()
+            + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
+            + " group by user_interests.user_id) usersports" + " on userdim.id = usersports.user_id ", null,
+        "group by usersports.name", null, getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    String expected2 = getExpectedQuery("basecube",
+        "select usersports.name as `name`, sum(basecube.msr12) as `msr12` FROM ", " join " + getDbName()
+            + "c1_usertable userdim ON basecube.userid = userdim.id "
+            + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name" + " from "
+            + getDbName() + "c1_user_interests_tbl user_interests" + " join " + getDbName()
+            + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
+            + " group by user_interests.user_id) usersports" + " on userdim.id = usersports.user_id ", null,
+        "group by usersports.name", null,
       getWhereForDailyAndHourly2days("basecube", "c1_testfact2_base"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);

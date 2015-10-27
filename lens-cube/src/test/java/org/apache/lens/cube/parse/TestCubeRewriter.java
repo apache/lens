@@ -779,10 +779,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
     expected =
       getExpectedQuery(
         cubeName,
-        "SELECT ( citydim.name ) g1 ,"
+        "SELECT ( citydim.name ) as `g1` ,"
           + "  case  when (( citydim.name ) ==  'NULL' ) then  'NULL'  when (( citydim.name ) ==  'X' )"
           + " then  'X-NAME'  when (( citydim.name ) ==  'Y' ) then  'Y-NAME'"
-          + "  else  'DEFAULT'  end  g2 , ( statedim.name ) g3 , ( statedim.id ) g4 ,"
+          + "  else  'DEFAULT'  end  as `g2` , ( statedim.name ) as `g3` , ( statedim.id ) as `g4` ,"
           + " ((( zipdim.code ) !=  1 ) and ((((( zipdim.f1 ) ==  \"xyz\" )"
           + " and (((( zipdim.f2 ) >=  \"3\" ) and (( zipdim.f2 ) !=  \"NULL\" ))"
           + " and (( zipdim.f2 ) !=  \"uk\" ))) or (((( zipdim.f2 ) ==  \"adc\" )"
@@ -791,7 +791,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
           + " or ((((( zipdim.f1 ) ==  \"api\" )"
           + " or (( zipdim.f1 ) ==  \"uk\" )) or ((( zipdim.f1 ) ==  \"adc\" )"
           + " and (( zipdim.f1 ) !=  \"js\" )))"
-          + " and (( citydim.id ) ==  12 )))) g5 , ((( zipdim.code ) ==  1 )"
+          + " and (( citydim.id ) ==  12 )))) as `g5` , ((( zipdim.code ) ==  1 )"
           + " and ((((( zipdim.f1 ) ==  \"xyz\" ) and (((( zipdim.f2 ) >=  \"3\" )"
           + " and (( zipdim.f2 ) !=  \"NULL\" ))"
           + " and (( zipdim.f2 ) !=  \"uk\" ))) or (((( zipdim.f2 ) ==  \"adc\" )"
@@ -800,14 +800,14 @@ public class TestCubeRewriter extends TestQueryRewrite {
           + " or ((((( zipdim.f1 ) ==  \"api\" )"
           + " or (( zipdim.f1 ) ==  \"uk\" )) or ((( zipdim.f1 ) ==  \"adc\" )"
           + " and (( zipdim.f1 ) !=  \"js\" )))"
-          + " and (( citydim.id ) ==  12 )))) g6 , ( zipdim.f1 ) g7 ,"
-          + " format_number(sum(( testcube.msr1 )),  \"##################.###\" ) a1 ,"
-          + " format_number(sum(( testcube.msr2 )),  \"##################.###\" ) a2 ,"
-          + " format_number(sum(( testcube.msr3 )),  \"##################.###\" ) a3, "
-          + " format_number((sum(( testcube.msr1 )) + sum(( testcube.msr2 ))),  \"##################.###\" ) a4 ,"
-          + " format_number((sum(( testcube.msr1 )) + sum(( testcube.msr3 ))),  \"##################.###\" ) a5 ,"
+          + " and (( citydim.id ) ==  12 )))) as `g6` , ( zipdim.f1 ) as `g7` ,"
+          + " format_number(sum(( testcube.msr1 )),  \"##################.###\" ) as `a1` ,"
+          + " format_number(sum(( testcube.msr2 )),  \"##################.###\" ) as `a2` ,"
+          + " format_number(sum(( testcube.msr3 )),  \"##################.###\" ) as `a3`, "
+          + " format_number((sum(( testcube.msr1 )) + sum(( testcube.msr2 ))),  \"##################.###\" ) as `a4` ,"
+          + " format_number((sum(( testcube.msr1 )) + sum(( testcube.msr3 ))),  \"##################.###\" ) as `a5` ,"
           + " format_number((sum(( testcube.msr1 )) - (sum(( testcube.msr2 )) + sum(( testcube.msr3 )))), "
-          + " \"##################.###\" ) a6"
+          + " \"##################.###\" ) as `a6`"
           + "  FROM ",
         actualExpr,
         null,
@@ -885,8 +885,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
       + " on testCube.cityid = citydim.id where " + LAST_HOUR_TIME_RANGE;
 
     String expectedRewrittenQuery = "SELECT ( citydim . name ) as `Alias With Spaces` , sum(( testcube . msr2 )) "
-      + "testmeasure  FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim ON "
-      + "(( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) =  '"
+      + "as `TestMeasure`  FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
+      + "ON (( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) =  '"
       + CubeTestSetup.getDateUptoHours(LAST_HOUR) + "' ))) GROUP BY ( citydim . name )";
 
     String actualRewrittenQuery = rewrite(inputQuery, getConfWithStorages("C2"));
@@ -902,8 +902,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
       + " on testCube.cityid = citydim.id where " + LAST_HOUR_TIME_RANGE;
 
     String expectedRewrittenQuery = "SELECT ( citydim . name ) as `Alias With Spaces` , sum(( testcube . msr2 )) "
-      + "testmeasure  FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim ON "
-      + "(( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) =  '"
+      + "as `TestMeasure`  FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
+      + "ON (( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) =  '"
       + CubeTestSetup.getDateUptoHours(LAST_HOUR) + "' ))) GROUP BY ( citydim . name )";
 
     String actualRewrittenQuery = rewrite(inputQuery, getConfWithStorages("C2"));

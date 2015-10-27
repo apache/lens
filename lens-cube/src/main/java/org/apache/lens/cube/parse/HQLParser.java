@@ -345,9 +345,9 @@ public final class HQLParser {
         buf.append(" true ");
       } else if (KW_FALSE == rootType) {
         buf.append(" false ");
-      } else if (Identifier == rootType && TOK_SELEXPR == ((ASTNode) root.getParent()).getToken().getType()
-        && hasSpaces(rootText)) {
-        // If column alias contains spaces, enclose in back quotes
+      } else if (Identifier == rootType && TOK_SELEXPR == ((ASTNode) root.getParent()).getToken().getType()) {
+        // back quote column alias in all cases. This is required since some alias values can match DB keywords
+        // (example : year as alias) and in such case queries can fail on certain DBs if the alias in not back quoted
         buf.append(" as `").append(rootText).append("` ");
       } else if (Identifier == rootType && TOK_FUNCTIONSTAR == ((ASTNode) root.getParent()).getToken().getType()) {
         // count(*) or count(someTab.*): Don't append space after the identifier
