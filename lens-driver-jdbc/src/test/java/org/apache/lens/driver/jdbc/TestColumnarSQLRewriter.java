@@ -142,6 +142,7 @@ public class TestColumnarSQLRewriter {
     factColumns.add(new FieldSchema("item_key", "int", ""));
     factColumns.add(new FieldSchema("branch_key", "int", ""));
     factColumns.add(new FieldSchema("location_key", "int", ""));
+    factColumns.add(new FieldSchema("other_location_key", "int", ""));
     factColumns.add(new FieldSchema("dollars_sold", "double", ""));
     factColumns.add(new FieldSchema("units_sold", "int", ""));
 
@@ -231,6 +232,25 @@ public class TestColumnarSQLRewriter {
       + "(( location_dim__db_location_dim_location_dim . id ) = ( time_dim___time_dim . id ))";
     compareQueries(expected4, actual4);
 
+  }
+
+  @Test
+  public void testPushDownFilterWithCommonDim() throws LensException {
+    String query = "select fact.time_key, time_dim.day_of_week, location_dim_a.location_name, "
+      + "other_location_dim.location_name, sum(fact.dollars_sold) from sales_fact fact inner join "
+      + "time_dim time_dim on fact.time_key = time_dim.time_key inner join location_dim location_dim_a "
+      + "on fact.location_key = location_dim_a.location_key inner join location_dim other_location_dim "
+      + "on fact.other_location_key = other_location_dim.location_key where time_dim.time_key "
+      + "between '2013-01-01' and '2013-01-31' and location_dim_a.location_key = 'some-loc' "
+      + "group by fact.time_key, location_dim_a.location_key, other_location_dim.location_key";
+
+    SessionState.start(hconf);
+    qtest.rewrite(query, conf, hconf);
+    String expected = "sales_fact___fact.time_key in  (  select time_dim .time_key from time_dim "
+      + "where ( time_dim. time_key ) between  '2013-01-01'  and  '2013-01-31'  ) and "
+      + "sales_fact___fact.location_key in  (  select location_dim .location_key from "
+      + "location_dim where (( location_dim. location_key ) =  'some-loc' ) ) and ";
+    Assert.assertEquals(qtest.allSubQueries.toString().trim(), expected.trim());
   }
 
   /**

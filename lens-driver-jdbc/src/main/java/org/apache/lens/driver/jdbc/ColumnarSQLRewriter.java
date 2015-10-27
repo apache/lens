@@ -673,7 +673,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           .replaceAll("[(,)]", "");
         String dimJoinKeys = HQLParser.getString(right).replaceAll("\\s+", "")
           .replaceAll("[(,)]", "");
-        String dimTableName = dimJoinKeys.substring(0, dimJoinKeys.indexOf("__"));
+        int dimTableDelimIndex = dimJoinKeys.indexOf("__");
+        String dimTableName = dimJoinKeys.substring(0, dimTableDelimIndex);
+        String dimAlias = dimJoinKeys.
+            substring(dimTableDelimIndex + 3, dimJoinKeys.indexOf('.')).trim();
 
         // Construct part of subquery by referring join condition
         // fact.fact_key = dim_table.dim_key
@@ -691,14 +694,16 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         // Check the occurrence of dimension table in the filter list and
         // combine all filters of same dimension table with and .
         // eg. "dim_table.key1 = 'abc' and dim_table.key2 = 'xyz'"
-        if (setAllFilters.toString().matches("(.*)" + dimTableName + "(.*)")) {
+        if (setAllFilters.toString().replaceAll("\\s+", "")
+            .matches("(.*)" + dimAlias + "(.*)")) {
 
           factFilters.delete(0, factFilters.length());
 
           // All filters in where clause
           for (int i = 0; i < setAllFilters.toArray().length; i++) {
 
-            if (setAllFilters.toArray()[i].toString().matches("(.*)" + dimTableName + ("(.*)"))) {
+            if (setAllFilters.toArray()[i].toString().replaceAll("\\s+", "")
+                .matches("(.*)" + dimAlias + ("(.*)"))) {
               String filters2 = setAllFilters.toArray()[i].toString();
               filters2 = filters2.replaceAll(
                 getTableOrAlias(filters2, "alias"),
