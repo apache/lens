@@ -121,7 +121,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
       getExpectedQuery(cubeName, "SELECT testcube.cityid," + " sum(testCube.msr2) * max(testCube.msr3) from ", null,
         "group by testcube.cityid", getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     String expectedq9 =
-      getExpectedQuery(cubeName, "SELECT testcube.cityid c1," + " max(testCube.msr3) m3 from ", "c1 > 100",
+      getExpectedQuery(cubeName, "SELECT testcube.cityid as `c1`," + " max(testCube.msr3) as `m3` from ", "c1 > 100",
         "group by testcube.cityid" + " having sum(testCube.msr2) < 100 AND (m3 > 1000)",
         getWhereForDailyAndHourly2days(cubeName, "c2_testfact"));
     String expectedq10 =
@@ -247,7 +247,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
     cubeql = rewriteCtx(query, conf);
     hQL = cubeql.toHQL();
     expectedQL =
-      getExpectedQuery(cubeName, "SELECT testcube.cityid," + " sum(testCube.msr2) m2 from ", null,
+      getExpectedQuery(cubeName, "SELECT testcube.cityid," + " sum(testCube.msr2) as `m2` from ", null,
         "group by testcube.cityid order by m2 asc", getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expectedQL, hQL);
 

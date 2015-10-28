@@ -740,7 +740,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       rewrite("select round(zipcode) rzc," + " msr2 from testCube where " + TWO_DAYS_RANGE + " group by zipcode"
         + " order by rzc", conf);
     expected =
-      getExpectedQuery(cubeName, "select round(testcube.zipcode) rzc," + " sum(testcube.msr2) FROM ", null,
+      getExpectedQuery(cubeName, "select round(testcube.zipcode) as `rzc`," + " sum(testcube.msr2) FROM ", null,
         " group by testcube.zipcode  order by rzc asc", getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(hqlQuery, expected);
 
@@ -916,7 +916,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     String hqlQuery = rewrite("select SUM(msr2) m2 from" + " testCube where " + TWO_DAYS_RANGE, getConfWithStorages(
       "C2"));
     String expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2)" + " m2 FROM ", null, null,
+      getExpectedQuery(cubeName, "select sum(testcube.msr2) as `m2` FROM ", null, null,
         getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(hqlQuery, expected);
 
@@ -936,13 +936,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
     hqlQuery = rewrite("select mycube.msr2 m2 from testCube" + " mycube where " + TWO_DAYS_RANGE, getConfWithStorages(
       "C2"));
     expected =
-      getExpectedQuery("mycube", "select sum(mycube.msr2) m2 FROM ", null, null,
+      getExpectedQuery("mycube", "select sum(mycube.msr2) as `m2` FROM ", null, null,
         getWhereForDailyAndHourly2days("mycube", "C2_testfact"));
     compareQueries(hqlQuery, expected);
 
     hqlQuery = rewrite("select testCube.msr2 m2 from testCube" + " where " + TWO_DAYS_RANGE, getConfWithStorages("C2"));
     expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2) m2 FROM ", null, null,
+      getExpectedQuery(cubeName, "select sum(testcube.msr2) as `m2` FROM ", null, null,
         getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(hqlQuery, expected);
   }
@@ -1121,11 +1121,11 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     hqlQuery = rewrite("select name n, count(1) from citydim" + " group by name order by n ", conf);
     expected =
-      getExpectedQuery("citydim", "select citydim.name n," + " count(1) from ",
+      getExpectedQuery("citydim", "select citydim.name as `n`," + " count(1) from ",
         "groupby citydim.name order by n asc", "c2_citytable", false);
     compareQueries(hqlQuery, expected);
 
-    hqlQuery = rewrite("select name n, count(1) from citydim" + " order by n ", conf);
+    hqlQuery = rewrite("select name as `n`, count(1) from citydim" + " order by n ", conf);
     compareQueries(hqlQuery, expected);
     hqlQuery = rewrite("select count(1) from citydim" + " group by name order by name ", conf);
     expected =

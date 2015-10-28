@@ -141,7 +141,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
       rewrite("select TC.substrexpr as subdim1, TC.avgmsr from testCube TC" + " where " + TWO_DAYS_RANGE
         + " and subdim1 != 'XYZ'", conf);
     String expected =
-      getExpectedQuery("tc", "select substr(tc.dim1, 3) subdim1, avg(tc.msr1 + tc.msr2) FROM ", null,
+      getExpectedQuery("tc", "select substr(tc.dim1, 3) as `subdim1`, avg(tc.msr1 + tc.msr2) FROM ", null,
         " and subdim1 != 'XYZ' group by substr(tc.dim1, 3)", getWhereForHourly2days("tc", "C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
@@ -278,7 +278,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
       rewrite("cube select booleancut bc, msr2 from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'"
         + " having msr6 > 100.0 order by bc", conf);
     String expected =
-      getExpectedQuery(cubeName, "select testCube.dim1 != 'x' AND testCube.dim2 != 10 bc,"
+      getExpectedQuery(cubeName, "select testCube.dim1 != 'x' AND testCube.dim2 != 10 as `bc`,"
         + " sum(testCube.msr2) FROM ", null, " and substr(testCube.dim1, 3) != 'XYZ' "
           + " group by testCube.dim1 != 'x' AND testCube.dim2 != 10"
           + " having (sum(testCube.msr2) + max(testCube.msr3))/ count(testcube.msr4) > 100.0" + " order by bc asc",
