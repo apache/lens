@@ -22,6 +22,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
 
+import org.apache.lens.api.util.CommonUtils;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.CubeSemanticAnalyzer;
 import org.apache.lens.cube.parse.HQLParser;
@@ -176,7 +177,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /** The from ast. */
   @Getter
   protected ASTNode fromAST;
-  private HashMap<String, String> regexReplaceMap = new HashMap<>();
+  private Map<String, String> regexReplaceMap;
 
   /**
    * Instantiates a new columnar sql rewriter.
@@ -186,14 +187,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   @Override
   public void init(Configuration conf) {
-    if (conf.get(JDBCDriverConfConstants.REGEX_REPLACEMENT_VALUES) != null) {
-      for (String kv : conf.get(JDBCDriverConfConstants.REGEX_REPLACEMENT_VALUES).split("(?<!\\\\),")) {
-        String[] kvArray = kv.split("=");
-        String key = kvArray[0].replaceAll("\\\\,", ",").trim();
-        String value = kvArray[1].replaceAll("\\\\,", ",").trim();
-        regexReplaceMap.put(key, value);
-      }
-    }
+    regexReplaceMap = CommonUtils.parseMapFromString(conf.get(JDBCDriverConfConstants.REGEX_REPLACEMENT_VALUES));
   }
 
   public String getClause() {

@@ -36,28 +36,35 @@
   </property>
 
   <property>
-  <name>lens.driver.jdbc.estimate.pool.max.size</name>
-  <value>50</value>
+    <name>lens.driver.jdbc.estimate.connection.properties</name>
+    <value>random_key=random_value</value>
+    <description>Connection properties for jdbc connection.</description>
+  </property>
+
+
+  <property>
+    <name>lens.driver.jdbc.estimate.pool.max.size</name>
+    <value>50</value>
   </property>
 
   <property>
-  <name>lens.driver.jdbc.estimate.pool.idle.time</name>
-  <value>800</value>
+    <name>lens.driver.jdbc.estimate.pool.idle.time</name>
+    <value>800</value>
   </property>
 
   <property>
-  <name>lens.driver.jdbc.estimate.get.connection.timeout</name>
-  <value>25000</value>
+    <name>lens.driver.jdbc.estimate.get.connection.timeout</name>
+    <value>25000</value>
   </property>
 
   <property>
-  <name>lens.driver.jdbc.estimate.pool.max.statements</name>
-  <value>15</value>
+    <name>lens.driver.jdbc.estimate.pool.max.statements</name>
+    <value>15</value>
   </property>
 
   <property>
     <name>lens.driver.jdbc.regex.replacement.values</name>
-    <value>weekofyear=week, to_date=date, format_number=format, date_sub\((.*?)\,\s*([0-9]+\s*)\)=date_sub($1\, interval $2 day), date_add\((.*?)\,\s*([0-9]+\s*)\)=date_add($1\, interval $2 day)</value>
+    <value>weekofyear=week, to_date=date, format_number=format, date_sub\((.*?)\,\s*([0-9]+\s*)\)=date_sub($1\, interval$2 day), date_add\((.*?)\,\s*([0-9]+\s*)\)=date_add($1\, interval $2 day)</value>
     <description>Rewriting the HQL to optimized sql queries</description>
   </property>
 </configuration>

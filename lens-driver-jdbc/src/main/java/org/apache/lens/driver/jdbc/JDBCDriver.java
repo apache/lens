@@ -19,8 +19,10 @@
 package org.apache.lens.driver.jdbc;
 
 import static java.lang.Integer.parseInt;
+import static java.util.Arrays.asList;
 
 import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.*;
+import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.ConnectionPoolProperties.*;
 import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -45,7 +47,9 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
-import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.PreparedQueryContext;
+import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
@@ -65,7 +69,6 @@ import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -306,7 +309,7 @@ public class JDBCDriver implements LensDriver {
 
       logSegregationContext.setLogSegragationAndQueryId(this.queryContext.getQueryHandleString());
 
-      Statement stmt = null;
+      Statement stmt;
       Connection conn = null;
       QueryResult result = new QueryResult();
       try {
@@ -448,13 +451,13 @@ public class JDBCDriver implements LensDriver {
    */
   protected void init(Configuration conf) throws LensException {
 
-    final int maxPoolSize = parseInt(this.conf.get(JDBC_POOL_MAX_SIZE));
+    final int maxPoolSize = parseInt(this.conf.get(JDBC_POOL_MAX_SIZE.getConfigKey()));
     final int maxConcurrentQueries
       = parseInt(this.conf.get(MaxConcurrentDriverQueriesConstraintFactory.MAX_CONCURRENT_QUERIES_KEY));
     checkState(maxPoolSize == maxConcurrentQueries, "maxPoolSize:" + maxPoolSize + " maxConcurrentQueries:"
       + maxConcurrentQueries);
 
-    queryContextMap = new ConcurrentHashMap<QueryHandle, JdbcQueryContext>();
+    queryContextMap = new ConcurrentHashMap<>();
     asyncQueryPool = Executors.newCachedThreadPool(new ThreadFactory() {
       @Override
       public Thread newThread(Runnable runnable) {
@@ -684,14 +687,15 @@ public class JDBCDriver implements LensDriver {
     return JDBC_DRIVER_PFX + "estimate." + jdbcKey.substring(JDBC_DRIVER_PFX.length());
   }
 
-  // If 'key' is set in conf, return its value.
-  // Otherwise, return value specified for fallBackKey
-  private String getKeyOrFallBack(Configuration conf, String key, String fallBackKey) {
-    String val = conf.get(key);
-    if (StringUtils.isBlank(val)) {
-      val = conf.get(fallBackKey);
+  // If any 'key' in 'keys' is set in conf, return its value.
+  private static String getKeyOrFallBack(Configuration conf, String... keys) {
+    for (String key : keys) {
+      String val = conf.get(key);
+      if (StringUtils.isNotBlank(val)) {
+        return val;
+      }
     }
-    return val;
+    return null;
   }
 
   // Get connection config used by estimate pool.
@@ -700,26 +704,19 @@ public class JDBCDriver implements LensDriver {
       Configuration tmpConf = new Configuration(conf);
       // Override JDBC settings in estimate conf, if set by user explicitly. Otherwise fall back to default JDBC pool
       // config
-      tmpConf.set(JDBC_DB_URI, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_DB_URI), JDBC_DB_URI));
-      tmpConf.set(JDBC_DRIVER_CLASS, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_DRIVER_CLASS), JDBC_DRIVER_CLASS));
-      tmpConf.set(JDBC_USER, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_USER), JDBC_USER));
-
-      String password = getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_PASSWORD), JDBC_PASSWORD);
-      /* We need to set password as empty string if it is not provided. Setting null on conf is not allowed */
-      if (password == null) {
-        password = "";
+      for (String key : asList(JDBC_CONNECTION_PROPERTIES, JDBC_DB_URI, JDBC_DRIVER_CLASS, JDBC_USER, JDBC_PASSWORD,
+        JDBC_POOL_MAX_SIZE.getConfigKey(), JDBC_POOL_IDLE_TIME.getConfigKey(),
+        JDBC_MAX_IDLE_TIME_EXCESS_CONNECTIONS.getConfigKey(),
+        JDBC_MAX_STATEMENTS_PER_CONNECTION.getConfigKey(), JDBC_GET_CONNECTION_TIMEOUT.getConfigKey())) {
+        String val = getKeyOrFallBack(tmpConf, getEstimateKey(key), key);
+        if (val != null) {
+          tmpConf.set(key, val);
+        }
       }
-      tmpConf.set(JDBC_PASSWORD, password);
-
-      tmpConf.set(JDBC_POOL_MAX_SIZE, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_POOL_MAX_SIZE),
-        JDBC_POOL_MAX_SIZE));
-      tmpConf.set(JDBC_POOL_IDLE_TIME, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_POOL_IDLE_TIME),
-        JDBC_POOL_IDLE_TIME));
-      tmpConf.set(JDBC_MAX_STATEMENTS_PER_CONNECTION, getKeyOrFallBack(tmpConf,
-        getEstimateKey(JDBC_MAX_STATEMENTS_PER_CONNECTION), JDBC_MAX_STATEMENTS_PER_CONNECTION));
-      tmpConf.set(JDBC_GET_CONNECTION_TIMEOUT, getKeyOrFallBack(tmpConf,
-        getEstimateKey(JDBC_GET_CONNECTION_TIMEOUT), JDBC_GET_CONNECTION_TIMEOUT));
-
+      /* We need to set password as empty string if it is not provided. Setting null on conf is not allowed */
+      if (tmpConf.get(JDBC_PASSWORD) == null) {
+        tmpConf.set(JDBC_PASSWORD, "");
+      }
       estimateConf = tmpConf;
     }
     return estimateConf;
@@ -739,8 +736,7 @@ public class JDBCDriver implements LensDriver {
     return connectionProvider;
   }
 
-  private final Map<QueryPrepareHandle, PreparedStatement> preparedQueries =
-    new HashMap<QueryPrepareHandle, PreparedStatement>();
+  private final Map<QueryPrepareHandle, PreparedStatement> preparedQueries = new HashMap<>();
 
   /**
    * Internally prepare the query
@@ -896,8 +892,7 @@ public class JDBCDriver implements LensDriver {
     JdbcQueryContext queryContext = new JdbcQueryContext(context, logSegregationContext);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
-    QueryResult result = new QueryCallable(queryContext, logSegregationContext).call();
-    return result;
+    return new QueryCallable(queryContext, logSegregationContext).call();
     // LOG.info("Execute " + context.getQueryHandle());
   }
 
@@ -1077,7 +1072,7 @@ public class JDBCDriver implements LensDriver {
           log.warn("Error closing query : {}", query.getHandleId(), e);
         }
       }
-      for (QueryPrepareHandle query : new ArrayList<QueryPrepareHandle>(preparedQueries.keySet())) {
+      for (QueryPrepareHandle query : preparedQueries.keySet()) {
         try {
           try {
             preparedQueries.get(query).close();

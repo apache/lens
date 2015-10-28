@@ -18,6 +18,9 @@
  */
 package org.apache.lens.driver.jdbc;
 
+import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.ConnectionPoolProperties.JDBC_GET_CONNECTION_TIMEOUT;
+import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.ConnectionPoolProperties.JDBC_POOL_MAX_SIZE;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
@@ -117,10 +120,10 @@ public class TestDataSourceConnectionProvider {
     conf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
 
     // Set a low timeout
-    conf.setInt(JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT, 1000);
+    conf.setInt(JDBC_GET_CONNECTION_TIMEOUT.getConfigKey(), 1000);
     final int MAX_CONNECTIONS = 3;
 
-    conf.setInt(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE, MAX_CONNECTIONS);
+    conf.setInt(JDBC_POOL_MAX_SIZE.getConfigKey(), MAX_CONNECTIONS);
     final DataSourceConnectionProvider cp = new DataSourceConnectionProvider();
 
     Connection[] connections = new Connection[MAX_CONNECTIONS + 1];

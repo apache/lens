@@ -18,19 +18,24 @@
  */
 package org.apache.lens.driver.jdbc;
 
+import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.*;
+import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.ConnectionPoolProperties.*;
+
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+
+import org.apache.lens.api.util.CommonUtils;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.conf.Configuration;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -46,7 +51,7 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
    * Instantiates a new data source connection provider.
    */
   public DataSourceConnectionProvider() {
-    dataSourceMap = new HashMap<DriverConfig, ComboPooledDataSource>();
+    dataSourceMap = new HashMap<>();
   }
 
   /**
@@ -56,9 +61,7 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
    * @return the driver configfrom conf
    */
   public DriverConfig getDriverConfigfromConf(Configuration conf) {
-    return new DriverConfig(conf.get(JDBCDriverConfConstants.JDBC_DRIVER_CLASS),
-      conf.get(JDBCDriverConfConstants.JDBC_DB_URI), conf.get(JDBCDriverConfConstants.JDBC_USER),
-      conf.get(JDBCDriverConfConstants.JDBC_PASSWORD));
+    return new DriverConfig(conf);
   }
 
   /**
@@ -78,6 +81,8 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
     /** The password. */
     final String password;
 
+    final Properties properties;
+
     /** The has hash code. */
     boolean hasHashCode = false;
 
@@ -87,16 +92,34 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
     /**
      * Instantiates a new driver config.
      *
-     * @param driverClass the driver class
-     * @param jdbcURI     the jdbc uri
-     * @param user        the user
-     * @param password    the password
+     * @param conf the configuration
      */
-    public DriverConfig(String driverClass, String jdbcURI, String user, String password) {
-      this.driverClass = driverClass;
-      this.jdbcURI = jdbcURI;
-      this.user = user;
-      this.password = password;
+    public DriverConfig(Configuration conf) {
+      this.driverClass = conf.get(JDBC_DRIVER_CLASS);
+      this.jdbcURI = conf.get(JDBC_DB_URI);
+      properties = new Properties();
+      properties.putAll(CommonUtils.parseMapFromString(conf.get(JDBC_CONNECTION_PROPERTIES)));
+      if (conf.get(JDBC_USER) != null) {
+        properties.setProperty("user", conf.get(JDBC_USER));
+      }
+      if (conf.get(JDBC_PASSWORD) != null) {
+        properties.setProperty("password", conf.get(JDBC_PASSWORD));
+      }
+      this.user = properties.getProperty("user");
+      this.password = properties.getProperty("password");
+      // Maximum number of connections allowed in the pool
+      setConnectionPoolProperties(properties, conf);
+    }
+
+    private void setConnectionPoolProperties(Properties properties, Configuration conf) {
+      for (JDBCDriverConfConstants.ConnectionPoolProperties property : JDBCDriverConfConstants
+        .ConnectionPoolProperties.values()) {
+        if (conf.get(property.getConfigKey()) != null) {
+          properties.put(property.getPoolProperty(), conf.get(property.getConfigKey()));
+        } else if (!properties.containsKey(property.getPoolProperty())) {
+          properties.put(property.getPoolProperty(), Integer.toString(property.getDefaultValue()));
+        }
+      }
     }
 
     /*
@@ -141,11 +164,12 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
      */
     @Override
     public String toString() {
-      StringBuilder builder = new StringBuilder("jdbcDriverClass: ").append(driverClass).append(", uri: ")
-        .append(jdbcURI).append(", user: ").append(user);
-      return builder.toString();
+      return "jdbcDriverClass: " + driverClass + ", uri: " + jdbcURI + ", user: " + user;
     }
 
+    public String getProperty(String key) {
+      return properties.getProperty(key);
+    }
   }
 
   /*
@@ -164,27 +188,15 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
         throw new IllegalArgumentException("Unable to set driver class:" + config.driverClass, e);
       }
       cpds.setJdbcUrl(config.jdbcURI);
-      cpds.setUser(config.user);
-      cpds.setPassword(config.password);
+      cpds.setProperties(config.properties);
 
-      // Maximum number of connections allowed in the pool
-      cpds.setMaxPoolSize(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE,
-        JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT));
-      // Max idle time before a connection is closed
-      cpds.setMaxIdleTime(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME,
-        JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME_DEFAULT));
-      // Max idle time before connection is closed if
-      // number of connections is > min pool size (default = 3)
-      cpds.setMaxIdleTimeExcessConnections(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME,
-        JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME_DEFAULT));
-      // Maximum number of prepared statements to cache per connection
-      cpds.setMaxStatementsPerConnection(conf.getInt(JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION,
-        JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT));
-
-      // How many milliseconds should a caller wait when trying to get a connection
-      // If the timeout expires, SQLException will be thrown
-      cpds.setCheckoutTimeout(conf.getInt(JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT,
-        JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT_DEFAULT));
+      cpds.setMaxPoolSize(Integer.parseInt(config.getProperty(JDBC_POOL_MAX_SIZE.getPoolProperty())));
+      cpds.setMaxIdleTime(Integer.parseInt(config.getProperty(JDBC_POOL_IDLE_TIME.getPoolProperty())));
+      cpds.setMaxIdleTimeExcessConnections(Integer.parseInt(config.getProperty(JDBC_MAX_IDLE_TIME_EXCESS_CONNECTIONS
+        .getPoolProperty())));
+      cpds.setMaxStatementsPerConnection(Integer.parseInt(config.getProperty(JDBC_MAX_STATEMENTS_PER_CONNECTION
+        .getPoolProperty())));
+      cpds.setCheckoutTimeout(Integer.parseInt(config.getProperty(JDBC_GET_CONNECTION_TIMEOUT.getPoolProperty())));
       dataSourceMap.put(config, cpds);
       log.info("Created new datasource for config: {}", config);
     }
