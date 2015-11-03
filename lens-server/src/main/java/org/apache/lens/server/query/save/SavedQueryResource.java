@@ -231,12 +231,12 @@ public class SavedQueryResource {
    * @param query      The HQL query
    * @return {@link org.apache.lens.api.query.save.ParameterParserResponse} ParameterParserResponse object
    */
-  @GET
+  @POST
   @Path("/savedqueries/parameters")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public ParameterParserResponse getParameters(
     @QueryParam("sessionid") LensSessionHandle sessionid,
-    @QueryParam("query") String query) {
+    @FormDataParam("query") String query) {
     return new ParameterParser(query).extractParameters();
   }
 
