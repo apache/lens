@@ -39,7 +39,8 @@ function getState (page, filterString, database) {
 
 function getTables (page, filterString, database) {
   // get all the native tables
-  let tables = TableStore.getTables(database);
+  // so that Object.keys does not throw up
+  let tables = TableStore.getTables(database) || {};
   let pageSize = 10;
   let allTables;
   let startIndex;

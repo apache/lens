@@ -46,6 +46,14 @@ function makeReqwest (url, method, data, options = {}) {
         let response = error.responseType !== 'json' ?
           XMLAdapter.stringToXML(error.response) :
           error.response;
+
+        if (!response) {
+          response = {
+            status: error.status,
+            statusText: error.statusText
+          };
+        }
+
         reject(response);
       }).catch(e => console.error(e));
   });
