@@ -20,6 +20,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import CodeMirror from 'codemirror';
+import _ from 'lodash';
 import 'codemirror/mode/sql/sql.js';
 import 'codemirror/addon/runmode/runmode.js';
 
@@ -30,13 +31,16 @@ import UserStore from '../stores/UserStore';
 class SavedQueryPreview extends React.Component {
   constructor (props) {
     super(props);
-    this.state = { showDetail: false, queryParams: {} };
+    this.state = {
+      showDetail: false,
+      queryParams: props.query.parameters.reduce((prev, curr) => {
+        prev[curr.name] = curr;
+        return prev;
+      }, {})
+    };
     this.toggleQueryDetails = this.toggleQueryDetails.bind(this);
     this.runSavedQuery = this.runSavedQuery.bind(this);
     this.update = this.update.bind(this);
-    this.props.query && this.props.query.parameters.forEach(param => {
-      this.state.queryParams[param.name] = param;
-    });
   }
 
   render () {
@@ -58,7 +62,7 @@ class SavedQueryPreview extends React.Component {
 
     let params = query && query.parameters.map(param => {
       return <QueryParamRowComponent param={param} entryMode={true}
-        updateParam={this.update}/>;
+        saveParamChanges={this.update}/>;
     });
 
     let paramsTable = !params.length ? null :
@@ -114,15 +118,17 @@ class SavedQueryPreview extends React.Component {
   }
 
   update (param) {
-    this.state.queryParams[param.name] = param.param;
+    this.setState({
+      queryParams: _.assign({}, this.state.queryParams, {[param.name]: param})
+    });
   }
 
   runSavedQuery () {
     let secretToken = UserStore.getUserDetails().secretToken;
-    let parameters = Object.keys(this.state.queryParams).map(name => {
-      let object = {};
-      object[name] = this.state.queryParams[name].defaultValue;
-      return object;
+    let parameters = Object.keys(this.state.queryParams).map(paramName => {
+      return {
+        [paramName]: this.state.queryParams[paramName].defaultValue
+      };
     });
     AdhocQueryActions.runSavedQuery(secretToken, this.props.query.id, parameters);
   }

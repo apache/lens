@@ -122,7 +122,8 @@ class QueryBox extends React.Component {
       params: null,
       isModeEdit: false,
       savedQueryId: null,
-      runImmediately: false
+      runImmediately: false,
+      description: ''
     };
   }
 
@@ -184,6 +185,7 @@ class QueryBox extends React.Component {
         this.setState({
           params: savedQuery.parameters,
           savedQueryId: savedQuery.id,
+          description: savedQuery.description,
           isModeEdit: true
         });
       }
@@ -257,7 +259,7 @@ class QueryBox extends React.Component {
 
             { this.state.params && !!this.state.params.length &&
               <QueryParams params={this.state.params} close={this.closeParamBox}
-                saveParams={this.saveParams}/>
+                saveParams={this.saveParams} description={this.state.description}/>
             }
 
             { this.state.serverMessage &&
@@ -329,6 +331,7 @@ class QueryBox extends React.Component {
     let user = UserStore.getUserDetails().email;
     let query = codeMirror.getValue();
 
+    // FIXME description is also mixed here.
     params = assign({}, params);
     params.name = queryName;
 
@@ -419,18 +422,20 @@ class QueryBox extends React.Component {
   _onChangeSavedQueryStore (hash) {
     if (!hash) return;
 
+    var newState = _.assign({}, this.state);
+
     switch (hash.type) {
       case 'failure':
-        this.state.clientMessage = null;
-        this.state.serverMessage = hash.message;
+        newState.clientMessage = null;
+        newState.serverMessage = hash.message;
         break;
 
       case 'success':
-        this.state.clientMessage = null;
-        this.state.serverMessage = hash.message;
+        newState.clientMessage = null;
+        newState.serverMessage = hash.message;
         // make the mode of QueryBox back to normal, if it's in Edit
-        if (this.state.isModeEdit) {
-          this.state.isModeEdit = false;
+        if (newState.isModeEdit) {
+          newState.isModeEdit = false;
         }
 
         // trigger to fetch the edited from server again
@@ -439,22 +444,30 @@ class QueryBox extends React.Component {
         // means the query was saved successfully.
 
         // run immediately?
-        if (this.state.runImmediately && hash.id) {
+        if (newState.runImmediately && hash.id) {
           this.runSavedQuery(hash.id);
-          this.state.runImmediately = false;
+          newState.runImmediately = false;
         }
 
         // make params null
-        this.state.params = null;
+        newState.params = null;
 
         break;
 
       case 'params':
-        this.state.params = hash.params;
+        newState.params = hash.params.map(param => {
+          return {
+            name: param.name,
+            dataType: param.dataType || 'STRING',
+            collectionType: param.collectionType || 'SINGLE',
+            defaultValue: param.defaultValue || null,
+            displayName: param.displayName || param.name
+          };
+        });
         break;
     }
 
-    this.setState(this.state);
+    this.setState(newState);
   }
 
   runSavedQuery (id) {
@@ -472,10 +485,10 @@ class QueryBox extends React.Component {
   }
 
   closeParamBox () {
-    this.setState({params: null, clientMessage: null});
+    this.cancel();
   }
 
-  saveParams (params) { // contains parameters, description et all
+  saveParams (params) { // FIXME contains parameters, description et all
     this.state.params = assign(this.state.params, params.parameters);
     this.state.runImmediately = params.runImmediately;
 
