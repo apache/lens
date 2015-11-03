@@ -122,7 +122,7 @@ class CubeTree extends React.Component {
 
     if (this.state.loading) {
       cubeTree = <Loader size='4px' margin='2px'/>;
-    } else if (!this.state.cubes.length) {
+    } else if (!Object.keys(this.state.cubes).length) {
       cubeTree = (<div className='alert-danger' style={{padding: '8px 5px'}}>
           <strong>Sorry, we couldn&#39;t find any cubes.</strong>
         </div>);
