@@ -33,7 +33,9 @@ Committer Guide
 
   * {{{http://www.apache.org/dev/committers.html#committer-responsibilities} Committer Responsibilities}}
 
-  * As first commit - Add your name to the list of Committers in pom.xml of the project. Follow the steps in commit section for instructions.
+  * As first commit - Add your name to the list of Committers in pom.xml of the project. Follow the steps in commit
+  section for instructions. Specify the roles that have been granted to you in the invite mail. If you are invited as
+  committer, just add your role as "Committer". If you are invited as PMC, specify "PMC" and "Committer" as your roles.
   A typical committer tag would look like
 
 +---
@@ -44,7 +46,7 @@ Committer Guide
   <name>Amareshwari Sriramadasu</name>
   <timezone>+5.5</timezone>
   <roles>
-    <role>PPMC</role>
+    <role>PMC</role>
     <role>Committer</role>
   </roles>
 </developer>
