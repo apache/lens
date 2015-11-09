@@ -196,7 +196,11 @@ let AdhocQueryAdapter = {
 
   getParams (secretToken, query) {
     let url = baseUrl + urls.parameters;
-    return BaseAdapter.get(url, {query: query});
+
+    let formData = new FormData();
+    formData.append('query', query);
+
+    return BaseAdapter.post(url, formData);
   },
 
   runSavedQuery (secretToken, id, params) {
