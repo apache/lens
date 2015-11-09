@@ -96,6 +96,10 @@ AppDispatcher.register((action) => {
       receiveTableDetails(action.payload);
       TableStore.emitChange();
       break;
+
+    case AdhocQueryConstants.RECEIVE_TABLES_FAILED:
+      TableStore.emitChange();
+      break;
   }
 });
 
