@@ -21,6 +21,7 @@ import React from 'react';
 import ClassNames from 'classnames';
 import CodeMirror from 'codemirror';
 import assign from 'object-assign';
+import _ from 'lodash';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/addon/edit/matchbrackets.js';
 import 'codemirror/addon/hint/sql-hint.js';
@@ -74,6 +75,20 @@ function setCode (code) {
   }
 }
 
+function getEmptyState () {
+  return {
+    clientMessage: null, // to give user instant ack
+    isRunQueryDisabled: true,
+    serverMessage: null, // type (success or error), text as keys
+    isCollapsed: false,
+    params: null,
+    isModeEdit: false,
+    savedQueryId: null,
+    runImmediately: false,
+    description: ''
+  };
+}
+
 // used to populate the query box when user wants to edit a query
 // TODO improve this.
 // this takes in the query handle and writes the query
@@ -114,17 +129,7 @@ class QueryBox extends React.Component {
     this.saveOrUpdate = this.saveOrUpdate.bind(this);
     this.runSavedQuery = this.runSavedQuery.bind(this);
 
-    this.state = {
-      clientMessage: null, // to give user instant ack
-      isRunQueryDisabled: true,
-      serverMessage: null, // type (success or error), text as keys
-      isCollapsed: false,
-      params: null,
-      isModeEdit: false,
-      savedQueryId: null,
-      runImmediately: false,
-      description: ''
-    };
+    this.state = getEmptyState();
   }
 
   componentDidMount () {
@@ -306,17 +311,40 @@ class QueryBox extends React.Component {
   updateQuery (params) {
     let query = this._getSavedQueryDetails(params);
     if (!query) return;
+
+    var options = {
+      parameters: query.parameters,
+      description: query.description,
+      name: query.name
+    };
+
     AdhocQueryActions
-      .updateSavedQuery(query.secretToken, query.user, query.query, query.params, this.state.savedQueryId);
-    this.setState({ clientMessage: clientMessages.updateQuery });
+      .updateSavedQuery(query.secretToken, query.user, query.query,
+        options, this.state.savedQueryId);
+
+    this.setState({
+      clientMessage: clientMessages.updateQuery,
+      runImmediately: params && params.runImmediately
+    });
   }
 
   saveQuery (params) {
     let query = this._getSavedQueryDetails(params);
     if (!query) return;
+
+    var options = {
+      parameters: query.parameters,
+      description: query.description,
+      name: query.name
+    };
+
     AdhocQueryActions
-      .saveQuery(query.secretToken, query.user, query.query, query.params);
-    this.setState({ clientMessage: clientMessages.saveQuery });
+      .saveQuery(query.secretToken, query.user, query.query, options);
+
+    this.setState({
+      clientMessage: clientMessages.saveQuery,
+      runImmediately: params && params.runImmediately
+    });
   }
 
   // internal which is called during save saved query & edit saved query
@@ -331,15 +359,13 @@ class QueryBox extends React.Component {
     let user = UserStore.getUserDetails().email;
     let query = codeMirror.getValue();
 
-    // FIXME description is also mixed here.
-    params = assign({}, params);
-    params.name = queryName;
-
     return {
       secretToken: secretToken,
       user: user,
       query: query,
-      params: params
+      parameters: params && params.parameters,
+      description: params && params.description,
+      name: queryName
     };
   }
 
@@ -431,13 +457,6 @@ class QueryBox extends React.Component {
         break;
 
       case 'success':
-        newState.clientMessage = null;
-        newState.serverMessage = hash.message;
-        // make the mode of QueryBox back to normal, if it's in Edit
-        if (newState.isModeEdit) {
-          newState.isModeEdit = false;
-        }
-
         // trigger to fetch the edited from server again
         let token = UserStore.getUserDetails().secretToken;
         if (hash.id) AdhocQueryActions.getSavedQueryById(token, hash.id);
@@ -449,9 +468,11 @@ class QueryBox extends React.Component {
           newState.runImmediately = false;
         }
 
-        // make params null
-        newState.params = null;
-
+        // empty the state, clean the slate
+        setCode('');
+        this.refs.queryName.getDOMNode().value = '';
+        newState = getEmptyState();
+        newState.serverMessage = hash.message;
         break;
 
       case 'params':
@@ -489,25 +510,13 @@ class QueryBox extends React.Component {
   }
 
   saveParams (params) { // FIXME contains parameters, description et all
-    this.state.params = assign(this.state.params, params.parameters);
-    this.state.runImmediately = params.runImmediately;
-
-    // edit or save new, only state variable will tell
     !this.state.isModeEdit ? this.saveQuery(params) : this.updateQuery(params);
   }
 
   cancel () {
     setCode('');
     this.refs.queryName.getDOMNode().value = '';
-    this.setState({
-      clientMessage: null, // to give user instant ack
-      isRunQueryDisabled: true,
-      serverMessage: null, // type (success or error), text as keys
-      isCollapsed: false,
-      params: null,
-      isModeEdit: false,
-      savedQueryId: null
-    });
+    this.setState(getEmptyState());
   }
 }
 

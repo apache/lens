@@ -39,6 +39,10 @@ class QueryParams extends React.Component {
     this.saveParamChanges = this.saveParamChanges.bind(this);
   }
 
+  componentWillReceiveProps (props) {
+    this.setState({description: props.description, paramChanges: []});
+  }
+
   render () {
     let propParams = this.props.params;
     if (!propParams) return null;
@@ -75,7 +79,7 @@ class QueryParams extends React.Component {
         <div className='form-group'>
           <label className='sr-only' htmlFor='queryDescription'>Description</label>
           <input type='text' className='form-control' style={{fontWeight: 'normal'}}
-            onChange={this.handleChange} id='queryDescription' defaultValue={this.state.description}
+            onChange={this.handleChange} id='queryDescription' value={this.state.description}
             placeholder='(Optional description) e.g. This awesome query does magic along with its job.'
           />
         </div>
