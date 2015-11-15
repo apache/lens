@@ -509,7 +509,7 @@ class QueryBox extends React.Component {
     this.cancel();
   }
 
-  saveParams (params) { // FIXME contains parameters, description et all
+  saveParams (params) {
     !this.state.isModeEdit ? this.saveQuery(params) : this.updateQuery(params);
   }
 
