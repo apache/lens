@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * The enum ParameterCollectionType
  * Collection type of a parameter has to be chosen based on its context.
  * - If it is occurring next to an IN/NOT IN clause, its multiple
- * - If it is found with EQ/NEQ..>,<,>=,<=,like etc, its single
+ * - If it is found with EQ/NEQ..&gt;,&lt;,&gt;=,&lt;=,like etc, its single
  */
 @XmlRootElement
 public enum ParameterCollectionType {

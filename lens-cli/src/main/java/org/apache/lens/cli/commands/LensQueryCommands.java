@@ -181,7 +181,6 @@ public class LensQueryCommands extends BaseLensCommand {
    * Explain query.
    *
    * @param sql      the sql
-   * @param location the location
    * @return the string
    * @throws LensAPIException
    * @throws UnsupportedEncodingException the unsupported encoding exception

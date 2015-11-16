@@ -52,10 +52,10 @@ public class PathValidator {
    * Also removes erroneously appended prefix for URI's.
    * Takes additional properties for special URI handling.
    *
-   * @param path
-   * @param shouldBeDirectory
-   * @param shouldExist
-   * @return
+   * @param path input path
+   * @param shouldBeDirectory should be a directory
+   * @param shouldExist should exist
+   * @return converted path
    */
   public String getValidPath(File path, boolean shouldBeDirectory,
                                        boolean shouldExist) {
@@ -89,8 +89,8 @@ public class PathValidator {
    *
    * Any new URI's have to be handled appropriately
    *
-   * @param path
-   * @return
+   * @param path input path
+   * @return cleaned up path
    */
   public String removePrefixBeforeURI(String path) {
     /**

@@ -2417,7 +2417,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public HealthStatus getHealthStatus() {

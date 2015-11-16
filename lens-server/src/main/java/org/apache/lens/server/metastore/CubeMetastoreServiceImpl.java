@@ -1448,7 +1448,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public HealthStatus getHealthStatus() {

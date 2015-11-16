@@ -44,7 +44,7 @@ public class QuerySchedulerServiceImpl extends BaseLensService implements QueryS
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public HealthStatus getHealthStatus() {
