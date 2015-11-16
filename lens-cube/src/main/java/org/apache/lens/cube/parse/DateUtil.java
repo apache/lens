@@ -63,7 +63,7 @@ public final class DateUtil {
   }
 
   public static final String GRANULARITY = "\\.(" + UNIT + ")";
-  public static final String RELATIVE = "(now){1}(" + GRANULARITY + "){0,1}";
+  public static final String RELATIVE = "(now)(" + GRANULARITY + ")?";
   public static final Pattern P_RELATIVE = Pattern.compile(RELATIVE, Pattern.CASE_INSENSITIVE);
 
   public static final String WSPACE = "\\s+";
@@ -79,7 +79,7 @@ public final class DateUtil {
   public static final Pattern P_UNIT = Pattern.compile(UNIT, Pattern.CASE_INSENSITIVE);
 
   public static final String RELDATE_VALIDATOR_STR = RELATIVE + OPTIONAL_WSPACE + "((" + SIGNAGE + ")" + "("
-    + WSPACE + ")?" + "(" + QUANTITY + ")" + OPTIONAL_WSPACE + "(" + UNIT + ")){0,1}" + "(s?)";
+    + WSPACE + ")?" + "(" + QUANTITY + ")" + OPTIONAL_WSPACE + "(" + UNIT + "))?" + "(s?)";
 
   public static final Pattern RELDATE_VALIDATOR = Pattern.compile(RELDATE_VALIDATOR_STR, Pattern.CASE_INSENSITIVE);
 

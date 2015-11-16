@@ -180,6 +180,8 @@ public class CandidateTablePruneCause {
     NO_PARTITIONS,
     // partition column does not exist
     PART_COL_DOES_NOT_EXIST,
+    // Range is not supported by this storage table
+    RANGE_NOT_ANSWERABLE,
     // storage is not supported by execution engine
     UNSUPPORTED
   }

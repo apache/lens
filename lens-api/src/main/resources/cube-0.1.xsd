@@ -828,6 +828,15 @@
             The following properties can be specified for Elastic search tables :
             1. lens.metastore.es.index.name : The underlying ES index name.
             2. lens.metastore.es.type.name : The underlying ES type name.
+            Start and End times for storage table:
+            1. cube.storagetable.start.times: Comma separated list of start times for this table.
+               Start times can be relative times(e.g. now.day - 1 month) or absolute times(e.g. 2014-02)
+               The max of the start times will be considered as the final start time. This storagetable will
+               not be candidate for answering time ranges completely before its start time.
+            2. cube.storagetable.end.times: Comma separated list of end times for this table.
+               End times can be relative times(e.g. now.day - 1 month) or absolute times(e.g. 2014-02)
+               The min of the end times will be considered as the final end time. This storagetable will not be
+               candidate for answering time ranges completely after its end time.
           </xs:documentation>
         </xs:annotation>
       </xs:element>

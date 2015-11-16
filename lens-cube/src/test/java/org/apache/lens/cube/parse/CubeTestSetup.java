@@ -1309,8 +1309,8 @@ public class CubeTestSetup {
     updates.add(QUARTERLY);
     updates.add(YEARLY);
 
-    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
-    List<String> timePartCols = new ArrayList<String>();
+    ArrayList<FieldSchema> partCols = new ArrayList<>();
+    List<String> timePartCols = new ArrayList<>();
     partCols.add(TestCubeMetastoreClient.getDatePartition());
     timePartCols.add(TestCubeMetastoreClient.getDatePartitionKey());
 
@@ -1319,20 +1319,25 @@ public class CubeTestSetup {
     s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
     s1.setPartCols(partCols);
     s1.setTimePartCols(timePartCols);
+    s1.setTblProps(new HashMap<String, String>());
+    s1.getTblProps().put(MetastoreUtil.getStoragetableStartTimesKey(), "2000, now - 10 years");
+    s1.getTblProps().put(MetastoreUtil.getStoragetableEndTimesKey(), "now - 5 years, 2010");
 
     StorageTableDesc s2 = new StorageTableDesc();
     s2.setInputFormat(TextInputFormat.class.getCanonicalName());
     s2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
-    ArrayList<FieldSchema> s2PartCols = new ArrayList<FieldSchema>();
+    ArrayList<FieldSchema> s2PartCols = new ArrayList<>();
     s2PartCols.add(new FieldSchema("ttd", serdeConstants.STRING_TYPE_NAME, "test date partition"));
     s2PartCols.add(new FieldSchema("ttd2", serdeConstants.STRING_TYPE_NAME, "test date partition"));
     s2.setPartCols(s2PartCols);
     s2.setTimePartCols(Arrays.asList("ttd", "ttd2"));
 
     storageAggregatePeriods.put(c99, updates);
+    storageAggregatePeriods.put(c0, updates);
 
-    Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
+    Map<String, StorageTableDesc> storageTables = new HashMap<>();
     storageTables.put(c99, s2);
+    storageTables.put(c0, s1);
     // create cube fact
     client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 0L,
       factValidityProperties, storageTables);
