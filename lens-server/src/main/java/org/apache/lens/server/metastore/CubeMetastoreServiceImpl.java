@@ -28,7 +28,6 @@ import javax.ws.rs.NotFoundException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
-import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServerConf;
@@ -40,10 +39,10 @@ import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.*;
-import org.apache.hadoop.hive.ql.metadata.*;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hive.service.cli.CLIService;
 
 import com.google.common.collect.Lists;
@@ -200,8 +199,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       log.info("Created cube " + cube.getName());
     } catch (HiveException e) {
       throw new LensException(e);
-    } catch (ParseException e) {
-      throw new LensException(e);
     } finally {
       release(sessionid);
     }
@@ -263,8 +260,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       msClient.alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube, parent));
       log.info("Cube updated " + cube.getName());
     } catch (HiveException e) {
-      throw new LensException(e);
-    } catch (ParseException e) {
       throw new LensException(e);
     } finally {
       release(sessionid);
@@ -1108,8 +1103,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       log.info("Created dimension " + dimension.getName());
     } catch (HiveException e) {
       throw new LensException(e);
-    } catch (ParseException e) {
-      throw new LensException(e);
     } finally {
       release(sessionid);
     }
@@ -1151,8 +1144,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
         JAXBUtils.dimensionFromXDimension(dimension));
       log.info("Altered dimension " + dimName);
     } catch (HiveException e) {
-      throw new LensException(e);
-    } catch (ParseException e) {
       throw new LensException(e);
     } finally {
       release(sessionid);

@@ -27,6 +27,7 @@ import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -585,7 +586,7 @@ public class CubeTestSetup {
 
   Set<ExprColumn> exprs;
 
-  private void createCube(CubeMetastoreClient client) throws HiveException, ParseException {
+  private void createCube(CubeMetastoreClient client) throws HiveException, ParseException, LensException {
     cubeMeasures = new HashSet<CubeMeasure>();
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr1", "int", "first measure")));
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr2", "float", "second measure"), "Measure2", null, "SUM",
@@ -749,8 +750,18 @@ public class CubeTestSetup {
     Set<String> dimensions = new HashSet<String>();
     dimensions.add("dim1");
     dimensions.add("dim2");
-    client
-      .createDerivedCube(TEST_CUBE_NAME, DERIVED_CUBE_NAME, measures, dimensions, new HashMap<String, String>(), 5L);
+    // Try creating derived cube with non existant dim/measures
+    try{
+      client.createDerivedCube(TEST_CUBE_NAME, DERIVED_CUBE_NAME,
+        Sets.newHashSet("random_measure"), Sets.newHashSet("random_dim_attribute"),
+        new HashMap<String, String>(), 5L);
+    } catch(LensException e) {
+      assertTrue(e.getMessage().contains("random_measure"));
+      assertTrue(e.getMessage().contains("random_dim_attribute"));
+      assertTrue(e.getMessage().contains("not present"));
+    }
+    client.createDerivedCube(TEST_CUBE_NAME, DERIVED_CUBE_NAME,
+      measures, dimensions, new HashMap<String, String>(), 5L);
   }
 
   private void createBaseAndDerivedCubes(CubeMetastoreClient client)

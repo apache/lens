@@ -20,10 +20,15 @@ package org.apache.lens.cube.metadata;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.server.api.error.LensException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
+
+import com.google.common.collect.Lists;
 
 public class DerivedCube extends AbstractCubeTable implements CubeInterface {
 
@@ -37,12 +42,12 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
   private final Set<String> measures = new HashSet<String>();
   private final Set<String> dimensions = new HashSet<String>();
 
-  public DerivedCube(String name, Set<String> measures, Set<String> dimensions, Cube parent) {
+  public DerivedCube(String name, Set<String> measures, Set<String> dimensions, Cube parent) throws LensException {
     this(name, measures, dimensions, new HashMap<String, String>(), 0L, parent);
   }
 
   public DerivedCube(String name, Set<String> measures, Set<String> dimensions, Map<String, String> properties,
-    double weight, Cube parent) {
+    double weight, Cube parent) throws LensException {
     super(name, COLUMNS, properties, weight);
     for (String msr : measures) {
       this.measures.add(msr.toLowerCase());
@@ -51,8 +56,40 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
       this.dimensions.add(dim.toLowerCase());
     }
     this.parent = parent;
-
+    validate();
     addProperties();
+  }
+
+  public void validate() throws LensException {
+    List<String> measuresNotInParentCube = Lists.newArrayList();
+    List<String> dimAttributesNotInParentCube = Lists.newArrayList();
+    for (String msr : measures) {
+      if (parent.getMeasureByName(msr) == null) {
+        measuresNotInParentCube.add(msr);
+      }
+    }
+    for (String dim : dimensions) {
+      if (parent.getDimAttributeByName(dim) == null) {
+        dimAttributesNotInParentCube.add(dim);
+      }
+    }
+    StringBuilder validationErrorStringBuilder = new StringBuilder();
+    String sep = "";
+    boolean invalid = false;
+    if (!measuresNotInParentCube.isEmpty()) {
+      validationErrorStringBuilder.append(sep).append("Measures ").append(measuresNotInParentCube);
+      sep = " and ";
+      invalid = true;
+    }
+    if (!dimAttributesNotInParentCube.isEmpty()) {
+      validationErrorStringBuilder.append(sep).append("Dim Attributes ").append(dimAttributesNotInParentCube);
+      invalid = true;
+    }
+    if (invalid) {
+      throw new LensException(LensCubeErrorCode.ERROR_IN_ENTITY_DEFINITION.getLensErrorInfo(),
+        "Derived cube invalid: " + validationErrorStringBuilder.append(" were not present in " + "parent cube ")
+          .append(parent));
+    }
   }
 
   public DerivedCube(Table tbl, Cube parent) {
