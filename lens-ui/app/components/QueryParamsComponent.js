@@ -26,28 +26,35 @@ import QueryParamRow from './QueryParamRowComponent';
 class QueryParams extends React.Component {
   constructor (props) {
     super(props);
-    this.state = {description: '', childrenParams: {}, runImmediately: false};
+    this.state = {
+      paramChanges: [],
+      runImmediately: false,
+      description: props.description
+    };
 
     this.close = this.close.bind(this);
     this.save = this.save.bind(this);
-    this.update = this.update.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleCheck = this.handleCheck.bind(this);
-    this._getChildrenParams = this._getChildrenParams.bind(this);
+    this.saveParamChanges = this.saveParamChanges.bind(this);
   }
 
   componentWillReceiveProps (props) {
-    if (!_.isEqual(props.params, this.props.params)) {
-      this.state.childrenParams = {};
-    }
+    this.setState({description: props.description, paramChanges: []});
   }
 
   render () {
-    let params = this.props.params && this.props.params.map((param, index) => {
-      return <QueryParamRow key={param.name} param={param} updateParam={this.update}/>;
-    });
+    let propParams = this.props.params;
+    if (!propParams) return null;
 
-    if (!params) return null;
+    let changedParams = this.state.paramChanges;
+    let params = this.mergeParamChanges(propParams, changedParams)
+      .map(param => {
+        return (
+          <QueryParamRow key={param.name} param={param}
+            saveParamChanges={this.saveParamChanges} />
+        );
+      });
 
     return (
       <form onSubmit={this.save} style={{padding: '10px', boxShadow: '2px 2px 2px 2px grey',
@@ -72,7 +79,7 @@ class QueryParams extends React.Component {
         <div className='form-group'>
           <label className='sr-only' htmlFor='queryDescription'>Description</label>
           <input type='text' className='form-control' style={{fontWeight: 'normal'}}
-            onChange={this.handleChange} id='queryDescription'
+            onChange={this.handleChange} id='queryDescription' value={this.state.description}
             placeholder='(Optional description) e.g. This awesome query does magic along with its job.'
           />
         </div>
@@ -93,7 +100,8 @@ class QueryParams extends React.Component {
 
   save (e) {
     e.preventDefault();
-    var parameters = this._getChildrenParams();
+    // merges the initial props and the delta changes done by child components
+    var parameters = this.mergeParamChanges(this.props.params, this.state.paramChanges);
     this.props.saveParams({
       parameters: parameters,
       description: this.state.description,
@@ -101,23 +109,39 @@ class QueryParams extends React.Component {
     });
   }
 
-  _getChildrenParams () {
-    return Object.keys(this.state.childrenParams).map(name => {
-      return this.state.childrenParams[name];
-    });
-  }
-
   handleChange (e) {
-    this.setState({description: e.target.value});
+    this.setState({ description: e.target.value });
   }
 
   handleCheck (e) {
-    this.setState({runImmediately: e.target.checked});
+    this.setState({ runImmediately: e.target.checked });
   }
 
-  // called by the child component {name, param}
-  update (param) {
-    this.state.childrenParams[param.name] = param.param;
+  mergeParamChanges (original = [], changes = []) {
+    return original.map(originalParam => {
+      let change = changes.filter(changedParam => {
+        return changedParam.name === originalParam.name;
+      });
+      return _.assign({}, originalParam, change[0]);
+    });
+  }
+
+  saveParamChanges (changedParam) {
+    // getting the param from the paramChanges state.
+    var param = this.state.paramChanges.filter(param => {
+      return param.name === changedParam.name;
+    })[0];
+
+    // apply the changedParam over the above param.
+    var newParam = _.assign({}, param, changedParam);
+
+    // getting all the other changes except the current as
+    // we want to over-write it
+    var newChangedParams = this.state.paramChanges.filter(param => {
+      return param.name !== newParam.name;
+    });
+
+    this.setState({paramChanges: [...newChangedParams, newParam]});
   }
 }
 

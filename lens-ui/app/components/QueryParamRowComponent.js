@@ -20,59 +20,39 @@
 import React from 'react';
 import { Multiselect } from 'react-widgets';
 import assign from 'object-assign';
+import _ from 'lodash';
 import 'react-widgets/dist/css/core.css';
 import 'react-widgets/dist/css/react-widgets.css';
-
-// returns true/false if the default value is correct
-// and also returns the value
-function validate (val, dataType) {
-  // if (dataType === 'NUMBER' && !window.isNaN(val)) return [true, val];
-  // if (dataType === 'BOOLEAN' && (val === 'true' || val === 'false')) {
-  //   return [true, val];
-  // }
-  // if (dataType === 'STRING' && typeof val === 'string') return [true, val];
-
-  return [true, val];
-}
 
 class QueryParamRow extends React.Component {
   constructor (props) {
     super(props);
 
-    // state being decided by mode of use of this component
-    // `entryMode` is used by the SavedQueryPreviewComponent,
-    // to just add values and run the saved query.
-    if (props.entryMode) {
-      this.state = assign({}, props.param);
-    } else {
-      this.state = assign({}, props.param, {
-        dataType: 'STRING',
-        collectionType: 'SINGLE',
-        displayName: props.param.name
-      });
-    }
+    this.state = {
+      paramChange: assign({}, props.param)
+    };
 
-    this.changeDisplayName = this.changeDisplayName.bind(this);
-    this.changeDataType = this.changeDataType.bind(this);
-    this.changeCollectionType = this.changeCollectionType.bind(this);
-    this.changeDefaultValue = this.changeDefaultValue.bind(this);
-    this.addDefaultValue = this.addDefaultValue.bind(this);
-    this.preventEnter = this.preventEnter.bind(this);
+    this._handleChange = this._handleChange.bind(this);
+    this.getDefaultValueInput = this.getDefaultValueInput.bind(this);
   }
 
-  componentWillReceiveProps (props) {
-    this.setState(assign({}, props.param));
-  }
-
-  componentWillUpdate (props, state) {
-    this.props.updateParam({
-      name: props.param.name,
-      param: state
-    });
+  shouldComponentUpdate (newProps, newState) {
+    return !_.isEqual(this.state, newState);
   }
 
   render () {
     let param = this.props.param;
+
+    let collectionType = this.state.paramChange.collectionType;
+    let dataType = this.state.paramChange.dataType;
+
+    let collectionTypeBox = (<select className='form-control' required
+      defaultValue='SINGLE' onChange={this._handleChange('ChangeCollectionType')}>
+        <option value='SINGLE'>Single</option>
+        <option value='MULTIPLE'>Multiple</option>
+      </select>);
+
+    let valueBox = this.getDefaultValueInput(collectionType, dataType);
 
     return (
       <tr>
@@ -80,13 +60,13 @@ class QueryParamRow extends React.Component {
         <td>
           { this.props.entryMode ? param.displayName :
             <input type='text' className='form-control' required defaultValue={param.name}
-              placeholder='display name' onChange={this.changeDisplayName}/>
+              placeholder='display name' onChange={this._handleChange('ChangeDisplayName')}/>
           }
         </td>
         <td>
           { this.props.entryMode ? param.dataType :
-            <select className='form-control' defaultValue='STRING'
-              onChange={this.changeDataType}>
+            <select className='form-control' defaultValue={dataType || 'STRING'}
+              onChange={this._handleChange('ChangeDataType')}>
               <option value='STRING'>String</option>
               <option value='NUMBER'>Number</option>
               <option value='BOOLEAN'>Boolean</option>
@@ -95,78 +75,88 @@ class QueryParamRow extends React.Component {
         </td>
         <td>
           { this.props.entryMode ? param.collectionType :
-            <select className='form-control' required defaultValue='SINGLE'
-              onChange={this.changeCollectionType}>
-              <option value='SINGLE'>Single</option>
-              <option value='MULTIPLE'>Multiple</option>
-            </select>
+            {collectionTypeBox}
           }
 
         </td>
         <td>
-          { !this.props.entryMode && (this.state.collectionType === 'SINGLE' ?
-            <input type='text' className='form-control' required value={this.state.defaultValue}
-              placeholder='default value' onChange={this.changeDefaultValue}/> :
-            <Multiselect messages={{createNew: 'Enter to add'}}
-              onCreate={this.addDefaultValue}
-              defaultValue={this.state.defaultValue} onKeyDown={this.preventEnter}
-            />
-          )}
-
-          { this.props.entryMode && (param.collectionType === 'SINGLE' ?
-            <input type='text' className='form-control' required value={this.state.defaultValue}
-              placeholder='default value' onChange={this.changeDefaultValue}/> :
-            <Multiselect messages={{createNew: 'Enter to add'}}
-               onCreate={this.addDefaultValue}
-              defaultValue={this.state.defaultValue} onKeyDown={this.preventEnter}
-            />
-          )}
+          {valueBox}
         </td>
       </tr>
     );
   }
 
-  // these methods change the default values
-  // called by normal input
-  changeDefaultValue (e) {
-    let val = validate(e.target.value, this.state.dataType);
+  _handleChange (elementType) {
+    return (arg) => {
+      let paramChange;
+      let state = _.assign({}, this.state.paramChange);
+      let val;
+      switch (elementType) {
+        case 'ChangeMultiselect':
+          paramChange = _.assign({}, state, {defaultValue: arg});
+          break;
 
-    if (val[0]) this.setState({defaultValue: val[1]});
+        case 'ChangeDefaultTextValue':
+          paramChange = _.assign({}, state, {defaultValue: arg.target.value});
+          break;
+
+        case 'AddItemInMultiSelect':
+          this.state.paramChange.defaultValue.push(arg);
+          paramChange = _.assign({}, this.state.paramChange, {
+            //defaultValue: [...this.state.paramChange.defaultValue, item]
+          });
+          break;
+
+        case 'ChangeDataType':
+          val = this.state.paramChange.collectionType === 'SINGLE' ? null : [];
+          paramChange = _.assign({}, state, {
+            dataType: arg.target.value,
+            defaultValue: val,
+          });
+          break;
+
+        case 'ChangeCollectionType':
+          val = arg.target.value === 'MULTIPLE' ? [] : null;
+          paramChange = _.assign({}, state, {
+            collectionType: arg.target.value,
+            defaultValue: val
+          });
+          break;
+
+        case 'ChangeDisplayName':
+          paramChange = _.assign({}, state, {displayName: arg.target.value});
+          break;
+      }
+
+      this.setState({paramChange});
+      this.props.saveParamChanges(paramChange);
+    };
   }
 
-  // called my multiselect
-  addDefaultValue (item) {
-    let val = validate(item, this.state.dataType);
-
-    if (val[0]) {
-      this.state.defaultValue.push(val[1]);
-      this.setState(this.state);
-    }
-  }
 
   preventEnter (e) {
     if (e.keyCode == 13) e.preventDefault();
   }
 
-  changeDataType (e) {
-    let val = this.state.collectionType === 'SINGLE' ? null : [];
-    this.setState({dataType: e.target.value, defaultValue: val});
-  }
-
-  changeCollectionType (e) {
-    let val = e.target.value === 'MULTIPLE' ? [] : null;
-    this.setState({defaultValue: val});
-    this.setState({collectionType: e.target.value});
-  }
-
-  changeDisplayName (e) {
-    this.setState({displayName: e.target.value});
+  getDefaultValueInput (collectionType, dataType) {
+    let valueBox = null;
+    if (collectionType === 'SINGLE') {
+      valueBox = <input type='text' className='form-control' required value={this.state.paramChange.defaultValue}
+        placeholder='default value' onChange={this._handleChange('ChangeDefaultTextValue')}/>;
+    } else if (collectionType === 'MULTIPLE') {
+      valueBox = <Multiselect messages={{createNew: 'Enter to add'}}
+         onCreate={this._handleChange('AddItemInMultiSelect')} data={this.state.paramChange.defaultValue}
+         onChange={this._handleChange('ChangeMultiselect')}
+        value={this.state.paramChange.defaultValue} onKeyDown={this.preventEnter}
+      />;
+    }
+    return valueBox;
   }
 }
 
 QueryParamRow.propTypes = {
   param: React.PropTypes.object.isRequired,
-  updateParam: React.PropTypes.func.isRequired,
+  saveParamChanges: React.PropTypes.func.isRequired,
   entryMode: React.PropTypes.boolean
 };
 
