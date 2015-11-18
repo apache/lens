@@ -26,12 +26,14 @@ Lens client configuration
 *--+--+---+--+
 |1|lens.client.dbname|default|Default lens database|
 *--+--+---+--+
-|2|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
+|2|lens.client.query.poll.interval|10|Interval at which query progress will be polled. Interval has to be given in milliseconds|
 *--+--+---+--+
-|3|lens.client.user.name|anonymous|Lens client user name|
+|3|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
 *--+--+---+--+
-|4|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+|4|lens.client.user.name|anonymous|Lens client user name|
 *--+--+---+--+
-|5|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
+|5|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+*--+--+---+--+
+|6|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
 *--+--+---+--+
 The configuration parameters and their default values

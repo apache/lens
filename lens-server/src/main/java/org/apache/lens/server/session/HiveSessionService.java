@@ -452,7 +452,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public HealthStatus getHealthStatus() {

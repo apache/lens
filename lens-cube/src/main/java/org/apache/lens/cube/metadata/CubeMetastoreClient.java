@@ -651,7 +651,7 @@ public class CubeMetastoreClient {
    * @throws HiveException
    */
   public void createDerivedCube(String parent, String name, Set<String> measures, Set<String> dimensions,
-    Map<String, String> properties, double weight) throws HiveException {
+    Map<String, String> properties, double weight) throws HiveException, LensException {
     DerivedCube cube = new DerivedCube(name, measures, dimensions, properties, weight, (Cube) getCube(parent));
     createCube(cube);
   }

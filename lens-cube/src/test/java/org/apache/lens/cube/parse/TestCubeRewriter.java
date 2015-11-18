@@ -463,7 +463,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
   @Test
   public void testCubeWhereQueryWithMultipleTablesForMonth() throws Exception {
     Configuration conf = getConf();
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C0,C1,C2,C3,C4,C5");
     conf.set(CubeQueryConfUtil.getValidStorageTablesKey("testfact"), "");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C1"), "HOURLY");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
@@ -990,6 +990,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
       MISSING_PARTITIONS);
     assertEquals(pruneCauses.getDetails().get("cheapfact").iterator().next().getCause(),
       NO_CANDIDATE_STORAGES);
+    CandidateTablePruneCause cheapFactPruneCauses = pruneCauses.getDetails().get("cheapfact").iterator().next();
+    assertEquals(cheapFactPruneCauses.getStorageCauses().get("c0").getCause(), SkipStorageCode.RANGE_NOT_ANSWERABLE);
+    assertEquals(cheapFactPruneCauses.getStorageCauses().get("c99").getCause(), SkipStorageCode.UNSUPPORTED);
     assertEquals(pruneCauses.getDetails().get("summary4").iterator().next().getCause(), TIMEDIM_NOT_SUPPORTED);
     assertTrue(pruneCauses.getDetails().get("summary4").iterator().next().getUnsupportedTimeDims().contains("d_time"));
   }

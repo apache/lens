@@ -26,7 +26,7 @@ public interface PrettyPrintable {
   /**
    * Returns the contents of this object in the form of a pretty formatted string.
    *
-   * @return
+   * @return contents as formatted String
    */
   String toPrettyString();
 }

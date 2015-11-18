@@ -76,7 +76,7 @@ public class SavedQueryDao {
   /**
    * Creates the saved query table
    *
-   * @throws LensException
+   * @throws LensException cannot create saved query table
    */
   public void createSavedQueryTableIfNotExists() throws LensException {
     try {
@@ -90,7 +90,7 @@ public class SavedQueryDao {
    * Saves the query passed
    *
    * @param savedQuery
-   * @return
+   * @return insert id
    * @throws LensException
    */
   public long saveQuery(SavedQuery savedQuery) throws LensException {

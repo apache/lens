@@ -417,7 +417,7 @@ public class TestMetastoreService extends LensJerseyTest {
     return cube;
   }
 
-  private XDerivedCube createDerivedCube(String cubeName, String parent) throws Exception {
+  private XDerivedCube createDerivedCube(String cubeName, String parent, boolean addExtraFields) throws Exception {
     XDerivedCube cube = cubeObjectFactory.createXDerivedCube();
     cube.setName(cubeName);
     cube.setDimAttrNames(new XDimAttrNames());
@@ -426,7 +426,10 @@ public class TestMetastoreService extends LensJerseyTest {
 
     cube.getDimAttrNames().getAttrName().add("dim1");
     cube.getMeasureNames().getMeasureName().add("msr1");
-
+    if (addExtraFields) {
+      cube.getDimAttrNames().getAttrName().add("random_dim");
+      cube.getMeasureNames().getMeasureName().add("random_measure");
+    }
     XProperty xp1 = cubeObjectFactory.createXProperty();
     xp1.setName("derived.foo");
     xp1.setValue("derived.bar");
@@ -469,13 +472,20 @@ public class TestMetastoreService extends LensJerseyTest {
       }
 
       assertTrue(foundcube);
-
+      // create invalid derived cube
+      XCube dcube = createDerivedCube("testderived", "testCube1", true);
+      result = target.queryParam("sessionid", lensSessionId).request(
+        mediaType).post(Entity.xml(cubeObjectFactory.createXCube(dcube)), APIResult.class);
+      assertEquals(result.getStatus(), Status.FAILED);
+      assertEquals(result.getMessage(), "ERROR_IN_ENTITY_DEFINITION[Derived cube invalid: "
+        + "Measures [random_measure] and Dim Attributes "
+        + "[random_dim] were not present in parent cube testcube1]");
       // create derived cube
-      final XCube dcube = createDerivedCube("testderived", "testCube1");
+      dcube = createDerivedCube("testderived", "testCube1", false);
       result = target.queryParam("sessionid", lensSessionId).request(
         mediaType).post(Entity.xml(cubeObjectFactory.createXCube(dcube)), APIResult.class);
       assertNotNull(result);
-      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+      assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       cubes = target().path("metastore/cubes").queryParam("sessionid", lensSessionId).request(mediaType)
         .get(StringList.class);
@@ -706,7 +716,7 @@ public class TestMetastoreService extends LensJerseyTest {
       Assert.assertTrue(links.get(1).isMapsToMany());
       Assert.assertEquals(links.get(1).toString(), "testdim.col1[n]");
 
-      final XDerivedCube dcube = createDerivedCube("testGetDerivedCube", "testGetCube");
+      final XDerivedCube dcube = createDerivedCube("testGetDerivedCube", "testGetCube", false);
       target = target().path("metastore").path("cubes");
       // Create this cube first
       element = cubeObjectFactory.createXCube(dcube);
@@ -746,7 +756,7 @@ public class TestMetastoreService extends LensJerseyTest {
         target.queryParam("sessionid", lensSessionId).request(mediaType).post(Entity.xml(element), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-      final XCube dcube = createDerivedCube("test_drop_derived_cube", "test_drop_cube");
+      final XCube dcube = createDerivedCube("test_drop_derived_cube", "test_drop_cube", false);
       target = target().path("metastore").path("cubes");
       // Create this cube first
       element = cubeObjectFactory.createXCube(dcube);
@@ -841,7 +851,15 @@ public class TestMetastoreService extends LensJerseyTest {
       assertNotNull(hcube.getDimAttributeByName("dim3"));
       assertEquals(((AbstractCubeTable) hcube).getProperties().get("foo2"), "bar2");
 
-      final XDerivedCube dcube = createDerivedCube("test_update_derived", cubeName);
+      XDerivedCube dcube = createDerivedCube("test_update_derived", cubeName, true);
+      element = cubeObjectFactory.createXCube(dcube);
+      result =
+        target.queryParam("sessionid", lensSessionId).request(mediaType).post(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), Status.FAILED);
+      assertEquals(result.getMessage(), "ERROR_IN_ENTITY_DEFINITION[Derived cube invalid: "
+        + "Measures [random_measure] and Dim Attributes "
+        + "[random_dim] were not present in parent cube test_update]");
+      dcube = createDerivedCube("test_update_derived", cubeName, false);
       // Create this cube first
       element = cubeObjectFactory.createXCube(dcube);
       result =
@@ -1262,7 +1280,7 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(col4h3.getType(), "string");
       assertEquals(col4h3.getChainRefColumns().get(0).getChainName(), "chain1");
       assertEquals(col4h3.getChainRefColumns().get(0).getRefColumn(), "col2");
-      assertEquals(col4h3.getNumOfDistinctValues().get(), (Long)1000L);
+      assertEquals(col4h3.getNumOfDistinctValues().get(), (Long) 1000L);
       assertNotNull(dim.getAttributeByName("col5"));
       ReferencedDimAtrribute col5 = (ReferencedDimAtrribute) dim.getAttributeByName("col5");
       assertEquals(col5.getDescription(), "ref column");

@@ -205,19 +205,19 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   }
 
   public CubeDimAttribute getDimAttributeByName(String dimension) {
-    return dimMap.get(dimension == null ? dimension : dimension.toLowerCase());
+    return dimMap.get(dimension == null ? null : dimension.toLowerCase());
   }
 
   public CubeMeasure getMeasureByName(String measure) {
-    return measureMap.get(measure == null ? measure : measure.toLowerCase());
+    return measureMap.get(measure == null ? null : measure.toLowerCase());
   }
 
   public CubeColumn getColumnByName(String column) {
-    CubeColumn cubeCol = (CubeColumn) super.getExpressionByName(column);
+    CubeColumn cubeCol = super.getExpressionByName(column);
     if (cubeCol == null) {
-      cubeCol = (CubeColumn) getMeasureByName(column);
+      cubeCol = getMeasureByName(column);
       if (cubeCol == null) {
-        cubeCol = (CubeColumn) getDimAttributeByName(column);
+        cubeCol = getDimAttributeByName(column);
       }
     }
     return cubeCol;

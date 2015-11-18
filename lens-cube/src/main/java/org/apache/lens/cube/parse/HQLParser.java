@@ -194,7 +194,7 @@ public final class HQLParser {
     }
 
     System.out.print(node.getText() + " [" + tokenMapping.get(node.getToken().getType()) + "]");
-    System.out.print(" (l" + level + "c" + child + ")");
+    System.out.print(" (l" + level + "c" + child + "p" + node.getCharPositionInLine() +")");
 
     if (node.getChildCount() > 0) {
       System.out.println(" {");

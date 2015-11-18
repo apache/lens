@@ -114,7 +114,7 @@ public class TestCubeMetastoreClient {
   }
 
   @BeforeClass
-  public static void setup() throws HiveException, AlreadyExistsException, ParseException {
+  public static void setup() throws HiveException, AlreadyExistsException, LensException {
     SessionState.start(conf);
     now = new Date();
     Calendar cal = Calendar.getInstance();
@@ -158,7 +158,7 @@ public class TestCubeMetastoreClient {
   }
 
   private static void defineCube(String cubeName, String cubeNameWithProps, String derivedCubeName,
-    String derivedCubeNameWithProps) throws ParseException {
+    String derivedCubeNameWithProps) throws LensException {
     cubeMeasures = new HashSet<CubeMeasure>();
     cubeMeasures.add(new ColumnMeasure(
       new FieldSchema("msr1", "int", "first measure"), null, null, null, null, null, null, null, 0.0, 9999.0));
@@ -299,7 +299,7 @@ public class TestCubeMetastoreClient {
       new DerivedCube(derivedCubeNameWithProps, measures, dimensions, CUBE_PROPERTIES, 0L, cubeWithProps);
   }
 
-  private static void defineUberDims() throws ParseException {
+  private static void defineUberDims() {
     // Define zip dimension
     zipAttrs.add(new BaseDimAttribute(new FieldSchema("zipcode", "int", "code")));
     zipAttrs.add(new BaseDimAttribute(new FieldSchema("f1", "string", "field1")));
@@ -2541,7 +2541,7 @@ public class TestCubeMetastoreClient {
   }
 
   @Test(priority = 3)
-  public void testCaching() throws HiveException, ParseException {
+  public void testCaching() throws HiveException,  LensException {
     client = CubeMetastoreClient.getInstance(conf);
     CubeMetastoreClient client2 = CubeMetastoreClient.getInstance(new HiveConf(TestCubeMetastoreClient.class));
     assertEquals(5, client.getAllCubes().size());

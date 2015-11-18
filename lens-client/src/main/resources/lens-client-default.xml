@@ -46,4 +46,9 @@
     <value>org.apache.lens.client.RequestFilter</value>
     <description>Implementation class for Request Filter</description>
   </property>
+  <property>
+    <name>lens.client.query.poll.interval</name>
+    <value>10</value>
+    <description>Interval at which query progress will be polled. Interval has to be given in milliseconds</description>
+  </property>
 </configuration>

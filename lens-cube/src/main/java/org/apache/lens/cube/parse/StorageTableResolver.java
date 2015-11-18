@@ -19,9 +19,12 @@
 package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.metadata.MetastoreUtil.getFactOrDimtableStorageTableName;
+import static org.apache.lens.cube.metadata.MetastoreUtil.getStoragetableEndTimesKey;
+import static org.apache.lens.cube.metadata.MetastoreUtil.getStoragetableStartTimesKey;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.PART_COL_DOES_NOT_EXIST;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.RANGE_NOT_ANSWERABLE;
 import static org.apache.lens.cube.parse.DateUtil.WSPACE;
 import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
 
@@ -69,6 +72,7 @@ class StorageTableResolver implements ContextRewriter {
   private TimeRangeWriter rangeWriter;
   private DateFormat partWhereClauseFormat = null;
   private PHASE phase;
+  private HashMap<CubeFactTable, Map<String, SkipStorageCause>> skipStorageCausesPerFact;
 
   enum PHASE {
     FACT_TABLES, FACT_PARTITIONS, DIM_TABLE_AND_PARTITIONS;
@@ -179,7 +183,7 @@ class StorageTableResolver implements ContextRewriter {
         Set<String> storageTables = new HashSet<String>();
         Map<String, String> whereClauses = new HashMap<String, String>();
         boolean foundPart = false;
-        Map<String, SkipStorageCause> skipStorageCauses = new HashMap<String, SkipStorageCause>();
+        Map<String, SkipStorageCause> skipStorageCauses = new HashMap<>();
         for (String storage : dimtable.getStorages()) {
           if (isStorageSupported(storage)) {
             String tableName = getFactOrDimtableStorageTableName(dimtable.getName(), storage).toLowerCase();
@@ -235,6 +239,7 @@ class StorageTableResolver implements ContextRewriter {
   // Resolves all the storage table names, which are valid for each updatePeriod
   private void resolveFactStorageTableNames(CubeQueryContext cubeql) throws LensException {
     Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator();
+    skipStorageCausesPerFact = new HashMap<>();
     while (i.hasNext()) {
       CubeFactTable fact = i.next().fact;
       if (fact.getUpdatePeriods().isEmpty()) {
@@ -247,7 +252,7 @@ class StorageTableResolver implements ContextRewriter {
       String str = conf.get(CubeQueryConfUtil.getValidStorageTablesKey(fact.getName()));
       List<String> validFactStorageTables =
         StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
-      Map<String, SkipStorageCause> skipStorageCauses = new HashMap<String, SkipStorageCause>();
+      Map<String, SkipStorageCause> skipStorageCauses = new HashMap<>();
 
       for (Map.Entry<String, Set<UpdatePeriod>> entry : fact.getUpdatePeriods().entrySet()) {
         String storage = entry.getKey();
@@ -281,7 +286,7 @@ class StorageTableResolver implements ContextRewriter {
           }
           Set<String> storageTables = storageTableMap.get(updatePeriod);
           if (storageTables == null) {
-            storageTables = new LinkedHashSet<String>();
+            storageTables = new LinkedHashSet<>();
             storageTableMap.put(updatePeriod, storageTables);
           }
           isStorageAdded = true;
@@ -292,6 +297,7 @@ class StorageTableResolver implements ContextRewriter {
           skipStorageCauses.put(storage, SkipStorageCause.noCandidateUpdatePeriod(skipUpdatePeriodCauses));
         }
       }
+      skipStorageCausesPerFact.put(fact, skipStorageCauses);
       if (storageTableMap.isEmpty()) {
         log.info("Not considering fact table:{} as it does not have any storage tables", fact);
         cubeql.addFactPruningMsgs(fact, noCandidateStorages(skipStorageCauses));
@@ -359,7 +365,10 @@ class StorageTableResolver implements ContextRewriter {
     while (i.hasNext()) {
       CandidateFact cfact = i.next();
       List<FactPartition> answeringParts = new ArrayList<>();
-      HashMap<String, SkipStorageCause> skipStorageCauses = new HashMap<>();
+      Map<String, SkipStorageCause> skipStorageCauses = skipStorageCausesPerFact.get(cfact.fact);
+      if (skipStorageCauses == null) {
+        skipStorageCauses = new HashMap<>();
+      }
       PartitionRangesForPartitionColumns missingParts = new PartitionRangesForPartitionColumns();
       boolean noPartsForRange = false;
       Set<String> unsupportedTimeDims = Sets.newHashSet();
@@ -506,7 +515,7 @@ class StorageTableResolver implements ContextRewriter {
   }
 
   private Set<FactPartition> getPartitions(CubeFactTable fact, TimeRange range,
-    HashMap<String, SkipStorageCause> skipStorageCauses,
+    Map<String, SkipStorageCause> skipStorageCauses,
     PartitionRangesForPartitionColumns missingPartitions) throws LensException {
     try {
       return getPartitions(fact, range, getValidUpdatePeriods(fact), true, failOnPartialData, skipStorageCauses,
@@ -564,11 +573,13 @@ class StorageTableResolver implements ContextRewriter {
     Iterator<String> it = storageTbls.iterator();
     while (it.hasNext()) {
       String storageTableName = it.next();
-      if (!client.partColExists(storageTableName, partCol)) {
+      if (!isStorageTableCandidateForRange(storageTableName, fromDate, toDate)) {
+        skipStorageCauses.put(storageTableName, new SkipStorageCause(RANGE_NOT_ANSWERABLE));
+        it.remove();
+      } else if (!client.partColExists(storageTableName, partCol)) {
         log.info("{} does not exist in {}", partCol, storageTableName);
         skipStorageCauses.put(storageTableName, SkipStorageCause.partColDoesNotExist(partCol));
         it.remove();
-        continue;
       }
     }
 
@@ -681,6 +692,32 @@ class StorageTableResolver implements ContextRewriter {
       updatePeriods, addNonExistingParts, failOnPartialData, skipStorageCauses, missingPartitions)
       && getPartitions(fact, floorToDate, toDate, partCol, partitions,
         updatePeriods, addNonExistingParts, failOnPartialData, skipStorageCauses, missingPartitions);
+  }
+
+  private boolean isStorageTableCandidateForRange(String storageTableName, Date fromDate, Date toDate) throws
+    HiveException, LensException {
+    Date now = new Date();
+    String startProperty = client.getTable(storageTableName).getProperty(getStoragetableStartTimesKey());
+    if (StringUtils.isNotBlank(startProperty)) {
+      for (String timeStr : startProperty.split("\\s*,\\s*")) {
+        if (toDate.before(DateUtil.resolveDate(timeStr, now))) {
+          log.info("from date {} is before validity start time: {}, hence discarding {}",
+            toDate, timeStr, storageTableName);
+          return false;
+        }
+      }
+    }
+    String endProperty = client.getTable(storageTableName).getProperty(getStoragetableEndTimesKey());
+    if (StringUtils.isNotBlank(endProperty)) {
+      for (String timeStr : endProperty.split("\\s*,\\s*")) {
+        if (fromDate.after(DateUtil.resolveDate(timeStr, now))) {
+          log.info("to date {} is after validity end time: {}, hence discarding {}",
+            fromDate, timeStr, storageTableName);
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   private void updateFactPartitionStorageTablesFrom(CubeFactTable fact,

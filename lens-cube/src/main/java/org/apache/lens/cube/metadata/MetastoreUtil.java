@@ -150,6 +150,12 @@ public class MetastoreUtil {
   public static String getCubeColEndTimePropertyKey(String colName) {
     return getColumnKeyPrefix(colName) + END_TIME_SFX;
   }
+  public static String getStoragetableStartTimesKey(){
+    return STORAGE_PFX + "start.times";
+  }
+  public static String getStoragetableEndTimesKey(){
+    return STORAGE_PFX + "end.times";
+  }
 
   public static String getCubeColCostPropertyKey(String colName) {
     return getColumnKeyPrefix(colName) + COST_SFX;
