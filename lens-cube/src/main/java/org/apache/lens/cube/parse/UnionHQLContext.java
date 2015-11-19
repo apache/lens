@@ -20,70 +20,36 @@
 package org.apache.lens.cube.parse;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.StringUtils;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 
 @AllArgsConstructor
-@NoArgsConstructor
-public abstract class UnionHQLContext implements HQLContextInterface {
+@RequiredArgsConstructor
+public abstract class UnionHQLContext extends SimpleHQLContext {
+  protected final CubeQueryContext query;
+  private final CandidateFact fact;
 
-  @Getter
-  @Setter
-  List<HQLContextInterface> hqlContexts = new ArrayList<HQLContextInterface>();
+  List<HQLContextInterface> hqlContexts = new ArrayList<>();
 
-  @Override
-  public String toHQL() throws LensException {
-    Set<String> queryParts = new LinkedHashSet<String>();
+  public void setHqlContexts(List<HQLContextInterface> hqlContexts) throws LensException {
+    this.hqlContexts = hqlContexts;
+    StringBuilder queryParts = new StringBuilder("(");
+    String sep = "";
     for (HQLContextInterface ctx : hqlContexts) {
-      queryParts.add(ctx.toHQL());
+      queryParts.append(sep).append(ctx.toHQL());
+      sep = " UNION ALL ";
     }
-    return StringUtils.join(queryParts, " UNION ALL ");
-  }
-
-  @Override
-  public String getSelect()  {
-    throw new NotImplementedException("Not Implemented");
-  }
-
-  @Override
-  public String getFrom() {
-    throw new NotImplementedException("Not Implemented");
+    setFrom(queryParts.append(") ").append(query.getCube().getName()).toString());
   }
 
   @Override
   public String getWhere() {
     throw new NotImplementedException("Not Implemented");
   }
-
-  @Override
-  public String getGroupby() {
-    throw new NotImplementedException("Not Implemented");
-  }
-
-  @Override
-  public String getHaving() {
-    throw new NotImplementedException("Not Implemented");
-  }
-
-  @Override
-  public String getOrderby() {
-    throw new NotImplementedException("Not Implemented");
-  }
-
-  @Override
-  public Integer getLimit() {
-    throw new NotImplementedException("Not Implemented");
-  }
-
 }

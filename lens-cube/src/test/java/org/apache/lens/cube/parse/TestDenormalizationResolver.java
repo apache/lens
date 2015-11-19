@@ -63,7 +63,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       getExpectedQuery(cubeName, "select testcube.dim2big1," + " max(testcube.msr3), sum(testcube.msr2) FROM ", null,
         " group by testcube.dim2big1", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
         null);
-    TestCubeRewriter.compareQueries(expecteddim2big1, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big1);
     // with another table
     hqlQuery = rewrite("select dim2big1, citydim.name, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange,
       conf);
@@ -73,14 +73,14 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       " group by testcube.dim2big1, citydim.name", null,
       getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
       null);
-    TestCubeRewriter.compareQueries(expecteddim2big1WithAnotherTable, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big1WithAnotherTable);
 
     hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
     String expecteddim2big2 =
       getExpectedQuery(cubeName, "select testcube.dim2big2, max(testcube.msr3), sum(testcube.msr2) FROM ", null,
         " group by testcube.dim2big2", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
         null);
-    TestCubeRewriter.compareQueries(expecteddim2big2, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big2);
 
     Configuration conf2 = new Configuration(conf);
     conf2.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
@@ -94,12 +94,12 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         " group by testdim3.name, (testcube.dim2big1)", null,
         getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
         null);
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
 
     hqlQuery = rewrite("select dim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf2);
-    TestCubeRewriter.compareQueries(expecteddim2big1, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big1);
     hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf2);
-    TestCubeRewriter.compareQueries(expecteddim2big2, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big2);
   }
 
   @Test
@@ -114,7 +114,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
           + getDbName() + "c1_testdim2tbl2 testdim2 ON testcube.dim2 = "
           + " testdim2.id and (testdim2.dt = 'latest') ", null, "group by (testdim2.bigid1)", null,
         getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
 
     hqlQuery =
       rewrite("select testdim2.name, dim2big1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
@@ -124,7 +124,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
           + getDbName() + "c1_testdim2tbl2 testdim2 ON testcube.dim2 = "
           + " testdim2.id and (testdim2.dt = 'latest') ", null, "group by testdim2.name, testdim2.bigid1", null,
         getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
 
     hqlQuery =
       rewrite("select testdim2.name, dim2big1, max(msr3)," + " msr2 from testCube left outer join testdim2"
@@ -135,7 +135,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
           + getDbName() + "c1_testdim2tbl2 testdim2 ON testcube.dim2 = "
           + " testdim2.id and (testdim2.dt = 'latest') ", null, "group by testdim2.name, testdim2.bigid1", null,
         getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
 
     hqlQuery =
       rewrite("select testdim3.name, dim2big1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
@@ -147,7 +147,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
           + "c1_testdim3tbl testdim3 on " + "testdim2.testdim3id = testdim3.id AND (testdim3.dt = 'latest')",
         null, " group by testdim3.name, (testdim2.bigid1)", null,
         getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
     LensException e = getLensExceptionInRewrite(
       "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
     PruneCauses.BriefAndDetailedError error = extractPruneCause(e);
@@ -200,7 +200,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         null, " group by substr(testcube.dim2big1, 5)",
         getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
         null);
-    TestCubeRewriter.compareQueries(expecteddim2big1, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big1);
   }
 
   @Test
@@ -214,7 +214,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         " JOIN " + getDbName() + "c1_testdim2tbl2 testdim2 ON testcube.dim2 = "
           + " testdim2.id and (testdim2.dt = 'latest') ", null, "group by substr(testdim2.bigid1, 5)", null,
         getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 
   @Test
@@ -225,13 +225,13 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         + " citydim.stateid = statedim.id and (statedim.dt = 'latest')";
     String expected = getExpectedQuery("citydim", "SELECT citydim.name, statedim.name FROM ", joinExpr, null, null,
         "c1_citytable", true);
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
 
     hqlQuery = rewrite("select citydim.statename, citydim.name  from" + " citydim", conf);
 
     expected = getExpectedQuery("citydim", "SELECT statedim.name, citydim.name FROM ", joinExpr, null, null,
         "c1_citytable", true);
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
 
     // Query would fail because citydim.nocandidatecol does not exist in any
     // candidate
@@ -321,7 +321,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     String expected =
       getExpectedQuery("citydim", "SELECT citydim.name, concat(citydim.name, \":\", statedim.name) FROM ",
         joinExpr, null, null, "c1_citytable", true);
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 
   @Test

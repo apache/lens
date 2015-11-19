@@ -139,7 +139,7 @@ public class CubeTestSetup {
   private static String c99 = "C99";
   private static Map<String, String> factValidityProperties = Maps.newHashMap();
   @Getter
-  private static Map<String, String> storageToUpdatePeriodMap = new LinkedHashMap<String, String>();
+  private static Map<String, List<UpdatePeriod>> storageToUpdatePeriodMap = new LinkedHashMap<>();
 
   static {
     Calendar cal = Calendar.getInstance();
@@ -213,6 +213,32 @@ public class CubeTestSetup {
     return MONTH_PARSER.format(dt);
   }
 
+  interface StoragePartitionProvider {
+    Map<String, String> providePartitionsForStorage(String storage);
+  }
+
+  public static String getExpectedUnionQuery(String cubeName, List<String> storages, StoragePartitionProvider provider,
+    String outerSelectPart, String outerWhere, String outerPostWhere, String innerQuerySelectPart,
+    String innerWhere, String innerPostWhere) {
+    if (!innerQuerySelectPart.trim().toLowerCase().endsWith("from")) {
+      innerQuerySelectPart += " from ";
+    }
+    StringBuilder sb = new StringBuilder();
+    sb.append(outerSelectPart);
+    if (!outerSelectPart.trim().toLowerCase().endsWith("from")) {
+      sb.append(" from ");
+    }
+    sb.append(" (");
+    String sep = "";
+    for (String storage : storages) {
+      sb.append(sep).append(getExpectedQuery(cubeName, innerQuerySelectPart + " ",
+        innerWhere, innerPostWhere, provider.providePartitionsForStorage(storage)));
+      sep = " UNION ALL ";
+    }
+    return sb.append(") ").append(cubeName).append(" ").append(outerWhere == null ? "" : outerWhere)
+      .append(" ").append(outerPostWhere == null ? "" : outerPostWhere).toString();
+  }
+
   public static String getExpectedQuery(String cubeName, String selExpr, String whereExpr, String postWhereExpr,
     Map<String, String> storageTableToWhereClause) {
     return getExpectedQuery(cubeName, selExpr, whereExpr, postWhereExpr, storageTableToWhereClause, null);
@@ -241,7 +267,7 @@ public class CubeTestSetup {
       expected.append(entry.getValue());
       expected.append(")");
       if (postWhereExpr != null) {
-        expected.append(postWhereExpr);
+        expected.append(" ").append(postWhereExpr);
       }
     }
     return expected.toString();
@@ -349,10 +375,11 @@ public class CubeTestSetup {
       storageTableToWhereClause.put(getStorageTableString(storageTables), whereClause);
     } else {
       for (String tbl : storageTables) {
-        String updatePeriod = storageToUpdatePeriodMap.get(tbl);
-        String whereClause = getWhereForDailyAndHourly2daysWithTimeDimUnionQuery(cubeName, timedDimension, from, to)
-            .get(updatePeriod);
-        storageTableToWhereClause.put(getStorageTableString(tbl), whereClause);
+        for (UpdatePeriod updatePeriod : storageToUpdatePeriodMap.get(tbl)) {
+          String whereClause = getWhereForDailyAndHourly2daysWithTimeDimUnionQuery(cubeName, timedDimension, from, to)
+            .get(updatePeriod.getName());
+          storageTableToWhereClause.put(getStorageTableString(tbl), whereClause);
+        }
       }
     }
     return storageTableToWhereClause;
@@ -392,7 +419,7 @@ public class CubeTestSetup {
   }
 
   public static Map<String, String> getWhereForDailyAndHourly2daysWithTimeDimUnionQuery(String cubeName,
-      String timedDimension, Date from, Date to) {
+    String timedDimension, Date from, Date to) {
     Map<String, String> updatePeriodToWhereMap = new HashMap<String, String>();
     List<String> hourlyparts = new ArrayList<String>();
     List<String> dailyparts = new ArrayList<String>();
@@ -400,7 +427,7 @@ public class CubeTestSetup {
     if (!CubeTestSetup.isZerothHour()) {
       addParts(hourlyparts, HOURLY, from, DateUtil.getCeilDate(from, DAILY));
       addParts(hourlyparts, HOURLY, DateUtil.getFloorDate(to, DAILY),
-          DateUtil.getFloorDate(to, HOURLY));
+        DateUtil.getFloorDate(to, HOURLY));
       dayStart = DateUtil.getCeilDate(from, DAILY);
     } else {
       dayStart = from;
@@ -475,9 +502,9 @@ public class CubeTestSetup {
     Date monthStart = TWO_MONTHS_BACK;
     if (!CubeTestSetup.isZerothHour()) {
       addParts(hourlyparts, HOURLY, TWO_MONTHS_BACK,
-          DateUtil.getCeilDate(TWO_MONTHS_BACK, DAILY));
+        DateUtil.getCeilDate(TWO_MONTHS_BACK, DAILY));
       addParts(hourlyparts, HOURLY, DateUtil.getFloorDate(NOW, DAILY),
-          DateUtil.getFloorDate(NOW, HOURLY));
+        DateUtil.getFloorDate(NOW, HOURLY));
       dayStart = DateUtil.getCeilDate(TWO_MONTHS_BACK, DAILY);
       monthStart = DateUtil.getCeilDate(TWO_MONTHS_BACK, MONTHLY);
     }
@@ -488,7 +515,7 @@ public class CubeTestSetup {
       monthStart = DateUtil.getCeilDate(TWO_MONTHS_BACK, MONTHLY);
     }
     addParts(dailyparts, DAILY, DateUtil.getFloorDate(NOW, MONTHLY),
-        DateUtil.getFloorDate(NOW, DAILY));
+      DateUtil.getFloorDate(NOW, DAILY));
     addParts(monthlyparts, MONTHLY, monthStart, DateUtil.getFloorDate(NOW, MONTHLY));
 
     updatePeriodToPart.put("HOURLY", hourlyparts);
@@ -496,12 +523,14 @@ public class CubeTestSetup {
     updatePeriodToPart.put("MONTHLY", monthlyparts);
 
     List<String> unionParts = new ArrayList<String>();
-    for (Map.Entry<String, String> entry : storageToUpdatePeriodMap.entrySet()) {
-      String uperiod = entry.getKey();
-      String table = entry.getValue();
-      if (table.equals(storageTable) && updatePeriodToPart.containsKey(uperiod)) {
-        unionParts.addAll(updatePeriodToPart.get(uperiod));
-        Collections.sort(unionParts);
+    for (Map.Entry<String, List<UpdatePeriod>> entry : storageToUpdatePeriodMap.entrySet()) {
+      String table = entry.getKey();
+      for (UpdatePeriod updatePeriod : entry.getValue()) {
+        String uperiod = updatePeriod.getName();
+        if (table.equals(storageTable) && updatePeriodToPart.containsKey(uperiod)) {
+          unionParts.addAll(updatePeriodToPart.get(uperiod));
+          Collections.sort(unionParts);
+        }
       }
     }
 
@@ -591,6 +620,10 @@ public class CubeTestSetup {
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr1", "int", "first measure")));
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr2", "float", "second measure"), "Measure2", null, "SUM",
       "RS"));
+    cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr21", "float", "second measure"), "Measure22", null, "SUM",
+      "RS"));
+    cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr22", "float", "second measure"), "Measure22", null, "SUM",
+      "RS"));
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr3", "double", "third measure"), "Measure3", null, "MAX",
       null));
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr4", "bigint", "fourth measure"), "Measure4", null, "COUNT",
@@ -600,7 +633,7 @@ public class CubeTestSetup {
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("newmeasure", "bigint", "measure available  from now"),
       "New measure", null, null, null, NOW, null, 100.0));
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr15", "int", "first measure"), "Measure15", null, "SUM",
-        "RS"));
+      "RS"));
 
     cubeDimensions = new HashSet<CubeDimAttribute>();
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("d_time", "timestamp", "d time")));
@@ -689,6 +722,10 @@ public class CubeTestSetup {
       "(1000 + sum(msr1) + sum(msr2))/100"));
     exprs.add(new ExprColumn(new FieldSchema("msr5", "double", "materialized in some facts"), "Fifth Msr",
       "msr2 + msr3"));
+    exprs.add(new ExprColumn(new FieldSchema("msr8", "double", "measure expression"), "Sixth Msr",
+      "msr2 + msr3"));
+    exprs.add(new ExprColumn(new FieldSchema("msr7", "double", "measure expression"), "Seventh Msr",
+      "case when sum(msr2) = 0 then 0 else sum(case when cityid='x' then msr21 else msr22 end)/sum(msr2) end"));
     exprs.add(new ExprColumn(new FieldSchema("equalsums", "double", "sums are equals"), "equalsums",
       new ExprSpec("msr3 + msr4", null, null), new ExprSpec("(msr3 + msr2)/100", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("roundedmsr1", "double", "rounded measure1"), "Rounded msr1",
@@ -708,7 +745,7 @@ public class CubeTestSetup {
     exprs.add(new ExprColumn(new FieldSchema("msr6", "bigint", "sixth measure"), "Measure6",
       "sum(msr2) + max(msr3)/ count(msr4)"));
     exprs.add(new ExprColumn(new FieldSchema("booleancut", "boolean", "a boolean expression"), "Boolean cut",
-      "dim1 != 'x' AND dim2 != 10 "));
+      "(dim1 != 'x' AND dim2 != 10)"));
     exprs.add(new ExprColumn(new FieldSchema("substrexpr", "string", "a sub-string expression"), "Substr expr",
       new ExprSpec("substr(dim1, 3))", null, null), new ExprSpec("substr(ascii(testdim2.name), 3)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("substrexprdim2", "string", "a sub-string expression"), "Substr expr",
@@ -1146,7 +1183,7 @@ public class CubeTestSetup {
 
   }
 
-  private void createCubeContinuousFact(CubeMetastoreClient client) throws Exception{
+  private void createCubeContinuousFact(CubeMetastoreClient client) throws Exception {
     // create continuous raw fact only with extra measures
     String factName = "testFact_CONTINUOUS";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>();
@@ -1253,16 +1290,16 @@ public class CubeTestSetup {
     CubeFactTable fact = client.getFactTable(factName);
     Table table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(), Storage.getPrefix(c1)));
     assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
-    for (UpdatePeriod period: Lists.newArrayList(MINUTELY, MINUTELY, DAILY, MONTHLY, YEARLY, QUARTERLY)) {
-      for (String partCol: Lists.newArrayList("dt")) {
+    for (UpdatePeriod period : Lists.newArrayList(MINUTELY, MINUTELY, DAILY, MONTHLY, YEARLY, QUARTERLY)) {
+      for (String partCol : Lists.newArrayList("dt")) {
         assertTimeline(client, fact.getName(), c1, period, partCol, EndsAndHolesPartitionTimeline.class);
       }
     }
 
     table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(), Storage.getPrefix(c4)));
     assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
-    for (UpdatePeriod period: Lists.newArrayList(MINUTELY, MINUTELY, DAILY, MONTHLY, YEARLY, QUARTERLY)) {
-      for (String partCol: Lists.newArrayList("ttd", "ttd2")) {
+    for (UpdatePeriod period : Lists.newArrayList(MINUTELY, MINUTELY, DAILY, MONTHLY, YEARLY, QUARTERLY)) {
+      for (String partCol : Lists.newArrayList("ttd", "ttd2")) {
         assertTimeline(client, fact.getName(), c4, period, partCol, EndsAndHolesPartitionTimeline.class);
       }
     }
@@ -2266,7 +2303,7 @@ public class CubeTestSetup {
         });
       }
     });
-    Dimension userDim = new Dimension(dimName, dimAttrs, null, joinChains, dimProps,  0L);
+    Dimension userDim = new Dimension(dimName, dimAttrs, null, joinChains, dimProps, 0L);
     client.createDimension(userDim);
 
     String dimTblName = "usertable";
@@ -2377,6 +2414,7 @@ public class CubeTestSetup {
 
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
+
   public void createSources(HiveConf conf, String dbName) throws Exception {
     try {
       Database database = new Database();

@@ -417,9 +417,9 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
     String joinExpr =
       ""
-        + " join " + getDbName() + ".c1_statetable statedim on ct.stateid = statedim.id and (statedim.dt = 'latest')"
-        + " join " + getDbName() + ".c1_countrytable countrydim on statedim.countryid = countrydim.id"
-        + " join " + getDbName() + ".c1_ziptable zipdim on ct.zipcode = zipdim.code and (zipdim.dt = 'latest')"
+        + " join " + getDbName() + "c1_statetable statedim on ct.stateid = statedim.id and (statedim.dt = 'latest')"
+        + " join " + getDbName() + "c1_countrytable countrydim on statedim.countryid = countrydim.id"
+        + " join " + getDbName() + "c1_ziptable zipdim on ct.zipcode = zipdim.code and (zipdim.dt = 'latest')"
         + "";
 
     String expected =
@@ -443,9 +443,9 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
     String joinExpr =
       ""
-        + " join " + getDbName() + ".c1_statetable statedim on ct.stateid = statedim.id and (statedim.dt = 'latest')"
-        + " join " + getDbName() + ".c1_countrytable countrydim on statedim.countryid = countrydim.id"
-        + " join " + getDbName() + ".c1_ziptable zipdim on ct.zipcode = zipdim.code and (zipdim.dt = 'latest')"
+        + " join " + getDbName() + "c1_statetable statedim on ct.stateid = statedim.id and (statedim.dt = 'latest')"
+        + " join " + getDbName() + "c1_countrytable countrydim on statedim.countryid = countrydim.id"
+        + " join " + getDbName() + "c1_ziptable zipdim on ct.zipcode = zipdim.code and (zipdim.dt = 'latest')"
         + "";
 
     String expected =

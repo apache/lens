@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CubeQueryConfUtil.*;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
@@ -132,9 +134,9 @@ public class CubeQueryContext implements TrackQueriedColumns {
   protected final Map<Dimension, Set<CandidateDim>> candidateDims = new HashMap<Dimension, Set<CandidateDim>>();
 
   // query trees
-  @Getter
+  @Getter @Setter
   private ASTNode havingAST;
-  @Getter
+  @Getter @Setter
   private ASTNode selectAST;
 
   // Will be set after the Fact is picked and time ranges replaced
@@ -142,7 +144,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
   @Setter
   private ASTNode whereAST;
 
-  @Getter
+  @Getter @Setter
   private ASTNode orderByAST;
   // Setter is used in promoting the select when promotion is on.
   @Getter
@@ -667,6 +669,9 @@ public class CubeQueryContext implements TrackQueriedColumns {
   public Integer getLimitValue() {
     return qb.getParseInfo().getDestLimit(getClause());
   }
+  public void setLimitValue(Integer value) {
+    qb.getParseInfo().setDestLimit(getClause(), value);
+  }
 
   private String getStorageStringWithAlias(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, String alias) {
     if (cubeTbls.get(alias) instanceof CubeInterface) {
@@ -764,14 +769,14 @@ public class CubeQueryContext implements TrackQueriedColumns {
           }
         }
       }
-      conf.set(CubeQueryConfUtil.NON_EXISTING_PARTITIONS, partsStr);
+      conf.set(NON_EXISTING_PARTITIONS, partsStr);
     } else {
-      conf.unset(CubeQueryConfUtil.NON_EXISTING_PARTITIONS);
+      conf.unset(NON_EXISTING_PARTITIONS);
     }
   }
 
   public String getNonExistingParts() {
-    return conf.get(CubeQueryConfUtil.NON_EXISTING_PARTITIONS);
+    return conf.get(NON_EXISTING_PARTITIONS);
   }
 
   private Map<Dimension, CandidateDim> pickCandidateDimsToQuery(Set<Dimension> dimensions) throws LensException {
@@ -942,6 +947,9 @@ public class CubeQueryContext implements TrackQueriedColumns {
       return new DimOnlyHQLContext(dimsToQuery, query);
     } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() > 1) {
       //create single fact with multiple storage context
+      if (!conf.getBoolean(ENABLE_STORAGES_UNION, DEFAULT_ENABLE_STORAGES_UNION)) {
+        throw new LensException(LensCubeErrorCode.STORAGE_UNION_DISABLED.getLensErrorInfo());
+      }
       return new SingleFactMultiStorageHQLContext(facts.iterator().next(), dimsToQuery, query);
     } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() == 1) {
       // create single fact context
@@ -1129,8 +1137,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
   }
 
   public boolean shouldReplaceTimeDimWithPart() {
-    return getConf().getBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL,
-      CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL);
+    return getConf().getBoolean(REPLACE_TIMEDIM_WITH_PART_COL, DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL);
   }
 
   public String getPartitionColumnOfTimeDim(String timeDimName) {

@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
@@ -49,7 +50,13 @@ public final class HQLParser {
   private HQLParser() {
 
   }
+
   public static final Pattern P_WSPACE = Pattern.compile("\\s+");
+
+  public static boolean isTableColumnAST(ASTNode astNode) {
+    return !(astNode == null || astNode.getChildren() == null || astNode.getChildCount() != 2) && astNode.getChild(0)
+      .getType() == HiveParser.TOK_TABLE_OR_COL && astNode.getChild(1).getType() == HiveParser.Identifier;
+  }
 
   public interface ASTNodeVisitor {
     void visit(TreeNode node) throws LensException;
@@ -786,8 +793,11 @@ public final class HQLParser {
     }
 
     // Compare text. For literals, comparison is case sensitive
-    if ((n1.getToken().getType() == StringLiteral && !n1.getText().equals(n2.getText()))
-      || !n1.getText().equalsIgnoreCase(n2.getText())) {
+    if ((n1.getToken().getType() == StringLiteral && !StringUtils.equals(n1.getText(), n2.getText()))) {
+      return false;
+    }
+
+    if (!StringUtils.equalsIgnoreCase(n1.getText(), n2.getText())) {
       return false;
     }
 
