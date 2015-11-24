@@ -480,7 +480,7 @@ class StorageTableResolver implements ContextRewriter {
         i.remove();
         continue;
       }
-      Set<String> storageTables = new LinkedHashSet<String>();
+      Set<String> storageTables = new LinkedHashSet<>();
       storageTables.addAll(minimalStorageTables.keySet());
       cfact.setStorageTables(storageTables);
 

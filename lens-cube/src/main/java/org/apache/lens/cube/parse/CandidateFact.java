@@ -264,7 +264,7 @@ public class CandidateFact implements CandidateTable {
     String database = SessionState.get().getCurrentDatabase();
     // Add database name prefix for non default database
     if (StringUtils.isNotBlank(database) && !"default".equalsIgnoreCase(database)) {
-      Set<String> storageTbls = new HashSet<String>();
+      Set<String> storageTbls = new TreeSet<>();
       Iterator<String> names = storageTables.iterator();
       while (names.hasNext()) {
         storageTbls.add(database + "." + names.next());
