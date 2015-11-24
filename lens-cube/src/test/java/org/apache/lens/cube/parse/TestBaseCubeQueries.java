@@ -226,6 +226,33 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   }
 
   @Test
+  public void testMultiFactQueryWithExpressionsFromMultipleFacts() throws Exception {
+    Configuration tConf = new Configuration(conf);
+    tConf.setBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, true);
+    String hqlQuery = rewrite("select  dim1, roundedmsr2, flooredmsr12 from basecube" + " where "
+            + TWO_DAYS_RANGE, tConf);
+    String expected1 =
+            getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, "
+                            + "floor(sum(( basecube . msr12 ))) as `flooredmsr12` FROM ", null,
+                    " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
+    String expected2 = getExpectedQuery(cubeName,
+            "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
+            " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+    TestCubeRewriter.compareContains(expected1, hqlQuery);
+    TestCubeRewriter.compareContains(expected2, hqlQuery);
+    String lower = hqlQuery.toLowerCase();
+    assertTrue(
+            lower.startsWith("select coalesce(mq1.dim1, mq2.dim1) dim1, mq2.roundedmsr2 roundedmsr2, "
+                    + "mq1.flooredmsr12 flooredmsr12 from ")
+                    || lower.startsWith("select coalesce(mq1.dim1, mq2.dim1) dim1, mq1.roundedmsr2 roundedmsr2, "
+                    + "mq2.flooredmsr12 flooredmsr12"
+                    + " from "), hqlQuery);
+
+    assertTrue(hqlQuery.contains("mq1 full outer join ") && hqlQuery.endsWith("mq2 on mq1.dim1 <=> mq2.dim1"),
+            hqlQuery);
+  }
+
+  @Test
   public void testMultiFactQueryWithSingleCommonDimensionWithColumnsSwapped() throws Exception {
     // columns in select interchanged
     String hqlQuery = rewrite("select dim1, msr12, roundedmsr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);

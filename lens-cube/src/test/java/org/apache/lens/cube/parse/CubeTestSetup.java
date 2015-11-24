@@ -732,6 +732,8 @@ public class CubeTestSetup {
       "round(msr1/1000)"));
     exprs.add(new ExprColumn(new FieldSchema("roundedmsr2", "double", "rounded measure2"), "Rounded msr2",
       "round(msr2/1000)"));
+    exprs.add(new ExprColumn(new FieldSchema("flooredmsr12", "double", "floored measure12"), "Floored msr12",
+            "floor(msr12)"));
     exprs.add(new ExprColumn(new FieldSchema("nestedexpr", "double", "nested expr"), "Nested expr",
       new ExprSpec("avg(roundedmsr2)", null, null), new ExprSpec("avg(equalsums)", null, null),
       new ExprSpec("case when substrexpr = 'xyz' then avg(msr5) when substrexpr = 'abc' then avg(msr4)/100 end",

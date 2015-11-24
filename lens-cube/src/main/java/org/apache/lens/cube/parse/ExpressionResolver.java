@@ -405,11 +405,11 @@ class ExpressionResolver implements ContextRewriter {
      */
     public boolean allNotEvaluable(Set<String> exprs, CandidateTable cTable) {
       for (String expr : exprs) {
-        if (!isEvaluable(expr, cTable)) {
-          return true;
+        if (isEvaluable(expr, cTable)) {
+          return false;
         }
       }
-      return false;
+      return true;
     }
 
     public Collection<String> coveringExpressions(Set<String> exprs, CandidateTable cTable) {

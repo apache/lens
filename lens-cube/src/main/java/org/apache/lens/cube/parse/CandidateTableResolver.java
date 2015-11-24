@@ -272,7 +272,8 @@ class CandidateTableResolver implements ContextRewriter {
         if (!checkForColumnExists(cfact, queriedMsrs)
           && (cubeql.getQueriedExprsWithMeasures().isEmpty()
             || cubeql.getExprCtx().allNotEvaluable(cubeql.getQueriedExprsWithMeasures(), cfact))) {
-          log.info("Not considering fact table:{} as columns {} is not available", cfact, queriedMsrs);
+          log.info("Not considering fact table:{} as columns {},{} is not available", cfact, queriedMsrs,
+                  cubeql.getQueriedExprsWithMeasures());
           cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(queriedMsrs,
             cubeql.getQueriedExprsWithMeasures()));
           toRemove = true;
