@@ -152,11 +152,13 @@ public class APIResult {
   }
 
   private static String extractCause(Throwable e) {
-    String cause = null;
-    while ((cause == null || cause.isEmpty()) && e != null) {
-      cause = e.getMessage();
+    StringBuilder cause = new StringBuilder();
+    String sep = "";
+    while (e != null) {
+      cause.append(sep).append(e.getMessage());
       e = e.getCause();
+      sep = ": ";
     }
-    return cause;
+    return cause.toString();
   }
 }

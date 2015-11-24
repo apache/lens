@@ -477,9 +477,8 @@ public class TestMetastoreService extends LensJerseyTest {
       result = target.queryParam("sessionid", lensSessionId).request(
         mediaType).post(Entity.xml(cubeObjectFactory.createXCube(dcube)), APIResult.class);
       assertEquals(result.getStatus(), Status.FAILED);
-      assertEquals(result.getMessage(), "ERROR_IN_ENTITY_DEFINITION[Derived cube invalid: "
-        + "Measures [random_measure] and Dim Attributes "
-        + "[random_dim] were not present in parent cube testcube1]");
+      assertEquals(result.getMessage(), "Problem in submitting entity: Derived cube invalid: Measures "
+        + "[random_measure] and Dim Attributes [random_dim] were not present in parent cube testcube1");
       // create derived cube
       dcube = createDerivedCube("testderived", "testCube1", false);
       result = target.queryParam("sessionid", lensSessionId).request(
@@ -856,9 +855,8 @@ public class TestMetastoreService extends LensJerseyTest {
       result =
         target.queryParam("sessionid", lensSessionId).request(mediaType).post(Entity.xml(element), APIResult.class);
       assertEquals(result.getStatus(), Status.FAILED);
-      assertEquals(result.getMessage(), "ERROR_IN_ENTITY_DEFINITION[Derived cube invalid: "
-        + "Measures [random_measure] and Dim Attributes "
-        + "[random_dim] were not present in parent cube test_update]");
+      assertEquals(result.getMessage(), "Problem in submitting entity: Derived cube invalid: Measures "
+        + "[random_measure] and Dim Attributes [random_dim] were not present in parent cube test_update");
       dcube = createDerivedCube("test_update_derived", cubeName, false);
       // Create this cube first
       element = cubeObjectFactory.createXCube(dcube);
@@ -1960,14 +1958,15 @@ public class TestMetastoreService extends LensJerseyTest {
   private XPartition createPartition(String cubeTableName, Date partDate) {
     return createPartition(cubeTableName, partDate, "dt");
   }
-
-  private XPartition createPartition(String cubeTableName, Date partDate, final String timeDimension) {
-
+  private XTimePartSpecElement createTimePartSpecElement(Date partDate, String timeDimension) {
     XTimePartSpecElement timePart = cubeObjectFactory.createXTimePartSpecElement();
     timePart.setKey(timeDimension);
     timePart.setValue(JAXBUtils.getXMLGregorianCalendar(HOURLY.truncate(partDate)));
+    return timePart;
+  }
+  private XPartition createPartition(String cubeTableName, Date partDate, final String timeDimension) {
 
-    return createPartition(cubeTableName, Arrays.asList(timePart));
+    return createPartition(cubeTableName, Arrays.asList(createTimePartSpecElement(partDate, timeDimension)));
   }
 
   private XPartition createPartition(String cubeTableName, final List<XTimePartSpecElement> timePartSpecs) {
@@ -2116,8 +2115,18 @@ public class TestMetastoreService extends LensJerseyTest {
         .post(null);
       Assert.assertEquals(resp.getStatus(), 400);
 
-      // Add a partition
+      // Add wrong partition
       final Date partDate = new Date();
+      XPartition xp2 = createPartition(table, partDate);
+      xp2.getTimePartitionSpec().getPartSpecElement()
+        .add(createTimePartSpecElement(partDate, "non_existant_time_part"));
+      partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartition(xp2)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.FAILED);
+      assertEquals(partAddResult.getMessage(), "No timeline found for fact=testFactStoragePartitions, storage=S2, "
+        + "update period=HOURLY, partition column=non_existant_time_part.");
+      // Add a partition
       XPartition xp = createPartition(table, partDate);
       partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partition")
         .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -2205,7 +2214,14 @@ public class TestMetastoreService extends LensJerseyTest {
         .post(Entity.xml(cubeObjectFactory.createXPartition(xp)));
       assertXMLError(resp);
 
-
+      // Try adding in batch with one partition being wrong wrt partition column.
+      partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.xml(cubeObjectFactory.createXPartitionList(toXPartitionList(xp2))),
+          APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.FAILED);
+      assertEquals(partAddResult.getMessage(), "No timeline found for fact=testFactStoragePartitions, storage=S2, "
+        + "update period=HOURLY, partition column=non_existant_time_part.");
       // Add in batch
       partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
         .queryParam("sessionid", lensSessionId).request(mediaType)
