@@ -37,6 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -48,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
+@ToString
 public class DefaultEstimatedQueryCollection implements EstimatedQueryCollection {
 
   private final QueryCollection queries;
@@ -109,7 +111,7 @@ public class DefaultEstimatedQueryCollection implements EstimatedQueryCollection
    */
   @Override
   public boolean remove(QueryContext query) {
-    this.queriesByDriver.remove(query.getSelectedDriver());
+    this.queriesByDriver.remove(query.getSelectedDriver(), query);
     return this.queries.remove(query);
   }
 

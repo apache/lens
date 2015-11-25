@@ -48,8 +48,8 @@ import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.server.LensJerseyTest;
+import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.api.util.LensUtil;
 
@@ -2418,7 +2418,7 @@ public class TestMetastoreService extends LensJerseyTest {
       // create hive table
       String tableName = "test_simple_table";
       SessionState.get().setCurrentDatabase(DB);
-      LensTestUtil.createHiveTable(tableName);
+      LensServerTestUtil.createHiveTable(tableName);
 
       WebTarget target = target().path("metastore").path("nativetables");
       // get all native tables

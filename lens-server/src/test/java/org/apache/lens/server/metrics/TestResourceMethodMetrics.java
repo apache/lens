@@ -41,8 +41,8 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.LensApplication;
+import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.api.metrics.MethodMetrics;
 import org.apache.lens.server.api.metrics.MetricsService;
@@ -87,16 +87,16 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
   }
 
   private void createTable(String tblName) throws InterruptedException {
-    LensTestUtil.createTable(tblName, target(), lensSessionId);
+    LensServerTestUtil.createTable(tblName, target(), lensSessionId);
   }
 
   private void loadData(String tblName, final String testDataFile) throws InterruptedException {
-    LensTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
+    LensServerTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
   }
 
   @AfterTest
   public void tearDown() throws Exception {
-    LensTestUtil.dropTable(TestQueryService.TEST_TABLE, target(), lensSessionId);
+    LensServerTestUtil.dropTable(TestQueryService.TEST_TABLE, target(), lensSessionId);
     metastoreService.closeSession(lensSessionId);
     super.tearDown();
   }

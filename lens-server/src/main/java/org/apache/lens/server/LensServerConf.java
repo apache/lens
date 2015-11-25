@@ -52,7 +52,6 @@ public final class LensServerConf {
           OVERRIDING_CONF_FOR_DRIVER.set(prop.getKey(), prop.getValue());
         }
       }
-
     }
   }
 

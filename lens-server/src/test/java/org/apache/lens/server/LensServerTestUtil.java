@@ -55,14 +55,14 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * The Class LensTestUtil.
+ * The Class LensServerTestUtil.
  */
 @Slf4j
-public final class LensTestUtil {
+public final class LensServerTestUtil {
 
   public static final String DB_WITH_JARS = "test_db_static_jars";
   public static final String DB_WITH_JARS_2 = "test_db_static_jars_2";
-  private LensTestUtil() {
+  private LensServerTestUtil() {
 
   }
 
@@ -159,7 +159,7 @@ public final class LensTestUtil {
   public static void loadDataFromClasspath(String tblName, final String testDataFile, WebTarget parent,
       LensSessionHandle lensSessionId) throws InterruptedException {
 
-    String absolutePath = LensTestUtil.class.getClassLoader().getResource(testDataFile).getPath();
+    String absolutePath = LensServerTestUtil.class.getClassLoader().getResource(testDataFile).getPath();
     loadData(tblName, absolutePath, parent, lensSessionId);
   }
 

@@ -20,7 +20,7 @@ package org.apache.lens.server.api.query;
 
 import static org.apache.lens.api.Priority.HIGH;
 import static org.apache.lens.server.api.LensConfConstants.*;
-import static org.apache.lens.server.api.util.TestLensUtil.getConfiguration;
+import static org.apache.lens.server.api.LensServerAPITestUtil.getConfiguration;
 
 import static org.testng.Assert.*;
 

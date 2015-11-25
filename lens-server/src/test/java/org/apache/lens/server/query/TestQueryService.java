@@ -20,7 +20,9 @@ package org.apache.lens.server.query;
 
 import static javax.ws.rs.core.Response.Status.*;
 
-import static org.apache.lens.server.api.util.TestLensUtil.getLensConf;
+import static org.apache.lens.server.LensServerTestUtil.DB_WITH_JARS;
+import static org.apache.lens.server.LensServerTestUtil.DB_WITH_JARS_2;
+import static org.apache.lens.server.api.LensServerAPITestUtil.getLensConf;
 import static org.apache.lens.server.common.RestAPITestUtil.*;
 
 import static org.testng.Assert.*;
@@ -48,8 +50,8 @@ import org.apache.lens.api.result.QueryCostTO;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensJerseyTest;
+import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
@@ -183,7 +185,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    */
   private void createTable(String tblName) throws InterruptedException {
-    LensTestUtil.createTable(tblName, target(), lensSessionId);
+    LensServerTestUtil.createTable(tblName, target(), lensSessionId);
   }
 
   /**
@@ -194,7 +196,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    */
   private void loadData(String tblName, final String testDataFile) throws InterruptedException {
-    LensTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
+    LensServerTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
   }
 
   /**
@@ -204,7 +206,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    */
   private void dropTable(String tblName) throws InterruptedException {
-    LensTestUtil.dropTable(tblName, target(), lensSessionId);
+    LensServerTestUtil.dropTable(tblName, target(), lensSessionId);
   }
 
   // test get a random query, should return 400
@@ -1248,23 +1250,23 @@ public class TestQueryService extends LensJerseyTest {
 
     // Open session with a DB which has static jars
     LensSessionHandle sessionHandle =
-      sessionService.openSession("foo@localhost", "bar", LensTestUtil.DB_WITH_JARS, new HashMap<String, String>());
+      sessionService.openSession("foo@localhost", "bar", DB_WITH_JARS, new HashMap<String, String>());
 
     // Add a jar in the session
     File testJarFile = new File("target/testjars/test2.jar");
     sessionService.addResourceToAllServices(sessionHandle, "jar", "file://" + testJarFile.getAbsolutePath());
 
-    log.info("@@@ Opened session " + sessionHandle.getPublicId() + " with database " + LensTestUtil.DB_WITH_JARS);
+    log.info("@@@ Opened session " + sessionHandle.getPublicId() + " with database " + DB_WITH_JARS);
     LensSessionImpl session = sessionService.getSession(sessionHandle);
 
     // Jars should be pending until query is run
-    assertEquals(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS).size(), 1);
-    assertEquals(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS_2).size(), 1);
+    assertEquals(session.getPendingSessionResourcesForDatabase(DB_WITH_JARS).size(), 1);
+    assertEquals(session.getPendingSessionResourcesForDatabase(DB_WITH_JARS_2).size(), 1);
 
     final String tableInDBWithJars = "testHiveDriverGetsDBJars";
     try {
       // First execute query on the session with db should load jars from DB
-      LensTestUtil.createTable(tableInDBWithJars, target(), sessionHandle, "(ID INT, IDSTR STRING) "
+      LensServerTestUtil.createTable(tableInDBWithJars, target(), sessionHandle, "(ID INT, IDSTR STRING) "
         + "ROW FORMAT SERDE \"DatabaseJarSerde\"");
 
       boolean addedToHiveDriver = false;
@@ -1272,37 +1274,36 @@ public class TestQueryService extends LensJerseyTest {
       for (LensDriver driver : queryService.getDrivers()) {
         if (driver instanceof HiveDriver) {
           addedToHiveDriver =
-            ((HiveDriver) driver).areDBResourcesAddedForSession(sessionHandle.getPublicId().toString(),
-              LensTestUtil.DB_WITH_JARS);
+            ((HiveDriver) driver).areDBResourcesAddedForSession(sessionHandle.getPublicId().toString(), DB_WITH_JARS);
         }
       }
       assertTrue(addedToHiveDriver);
 
       // Switch database
       log.info("@@@# database switch test");
-      session.setCurrentDatabase(LensTestUtil.DB_WITH_JARS_2);
-      LensTestUtil.createTable(tableInDBWithJars + "_2", target(), sessionHandle, "(ID INT, IDSTR STRING) "
+      session.setCurrentDatabase(DB_WITH_JARS_2);
+      LensServerTestUtil.createTable(tableInDBWithJars + "_2", target(), sessionHandle, "(ID INT, IDSTR STRING) "
         + "ROW FORMAT SERDE \"DatabaseJarSerde\"");
 
       // All db jars should have been added
-      assertTrue(session.getDBResources(LensTestUtil.DB_WITH_JARS_2).isEmpty());
-      assertTrue(session.getDBResources(LensTestUtil.DB_WITH_JARS).isEmpty());
+      assertTrue(session.getDBResources(DB_WITH_JARS_2).isEmpty());
+      assertTrue(session.getDBResources(DB_WITH_JARS).isEmpty());
 
       // All session resources must have been added to both DBs
       assertFalse(session.getLensSessionPersistInfo().getResources().isEmpty());
       for (LensSessionImpl.ResourceEntry resource : session.getLensSessionPersistInfo().getResources()) {
-        assertTrue(resource.isAddedToDatabase(LensTestUtil.DB_WITH_JARS_2));
-        assertTrue(resource.isAddedToDatabase(LensTestUtil.DB_WITH_JARS));
+        assertTrue(resource.isAddedToDatabase(DB_WITH_JARS_2));
+        assertTrue(resource.isAddedToDatabase(DB_WITH_JARS));
       }
 
-      assertTrue(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS).isEmpty());
-      assertTrue(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS_2).isEmpty());
+      assertTrue(session.getPendingSessionResourcesForDatabase(DB_WITH_JARS).isEmpty());
+      assertTrue(session.getPendingSessionResourcesForDatabase(DB_WITH_JARS_2).isEmpty());
 
     } finally {
       log.info("@@@ TEST_OVER");
       try {
-        LensTestUtil.dropTable(tableInDBWithJars, target(), sessionHandle);
-        LensTestUtil.dropTable(tableInDBWithJars + "_2", target(), sessionHandle);
+        LensServerTestUtil.dropTable(tableInDBWithJars, target(), sessionHandle);
+        LensServerTestUtil.dropTable(tableInDBWithJars + "_2", target(), sessionHandle);
       } catch (Throwable th) {
         log.error("Exception while dropping table.", th);
       }
@@ -1361,13 +1362,13 @@ public class TestQueryService extends LensJerseyTest {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
     String tblName = "testNonSelectQueriesWithPersistResult";
-    LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+    LensServerTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
-    LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+    LensServerTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+    LensServerTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
-    LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+    LensServerTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
   }
 
   @Test

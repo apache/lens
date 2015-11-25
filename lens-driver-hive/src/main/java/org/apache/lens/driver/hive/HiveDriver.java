@@ -95,7 +95,7 @@ public class HiveDriver implements LensDriver {
   public static final String HS2_PRIORITY_DEFAULT_RANGES = "VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW";
   public static final String SESSION_KEY_DELIMITER = ".";
 
-  private static final String QUERY_LAUNCHIG_CONSTRAINT_FACTORIES_KEY
+  public static final String QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY
     = "lens.driver.hive.query.launching.constraint.factories";
 
   private static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY
@@ -143,7 +143,7 @@ public class HiveDriver implements LensDriver {
   private DriverQueryHook queryHook;
 
   @Getter
-  private ImmutableSet<QueryLaunchingConstraint> queryConstraints;
+  protected ImmutableSet<QueryLaunchingConstraint> queryConstraints;
   private ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies;
 
   private String sessionDbKey(String sessionHandle, String database) {
@@ -364,7 +364,7 @@ public class HiveDriver implements LensDriver {
     } catch (InstantiationException | IllegalAccessException e) {
       throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
     }
-    queryConstraints = getImplementations(QUERY_LAUNCHIG_CONSTRAINT_FACTORIES_KEY, driverConf);
+    queryConstraints = getImplementations(QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY, driverConf);
     selectionPolicies = getImplementations(WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY, driverConf);
   }
 

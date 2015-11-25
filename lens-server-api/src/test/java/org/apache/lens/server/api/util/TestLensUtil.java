@@ -18,13 +18,7 @@
  */
 package org.apache.lens.server.api.util;
 
-import static org.testng.Assert.assertEquals;
-
 import java.io.IOException;
-
-import org.apache.lens.api.LensConf;
-
-import org.apache.hadoop.conf.Configuration;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -60,23 +54,5 @@ public class TestLensUtil {
       th = e;
     }
     Assert.assertEquals(LensUtil.getCauseMessage(th), "run time exception");
-  }
-
-  public static Configuration getConfiguration(Object... args) {
-    Configuration conf = new Configuration();
-    Assert.assertEquals(args.length % 2, 0, "Odd number of arguments not supported");
-    for (int i = 0; i < args.length; i += 2) {
-      conf.set(args[i].toString(), args[i + 1].toString());
-    }
-    return conf;
-  }
-
-  public static LensConf getLensConf(Object... args) {
-    assertEquals(args.length % 2, 0);
-    LensConf conf = new LensConf();
-    for (int i = 0; i < args.length; i += 2) {
-      conf.addProperty(args[i], args[i + 1]);
-    }
-    return conf;
   }
 }

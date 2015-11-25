@@ -27,6 +27,7 @@ import org.apache.commons.collections.map.MultiValueMap;
 
 import com.google.common.collect.Sets;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see QueryCollection
  */
 @Slf4j
+@ToString
 public class DefaultQueryCollection implements QueryCollection {
 
   private final Set<QueryContext> queries;
