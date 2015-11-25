@@ -94,7 +94,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     for (int i = 0; i < query.getSelectAST().getChildCount(); i++) {
       if (selectToFactIndex.get(i) == null) {
         throw new LensException(LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getLensErrorInfo(),
-            HQLParser.getString((ASTNode) query.getSelectAST().getChild(i)));
+          HQLParser.getString((ASTNode) query.getSelectAST().getChild(i)));
       }
       if (selectToFactIndex.get(i).size() == 1) {
         select.append("mq").append(selectToFactIndex.get(i).get(0)).append(".")
@@ -130,6 +130,10 @@ class MultiFactHQLContext extends SimpleHQLContext {
     Iterator<CandidateFact> iter = facts.iterator();
     while (iter.hasNext()) {
       CandidateFact fact = iter.next();
+      if (fact.getStorageTables().size() > 1) {
+        // Not supported right now.
+        throw new LensException(LensCubeErrorCode.STORAGE_UNION_DISABLED.getLensErrorInfo());
+      }
       FactHQLContext facthql = new FactHQLContext(fact, dimsToQuery, factDimMap.get(fact), query);
       fromBuilder.append("(");
       fromBuilder.append(facthql.toHQL());
