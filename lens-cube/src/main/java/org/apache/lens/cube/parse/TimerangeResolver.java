@@ -183,7 +183,7 @@ class TimerangeResolver implements ContextRewriter {
     }
 
     // Remove join paths that have columns with invalid life span
-    JoinResolver.AutoJoinContext joinContext = cubeql.getAutoJoinCtx();
+    AutoJoinContext joinContext = cubeql.getAutoJoinCtx();
     if (joinContext == null) {
       return;
     }

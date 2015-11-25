@@ -154,7 +154,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
   private CubeMetastoreClient metastoreClient;
   @Getter
   @Setter
-  private JoinResolver.AutoJoinContext autoJoinCtx;
+  private AutoJoinContext autoJoinCtx;
   @Getter
   @Setter
   private ExpressionResolver.ExpressionResolverContext exprCtx;
