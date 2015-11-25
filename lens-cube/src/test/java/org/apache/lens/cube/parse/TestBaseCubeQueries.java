@@ -500,8 +500,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertEquals(
       pruneCause.getDetails().get("testfact2_base").iterator().next().getMissingPartitions().iterator().next(),
       "ttd:["
-        + UpdatePeriod.SECONDLY.format().format(DateUtils.addDays(DateUtils.truncate(TWODAYS_BACK, Calendar.HOUR), -10))
-        + ", " + UpdatePeriod.SECONDLY.format().format(DateUtils.addDays(DateUtils.truncate(NOW, Calendar.HOUR), 10))
+        + UpdatePeriod.SECONDLY.format(DateUtils.addDays(DateUtils.truncate(TWODAYS_BACK, Calendar.HOUR), -10))
+        + ", " + UpdatePeriod.SECONDLY.format(DateUtils.addDays(DateUtils.truncate(NOW, Calendar.HOUR), 10))
         + ")");
 
     // fail on partial false. Should go to fallback column. Also testing transitivity of timedim relations

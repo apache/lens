@@ -54,7 +54,7 @@ public class UpdatePeriodTest {
     for (int i = 0; i < 5000; i++) {
       Date randomDate = randomDateGenerator.nextDate();
       randomDate = period.truncate(randomDate);
-      assertEquals(randomDate, period.format().parse(period.format().format(randomDate)));
+      assertEquals(randomDate, period.parse(period.format(randomDate)));
     }
   }
 }

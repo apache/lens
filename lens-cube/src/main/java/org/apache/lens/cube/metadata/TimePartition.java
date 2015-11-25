@@ -38,7 +38,7 @@ public class TimePartition implements Comparable<TimePartition>, Named {
   private TimePartition(@NonNull UpdatePeriod updatePeriod, @NonNull Date date) {
     this.updatePeriod = updatePeriod;
     this.date = updatePeriod.truncate(date);
-    this.dateString = updatePeriod.format().format(this.date);
+    this.dateString = updatePeriod.format(this.date);
   }
 
   public static TimePartition of(UpdatePeriod updatePeriod, Date date) throws LensException {
@@ -56,7 +56,7 @@ public class TimePartition implements Comparable<TimePartition>, Named {
         throw new LensException(getWrongUpdatePeriodMessage(updatePeriod, dateString));
       }
       try {
-        return TimePartition.of(updatePeriod, updatePeriod.format().parse(dateString));
+        return TimePartition.of(updatePeriod, updatePeriod.parse(dateString));
       } catch (ParseException e) {
         throw new LensException(getWrongUpdatePeriodMessage(updatePeriod, dateString), e);
       }

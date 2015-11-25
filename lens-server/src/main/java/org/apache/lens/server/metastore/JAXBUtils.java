@@ -859,7 +859,7 @@ public final class JAXBUtils {
           XTimePartSpecElement timePartSpecElement = new XTimePartSpecElement();
           timePartSpecElement.setKey(entry.getKey());
           timePartSpecElement
-            .setValue(getXMLGregorianCalendar(UpdatePeriod.valueOf(xp.getUpdatePeriod().name()).format().parse(
+            .setValue(getXMLGregorianCalendar(UpdatePeriod.valueOf(xp.getUpdatePeriod().name()).parse(
               entry.getValue())));
           xp.getTimePartitionSpec().getPartSpecElement().add(timePartSpecElement);
         } else {

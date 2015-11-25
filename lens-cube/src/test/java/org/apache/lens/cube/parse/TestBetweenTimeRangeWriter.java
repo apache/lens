@@ -67,7 +67,7 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
   public void validateSingle(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.ONE_DAY_BACK));
+      parts.add(UpdatePeriod.DAILY.format(CubeTestSetup.ONE_DAY_BACK));
     } else {
       parts.add(format.format(CubeTestSetup.ONE_DAY_BACK));
     }

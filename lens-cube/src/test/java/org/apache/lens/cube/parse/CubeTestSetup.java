@@ -19,15 +19,11 @@
 
 package org.apache.lens.cube.parse;
 
-import static java.util.Calendar.DAY_OF_MONTH;
-import static java.util.Calendar.HOUR_OF_DAY;
-import static java.util.Calendar.MONTH;
+import static java.util.Calendar.*;
 
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -58,7 +54,6 @@ import org.apache.hadoop.mapred.TextInputFormat;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -105,7 +100,6 @@ public class CubeTestSetup {
   public static final String DERIVED_CUBE_NAME1 = "der1";
   public static final String DERIVED_CUBE_NAME2 = "der2";
   public static final String DERIVED_CUBE_NAME3 = "der3";
-  public static final String DERIVED_CUBE_NAME4 = "der4";
 
   // Time Instances as Date Type
   public static final Date NOW;
@@ -140,9 +134,31 @@ public class CubeTestSetup {
   private static Map<String, String> factValidityProperties = Maps.newHashMap();
   @Getter
   private static Map<String, List<UpdatePeriod>> storageToUpdatePeriodMap = new LinkedHashMap<>();
+  public static class DateOffsetProvider extends HashMap<Integer, Date> {
+    private final UpdatePeriod updatePeriod;
+    Calendar calendar = Calendar.getInstance();
+
+    public DateOffsetProvider(UpdatePeriod updatePeriod) {
+      this.updatePeriod = updatePeriod;
+    }
+    {
+      put(0, calendar.getTime());
+    }
+
+    @Override
+    public Date get(Object key) {
+      if (!containsKey(key) && key instanceof Integer) {
+        calendar.setTime(super.get(0));
+        calendar.add(updatePeriod.calendarField(), (Integer) key);
+        put((Integer) key, calendar.getTime());
+      }
+      return super.get(key);
+    }
+  }
 
   static {
     Calendar cal = Calendar.getInstance();
+    // Keep in sync
     NOW = cal.getTime();
     log.debug("Test now:{}", NOW);
 
@@ -280,24 +296,18 @@ public class CubeTestSetup {
 
   public static String getExpectedQuery(String cubeName, String selExpr, String whereExpr, String postWhereExpr,
     String rangeWhere, String storageTable, List<String> notLatestConditions) {
-    StringBuilder expected = new StringBuilder();
-    expected.append(selExpr);
-    expected.append(getDbName() + storageTable);
-    expected.append(" ");
-    expected.append(cubeName);
-    expected.append(" WHERE ");
-    expected.append("(");
+    StringBuilder expected = new StringBuilder()
+      .append(selExpr).append(getDbName()).append(storageTable).append(" ").append(cubeName)
+      .append(" WHERE ").append("(");
     if (notLatestConditions != null) {
       for (String cond : notLatestConditions) {
         expected.append(cond).append(" AND ");
       }
     }
     if (whereExpr != null) {
-      expected.append(whereExpr);
-      expected.append(" AND ");
+      expected.append(whereExpr).append(" AND ");
     }
-    expected.append(rangeWhere);
-    expected.append(")");
+    expected.append(rangeWhere).append(")");
     if (postWhereExpr != null) {
       expected.append(postWhereExpr);
     }
@@ -1561,7 +1571,7 @@ public class CubeTestSetup {
       TimePartition tp = TimePartition.of(HOURLY, temp);
       ttdStoreAll.add(tp);
       ttd2StoreAll.add(tp);
-      partitions.add(HOURLY.format().format(temp));
+      partitions.add(HOURLY.format(temp));
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       storagePartitionDescs.add(sPartSpec);
       cal.add(HOUR_OF_DAY, 1);
@@ -2036,8 +2046,6 @@ public class CubeTestSetup {
     dimColumns.add(new FieldSchema("name", "string", "field1"));
     dimColumns.add(new FieldSchema("cyleDim2Id", "string", "link to cyclic dim 2"));
 
-    Map<String, List<TableReference>> dimensionReferences = new HashMap<String, List<TableReference>>();
-    dimensionReferences.put("cyleDim2Id", Arrays.asList(new TableReference("cycleDim2", "id")));
 
     Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
     ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();

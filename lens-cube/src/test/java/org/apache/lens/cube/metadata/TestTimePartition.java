@@ -39,7 +39,7 @@ public class TestTimePartition {
   @Test(dataProvider = "update-periods")
   public void test(UpdatePeriod up) throws LensException {
     // Normal date object parsable
-    String nowStr = up.format().format(NOW);
+    String nowStr = up.format(NOW);
     // Create partition by date object or it's string representation -- both should be same.
     TimePartition nowPartition = TimePartition.of(up, NOW);
     TimePartition nowStrPartition = TimePartition.of(up, nowStr);

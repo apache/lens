@@ -45,7 +45,6 @@ public final class DateUtil {
   private DateUtil() {
 
   }
-
   /*
    * NOW -> new java.util.Date() NOW-7DAY -> a date one week earlier NOW (+-)
    * <NUM>UNIT or Hardcoded dates in DD-MM-YYYY hh:mm:ss,sss
@@ -68,7 +67,6 @@ public final class DateUtil {
 
   public static final String WSPACE = "\\s+";
   public static final String OPTIONAL_WSPACE = "\\s*";
-  public static final Pattern P_WSPACE = Pattern.compile(WSPACE);
 
   public static final String SIGNAGE = "\\+|\\-";
   public static final Pattern P_SIGNAGE = Pattern.compile(SIGNAGE);
@@ -107,10 +105,6 @@ public final class DateUtil {
         return new SimpleDateFormat(HIVE_QUERY_DATE_FMT);
       }
     };
-
-  public static String formatDate(Date dt) {
-    return ABSDATE_PARSER.get().format(dt);
-  }
 
   public static String getAbsDateFormatString(String str) {
     if (str.matches(YEAR_FMT)) {
@@ -178,7 +172,6 @@ public final class DateUtil {
 
       Matcher granularityMatcher = P_UNIT.matcher(nowWithGranularity);
       if (granularityMatcher.find()) {
-        String unit = granularityMatcher.group().toLowerCase();
         calendar = UpdatePeriod.fromUnitName(granularityMatcher.group().toLowerCase()).truncate(calendar);
       }
     }
@@ -267,12 +260,6 @@ public final class DateUtil {
       break;
     }
     return cal.getTime();
-  }
-
-  public static int getNumberofDaysInMonth(Date date) {
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(date);
-    return calendar.getActualMaximum(DAY_OF_MONTH);
   }
 
   public static CoveringInfo getMonthlyCoveringInfo(Date from, Date to) {

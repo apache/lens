@@ -87,7 +87,7 @@ public class FactPartition implements Comparable<FactPartition> {
   }
 
   public String getPartString() {
-    return period.format().format(partSpec);
+    return period.format(partSpec);
   }
 
   public String getFormattedFilter(String tableName) {

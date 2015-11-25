@@ -22,17 +22,22 @@ package org.apache.lens.cube.metadata;
 import static java.util.Calendar.*;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
-import org.apache.lens.cube.parse.DateUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang3.time.DateUtils;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import lombok.Getter;
 
 public enum UpdatePeriod implements Named {
@@ -181,10 +186,6 @@ public enum UpdatePeriod implements Named {
     return this.weight;
   }
 
-  public long monthWeight(Date date) {
-    return DateUtil.getNumberofDaysInMonth(date) * DAILY.weight();
-  }
-
   public static UpdatePeriod fromUnitName(String unitName) throws LensException {
     for (UpdatePeriod up : values()) {
       if (up.getUnitName().equals(unitName)) {
@@ -216,6 +217,37 @@ public enum UpdatePeriod implements Named {
       return getYearlyFormat();
     default:
       throw new IllegalArgumentException("Update period illegal, or doesn't have defined format");
+    }
+  }
+
+  Cache<Date, String> dateToStringCache = CacheBuilder.newBuilder()
+    .expireAfterWrite(2, TimeUnit.HOURS).maximumSize(100).build();
+  Cache<String, Date> stringToDateCache = CacheBuilder.newBuilder()
+    .expireAfterWrite(2, TimeUnit.HOURS).maximumSize(100).build();
+
+  public String format(final Date date) {
+    try {
+      return dateToStringCache.get(date, new Callable<String>() {
+        @Override
+        public String call() {
+          return format().format(date);
+        }
+      });
+    } catch (ExecutionException e) {
+      return format().format(date);
+    }
+  }
+
+  public Date parse(final String dateString) throws ParseException {
+    try {
+      return stringToDateCache.get(dateString, new Callable<Date>() {
+        @Override
+        public Date call() throws Exception {
+          return format().parse(dateString);
+        }
+      });
+    } catch (ExecutionException e) {
+      return format().parse(dateString);
     }
   }
 

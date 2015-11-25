@@ -909,7 +909,7 @@ public class TestHiveDriver {
         p = UpdatePeriod.HOURLY;
         break;
       }
-      FactPartition part = new FactPartition(partEls[0], p.format().parse(partSpec), p, null, p.format(),
+      FactPartition part = new FactPartition(partEls[0], p.parse(partSpec), p, null, p.format(),
         Collections.singleton("table1"));
       factParts.add(part);
     }

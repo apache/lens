@@ -43,9 +43,9 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateDisjoint(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.MONTHLY.format().format(CubeTestSetup.TWO_MONTHS_BACK));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.TWODAYS_BACK));
-      parts.add(UpdatePeriod.HOURLY.format().format(CubeTestSetup.NOW));
+      parts.add(UpdatePeriod.MONTHLY.format(CubeTestSetup.TWO_MONTHS_BACK));
+      parts.add(UpdatePeriod.DAILY.format(CubeTestSetup.TWODAYS_BACK));
+      parts.add(UpdatePeriod.HOURLY.format(CubeTestSetup.NOW));
     } else {
       parts.add(format.format(CubeTestSetup.TWO_MONTHS_BACK));
       parts.add(format.format(CubeTestSetup.TWODAYS_BACK));
@@ -60,9 +60,9 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateConsecutive(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.ONE_DAY_BACK));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.TWODAYS_BACK));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.NOW));
+      parts.add(UpdatePeriod.DAILY.format(CubeTestSetup.ONE_DAY_BACK));
+      parts.add(UpdatePeriod.DAILY.format(CubeTestSetup.TWODAYS_BACK));
+      parts.add(UpdatePeriod.DAILY.format(CubeTestSetup.NOW));
     } else {
       parts.add(format.format(CubeTestSetup.ONE_DAY_BACK));
       parts.add(format.format(CubeTestSetup.TWODAYS_BACK));
@@ -77,7 +77,7 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateSingle(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.ONE_DAY_BACK));
+      parts.add(UpdatePeriod.DAILY.format(CubeTestSetup.ONE_DAY_BACK));
     } else {
       parts.add(format.format(CubeTestSetup.ONE_DAY_BACK));
     }

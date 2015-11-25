@@ -25,7 +25,6 @@ import java.text.ParseException;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 
@@ -34,11 +33,11 @@ public class MetastoreUtil {
 
   }
 
-  public static final String getFactOrDimtableStorageTableName(String factName, String storageName) {
+  public static String getFactOrDimtableStorageTableName(String factName, String storageName) {
     return getStorageTableName(factName, Storage.getPrefix(storageName));
   }
 
-  public static final String getStorageTableName(String cubeTableName, String storagePrefix) {
+  public static String getStorageTableName(String cubeTableName, String storagePrefix) {
     return (storagePrefix + cubeTableName).toLowerCase();
   }
 
@@ -46,26 +45,26 @@ public class MetastoreUtil {
     return getStorageEntityPrefix(name) + CLASS_SFX;
   }
 
-  public static final String getStorageEntityPrefix(String storageName) {
+  public static String getStorageEntityPrefix(String storageName) {
     return STORAGE_ENTITY_PFX + storageName.toLowerCase();
   }
 
   // //////////////////////////
   // Dimension properties ///
   // /////////////////////////
-  public static final String getDimPrefix(String dimName) {
+  public static String getDimPrefix(String dimName) {
     return DIMENSION_PFX + dimName.toLowerCase();
   }
 
-  public static final String getDimAttributeListKey(String dimName) {
+  public static String getDimAttributeListKey(String dimName) {
     return getDimPrefix(dimName) + ATTRIBUTES_LIST_SFX;
   }
 
-  public static final String getDimTablePartsKey(String dimtableName) {
+  public static String getDimTablePartsKey(String dimtableName) {
     return DIM_TABLE_PFX + dimtableName + PARTCOLS_SFX;
   }
 
-  public static final String getDimTimedDimensionKey(String dimName) {
+  public static String getDimTimedDimensionKey(String dimName) {
     return getDimPrefix(dimName) + TIMED_DIMENSION_SFX;
   }
 
@@ -76,7 +75,7 @@ public class MetastoreUtil {
     return DIM_KEY_PFX + dimName.toLowerCase();
   }
 
-  public static final String getDimensionClassPropertyKey(String dimName) {
+  public static String getDimensionClassPropertyKey(String dimName) {
     return getDimensionKeyPrefix(dimName) + CLASS_SFX;
   }
 
@@ -84,11 +83,11 @@ public class MetastoreUtil {
     return getDimensionKeyPrefix(name) + INLINE_VALUES_SFX;
   }
 
-  public static final String getDimTypePropertyKey(String dimName) {
+  public static String getDimTypePropertyKey(String dimName) {
     return getDimensionKeyPrefix(dimName) + TYPE_SFX;
   }
 
-  public static final String getDimNumOfDistinctValuesPropertyKey(String dimName) {
+  public static String getDimNumOfDistinctValuesPropertyKey(String dimName) {
     return getDimensionKeyPrefix(dimName) + NUM_DISTINCT_VALUES;
   }
 
@@ -104,15 +103,15 @@ public class MetastoreUtil {
     return Integer.parseInt(param.substring(getHierachyElementKeyPFX(dimName).length()));
   }
 
-  public static final String getDimensionSrcReferenceKey(String dimName) {
+  public static String getDimensionSrcReferenceKey(String dimName) {
     return getDimensionKeyPrefix(dimName) + DIM_REFERS_SFX;
   }
 
-  public static final String getDimRefChainNameKey(String dimName) {
+  public static String getDimRefChainNameKey(String dimName) {
     return getDimensionKeyPrefix(dimName) + CHAIN_NAME_SFX;
   }
 
-  public static final String getDimRefChainColumnKey(String dimName) {
+  public static String getDimRefChainColumnKey(String dimName) {
     return getDimensionKeyPrefix(dimName) + CHAIN_REF_COLUMN_SFX;
   }
 
@@ -120,11 +119,7 @@ public class MetastoreUtil {
     return getDimensionKeyPrefix(dimName) + IS_JOIN_KEY_SFX;
   }
 
-  public static final String getDimensionDestReference(String tableName, String columnName) {
-    return tableName.toLowerCase() + TABLE_COLUMN_SEPERATOR + columnName.toLowerCase();
-  }
-
-  public static final String getReferencesString(List<TableReference> references) {
+  public static String getReferencesString(List<TableReference> references) {
     String[] toks = new String[references.size()];
 
     for (int i = 0; i < references.size(); i++) {
@@ -150,10 +145,12 @@ public class MetastoreUtil {
   public static String getCubeColEndTimePropertyKey(String colName) {
     return getColumnKeyPrefix(colName) + END_TIME_SFX;
   }
-  public static String getStoragetableStartTimesKey(){
+
+  public static String getStoragetableStartTimesKey() {
     return STORAGE_PFX + "start.times";
   }
-  public static String getStoragetableEndTimesKey(){
+
+  public static String getStoragetableEndTimesKey() {
     return STORAGE_PFX + "end.times";
   }
 
@@ -169,15 +166,15 @@ public class MetastoreUtil {
     return getColumnKeyPrefix(colName) + DISPLAY_SFX;
   }
 
-  public static final String getExprColumnKey(String colName) {
+  public static String getExprColumnKey(String colName) {
     return getColumnKeyPrefix(colName) + EXPR_SFX;
   }
 
-  public static final String getExprTypePropertyKey(String colName) {
+  public static String getExprTypePropertyKey(String colName) {
     return getColumnKeyPrefix(colName) + TYPE_SFX;
   }
 
-  public static final String getExprEncodingPropertyKey(String colName) {
+  public static String getExprEncodingPropertyKey(String colName) {
     return getExprColumnKey(colName) + BASE64_SFX;
   }
 
@@ -247,78 +244,78 @@ public class MetastoreUtil {
   // //////////////////////////
   // Measure properties ///
   // /////////////////////////
-  public static final String getMeasurePrefix(String measureName) {
+  public static String getMeasurePrefix(String measureName) {
     return MEASURE_KEY_PFX + measureName.toLowerCase();
   }
 
-  public static final String getMeasureClassPropertyKey(String measureName) {
+  public static String getMeasureClassPropertyKey(String measureName) {
     return getMeasurePrefix(measureName) + CLASS_SFX;
   }
 
-  public static final String getMeasureUnitPropertyKey(String measureName) {
+  public static String getMeasureUnitPropertyKey(String measureName) {
     return getMeasurePrefix(measureName) + UNIT_SFX;
   }
 
-  public static final String getMeasureTypePropertyKey(String measureName) {
+  public static String getMeasureTypePropertyKey(String measureName) {
     return getMeasurePrefix(measureName) + TYPE_SFX;
   }
 
-  public static final String getMeasureFormatPropertyKey(String measureName) {
+  public static String getMeasureFormatPropertyKey(String measureName) {
     return getMeasurePrefix(measureName) + FORMATSTRING_SFX;
   }
 
-  public static final String getMeasureAggrPropertyKey(String measureName) {
+  public static String getMeasureAggrPropertyKey(String measureName) {
     return getMeasurePrefix(measureName) + AGGR_SFX;
   }
 
-  public static final String getMeasureMinPropertyKey(String measureName) {
+  public static String getMeasureMinPropertyKey(String measureName) {
     return getMeasurePrefix(measureName) + MIN_SFX;
   }
 
-  public static final String getMeasureMaxPropertyKey(String measureName) {
+  public static String getMeasureMaxPropertyKey(String measureName) {
     return getMeasurePrefix(measureName) + MAX_SFX;
   }
 
-  public static final String getExpressionListKey(String name) {
+  public static String getExpressionListKey(String name) {
     return getBasePrefix(name) + EXPRESSIONS_LIST_SFX;
   }
 
   // //////////////////////////
   // Cube properties ///
   // /////////////////////////
-  public static final String getBasePrefix(String base) {
+  public static String getBasePrefix(String base) {
     return BASE_KEY_PFX + base.toLowerCase();
   }
 
-  public static final String getCubePrefix(String cubeName) {
+  public static String getCubePrefix(String cubeName) {
     return CUBE_KEY_PFX + cubeName.toLowerCase();
   }
 
-  public static final String getCubeMeasureListKey(String cubeName) {
+  public static String getCubeMeasureListKey(String cubeName) {
     return getCubePrefix(cubeName) + MEASURES_LIST_SFX;
   }
 
-  public static final String getCubeDimensionListKey(String cubeName) {
+  public static String getCubeDimensionListKey(String cubeName) {
     return getCubePrefix(cubeName) + DIMENSIONS_LIST_SFX;
   }
 
-  public static final String getCubeTimedDimensionListKey(String cubeName) {
+  public static String getCubeTimedDimensionListKey(String cubeName) {
     return getCubePrefix(cubeName) + TIMED_DIMENSIONS_LIST_SFX;
   }
 
-  public static final String getCubeJoinChainListKey(String cubeName) {
+  public static String getCubeJoinChainListKey(String cubeName) {
     return getCubePrefix(cubeName) + JOIN_CHAIN_LIST_SFX;
   }
 
-  public static final String getDimensionJoinChainListKey(String dimName) {
+  public static String getDimensionJoinChainListKey(String dimName) {
     return getDimPrefix(dimName) + JOIN_CHAIN_LIST_SFX;
   }
 
-  public static final String getParentCubeNameKey(String cubeName) {
+  public static String getParentCubeNameKey(String cubeName) {
     return getCubePrefix(cubeName) + PARENT_CUBE_SFX;
   }
 
-  public static final String getCubeTableKeyPrefix(String tableName) {
+  public static String getCubeTableKeyPrefix(String tableName) {
     return CUBE_TABLE_PFX + tableName.toLowerCase();
   }
 
@@ -350,7 +347,7 @@ public class MetastoreUtil {
   }
 
   public static String getLatestPartTimestampKey(String partCol) {
-    return MetastoreConstants.STORAGE_PFX + partCol + MetastoreConstants.LATEST_PART_TIMESTAMP_SFX;
+    return STORAGE_PFX + partCol + LATEST_PART_TIMESTAMP_SFX;
   }
 
   // //////////////////////////
@@ -362,16 +359,15 @@ public class MetastoreUtil {
     }
     String sep = "";
     StringBuilder valueStr = new StringBuilder();
-    Iterator<E> it = set.iterator();
-    while (it.hasNext()) {
-      valueStr.append(sep).append(it.next().getName());
+    for (E aSet : set) {
+      valueStr.append(sep).append(aSet.getName());
       sep = ",";
     }
     return valueStr.toString();
   }
 
   static <E extends Named> List<String> getNamedStrs(Collection<E> set, int maxLength) {
-    List<String> namedStrings = new ArrayList<String>();
+    List<String> namedStrings = new ArrayList<>();
     if (set == null || set.isEmpty()) {
       return namedStrings;
     }
@@ -396,10 +392,10 @@ public class MetastoreUtil {
     return namedStrings;
   }
 
-  private static int maxParamLength = 3999;
+  private static final int MAX_PARAM_LENGTH = 3999;
 
   public static <E extends Named> void addNameStrings(Map<String, String> props, String key, Collection<E> set) {
-    addNameStrings(props, key, set, maxParamLength);
+    addNameStrings(props, key, set, MAX_PARAM_LENGTH);
   }
 
   static <E extends Named> void addNameStrings(Map<String, String> props, String key,
@@ -454,15 +450,6 @@ public class MetastoreUtil {
     return valueStr.toString();
   }
 
-  public static Set<String> getColumnNames(AbstractCubeTable table) {
-    List<FieldSchema> fields = table.getColumns();
-    Set<String> columns = new HashSet<String>(fields.size());
-    for (FieldSchema f : fields) {
-      columns.add(f.getName().toLowerCase());
-    }
-    return columns;
-  }
-
   public static void addColumnNames(CubeDimAttribute dim, Set<String> cols) {
     if (dim instanceof HierarchicalDimAttribute) {
       HierarchicalDimAttribute h = (HierarchicalDimAttribute) dim;
@@ -486,6 +473,16 @@ public class MetastoreUtil {
     return STORAGE_PFX + PARTITION_TIMELINE_CACHE + "present";
   }
 
+  public static void filterPartitionsByUpdatePeriod(List<Partition> partitions, UpdatePeriod updatePeriod) {
+    Iterator<Partition> iter = partitions.iterator();
+    while (iter.hasNext()) {
+      Partition part = iter.next();
+      if (!UpdatePeriod.valueOf(part.getParameters().get(PARTITION_UPDATE_PERIOD)).equals(updatePeriod)) {
+        iter.remove();
+      }
+    }
+  }
+
   public static List<Partition> filterPartitionsByNonTimeParts(List<Partition> partitions,
     Map<String, String> nonTimePartSpec,
     String latestPartCol) {
@@ -497,7 +494,7 @@ public class MetastoreUtil {
         if ((nonTimePartSpec == null || !nonTimePartSpec.containsKey(entry1.getKey()))
           && !entry1.getKey().equals(latestPartCol)) {
           try {
-            UpdatePeriod.valueOf(part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD))
+            UpdatePeriod.valueOf(part.getParameters().get(PARTITION_UPDATE_PERIOD))
               .format()
               .parse(entry1.getValue());
           } catch (ParseException e) {
@@ -505,7 +502,6 @@ public class MetastoreUtil {
           }
         }
       }
-
       if (ignore) {
         iter.remove();
       }
@@ -513,13 +509,13 @@ public class MetastoreUtil {
     return partitions;
   }
 
-  public static Date getLatestTimeStampOfDimtable(Partition part, String partCol) throws HiveException {
+  public static Date getLatestTimeStampFromPartition(Partition part, String partCol) throws HiveException {
     if (part != null) {
       String latestTimeStampStr = part.getParameters().get(MetastoreUtil.getLatestPartTimestampKey(partCol));
-      String latestPartUpdatePeriod = part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD);
+      String latestPartUpdatePeriod = part.getParameters().get(PARTITION_UPDATE_PERIOD);
       UpdatePeriod latestUpdatePeriod = UpdatePeriod.valueOf(latestPartUpdatePeriod.toUpperCase());
       try {
-        return latestUpdatePeriod.format().parse(latestTimeStampStr);
+        return latestUpdatePeriod.parse(latestTimeStampStr);
       } catch (ParseException e) {
         throw new HiveException(e);
       }

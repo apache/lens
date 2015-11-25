@@ -154,7 +154,7 @@ public class CubeFactTable extends AbstractCubeTable {
     List<String> partitions = new ArrayList<String>();
     Date dt = cal.getTime();
     while (dt.compareTo(toDate) < 0) {
-      String part = interval.format().format(cal.getTime());
+      String part = interval.format(cal.getTime());
       partitions.add(part);
       cal.add(interval.calendarField(), 1);
       dt = cal.getTime();

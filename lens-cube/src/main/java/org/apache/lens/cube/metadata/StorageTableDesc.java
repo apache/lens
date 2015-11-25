@@ -19,10 +19,12 @@
 
 package org.apache.lens.cube.metadata;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.plan.CreateTableDesc;
 
 public class StorageTableDesc extends CreateTableDesc {
@@ -43,6 +45,25 @@ public class StorageTableDesc extends CreateTableDesc {
       super.setTblProps(new HashMap<String, String>());
     }
     super.getTblProps().put(MetastoreConstants.TIME_PART_COLUMNS, StringUtils.join(this.timePartCols, ','));
+  }
+
+  public StorageTableDesc() {
+  }
+
+  public StorageTableDesc(Class<?> inputFormatClass, Class<?> outputFormatClass,
+    ArrayList<FieldSchema> partCols, List<String> timePartCols) {
+    if (inputFormatClass != null) {
+      setInputFormat(inputFormatClass.getCanonicalName());
+    }
+    if (outputFormatClass != null) {
+      setOutputFormat(outputFormatClass.getCanonicalName());
+    }
+    if (partCols != null) {
+      setPartCols(partCols);
+    }
+    if (timePartCols != null) {
+      setTimePartCols(timePartCols);
+    }
   }
 
   /**
