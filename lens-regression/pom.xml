@@ -87,14 +87,13 @@
                         </goals>
                         <configuration>
                             <target>
-                                <property name="build.compiler" value="extJavac"/>
-                                <property name="compile_classpath" refid="maven.compile.classpath"/>
-                                <mkdir dir="${project.build.directory}/additional-classes"/>
-                                <javac includeantruntime="false" srcdir="src/additional/java"
-                                       destdir="${project.build.directory}/additional-classes" classpath="${compile_classpath}"/>
-                                <mkdir dir="${project.build.directory}/testjars"/>
+                                <property name="build.compiler" value="extJavac" />
+                                <property name="compile_classpath" refid="maven.compile.classpath" />
+                                <mkdir dir="${project.build.directory}/additional-classes" />
+                                <javac includeantruntime="false" srcdir="src/additional/java" destdir="${project.build.directory}/additional-classes" classpath="${compile_classpath}" />
+                                <mkdir dir="${project.build.directory}/testjars" />
                                 <jar destfile="${project.build.directory}/testjars/hiveudftest.jar">
-                                    <fileset dir="${project.build.directory}/additional-classes" includes="SampleUdf.class"/>
+                                    <fileset dir="${project.build.directory}/additional-classes" includes="SampleUdf.class" />
                                 </jar>
                             </target>
                         </configuration>

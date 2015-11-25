@@ -39,6 +39,7 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.time.DateUtils;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -54,6 +55,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

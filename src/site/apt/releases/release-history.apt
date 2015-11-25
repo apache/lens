@@ -23,6 +23,8 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |Release version|Major features|Release documentation|Release Notes|Download|Incompatibilities|More Info |
 *--+--+---+--+--+--+--+
+|2.4.0-beta| JDK8 support, new web client, Saved Query and Parameterization, Support flattening of columns selected through bridge-tables(many-to-many relationships), column name mapping for columns in underlying storage tables, Enhancements cube.xsd and jdbc driver, Improvements in Error codes, Doc improvements, bug fixes| {{{../versions/2.4.0-beta/index.html} 2.4.x docs}} |{{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12333087} 2.4 release notes}} |{{{http://archive.apache.org/dist/lens/2.4-beta/} Download}} |{{{#a2.4.x_from_2.3.x} 2.4.x-incompatibilities}} | - |
+*--+--+---+--+--+--+--+
 |2.3.0-beta | Per Query Logs, Server side XML validation, File size in query result, File name suggestions in CLI, Phase 1 Query rewriter, Elastic Search driver, Query launching constraints, Update partition api, Lens Service Health check, Doc/javadoc improvements, Code cleanup, bug fixes| {{{../versions/2.3.0-beta/index.html} 2.3.x docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12332350&projectId=12315923} 2.3 release notes}}| {{{http://archive.apache.org/dist/lens/2.3-beta/} Download}} | {{{#a2.3.x_from_2.2.x} 2.3.x-incompatibilities}} | - |
 *--+--+---+--+--+--+--+
 |2.2.0-beta-incubating| CLI Improvements, Support for multiple expressions and and union queries, More descriptive error codes, Zeppelin integration, Code cleanup| {{{../versions/2.2.0-beta-incubating/index.html} 2.2.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12329586&projectId=12315923} 2.2 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.2-beta-incubating/} Download}} | {{{#a2.2.x_from_2.1.x} 2.2.x-incompatibilities}} | - |
@@ -39,6 +41,32 @@ All Apache Lens releases
   ganglia metrics reporting, the jar needs to be downloaded and used.
 
 * Incompatibilities
+
+** 2.4.x from 2.3.x
+
+  * LENS-187: Moved all errors from inmobi hive to lens. All errors will be having same error code but all exceptions
+    are mapped to LensException instead of HiveException, SemanticException.
+
+  * LENS-446: Removed all server params from session and driver configurations. Earlier, all server params was passed to
+    drivers and showing through session api. We can not see anymore server side properties from session params.
+
+  * LENS-224: Driver class name also will be stored for finished queries. This will be an additional column(driverclass)
+    in finished_queries table.
+
+  * LENS-693: Purges the finished queries to DB periodically. Added a new config property
+    lens.server.querypurger.sleep.interval for configuring purge interval. No more depends on number of finished queries
+    to purge the finished queries to DB.
+
+  * LENS-734: All query output files are generated through HadoopFileFormatter and ZipFileFormatter will be having
+    query name in output file name. Earlier, query output file does not contain query name in the output file
+
+  * LENS-737: Give single error with LensMultiException to user. Earlier, we used give Internal server error to users as
+    multiple drivers gives different errors.
+
+  * LENS-774: Fixed spelling mistake in lens.server.session.expiry.service.interval.secs property.
+    Earlier, LensConfConstants.java file and lensserver-default.xml are having different property name
+    because of spelling error. Due to that we were unable to override lens.server.session.expiry.service.interval.secs
+    property.
 
 ** 2.3.x from 2.2.x
 

@@ -629,7 +629,6 @@ public class TestColumnarSQLRewriter {
             + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) "
             + "order by dollars_sold  desc";
     compareQueries(actual, expected);
-
   }
 
   @Test
@@ -683,7 +682,6 @@ public class TestColumnarSQLRewriter {
             + " ( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) "
             + "order by dollars_sold  desc";
     compareQueries(actual, expected);
-
   }
 
   @Test
