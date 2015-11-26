@@ -2485,6 +2485,14 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       throw new NotFoundException("http result not available");
     }
     final Path resultPath = new Path(resultSet.getOutputPath());
+    try {
+      FileSystem fs = resultPath.getFileSystem(conf);
+      if (!fs.exists(resultPath)) {
+        throw new NotFoundException("Result file does not exist!");
+      }
+    } catch (IOException e) {
+      throw new LensException(e);
+    }
     final QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
     String resultFSReadUrl = conf.get(RESULT_FS_READ_URL);
     if (resultFSReadUrl != null) {
