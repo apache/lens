@@ -60,12 +60,14 @@ import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
+
+ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import com.google.common.collect.ImmutableSet;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -75,7 +77,7 @@ import lombok.extern.slf4j.Slf4j;
  * This driver is responsible for running queries against databases which can be queried using the JDBC API.
  */
 @Slf4j
-public class JDBCDriver implements LensDriver {
+public class JDBCDriver extends AbstractLensDriver {
 
   /** The Constant THID. */
   public static final AtomicInteger THID = new AtomicInteger();
@@ -420,17 +422,17 @@ public class JDBCDriver implements LensDriver {
     return conf;
   }
 
-  /**
-   * Configure driver with {@link org.apache.hadoop.conf.Configuration} passed
+  /*
+   * (non-Javadoc)
    *
-   * @param conf The configuration object
-   * @throws LensException the lens exception
+   * @see org.apache.lens.server.api.driver.LensDriver#configure(org.apache.hadoop.conf.Configuration)
    */
   @Override
-  public void configure(Configuration conf) throws LensException {
+  public void configure(Configuration conf, String driverType, String driverName) throws LensException {
+    super.configure(conf, driverType, driverName);
     this.conf = new Configuration(conf);
     this.conf.addResource("jdbcdriver-default.xml");
-    this.conf.addResource("jdbcdriver-site.xml");
+    this.conf.addResource(getDriverResourcePath("jdbcdriver-site.xml"));
     init(conf);
     try {
       queryHook = this.conf.getClass(
@@ -440,7 +442,7 @@ public class JDBCDriver implements LensDriver {
       throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
     }
     configured = true;
-    log.info("JDBC Driver configured");
+    log.info("JDBC Driver {} configured", getFullyQualifiedName());
   }
 
   /**
@@ -514,9 +516,9 @@ public class JDBCDriver implements LensDriver {
       DummyQueryRewriter.class, QueryRewriter.class);
     try {
       rewriter = queryRewriterClass.newInstance();
-      log.info("Initialized :{}", queryRewriterClass);
+      log.info("{} Initialized :{}", getFullyQualifiedName(), queryRewriterClass);
     } catch (Exception e) {
-      log.error("Unable to create rewriter object", e);
+      log.error("{} Unable to create rewriter object", getFullyQualifiedName(), e);
       throw new LensException(e);
     }
     rewriter.init(conf);
@@ -636,7 +638,7 @@ public class JDBCDriver implements LensDriver {
       explainQuery = rewrittenQuery.replaceAll("select ", "select "
         + explainKeyword + " ");
     }
-    log.info("Explain Query : {}", explainQuery);
+    log.info("{} Explain Query : {}", getFullyQualifiedName(), explainQuery);
     QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery, null,
       new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier(), false);
     QueryResult result = null;
@@ -873,7 +875,7 @@ public class JDBCDriver implements LensDriver {
     checkConfigured();
 
     String rewrittenQuery = rewriteQuery(context);
-    log.info("Execute {}", context.getQueryHandle());
+    log.info("{} Execute {}", getFullyQualifiedName(), context.getQueryHandle());
     QueryResult result = executeInternal(context, rewrittenQuery);
     return result.getLensResultSet(true);
 
@@ -919,7 +921,7 @@ public class JDBCDriver implements LensDriver {
       throw new LensException("Query execution rejected: " + context.getQueryHandle() + " reason:" + e.getMessage(), e);
     }
     queryContextMap.put(context.getQueryHandle(), jdbcCtx);
-    log.info("ExecuteAsync: {}", context.getQueryHandle());
+    log.info("{} ExecuteAsync: {}", getFullyQualifiedName(), context.getQueryHandle());
   }
 
   /**
@@ -1032,7 +1034,7 @@ public class JDBCDriver implements LensDriver {
         context.setEndTime(System.currentTimeMillis());
       }
       context.closeResult();
-      log.info("Cancelled query: {}", handle);
+      log.info("{} Cancelled query : {}", getFullyQualifiedName(), handle);
     }
     return cancelResult;
   }
@@ -1053,7 +1055,7 @@ public class JDBCDriver implements LensDriver {
     } finally {
       queryContextMap.remove(handle);
     }
-    log.info("Closed query {}", handle.getHandleId());
+    log.info("{} Closed query {}", getFullyQualifiedName(), handle.getHandleId());
   }
 
   /**
@@ -1069,7 +1071,7 @@ public class JDBCDriver implements LensDriver {
         try {
           closeQuery(query);
         } catch (LensException e) {
-          log.warn("Error closing query : {}", query.getHandleId(), e);
+          log.warn("{} Error closing query : {}", getFullyQualifiedName(), query.getHandleId(), e);
         }
       }
       for (QueryPrepareHandle query : preparedQueries.keySet()) {
@@ -1080,7 +1082,7 @@ public class JDBCDriver implements LensDriver {
             throw new LensException();
           }
         } catch (LensException e) {
-          log.warn("Error closing prapared query : {}", query, e);
+          log.warn("{} Error closing prapared query : {}", getFullyQualifiedName(), query, e);
         }
       }
     } finally {

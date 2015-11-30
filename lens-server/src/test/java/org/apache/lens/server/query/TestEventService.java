@@ -30,6 +30,7 @@ import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEvent;
@@ -275,6 +276,7 @@ public class TestEventService {
    */
   @BeforeTest
   public void setup() throws Exception {
+    System.setProperty(LensConfConstants.CONFIG_LOCATION, "target/test-classes/");
     LensServices.get().init(LensServerConf.getHiveConf());
     LensServices.get().start();
     service = LensServices.get().getService(LensEventService.NAME);

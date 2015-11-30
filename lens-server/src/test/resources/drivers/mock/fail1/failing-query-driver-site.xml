@@ -24,4 +24,9 @@
     <name>lens.driver.test.key</name>
     <value>set</value>
   </property>
+
+  <property>
+    <name>lens.driver.test.drivername</name>
+    <value>mock/fail1</value>
+  </property>
 </configuration>

@@ -48,6 +48,7 @@ import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.commons.lang.Validate;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -62,13 +63,14 @@ import org.antlr.runtime.tree.Tree;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Driver for elastic search
  */
 @Slf4j
-public class ESDriver implements LensDriver {
+public class ESDriver extends AbstractLensDriver {
 
   private static final AtomicInteger THID = new AtomicInteger();
   private static final double STREAMING_PARTITION_COST = 0;
@@ -317,10 +319,11 @@ public class ESDriver implements LensDriver {
   }
 
   @Override
-  public void configure(Configuration conf) throws LensException {
+  public void configure(Configuration conf, String driverType, String driverName) throws LensException {
+    super.configure(conf, driverType, driverName);
     this.conf = new Configuration(conf);
     this.conf.addResource("esdriver-default.xml");
-    this.conf.addResource("esdriver-site.xml");
+    this.conf.addResource(getDriverResourcePath("esdriver-site.xml"));
     config = new ESDriverConfig(this.conf);
     Class klass;
     try {
@@ -341,10 +344,10 @@ public class ESDriver implements LensDriver {
       | InstantiationException
       | IllegalAccessException
       | InvocationTargetException e) {
-      log.error("ES driver cannot start!", e);
+      log.error("ES driver {} cannot start!", getFullyQualifiedName(), e);
       throw new LensException("Cannot start es driver", e);
     }
-    log.debug("ES Driver configured");
+    log.info("ES Driver {} configured", getFullyQualifiedName());
     asyncQueryPool = Executors.newCachedThreadPool(new ThreadFactory() {
       @Override
       public Thread newThread(Runnable runnable) {

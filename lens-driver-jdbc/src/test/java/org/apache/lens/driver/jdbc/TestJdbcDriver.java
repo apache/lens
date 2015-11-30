@@ -88,7 +88,7 @@ public class TestJdbcDriver {
     hConf = new HiveConf(baseConf, this.getClass());
 
     driver = new JDBCDriver();
-    driver.configure(baseConf);
+    driver.configure(baseConf, "jdbc", "jdbc1");
 
     assertNotNull(driver);
     assertTrue(driver.configured);
@@ -309,12 +309,12 @@ public class TestJdbcDriver {
     metricConf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestJdbcDriver.class.getSimpleName());
     driver.estimate(createExplainContext(query1, metricConf));
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
-
+    String driverQualifiledName = driver.getFullyQualifiedName();
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-columnar-sql-rewrite",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-jdbc-prepare-statement",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-thru-prepare",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-check-allowed-query")));
+      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-columnar-sql-rewrite",
+      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-jdbc-prepare-statement",
+      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-thru-prepare",
+      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-jdbc-check-allowed-query")));
   }
 
   @Test

@@ -135,7 +135,7 @@ public class TestColumnarSQLRewriter {
   @BeforeTest
   public void setup() throws Exception {
     conf.addResource("jdbcdriver-default.xml");
-    conf.addResource("jdbcdriver-site.xml");
+    conf.addResource("drivers/jdbc/jdbc1/jdbcdriver-site.xml");
     qtest.init(conf);
 
     List<FieldSchema> factColumns = new ArrayList<>();
@@ -435,8 +435,8 @@ public class TestColumnarSQLRewriter {
     String actual = qtest.rewrite(query, conf, hconf);
 
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
-            + "week((time_dim___time_dim . day )), "
-            + "date(( time_dim___time_dim . day )), ( item_dim___item_dim . item_key ),  "
+            + "week(( time_dim___time_dim . day )), "
+            + "date((time_dim___time_dim . day )), ( item_dim___item_dim . item_key ),  "
             + "case  when (sum(alias2) =  0 ) then  0.0  else sum(alias2) end  as `dollars_sold` , "
             + "format(sum(alias3),  4 ), format(avg(alias4),  '##################.###' ), "
             + "min(alias5), max(alias6) from  (select sales_fact___fact.time_key, "

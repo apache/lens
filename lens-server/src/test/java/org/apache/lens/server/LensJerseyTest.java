@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.LensMetricsUtil;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.model.LogSegregationContext;
@@ -48,6 +49,7 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 
 import com.google.common.collect.Lists;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -120,6 +122,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   public void startAll() throws Exception {
     log.info("Before suite");
     System.setProperty("lens.log.dir", "target/");
+    System.setProperty(LensConfConstants.CONFIG_LOCATION, "target/test-classes/");
     TestRemoteHiveDriver.createHS2Service();
     System.out.println("Remote hive server started!");
     HiveConf hiveConf = new HiveConf();

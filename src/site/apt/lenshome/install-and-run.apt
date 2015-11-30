@@ -98,14 +98,24 @@ Installing and Running Lens
   │   ├── lens-config.sh
   │   └── lens-ctl
   ├── conf
-  │   ├── hivedriver-site.xml
-  │   ├── jdbcdriver-site.xml
+  │   ├── drivers
+  │   │   ├── hive
+  │   │	  │   └── hive1
+  │   │	  │       └── hivedriver-site.xml
+  │   │	  └── jdbc
+  │   │	      └── jdbc1
+  │   │	          └── jdbcdriver-site.xml
   │   ├── lens-env.sh
   │   ├── lens-site.xml
   │   └── logback.xml
   ├── conf-pseudo-distr
-  │   ├── hivedriver-site.xml
-  │   ├── jdbcdriver-site.xml
+  │   ├── drivers
+  │   │   ├── hive
+  │   │	  │   └── hive1
+  │   │	  │       └── hivedriver-site.xml
+  │   │	  └── jdbc
+  │   │	      └── jdbc1
+  │   │	          └── jdbcdriver-site.xml
   │   ├── lens-env.sh
   │   ├── lens-site.xml
   │   └── logback.xml

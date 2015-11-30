@@ -65,7 +65,7 @@ Lens server configuration
 *--+--+---+--+
 |19|lens.server.driver.selector.class|org.apache.lens.server.api.driver.MinQueryCostSelector|Class for selecting best driver given the query context|
 *--+--+---+--+
-|20|lens.server.drivers|org.apache.lens.driver.hive.HiveDriver|Drivers enabled for this lens server instance|
+|20|lens.server.drivers|hive:org.apache.lens.driver.hive.HiveDriver|Drivers enabled for this lens server instance|
 *--+--+---+--+
 |21|lens.server.enable.console.metrics|false|Enable metrics to be reported on console|
 *--+--+---+--+

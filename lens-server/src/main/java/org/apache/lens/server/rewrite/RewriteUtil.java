@@ -368,7 +368,7 @@ public final class RewriteUtil {
       log.warn("Driver : {}  Skipped for the query rewriting due to ", driver, e);
       ctx.setDriverRewriteError(driver, e);
       failureCause = new StringBuilder(" Driver :")
-          .append(driver.getClass().getName())
+          .append(driver.getFullyQualifiedName())
           .append(" Cause :" + e.getLocalizedMessage())
           .toString();
     }

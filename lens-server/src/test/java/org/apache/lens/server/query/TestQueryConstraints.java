@@ -19,7 +19,6 @@
 package org.apache.lens.server.query;
 
 import static org.apache.lens.server.api.LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY;
-import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import static org.testng.Assert.*;
 
@@ -39,7 +38,6 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.driver.DriverSelector;
 import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryExecutionService;
@@ -52,13 +50,16 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.test.TestProperties;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.beust.jcommander.internal.Lists;
+
 import com.google.common.base.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -68,52 +69,6 @@ import lombok.extern.slf4j.Slf4j;
 @Test(groups = "two-working-drivers", dependsOnGroups = "filter-test")
 public class TestQueryConstraints extends LensJerseyTest {
   private HiveConf serverConf;
-
-  public static class MockHiveDriverBase extends HiveDriver {
-
-    private final Configuration customConf;
-
-    /**
-     * Instantiates a new hive driver.
-     *
-     * @throws LensException the lens exception
-     */
-    public MockHiveDriverBase() throws LensException {
-      customConf = new Configuration();
-      customConf.setInt("driver.max.concurrent.launched.queries", 2);
-      customConf.set(HiveDriver.QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY,
-        "org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory");
-    }
-
-    @Override
-    public void configure(Configuration conf) throws LensException {
-      super.configure(conf);
-      queryConstraints = getImplementations(HiveDriver.QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY, customConf);
-    }
-  }
-
-  public static class HiveDriver1 extends MockHiveDriverBase {
-
-    /**
-     * Instantiates a new hive driver.
-     *
-     * @throws LensException the lens exception
-     */
-    public HiveDriver1() throws LensException {
-
-    }
-  }
-
-  public static class HiveDriver2 extends MockHiveDriverBase {
-
-    /**
-     * Instantiates a new hive driver.
-     *
-     * @throws LensException the lens exception
-     */
-    public HiveDriver2() throws LensException {
-    }
-  }
 
   public static class RoundRobinSelector implements DriverSelector {
     int counter = 0;
@@ -158,8 +113,8 @@ public class TestQueryConstraints extends LensJerseyTest {
   public HiveConf getServerConf() {
     if (serverConf == null) {
       serverConf = new HiveConf(super.getServerConf());
-      serverConf.set(LensConfConstants.DRIVER_CLASSES,
-        HiveDriver1.class.getName() + "," + HiveDriver2.class.getName());
+      // Lets test only mockHive. updating lens server conf for same
+      serverConf.set(LensConfConstants.DRIVER_TYPES_AND_CLASSES, "mockHive:" + HiveDriver.class.getName());
       serverConf.set("lens.server.driver.selector.class", RoundRobinSelector.class.getName());
       LensServerConf.getConfForDrivers().addResource(serverConf);
     }
@@ -265,11 +220,6 @@ public class TestQueryConstraints extends LensJerseyTest {
     QueryExecutionServiceImpl.QueryCount count = queryService.getQueryCountSnapshot();
     assertTrue(count.running <= 4, System.currentTimeMillis() + " " + count.running + " running queries: "
       + queryService.getLaunchedQueries());
-    if (count.running == 4) {
-      assertEquals(count.queued, 0);
-    } else {
-      assertEquals(count.waiting, 0);
-    }
   }
 
   private QueryHandle launchQuery() {

@@ -31,10 +31,39 @@ Configuring lens server
 
 * Driver configuration
 
-  The supported drivers are configured through classnames in this release. The configuration 
-  for each driver can be specified in their site.xml file. For example, HiveDriver's
-  configuration should be specified in hivedriver-site.xml. Supported drivers in this version
-  are org.apache.lens.driver.hive.HiveDriver, org.apache.lens.driver.jdbc.JDBCDriver
+  The supported drivers are configured through type and classname in this release. The property 
+  lens.server.drivers in server configuration specifies the driver types supported by the system and 
+  their corresponding driver implementation.
+
+  System can have multiple drivers of same type, for example MySQL and Postgres can be two drivers of
+  type JDBC. The configuration for each driver is specified in its site.xml file which should be 
+  present under the folder <Server_Conf_location>/drivers/<driver-type>/<driver-name>. 
+  For example, Hive driver's configuration should be specified in 
+  <LensServer_Install_Location>/conf/drivers/hive/hive1/hivedriver-site.xml where hive1 is the driver name.
+  A driver is identified by its fully qualified name which includes the driver type and driver name. For the
+  example discussed above the fully qualified name would be "hive/hive1"
+  
+  The organization of drivers in the system is illustrated below 
+
++---+
+
+  ├── conf
+      └── drivers
+          ├── hive
+          │   ├── hive1
+          │   │   └── hivedriver-site.xml
+          │   └── hive2
+          │       └── hivedriver-site.xml
+          └── jdbc
+              ├── jdbc1
+              │   └── jdbcdriver-site.xml
+              └── jdbc2
+                  └── jdbcdriver-site.xml
+
++---+
+
+  Supported drivers in this version are 
+  org.apache.lens.driver.hive.HiveDriver, org.apache.lens.driver.jdbc.JDBCDriver
   and org.apache.lens.driver.es.ESDriver.
   The configuration parameters and their description are explained in their respective docs listed below
   HiveDriver - {{{./hivedriver-config.html} here}}

@@ -222,6 +222,18 @@ public class TestQueryService extends LensJerseyTest {
     assertEquals(rs.getStatus(), 400);
   }
 
+  @Test
+  public void testLoadingMultipleDrivers() {
+    Collection<LensDriver> drivers = queryService.getDrivers();
+    assertEquals(drivers.size(), 4);
+    Set<String> driverNames = new HashSet<String>(drivers.size());
+    for(LensDriver driver : drivers){
+      assertEquals(driver.getConf().get("lens.driver.test.drivername"), driver.getFullyQualifiedName());
+      driverNames.add(driver.getFullyQualifiedName());
+    }
+    assertTrue(driverNames.containsAll(Arrays.asList("hive/hive1", "hive/hive2", "jdbc/jdbc1", "mock/fail1")));
+  }
+
   /**
    * Test rewrite failure in execute operation.
    *
@@ -464,8 +476,8 @@ public class TestQueryService extends LensJerseyTest {
       .get(LensPreparedQuery.class);
     assertTrue(ctx.getUserQuery().equalsIgnoreCase("select ID from " + TEST_TABLE));
     assertTrue(ctx.getDriverQuery().equalsIgnoreCase("select ID from " + TEST_TABLE));
-    assertEquals(ctx.getSelectedDriverClassName(),
-      org.apache.lens.driver.hive.HiveDriver.class.getCanonicalName());
+    //both drivers hive/hive1 and hive/hive2 are capable of handling the query as they point to the same hive server
+    assertTrue(ctx.getSelectedDriverName().equals("hive/hive1") || ctx.getSelectedDriverName().equals("hive/hive2"));
     assertNull(ctx.getConf().getProperties().get("my.property"));
 
     // Update conf for prepared query
@@ -539,8 +551,8 @@ public class TestQueryService extends LensJerseyTest {
       .request().get(LensPreparedQuery.class);
     assertTrue(ctx.getUserQuery().equalsIgnoreCase("select ID from " + TEST_TABLE));
     assertTrue(ctx.getDriverQuery().equalsIgnoreCase("select ID from " + TEST_TABLE));
-    assertEquals(ctx.getSelectedDriverClassName(),
-      org.apache.lens.driver.hive.HiveDriver.class.getCanonicalName());
+    //both drivers hive/hive1 and hive/hive2 are capable of handling the query as they point to the same hive server
+    assertTrue(ctx.getSelectedDriverName().equals("hive/hive1") || ctx.getSelectedDriverName().equals("hive/hive2"));
     assertNull(ctx.getConf().getProperties().get("my.property"));
 
     // Update conf for prepared query
@@ -1275,6 +1287,9 @@ public class TestQueryService extends LensJerseyTest {
         if (driver instanceof HiveDriver) {
           addedToHiveDriver =
             ((HiveDriver) driver).areDBResourcesAddedForSession(sessionHandle.getPublicId().toString(), DB_WITH_JARS);
+          if (addedToHiveDriver){
+            break; //There are two Hive drivers now both pointing to same hive server. So break after first success
+          }
         }
       }
       assertTrue(addedToHiveDriver);
@@ -1396,12 +1411,15 @@ public class TestQueryService extends LensJerseyTest {
 
     assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
         "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-DRIVER_SELECTION",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-HiveDriver-CUBE_REWRITE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-HiveDriver-DRIVER_ESTIMATE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-HiveDriver-RewriteUtil-rewriteQuery",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-JDBCDriver-CUBE_REWRITE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-JDBCDriver-DRIVER_ESTIMATE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-JDBCDriver-RewriteUtil-rewriteQuery",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-CUBE_REWRITE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-DRIVER_ESTIMATE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-RewriteUtil-rewriteQuery",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-CUBE_REWRITE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-DRIVER_ESTIMATE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-RewriteUtil-rewriteQuery",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-CUBE_REWRITE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-DRIVER_ESTIMATE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-RewriteUtil-rewriteQuery",
         "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-PARALLEL_ESTIMATE")),
       reg.getGauges().keySet().toString());
   }

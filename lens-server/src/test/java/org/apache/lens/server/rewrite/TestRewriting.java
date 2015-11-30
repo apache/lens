@@ -177,7 +177,7 @@ public class TestRewriting {
     MockDriver driver = new MockDriver();
     LensConf lensConf = new LensConf();
     Configuration conf = new Configuration();
-    driver.configure(conf);
+    driver.configure(conf, null, null);
     drivers.add(driver);
 
     CubeQueryRewriter mockWriter = getMockedRewriter();
@@ -190,7 +190,7 @@ public class TestRewriting {
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
     conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestRewriting.class.getSimpleName());
-    driver.configure(conf);
+    driver.configure(conf, null, null);
     String q2 = "cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
@@ -201,8 +201,8 @@ public class TestRewriting {
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestRewriting-MockDriver-RewriteUtil-rewriteQuery",
-      "lens.MethodMetricGauge.TestRewriting-MockDriver-1-RewriteUtil-rewriteQuery-toHQL")));
+      "lens.MethodMetricGauge.TestRewriting-"+driver.getFullyQualifiedName()+"-RewriteUtil-rewriteQuery",
+      "lens.MethodMetricGauge.TestRewriting-"+driver.getFullyQualifiedName()+"-1-RewriteUtil-rewriteQuery-toHQL")));
     conf.unset(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
 
     q2 = "insert overwrite directory 'target/rewrite' cube select name from table";
@@ -290,9 +290,10 @@ public class TestRewriting {
     runRewrites(RewriteUtil.rewriteQuery(ctx));
     reg = LensMetricsRegistry.getStaticRegistry();
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-1-RewriteUtil-rewriteQuery-toHQL",
-      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-2-RewriteUtil-rewriteQuery-toHQL",
-      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-RewriteUtil-rewriteQuery")));
+      "lens.MethodMetricGauge.TestRewriting-"+driver.getFullyQualifiedName()+"-1-RewriteUtil-rewriteQuery-toHQL",
+      "lens.MethodMetricGauge.TestRewriting-multiple-"+driver.getFullyQualifiedName()
+        +"-2-RewriteUtil-rewriteQuery-toHQL",
+      "lens.MethodMetricGauge.TestRewriting-multiple-"+driver.getFullyQualifiedName()+"-RewriteUtil-rewriteQuery")));
     conf.unset(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
 
     q2 = "select * from (cube select name from table) a full outer join"
@@ -418,7 +419,7 @@ public class TestRewriting {
 
     // failing query for second driver
     MockDriver driver2 = new MockDriver();
-    driver2.configure(conf);
+    driver2.configure(conf, null, null);
     drivers.add(driver2);
 
     Assert.assertEquals(drivers.size(), 2);

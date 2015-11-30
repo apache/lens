@@ -46,7 +46,7 @@ import lombok.*;
  *          the priority
  * @param isPersistent
  *          the is persistent
- * @param selectedDriverClassName
+ * @param selectedDriverName
  *          the selected driver class name
  * @param driverQuery
  *          the driver query
@@ -121,7 +121,7 @@ public class LensQuery {
    */
   @XmlElement
   @Getter
-  private String selectedDriverClassName;
+  private String selectedDriverName;
 
   /**
    * The driver query.

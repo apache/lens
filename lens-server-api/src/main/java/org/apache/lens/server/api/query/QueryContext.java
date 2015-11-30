@@ -306,8 +306,7 @@ public class QueryContext extends AbstractQueryContext {
    */
   public LensQuery toLensQuery() {
     return new LensQuery(queryHandle, userQuery, super.getSubmittedUser(), priority, isPersistent,
-      getSelectedDriver() != null ? getSelectedDriver().getClass()
-        .getCanonicalName() : null,
+      getSelectedDriver() != null ? getSelectedDriver().getFullyQualifiedName() : null,
       getSelectedDriverQuery(),
       status,
       resultSetPath, driverOpHandle, lensConf, submissionTime, launchTime, driverStatus.getDriverStartTime(),

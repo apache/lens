@@ -159,11 +159,11 @@ public class FinishedLensQuery {
   private String queryName;
 
   /**
-   * The selected driver class name.
+   * The selected driver's fully qualified name.
    */
   @Getter
   @Setter
-  private String driverClass;
+  private String driverName;
 
   @Getter
   private LensDriver selectedDriver;
@@ -197,14 +197,14 @@ public class FinishedLensQuery {
     }
     this.selectedDriver = ctx.getSelectedDriver();
     if (null != ctx.getSelectedDriver()) {
-      this.driverClass = ctx.getSelectedDriver().getClass().getName();
+      this.driverName = ctx.getSelectedDriver().getFullyQualifiedName();
     }
   }
 
   public QueryContext toQueryContext(Configuration conf, Collection<LensDriver> drivers) {
 
-    if (null == selectedDriver && null != driverClass) {
-      selectedDriver = getDriverFromClassName(drivers);
+    if (null == selectedDriver && null != driverName) {
+      selectedDriver = getDriverFromName(drivers);
     }
 
     QueryContext qctx =
@@ -223,12 +223,11 @@ public class FinishedLensQuery {
     return qctx;
   }
 
-  private LensDriver getDriverFromClassName(Collection<LensDriver> drivers) {
+  private LensDriver getDriverFromName(Collection<LensDriver> drivers) {
     Iterator<LensDriver> iterator = drivers.iterator();
     while (iterator.hasNext()) {
       LensDriver driver = iterator.next();
-      if (driverClass.equals(driver.getClass().getName())) {
-        //TODO : LENS-123 - Ability to load different instances of same driver class
+      if (driverName.equals(driver.getFullyQualifiedName())) {
         return driver;
       }
     }

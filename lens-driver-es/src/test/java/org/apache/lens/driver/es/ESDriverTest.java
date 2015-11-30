@@ -35,7 +35,7 @@ public abstract class ESDriverTest {
   public void beforeTest() throws LensException {
     initializeConfig(config);
     esDriverConfig = new ESDriverConfig(config);
-    driver.configure(config);
+    driver.configure(config, "es", "es1");
     mockClientES = (MockClientES) driver.getESClient();
   }
 

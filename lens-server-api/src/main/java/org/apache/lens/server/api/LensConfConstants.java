@@ -52,9 +52,9 @@ public final class LensConfConstants {
   public static final String METASTORE_PFX = "lens.metastore.";
 
   /**
-   * The Constant DRIVER_CLASSES.
+   * The Constant DRIVER_TYPES_AND_CLASSES
    */
-  public static final String DRIVER_CLASSES = SERVER_PFX + "drivers";
+  public static final String DRIVER_TYPES_AND_CLASSES = SERVER_PFX + "drivers";
   /**
    * The Constant DRIVER_SELECTOR_CLASS.
    */
@@ -943,6 +943,21 @@ public final class LensConfConstants {
   public static final int DEFAULT_FETCH_COUNT_SAVED_QUERY_LIST = 20;
 
   /**
+   * This is the base directory where all drivers are available under lens-server's Conf directory.
+   */
+  public static final String DRIVERS_BASE_DIR = "drivers";
+
+  /**
+   * Name of the property that holds the path of "conf" directory of server
+   */
+  public static final String CONFIG_LOCATION = "config.location";
+
+  /**
+   * Default location of "conf" directory (wrt to lens-server/bin)
+   */
+  public static final String DEFAULT_CONFIG_LOCATION = "../conf";
+
+  /**
    * The Constant RESULTSET_PURGE_ENABLED.
    */
   public static final String RESULTSET_PURGE_ENABLED = SERVER_PFX + "resultset.purge.enabled";
@@ -981,5 +996,4 @@ public final class LensConfConstants {
    * The Constant DEFAULT_HDFS_OUTPUT_RETENTION.
    */
   public static final String DEFAULT_HDFS_OUTPUT_RETENTION = "1 day";
-
 }

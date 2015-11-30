@@ -25,7 +25,7 @@
 <configuration>
   <property>
     <name>lens.server.drivers</name>
-    <value>org.apache.lens.driver.hive.HiveDriver</value>
+    <value>hive:org.apache.lens.driver.hive.HiveDriver</value>
   </property>
 
   <property>

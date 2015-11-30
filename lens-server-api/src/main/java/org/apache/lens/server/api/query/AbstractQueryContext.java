@@ -256,7 +256,7 @@ public abstract class AbstractQueryContext implements Serializable {
       String expMsg = LensUtil.getCauseMessage(e);
       driverQueryContext.setDriverQueryCostEstimateError(e);
       failureCause = new StringBuilder("Driver :")
-        .append(driver.getClass().getName())
+        .append(driver.getFullyQualifiedName())
         .append(" Cause :")
         .append(expMsg)
         .toString();

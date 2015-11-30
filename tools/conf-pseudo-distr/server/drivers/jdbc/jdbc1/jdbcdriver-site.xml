@@ -24,11 +24,11 @@
 <configuration>
   <property>
     <name>lens.driver.jdbc.driver.class</name>
-    <value>org.hsqldb.jdbcDriver</value>
+    <value>jdbc:org.hsqldb.jdbcDriver</value>
   </property>
   <property>
     <name>lens.driver.jdbc.db.uri</name>
-    <value>jdbc:hsqldb:./target/db-storage.db;MODE=MYSQL</value>
+    <value>jdbc:hsqldb:/tmp/db-storage.db;MODE=MYSQL;readonly=true</value>
   </property>
   <property>
     <name>lens.driver.jdbc.db.user</name>
@@ -45,11 +45,6 @@
   </property>
   <property>
     <name>lens.driver.jdbc.explain.keyword</name>
-    <value>explain plan for</value>
+    <value>explain plan for </value>
   </property>
-  <property>
-    <name>lens.driver.test.key</name>
-    <value>set</value>
-  </property>
-
 </configuration>

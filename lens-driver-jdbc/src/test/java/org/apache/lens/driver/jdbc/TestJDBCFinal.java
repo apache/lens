@@ -75,7 +75,7 @@ public class TestJDBCFinal {
     baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
 
     driver = new JDBCDriver();
-    driver.configure(baseConf);
+    driver.configure(baseConf, "jdbc", "jdbc1");
     assertNotNull(driver);
     assertTrue(driver.configured);
     System.out.println("Driver configured!");

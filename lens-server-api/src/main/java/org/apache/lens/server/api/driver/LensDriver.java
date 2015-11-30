@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableSet;
  * The Interface LensDriver.
  */
 public interface LensDriver extends Externalizable {
-
   /**
    * Get driver configuration
    */
@@ -47,9 +46,11 @@ public interface LensDriver extends Externalizable {
    * Configure driver with {@link Configuration} passed.
    *
    * @param conf The configuration object
+   * @param driverType Type of the driver (Example: hive, jdbc, el)
+   * @param driverName Name of this driver
    * @throws LensException the lens exception
    */
-  void configure(Configuration conf) throws LensException;
+  void configure(Configuration conf, String driverType, String driverName) throws LensException;
 
   /**
    * Estimate the cost of execution for given query.
@@ -199,4 +200,12 @@ public interface LensDriver extends Externalizable {
    * null is never returned.
    */
   ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies();
+
+
+  /**
+   * @return fully qualified name of this driver. This should be unique for each driver instance. This name can be used
+   * for referring to the driver while logging, persisting and restoring driver details,etc.
+   * (Examples: hive/hive1, jdbc/mysql1 )
+   */
+  String getFullyQualifiedName();
 }

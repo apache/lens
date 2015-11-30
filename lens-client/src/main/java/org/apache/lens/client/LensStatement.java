@@ -213,7 +213,7 @@ public class LensStatement {
       }
     }
     LensClient.getCliLooger().info("User query: '{}' was submitted to {}", query.getUserQuery(),
-      query.getSelectedDriverClassName());
+      query.getSelectedDriverName());
     if (query.getDriverQuery() != null) {
       LensClient.getCliLooger().info(" Driver query: '{}' and Driver handle: {}", query.getDriverQuery(),
         query.getDriverOpHandle());

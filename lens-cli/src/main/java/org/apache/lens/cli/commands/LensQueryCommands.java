@@ -364,7 +364,7 @@ public class LensQueryCommands extends BaseLensCommand {
         .append("Prepare handle:").append(prepared.getPrepareHandle()).append("\n")
         .append("User:" + prepared.getPreparedUser()).append("\n")
         .append("Prepared at:").append(prepared.getPreparedTime()).append("\n")
-        .append("Selected driver :").append(prepared.getSelectedDriverClassName()).append("\n")
+        .append("Selected driver :").append(prepared.getSelectedDriverName()).append("\n")
         .append("Driver query:").append(prepared.getDriverQuery()).append("\n");
       if (prepared.getConf() != null) {
         sb.append("Conf:").append(prepared.getConf().getProperties()).append("\n");
