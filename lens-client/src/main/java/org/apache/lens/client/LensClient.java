@@ -226,8 +226,9 @@ public class LensClient {
     return getLensStatement(query).getResultSet();
   }
 
-  public List<QueryHandle> getQueries(String state, String queryName, String user, long fromDate, long toDate) {
-    return new LensStatement(connection).getAllQueries(state, queryName, user, fromDate, toDate);
+  public List<QueryHandle> getQueries(String state, String queryName, String user, String driver, long fromDate,
+    long toDate) {
+    return new LensStatement(connection).getAllQueries(state, queryName, user, driver, fromDate, toDate);
   }
 
   private void connectToLensServer() {

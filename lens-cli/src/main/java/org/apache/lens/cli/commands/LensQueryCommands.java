@@ -218,6 +218,7 @@ public class LensQueryCommands extends BaseLensCommand {
    * @param state     the state
    * @param queryName the query name
    * @param user      the user
+   * @param driver    the driver name
    * @param fromDate  the from date
    * @param toDate    the to date
    * @return the all queries
@@ -229,11 +230,12 @@ public class LensQueryCommands extends BaseLensCommand {
     @CliOption(key = {"state"}, mandatory = false, help = "<query-status>") String state,
     @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName,
     @CliOption(key = {"user"}, mandatory = false, help = "<user-who-submitted-query>") String user,
+    @CliOption(key = {"driver"}, mandatory = false, help = "<driver-where-query-ran>") String driver,
     @CliOption(key = {"fromDate"}, mandatory = false, unspecifiedDefaultValue = "-1", help
       = "<submission-time-is-after>") long fromDate,
     @CliOption(key = {"toDate"}, mandatory = false, unspecifiedDefaultValue = "" + Long.MAX_VALUE, help
       = "<submission-time-is-before>") long toDate) {
-    List<QueryHandle> handles = getClient().getQueries(state, queryName, user, fromDate, toDate);
+    List<QueryHandle> handles = getClient().getQueries(state, queryName, user, driver, fromDate, toDate);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles).concat("\n").concat("Total number of queries: "
         + handles.size());

@@ -355,7 +355,7 @@ User CLI Commands
 *--+--+
 |query kill [--query_handle] \<query_handle\>|Kill query with handle <<<query_handle>>>|
 *--+--+
-|query list [--state \<query-status\>] [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all queries. Various filter options can be provided(optionally),  as can be seen from the command syntax|
+|query list [--state \<query-status\>] [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--driver \<driver-where-query-was-executed\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all queries. Various filter options can be provided(optionally),  as can be seen from the command syntax|
 *--+--+
 |query results [--query_handle] \<query_handle\> [--save_location \<save_location\>] [--async \<async\>]|get results of query with query handle <<<query_handle>>>. If async is false then wait till the query execution is completed, it's by default true. Can optionally save the results to a file by providing <<<save_location>>>.|
 *--+--+
