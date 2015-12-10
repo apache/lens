@@ -76,6 +76,7 @@ public class TestDateUtil {
     }
   }
 
+
   @Test
   public void testMonthsBetween() throws Exception {
     int i = 0;
@@ -194,6 +195,9 @@ public class TestDateUtil {
 
     weeks = getWeeklyCoveringInfo(DATE_FMT.parse("2013-May-26"), DATE_FMT.parse("2013-Jun-10"));
     assertEquals(weeks, new CoveringInfo(2, false), "2013-May-26 to 2013-Jun-10");
+
+    weeks = getWeeklyCoveringInfo(DATE_FMT.parse("2015-Dec-27"), DATE_FMT.parse("2016-Jan-03"));
+    assertEquals(weeks, new CoveringInfo(1, true), "2015-Dec-27 to 2016-Jan-03");
   }
 
   @Test

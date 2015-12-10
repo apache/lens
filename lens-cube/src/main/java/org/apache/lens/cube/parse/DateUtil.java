@@ -343,20 +343,13 @@ public final class DateUtil {
 
     Calendar cal = Calendar.getInstance();
     cal.setTime(from);
-    int fromWeek = cal.get(Calendar.WEEK_OF_YEAR);
     int fromDay = cal.get(Calendar.DAY_OF_WEEK);
-    int fromYear = cal.get(YEAR);
-
-    cal.clear();
-    cal.set(YEAR, fromYear);
-    cal.set(Calendar.WEEK_OF_YEAR, fromWeek);
     cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-    int maxDayInWeek = cal.getActualMaximum(Calendar.DAY_OF_WEEK);
     Date fromWeekStartDate = cal.getTime();
     boolean coverable = dayDiff % 7 == 0;
     if (fromWeekStartDate.before(from)) {
       // Count from the start of next week
-      dayDiff -= (maxDayInWeek - (fromDay - Calendar.SUNDAY));
+      dayDiff -= (cal.getActualMaximum(Calendar.DAY_OF_WEEK) - (fromDay - Calendar.SUNDAY));
       coverable = false;
     }
 
