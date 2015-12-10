@@ -32,7 +32,7 @@ import org.apache.lens.server.metastore.CubeMetastoreServiceImpl;
 import org.apache.lens.server.metastore.MetastoreApp;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.quota.QuotaServiceImpl;
-import org.apache.lens.server.scheduler.QuerySchedulerServiceImpl;
+import org.apache.lens.server.scheduler.SchedulerServiceImpl;
 import org.apache.lens.server.session.HiveSessionService;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -93,7 +93,7 @@ public class TestHealthChecks extends LensJerseyTest {
 
   @Test
   public void testQuerySchedulerServiceHealth() throws Exception {
-    checkHealth(QuerySchedulerServiceImpl.NAME);
+    checkHealth(SchedulerServiceImpl.NAME);
   }
 
   @Test

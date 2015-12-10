@@ -91,7 +91,7 @@
 
   <property>
     <name>lens.server.scheduler.service.impl</name>
-    <value>org.apache.lens.server.scheduler.QuerySchedulerServiceImpl</value>
+    <value>org.apache.lens.server.scheduler.SchedulerServiceImpl</value>
     <description>Implementation class for query scheduler service</description>
   </property>
 

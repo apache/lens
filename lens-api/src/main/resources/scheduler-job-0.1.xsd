@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           attributeFormDefault="unqualified" elementFormDefault="qualified"
+           targetNamespace="uri:lens:job:0.1" xmlns="uri:lens:job:0.1"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
+
+    <xs:annotation>
+        <xs:appinfo>
+            <jaxb:schemaBindings>
+                <jaxb:package name="org.apache.lens.api.scheduler" />
+            </jaxb:schemaBindings>
+        </xs:appinfo>
+    </xs:annotation>
+
+    <xs:element name="job" type="x_job" />
+
+    <xs:complexType name="x_job">
+        <xs:annotation>
+            <xs:documentation>
+                XJob represents a job that can be scheduled on lens.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="non_empty_string" name="name">
+                <xs:annotation>
+                    <xs:documentation>
+                        Name of the scheduled job. It need not be unique.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element type="x_execution" name="execution">
+                <xs:annotation>
+                    <xs:documentation>
+                        Contains the information for the executable and session.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element type="x_trigger" name="trigger">
+                <xs:annotation>
+                    <xs:documentation>
+                        Trigger is the gating condition for an instance of job to be launched.
+                        Currently only time based triggers are supported.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element type="map_type" name="job_conf" minOccurs="0" maxOccurs="unbounded" >
+                <xs:annotation>
+                    <xs:documentation>
+                        Configuration for the job e.g. number of retries etc.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element type="xs:dateTime" name="start_time">
+                <xs:annotation>
+                    <xs:documentation>
+                        Start time of this job's schedule  e.g. 2013-11-30T00:00:00
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+            <xs:element type="xs:dateTime" name="end_time">
+                <xs:annotation>
+                    <xs:documentation>
+                        End time of this job's schedule e.g. 2013-11-30T00:00:00
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="x_execution">
+        <xs:annotation>
+            <xs:documentation>
+                Task which has to be scheduled. Currently only query is supported.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <!-- Session related information for the job like db, conf, resource_path etc. -->
+            <xs:element type="x_session_type" name="session">
+            </xs:element>
+            <xs:choice>
+                <!-- Executable for the job e.g. query.
+                See x_job_query documentation for detailed documentation on query -->
+                <xs:element name="query" type="x_job_query" />
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="x_session_type">
+        <xs:sequence>
+            <xs:element name="db" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>
+                        Database name to be used in session e.g. myDB
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="conf" type="map_type" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        Configuration for session.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element type="xs:string" name="resource_path" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        Path for resources like jars etc. e.g. /path/to/my/jar
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="x_job_query">
+        <xs:annotation>
+            <xs:documentation>
+                A query which is executed in each run of the job.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="query" type="non_empty_string">
+                <xs:annotation>
+                    <xs:documentation>
+                        A query which is executed in each run of the job.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="conf" type="map_type" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        Configuration for the query which is executed
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="x_trigger">
+        <xs:annotation>
+            <xs:documentation>
+                Trigger is the gating condition for an instance of job to be launched.
+                Currently only time based triggers are supported.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:choice>
+            <!-- Frequency for the job.
+            Frequency of schedule. Frequency can either be
+                1) an enum from (DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY)
+                2) a cron_expression
+            -->
+            <xs:element name="frequency" type="x_frequency" />
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="map_type">
+        <xs:annotation>
+            <xs:documentation>
+                A type to represent key, value pairs.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="key" type="non_empty_string" />
+            <xs:element name="value" type="xs:string" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="x_frequency">
+        <xs:annotation>
+            <xs:documentation>
+                Frequency of schedule. Frequency can either be
+                1) an enum from (DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY)
+                2) a cron_expression
+            </xs:documentation>
+        </xs:annotation>
+        <xs:choice>
+            <xs:element name="enum" type="x_frequency_enum" />
+            <xs:element name="cron_expression" type="x_cron_expression" />
+        </xs:choice>
+        <xs:attribute type="xs:string" name="timezone" />
+    </xs:complexType>
+
+    <xs:simpleType name="x_frequency_enum">
+        <xs:annotation>
+            <xs:documentation>
+                Valid enum expressions which can be used as frequency.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="DAILY" />
+            <xs:enumeration value="WEEKLY" />
+            <xs:enumeration value="MONTHLY" />
+            <xs:enumeration value="QUARTERLY" />
+            <xs:enumeration value="YEARLY" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="x_cron_expression">
+        <xs:annotation>
+            <xs:documentation>
+                Source: https://quartz-scheduler.org/xml/job_scheduling_data_1_8.xsd
+                To examine you can break it up visually like as below.
+                SECONDS: (
+                ((([0-9]|[0-5][0-9])(-([0-9]|[0-5][0-9]))?,)*([0-9]|[0-5][0-9])(-([0-9]|[0-5][0-9]))?)
+                | (([\*]|[0-9]|[0-5][0-9])/([0-9]|[0-5][0-9])) | ([\?])
+                | ([\*]) ) [\s] MINUTES: (
+                ((([0-9]|[0-5][0-9])(-([0-9]|[0-5][0-9]))?,)*([0-9]|[0-5][0-9])(-([0-9]|[0-5][0-9]))?)
+                | (([\*]|[0-9]|[0-5][0-9])/([0-9]|[0-5][0-9])) | ([\?])
+                | ([\*]) ) [\s] HOURS: (
+                ((([0-9]|[0-1][0-9]|[2][0-3])(-([0-9]|[0-1][0-9]|[2][0-3]))?,)*([0-9]|[0-1][0-9]|[2][0-3])(-([0-9]|[0-1][0-9]|[2][0-3]))?)
+                |
+                (([\*]|[0-9]|[0-1][0-9]|[2][0-3])/([0-9]|[0-1][0-9]|[2][0-3]))
+                | ([\?]) | ([\*]) ) [\s] DAY OF MONTH: (
+                ((([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1])(-([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1]))?,)*([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1])(-([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1]))?(C)?)
+                |
+                (([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1])/([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1])(C)?)
+                | (L(-[0-9])?) | (L(-[1-2][0-9])?) | (L(-[3][0-1])?) |
+                (LW) | ([1-9]W) | ([1-3][0-9]W) | ([\?]) | ([\*]) )[\s]
+                MONTH: (
+                ((([1-9]|0[1-9]|1[0-2])(-([1-9]|0[1-9]|1[0-2]))?,)*([1-9]|0[1-9]|1[0-2])(-([1-9]|0[1-9]|1[0-2]))?)
+                | (([1-9]|0[1-9]|1[0-2])/([1-9]|0[1-9]|1[0-2])) |
+                (((JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(-(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))?,)*(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(-(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))?)
+                |
+                ((JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))
+                | ([\?]) | ([\*]) )[\s] DAY OF WEEK: (
+                (([1-7](-([1-7]))?,)*([1-7])(-([1-7]))?) |
+                ([1-7]/([1-7])) |
+                (((MON|TUE|WED|THU|FRI|SAT|SUN)(-(MON|TUE|WED|THU|FRI|SAT|SUN))?,)*(MON|TUE|WED|THU|FRI|SAT|SUN)(-(MON|TUE|WED|THU|FRI|SAT|SUN))?(C)?)
+                |
+                ((MON|TUE|WED|THU|FRI|SAT|SUN)/(MON|TUE|WED|THU|FRI|SAT|SUN)(C)?)
+                | (([1-7]|(MON|TUE|WED|THU|FRI|SAT|SUN))(L|LW)?) |
+                (([1-7]|MON|TUE|WED|THU|FRI|SAT|SUN)#([1-7])?) | ([\?])
+                | ([\*]) ) YEAR (OPTIONAL): ( [\s]? ([\*])? |
+                ((19[7-9][0-9])|(20[0-9][0-9]))? |
+                (((19[7-9][0-9])|(20[0-9][0-9]))/((19[7-9][0-9])|(20[0-9][0-9])))?
+                |
+                ((((19[7-9][0-9])|(20[0-9][0-9]))(-((19[7-9][0-9])|(20[0-9][0-9])))?,)*((19[7-9][0-9])|(20[0-9][0-9]))(-((19[7-9][0-9])|(20[0-9][0-9])))?)?
+                )
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern
+                    value="(((([0-9]|[0-5][0-9])(-([0-9]|[0-5][0-9]))?,)*([0-9]|[0-5][0-9])(-([0-9]|[0-5][0-9]))?)|(([\*]|[0-9]|[0-5][0-9])/([0-9]|[0-5][0-9]))|([\?])|([\*]))[\s](((([0-9]|[0-5][0-9])(-([0-9]|[0-5][0-9]))?,)*([0-9]|[0-5][0-9])(-([0-9]|[0-5][0-9]))?)|(([\*]|[0-9]|[0-5][0-9])/([0-9]|[0-5][0-9]))|([\?])|([\*]))[\s](((([0-9]|[0-1][0-9]|[2][0-3])(-([0-9]|[0-1][0-9]|[2][0-3]))?,)*([0-9]|[0-1][0-9]|[2][0-3])(-([0-9]|[0-1][0-9]|[2][0-3]))?)|(([\*]|[0-9]|[0-1][0-9]|[2][0-3])/([0-9]|[0-1][0-9]|[2][0-3]))|([\?])|([\*]))[\s](((([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1])(-([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1]))?,)*([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1])(-([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1]))?(C)?)|(([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1])/([1-9]|[0][1-9]|[1-2][0-9]|[3][0-1])(C)?)|(L(-[0-9])?)|(L(-[1-2][0-9])?)|(L(-[3][0-1])?)|(LW)|([1-9]W)|([1-3][0-9]W)|([\?])|([\*]))[\s](((([1-9]|0[1-9]|1[0-2])(-([1-9]|0[1-9]|1[0-2]))?,)*([1-9]|0[1-9]|1[0-2])(-([1-9]|0[1-9]|1[0-2]))?)|(([1-9]|0[1-9]|1[0-2])/([1-9]|0[1-9]|1[0-2]))|(((JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(-(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))?,)*(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(-(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))?)|((JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))|([\?])|([\*]))[\s]((([1-7](-([1-7]))?,)*([1-7])(-([1-7]))?)|([1-7]/([1-7]))|(((MON|TUE|WED|THU|FRI|SAT|SUN)(-(MON|TUE|WED|THU|FRI|SAT|SUN))?,)*(MON|TUE|WED|THU|FRI|SAT|SUN)(-(MON|TUE|WED|THU|FRI|SAT|SUN))?(C)?)|((MON|TUE|WED|THU|FRI|SAT|SUN)/(MON|TUE|WED|THU|FRI|SAT|SUN)(C)?)|(([1-7]|(MON|TUE|WED|THU|FRI|SAT|SUN))?(L|LW)?)|(([1-7]|MON|TUE|WED|THU|FRI|SAT|SUN)#([1-7])?)|([\?])|([\*]))([\s]?(([\*])?|(19[7-9][0-9])|(20[0-9][0-9]))?| (((19[7-9][0-9])|(20[0-9][0-9]))/((19[7-9][0-9])|(20[0-9][0-9])))?| ((((19[7-9][0-9])|(20[0-9][0-9]))(-((19[7-9][0-9])|(20[0-9][0-9])))?,)*((19[7-9][0-9])|(20[0-9][0-9]))(-((19[7-9][0-9])|(20[0-9][0-9])))?)?)" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="non_empty_string">
+        <xs:annotation>
+            <xs:documentation>
+                A type to represent non empty strings.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>
