@@ -28,6 +28,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 
+import com.google.common.collect.Sets;
+
 public class MetastoreUtil {
   private MetastoreUtil() {
 
@@ -394,11 +396,23 @@ public class MetastoreUtil {
 
   private static final int MAX_PARAM_LENGTH = 3999;
 
+  public static Set<Named> getNamedSetFromStringSet(Set<String> strings) {
+    Set<Named> nameds = Sets.newHashSet();
+    for(final String s: strings) {
+      nameds.add(new Named() {
+        @Override
+        public String getName() {
+          return s;
+        }
+      });
+    }
+    return nameds;
+  }
   public static <E extends Named> void addNameStrings(Map<String, String> props, String key, Collection<E> set) {
     addNameStrings(props, key, set, MAX_PARAM_LENGTH);
   }
 
-  static <E extends Named> void addNameStrings(Map<String, String> props, String key,
+  public static <E extends Named> void addNameStrings(Map<String, String> props, String key,
     Collection<E> set, int maxLength) {
     List<String> namedStrings = getNamedStrs(set, maxLength);
     props.put(key + ".size", String.valueOf(namedStrings.size()));
