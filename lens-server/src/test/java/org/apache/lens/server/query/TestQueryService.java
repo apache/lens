@@ -1472,6 +1472,26 @@ public class TestQueryService extends LensJerseyTest {
     getLensQueryResult(target(), lensSessionId, ctx1.getQueryHandle());
   }
 
+  /**
+   * Test session close when a query is active on the session
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testSessionClose() throws Exception {
+    // Query with group by, will run long enough to close the session before finish
+    String query = "select ID, IDSTR, count(*) from " + TEST_TABLE + " group by ID, IDSTR";
+    SessionService sessionService = LensServices.get().getService(HiveSessionService.NAME);
+    Map<String, String> sessionconf = new HashMap<String, String>();
+    LensSessionHandle sessionHandle = sessionService.openSession("foo", "bar", "default", sessionconf);
+    LensConf conf = getLensConf(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    QueryHandle qHandle =
+      executeAndGetHandle(target(), Optional.of(sessionHandle), Optional.of(query), Optional.of(conf));
+    sessionService.closeSession(sessionHandle);
+    sessionHandle = sessionService.openSession("foo", "bar", "default", sessionconf);
+    waitForQueryToFinish(target(), sessionHandle, qHandle, Status.SUCCESSFUL);
+  }
+
   @AfterMethod
   private void waitForPurge() throws InterruptedException {
     waitForPurge(0, queryService.finishedQueries);

@@ -274,9 +274,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     // Write driver to stream
     ByteArrayOutputStream driverBytes = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(driverBytes);
     try {
-      oldDriver.writeExternal(new ObjectOutputStream(driverBytes));
+      oldDriver.writeExternal(out);
     } finally {
+      out.close();
       driverBytes.close();
     }
 
