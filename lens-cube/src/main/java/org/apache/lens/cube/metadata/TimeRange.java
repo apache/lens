@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.metadata;
 
-import static org.apache.lens.cube.parse.DateUtil.ABSDATE_PARSER;
+import static org.apache.lens.cube.metadata.DateUtil.ABSDATE_PARSER;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TreeSet;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
-import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;

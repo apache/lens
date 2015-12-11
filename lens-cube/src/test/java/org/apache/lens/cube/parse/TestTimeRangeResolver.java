@@ -19,9 +19,9 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE;
-import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;

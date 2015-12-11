@@ -21,7 +21,6 @@ package org.apache.lens.cube.metadata;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.UpdatePeriod.UpdatePeriodComparator;
-import org.apache.lens.cube.parse.DateUtil;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;

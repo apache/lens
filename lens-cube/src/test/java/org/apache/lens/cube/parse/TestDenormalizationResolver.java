@@ -19,6 +19,7 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import java.util.*;
@@ -55,18 +56,16 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
   @Test
   public void testDenormsAsDirectFields() throws ParseException, LensException, HiveException {
     // denorm fields directly available
-    String twoDaysITRange =
-      "time_range_in(it, '" + CubeTestSetup.getDateUptoHours(TWODAYS_BACK) + "','"
-        + CubeTestSetup.getDateUptoHours(NOW) + "')";
-    String hqlQuery = rewrite("select dim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
+    String hqlQuery = rewrite("select dim2big1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE_IT,
+      conf);
     String expecteddim2big1 =
       getExpectedQuery(cubeName, "select testcube.dim2big1," + " max(testcube.msr3), sum(testcube.msr2) FROM ", null,
         " group by testcube.dim2big1", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
         null);
     TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big1);
     // with another table
-    hqlQuery = rewrite("select dim2big1, citydim.name, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange,
-      conf);
+    hqlQuery = rewrite("select dim2big1, citydim.name, max(msr3)," + " msr2 from testCube" + " where "
+      + TWO_DAYS_RANGE_IT, conf);
     String expecteddim2big1WithAnotherTable = getExpectedQuery(cubeName,
       "select testcube.dim2big1, citydim.name, max(testcube.msr3), sum(testcube.msr2) FROM ", " JOIN "
         + getDbName() + "c1_citytable citydim " + "on testcube.cityid = citydim.id and citydim.dt = 'latest' ", null,
@@ -75,7 +74,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       null);
     TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big1WithAnotherTable);
 
-    hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
+    hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE_IT, conf);
     String expecteddim2big2 =
       getExpectedQuery(cubeName, "select testcube.dim2big2, max(testcube.msr3), sum(testcube.msr2) FROM ", null,
         " group by testcube.dim2big2", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
@@ -84,8 +83,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
 
     Configuration conf2 = new Configuration(conf);
     conf2.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
-    hqlQuery =
-      rewrite("select testdim3.name, dim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf2);
+    hqlQuery = rewrite("select testdim3.name, dim2big1, max(msr3)," + " msr2 from testCube" + " where "
+      + TWO_DAYS_RANGE_IT, conf2);
     String expected =
       getExpectedQuery(cubeName,
         "select testdim3.name, testcube.dim2big1, max(testcube.msr3), sum(testcube.msr2) FROM ", " JOIN "
@@ -96,9 +95,9 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         null);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
-    hqlQuery = rewrite("select dim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf2);
+    hqlQuery = rewrite("select dim2big1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE_IT, conf2);
     TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big1);
-    hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf2);
+    hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE_IT, conf2);
     TestCubeRewriter.compareQueries(hqlQuery, expecteddim2big2);
   }
 
@@ -190,11 +189,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
 
   @Test
   public void testCubeQueryWithExpressionHavingDenormColumnComingAsDirectColumn() throws Exception {
-    String twoDaysITRange =
-      "time_range_in(it, '" + CubeTestSetup.getDateUptoHours(TWODAYS_BACK) + "','"
-        + CubeTestSetup.getDateUptoHours(NOW) + "')";
-    String hqlQuery = rewrite("select substrdim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange,
-      conf);
+    String hqlQuery = rewrite("select substrdim2big1, max(msr3)," + " msr2 from testCube" + " where "
+      + TWO_DAYS_RANGE_IT, conf);
     String expecteddim2big1 =
       getExpectedQuery(cubeName, "select substr(testcube.dim2big1, 5), max(testcube.msr3), sum(testcube.msr2) FROM ",
         null, " group by substr(testcube.dim2big1, 5)",

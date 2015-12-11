@@ -18,7 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.CubeTestSetup.*;
+import static org.apache.lens.cube.metadata.DateFactory.*;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
@@ -301,8 +301,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
     Configuration queryConf = new Configuration(conf);
     queryConf.setBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, true);
 
-    testFieldsCannotBeQueriedTogetherError("select msr4 from basecube where " + "time_range_in(d_time, '"
-        + getDateUptoHours(TWODAYS_BACK) + "','" + getDateUptoHours(CubeTestSetup.NOW) + "')",
+    testFieldsCannotBeQueriedTogetherError("select msr4 from basecube where " + TWO_DAYS_RANGE,
         Arrays.asList("d_time", "msr4"), queryConf);
   }
 
@@ -321,8 +320,7 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
     Configuration queryConf = new Configuration(conf);
     queryConf.setBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, false);
 
-    testFieldsCannotBeQueriedTogetherError("select msr4 from basecube where " + "time_range_in(d_time, '"
-        + getDateUptoHours(TWODAYS_BACK) + "','" + getDateUptoHours(CubeTestSetup.NOW) + "')",
+    testFieldsCannotBeQueriedTogetherError("select msr4 from basecube where " + TWO_DAYS_RANGE,
         Arrays.asList("d_time", "msr4"), queryConf);
   }
 

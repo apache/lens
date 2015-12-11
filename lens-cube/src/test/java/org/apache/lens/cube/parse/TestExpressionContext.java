@@ -19,10 +19,10 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.apache.lens.cube.parse.CubeTestSetup.TWO_DAYS_RANGE;
 
 import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 

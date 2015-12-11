@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.metadata;
 
 import static java.util.Calendar.DAY_OF_MONTH;
 import static java.util.Calendar.MONTH;
 
+import static org.apache.lens.cube.metadata.DateUtil.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
-import static org.apache.lens.cube.parse.DateUtil.*;
 
 import static org.apache.commons.lang.time.DateUtils.addMilliseconds;
 
@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
-import org.apache.lens.cube.parse.DateUtil.*;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.time.DateUtils;
@@ -44,7 +43,6 @@ import org.testng.annotations.Test;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**

@@ -19,9 +19,10 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
+import static org.apache.lens.cube.metadata.DateUtil.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.MISSING_PARTITIONS;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
-import static org.apache.lens.cube.parse.DateUtil.*;
 import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.KW_AND;
@@ -33,6 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
@@ -47,7 +49,6 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Splitter;
-
 import lombok.Getter;
 
 public class TestBaseCubeQueries extends TestQueryRewrite {

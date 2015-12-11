@@ -22,10 +22,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
 
-import org.apache.lens.cube.metadata.AbstractCubeTable;
-import org.apache.lens.cube.metadata.CubeFactTable;
-import org.apache.lens.cube.metadata.CubeInterface;
-import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 import org.apache.lens.server.api.error.LensException;

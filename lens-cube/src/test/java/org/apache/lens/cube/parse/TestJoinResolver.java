@@ -19,6 +19,7 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import static org.testng.Assert.*;

@@ -19,12 +19,15 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import java.util.List;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
+import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
@@ -39,14 +42,10 @@ import org.testng.annotations.Test;
 
 public class TestTimeRangeExtractor extends TestQueryRewrite {
   private CubeQueryRewriter driver;
-  private String dateNow;
-  private String dateTwoDaysBack;
 
   @BeforeTest
   public void setupInstance() throws Exception {
     driver = new CubeQueryRewriter(new Configuration(), new HiveConf());
-    dateTwoDaysBack = getDateUptoHours(TWODAYS_BACK);
-    dateNow = getDateUptoHours(NOW);
   }
 
   @AfterTest
@@ -61,7 +60,8 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
 
   @Test
   public void testTimeRangeValidation() throws Exception {
-    String timeRange2 = " time_range_in(d_time, '" + dateNow + "','" + dateTwoDaysBack + "')";
+    // reverse range
+    String timeRange2 = getTimeRangeString(UpdatePeriod.DAILY, 0, -2, UpdatePeriod.HOURLY);
     try {
       // this should throw exception because from date is after to date
       driver.rewrite("SELECT cityid, testCube.msr2 from" + " testCube where " + timeRange2);
@@ -74,7 +74,8 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
 
   @Test
   public void testEqualTimeRangeValidation() throws Exception {
-    String equalTimeRange = " time_range_in(d_time, '" + dateNow + "','" + dateNow + "')";
+    // zero range
+    String equalTimeRange = getTimeRangeString(UpdatePeriod.HOURLY, 0, 0);
     try {
       // this should throw exception because from date and to date are same
       driver.rewrite("SELECT cityid, testCube.msr2 from" + " testCube where " + equalTimeRange);
@@ -87,18 +88,16 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
 
   @Test
   public void testNoNPE() throws Exception {
-    String timeRange = " time_range_in(d_time, '" + dateTwoDaysBack + "','" + dateNow + "')";
-    String q1 = "SELECT cityid, testCube.msr2 from testCube where " + timeRange + " AND cityid IS NULL";
+    String q1 = "SELECT cityid, testCube.msr2 from testCube where " + TWO_DAYS_RANGE + " AND cityid IS NULL";
     rewrite(driver, q1);
-    q1 = "SELECT cityid, testCube.msr2 from testCube where cityid IS NULL AND " + timeRange;
+    q1 = "SELECT cityid, testCube.msr2 from testCube where cityid IS NULL AND " + TWO_DAYS_RANGE;
     rewrite(driver, q1);
   }
 
   @Test
   public void testTimeRangeASTPosition() throws Exception {
     // check that time range can be any child of AND
-    String timeRange = " time_range_in(d_time, '" + dateTwoDaysBack + "','" + dateNow + "')";
-    String q1 = "SELECT cityid, testCube.msr2 from testCube where " + timeRange + " AND cityid=1";
+    String q1 = "SELECT cityid, testCube.msr2 from testCube where " + TWO_DAYS_RANGE + " AND cityid=1";
     CubeQueryContext cubeql = driver.rewrite(q1);
     String hql = cubeql.toHQL();
   }
@@ -106,10 +105,9 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
   @Test
   public void testPartitionColNameExtract() throws Exception {
     String q2 =
-      "SELECT cityid, testCube.msr3 from testCube where cityid=1 AND " + " time_range_in(d_time, '" + dateTwoDaysBack
-        + "','" + dateNow + "')";
+      "SELECT cityid, testCube.msr3 from testCube where cityid=1 AND " + TWO_DAYS_RANGE;
     CubeQueryContext cubeql = driver.rewrite(q2);
-    String hql = cubeql.toHQL();
+    cubeql.toHQL();
     // Check that column name in time range is extracted properly
     TimeRange range = cubeql.getTimeRanges().get(0);
     Assert.assertNotNull(range);
@@ -124,12 +122,11 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
     String dateNow = getDateUptoHours(NOW);
     // time range within time range
     String q3 =
-      "SELECT cityid, testCube.msr3 FROM testCube where cityid=1 AND" + "  (time_range_in(d_time, '" + dateTwoDaysBack
-        + "','" + dateNow + "')  "
+      "SELECT cityid, testCube.msr3 FROM testCube where cityid=1 AND (" + TWO_DAYS_RANGE
         // Time range as sibling of the first time range
-        + " OR " + " time_range_in(d_time, '" + dateTwoDaysBack + "', '" + dateNow + "'))";
+        + " OR " + TWO_DAYS_RANGE + ")";
     CubeQueryContext cubeql = driver.rewrite(q3);
-    String hql = cubeql.toHQL();
+    cubeql.toHQL();
 
     List<TimeRange> ranges = cubeql.getTimeRanges();
     Assert.assertEquals(2, ranges.size());

@@ -21,7 +21,7 @@ package org.apache.lens.cube.parse;
 import java.util.Map;
 
 import org.apache.lens.cube.metadata.Dimension;
-
+import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;

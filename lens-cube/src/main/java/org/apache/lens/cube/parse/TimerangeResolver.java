@@ -27,10 +27,7 @@ import java.util.*;
 import org.apache.lens.cube.error.ColUnAvailableInTimeRange;
 import org.apache.lens.cube.error.ColUnAvailableInTimeRangeException;
 import org.apache.lens.cube.error.LensCubeErrorCode;
-import org.apache.lens.cube.metadata.AbstractCubeTable;
-import org.apache.lens.cube.metadata.CubeColumn;
-import org.apache.lens.cube.metadata.Dimension;
-import org.apache.lens.cube.metadata.SchemaGraph;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.DenormalizationResolver.ReferencedQueriedColumn;
 import org.apache.lens.server.api.error.LensException;
 

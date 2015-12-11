@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.metadata;
 
-import static java.util.Calendar.*;
+import static java.util.Calendar.MONTH;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -26,16 +26,19 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
-import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +48,7 @@ public final class DateUtil {
   private DateUtil() {
 
   }
+
   /*
    * NOW -> new java.util.Date() NOW-7DAY -> a date one week earlier NOW (+-)
    * <NUM>UNIT or Hardcoded dates in DD-MM-YYYY hh:mm:ss,sss
@@ -145,10 +149,18 @@ public final class DateUtil {
     }
   }
 
-  public static Date resolveAbsoluteDate(String str) throws LensException {
+  static Cache<String, Date> stringToDateCache = CacheBuilder.newBuilder()
+    .expireAfterWrite(2, TimeUnit.HOURS).maximumSize(100).build();
+
+  public static Date resolveAbsoluteDate(final String str) throws LensException {
     try {
-      return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
-    } catch (ParseException e) {
+      return stringToDateCache.get(str, new Callable<Date>() {
+        @Override
+        public Date call() throws ParseException {
+          return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
+        }
+      });
+    } catch (Exception e) {
       log.error("Invalid date format. expected only {} date provided:{}", ABSDATE_FMT, str, e);
       throw new LensException(LensCubeErrorCode.WRONG_TIME_RANGE_FORMAT.getLensErrorInfo(), ABSDATE_FMT, str);
     }
@@ -182,84 +194,12 @@ public final class DateUtil {
     return diff.offsetFrom(calendar.getTime());
   }
 
-  public static Date getCeilDate(Date fromDate, UpdatePeriod interval) {
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(fromDate);
-    boolean hasFraction = false;
-    switch (interval) {
-    case YEARLY:
-      if (cal.get(MONTH) != 0) {
-        hasFraction = true;
-        break;
-      }
-    case MONTHLY:
-      if (cal.get(DAY_OF_MONTH) != 1) {
-        hasFraction = true;
-        break;
-      }
-    case DAILY:
-      if (cal.get(Calendar.HOUR_OF_DAY) != 0) {
-        hasFraction = true;
-        break;
-      }
-    case HOURLY:
-      if (cal.get(Calendar.MINUTE) != 0) {
-        hasFraction = true;
-        break;
-      }
-    case MINUTELY:
-      if (cal.get(Calendar.SECOND) != 0) {
-        hasFraction = true;
-        break;
-      }
-    case SECONDLY:
-    case CONTINUOUS:
-      if (cal.get(Calendar.MILLISECOND) != 0) {
-        hasFraction = true;
-      }
-      break;
-    case WEEKLY:
-      if (cal.get(Calendar.DAY_OF_WEEK) != 1) {
-        hasFraction = true;
-        break;
-      }
-    }
-
-    if (hasFraction) {
-      cal.add(interval.calendarField(), 1);
-      return getFloorDate(cal.getTime(), interval);
-    } else {
-      return fromDate;
-    }
+  public static Date getCeilDate(Date date, UpdatePeriod interval) {
+    return interval.getCeilDate(date);
   }
 
-  public static Date getFloorDate(Date toDate, UpdatePeriod interval) {
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(toDate);
-    switch (interval) {
-    case YEARLY:
-      cal.set(MONTH, 0);
-    case MONTHLY:
-      cal.set(DAY_OF_MONTH, 1);
-    case DAILY:
-      cal.set(Calendar.HOUR_OF_DAY, 0);
-    case HOURLY:
-      cal.set(Calendar.MINUTE, 0);
-    case MINUTELY:
-      cal.set(Calendar.SECOND, 0);
-    case SECONDLY:
-    case CONTINUOUS:
-      cal.set(Calendar.MILLISECOND, 0);
-      break;
-    case WEEKLY:
-      cal.set(Calendar.DAY_OF_WEEK, 1);
-      cal.set(Calendar.HOUR_OF_DAY, 0);
-      cal.set(Calendar.MINUTE, 0);
-      cal.set(Calendar.SECOND, 0);
-      cal.set(Calendar.MILLISECOND, 0);
-      break;
-    }
-    return cal.getTime();
+  public static Date getFloorDate(Date date, UpdatePeriod interval) {
+    return interval.getFloorDate(date);
   }
 
   public static CoveringInfo getMonthlyCoveringInfo(Date from, Date to) {

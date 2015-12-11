@@ -28,7 +28,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.lens.cube.parse.DateUtil;
+import org.apache.lens.cube.metadata.DateUtil;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.MetricsService;

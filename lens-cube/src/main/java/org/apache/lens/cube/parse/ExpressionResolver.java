@@ -19,18 +19,11 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.DOT;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
 
-import org.apache.lens.cube.metadata.AbstractBaseTable;
-import org.apache.lens.cube.metadata.AbstractCubeTable;
-import org.apache.lens.cube.metadata.CubeColumn;
-import org.apache.lens.cube.metadata.CubeInterface;
-import org.apache.lens.cube.metadata.Dimension;
-import org.apache.lens.cube.metadata.ExprColumn;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;

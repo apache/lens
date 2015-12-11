@@ -278,7 +278,7 @@ public enum UpdatePeriod implements Named {
       return cal.getTime();
     case QUARTERLY:
       Date dt = DateUtils.truncate(date, this.calendarField());
-      dt.setMonth(dt.getMonth() - dt.getMonth() % 3);
+      dt.setMonth(dt.getMonth() - (dt.getMonth() % 3));
       return dt;
     default:
       return DateUtils.truncate(date, this.calendarField());
@@ -299,6 +299,86 @@ public enum UpdatePeriod implements Named {
     calendar.add(calendarField(), increment);
   }
 
+  public Date getCeilDate(Date date) {
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(date);
+    boolean hasFraction = false;
+    switch (this) {
+    case YEARLY:
+      if (cal.get(MONTH) != 0) {
+        hasFraction = true;
+        break;
+      }
+    case MONTHLY:
+      if (cal.get(DAY_OF_MONTH) != 1) {
+        hasFraction = true;
+        break;
+      }
+    case DAILY:
+      if (cal.get(Calendar.HOUR_OF_DAY) != 0) {
+        hasFraction = true;
+        break;
+      }
+    case HOURLY:
+      if (cal.get(Calendar.MINUTE) != 0) {
+        hasFraction = true;
+        break;
+      }
+    case MINUTELY:
+      if (cal.get(Calendar.SECOND) != 0) {
+        hasFraction = true;
+        break;
+      }
+    case SECONDLY:
+    case CONTINUOUS:
+      if (cal.get(Calendar.MILLISECOND) != 0) {
+        hasFraction = true;
+      }
+      break;
+    case WEEKLY:
+      if (cal.get(Calendar.DAY_OF_WEEK) != 1) {
+        hasFraction = true;
+        break;
+      }
+    }
+
+    if (hasFraction) {
+      cal.add(this.calendarField(), 1);
+      return getFloorDate(cal.getTime());
+    } else {
+      return date;
+    }
+  }
+
+  public Date getFloorDate(Date date) {
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(date);
+    switch(this) {
+    case WEEKLY:
+      cal.set(Calendar.DAY_OF_WEEK, 1);
+      break;
+    }
+    switch (this) {
+    case YEARLY:
+      cal.set(MONTH, 0);
+    case MONTHLY:
+      cal.set(DAY_OF_MONTH, 1);
+    case WEEKLY:
+      // Already covered, only here for fall through cases
+    case DAILY:
+      cal.set(Calendar.HOUR_OF_DAY, 0);
+    case HOURLY:
+      cal.set(Calendar.MINUTE, 0);
+    case MINUTELY:
+      cal.set(Calendar.SECOND, 0);
+    case SECONDLY:
+    case CONTINUOUS:
+      cal.set(Calendar.MILLISECOND, 0);
+      break;
+    }
+    return cal.getTime();
+  }
+
   public static class UpdatePeriodComparator implements Comparator<UpdatePeriod> {
     @Override
     public int compare(UpdatePeriod o1, UpdatePeriod o2) {
@@ -306,7 +386,7 @@ public enum UpdatePeriod implements Named {
         return -1;
       } else if (o1 != null && o2 == null) {
         return 1;
-      } else if (o1 == null && o2 == null) {
+      } else if (o1 == null) {
         return 0;
       } else {
         if (o1.weight > o2.weight) {

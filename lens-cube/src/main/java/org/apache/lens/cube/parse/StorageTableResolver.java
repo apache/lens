@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateUtil.WSPACE;
 import static org.apache.lens.cube.metadata.MetastoreUtil.getFactOrDimtableStorageTableName;
 import static org.apache.lens.cube.metadata.MetastoreUtil.getStoragetableEndTimesKey;
 import static org.apache.lens.cube.metadata.MetastoreUtil.getStoragetableStartTimesKey;
@@ -25,7 +26,6 @@ import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.PART_COL_DOES_NOT_EXIST;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.RANGE_NOT_ANSWERABLE;
-import static org.apache.lens.cube.parse.DateUtil.WSPACE;
 import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
 
 import java.text.DateFormat;

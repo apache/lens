@@ -19,7 +19,7 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.CubeTestSetup.TWO_DAYS_RANGE;
+import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE;
 
 import java.util.Arrays;
 import java.util.Collections;

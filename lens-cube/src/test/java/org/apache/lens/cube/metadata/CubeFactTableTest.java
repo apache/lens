@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.lens.cube.parse.DateUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.testng.annotations.DataProvider;

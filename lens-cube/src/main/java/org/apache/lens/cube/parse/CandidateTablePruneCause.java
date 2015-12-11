@@ -22,6 +22,8 @@ import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTable
 
 import java.util.*;
 
+import org.apache.lens.cube.metadata.TimeRange;
+
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
 import com.google.common.collect.Lists;
