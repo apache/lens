@@ -19,14 +19,20 @@
 
 package org.apache.lens.cube.metadata;
 
+import static org.apache.lens.cube.error.LensCubeErrorCode.EXPRESSION_NOT_PARSABLE;
 import static org.apache.lens.cube.metadata.MetastoreConstants.*;
 
 import java.text.ParseException;
 import java.util.*;
 
+import org.apache.lens.server.api.error.LensException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.ParseDriver;
+import org.apache.hadoop.hive.ql.parse.ParseUtils;
 
 import com.google.common.collect.Sets;
 
@@ -535,5 +541,15 @@ public class MetastoreUtil {
       }
     }
     return null;
+  }
+  public static ASTNode parseExpr(String expr) throws LensException {
+    ParseDriver driver = new ParseDriver();
+    ASTNode tree;
+    try {
+      tree = driver.parseExpression(expr);
+    } catch (org.apache.hadoop.hive.ql.parse.ParseException e) {
+      throw new LensException(EXPRESSION_NOT_PARSABLE.getLensErrorInfo(), e, e.getMessage(), expr);
+    }
+    return ParseUtils.findRootNonNullToken(tree);
   }
 }

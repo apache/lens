@@ -1561,7 +1561,7 @@ public class CubeTestSetup {
   }
 
   // DimWithTwoStorages
-  private void createCityTable(CubeMetastoreClient client) throws HiveException, ParseException {
+  private void createCityTable(CubeMetastoreClient client) throws HiveException, ParseException, LensException {
     Set<CubeDimAttribute> cityAttrs = new HashSet<CubeDimAttribute>();
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "city name")));

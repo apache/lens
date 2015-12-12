@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public abstract class UnionHQLContext extends SimpleHQLContext {
   protected final CubeQueryContext query;
-  private final CandidateFact fact;
+  protected final CandidateFact fact;
 
   List<HQLContextInterface> hqlContexts = new ArrayList<>();
 

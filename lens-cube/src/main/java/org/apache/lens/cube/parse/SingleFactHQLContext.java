@@ -26,7 +26,6 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 
 /**
  * HQL context class which passes down all query strings to come from DimOnlyHQLContext and works with fact being
@@ -67,12 +66,7 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
           String rangeWhere = entry.getKey();
 
           if (!StringUtils.isBlank(rangeWhere)) {
-            ASTNode rangeAST;
-            try {
-              rangeAST = HQLParser.parseExpr(rangeWhere);
-            } catch (ParseException e) {
-              throw new LensException(e);
-            }
+            ASTNode rangeAST = HQLParser.parseExpr(rangeWhere);
             rangeAST.setParent(range.getParent());
             range.getParent().setChild(range.getChildIndex(), rangeAST);
           }

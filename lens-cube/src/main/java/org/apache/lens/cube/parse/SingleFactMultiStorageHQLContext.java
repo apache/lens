@@ -19,7 +19,7 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.HQLParser.getString;
+import static org.apache.lens.cube.parse.HQLParser.*;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
@@ -66,7 +66,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     @Override
     public int hashCode() {
       if (!hashCodeComputed) {
-        hashCode = HQLParser.getString(ast).hashCode();
+        hashCode = getString(ast).hashCode();
         hashCodeComputed = true;
       }
       return hashCode;
@@ -74,8 +74,8 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
 
     @Override
     public boolean equals(Object o) {
-      return o instanceof HashableASTNode && this.hashCode() == o.hashCode() && HQLParser.getString(this.getAST())
-        .trim().equalsIgnoreCase(HQLParser.getString(((HashableASTNode) o).getAST()).trim());
+      return o instanceof HashableASTNode && this.hashCode() == o.hashCode() && getString(this.getAST())
+        .trim().equalsIgnoreCase(getString(((HashableASTNode) o).getAST()).trim());
     }
   }
 
@@ -86,6 +86,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     super(query, fact);
     processSelectAST();
     processGroupByAST();
+    processWhereAST();
     processHavingAST();
     processOrderByAST();
     processLimit();
@@ -94,10 +95,10 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
 
   private void processSelectAST() {
     query.getSelectFinalAliases().clear();
-    ASTNode originalSelectAST = HQLParser.copyAST(query.getSelectAST());
+    ASTNode originalSelectAST = copyAST(query.getSelectAST());
     query.setSelectAST(new ASTNode(originalSelectAST.getToken()));
     ASTNode outerSelectAST = processExpression(originalSelectAST);
-    setSelect(HQLParser.getString(outerSelectAST));
+    setSelect(getString(outerSelectAST));
   }
 
   private void processGroupByAST() {
@@ -106,16 +107,25 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     }
   }
 
+  private void processWhereAST() throws LensException {
+    for (String storageTable : fact.getStorgeWhereClauseMap().keySet()) {
+      ASTNode tree = parseExpr(fact.getStorgeWhereClauseMap().get(storageTable));
+      ASTNode replaced = replaceAST(tree);
+      fact.getStorgeWhereClauseMap().put(storageTable, getString(replaced));
+    }
+  }
+
   private void processHavingAST() throws LensException {
     if (query.getHavingAST() != null) {
-      setHaving(HQLParser.getString(processExpression(query.getHavingAST())));
+      setHaving(getString(processExpression(query.getHavingAST())));
       query.setHavingAST(null);
     }
   }
 
+
   private void processOrderByAST() {
     if (query.getOrderByAST() != null) {
-      setOrderby(HQLParser.getString(processExpression(query.getOrderByAST())));
+      setOrderby(getString(processExpression(query.getOrderByAST())));
       query.setOrderByAST(null);
     }
   }
@@ -124,6 +134,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     setLimit(query.getLimitValue());
     query.setLimitValue(null);
   }
+
   /*
   Perform a DFS on the provided AST, and Create an AST of similar structure with changes specific to the
   inner query - outer query dynamics. The resultant AST is supposed to be used in outer query.
@@ -147,11 +158,11 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     if (astNode == null) {
       return null;
     }
-    if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
-      return innerToOuterASTs.get(new HashableASTNode(astNode));
-    }
-    if (HQLParser.isAggregateAST(astNode)) {
-      ASTNode innerSelectASTWithoutAlias = HQLParser.copyAST(astNode);
+    if (isAggregateAST(astNode)) {
+      if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
+        return innerToOuterASTs.get(new HashableASTNode(astNode));
+      }
+      ASTNode innerSelectASTWithoutAlias = copyAST(astNode);
       ASTNode innerSelectExprAST = new ASTNode(new CommonToken(HiveParser.TOK_SELEXPR));
       innerSelectExprAST.addChild(innerSelectASTWithoutAlias);
       String alias = decideAlias(astNode);
@@ -164,8 +175,11 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       outerAST.addChild(dotAST);
       innerToOuterASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
       return outerAST;
-    } else if (HQLParser.isTableColumnAST(astNode)) {
-      ASTNode innerSelectASTWithoutAlias = HQLParser.copyAST(astNode);
+    } else if (isTableColumnAST(astNode)) {
+      if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
+        return innerToOuterASTs.get(new HashableASTNode(astNode));
+      }
+      ASTNode innerSelectASTWithoutAlias = copyAST(astNode);
       ASTNode innerSelectExprAST = new ASTNode(new CommonToken(HiveParser.TOK_SELEXPR));
       innerSelectExprAST.addChild(innerSelectASTWithoutAlias);
       String alias = decideAlias(astNode);
@@ -184,6 +198,30 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       }
       return outerHavingExpression;
     }
+  }
+
+  /**
+   * Transforms the inner query's AST so that aliases are used now instead of column names.
+   * Does so in-place, without creating new ASTNode instances.
+   * @param astNode inner query's AST Node to transform
+   * @return Transformed AST Node.
+   */
+  private ASTNode replaceAST(ASTNode astNode) {
+    if (astNode == null) {
+      return null;
+    }
+    if (isAggregateAST(astNode) || isTableColumnAST(astNode)) {
+      if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
+        ASTNode ret = innerToOuterASTs.get(new HashableASTNode(astNode));
+        // Set parent null for quicker GC
+        astNode.setParent(null);
+        return ret;
+      }
+    }
+    for (int i = 0; i < astNode.getChildCount(); i++) {
+      astNode.setChild(i, replaceAST((ASTNode) astNode.getChild(i)));
+    }
+    return astNode;
   }
 
   private void addToInnerSelectAST(ASTNode selectExprAST) {

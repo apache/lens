@@ -316,7 +316,7 @@ public final class JAXBUtils {
     return xes;
   }
 
-  private static ExprSpec[] exprSpecFromXExprColumn(Collection<XExprSpec> xesList) {
+  private static ExprSpec[] exprSpecFromXExprColumn(Collection<XExprSpec> xesList) throws LensException {
     List<ExprSpec> esArray = new ArrayList<ExprSpec>(xesList.size());
     for (XExprSpec xes : xesList) {
       esArray.add(new ExprSpec(xes.getExpr(), getDateFromXML(xes.getStartTime()), getDateFromXML(xes.getEndTime())));
@@ -478,7 +478,7 @@ public final class JAXBUtils {
     return jc;
   }
 
-  public static ExprColumn hiveExprColumnFromXExprColumn(XExprColumn xe) {
+  public static ExprColumn hiveExprColumnFromXExprColumn(XExprColumn xe) throws LensException {
     ExprColumn ec = new ExprColumn(new FieldSchema(xe.getName(), xe.getType().toLowerCase(),
       xe.getDescription()),
       xe.getDisplayString(),
@@ -598,7 +598,7 @@ public final class JAXBUtils {
       return null;
     }
 
-    Storage storage = null;
+    Storage storage;
     try {
       Class<?> clazz = Class.forName(xs.getClassname());
       Constructor<?> constructor = clazz.getConstructor(String.class);
@@ -924,7 +924,7 @@ public final class JAXBUtils {
     return ret;
   }
 
-  public static Dimension dimensionFromXDimension(XDimension dimension) {
+  public static Dimension dimensionFromXDimension(XDimension dimension) throws LensException {
     Set<CubeDimAttribute> dims = new LinkedHashSet<CubeDimAttribute>();
     for (XDimAttribute xd : dimension.getAttributes().getDimAttribute()) {
       dims.add(hiveDimAttrFromXDimAttr(xd));

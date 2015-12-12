@@ -43,11 +43,7 @@ import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.Partition;
-import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.metadata.*;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
@@ -305,7 +301,7 @@ public class TestCubeMetastoreClient {
       new DerivedCube(derivedCubeNameWithProps, measures, dimensions, CUBE_PROPERTIES, 0L, cubeWithProps);
   }
 
-  private static void defineUberDims() {
+  private static void defineUberDims() throws LensException {
     // Define zip dimension
     zipAttrs.add(new BaseDimAttribute(new FieldSchema("zipcode", "int", "code")));
     zipAttrs.add(new BaseDimAttribute(new FieldSchema("f1", "string", "field1")));
@@ -411,7 +407,7 @@ public class TestCubeMetastoreClient {
       expr1.setExpr("contact(countrydim.name");
       stateCountryExpr.addExpression(expr1);
       fail("Expected add expression to fail because of syntax error");
-    } catch (ParseException exc) {
+    } catch (LensException exc) {
       // Pass
     }
     city.alterExpression(stateCountryExpr);

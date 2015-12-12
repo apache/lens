@@ -31,7 +31,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.Tree;
@@ -73,12 +72,7 @@ class GroupbyResolver implements ContextRewriter {
 
         if (!groupByExprs.contains(expr)) {
           if (!cubeql.isAggregateExpr(expr)) {
-            ASTNode exprAST;
-            try {
-              exprAST = HQLParser.parseExpr(expr);
-            } catch (ParseException e) {
-              throw new LensException(e);
-            }
+            ASTNode exprAST = HQLParser.parseExpr(expr);
             ASTNode groupbyAST = cubeql.getGroupByAST();
             if (!isConstantsUsed(exprAST)) {
               if (groupbyAST != null) {
@@ -140,12 +134,7 @@ class GroupbyResolver implements ContextRewriter {
     int index = 0;
     for (String expr : groupByExprs) {
       if (!contains(cubeql, selectExprs, expr)) {
-        ASTNode exprAST;
-        try {
-          exprAST = HQLParser.parseExpr(expr);
-        } catch (ParseException e) {
-          throw new LensException(e);
-        }
+        ASTNode exprAST = HQLParser.parseExpr(expr);
         addChildAtIndex(index, cubeql.getSelectAST(), exprAST);
         index++;
       }
