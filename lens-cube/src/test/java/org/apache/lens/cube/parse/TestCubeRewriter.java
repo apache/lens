@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCause;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode;
@@ -186,7 +187,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     LensException th = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
     assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
-    PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(th);
+    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) th;
+    PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
     int endIndex = MISSING_PARTITIONS.errorFormat.length() - 3;
     assertEquals(
       pruneCauses.getBrief().substring(0, endIndex),
@@ -1031,7 +1033,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     LensException e = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
     assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
-    PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
+    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
+    PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
 
     assertEquals(
       pruneCauses.getBrief().substring(0, MISSING_PARTITIONS.errorFormat.length() - 3),

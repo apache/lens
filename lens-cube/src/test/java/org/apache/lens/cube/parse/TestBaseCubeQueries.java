@@ -34,6 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
@@ -67,6 +68,18 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   }
 
   @Test
+  public void testNoCandidateFactAvailableExceptionCompareTo() throws Exception {
+    //maxCause : COLUMN_NOT_FOUND, Ordinal : 9
+    NoCandidateFactAvailableException ne1 =(NoCandidateFactAvailableException)
+            getLensExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
+            + TWO_DAYS_RANGE, conf);
+    //maxCause : FACT_NOT_AVAILABLE_IN_RANGE, Ordinal : 1
+    NoCandidateFactAvailableException ne2 = (NoCandidateFactAvailableException)
+            getLensExceptionInRewrite("cube select dim1 from " + cubeName + " where " + LAST_YEAR_RANGE, getConf());
+    assertEquals(ne1.compareTo(ne2), 8);
+  }
+
+  @Test
   public void testColumnErrors() throws Exception {
     LensException e;
 
@@ -78,7 +91,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       + TWO_DAYS_RANGE, conf);
     assertEquals(e.getErrorCode(),
         LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
-    PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
+    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
+    PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
     String regexp = String.format(CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND.errorFormat,
       "Column Sets: (.*?)", "queriable together");
     Matcher matcher = Pattern.compile(regexp).matcher(pruneCauses.getBrief());
@@ -494,7 +508,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
     LensException exc =
       getLensExceptionInRewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
-    PruneCauses.BriefAndDetailedError pruneCause = extractPruneCause(exc);
+    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) exc;
+    PruneCauses.BriefAndDetailedError pruneCause = ne.getJsonMessage();
     assertTrue(pruneCause.getBrief().contains("Missing partitions"));
     assertEquals(pruneCause.getDetails().get("testfact2_base").iterator().next().getCause(), MISSING_PARTITIONS);
     assertEquals(pruneCause.getDetails().get("testfact2_base").iterator().next().getMissingPartitions().size(), 1);

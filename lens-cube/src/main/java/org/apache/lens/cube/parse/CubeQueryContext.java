@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
@@ -845,7 +846,8 @@ public class CubeQueryContext implements TrackQueriedColumns {
             }
           }
         }
-        throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(), reason);
+        log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}", factPruningMsgs.toJsonObject());
+        throw new NoCandidateFactAvailableException(factPruningMsgs);
       }
     }
     return facts;

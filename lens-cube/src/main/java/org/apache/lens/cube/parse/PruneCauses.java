@@ -41,6 +41,8 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
   private final HashMap<CandidateTablePruneCause, List<T>> reversed = reverse();
   @Getter(lazy = true)
   private final HashMap<String, List<CandidateTablePruneCause>> compact = computeCompact();
+  @Getter(lazy = true)
+  private final CandidateTablePruneCode maxCause  = computeMaxCause();
 
   private HashMap<String, List<CandidateTablePruneCause>> computeCompact() {
     HashMap<String, List<CandidateTablePruneCause>> detailedMessage = Maps.newHashMap();
@@ -79,6 +81,16 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
 
   public BriefAndDetailedError toJsonObject() {
     return new BriefAndDetailedError(getBriefCause(), getCompact());
+  }
+
+  private CandidateTablePruneCode computeMaxCause() {
+    CandidateTablePruneCode maxCause = CandidateTablePruneCode.values()[0];
+    for (CandidateTablePruneCause cause : getReversed().keySet()) {
+      if (cause.getCause().compareTo(maxCause) > 0) {
+        maxCause = cause.getCause();
+      }
+    }
+    return maxCause;
   }
 
   public String getBriefCause() {

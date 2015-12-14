@@ -24,6 +24,7 @@ import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
 
@@ -149,7 +150,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     TestCubeRewriter.compareQueries(hqlQuery, expected);
     LensException e = getLensExceptionInRewrite(
       "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
-    PruneCauses.BriefAndDetailedError error = extractPruneCause(e);
+    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
+    PruneCauses.BriefAndDetailedError error = ne.getJsonMessage();
     Assert.assertEquals(error.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
 
     HashMap<String, List<CandidateTablePruneCause>> details = error.getDetails();
