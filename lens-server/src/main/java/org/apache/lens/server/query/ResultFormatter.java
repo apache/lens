@@ -46,6 +46,10 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
+  /** ResultFormatter core and max pool size */
+  private static final int CORE_POOL_SIZE = 5;
+  private static final int MAX_POOL_SIZE = 10;
+
   private final LogSegregationContext logSegregationContext;
 
   /**
@@ -54,6 +58,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
    * @param queryService the query service
    */
   public ResultFormatter(QueryExecutionServiceImpl queryService, @NonNull LogSegregationContext logSegregationContext) {
+    super(CORE_POOL_SIZE, MAX_POOL_SIZE);
     this.queryService = queryService;
     this.logSegregationContext = logSegregationContext;
   }
