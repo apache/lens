@@ -34,7 +34,6 @@ import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
-import org.apache.lens.server.api.query.cost.QueryCostCalculator;
 import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
 
 import org.apache.hadoop.conf.Configuration;
@@ -226,7 +225,6 @@ public class QueryContext extends AbstractQueryContext {
     this.submissionTime = submissionTime;
     this.queryHandle = new QueryHandle(UUID.randomUUID());
     this.status = new QueryStatus(0.0f, null, Status.NEW, "Query just got created", false, null, null, null);
-    this.priority = Priority.NORMAL;
     this.lensConf = qconf;
     this.conf = conf;
     this.isPersistent = conf.getBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_SET,
@@ -429,15 +427,17 @@ public class QueryContext extends AbstractQueryContext {
   }
 
   public Priority decidePriority(LensDriver driver, QueryPriorityDecider queryPriorityDecider) throws LensException {
+    // On-demand re-computation of cost, in case it's not alredy set by a previous estimate call.
+    // In driver test cases, estimate doesn't happen. Hence this code path ensures cost is computed and
+    // priority is set based on correct cost.
+    calculateCost(driver);
     priority = queryPriorityDecider.decidePriority(getDriverQueryCost(driver));
     return priority;
   }
 
-  public Priority calculateCostAndDecidePriority(LensDriver driver, QueryCostCalculator queryCostCalculator,
-    QueryPriorityDecider queryPriorityDecider) throws LensException {
+  private void calculateCost(LensDriver driver) throws LensException {
     if (getDriverQueryCost(driver) == null) {
-      setDriverCost(driver, queryCostCalculator.calculateCost(this, driver));
+      setDriverCost(driver, driver.estimate(this));
     }
-    return decidePriority(driver, queryPriorityDecider);
   }
 }

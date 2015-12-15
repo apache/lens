@@ -27,6 +27,25 @@ public class CommonUtils {
 
   }
 
+  public interface EntryParser<K, V> {
+    K parseKey(String str);
+
+    V parseValue(String str);
+  }
+
+  private static EntryParser<String, String> defaultEntryParser = new EntryParser<String, String>() {
+    @Override
+    public String parseKey(String str) {
+      return str;
+    }
+
+    @Override
+    public String parseValue(String str) {
+      return str;
+    }
+  };
+
+
   /**
    * Splits given String str around non-escaped commas. Then parses each of the split element
    * as map entries in the format `key=value`. Constructs a map of such entries.
@@ -36,7 +55,11 @@ public class CommonUtils {
    * @return parsed map
    */
   public static Map<String, String> parseMapFromString(String str) {
-    Map<String, String> map = new HashMap<>();
+    return parseMapFromString(str, defaultEntryParser);
+  }
+
+  public static <K, V> Map<K, V> parseMapFromString(String str, EntryParser<K, V> parser) {
+    Map<K, V> map = new HashMap<>();
     if (str != null) {
       for (String kv : str.split("(?<!\\\\),")) {
         if (!kv.isEmpty()) {
@@ -49,7 +72,7 @@ public class CommonUtils {
           if (kvArray.length > 1) {
             value = kvArray[1].replaceAll("\\\\,", ",").trim();
           }
-          map.put(key, value);
+          map.put(parser.parseKey(key), parser.parseValue(value));
         }
       }
     }

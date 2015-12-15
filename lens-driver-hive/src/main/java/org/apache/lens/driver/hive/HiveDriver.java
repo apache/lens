@@ -20,8 +20,14 @@ package org.apache.lens.driver.hive;
 
 import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -29,6 +35,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator;
@@ -50,7 +57,6 @@ import org.apache.lens.server.api.query.priority.CostToPriorityRangeConf;
 import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
 
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -66,7 +72,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
 import com.google.common.collect.ImmutableSet;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,6 +115,7 @@ public class HiveDriver extends AbstractLensDriver {
   private HiveConf hiveConf;
 
   /** The hive handles. */
+  @Getter
   private Map<QueryHandle, OperationHandle> hiveHandles = new ConcurrentHashMap<QueryHandle, OperationHandle>();
 
   /** The orphaned hive sessions. */
@@ -383,10 +389,12 @@ public class HiveDriver extends AbstractLensDriver {
 
   private QueryCost calculateQueryCost(AbstractQueryContext qctx) throws LensException {
     if (qctx.isOlapQuery()) {
-      return queryCostCalculator.calculateCost(qctx, this);
-    } else {
-      return new FactPartitionBasedQueryCost(Double.MAX_VALUE);
+      QueryCost cost = queryCostCalculator.calculateCost(qctx, this);
+      if (cost != null) {
+        return cost;
+      }
     }
+    return new FactPartitionBasedQueryCost(Double.MAX_VALUE);
   }
 
   @Override
@@ -548,22 +556,7 @@ public class HiveDriver extends AbstractLensDriver {
       addPersistentPath(ctx);
       Configuration qdconf = ctx.getDriverConf(this);
       qdconf.set("mapred.job.name", ctx.getQueryHandle().toString());
-      //Query is already explained.
-      log.info("whetherCalculatePriority: {}", whetherCalculatePriority);
-      if (whetherCalculatePriority) {
-        try {
-          // Inside try since non-data fetching queries can also be executed by async method.
-          String priority = ctx.calculateCostAndDecidePriority(this, queryCostCalculator, queryPriorityDecider)
-            .toString();
-          qdconf.set("mapred.job.priority", priority);
-          log.info("set priority to {}", priority);
-        } catch (Exception e) {
-          // not failing query launch when setting priority fails
-          // priority will be set to usually NORMAL - the default in underlying system.
-          log.error("could not set priority for lens session id:{} User query: {}", ctx.getLensSessionIdentifier(),
-            ctx.getUserQuery(), e);
-        }
-      }
+      decidePriority(ctx);
       queryHook.preLaunch(ctx);
       SessionHandle sessionHandle = getSession(ctx);
       OperationHandle op = getClient().executeStatementAsync(sessionHandle, ctx.getSelectedDriverQuery(),
@@ -809,6 +802,27 @@ public class HiveDriver extends AbstractLensDriver {
     return selectionPolicies;
   }
 
+  @Override
+  public Priority decidePriority(QueryContext ctx) {
+    if (whetherCalculatePriority && ctx.getDriverConf(this).get("mapred.job.priority") == null) {
+      try {
+        // Inside try since non-data fetching queries can also be executed by async method.
+        Priority priority = ctx.decidePriority(this, queryPriorityDecider);
+        String priorityStr = priority.toString();
+        ctx.getDriverConf(this).set("mapred.job.priority", priorityStr);
+        log.info("set priority to {}", priority);
+        return priority;
+      } catch (Exception e) {
+        // not failing query launch when setting priority fails
+        // priority will be set to usually NORMAL - the default in underlying system.
+        log.error("could not set priority for lens session id:{} User query: {}", ctx.getLensSessionIdentifier(),
+          ctx.getUserQuery(), e);
+        return null;
+      }
+    }
+    return null;
+  }
+
   protected CLIServiceClient getClient() throws LensException {
     if (isEmbedded) {
       if (embeddedConnection == null) {
@@ -837,7 +851,7 @@ public class HiveDriver extends AbstractLensDriver {
           thriftConnExpiryQueue.offer(connection);
           threadConnections.put(connectionKey, connection);
           log.info("New thrift connection {} for thread: {} for user: {} connection ID={} on driver:{}",
-              connectionClass, Thread.currentThread().getId(), user, connection.getConnId(), getFullyQualifiedName());
+            connectionClass, Thread.currentThread().getId(), user, connection.getConnId(), getFullyQualifiedName());
         } catch (Exception e) {
           throw new LensException(e);
         }
@@ -939,14 +953,14 @@ public class HiveDriver extends AbstractLensDriver {
           hiveSession = getClient().openSession(ctx.getClusterUser(), "");
           lensToHiveSession.put(sessionDbKey, hiveSession);
           log.info("New hive session for user: {} , lens session: {} , hive session handle: {} , driver : {}",
-              ctx.getClusterUser(), sessionDbKey, hiveSession.getHandleIdentifier(), getFullyQualifiedName());
+            ctx.getClusterUser(), sessionDbKey, hiveSession.getHandleIdentifier(), getFullyQualifiedName());
           for (LensEventListener<DriverEvent> eventListener : driverListeners) {
             try {
               eventListener.onEvent(new DriverSessionStarted(System.currentTimeMillis(), this, lensSession, hiveSession
                 .getSessionId().toString()));
             } catch (Exception exc) {
               log.error("Error sending driver {} start event to listener {}", getFullyQualifiedName(), eventListener,
-                 exc);
+                exc);
             }
           }
         } catch (Exception e) {
@@ -1218,7 +1232,7 @@ public class HiveDriver extends AbstractLensDriver {
       if (isSessionInvalid(exc, session)) {
         // We have to expire previous session
         log.info("{} Hive server session {} for lens session {} has become invalid", getFullyQualifiedName(), session,
-            lensSession);
+          lensSession);
         sessionLock.lock();
         try {
           // We should close all connections and clear the session map since

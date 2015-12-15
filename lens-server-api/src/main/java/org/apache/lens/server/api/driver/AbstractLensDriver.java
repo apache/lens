@@ -19,11 +19,12 @@
 package org.apache.lens.server.api.driver;
 
 
+import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.hadoop.conf.Configuration;
 
 import lombok.Getter;
@@ -49,7 +50,7 @@ public abstract class AbstractLensDriver implements LensDriver {
     if (StringUtils.isBlank(driverType) || StringUtils.isBlank(driverName)) {
       throw new LensException("Driver Type and Name can not be null or empty");
     }
-    fullyQualifiedName =  new StringBuilder(driverType).append(SEPARATOR).append(driverName).toString();
+    fullyQualifiedName = new StringBuilder(driverType).append(SEPARATOR).append(driverName).toString();
   }
 
   /**
@@ -61,7 +62,13 @@ public abstract class AbstractLensDriver implements LensDriver {
    */
   protected String getDriverResourcePath(String resourceName) {
     return new StringBuilder(LensConfConstants.DRIVERS_BASE_DIR).append(SEPARATOR).append(getFullyQualifiedName())
-        .append(SEPARATOR).append(resourceName).toString();
+      .append(SEPARATOR).append(resourceName).toString();
+  }
+
+  @Override
+  public Priority decidePriority(QueryContext queryContext) {
+    // no-op by default
+    return null;
   }
 
   @Override

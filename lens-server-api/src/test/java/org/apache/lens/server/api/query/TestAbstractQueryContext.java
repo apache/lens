@@ -33,7 +33,6 @@ import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.LensMetricsRegistry;
-import org.apache.lens.server.api.query.cost.MockQueryCostCalculator;
 import org.apache.lens.server.api.query.priority.MockQueryPriorityDecider;
 
 import org.apache.hadoop.conf.Configuration;
@@ -101,8 +100,7 @@ public class TestAbstractQueryContext {
   @Test
   public void testPrioritySetting() throws LensException {
     MockQueryContext ctx = new MockQueryContext();
-    Priority p = ctx.calculateCostAndDecidePriority(ctx.getSelectedDriver(), new
-      MockQueryCostCalculator(), new MockQueryPriorityDecider());
+    Priority p = ctx.decidePriority(ctx.getSelectedDriver(), new MockQueryPriorityDecider());
     assertEquals(p, HIGH);
     assertEquals(ctx.getPriority(), HIGH);
   }

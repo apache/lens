@@ -20,11 +20,14 @@ package org.apache.lens.server.api.driver;
 
 import java.io.Externalizable;
 
+import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
-import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.PreparedQueryContext;
+import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.QueryCost;
@@ -208,4 +211,12 @@ public interface LensDriver extends Externalizable {
    * (Examples: hive/hive1, jdbc/mysql1 )
    */
   String getFullyQualifiedName();
+
+  /**
+   * decide priority based on query's cost. The cost should be already computed by estimate call, but it's
+   * not guaranteed to be pre-computed. It's up to the driver to do an on-demand computation of cost.
+   * @see QueryContext#decidePriority(LensDriver, QueryPriorityDecider) that handles this on-demand computation.
+   * @param queryContext
+   */
+  Priority decidePriority(QueryContext queryContext);
 }

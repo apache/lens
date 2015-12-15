@@ -21,7 +21,6 @@ package org.apache.lens.server.query.constraint;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import static org.testng.Assert.assertEquals;
 
 import org.apache.lens.server.api.driver.LensDriver;
@@ -53,7 +52,7 @@ public class ThreadSafeEstimatedQueryCollectionTest {
     LensDriver mockDriver = mock(LensDriver.class);
     LensDriver mockDriver2 = mock(LensDriver.class);
 
-    QueryLaunchingConstraint constraint = new MaxConcurrentDriverQueriesConstraint(maxConcurrentQueries);
+    QueryLaunchingConstraint constraint = new MaxConcurrentDriverQueriesConstraint(maxConcurrentQueries, null, null);
     ThreadSafeEstimatedQueryCollection col = new ThreadSafeEstimatedQueryCollection(new
       DefaultEstimatedQueryCollection(new DefaultQueryCollection()));
 
