@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateDimAvailableException;
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
@@ -810,12 +811,12 @@ public class CubeQueryContext implements TrackQueriedColumns {
               }
             }
           }
-          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo(),
-              dim.getName(), reason);
+          log.error("Query rewrite failed due to NO_CANDIDATE_DIM_AVAILABLE, Cause {}",
+                  dimPruningMsgs.get(dim).toJsonObject());
+          throw new NoCandidateDimAvailableException(dimPruningMsgs.get(dim));
         }
       }
     }
-
     return dimsToQuery;
   }
 

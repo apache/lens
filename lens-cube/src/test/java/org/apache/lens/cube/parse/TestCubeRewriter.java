@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateDimAvailableException;
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCause;
@@ -46,6 +47,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 
@@ -1078,6 +1080,23 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
+  public void testNoCandidateDimAvailableExceptionCompare() throws Exception {
+
+    //Max cause COLUMN_NOT_FOUND, Ordinal 9
+    PruneCauses<CubeDimensionTable> pr1 = new PruneCauses<CubeDimensionTable>();
+    pr1.addPruningMsg(new CubeDimensionTable(new Table("test", "citydim")),
+            CandidateTablePruneCause.columnNotFound("test1", "test2", "test3"));
+    NoCandidateDimAvailableException ne1 = new NoCandidateDimAvailableException(pr1);
+
+    //Max cause EXPRESSION_NOT_EVALUABLE, Ordinal 6
+    PruneCauses<CubeDimensionTable> pr2 = new PruneCauses<CubeDimensionTable>();
+    pr2.addPruningMsg(new CubeDimensionTable(new Table("test", "citydim")),
+            CandidateTablePruneCause.expressionNotEvaluable("testexp1", "testexp2"));
+    NoCandidateDimAvailableException ne2 = new NoCandidateDimAvailableException(pr2);
+    assertEquals(ne1.compareTo(ne2), 3);
+  }
+
+  @Test
   public void testDimensionQueryWithMultipleStorages() throws Exception {
     String hqlQuery = rewrite("select name, stateid from" + " citydim", getConf());
     String expected =
@@ -1095,7 +1114,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     // state table is present on c1 with partition dumps and partitions added
     LensException e = getLensExceptionInRewrite("select name, capital from statedim ", conf);
     assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo().getErrorCode());
-    assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
+    NoCandidateDimAvailableException ne = (NoCandidateDimAvailableException) e;
+    assertEquals(ne.getJsonMessage(), new PruneCauses.BriefAndDetailedError(
       NO_CANDIDATE_STORAGES.errorFormat,
       new HashMap<String, List<CandidateTablePruneCause>>() {
         {
