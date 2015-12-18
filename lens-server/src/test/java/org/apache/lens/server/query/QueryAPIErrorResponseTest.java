@@ -160,7 +160,8 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     final String testQuery = "select * from non_existing_table";
     Response response = estimate(target(), Optional.of(sessionId), Optional.of(testQuery));
 
-    final String expectedErrMsg = "Internal Server Error.";
+    final String expectedErrMsg = "Semantic Error : Error while compiling statement: "
+      + "FAILED: SemanticException [Error 10001]: Line 1:31 Table not found 'non_existing_table'";
 
     LensErrorTO childError1 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
       expectedErrMsg, MOCK_STACK_TRACE);
@@ -170,7 +171,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
         expectedErrMsg, MOCK_STACK_TRACE, Arrays.asList(childError1, childError2));
 
-    ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(Status.INTERNAL_SERVER_ERROR,
+    ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(Status.BAD_REQUEST,
       expectedLensErrorTO);
 
     expectedData.verify(response);

@@ -49,6 +49,7 @@ import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.api.result.QueryCostTO;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.driver.hive.HiveDriver;
+import org.apache.lens.driver.hive.LensHiveErrorCode;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
@@ -252,7 +253,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     final Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
-    assertEquals(response.getStatus(), INTERNAL_SERVER_ERROR.getStatusCode());
+    assertEquals(response.getStatus(), BAD_REQUEST.getStatusCode());
   }
 
   /**
@@ -416,7 +417,7 @@ public class TestQueryService extends LensJerseyTest {
 
     final Response responseExplain = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
 
-    assertEquals(responseExplain.getStatus(), INTERNAL_SERVER_ERROR.getStatusCode());
+    assertEquals(responseExplain.getStatus(), BAD_REQUEST.getStatusCode());
 
     // Test explain and prepare
     final WebTarget ptarget = target().path("queryapi/preparedqueries");
@@ -433,7 +434,38 @@ public class TestQueryService extends LensJerseyTest {
     final Response responseExplainAndPrepare = target.request().post(
       Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
 
-    assertEquals(responseExplainAndPrepare.getStatus(), INTERNAL_SERVER_ERROR.getStatusCode());
+    assertEquals(responseExplainAndPrepare.getStatus(), BAD_REQUEST.getStatusCode());
+  }
+
+  /**
+   * Test semantic error for hive query on non-existent table.
+   *
+   * @throws IOException          Signals that an I/O exception has occurred.
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void testHiveSemanticFailure() throws InterruptedException, IOException {
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), " select ID from NOT_EXISTS"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
+    Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+    LensAPIResult result = response.readEntity(LensAPIResult.class);
+    List<LensErrorTO> childErrors = result.getLensErrorTO().getChildErrors();
+    boolean hiveSemanticErrorExists=false;
+    for (LensErrorTO error : childErrors) {
+      if (error.getCode() == LensHiveErrorCode.SEMANTIC_ERROR.getLensErrorInfo().getErrorCode()) {
+        hiveSemanticErrorExists = true;
+        break;
+      }
+    }
+    assertTrue(hiveSemanticErrorExists);
   }
 
   // post to preparedqueries
@@ -1154,7 +1186,7 @@ public class TestQueryService extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
 
     Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
-    assertEquals(response.getStatus(), INTERNAL_SERVER_ERROR.getStatusCode());
+    assertEquals(response.getStatus(), BAD_REQUEST.getStatusCode());
   }
 
   /**

@@ -18,6 +18,7 @@
  */
 package org.apache.lens.driver.hive;
 
+import static org.apache.lens.driver.hive.LensHiveErrorCode.*;
 import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import java.io.ByteArrayInputStream;
@@ -508,6 +509,7 @@ public class HiveDriver extends AbstractLensDriver {
   // assuming this is only called for executing explain/insert/set/delete/etc... queries which don't ask to fetch data.
   public LensResultSet execute(QueryContext ctx) throws LensException {
     OperationHandle op = null;
+    LensResultSet result = null;
     try {
       addPersistentPath(ctx);
       Configuration qdconf = ctx.getDriverConf(this);
@@ -525,24 +527,24 @@ public class HiveDriver extends AbstractLensDriver {
       if (status.getState() == OperationState.ERROR) {
         throw new LensException("Unknown error while running query " + ctx.getUserQuery());
       }
-      LensResultSet result = createResultSet(ctx, true);
+      result = createResultSet(ctx, true);
       // close the query immediately if the result is not inmemory result set
       if (result == null || !(result instanceof HiveInMemoryResultSet)) {
         closeQuery(ctx.getQueryHandle());
       }
       // remove query handle from hiveHandles even in case of inmemory result set
       hiveHandles.remove(ctx.getQueryHandle());
-      return result;
     } catch (IOException e) {
       throw new LensException("Error adding persistent path", e);
     } catch (HiveSQLException hiveErr) {
       handleHiveServerError(ctx, hiveErr);
-      throw new LensException("Error executing query", hiveErr);
+      handleHiveSQLException(hiveErr);
     } finally {
       if (null != op) {
         opHandleToSession.remove(op);
       }
     }
+    return result;
   }
 
   /*
@@ -569,8 +571,15 @@ public class HiveDriver extends AbstractLensDriver {
       throw new LensException("Error adding persistent path", e);
     } catch (HiveSQLException e) {
       handleHiveServerError(ctx, e);
-      throw new LensException("Error executing async query", e);
+      handleHiveSQLException(e);
     }
+  }
+
+  private LensException handleHiveSQLException(HiveSQLException ex) throws LensException {
+    if (ex.getMessage().contains("SemanticException")) {
+      throw new LensException(SEMANTIC_ERROR.getLensErrorInfo(), ex, ex.getMessage());
+    }
+    throw new LensException(HIVE_ERROR.getLensErrorInfo(), ex, ex.getMessage());
   }
 
   /*
