@@ -97,7 +97,9 @@ class AggregateResolver implements ContextRewriter {
     Configuration distConf = cubeql.getConf();
     boolean isDimOnlyDistinctEnabled = distConf.getBoolean(CubeQueryConfUtil.ENABLE_ATTRFIELDS_ADD_DISTINCT,
       CubeQueryConfUtil.DEFAULT_ATTR_FIELDS_ADD_DISTINCT);
-    if (isDimOnlyDistinctEnabled) {
+    //Having clause will always work with measures, if only keys projected
+    //query should skip distinct and promote group by.
+    if (cubeql.getHavingAST() == null && isDimOnlyDistinctEnabled) {
       // Check if any measure/aggregate columns and distinct clause used in
       // select tree. If not, update selectAST token "SELECT" to "SELECT DISTINCT"
       if (!hasMeasures(cubeql, cubeql.getSelectAST()) && !isDistinctClauseUsed(cubeql.getSelectAST())

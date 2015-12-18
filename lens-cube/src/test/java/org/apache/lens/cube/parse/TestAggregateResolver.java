@@ -93,6 +93,9 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     String q10 = "SELECT cityid, round(testCube.msr2) from testCube where " + TWO_DAYS_RANGE;
 
+    //dimension selected with having
+    String q11 = "SELECT cityid from testCube where " + TWO_DAYS_RANGE + " having (testCube.msr2 > 100)";
+
     String expectedq1 =
       getExpectedQuery(cubeName, "SELECT testcube.cityid," + " sum(testCube.msr2) from ", null,
         "group by testcube.cityid", getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
@@ -128,13 +131,17 @@ public class TestAggregateResolver extends TestQueryRewrite {
     String expectedq10 =
       getExpectedQuery(cubeName, "SELECT testcube.cityid," + " round(sum(testCube.msr2)) from ", null,
         "group by testcube.cityid", getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
-
+    String expectedq11 =
+      getExpectedQuery(cubeName, "SELECT testcube.cityid from ", null,
+        "group by testcube.cityid" + "having sum(testCube.msr2) > 100",
+              getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     String[] tests = {
-      q1, q2, q3, q4, q5, q6, q7, q8, q9, q10,
+      q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11,
     };
     String[] expected = {
       expectedq1, expectedq2, expectedq3, expectedq4, expectedq5,
       expectedq6, expectedq7, expectedq8, expectedq9, expectedq10,
+      expectedq11,
     };
 
     for (int i = 0; i < tests.length; i++) {
