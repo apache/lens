@@ -1212,10 +1212,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       return result;
     } catch (Exception e) {
       throw new LensException("Error getting native tables from DB", e);
-    } finally {
-      if (null != msc) {
-        msc.close();
-      }
     }
   }
 
