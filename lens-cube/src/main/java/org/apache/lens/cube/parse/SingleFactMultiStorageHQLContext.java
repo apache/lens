@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CubeQueryConfUtil.DEFAULT_ENABLE_STORAGES_UNION;
+import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_STORAGES_UNION;
 import static org.apache.lens.cube.parse.HQLParser.*;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.server.api.error.LensException;
 
@@ -42,6 +45,7 @@ import lombok.Data;
 
 public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
 
+  private final QueryAST ast;
   int aliasCounter = 0;
 
   @Data
@@ -81,29 +85,33 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
 
   private Map<HashableASTNode, ASTNode> innerToOuterASTs = new HashMap<>();
 
-  SingleFactMultiStorageHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query)
+  SingleFactMultiStorageHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery,
+    CubeQueryContext query, QueryAST ast)
     throws LensException {
     super(query, fact);
+    if (!query.getConf().getBoolean(ENABLE_STORAGES_UNION, DEFAULT_ENABLE_STORAGES_UNION)) {
+      throw new LensException(LensCubeErrorCode.STORAGE_UNION_DISABLED.getLensErrorInfo());
+    }
+    this.ast = ast;
     processSelectAST();
     processGroupByAST();
     processWhereAST();
     processHavingAST();
     processOrderByAST();
     processLimit();
-    setHqlContexts(getUnionContexts(fact, dimsToQuery, query));
+    setHqlContexts(getUnionContexts(fact, dimsToQuery, query, ast));
   }
 
   private void processSelectAST() {
-    query.getSelectFinalAliases().clear();
-    ASTNode originalSelectAST = copyAST(query.getSelectAST());
-    query.setSelectAST(new ASTNode(originalSelectAST.getToken()));
+    ASTNode originalSelectAST = copyAST(ast.getSelectAST());
+    ast.setSelectAST(new ASTNode(originalSelectAST.getToken()));
     ASTNode outerSelectAST = processExpression(originalSelectAST);
     setSelect(getString(outerSelectAST));
   }
 
   private void processGroupByAST() {
-    if (query.getGroupByAST() != null) {
-      setGroupby(getString(processExpression(query.getGroupByAST())));
+    if (ast.getGroupByAST() != null) {
+      setGroupby(getString(processExpression(ast.getGroupByAST())));
     }
   }
 
@@ -111,28 +119,29 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     for (String storageTable : fact.getStorgeWhereClauseMap().keySet()) {
       ASTNode tree = parseExpr(fact.getStorgeWhereClauseMap().get(storageTable));
       ASTNode replaced = replaceAST(tree);
+      //TODO: optimize parse/unparse cycle
       fact.getStorgeWhereClauseMap().put(storageTable, getString(replaced));
     }
   }
 
   private void processHavingAST() throws LensException {
-    if (query.getHavingAST() != null) {
-      setHaving(getString(processExpression(query.getHavingAST())));
-      query.setHavingAST(null);
+    if (ast.getHavingAST() != null) {
+      setHaving(getString(processExpression(ast.getHavingAST())));
+      ast.setHavingAST(null);
     }
   }
 
 
   private void processOrderByAST() {
-    if (query.getOrderByAST() != null) {
-      setOrderby(getString(processExpression(query.getOrderByAST())));
-      query.setOrderByAST(null);
+    if (ast.getOrderByAST() != null) {
+      setOrderby(getString(processExpression(ast.getOrderByAST())));
+      ast.setOrderByAST(null);
     }
   }
 
   private void processLimit() {
-    setLimit(query.getLimitValue());
-    query.setLimitValue(null);
+    setLimit(ast.getLimitValue());
+    ast.setLimitValue(null);
   }
 
   /*
@@ -171,6 +180,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       addToInnerSelectAST(innerSelectExprAST);
       ASTNode dotAST = getDotAST(query.getCube().getName(), alias);
       ASTNode outerAST = new ASTNode(new CommonToken(TOK_FUNCTION));
+      //TODO: take care or non-transitive aggregate functions
       outerAST.addChild(new ASTNode(new CommonToken(Identifier, astNode.getChild(0).getText())));
       outerAST.addChild(dotAST);
       innerToOuterASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
@@ -225,10 +235,10 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
   }
 
   private void addToInnerSelectAST(ASTNode selectExprAST) {
-    if (query.getSelectAST() == null) {
-      query.setSelectAST(new ASTNode(new CommonToken(TOK_SELECT)));
+    if (ast.getSelectAST() == null) {
+      ast.setSelectAST(new ASTNode(new CommonToken(TOK_SELECT)));
     }
-    query.getSelectAST().addChild(selectExprAST);
+    ast.getSelectAST().addChild(selectExprAST);
   }
 
   private ASTNode getDotAST(String tableAlias, String fieldAlias) {
@@ -245,13 +255,13 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
   }
 
   private static ArrayList<HQLContextInterface> getUnionContexts(CandidateFact fact, Map<Dimension, CandidateDim>
-    dimsToQuery, CubeQueryContext query)
+    dimsToQuery, CubeQueryContext query, QueryAST ast)
     throws LensException {
     ArrayList<HQLContextInterface> contexts = new ArrayList<>();
     String alias = query.getAliasForTableName(query.getCube().getName());
     for (String storageTable : fact.getStorageTables()) {
-      SingleFactHQLContext ctx = new SingleFactHQLContext(fact, storageTable + " " + alias, dimsToQuery, query,
-        fact.getWhereClause(storageTable.substring(storageTable.indexOf(".") + 1)));
+      SingleFactSingleStorageHQLContext ctx = new SingleFactSingleStorageHQLContext(fact, storageTable + " " + alias,
+        dimsToQuery, query, DefaultQueryAST.fromCandidateFact(fact, storageTable, ast));
       contexts.add(ctx);
     }
     return contexts;

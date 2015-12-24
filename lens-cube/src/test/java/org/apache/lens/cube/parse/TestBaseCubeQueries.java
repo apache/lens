@@ -50,6 +50,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import lombok.Getter;
 
 public class TestBaseCubeQueries extends TestQueryRewrite {
@@ -546,17 +547,24 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertEquals(ctx.getCandidateFactSets().size(), 1);
     assertEquals(ctx.getCandidateFactSets().iterator().next().size(), 1);
     CandidateFact cfact = ctx.getCandidateFactSets().iterator().next().iterator().next();
-    assertEquals(cfact.getRangeToWhereClause().size(), 2);
-    for(Map.Entry<TimeRange, String> entry: cfact.getRangeToWhereClause().entrySet()) {
+
+    assertEquals(cfact.getRangeToStoragePartMap().size(), 2);
+    Set<String> storages = Sets.newHashSet();
+    for(Map<String, String> entry: cfact.getRangeToStorageWhereMap().values()) {
+      storages.addAll(entry.keySet());
+    }
+    assertEquals(storages.size(), 1);
+    String storage = storages.iterator().next();
+    for(Map.Entry<TimeRange, Map<String, String>> entry: cfact.getRangeToStorageWhereMap().entrySet()) {
       if (entry.getKey().getPartitionColumn().equals("dt")) {
-        ASTNode parsed = HQLParser.parseExpr(entry.getValue());
+        ASTNode parsed = HQLParser.parseExpr(entry.getValue().get(storage));
         assertEquals(parsed.getToken().getType(), KW_AND);
-        assertTrue(entry.getValue().substring(((CommonToken) parsed.getToken()).getStopIndex() + 1).toLowerCase()
-          .contains(dTimeWhereClause));
-        assertFalse(entry.getValue().substring(0, ((CommonToken) parsed.getToken()).getStartIndex()).toLowerCase()
-          .contains("and"));
+        assertTrue(entry.getValue().get(storage).substring(((CommonToken) parsed.getToken()).getStopIndex() + 1)
+          .toLowerCase().contains(dTimeWhereClause));
+        assertFalse(entry.getValue().get(storage).substring(0, ((CommonToken) parsed.getToken()).getStartIndex())
+          .toLowerCase().contains("and"));
       } else if (entry.getKey().getPartitionColumn().equals("ttd")) {
-        assertFalse(entry.getValue().toLowerCase().contains("and"));
+        assertFalse(entry.getValue().get(storage).toLowerCase().contains("and"));
       } else {
         throw new LensException("Unexpected");
       }

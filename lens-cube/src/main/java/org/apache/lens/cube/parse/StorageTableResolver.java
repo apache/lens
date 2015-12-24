@@ -19,14 +19,10 @@
 package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.metadata.DateUtil.WSPACE;
-import static org.apache.lens.cube.metadata.MetastoreUtil.getFactOrDimtableStorageTableName;
-import static org.apache.lens.cube.metadata.MetastoreUtil.getStoragetableEndTimesKey;
-import static org.apache.lens.cube.metadata.MetastoreUtil.getStoragetableStartTimesKey;
+import static org.apache.lens.cube.metadata.MetastoreUtil.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.PART_COL_DOES_NOT_EXIST;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.RANGE_NOT_ANSWERABLE;
-import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.*;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -36,10 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.lens.cube.metadata.*;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCause;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipUpdatePeriodCode;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.*;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -49,7 +42,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -361,9 +353,9 @@ class StorageTableResolver implements ContextRewriter {
   private void resolveFactStoragePartitions(CubeQueryContext cubeql) throws LensException {
     // Find candidate tables wrt supported storages
     Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator();
-    Map<TimeRange, String> whereClauseForFallback = new LinkedHashMap<TimeRange, String>();
     while (i.hasNext()) {
       CandidateFact cfact = i.next();
+      Map<TimeRange, String> whereClauseForFallback = new LinkedHashMap<TimeRange, String>();
       List<FactPartition> answeringParts = new ArrayList<>();
       Map<String, SkipStorageCause> skipStorageCauses = skipStorageCausesPerFact.get(cfact.fact);
       if (skipStorageCauses == null) {
@@ -434,9 +426,6 @@ class StorageTableResolver implements ContextRewriter {
         cfact.incrementPartsQueried(rangeParts.size());
         answeringParts.addAll(rangeParts);
         cfact.getPartsQueried().addAll(rangeParts);
-        String rangeWhereClause = rangeWriter.getTimeRangeWhereClause(cubeql,
-          cubeql.getAliasForTableName(cubeql.getCube().getName()), rangeParts);
-        cfact.getRangeToWhereClause().put(range, joinWithAnd(rangeWhereClause, extraWhereClause.toString()));
       }
       if (!unsupportedTimeDims.isEmpty()) {
         log.info("Not considering fact table:{} as it doesn't support time dimensions: {}", cfact.fact,
@@ -483,24 +472,27 @@ class StorageTableResolver implements ContextRewriter {
       Set<String> storageTables = new LinkedHashSet<>();
       storageTables.addAll(minimalStorageTables.keySet());
       cfact.setStorageTables(storageTables);
-
       // Update range->storage->partitions with time range where clause
       for (TimeRange trange : cfact.getRangeToStoragePartMap().keySet()) {
-        Map<String, String> rangeToWhere = new HashMap<String, String>();
+        Map<String, String> rangeToWhere = new HashMap<>();
         for (Map.Entry<String, Set<FactPartition>> entry : minimalStorageTables.entrySet()) {
           String table = entry.getKey();
           Set<FactPartition> minimalParts = entry.getValue();
 
           LinkedHashSet<FactPartition> rangeParts = cfact.getRangeToStoragePartMap().get(trange).get(table);
-          LinkedHashSet<FactPartition> minimalPartsCopy = new LinkedHashSet<FactPartition>(minimalParts);
-          minimalPartsCopy.retainAll(rangeParts);
+          LinkedHashSet<FactPartition> minimalPartsCopy = Sets.newLinkedHashSet();
+
+          if (rangeParts != null) {
+            minimalPartsCopy.addAll(minimalParts);
+            minimalPartsCopy.retainAll(rangeParts);
+          }
           if (!StringUtils.isEmpty(whereClauseForFallback.get(trange))) {
-            rangeToWhere.put(
-              rangeWriter.getTimeRangeWhereClause(cubeql, cubeql.getAliasForTableName(cubeql.getCube().getName()),
-                minimalPartsCopy) + " and  " + whereClauseForFallback.get(trange), table);
+            rangeToWhere.put(table, "(("
+              + rangeWriter.getTimeRangeWhereClause(cubeql, cubeql.getAliasForTableName(cubeql.getCube().getName()),
+                minimalPartsCopy) + ") and  (" + whereClauseForFallback.get(trange) + "))");
           } else {
-            rangeToWhere.put(rangeWriter.getTimeRangeWhereClause(cubeql,
-              cubeql.getAliasForTableName(cubeql.getCube().getName()), minimalPartsCopy), table);
+            rangeToWhere.put(table, rangeWriter.getTimeRangeWhereClause(cubeql,
+              cubeql.getAliasForTableName(cubeql.getCube().getName()), minimalPartsCopy));
           }
         }
         cfact.getRangeToStorageWhereMap().put(trange, rangeToWhere);
@@ -592,8 +584,7 @@ class StorageTableResolver implements ContextRewriter {
     int lookAheadNumParts =
       conf.getInt(CubeQueryConfUtil.getLookAheadPTPartsKey(interval), CubeQueryConfUtil.DEFAULT_LOOK_AHEAD_PT_PARTS);
 
-    TimeRange.Iterable.Iterator iter = TimeRange.iterable(ceilFromDate, floorToDate, interval, 1)
-      .iterator();
+    TimeRange.Iterable.Iterator iter = TimeRange.iterable(ceilFromDate, floorToDate, interval, 1).iterator();
     // add partitions from ceilFrom to floorTo
     while (iter.hasNext()) {
       Date dt = iter.next();

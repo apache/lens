@@ -512,7 +512,7 @@ public class CubeTestSetup {
       "No aggregateMsr", null, null, null));
     cubeMeasures.add(new ColumnMeasure(new FieldSchema("newmeasure", "bigint", "measure available  from now"),
       "New measure", null, null, null, NOW, null, 100.0));
-    cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr15", "int", "first measure"), "Measure15", null, "SUM",
+    cubeMeasures.add(new ColumnMeasure(new FieldSchema("msr15", "int", "fifteenth measure"), "Measure15", null, "SUM",
       "RS"));
 
     cubeDimensions = new HashSet<CubeDimAttribute>();

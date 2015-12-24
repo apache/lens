@@ -26,6 +26,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 
+import org.apache.hadoop.util.StringUtils;
+
+import com.google.common.collect.Lists;
+
 public class DateFactory {
   private DateFactory() {
 
@@ -143,6 +147,7 @@ public class DateFactory {
   // Time Ranges
   public static final String LAST_HOUR_TIME_RANGE;
   public static final String TWO_DAYS_RANGE;
+  public static final String TWO_DAYS_RANGE_SPLIT_OVER_UPDATE_PERIODS;
   public static final String TWO_DAYS_RANGE_TTD;
   public static final String TWO_DAYS_RANGE_TTD_BEFORE_4_DAYS;
   public static final String TWO_DAYS_RANGE_TTD2;
@@ -192,5 +197,11 @@ public class DateFactory {
 
     // calculate LAST_HOUR_TIME_RANGE
     LAST_HOUR_TIME_RANGE = getTimeRangeString(HOURLY, -1, 0);
+
+    TWO_DAYS_RANGE_SPLIT_OVER_UPDATE_PERIODS = StringUtils.join(" OR ", Lists.newArrayList(
+      getTimeRangeString(getDateStringWithOffset(HOURLY, -48), getDateStringWithOffset(DAILY, -1)),
+      getTimeRangeString(getDateStringWithOffset(DAILY, 0), getDateStringWithOffset(HOURLY, 0)),
+      getTimeRangeString(getDateStringWithOffset(DAILY, -1), getDateStringWithOffset(DAILY, 0))
+    ));
   }
 }

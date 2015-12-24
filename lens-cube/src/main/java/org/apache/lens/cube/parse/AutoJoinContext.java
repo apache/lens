@@ -101,7 +101,7 @@ public class AutoJoinContext {
   }
 
   private JoinClause getJoinClause(CandidateFact fact) {
-    if (fact == null) {
+    if (fact == null || !factClauses.containsKey(fact)) {
       return minCostClause;
     }
     return factClauses.get(fact);

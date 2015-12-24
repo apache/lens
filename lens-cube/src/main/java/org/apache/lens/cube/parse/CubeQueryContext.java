@@ -21,9 +21,7 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.*;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -50,16 +48,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CubeQueryContext implements TrackQueriedColumns {
+public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   public static final String TIME_RANGE_FUNC = "time_range_in";
   public static final String NOW = "now";
   public static final String DEFAULT_TABLE = "_default_";
@@ -653,7 +646,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     return null;
   }
 
-  public ASTNode getJoinTree() {
+  public ASTNode getJoinAST() {
     return qb.getParseInfo().getJoinExpr();
   }
 
@@ -688,8 +681,8 @@ public class CubeQueryContext implements TrackQueriedColumns {
   }
 
   String getQBFromString(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
-    String fromString = null;
-    if (getJoinTree() == null) {
+    String fromString;
+    if (getJoinAST() == null) {
       if (cube != null) {
         fromString = fact.getStorageString(getAliasForTableName(cube.getName()));
       } else {
@@ -858,6 +851,23 @@ public class CubeQueryContext implements TrackQueriedColumns {
   @Getter private Collection<CandidateFact> pickedFacts;
   @Getter private Collection<CandidateDim> pickedDimTables;
 
+  private void addRangeClauses(CandidateFact fact) throws LensException {
+    if (fact != null) {
+      // resolve timerange positions and replace it by corresponding where clause
+      for (TimeRange range : getTimeRanges()) {
+        for (Map.Entry<String, String> entry : fact.getRangeToStorageWhereMap().get(range).entrySet()) {
+          String table = entry.getKey();
+          String rangeWhere = entry.getValue();
+          if (!StringUtils.isBlank(rangeWhere)) {
+            ASTNode rangeAST = HQLParser.parseExpr(rangeWhere);
+            range.getParent().setChild(range.getChildIndex(), rangeAST);
+          }
+          fact.getStorgeWhereClauseMap().put(table, getWhereTree());
+        }
+      }
+    }
+  }
+
   public String toHQL() throws LensException {
     Set<CandidateFact> cfacts = pickCandidateFactToQuery();
     Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
@@ -872,11 +882,13 @@ public class CubeQueryContext implements TrackQueriedColumns {
         // copy ASTs for each fact
         for (CandidateFact cfact : cfacts) {
           cfact.copyASTs(this);
-          cfact.updateTimeranges(this);
-          factDimMap.put(cfact, new HashSet<Dimension>(dimsToQuery.keySet()));
+          factDimMap.put(cfact, new HashSet<>(dimsToQuery.keySet()));
         }
-      } else {
-        SingleFactHQLContext.addRangeClauses(this, cfacts.iterator().next());
+      }
+    }
+    if (cfacts != null) {
+      for (CandidateFact fact : cfacts) {
+        addRangeClauses(fact);
       }
     }
 
@@ -884,7 +896,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     Set<Dimension> exprDimensions = new HashSet<Dimension>();
     if (cfacts != null) {
       for (CandidateFact cfact : cfacts) {
-        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(cfact, dimsToQuery, cfacts.size() > 1);
+        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(cfact, dimsToQuery, cfacts.size() > 1 ? cfact : this);
         exprDimensions.addAll(factExprDimTables);
         if (cfacts.size() > 1) {
           factDimMap.get(cfact).addAll(factExprDimTables);
@@ -892,7 +904,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       }
     } else {
       // dim only query
-      exprDimensions.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, false));
+      exprDimensions.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, this));
     }
     dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimensions));
 
@@ -940,25 +952,22 @@ public class CubeQueryContext implements TrackQueriedColumns {
         }
       }
     }
-    hqlContext = createHQLContext(cfacts, dimsToQuery, factDimMap, this);
+    hqlContext = createHQLContext(cfacts, dimsToQuery, factDimMap);
     return hqlContext.toHQL();
   }
 
   private HQLContextInterface createHQLContext(Set<CandidateFact> facts, Map<Dimension, CandidateDim> dimsToQuery,
-    Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws LensException {
+    Map<CandidateFact, Set<Dimension>> factDimMap) throws LensException {
     if (facts == null || facts.size() == 0) {
-      return new DimOnlyHQLContext(dimsToQuery, query);
+      return new DimOnlyHQLContext(dimsToQuery, this, this);
     } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() > 1) {
       //create single fact with multiple storage context
-      if (!conf.getBoolean(ENABLE_STORAGES_UNION, DEFAULT_ENABLE_STORAGES_UNION)) {
-        throw new LensException(LensCubeErrorCode.STORAGE_UNION_DISABLED.getLensErrorInfo());
-      }
-      return new SingleFactMultiStorageHQLContext(facts.iterator().next(), dimsToQuery, query);
+      return new SingleFactMultiStorageHQLContext(facts.iterator().next(), dimsToQuery, this, this);
     } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() == 1) {
       // create single fact context
-      return new SingleFactHQLContext(facts.iterator().next(), dimsToQuery, query);
+      return new SingleFactSingleStorageHQLContext(facts.iterator().next(), dimsToQuery, this, this);
     } else {
-      return new MultiFactHQLContext(facts, dimsToQuery, factDimMap, query);
+      return new MultiFactHQLContext(facts, dimsToQuery, factDimMap, this);
     }
   }
 
@@ -977,10 +986,6 @@ public class CubeQueryContext implements TrackQueriedColumns {
 
   public Set<String> getColumnsQueried(String tblName) {
     return tblAliasToColumns.get(getAliasForTableName(tblName));
-  }
-
-  public void addColumnsQueried(AbstractCubeTable table, String column) {
-    addColumnsQueried(getAliasForTableName(table.getName()), column);
   }
 
   public void addColumnsQueriedWithTimeDimCheck(String alias, String timeDimColumn) {

@@ -44,7 +44,11 @@ abstract class DimHQLContext extends SimpleHQLContext {
   public CubeQueryContext getQuery() {
     return query;
   }
-
+  DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery,
+    Set<Dimension> queriedDims, QueryAST ast) throws LensException {
+    this(query, dimsToQuery, queriedDims, ast.getSelectTree(), ast.getWhereTree(), ast.getGroupByTree(),
+      ast.getOrderByTree(), ast.getHavingTree(), ast.getLimitValue());
+  }
   DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery,
     Set<Dimension> queriedDims, String select, String where,
     String groupby, String orderby, String having, Integer limit) throws LensException {

@@ -87,8 +87,8 @@ class JoinResolver implements ContextRewriter {
     boolean joinResolverDisabled = cubeql.getConf().getBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS,
         CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
     if (joinResolverDisabled) {
-      if (cubeql.getJoinTree() != null) {
-        cubeQB.setQbJoinTree(genJoinTree(cubeQB, cubeql.getJoinTree(), cubeql));
+      if (cubeql.getJoinAST() != null) {
+        cubeQB.setQbJoinTree(genJoinTree(cubeql.getJoinAST(), cubeql));
       }
     } else {
       autoResolveJoins(cubeql);
@@ -336,7 +336,7 @@ class JoinResolver implements ContextRewriter {
   }
 
   // Recursively find out join conditions
-  private QBJoinTree genJoinTree(QB qb, ASTNode joinParseTree, CubeQueryContext cubeql) throws LensException {
+  private QBJoinTree genJoinTree(ASTNode joinParseTree, CubeQueryContext cubeql) throws LensException {
     QBJoinTree joinTree = new QBJoinTree();
     JoinCond[] condn = new JoinCond[1];
 
@@ -388,7 +388,7 @@ class JoinResolver implements ContextRewriter {
 
     } else if (isJoinToken(left)) {
       // Left subtree is join token itself, so recurse down
-      QBJoinTree leftTree = genJoinTree(qb, left, cubeql);
+      QBJoinTree leftTree = genJoinTree(left, cubeql);
 
       joinTree.setJoinSrc(leftTree);
 
@@ -436,12 +436,9 @@ class JoinResolver implements ContextRewriter {
     return joinTree;
   }
 
-  private boolean isJoinToken(ASTNode node) {
-    if ((node.getToken().getType() == TOK_JOIN) || (node.getToken().getType() == TOK_LEFTOUTERJOIN)
+  private static boolean isJoinToken(ASTNode node) {
+    return (node.getToken().getType() == TOK_JOIN) || (node.getToken().getType() == TOK_LEFTOUTERJOIN)
       || (node.getToken().getType() == TOK_RIGHTOUTERJOIN) || (node.getToken().getType() == TOK_FULLOUTERJOIN)
-      || (node.getToken().getType() == TOK_LEFTSEMIJOIN) || (node.getToken().getType() == TOK_UNIQUEJOIN)) {
-      return true;
-    }
-    return false;
+      || (node.getToken().getType() == TOK_LEFTSEMIJOIN) || (node.getToken().getType() == TOK_UNIQUEJOIN);
   }
 }

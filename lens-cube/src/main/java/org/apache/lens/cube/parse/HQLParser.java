@@ -293,7 +293,6 @@ public final class HQLParser {
     if (original.getChildren() != null) {
       for (Object o : original.getChildren()) {
         ASTNode childCopy = copyAST((ASTNode) o);
-        childCopy.setParent(copy);
         copy.addChild(childCopy);
       }
     }

@@ -78,7 +78,6 @@ class GroupbyResolver implements ContextRewriter {
               if (groupbyAST != null) {
                 // groupby ast exists, add the expression to AST
                 groupbyAST.addChild(exprAST);
-                exprAST.setParent(groupbyAST);
               } else {
                 // no group by ast exist, create one
                 ASTNode newAST = new ASTNode(new CommonToken(TOK_GROUPBY));
@@ -153,7 +152,6 @@ class GroupbyResolver implements ContextRewriter {
       parent.setChild(i + 1, ch);
     }
     parent.setChild(index, child);
-    child.setParent(parent);
   }
 
   @Override

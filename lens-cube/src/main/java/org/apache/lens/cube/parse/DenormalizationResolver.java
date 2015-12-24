@@ -281,19 +281,15 @@ public class DenormalizationResolver implements ContextRewriter {
     }
 
     private void replaceReferencedColumns(CandidateFact cfact, boolean replaceFact) throws LensException {
+      QueryAST ast = cubeql;
       if (replaceFact
         && (tableToRefCols.get(cfact.getName()) != null && !tableToRefCols.get(cfact.getName()).isEmpty())) {
-        resolveClause(cubeql, cfact.getSelectAST());
-        resolveClause(cubeql, cfact.getWhereAST());
-        resolveClause(cubeql, cfact.getGroupByAST());
-        resolveClause(cubeql, cfact.getHavingAST());
-      } else {
-        resolveClause(cubeql, cubeql.getSelectAST());
-        resolveClause(cubeql, cubeql.getWhereAST());
-        resolveClause(cubeql, cubeql.getGroupByAST());
-        resolveClause(cubeql, cubeql.getHavingAST());
-
+        ast = cfact;
       }
+      resolveClause(cubeql, ast.getSelectAST());
+      resolveClause(cubeql, ast.getWhereAST());
+      resolveClause(cubeql, ast.getGroupByAST());
+      resolveClause(cubeql, ast.getHavingAST());
       resolveClause(cubeql, cubeql.getOrderByAST());
     }
 
@@ -320,11 +316,9 @@ public class DenormalizationResolver implements ContextRewriter {
         ASTNode newTableNode =
           new ASTNode(new CommonToken(HiveParser.Identifier, query.getAliasForTableName(refered.getDestTable())));
         tableNode.setChild(0, newTableNode);
-        newTableNode.setParent(tableNode);
 
         ASTNode newColumnNode = new ASTNode(new CommonToken(HiveParser.Identifier, refered.getRefColumn()));
         node.setChild(1, newColumnNode);
-        newColumnNode.setParent(node);
       } else {
         // recurse down
         for (int i = 0; i < node.getChildCount(); i++) {

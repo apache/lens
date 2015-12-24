@@ -32,16 +32,15 @@ import org.apache.lens.server.api.error.LensException;
  */
 class DimOnlyHQLContext extends DimHQLContext {
 
-  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws LensException {
-    super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(),
-      query.getWhereTree(), query.getGroupByTree(), query.getOrderByTree(),
-      query.getHavingTree(), query.getLimitValue());
+  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, QueryAST ast)
+    throws LensException {
+    this(dimsToQuery, dimsToQuery.keySet(), query, ast);
   }
 
-  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, String whereClause)
+  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> dimsQueried,
+    CubeQueryContext query, QueryAST ast)
     throws LensException {
-    super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), whereClause, query.getGroupByTree(), query
-        .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
+    super(query, dimsToQuery, dimsQueried, ast);
   }
 
   public String toHQL() throws LensException {
@@ -49,7 +48,7 @@ class DimOnlyHQLContext extends DimHQLContext {
   }
 
   protected String getFromTable() throws LensException {
-    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
+    if (query.isAutoJoinResolved()) {
       return getDimsToQuery().get(query.getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
         query.getAliasForTableName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));
     } else {

@@ -61,7 +61,7 @@ class ColumnResolver implements ContextRewriter {
     }
     getColsForSelectTree(cubeql);
     getColsForWhereTree(cubeql);
-    getColsForTree(cubeql, cubeql.getJoinTree(), cubeql);
+    getColsForTree(cubeql, cubeql.getJoinAST(), cubeql);
     getColsForTree(cubeql, cubeql.getGroupByAST(), cubeql);
     getColsForTree(cubeql, cubeql.getHavingAST(), cubeql);
     getColsForTree(cubeql, cubeql.getOrderByAST(), cubeql);

@@ -148,7 +148,7 @@ public class CubeQueryRewriter {
     // Resolve candidate fact tables and dimension tables for columns queried
     rewriters.add(candidateTblResolver);
     // Resolve aggregations and generate base select tree
-    rewriters.add(new AggregateResolver(conf));
+    rewriters.add(new AggregateResolver());
     rewriters.add(new GroupbyResolver(conf));
     rewriters.add(new FieldValidator());
     // Resolve joins and generate base join tree

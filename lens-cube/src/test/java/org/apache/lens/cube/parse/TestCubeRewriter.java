@@ -41,7 +41,6 @@ import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.time.DateUtils;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -58,7 +57,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -410,7 +408,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
           return getWhereForMonthlyDailyAndHourly2monthsUnionQuery(storage);
         }
       };
-      try{
+      try {
         rewrite("select cityid as `City ID`, msr8, msr7 as `Third measure` "
           + "from testCube where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
         fail("Union feature is disabled, should have failed");
@@ -498,6 +496,35 @@ public class TestCubeRewriter extends TestQueryRewrite {
       getStorageToUpdatePeriodMap().clear();
     }
 
+  }
+
+  @Test
+  public void testMultiFactMultiStorage() throws ParseException, LensException {
+    Configuration conf = LensServerAPITestUtil.getConfiguration(
+      CubeQueryConfUtil.ENABLE_STORAGES_UNION, true,
+      CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2",
+      getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact",
+      getValidUpdatePeriodsKey("testfact", "C1"), "HOURLY",
+      getValidUpdatePeriodsKey("testfact", "C2"), "DAILY",
+      getValidUpdatePeriodsKey("testfact2_raw", "C1"), "YEARLY",
+      getValidUpdatePeriodsKey("testfact2_raw", "C2"), "YEARLY");
+    CubeTestSetup.getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(HOURLY));
+    CubeTestSetup.getStorageToUpdatePeriodMap().put("c2_testfact", Lists.newArrayList(DAILY));
+    String whereCond = "zipcode = 'a' and cityid = 'b' and (" + TWO_DAYS_RANGE_SPLIT_OVER_UPDATE_PERIODS + ")";
+    String hqlQuery = rewrite("cube select zipcode, count(msr4), sum(msr15) from testCube where " + whereCond, conf);
+    System.out.println(hqlQuery);
+    String possibleStart1 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq1.msr4 msr4, mq2.msr15 msr15 FROM ";
+    String possibleStart2 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq2.msr4 msr4, mq1.msr15 msr15 FROM ";
+
+    assertTrue(hqlQuery.startsWith(possibleStart1) || hqlQuery.startsWith(possibleStart2));
+    compareContains(rewrite("cube select zipcode as `zipcode`, sum(msr15) as `msr15` from testcube where " + whereCond,
+      conf), hqlQuery);
+    compareContains(rewrite("cube select zipcode as `zipcode`, count(msr4) as `msr4` from testcube where " + whereCond,
+      conf), hqlQuery);
+    assertTrue(hqlQuery.endsWith("on mq1.zipcode <=> mq2.zipcode"));
+    // No time_range_in should be remaining
+    assertFalse(hqlQuery.contains("time_range_in"));
+    //TODO: handle having after LENS-813, also handle for order by and limit
   }
 
   @Test
@@ -1120,18 +1147,18 @@ public class TestCubeRewriter extends TestQueryRewrite {
       new HashMap<String, List<CandidateTablePruneCause>>() {
         {
           put("statetable", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(
-              new HashMap<String, SkipStorageCause>() {
-                {
-                  put("c1_statetable", new SkipStorageCause(SkipStorageCode.NO_PARTITIONS));
-                }
-              }))
+            new HashMap<String, SkipStorageCause>() {
+              {
+                put("c1_statetable", new SkipStorageCause(SkipStorageCode.NO_PARTITIONS));
+              }
+            }))
           );
           put("statetable_partitioned", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(
-              new HashMap<String, SkipStorageCause>() {
-                {
-                  put("C3_statetable_partitioned", new SkipStorageCause(SkipStorageCode.UNSUPPORTED));
-                }
-              }))
+            new HashMap<String, SkipStorageCause>() {
+              {
+                put("C3_statetable_partitioned", new SkipStorageCause(SkipStorageCode.UNSUPPORTED));
+              }
+            }))
           );
         }
       }
