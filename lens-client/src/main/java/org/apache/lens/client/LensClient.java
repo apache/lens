@@ -57,6 +57,7 @@ public class LensClient {
   private LensConnection connection;
   private final HashMap<QueryHandle, LensStatement> statementMap =
     Maps.newHashMap();
+  @Getter
   private final LensStatement statement;
 
   @Getter
@@ -192,11 +193,11 @@ public class LensClient {
   }
 
   public QueryStatus getQueryStatus(QueryHandle query) {
-    return new LensStatement(connection).getQuery(query).getStatus();
+    return statement.getQuery(query).getStatus();
   }
 
   public LensQuery getQueryDetails(QueryHandle handle) {
-    return new LensStatement(connection).getQuery(handle);
+    return statement.getQuery(handle);
   }
 
   public QueryStatus getQueryStatus(String q) {
@@ -208,7 +209,7 @@ public class LensClient {
   }
 
   public LensAPIResult<QueryPlan> getQueryPlan(String q) throws LensAPIException {
-    return new LensStatement(connection).explainQuery(q);
+    return statement.explainQuery(q);
   }
 
   public boolean killQuery(QueryHandle q) {
@@ -228,7 +229,7 @@ public class LensClient {
 
   public List<QueryHandle> getQueries(String state, String queryName, String user, String driver, long fromDate,
     long toDate) {
-    return new LensStatement(connection).getAllQueries(state, queryName, user, driver, fromDate, toDate);
+    return statement.getAllQueries(state, queryName, user, driver, fromDate, toDate);
   }
 
   private void connectToLensServer() {

@@ -40,9 +40,12 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * Top level class which is used to execute lens queries.
  */
+@RequiredArgsConstructor
 public class LensStatement {
 
   /** The connection. */
@@ -50,15 +53,6 @@ public class LensStatement {
 
   /** The query. */
   private LensQuery query;
-
-  /**
-   * Instantiates a new lens statement.
-   *
-   * @param connection the connection
-   */
-  public LensStatement(LensConnection connection) {
-    this.connection = connection;
-  }
 
   /**
    * Execute.

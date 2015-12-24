@@ -102,6 +102,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String sql = "cube select id,name from test_dim";
     String result = qCom.executeQuery(sql, false, "testQuery2");
     assertTrue(result.contains("1\tfirst"), result);
+
   }
 
   /**
@@ -237,11 +238,11 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String[] resultSplits = result.split("\n");
     // assert on the number of queries
     assertEquals(String.valueOf(resultSplits.length - 1), resultSplits[resultSplits.length - 1].split(": ")[1]);
-
+    assertEquals(qCom.getOrDefaultQueryHandleString(null), qh);
     QueryStatus queryStatus = qCom.getClient().getQueryStatus(qh);
     while (!queryStatus.finished()) {
       if (queryStatus.launched()) {
-        String details = qCom.getDetails(qh);
+        String details = qCom.getDetails(null);
         assertTrue(details.contains("driverQuery"));
       }
       Thread.sleep(1000);
@@ -256,7 +257,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String details = qCom.getDetails(qh);
     assertTrue(details.contains("driverQuery"));
 
-    result = qCom.getQueryResults(qh, null, true);
+    result = qCom.getQueryResults(null, null, true);
     assertTrue(result.contains("1\tfirst"));
 
     downloadResult(qCom, qh, result);
