@@ -18,7 +18,7 @@
  */
 package org.apache.lens.driver.hive;
 
-import static org.apache.lens.driver.hive.LensHiveErrorCode.*;
+import static org.apache.lens.server.api.error.LensDriverErrorCode.*;
 import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import java.io.ByteArrayInputStream;
@@ -579,7 +579,7 @@ public class HiveDriver extends AbstractLensDriver {
     if (ex.getMessage().contains("SemanticException")) {
       throw new LensException(SEMANTIC_ERROR.getLensErrorInfo(), ex, ex.getMessage());
     }
-    throw new LensException(HIVE_ERROR.getLensErrorInfo(), ex, ex.getMessage());
+    throw new LensException(DRIVER_ERROR.getLensErrorInfo(), ex, ex.getMessage());
   }
 
   /*

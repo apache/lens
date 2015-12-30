@@ -49,12 +49,12 @@ import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.api.result.QueryCostTO;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.driver.hive.HiveDriver;
-import org.apache.lens.driver.hive.LensHiveErrorCode;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.error.LensDriverErrorCode;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.metrics.MetricsService;
@@ -460,7 +460,7 @@ public class TestQueryService extends LensJerseyTest {
     List<LensErrorTO> childErrors = result.getLensErrorTO().getChildErrors();
     boolean hiveSemanticErrorExists=false;
     for (LensErrorTO error : childErrors) {
-      if (error.getCode() == LensHiveErrorCode.SEMANTIC_ERROR.getLensErrorInfo().getErrorCode()) {
+      if (error.getCode() == LensDriverErrorCode.SEMANTIC_ERROR.getLensErrorInfo().getErrorCode()) {
         hiveSemanticErrorExists = true;
         break;
       }
