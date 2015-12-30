@@ -35,8 +35,10 @@ import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.driver.jdbc.JDBCResultSet;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.driver.MockDriver;
 import org.apache.lens.server.api.query.FinishedLensQuery;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.QueryExecutionService;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -60,13 +62,14 @@ public class TestLensDAO extends LensJerseyTest {
    */
   @Test
   public void testLensServerDAO() throws Exception {
-    QueryExecutionServiceImpl service = (QueryExecutionServiceImpl) LensServices.get().getService("query");
+    QueryExecutionServiceImpl service = LensServices.get().getService(QueryExecutionService.NAME);
 
     // Test insert query
     QueryContext queryContext = service.createContext("SELECT ID FROM testTable", "foo@localhost", new LensConf(),
       new Configuration());
     long submissionTime = queryContext.getSubmissionTime();
     queryContext.setQueryName("daoTestQuery1");
+    queryContext.getDriverContext().setSelectedDriver(new MockDriver());
     FinishedLensQuery finishedLensQuery = new FinishedLensQuery(queryContext);
     finishedLensQuery.setStatus(QueryStatus.Status.SUCCESSFUL.name());
 
@@ -91,7 +94,6 @@ public class TestLensDAO extends LensJerseyTest {
       log.info("@@@JSON {}" + jsonMetadata);
 
       finishedLensQuery.setMetadata(MAPPER.writeValueAsString(jdbcRsMeta));
-      finishedLensQuery.setMetadataClass(JDBCResultSet.JDBCResultSetMetadata.class.getName());
     } catch (SQLException ex) {
       log.error("Error creating result set ", ex);
     } finally {
@@ -125,8 +127,8 @@ public class TestLensDAO extends LensJerseyTest {
     // Test find finished queries
     LensSessionHandle session = service.openSession("foo@localhost", "bar", new HashMap<String, String>());
 
-    List<QueryHandle> persistedHandles = service.lensServerDao.findFinishedQueries(null, null, null, submissionTime,
-      System.currentTimeMillis());
+    List<QueryHandle> persistedHandles = service.lensServerDao.findFinishedQueries(null, null, null, null,
+      submissionTime, System.currentTimeMillis());
     if (persistedHandles != null) {
       for (QueryHandle handle : persistedHandles) {
         LensQuery query = service.getQuery(session, handle);
@@ -139,7 +141,8 @@ public class TestLensDAO extends LensJerseyTest {
 
     System.out.println("@@ State = " + queryContext.getStatus().getStatus().name());
     List<QueryHandle> daoTestQueryHandles = service.lensServerDao.findFinishedQueries(finishedLensQuery.getStatus(),
-      queryContext.getSubmittedUser(), "daotestquery1", -1L, Long.MAX_VALUE);
+        queryContext.getSubmittedUser(), queryContext.getSelectedDriver().getFullyQualifiedName(), "daotestquery1", -1L,
+      Long.MAX_VALUE);
     Assert.assertEquals(daoTestQueryHandles.size(), 1);
     Assert.assertEquals(daoTestQueryHandles.get(0).getHandleId().toString(), finishedHandle);
   }

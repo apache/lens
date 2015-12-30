@@ -72,4 +72,9 @@ public class ThreadSafeQueryCollection implements QueryCollection {
   public synchronized int getQueriesCount() {
     return this.queries.getQueriesCount();
   }
+
+  @Override
+  public synchronized Integer getQueryIndex(QueryContext query) {
+    return this.queries.getQueryIndex(query);
+  }
 }

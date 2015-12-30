@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
@@ -155,7 +156,8 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
     String[] attributes = new String[ldapFields.length];
     SearchResult sr = findAccountByAccountName(user);
     for (int i = 0; i < attributes.length; i++) {
-      attributes[i] = sr.getAttributes().get(ldapFields[i]).get().toString();
+      Attribute attr = sr.getAttributes().get(ldapFields[i]);
+      attributes[i] = (attr == null ? null : attr.get().toString());
     }
     return attributes;
   }

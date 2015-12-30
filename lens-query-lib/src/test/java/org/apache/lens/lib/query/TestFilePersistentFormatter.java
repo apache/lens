@@ -23,9 +23,12 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.query.PersistedOutputFormatter;
+import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -45,12 +48,12 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
   /**
    * The part file dir.
    */
-  private Path partFileDir = new Path("file:///tmp/partcsvfiles");
+  private Path partFileDir = new Path("target/partcsvfiles");
 
   /**
    * The part file text dir.
    */
-  private Path partFileTextDir = new Path("file:///tmp/parttextfiles");
+  private Path partFileTextDir = new Path("target/parttextfiles");
 
   /**
    * Creates the part files.
@@ -251,6 +254,79 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     List<String> actual = readZipOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
     System.out.println("Actual rows:" + actual);
     Assert.assertEquals(actual, getExpectedCSVRowsWithMultiple());
+  }
+
+  /**
+   * Test text files output path.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  @Test
+  public void testTextFileOutputPath() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.set("test.partfile.dir", partFileTextDir.toString());
+    conf.set(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
+    conf.set(LensConfConstants.QUERY_OUTPUT_HEADER,
+      "firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+    QueryContext ctx = createContext(conf, "test.Query_1 name");
+    Path expectedFinalPath = new Path(LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT,
+      "test.Query_1_name-" + ctx.getQueryHandle() + ".txt");
+    FileSystem fs = expectedFinalPath.getFileSystem(conf);
+    expectedFinalPath = expectedFinalPath.makeQualified(fs);
+    validateFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt",
+      getMockedResultSetWithoutComma(), ctx, expectedFinalPath);
+  }
+
+  /**
+   * Test text files with a long output path.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  @Test
+  public void testTextFileLongOutputPath() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.set("test.partfile.dir", partFileTextDir.toString());
+    conf.set(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
+    conf.set(LensConfConstants.QUERY_OUTPUT_HEADER,
+      "firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+    QueryContext ctx = createContext(conf, "test-Query 1^name12345678901234567890123456789012345678901234567890");
+    Path expectedFinalPath = new Path(LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT,
+      "test-Query_1_name123456789012345678901234567890123-" + ctx.getQueryHandle() + ".txt");
+    FileSystem fs = expectedFinalPath.getFileSystem(conf);
+    expectedFinalPath = expectedFinalPath.makeQualified(fs);
+    validateFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt",
+      getMockedResultSetWithoutComma(), ctx, expectedFinalPath);
+  }
+
+  /**
+   * Test zip csv files output path.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  @Test
+  public void testCSVZipFileOutputPath() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.setBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
+    conf.setLong(LensConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
+    QueryContext ctx = createContext(conf, "Test.query_1 name");
+    Path expectedFinalPath = new Path(LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT,
+      "Test.query_1_name-" + ctx.getQueryHandle() + ".zip");
+    FileSystem fs = expectedFinalPath.getFileSystem(conf);
+    expectedFinalPath = expectedFinalPath.makeQualified(fs);
+    validateFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".zip",
+      getMockedResultSetWithoutComma(), ctx, expectedFinalPath);
+    ZipEntry ze = null;
+    ZipInputStream zin = new ZipInputStream(fs.open(expectedFinalPath));
+    int i = 0;
+    while ((ze = zin.getNextEntry()) != null) {
+      Assert.assertEquals(ze.getName(), "Test.query_1_name-" + ctx.getQueryHandle() + "_part-" + i + ".csv");
+      i++;
+      zin.closeEntry();
+    }
+    zin.close();
   }
 
   protected List<String> getExpectedCSVRows() {

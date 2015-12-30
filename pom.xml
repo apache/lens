@@ -39,7 +39,7 @@
     <servlet.api.version>2.5</servlet.api.version>
     <jsp.api.version>2.0</jsp.api.version>
     <ws.rs.version>2.0</ws.rs.version>
-    <jaxb.api.version>2.1</jaxb.api.version>
+    <jaxb.api.version>2.2.11</jaxb.api.version>
     <javax.mail.version>1.4</javax.mail.version>
 
     <!-- hadoop stack -->
@@ -47,18 +47,24 @@
     <spark.version>1.3.0</spark.version>
     <hive.version>0.13.3-inm</hive.version>
 
+    <!-- jest client for elasticsearch -->
+    <jest.version>0.1.5</jest.version>
+    <httpclient.version>4.4</httpclient.version>
+    <httpcore.version>4.4</httpcore.version>
+
     <!-- common library/framework versions -->
-    <commons.logging.version>1.1.1</commons.logging.version>
     <slf4j.version>1.7.6</slf4j.version>
-    <log4j.version>1.2.16</log4j.version>
     <commons.lang.version>2.4</commons.lang.version>
     <commons.collections.version>3.2.1</commons.collections.version>
     <joda.time.version>2.0</joda.time.version>
     <guava.version>13.0.1</guava.version>
-    <lombok.version>1.12.4</lombok.version>
+    <lombok.version>1.16.6</lombok.version>
+    <lombok.maven.plugin.version>1.16.4.1</lombok.maven.plugin.version>
     <typesafe.config.version>1.2.1</typesafe.config.version>
+    <logback.version>1.1.3</logback.version>
 
     <jackson.asl.version>1.9.13</jackson.asl.version>
+    <jackson.guava.version>2.3.3</jackson.guava.version>
     <opencsv.version>2.3</opencsv.version>
     <jsch.version>0.1.42</jsch.version>
 
@@ -81,17 +87,16 @@
     <!-- test -->
     <testng.version>6.8</testng.version>
     <mockito.version>1.9.5</mockito.version>
-    <powermock.version>1.4.12</powermock.version>
-    <test.tmp.dir>${basedir}/target/tmp</test.tmp.dir>
+    <powermock.version>1.5.6</powermock.version>
 
     <!-- maven plugins -->
-    <jaxb2.plugin.version>0.12.3</jaxb2.plugin.version>
-    <jaxb2.basics.plugin.version>0.6.3</jaxb2.basics.plugin.version>
+    <jaxb2.plugin.version>0.13.0</jaxb2.plugin.version>
+    <jaxb2.basics.plugin.version>0.9.5</jaxb2.basics.plugin.version>
     <jetty.plugin.version>${jetty.version}</jetty.plugin.version>
     <exec.plugin.version>1.2.1</exec.plugin.version>
     <enunciate.plugin.version>1.28</enunciate.plugin.version>
     <reports.plugin.version>2.7</reports.plugin.version>
-    <javadoc.plugin.version>2.9.1</javadoc.plugin.version>
+    <javadoc.plugin.version>2.10.3</javadoc.plugin.version>
     <surefire.plugin.version>2.15</surefire.plugin.version>
     <jdeb.plugin.version>1.0.1</jdeb.plugin.version>
     <checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
@@ -102,6 +107,11 @@
     <antrun.plugin.version>1.8</antrun.plugin.version>
     <cobertura.plugin.version>2.7</cobertura.plugin.version>
 
+    <!-- UI -->
+    <nodejs.plugin.version>1.0.0</nodejs.plugin.version>
+    <nodeVersion>0.10.32</nodeVersion>
+    <npmVersion>1.4.9</npmVersion>
+
     <!-- debian -->
     <mvn.deb.build.dir>${project.build.directory}/debian</mvn.deb.build.dir>
 
@@ -109,16 +119,17 @@
     <mvn.lens.install.dir>/usr/local/lens</mvn.lens.install.dir>
     <mvn.lens.webapp.dir>${mvn.lens.install.dir}/server/webapp</mvn.lens.webapp.dir>
     <mvn.lens.server.dir>${mvn.lens.webapp.dir}/lens-server</mvn.lens.server.dir>
+    <src.dir>src/main/java</src.dir>
 
   </properties>
 
   <groupId>org.apache.lens</groupId>
   <artifactId>apache-lens</artifactId>
-  <version>2.3.0-beta-incubating-SNAPSHOT</version>
+  <version>2.5.0-beta-SNAPSHOT</version>
   <name>Lens</name>
   <packaging>pom</packaging>
   <description>Unified Analytics Platform</description>
-  <url>http://lens.incubator.apache.org</url>
+  <url>http://lens.apache.org</url>
   <inceptionYear>2014</inceptionYear>
   <licenses>
     <license>
@@ -145,30 +156,30 @@
   <distributionManagement>
     <site>
       <id>lens-site</id>
-      <url>http://lens.incubator.apache.org/</url>
+      <url>http://lens.apache.org/</url>
     </site>
   </distributionManagement>
 
   <mailingLists>
     <mailingList>
       <name>lens-user</name>
-      <subscribe>user-subscribe@lens.incubator.apache.org</subscribe>
-      <unsubscribe>user-unsubscribe@lens.incubator.apache.org</unsubscribe>
-      <post>user@lens.incubator.apache.org</post>
+      <subscribe>user-subscribe@lens.apache.org</subscribe>
+      <unsubscribe>user-unsubscribe@lens.apache.org</unsubscribe>
+      <post>user@lens.apache.org</post>
       <archive>http://mail-archives.apache.org/mod_mbox/lens-user/</archive>
     </mailingList>
     <mailingList>
       <name>lens-dev</name>
-      <subscribe>dev-subscribe@lens.incubator.apache.org</subscribe>
-      <unsubscribe>dev-unsubscribe@lens.incubator.apache.org</unsubscribe>
-      <post>dev@lens.incubator.apache.org</post>
+      <subscribe>dev-subscribe@lens.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@lens.apache.org</unsubscribe>
+      <post>dev@lens.apache.org</post>
       <archive>http://mail-archives.apache.org/mod_mbox/lens-dev/</archive>
     </mailingList>
     <mailingList>
       <name>lens-commits</name>
-      <subscribe>commits-subscribe@lens.incubator.apache.org</subscribe>
-      <unsubscribe>commits-unsubscribe@lens.incubator.apache.org</unsubscribe>
-      <post>commits@lens.incubator.apache.org</post>
+      <subscribe>commits-subscribe@lens.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@lens.apache.org</unsubscribe>
+      <post>commits@lens.apache.org</post>
       <archive>http://mail-archives.apache.org/mod_mbox/lens-commits/</archive>
     </mailingList>
   </mailingLists>
@@ -179,108 +190,7 @@
       <name>Amareshwari Sriramadasu</name>
       <timezone>+5.5</timezone>
       <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-
-    <developer>
-      <id>gunther</id>
-      <email>gunther@apache.org</email>
-      <name>Gunther Hagleitner</name>
-      <timezone>-8</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>jdhok</id>
-      <email>jdhok@apache.org</email>
-      <name>Jaideep Dhok</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>raghavsingh</id>
-      <email>raghavsingh@apache.org</email>
-      <name>Raghavendra Singh</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>prongs</id>
-      <email>prongs@apache.org</email>
-      <name>Rajat Khandelwal</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>sharad</id>
-      <email>sharad@apache.org</email>
-      <name>Sharad Agarwal</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>sreekanth</id>
-      <email>sreekanth@apache.org</email>
-      <name>Sreekanth Ramakrishnan</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>sriksun</id>
-      <email>sriksun@apache.org</email>
-      <name>Srikanth Sundarrajan</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>sumasai</id>
-      <email>sumasai@apache.org</email>
-      <name>Suma Shivaprasad</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>vikram</id>
-      <email>vikram@apache.org</email>
-      <name>Vikram Dixit</name>
-      <timezone>-8</timezone>
-      <roles>
-        <role>PPMC</role>
-        <role>Committer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>himanshugahlaut</id>
-      <email>himanshugahlaut@apache.org</email>
-      <name>Himanshu Gahlaut</name>
-      <timezone>+5.5</timezone>
-      <roles>
-        <role>PPMC</role>
+        <role>PMC</role>
         <role>Committer</role>
       </roles>
     </developer>
@@ -290,15 +200,162 @@
       <name>Arshad Matin</name>
       <timezone>+5.5</timezone>
       <roles>
-        <role>PPMC</role>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>deepakbarr</id>
+      <email>deepakbarr@apache.org</email>
+      <name>Deepak Kumar Barr</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>gunther</id>
+      <email>gunther@apache.org</email>
+      <name>Gunther Hagleitner</name>
+      <timezone>-8</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>himanshugahlaut</id>
+      <email>himanshugahlaut@apache.org</email>
+      <name>Himanshu Gahlaut</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>jdhok</id>
+      <email>jdhok@apache.org</email>
+      <name>Jaideep Dhok</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>raghavsingh</id>
+      <email>raghavsingh@apache.org</email>
+      <name>Raghavendra Singh</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>prongs</id>
+      <email>prongs@apache.org</email>
+      <name>Rajat Khandelwal</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>raju</id>
+      <email>raju@apache.org</email>
+      <name>Raju Bairishetti</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sharad</id>
+      <email>sharad@apache.org</email>
+      <name>Sharad Agarwal</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sreekanth</id>
+      <email>sreekanth@apache.org</email>
+      <name>Sreekanth Ramakrishnan</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sriksun</id>
+      <email>sriksun@apache.org</email>
+      <name>Srikanth Sundarrajan</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sumasai</id>
+      <email>sumasai@apache.org</email>
+      <name>Suma Shivaprasad</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>vikram</id>
+      <email>vikram@apache.org</email>
+      <name>Vikram Dixit</name>
+      <timezone>-8</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>yash</id>
+      <email>yash@apache.org</email>
+      <name>Yash Sharma</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>amrk7</id>
+      <email>amrk7@apache.org</email>
+      <name>Amruth S</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sushilmohanty</id>
+      <email>sushilmohanty@apache.org</email>
+      <name>SushilMohanty</name>
+      <timezone>+5.5</timezone>
+      <roles>
         <role>Committer</role>
       </roles>
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</developerConnection>
-    <url>https://git-wip-us.apache.org/repos/asf/incubator-lens.git</url>
+    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</connection>
+    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</developerConnection>
+    <url>https://git-wip-us.apache.org/repos/asf/lens.git</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -346,7 +403,7 @@
               <show>public</show>
               <groups>
                 <group>
-                  <title>Clien api</title>
+                  <title>Client api</title>
                   <packages>org.apache.lens.api*:org.apache.lens.client*</packages>
                 </group>
                 <group>
@@ -365,7 +422,7 @@
   </reporting>
 
   <build>
-
+    <sourceDirectory>${src.dir}</sourceDirectory>
     <resources>
       <resource>
         <directory>${basedir}/src/deb/control</directory>
@@ -377,6 +434,12 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
 
     <pluginManagement>
       <plugins>
@@ -404,8 +467,8 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-	  <artifactId>maven-site-plugin</artifactId>
-	  <configuration>
+          <artifactId>maven-site-plugin</artifactId>
+          <configuration>
             <generateReports>true</generateReports>
           </configuration>
         </plugin>
@@ -450,6 +513,11 @@
           <version>${checkstyle.plugin.version}</version>
         </plugin>
         <plugin>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok-maven-plugin</artifactId>
+          <version>${lombok.maven.plugin.version}</version>
+        </plugin>
+        <plugin>
           <groupId>org.jvnet.jaxb2.maven2</groupId>
           <artifactId>maven-jaxb2-plugin</artifactId>
           <version>${jaxb2.plugin.version}</version>
@@ -484,6 +552,43 @@
           <artifactId>findbugs-maven-plugin</artifactId>
           <version>${findbugs.plugin.version}</version>
         </plugin>
+        <plugin>
+          <groupId>io.wcm.maven.plugins</groupId>
+          <artifactId>nodejs-maven-plugin</artifactId>
+          <version>${nodejs.plugin.version}</version>
+          <configuration>
+            <npmVersion>${npmVersion}</npmVersion>
+            <nodeJsVersion>${nodeVersion}</nodeJsVersion>
+            <nodeJsDirectory>${project.basedir}/node</nodeJsDirectory>
+            <tasks>
+              <npmInstallTask>
+                <workingDirectory>${project.basedir}</workingDirectory>
+              </npmInstallTask>
+            </tasks>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>shade</goal>
+              </goals>
+              <configuration>
+                <transformers>
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
+                    <resource>log4j.properties</resource>
+                  </transformer>
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
+                  <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer" />
+                </transformers>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -504,11 +609,15 @@
             <exclude>.git/**</exclude>
             <!-- For connecting to ReviewBoard thru rbt tools-->
             <exclude>.reviewboardrc</exclude>
+            <!-- Used in apache pre-commit job -->
+            <exclude>**/patchprocess/**</exclude>
             <!-- IDE files -->
             <exclude>.idea/**</exclude>
             <exclude>**/*.iml</exclude>
             <exclude>**/.classpath</exclude>
             <exclude>**/.project</exclude>
+            <exclude>**/node/**</exclude>
+            <exclude>**/node_modules/**</exclude>
             <exclude>**/.checkstyle</exclude>
             <exclude>**/.settings/**</exclude>
             <exclude>**/maven-eclipse.xml</exclude>
@@ -529,6 +638,7 @@
             <exclude>**/codemirror.min.*</exclude>
             <exclude>**/*.js</exclude>
             <exclude>**/*.properties</exclude>
+            <exclude>**/*.json</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -575,7 +685,7 @@
           <dependency>
             <groupId>org.apache.lens</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>2.3.0-beta-incubating-SNAPSHOT</version>
+            <version>2.5.0-beta-SNAPSHOT</version>
           </dependency>
         </dependencies>
         <executions>
@@ -601,22 +711,22 @@
         <artifactId>findbugs-maven-plugin</artifactId>
         <configuration>
           <xmlOutput>true</xmlOutput>
-	  <excludeFilterFile>${project.basedir}/../checkstyle/src/main/resources/findbugs-exclude.xml</excludeFilterFile>
+          <excludeFilterFile>${basedir}/../checkstyle/src/main/resources/findbugs-exclude.xml
+          </excludeFilterFile>
           <failOnError>true</failOnError>
           <skip>${skipCheck}</skip>
         </configuration>
         <executions>
           <execution>
-             <id>findbugs-check</id>
-             <goals>
-               <goal>check</goal>
-             </goals>
-             <phase>verify</phase>
-           </execution>
+            <id>findbugs-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
         </executions>
       </plugin>
     </plugins>
-
   </build>
   <repositories>
     <repository>
@@ -712,18 +822,23 @@
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-log4j12</artifactId>
+        <artifactId>log4j-over-slf4j</artifactId>
         <version>${slf4j.version}</version>
       </dependency>
       <dependency>
-        <groupId>log4j</groupId>
-        <artifactId>log4j</artifactId>
-        <version>${log4j.version}</version>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jcl-over-slf4j</artifactId>
+        <version>${slf4j.version}</version>
       </dependency>
       <dependency>
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging</artifactId>
-        <version>${commons.logging.version}</version>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${logback.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-lang</groupId>
@@ -800,6 +915,10 @@
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
           <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
           </exclusion>
@@ -818,6 +937,10 @@
           <exclusion>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -880,6 +1003,10 @@
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
           <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
           </exclusion>
@@ -895,6 +1022,10 @@
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -902,12 +1033,48 @@
         <artifactId>hive-service</artifactId>
         <version>${hive.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-serde</artifactId>
         <version>${hive.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>com.typesafe</groupId>
@@ -926,8 +1093,28 @@
         <scope>provided</scope>
         <exclusions>
           <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -936,24 +1123,96 @@
         <artifactId>hive-metastore</artifactId>
         <version>${hive.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-common</artifactId>
         <version>${hive.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-exec</artifactId>
         <version>${hive.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-cli</artifactId>
         <version>${hive.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -1133,6 +1392,12 @@
         <groupId>org.springframework.shell</groupId>
         <artifactId>spring-shell</artifactId>
         <version>${spring.shell.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <!-- HSQLDB Dependency for examples to work -->
       <dependency>
@@ -1173,23 +1438,92 @@
             <artifactId>jline</artifactId>
             <groupId>jline</groupId>
           </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jul-to-slf4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-mllib_2.10</artifactId>
         <version>${spark.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jul-to-slf4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-yarn_2.10</artifactId>
         <version>${spark.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jul-to-slf4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
-
       <dependency>
         <groupId>org.apache.hive.hcatalog</groupId>
         <artifactId>hive-hcatalog-core</artifactId>
         <version>${hive.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.thrift</groupId>
@@ -1206,6 +1540,39 @@
         <artifactId>jsch</artifactId>
         <version>${jsch.version}</version>
       </dependency>
+      <!-- jest elastic search deps -->
+      <dependency>
+        <groupId>io.searchbox</groupId>
+        <artifactId>jest</artifactId>
+        <version>${jest.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-guava</artifactId>
+        <version>${jackson.guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>${httpclient.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>${httpcore.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -1218,14 +1585,17 @@
     <module>lens-query-lib</module>
     <module>lens-driver-hive</module>
     <module>lens-driver-jdbc</module>
+    <module>lens-driver-es</module>
     <module>lens-server</module>
     <module>lens-client</module>
     <module>lens-cli</module>
     <module>lens-examples</module>
+    <module>lens-ship-jars</module>
     <module>lens-dist</module>
     <module>lens-ml-lib</module>
     <module>lens-ml-dist</module>
     <module>lens-regression</module>
+    <module>lens-ui</module>
   </modules>
 
   <profiles>
@@ -1281,24 +1651,24 @@
           </plugin>
 
           <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <executions>
-            <execution>
-              <phase>process-classes</phase>
-              <configuration>
-                <failOnError>false</failOnError>
-                <tasks>
-                  <propertyfile file="target/generated-classes/cobertura/cobertura.properties">
-                    <entry key="net.sourceforge.cobertura.datafile" value="${mvn.lens.install.dir}" />
-                  </propertyfile>
-                </tasks>
-              </configuration>
-              <goals>
-                <goal>run</goal>
-              </goals>
-            </execution>
-          </executions>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>process-classes</phase>
+                <configuration>
+                  <failOnError>false</failOnError>
+                  <tasks>
+                    <propertyfile file="target/generated-classes/cobertura/cobertura.properties">
+                      <entry key="net.sourceforge.cobertura.datafile" value="${mvn.lens.install.dir}" />
+                    </propertyfile>
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
 
           <plugin>
@@ -1312,7 +1682,7 @@
 
         </plugins>
       </build>
-   </profile>
+    </profile>
     <profile>
       <id>no-checkstyle</id>
       <build>
@@ -1324,7 +1694,7 @@
               <dependency>
                 <groupId>org.apache.lens</groupId>
                 <artifactId>checkstyle</artifactId>
-                <version>2.3.0-beta-incubating-SNAPSHOT</version>
+                <version>2.5.0-beta-SNAPSHOT</version>
               </dependency>
             </dependencies>
             <executions>
@@ -1396,6 +1766,74 @@
       <properties>
         <skipCheck>true</skipCheck>
       </properties>
+    </profile>
+    <profile>
+      <id>lombok-needs-tools-jar</id>
+      <activation>
+        <file>
+          <exists>${java.home}/../lib/tools.jar</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-maven-plugin</artifactId>
+            <version>${lombok.maven.plugin.version}</version>
+            <dependencies>
+              <dependency>
+                <groupId>sun.jdk</groupId>
+                <artifactId>tools</artifactId>
+                <version>1.6</version>
+                <scope>system</scope>
+                <systemPath>${java.home}/../lib/tools.jar</systemPath>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>javadoc</id>
+      <properties>
+        <src.dir>target/generated-sources/delombok</src.dir>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>delombok</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>delombok</goal>
+                </goals>
+                <configuration>
+                  <formatPreferences>
+                    <javaLangAsFQN>skip</javaLangAsFQN>
+                  </formatPreferences>
+                  <verbose>true</verbose>
+                  <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                  <addOutputDirectory>true</addOutputDirectory>
+                </configuration>
+              </execution>
+              <execution>
+                <id>test-delombok</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>testDelombok</goal>
+                </goals>
+                <configuration>
+                  <verbose>true</verbose>
+                  <addOutputDirectory>true</addOutputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>

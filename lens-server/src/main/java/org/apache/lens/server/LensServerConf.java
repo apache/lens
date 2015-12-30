@@ -18,6 +18,11 @@
  */
 package org.apache.lens.server;
 
+import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.lens.server.api.LensConfConstants;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 
@@ -32,13 +37,21 @@ public final class LensServerConf {
   private static final class ConfHolder {
     public static final HiveConf HIVE_CONF = new HiveConf();
     // configuration object which does not load defaults and loads only lens*.xml files.
-    public static final Configuration CONF = new Configuration(false);
+    // and removes any server specific configuration, that should not be passed to drivers
+    private static final Configuration OVERRIDING_CONF_FOR_DRIVER = new Configuration(false);
 
     static {
       HIVE_CONF.addResource("lensserver-default.xml");
       HIVE_CONF.addResource("lens-site.xml");
-      CONF.addResource("lensserver-default.xml");
-      CONF.addResource("lens-site.xml");
+      Configuration conf = new Configuration(false);
+      conf.addResource("lens-site.xml");
+      Iterator<Map.Entry<String, String>> confItr = conf.iterator();
+      while (confItr.hasNext()) {
+        Map.Entry<String, String> prop = confItr.next();
+        if (!prop.getKey().startsWith(LensConfConstants.SERVER_PFX)) {
+          OVERRIDING_CONF_FOR_DRIVER.set(prop.getKey(), prop.getValue());
+        }
+      }
     }
   }
 
@@ -57,8 +70,8 @@ public final class LensServerConf {
    *
    * @return the conf
    */
-  public static Configuration getConf() {
-    return ConfHolder.CONF;
+  public static Configuration getConfForDrivers() {
+    return ConfHolder.OVERRIDING_CONF_FOR_DRIVER;
   }
 
   /**

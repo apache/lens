@@ -17,11 +17,11 @@
 # under the License.
 #
 Package: apache-lens-client
-Version: [[project.version]] 
+Version: [[project.version]]
 Section:  misc
 Priority: high
-Architecture: all 
+Architecture: all
 Depends: sun-java7-jre | java2-runtime
-Maintainer: dev@lens.incubator.apache.org
+Maintainer: dev@lens.apache.org
 Description: Apache Lens Client Distribution
-Distribution: alpha
+Distribution: beta

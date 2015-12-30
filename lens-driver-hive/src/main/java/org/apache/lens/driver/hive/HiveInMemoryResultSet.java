@@ -90,8 +90,8 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
    * @see org.apache.lens.server.api.driver.LensResultSet#size()
    */
   @Override
-  public int size() throws LensException {
-    return -1;
+  public Integer size() throws LensException {
+    return null;
   }
 
   @Override

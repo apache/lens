@@ -67,25 +67,25 @@ public class LensErrorTO<PAYLOAD> implements Serializable {
   public static <PAYLOAD> LensErrorTO<PAYLOAD> composedOf(final int code, final String message,
       final String stackTrace, final PAYLOAD payload, final List<LensErrorTO> childErrors) {
 
-    return new LensErrorTO<PAYLOAD>(code, message, stackTrace, payload, childErrors);
+    return new LensErrorTO<>(code, message, stackTrace, payload, childErrors);
   }
 
   public static <PAYLOAD> LensErrorTO<PAYLOAD> composedOf(final int code, final String message,
       final String stackTrace, final PAYLOAD payload) {
 
-    return new LensErrorTO<PAYLOAD>(code, message, stackTrace, payload, null);
+    return new LensErrorTO<>(code, message, stackTrace, payload, null);
   }
 
   public static LensErrorTO<NoErrorPayload> composedOf(final int code, final String message,
       final String stackTrace) {
 
-    return new LensErrorTO<NoErrorPayload>(code, message, stackTrace, null, null);
+    return new LensErrorTO<>(code, message, stackTrace, null, null);
   }
 
   public static LensErrorTO<NoErrorPayload> composedOf(final int code, final String message,
       final String stackTrace, final List<LensErrorTO> childErrors) {
 
-    return new LensErrorTO<NoErrorPayload>(code, message, stackTrace, null, childErrors);
+    return new LensErrorTO<>(code, message, stackTrace, null, childErrors);
   }
 
   private LensErrorTO(final int code, final String message, final String stackTrace, final PAYLOAD errorPayload,

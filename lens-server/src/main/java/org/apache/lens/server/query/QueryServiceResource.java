@@ -77,7 +77,7 @@ public class QueryServiceResource {
 
   private void validateSessionId(final LensSessionHandle sessionHandle) throws LensException {
     if (sessionHandle == null) {
-      throw new LensException(SESSION_ID_NOT_PROVIDED.getValue());
+      throw new LensException(SESSION_ID_NOT_PROVIDED.getLensErrorInfo());
     }
   }
 
@@ -104,7 +104,7 @@ public class QueryServiceResource {
 
   private void validateQuery(String query) throws LensException {
     if (StringUtils.isBlank(query)) {
-      throw new LensException(NULL_OR_EMPTY_OR_BLANK_QUERY.getValue());
+      throw new LensException(NULL_OR_EMPTY_OR_BLANK_QUERY.getLensErrorInfo());
     }
   }
   /**
@@ -124,7 +124,7 @@ public class QueryServiceResource {
    * @throws LensException the lens exception
    */
   public QueryServiceResource() throws LensException {
-    queryServer = (QueryExecutionService) LensServices.get().getService("query");
+    queryServer = LensServices.get().getService(QueryExecutionService.NAME);
     errorCollection = LensServices.get().getErrorCollection();
     logSegregationContext = LensServices.get().getLogSegregationContext();
   }
@@ -145,6 +145,7 @@ public class QueryServiceResource {
    *                  all the queries will be returned
    * @param user      Returns queries submitted by this user. If set to "all", returns queries of all users. By default,
    *                  returns queries of the current user.
+   * @param driver    Get queries submitted on a specific driver.
    * @param fromDate  from date to search queries in a time range, the range is inclusive(submitTime &gt;= fromDate)
    * @param toDate    to date to search queries in a time range, the range is inclusive(toDate &gt;= submitTime)
    * @return List of {@link QueryHandle} objects
@@ -154,14 +155,14 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("queryName") String queryName,
-    @DefaultValue("") @QueryParam("user") String user, @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
-    @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+    @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("driver") String driver,
+    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     try {
       if (toDate == -1L) {
         toDate = Long.MAX_VALUE;
       }
-      return queryServer.getAllQueries(sessionid, state, user, queryName, fromDate, toDate);
+      return queryServer.getAllQueries(sessionid, state, user, driver, queryName, fromDate, toDate);
     } catch (LensException e) {
       throw new WebApplicationException(e);
     }
@@ -205,7 +206,7 @@ public class QueryServiceResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
-  public LensAPIResult<QuerySubmitResult> query(@FormDataParam("sessionid") LensSessionHandle sessionid,
+  public LensAPIResult<? extends QuerySubmitResult> query(@FormDataParam("sessionid") LensSessionHandle sessionid,
       @FormDataParam("query") String query, @FormDataParam("operation") String operation,
       @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
       @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
@@ -254,6 +255,7 @@ public class QueryServiceResource {
    *                  {@link org.apache.lens.api.query.QueryStatus.Status#SUCCESSFUL} cannot be cancelled
    * @param user      If any user is passed, all the queries submitted by the user will be cancelled, otherwise all the
    *                  queries will be cancelled
+   * @param driver    Get queries submitted on a specific driver.
    * @param queryName Cancel queries matching the query name
    * @param fromDate  the from date, inclusive(submitTime&gt;=fromDate)
    * @param toDate    the to date, inclusive(toDate&gt;=submitTime)
@@ -267,14 +269,15 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult cancelAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("user") String user,
-    @DefaultValue("") @QueryParam("queryName") String queryName,
+    @DefaultValue("") @QueryParam("queryName") String queryName, @DefaultValue("") @QueryParam("driver") String driver,
     @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     int numCancelled = 0;
     List<QueryHandle> handles = null;
     boolean failed = false;
     try {
-      handles = getAllQueries(sessionid, state, queryName, user, fromDate, toDate == -1L ? Long.MAX_VALUE : toDate);
+      handles = getAllQueries(sessionid, state, queryName, user, driver, fromDate,
+        toDate == -1L ? Long.MAX_VALUE : toDate);
       for (QueryHandle handle : handles) {
         if (cancelQuery(sessionid, handle)) {
           numCancelled++;
@@ -340,19 +343,24 @@ public class QueryServiceResource {
    * @return {@link QueryPrepareHandle} incase of {link org.apache.lens.api.query.SubmitOp#PREPARE} operation.
    *         {@link QueryPlan} incase of {@link org.apache.lens.api.query.SubmitOp#EXPLAIN_AND_PREPARE}
    *         and the query plan will contain the prepare handle as well.
+   * @throws LensException
    */
   @POST
   @Path("preparedqueries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
-  public QuerySubmitResult prepareQuery(@FormDataParam("sessionid") LensSessionHandle sessionid,
-    @FormDataParam("query") String query, @DefaultValue("") @FormDataParam("operation") String operation,
-    @FormDataParam("conf") LensConf conf, @DefaultValue("") @FormDataParam("queryName") String queryName) {
+  public LensAPIResult<? extends QuerySubmitResult> prepareQuery(
+      @FormDataParam("sessionid") LensSessionHandle sessionid, @FormDataParam("query") String query,
+      @DefaultValue("") @FormDataParam("operation") String operation, @FormDataParam("conf") LensConf conf,
+      @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
+    final String requestId = this.logSegregationContext.getLogSegragationId();
+
     try {
       checkSessionId(sessionid);
       checkQuery(query);
       SubmitOp sop = null;
+      QuerySubmitResult result;
       try {
         sop = SubmitOp.valueOf(operation.toUpperCase());
       } catch (IllegalArgumentException e) {
@@ -363,17 +371,20 @@ public class QueryServiceResource {
       }
       switch (sop) {
       case PREPARE:
-        return queryServer.prepare(sessionid, query, conf, queryName);
+        result = queryServer.prepare(sessionid, query, conf, queryName);
+        break;
       case EXPLAIN_AND_PREPARE:
-        return queryServer.explainAndPrepare(sessionid, query, conf, queryName);
+        result = queryServer.explainAndPrepare(sessionid, query, conf, queryName);
+        break;
       default:
         throw new BadRequestException("Invalid operation type: " + operation + prepareClue);
       }
+      return LensAPIResult.composedOf(null, requestId, result);
     } catch (LensException e) {
-      throw new WebApplicationException(e);
+      e.buildLensErrorResponse(errorCollection, null, requestId);
+      throw e;
     }
   }
-
   /**
    * Destroy all the prepared queries; Can be filtered with user.
    *
@@ -390,10 +401,11 @@ public class QueryServiceResource {
    */
   @DELETE
   @Path("preparedqueries")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN })
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
-    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+      @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
+      @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
+      @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     int numDestroyed = 0;
     boolean failed = false;

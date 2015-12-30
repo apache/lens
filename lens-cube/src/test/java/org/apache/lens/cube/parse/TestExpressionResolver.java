@@ -19,15 +19,16 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
@@ -41,7 +42,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @BeforeTest
   public void setupDriver() throws Exception {
     conf = new Configuration();
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2");
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
@@ -50,15 +51,19 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
   @Test
   public void testColumnErrors() throws Exception {
-    SemanticException th;
-    th = getSemanticExceptionInRewrite("select nocolexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("nonexist"));
+    LensException th;
+    th = getLensExceptionInRewrite("select nocolexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
 
-    th = getSemanticExceptionInRewrite("select invalidexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE,
-      conf);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("invalidexpr"));
+    Assert.assertTrue(getLensExceptionErrorMessageInRewrite(
+        "select nocolexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf).contains("nonexist"));
+
+    Assert.assertTrue(getLensExceptionErrorMessageInRewrite(
+        "select invalidexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf).contains("invalidexpr"));
+
+    th = getLensExceptionInRewrite("select invalidexpr, " + "SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE,
+        conf);
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -137,7 +142,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
       rewrite("select TC.substrexpr as subdim1, TC.avgmsr from testCube TC" + " where " + TWO_DAYS_RANGE
         + " and subdim1 != 'XYZ'", conf);
     String expected =
-      getExpectedQuery("tc", "select substr(tc.dim1, 3) subdim1, avg(tc.msr1 + tc.msr2) FROM ", null,
+      getExpectedQuery("tc", "select substr(tc.dim1, 3) as `subdim1`, avg(tc.msr1 + tc.msr2) FROM ", null,
         " and subdim1 != 'XYZ' group by substr(tc.dim1, 3)", getWhereForHourly2days("tc", "C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
@@ -274,7 +279,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
       rewrite("cube select booleancut bc, msr2 from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'"
         + " having msr6 > 100.0 order by bc", conf);
     String expected =
-      getExpectedQuery(cubeName, "select testCube.dim1 != 'x' AND testCube.dim2 != 10 bc,"
+      getExpectedQuery(cubeName, "select testCube.dim1 != 'x' AND testCube.dim2 != 10 as `bc`,"
         + " sum(testCube.msr2) FROM ", null, " and substr(testCube.dim1, 3) != 'XYZ' "
           + " group by testCube.dim1 != 'x' AND testCube.dim2 != 10"
           + " having (sum(testCube.msr2) + max(testCube.msr3))/ count(testcube.msr4) > 100.0" + " order by bc asc",
@@ -285,6 +290,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testMultipleExpressionsPickingFirstExpression() throws Exception {
     Configuration newConf = new Configuration(conf);
+    newConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
     newConf.set(CubeQueryConfUtil.getValidFactTablesKey(cubeName), "testFact");
     String hqlQuery = rewrite("select equalsums from testCube where " + TWO_DAYS_RANGE, newConf);
     String expected =
@@ -311,8 +317,20 @@ public class TestExpressionResolver extends TestQueryRewrite {
   }
 
   @Test
+  public void testExpressionFieldWithOtherFields() throws Exception {
+    // select with expression which requires dimension tables. And there is a candidate, which is removed because
+    // the other fields which require the dimension tables as expression ones, are not reachable and
+    // the expression is not evaluable on the candidate.
+    LensException th =
+      getLensExceptionInRewrite("select cityStateName, msr2expr, msr5, msr15 from testCube where "
+        + TWO_DAYS_RANGE, conf);
+    Assert.assertEquals(th.getErrorCode(),
+      LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
+  }
+  @Test
   public void testMaterializedExpressionPickingMaterializedValue() throws Exception {
     Configuration newConf = new Configuration(conf);
+    newConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
     newConf.set(CubeQueryConfUtil.getValidFactTablesKey(cubeName), "testFact");
     String hqlQuery = rewrite("select msr5 from testCube where " + TWO_DAYS_RANGE, newConf);
     String expected = getExpectedQuery(cubeName, "select testcube.msr5 FROM ", null, null,
@@ -330,10 +348,10 @@ public class TestExpressionResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDerivedCube() throws SemanticException, ParseException, LensException {
-    SemanticException th =
-      getSemanticExceptionInRewrite("select avgmsr from derivedCube" + " where " + TWO_DAYS_RANGE, conf);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
+  public void testDerivedCube() throws ParseException, LensException, HiveException {
+    LensException th =
+      getLensExceptionInRewrite("select avgmsr from derivedCube" + " where " + TWO_DAYS_RANGE, conf);
+    Assert.assertEquals(th.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -365,7 +383,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
     // since zipdim is not available in storage C2, first expression should be have been pruned
     // And joining with statedim for second expression is not possible because of stateid missing in C2 tables
     // or citydim.name missing in c2 tables.
-    CubeQueryContext ctx = rewriteCtx("select citydim.name, cityaddress from" + " citydim", newConf);
+    CubeQueryContext ctx = rewriteCtx("select citydim.name, cityaddress from citydim", newConf);
     Assert.assertEquals(ctx.getDimPruningMsgs().get(ctx.getMetastoreClient().getDimension("citydim"))
       .get(ctx.getMetastoreClient().getDimensionTable("citytable")).size(), 1);
     CandidateTablePruneCause pruningMsg =
@@ -388,9 +406,9 @@ public class TestExpressionResolver extends TestQueryRewrite {
       + "c1_countrytable countrydim on" + " statedim.countryid = countrydim.id";
     joinExpr = join2 + join3 + join1;
     String expected =
-      getExpectedQuery("citydim", "SELECT citydim.name cname, concat((citydim.name), \":\", (statedim.name ),"
-        + " \":\",(countrydim.name),  \":\" , ( zipdim . code )) caddr FROM ", joinExpr, null, null, "c1_citytable",
-        true);
+      getExpectedQuery("citydim", "SELECT citydim.name as `cname`, concat((citydim.name), \":\", (statedim.name ),"
+        + " \":\",(countrydim.name),  \":\" , ( zipdim . code )) as `caddr` FROM ", joinExpr, null, null,
+        "c1_citytable", true);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 
@@ -400,9 +418,9 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
     String joinExpr =
       ""
-        + " join " + getDbName() + ".c1_statetable statedim on ct.stateid = statedim.id and (statedim.dt = 'latest')"
-        + " join " + getDbName() + ".c1_countrytable countrydim on statedim.countryid = countrydim.id"
-        + " join " + getDbName() + ".c1_ziptable zipdim on ct.zipcode = zipdim.code and (zipdim.dt = 'latest')"
+        + " join " + getDbName() + "c1_statetable statedim on ct.stateid = statedim.id and (statedim.dt = 'latest')"
+        + " join " + getDbName() + "c1_countrytable countrydim on statedim.countryid = countrydim.id"
+        + " join " + getDbName() + "c1_ziptable zipdim on ct.zipcode = zipdim.code and (zipdim.dt = 'latest')"
         + "";
 
     String expected =
@@ -426,15 +444,15 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
     String joinExpr =
       ""
-        + " join " + getDbName() + ".c1_statetable statedim on ct.stateid = statedim.id and (statedim.dt = 'latest')"
-        + " join " + getDbName() + ".c1_countrytable countrydim on statedim.countryid = countrydim.id"
-        + " join " + getDbName() + ".c1_ziptable zipdim on ct.zipcode = zipdim.code and (zipdim.dt = 'latest')"
+        + " join " + getDbName() + "c1_statetable statedim on ct.stateid = statedim.id and (statedim.dt = 'latest')"
+        + " join " + getDbName() + "c1_countrytable countrydim on statedim.countryid = countrydim.id"
+        + " join " + getDbName() + "c1_ziptable zipdim on ct.zipcode = zipdim.code and (zipdim.dt = 'latest')"
         + "";
 
     String expected =
-      getExpectedQuery("ct", "SELECT ct.name cname, concat((ct.name), \":\", (statedim.name ),"
-        + " \":\",(countrydim.name),  \":\" , ( zipdim . code )) caddr FROM ", joinExpr, null, null, "c1_citytable",
-        true);
+      getExpectedQuery("ct", "SELECT ct.name as `cname`, concat((ct.name), \":\", (statedim.name ),"
+        + " \":\",(countrydim.name),  \":\" , ( zipdim . code )) as `caddr` FROM ", joinExpr, null, null,
+        "c1_citytable", true);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 

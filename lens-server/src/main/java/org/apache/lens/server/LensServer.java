@@ -25,10 +25,11 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.apache.lens.api.result.LensJAXBContextResolver;
+import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.error.LensExceptionMapper;
+import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.ui.UIApp;
@@ -44,7 +45,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.codahale.metrics.servlets.AdminServlet;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,10 +89,10 @@ public class LensServer {
     serverList.add(server);
 
     WebappContext adminCtx = new WebappContext("admin", "");
-    adminCtx.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry", ((MetricsServiceImpl) LensServices
-      .get().getService(MetricsService.NAME)).getMetricRegistry());
-    adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
-      ((MetricsServiceImpl) LensServices.get().getService(MetricsService.NAME)).getHealthCheck());
+    MetricsServiceImpl metricsService = LensServices.get().getService(MetricsService.NAME);
+    adminCtx
+      .setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry", (metricsService.getMetricRegistry()));
+    adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry", metricsService.getHealthCheck());
 
     final ServletRegistration sgMetrics = adminCtx.addServlet("admin", new AdminServlet());
     sgMetrics.addMapping("/admin/*");
@@ -113,6 +113,7 @@ public class LensServer {
     ResourceConfig app = ResourceConfig.forApplicationClass(LensApplication.class);
     app.register(new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".request"), true));
     app.register(LensExceptionMapper.class);
+    app.register(LensJAXBValidationExceptionMapper.class);
     app.register(LensJAXBContextResolver.class);
     app.setApplicationName("AllApps");
     return app;

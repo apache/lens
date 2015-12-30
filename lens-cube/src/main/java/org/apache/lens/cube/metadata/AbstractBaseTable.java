@@ -82,7 +82,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     for (ExprColumn expr : expressions) {
       exprMap.put(expr.getName().toLowerCase(), expr);
     }
-    this.joinChains = getJoinChains();
+    this.joinChains = getJoinChains(this, getJoinChainListPropKey(getName()), getProperties());
     chainMap = new HashMap<String, JoinChain>();
     for (JoinChain chain : joinChains) {
       chainMap.put(chain.getName().toLowerCase(), chain);
@@ -263,13 +263,13 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
    *
    * @return
    */
-  public Set<JoinChain> getJoinChains() {
+  private static Set<JoinChain> getJoinChains(AbstractBaseTable tbl, String propName, Map<String, String> props) {
     Set<JoinChain> joinChains = new HashSet<JoinChain>();
-    String joinChainsStr = MetastoreUtil.getNamedStringValue(getProperties(), getJoinChainListPropKey(getName()));
+    String joinChainsStr = MetastoreUtil.getNamedStringValue(props, propName);
     if (!StringUtils.isBlank(joinChainsStr)) {
       String[] cnames = joinChainsStr.split(",");
       for (String chainName : cnames) {
-        JoinChain chain = new JoinChain(this, chainName);
+        JoinChain chain = new JoinChain(tbl, chainName);
         joinChains.add(chain);
       }
     }

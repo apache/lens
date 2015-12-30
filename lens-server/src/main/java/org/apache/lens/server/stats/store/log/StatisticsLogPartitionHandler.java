@@ -104,7 +104,7 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
           new File(entry.getValue()).delete();
         }
       } catch (Exception e) {
-        MetricsService svc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+        MetricsService svc = LensServices.get().getService(MetricsService.NAME);
         svc.incrCounter(StatisticsLogPartitionHandler.class, LOG_PARTITION_HANDLER_COUNTER);
         LOG.error("Unable to copy file to the file system", e);
       }

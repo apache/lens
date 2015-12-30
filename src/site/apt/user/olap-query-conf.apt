@@ -24,44 +24,54 @@ OLAP query configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|lens.cube.query.disable.aggregate.resolver|true|Tells whether to disable automatic resolution of aggregations for measures in a cube. To enable automatic resolution, this value should be false.|
+|1|lens.cube.query.bridge.table.field.aggregator|collect_set|The field aggregator function to be used for aggregating fields from bridge tables. Would be used only when flattening is enabled. The value can be passed for each query. During typical deployments it would be passed for each driver, as the function could be different for each driver.|
 *--+--+---+--+
-|2|lens.cube.query.disable.auto.join|true|Tells whether to disable automatic resolution of join conditions between tables involved. To enable automatic resolution, this value should be false.|
+|2|lens.cube.query.disable.aggregate.resolver|true|Tells whether to disable automatic resolution of aggregations for measures in a cube. To enable automatic resolution, this value should be false.|
 *--+--+---+--+
-|3|lens.cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
+|3|lens.cube.query.disable.auto.join|true|Tells whether to disable automatic resolution of join conditions between tables involved. To enable automatic resolution, this value should be false.|
 *--+--+---+--+
-|4|lens.cube.query.enable.attrfields.add.distinct|true|When the query has only attribute fields projected from cube and the flag is set to true, distinct clause will be added for the projection so that no duplicate values will be projected. If flag is set to false, projection wont be changed, result might include duplicate values.|
+|4|lens.cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
 *--+--+---+--+
-|5|lens.cube.query.fail.if.data.partial|false|Whether to fail the query of data is partial|
+|5|lens.cube.query.enable.attrfields.add.distinct|true|When the query has only attribute fields projected from cube and the flag is set to true, distinct clause will be added for the projection so that no duplicate values will be projected. If flag is set to false, projection wont be changed, result might include duplicate values.|
 *--+--+---+--+
-|6|lens.cube.query.join.type|INNER|Tells what the join type is, in-case of automatic resolution of joins is enabled|
+|6|lens.cube.query.enable.flattening.bridge.tables|false|Flag specifies if fields selected have to be flattened or not, if they are coming from tables with many to many relationship in join. If false, field selection will be simple join and selecting the field. If true, the fields from bridge tables will be aggregated grouped by join key.|
 *--+--+---+--+
-|7|lens.cube.query.lookahead.ptparts.forinterval.${interval}|1|The value of number of lookahead process time partitions for interval specified. Interval can be any Update period.|
+|7|lens.cube.query.enable.storages.union|false|Sometimes One storage table doesn't contain all required partitions, and the query needs to be answered from two storage tables. Enabling this (make value = <true>) allows rewrite of such queries. If it's <false>, then such queries will fail in rewrite phase. The feature should only be enabled when all the aggregate functions used in the query (explicitly or implicitly picked from default aggregates of used measures) are transitive. Transitive aggregate functions are those that follow the following property:\ |
+| |                                     |     |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \ |
+| |                                     |     |<<<f(a, b, c, d) = f(f(a, b), f(c, d)) for all possible values of a,b,c,d.>>>                                                                                                                                                                                                                                                                                                                                                                                                                                                    \ |
+| |                                     |     |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \ |
+| |                                     |     |e.g. SUM, MAX, MIN etc are transitive aggregate functions, while AVG, COUNT etc are not.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 *--+--+---+--+
-|8|lens.cube.query.max.interval| |Maximum value of the update period that the query timed dimensions can take values of. For example, if query involves month ranges, user can say query maximum interval is daily, then no monthly partitions will be picked.|
+|8|lens.cube.query.fail.if.data.partial|false|Whether to fail the query of data is partial|
 *--+--+---+--+
-|9|lens.cube.query.nonexisting.partitions| |The list of comma separated non existing partitions, if query can run with partial data. The value will be set by the cube query rewriter|
+|9|lens.cube.query.join.type|INNER|Tells what the join type is, in-case of automatic resolution of joins is enabled|
 *--+--+---+--+
-|10|lens.cube.query.partition.where.clause.format| |The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition|
+|10|lens.cube.query.lookahead.ptparts.forinterval.${interval}|1|The value of number of lookahead process time partitions for interval specified. Interval can be any Update period.|
 *--+--+---+--+
-|11|lens.cube.query.pick.lightest.fact.first|false|If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will be resolved to check all partitions exist and then pick lightest fact among candidates|
+|11|lens.cube.query.max.interval| |Maximum value of the update period that the query timed dimensions can take values of. For example, if query involves month ranges, user can say query maximum interval is daily, then no monthly partitions will be picked.|
 *--+--+---+--+
-|12|lens.cube.query.process.time.partition.column| |The column name which is a process time column. If process time column is specified, query rewriter will look ahead the partitions of other timed dimensions inside this column.|
+|12|lens.cube.query.nonexisting.partitions| |The list of comma separated non existing partitions, if query can run with partial data. The value will be set by the cube query rewriter|
 *--+--+---+--+
-|13|lens.cube.query.promote.groupby.toselect|false|Tells whether to promote group by clauses to be promoted to select expressions if they are already not projected. To enable automatic promotion, this value should be true.|
+|13|lens.cube.query.partition.where.clause.format| |The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition|
 *--+--+---+--+
-|14|lens.cube.query.promote.select.togroupby|false|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
+|14|lens.cube.query.pick.lightest.fact.first|false|If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will be resolved to check all partitions exist and then pick lightest fact among candidates|
 *--+--+---+--+
-|15|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
+|15|lens.cube.query.process.time.partition.column| |The column name which is a process time column. If process time column is specified, query rewriter will look ahead the partitions of other timed dimensions inside this column.|
 *--+--+---+--+
-|16|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
+|16|lens.cube.query.promote.groupby.toselect|false|Tells whether to promote group by clauses to be promoted to select expressions if they are already not projected. To enable automatic promotion, this value should be true.|
 *--+--+---+--+
-|17|lens.cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
+|17|lens.cube.query.promote.select.togroupby|false|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
 *--+--+---+--+
-|18|lens.cube.query.valid.dim.storgaetables| |List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid|
+|18|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|19|lens.cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods| |List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid|
+|19|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
 *--+--+---+--+
-|20|lens.cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
+|20|lens.cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
+*--+--+---+--+
+|21|lens.cube.query.valid.dim.storgaetables| |List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid|
+*--+--+---+--+
+|22|lens.cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods| |List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid|
+*--+--+---+--+
+|23|lens.cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
 *--+--+---+--+
 The configuration parameters and their default values

@@ -100,7 +100,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
         LoggerFactory.getLogger(eventClass).info(representation);
       }
     } catch (Exception exc) {
-      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      MetricsService metricsService = LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(LogStatisticsStore.class, LOG_STORE_ERRORS);
       LOG.error("Unknown error ", exc);
     }

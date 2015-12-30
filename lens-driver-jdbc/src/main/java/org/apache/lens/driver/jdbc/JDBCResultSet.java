@@ -99,9 +99,9 @@ public class JDBCResultSet extends InMemoryResultSet {
    * @see org.apache.lens.server.api.driver.LensResultSet#size()
    */
   @Override
-  public int size() throws LensException {
+  public Integer size() throws LensException {
     log.warn("Size of result set is not supported");
-    return -1;
+    return null;
   }
 
   @Override

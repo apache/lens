@@ -96,7 +96,7 @@ public class LensRequestListener implements RequestEventListener {
       Throwable error = event.getException();
       if (error != null) {
         Class<?> errorClass = error.getClass();
-        MetricsService metrics = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+        MetricsService metrics = LensServices.get().getService(MetricsService.NAME);
         if (metrics != null) {
           // overall error counter
           metrics.incrCounter(LensRequestListener.class, HTTP_ERROR);
@@ -121,7 +121,7 @@ public class LensRequestListener implements RequestEventListener {
       }
       break;
     case FINISHED:
-      MetricsService metrics = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      MetricsService metrics = LensServices.get().getService(MetricsService.NAME);
       if (metrics != null) {
         metrics.incrCounter(LensRequestListener.class, HTTP_REQUESTS_FINISHED);
       }
@@ -145,7 +145,7 @@ public class LensRequestListener implements RequestEventListener {
   }
 
   private MethodMetricsContext getContext(RequestEvent event) {
-    MetricsService metricsSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+    MetricsService metricsSvc = LensServices.get().getService(MetricsService.NAME);
     return metricsSvc.getMethodMetricsContext(event.getUriInfo().getMatchedResourceMethod(),
       event.getContainerRequest());
   }

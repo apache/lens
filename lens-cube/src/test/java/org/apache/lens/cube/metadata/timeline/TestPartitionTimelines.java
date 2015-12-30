@@ -18,25 +18,28 @@
  */
 package org.apache.lens.cube.metadata.timeline;
 
+import static org.testng.Assert.*;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.TestTimePartition;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.cube.metadata.UpdatePeriodTest;
 import org.apache.lens.server.api.error.LensException;
 
-import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.beust.jcommander.internal.Lists;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TestPartitionTimelines {
 
   private static final String TABLE_NAME = "storage_fact";
-  public static final UpdatePeriod PERIOD = UpdatePeriod.HOURLY;
   private static final String PART_COL = "pt";
   private static final List<Class<? extends PartitionTimeline>> TIMELINE_IMPLEMENTATIONS = Arrays.asList(
     StoreAllPartitionTimeline.class,
@@ -44,46 +47,48 @@ public class TestPartitionTimelines {
     RangesPartitionTimeline.class
   );
 
-  @Test
-  public void testPropertiesContractsForAllSubclasses() throws LensException {
-    for (Class<? extends PartitionTimeline> clazz : TIMELINE_IMPLEMENTATIONS) {
-      testPropertiesContract(clazz);
-    }
+  @DataProvider(name = "update-periods")
+  public Object[][] provideUpdatePeriods() {
+    return UpdatePeriodTest.provideUpdatePeriods();
   }
 
-  @Test
-  public void testEquivalence() throws LensException {
+  @DataProvider(name = "update-periods-and-timeline-classes")
+  public Object[][] provideUpdatePeriodsAndTimelineClasses() {
+    UpdatePeriod[] values = UpdatePeriod.values();
+    Object[][] ret = new Object[values.length * TIMELINE_IMPLEMENTATIONS.size()][2];
+    for (int i = 0; i < values.length; i++) {
+      for (int j = 0; j < TIMELINE_IMPLEMENTATIONS.size(); j++) {
+        ret[TIMELINE_IMPLEMENTATIONS.size() * i + j] = new Object[]{
+          values[i],
+          TIMELINE_IMPLEMENTATIONS.get(j),
+        };
+      }
+    }
+    return ret;
+  }
+
+
+  @Test(dataProvider = "update-periods")
+  public void testEquivalence(UpdatePeriod period) throws LensException, InvocationTargetException,
+    NoSuchMethodException, InstantiationException, IllegalAccessException {
+    final Random randomGenerator = new Random();
     for (int j = 0; j < 10; j++) {
-      Random randomGenerator = new Random();
       List<PartitionTimeline> timelines = Lists.newArrayList();
       for (Class<? extends PartitionTimeline> clazz : TIMELINE_IMPLEMENTATIONS) {
-        timelines.add(getInstance(clazz));
+        timelines.add(getInstance(clazz, period));
       }
       final List<TimePartition> addedPartitions = Lists.newArrayList();
-      for (int i = 0; i < 200; i++) {
-        int randomInt = randomGenerator.nextInt(100) - 50;
-        TimePartition part = TimePartition.of(PERIOD, TestTimePartition.timeAtDiff(TestTimePartition.NOW, PERIOD,
+      for (int i = 0; i < 20; i++) {
+        int randomInt = randomGenerator.nextInt(10) - 5;
+        TimePartition part = TimePartition.of(period, TestTimePartition.timeAtDiff(TestTimePartition.NOW, period,
           randomInt));
         addedPartitions.add(part);
         for (PartitionTimeline timeline : timelines) {
           timeline.add(part);
         }
+        assertSameTimelines(timelines);
       }
-      Iterator<TimePartition> sourceOfTruth = timelines.get(0).iterator();
-      List<Iterator<TimePartition>> otherIterators = Lists.newArrayList();
-      for (int i = 1; i < TIMELINE_IMPLEMENTATIONS.size() - 1; i++) {
-        otherIterators.add(timelines.get(i).iterator());
-      }
-      while (sourceOfTruth.hasNext()) {
-        TimePartition cur = sourceOfTruth.next();
-        for (Iterator<TimePartition> iterator : otherIterators) {
-          Assert.assertTrue(iterator.hasNext());
-          Assert.assertEquals(iterator.next(), cur);
-        }
-      }
-      for (Iterator<TimePartition> iterator : otherIterators) {
-        Assert.assertFalse(iterator.hasNext());
-      }
+      assertSameTimelines(timelines);
       Collections.shuffle(addedPartitions);
       Iterator<TimePartition> iter = addedPartitions.iterator();
       while (iter.hasNext()) {
@@ -92,62 +97,80 @@ public class TestPartitionTimelines {
         if (!addedPartitions.contains(part)) {
           for (PartitionTimeline timeline : timelines) {
             timeline.drop(part);
+            assertTrue(timeline.isConsistent());
           }
         }
       }
       for (PartitionTimeline timeline : timelines) {
-        Assert.assertTrue(timeline.isEmpty());
+        assertTrue(timeline.isEmpty());
       }
     }
   }
 
-
-  private <T extends PartitionTimeline> T getInstance(Class<T> clz) {
-    try {
-      return clz.getConstructor(String.class, UpdatePeriod.class, String.class)
-        .newInstance(TABLE_NAME, PERIOD, PART_COL);
-    } catch (Exception e) {
-      log.error("Error while getting instance.", e);
+  public static void assertSameTimelines(List<PartitionTimeline> timelines) {
+    List<Iterator<TimePartition>> iterators = Lists.newArrayList();
+    for (PartitionTimeline timeline : timelines) {
+      iterators.add(timeline.iterator());
     }
-    return null;
+
+    while (iterators.get(0).hasNext()) {
+      Map<Class, TimePartition> parts = Maps.newHashMap();
+      for (Iterator<TimePartition> iterator : iterators) {
+        assertTrue(iterator.hasNext());
+        parts.put(iterator.getClass(), iterator.next());
+      }
+      assertEquals(new HashSet<>(parts.values()).size(), 1, "More than one values for next: " + parts.values());
+    }
+    for (Iterator<TimePartition> iterator : iterators) {
+      assertFalse(iterator.hasNext());
+    }
   }
 
-  private <T extends PartitionTimeline> void testPropertiesContract(Class<T> clz) throws LensException {
+
+  private <T extends PartitionTimeline> T getInstance(Class<T> clz, UpdatePeriod period) throws
+    NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    return clz.getConstructor(String.class, UpdatePeriod.class, String.class)
+      .newInstance(TABLE_NAME, period, PART_COL);
+  }
+
+  @Test(dataProvider = "update-periods-and-timeline-classes")
+  public <T extends PartitionTimeline> void testPropertiesContract(UpdatePeriod period, Class<T> clz) throws
+    LensException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
     // Make two instances, one to modify, other to validate against
-    T inst1 = getInstance(clz);
-    T inst2 = getInstance(clz);
+    T inst1 = getInstance(clz, period);
+    T inst2 = getInstance(clz, period);
     // whenever we'll init from props, timeline should become empty.
     Map<String, String> props = inst1.toProperties();
-    Assert.assertTrue(inst2.initFromProperties(props));
+    assertTrue(inst2.initFromProperties(props));
     // init from props of an empty timeline: should succeed and make the timeline empty
-    Assert.assertEquals(inst1, inst2);
-    Assert.assertTrue(inst1.isEmpty());
-    Assert.assertTrue(inst2.isEmpty());
+    assertEquals(inst1, inst2);
+    assertTrue(inst1.isEmpty());
+    assertTrue(inst2.isEmpty());
     // Add single partition and test for non-equivalence
-    Assert.assertTrue(inst1.add(TimePartition.of(PERIOD, TestTimePartition.NOW)));
-    Assert.assertFalse(inst1.equals(inst2));
+    assertTrue(inst1.add(TimePartition.of(period, TestTimePartition.NOW)));
+    assertFalse(inst1.equals(inst2));
     // add same parittion in other timeline, test for equality
-    Assert.assertTrue(inst2.add(TimePartition.of(PERIOD, TestTimePartition.NOW)));
-    Assert.assertTrue(inst1.isConsistent());
-    Assert.assertTrue(inst2.isConsistent());
-    Assert.assertEquals(inst1, inst2);
+    assertTrue(inst2.add(TimePartition.of(period, TestTimePartition.NOW)));
+    assertTrue(inst1.isConsistent());
+    assertTrue(inst2.isConsistent());
+    assertEquals(inst1, inst2);
     // init with blank properties. Should become empty
-    Assert.assertTrue(inst2.initFromProperties(props));
-    Assert.assertFalse(inst1.equals(inst2));
+    assertTrue(inst2.initFromProperties(props));
+    assertFalse(inst1.equals(inst2));
     // init from properties of timeline with single partition.
-    Assert.assertTrue(inst2.initFromProperties(inst1.toProperties()));
-    Assert.assertEquals(inst1, inst2);
+    assertTrue(inst2.initFromProperties(inst1.toProperties()));
+    assertEquals(inst1, inst2);
     // clear timelines
     inst1.initFromProperties(props);
     inst2.initFromProperties(props);
     // Make sparse partition range in one, init other from its properties. Test equality.
-    for (int i = 0; i < 5000; i++) {
-      Assert.assertTrue(inst1.add(TimePartition.of(PERIOD, TestTimePartition.timeAtDiff(TestTimePartition.NOW, PERIOD,
+    for (int i = 0; i < 500; i++) {
+      assertTrue(inst1.add(TimePartition.of(period, TestTimePartition.timeAtDiff(TestTimePartition.NOW, period,
         i * 2))));
     }
-    Assert.assertTrue(inst1.isConsistent());
+    assertTrue(inst1.isConsistent());
     inst2.initFromProperties(inst1.toProperties());
-    Assert.assertTrue(inst2.isConsistent());
-    Assert.assertEquals(inst1, inst2);
+    assertTrue(inst2.isConsistent());
+    assertEquals(inst1, inst2);
   }
 }

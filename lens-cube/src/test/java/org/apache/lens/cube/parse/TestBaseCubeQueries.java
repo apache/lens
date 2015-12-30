@@ -19,9 +19,10 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
+import static org.apache.lens.cube.metadata.DateUtil.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.MISSING_PARTITIONS;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
-import static org.apache.lens.cube.parse.DateUtil.*;
 import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.KW_AND;
@@ -32,21 +33,24 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
+import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import lombok.Getter;
 
 public class TestBaseCubeQueries extends TestQueryRewrite {
@@ -57,7 +61,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   @BeforeTest
   public void setupDriver() throws Exception {
     conf = new Configuration();
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2");
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
@@ -65,36 +69,71 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   }
 
   @Test
-  public void testColumnErrors() throws Exception {
-    SemanticException e;
+  public void testNoCandidateFactAvailableExceptionCompareTo() throws Exception {
+    //maxCause : COLUMN_NOT_FOUND, Ordinal : 9
+    NoCandidateFactAvailableException ne1 =(NoCandidateFactAvailableException)
+            getLensExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
+            + TWO_DAYS_RANGE, conf);
+    //maxCause : FACT_NOT_AVAILABLE_IN_RANGE, Ordinal : 1
+    NoCandidateFactAvailableException ne2 = (NoCandidateFactAvailableException)
+            getLensExceptionInRewrite("cube select dim1 from " + cubeName + " where " + LAST_YEAR_RANGE, getConf());
+    assertEquals(ne1.compareTo(ne2), 8);
+  }
 
-    e = getSemanticExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
-      ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT.getErrorCode());
+  @Test
+  public void testColumnErrors() throws Exception {
+    LensException e;
+
+    e = getLensExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
+    assertEquals(e.getErrorCode(),
+        LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getLensErrorInfo().getErrorCode());
     // no fact has the all the dimensions queried
-    e = getSemanticExceptionInRewrite("select dim1, stateid, msr3, msr13 from basecube" + " where " + TWO_DAYS_RANGE,
-      conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
-      ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
-    PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
+    e = getLensExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
+      + TWO_DAYS_RANGE, conf);
+    assertEquals(e.getErrorCode(),
+        LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
+    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
+    PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
     String regexp = String.format(CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND.errorFormat,
       "Column Sets: (.*?)", "queriable together");
     Matcher matcher = Pattern.compile(regexp).matcher(pruneCauses.getBrief());
     assertTrue(matcher.matches(), pruneCauses.getBrief());
     assertEquals(matcher.groupCount(), 1);
     String columnSetsStr = matcher.group(1);
-    assertNotEquals(columnSetsStr.indexOf("stateid"), -1);
+    assertNotEquals(columnSetsStr.indexOf("test_time_dim"), -1, columnSetsStr);
     assertNotEquals(columnSetsStr.indexOf("msr3, msr13"), -1);
-    assertEquals(pruneCauses.getDetails().get("testfact3_base,testfact3_raw_base"),
-      Arrays.asList(CandidateTablePruneCause.columnNotFound("stateid")));
-    assertEquals(pruneCauses.getDetails().get("testfact_deprecated,testfact2_raw_base,testfact2_base"),
-      Arrays.asList(CandidateTablePruneCause.columnNotFound("msr3", "msr13")));
-    assertTrue(pruneCauses.getDetails().containsKey("testfact1_base,testfact1_raw_base")
-      || pruneCauses.getDetails().containsKey("testfact1_raw_base,testfact1_base"));
-    String fact1BaseKey = pruneCauses.getDetails().containsKey("testfact1_base,testfact1_raw_base")
-      ? "testfact1_base,testfact1_raw_base" : "testfact1_raw_base,testfact1_base";
-    assertEquals(pruneCauses.getDetails().get(fact1BaseKey),
+
+    /**
+     * Verifying the BriefAndDetailedError:
+     * 1. Check for missing columns(COLUMN_NOT_FOUND)
+     *    and check the respective tables for each COLUMN_NOT_FOUND
+     * 2. check for ELEMENT_IN_SET_PRUNED
+     *
+     */
+    boolean columnNotFound = false;
+    List<String> testTimeDimFactTables = Arrays.asList("testfact3_base", "testfact1_raw_base", "testfact3_raw_base");
+    List<String> factTablesForMeasures = Arrays.asList("testfact_deprecated", "testfact2_raw_base", "testfact2_base");
+    for (Map.Entry<String, List<CandidateTablePruneCause>> entry : pruneCauses.getDetails().entrySet()) {
+      if (entry.getValue().contains(CandidateTablePruneCause.columnNotFound("test_time_dim"))) {
+        columnNotFound = true;
+        compareStrings(testTimeDimFactTables, entry);
+      }
+      if (entry.getValue().contains(CandidateTablePruneCause.columnNotFound("msr3", "msr13"))) {
+        columnNotFound = true;
+        compareStrings(factTablesForMeasures, entry);
+      }
+    }
+    Assert.assertTrue(columnNotFound);
+    assertEquals(pruneCauses.getDetails().get("testfact1_base"),
       Arrays.asList(new CandidateTablePruneCause(CandidateTablePruneCode.ELEMENT_IN_SET_PRUNED)));
+  }
+
+  private void compareStrings(List<String> factTablesList, Map.Entry<String, List<CandidateTablePruneCause>> entry) {
+    String factTablesString = entry.getKey();
+    Iterable<String> factTablesIterator = Splitter.on(',').split(factTablesString);
+    for (String factTable : factTablesIterator) {
+      Assert.assertTrue(factTablesList.contains(factTable), "Not selecting" + factTable + "fact table");
+    }
   }
 
   @Test
@@ -144,10 +183,10 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     Assert.assertTrue(candidateFacts.contains("testfact2_base"));
     String hqlQuery = ctx.toHQL();
     String expected1 =
-      getExpectedQuery(cubeName, "select sum(basecube.msr12) msr12 FROM ", null,
+      getExpectedQuery(cubeName, "select sum(basecube.msr12) as `msr12` FROM ", null,
         null, getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
     String expected2 =
-      getExpectedQuery(cubeName, "select round(sum(basecube.msr2)/1000) roundedmsr2 FROM ", null,
+      getExpectedQuery(cubeName, "select round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
         null, getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -162,10 +201,10 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testMultiFactQueryWithSingleCommonDimension() throws Exception {
     String hqlQuery = rewrite("select dim1, roundedmsr2, msr12 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, sum(basecube.msr12) msr12 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, sum(basecube.msr12) as `msr12` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
-    String expected2 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, round(sum(basecube.msr2)/1000) roundedmsr2 FROM ", null,
+    String expected2 = getExpectedQuery(cubeName,
+        "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -185,10 +224,10 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     tConf.setBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, true);
     String hqlQuery = rewrite("select dim1, roundedmsr2, msr12 from basecube" + " where " + TWO_DAYS_RANGE, tConf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, sum(basecube.msr12) msr12 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, sum(basecube.msr12) as `msr12` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
-    String expected2 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, round(sum(basecube.msr2)/1000) roundedmsr2 FROM ", null,
+    String expected2 = getExpectedQuery(cubeName,
+        "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -203,14 +242,41 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   }
 
   @Test
+  public void testMultiFactQueryWithExpressionsFromMultipleFacts() throws Exception {
+    Configuration tConf = new Configuration(conf);
+    tConf.setBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, true);
+    String hqlQuery = rewrite("select  dim1, roundedmsr2, flooredmsr12 from basecube" + " where "
+            + TWO_DAYS_RANGE, tConf);
+    String expected1 =
+            getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, "
+                            + "floor(sum(( basecube . msr12 ))) as `flooredmsr12` FROM ", null,
+                    " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
+    String expected2 = getExpectedQuery(cubeName,
+            "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
+            " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+    TestCubeRewriter.compareContains(expected1, hqlQuery);
+    TestCubeRewriter.compareContains(expected2, hqlQuery);
+    String lower = hqlQuery.toLowerCase();
+    assertTrue(
+            lower.startsWith("select coalesce(mq1.dim1, mq2.dim1) dim1, mq2.roundedmsr2 roundedmsr2, "
+                    + "mq1.flooredmsr12 flooredmsr12 from ")
+                    || lower.startsWith("select coalesce(mq1.dim1, mq2.dim1) dim1, mq1.roundedmsr2 roundedmsr2, "
+                    + "mq2.flooredmsr12 flooredmsr12"
+                    + " from "), hqlQuery);
+
+    assertTrue(hqlQuery.contains("mq1 full outer join ") && hqlQuery.endsWith("mq2 on mq1.dim1 <=> mq2.dim1"),
+            hqlQuery);
+  }
+
+  @Test
   public void testMultiFactQueryWithSingleCommonDimensionWithColumnsSwapped() throws Exception {
     // columns in select interchanged
     String hqlQuery = rewrite("select dim1, msr12, roundedmsr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, sum(basecube.msr12) msr12 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, sum(basecube.msr12) as `msr12` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
-    String expected2 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, round(sum(basecube.msr2)/1000) roundedmsr2 FROM ", null,
+    String expected2 = getExpectedQuery(cubeName,
+        "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -230,14 +296,14 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     String hqlQuery = rewrite("select dim1, msr12, roundedmsr2, msr13, msr3 from basecube where " + TWO_DAYS_RANGE,
       conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, sum(basecube.msr12) msr12 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, sum(basecube.msr12) as `msr12` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
-    String expected2 =
-      getExpectedQuery(cubeName,
-        "select basecube.dim1 dim1, round(sum(basecube.msr2)/1000) roundedmsr2, max(basecube.msr3) msr3 FROM ", null,
-        " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+    String expected2 = getExpectedQuery(
+        cubeName,
+        "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2`, max(basecube.msr3) as `msr3` "
+        + "FROM ", null, " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     String expected3 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, max(basecube.msr13) msr13 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, max(basecube.msr13) as `msr13` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "c1_testfact3_base"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -269,13 +335,13 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testMultiFactQueryWithTwoCommonDimensions() throws Exception {
     // query two dim attributes
     String hqlQuery = rewrite("select dim1, dim11, msr12, roundedmsr2 from basecube where " + TWO_DAYS_RANGE, conf);
-    String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, basecube.dim11 dim11, sum(basecube.msr12) msr12 FROM ",
-        null, " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
-    String expected2 =
-      getExpectedQuery(cubeName,
-        "select basecube.dim1 dim1, basecube.dim11 dim11, round(sum(basecube.msr2)/1000) roundedmsr2 FROM ", null,
-        " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+    String expected1 = getExpectedQuery(cubeName,
+        "select basecube.dim1 as `dim1`, basecube.dim11 as `dim11`, sum(basecube.msr12) as `msr12` FROM ", null,
+        " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
+    String expected2 = getExpectedQuery(
+        cubeName,
+        "select basecube.dim1 as `dim1`, basecube.dim11 as `dim11`, round(sum(basecube.msr2)/1000) as `roundedmsr2` "
+        + "FROM ", null, " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
     assertTrue(hqlQuery.toLowerCase().startsWith(
@@ -294,10 +360,10 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     // no aggregates in the query
     String hqlQuery = rewrite("select dim1, msr11, roundedmsr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, basecube.msr11 msr11 FROM ", null, null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, basecube.msr11 as `msr11` FROM ", null, null,
         getWhereForHourly2days(cubeName, "C1_testfact2_raw_base"));
-    String expected2 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, round(basecube.msr2/1000) roundedmsr2 FROM ", null, null,
+    String expected2 = getExpectedQuery(cubeName,
+        "select basecube.dim1 as `dim1`, round(basecube.msr2/1000) as `roundedmsr2` FROM ", null, null,
         getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -316,10 +382,10 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     String hqlQuery =
       rewrite("select dim1 d1, msr12 `my msr12`, roundedmsr2 m2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 d1, sum(basecube.msr12) expr2 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `d1`, sum(basecube.msr12) as `expr2` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
     String expected2 =
-      getExpectedQuery(cubeName, "select basecube.dim1 d1, round(sum(basecube.msr2)/1000) m2 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `d1`, round(sum(basecube.msr2)/1000) as `m2` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -336,10 +402,10 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
    // query with non default aggregate
     String hqlQuery = rewrite("select dim1, avg(msr12), avg(msr2) from basecube" + " where " + TWO_DAYS_RANGE, conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, avg(basecube.msr12) msr12 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, avg(basecube.msr12) as `msr12` FROM ", null,
         " group by basecube.dim1", getWhereForHourly2days(cubeName, "C1_testfact2_raw_base"));
     String expected2 =
-      getExpectedQuery(cubeName, "select basecube.dim1 dim1, avg(basecube.msr2)) msr2 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, avg(basecube.msr2)) as `msr2` FROM ", null,
         " group by basecube.dim1", getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -356,15 +422,14 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testMultiFactQueryWithJoins() throws Exception {
     // query with join
     String hqlQuery = rewrite("select testdim2.name, msr12, roundedmsr2 from basecube where " + TWO_DAYS_RANGE, conf);
-    String expected1 =
-      getExpectedQuery(cubeName, "select testdim2.name name, sum(basecube.msr12) msr12 FROM ", " JOIN " + getDbName()
-          + "c1_testdim2tbl testdim2 ON basecube.dim2 = " + " testdim2.id and (testdim2.dt = 'latest') ", null,
+    String expected1 = getExpectedQuery(cubeName,
+        "select testdim2.name as `name`, sum(basecube.msr12) as `msr12` FROM ", " JOIN " + getDbName()
+            + "c1_testdim2tbl testdim2 ON basecube.dim2 = " + " testdim2.id and (testdim2.dt = 'latest') ", null,
         " group by testdim2.name", null, getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
-    String expected2 =
-      getExpectedQuery(cubeName, "select testdim2.name name, round(sum(basecube.msr2)/1000) roundedmsr2 FROM ", " JOIN "
-          + getDbName() + "c1_testdim2tbl testdim2 ON basecube.dim2 = "
-          + " testdim2.id and (testdim2.dt = 'latest') ", null, " group by testdim2.name", null,
-        getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
+    String expected2 = getExpectedQuery(cubeName,
+        "select testdim2.name as `name`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", " JOIN " + getDbName()
+            + "c1_testdim2tbl testdim2 ON basecube.dim2 = " + " testdim2.id and (testdim2.dt = 'latest') ", null,
+        " group by testdim2.name", null, getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
     assertTrue(hqlQuery.toLowerCase().startsWith(
@@ -379,12 +444,12 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testMultiFactQueryWithDenormColumn() throws Exception {
     // query with denorm variable
     String hqlQuery = rewrite("select dim2, msr13, roundedmsr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
-    String expected1 =
-      getExpectedQuery(cubeName, "select testdim2.id dim2, max(basecube.msr13) msr13 FROM ", " JOIN " + getDbName()
-          + "c1_testdim2tbl testdim2 ON basecube.dim12 = " + " testdim2.id and (testdim2.dt = 'latest') ", null,
-        " group by testdim2.id", null, getWhereForHourly2days(cubeName, "C1_testFact3_RAW_BASE"));
-    String expected2 =
-      getExpectedQuery(cubeName, "select basecube.dim2 dim2, round(sum(basecube.msr2)/1000) roundedmsr2 FROM ", null,
+    String expected1 = getExpectedQuery(cubeName, "select testdim2.id as `dim2`, max(basecube.msr13) as `msr13` FROM ",
+        " JOIN " + getDbName() + "c1_testdim2tbl testdim2 ON basecube.dim12 = "
+            + " testdim2.id and (testdim2.dt = 'latest') ", null, " group by testdim2.id", null,
+        getWhereForHourly2days(cubeName, "C1_testFact3_RAW_BASE"));
+    String expected2 = getExpectedQuery(cubeName,
+        "select basecube.dim2 as `dim2`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
         " group by basecube.dim2", getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
@@ -405,14 +470,14 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
         "select booleancut, round(sum(msr2)/1000), avg(msr13 + msr14) from basecube" + " where " + TWO_DAYS_RANGE,
         conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND testdim2.id != 10 booleancut,"
-          + " avg(basecube.msr13 + basecube.msr14) expr3 FROM ", " JOIN " + getDbName()
+      getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND testdim2.id != 10 as `booleancut`,"
+          + " avg(basecube.msr13 + basecube.msr14) as `expr3` FROM ", " JOIN " + getDbName()
           + "c1_testdim2tbl testdim2 ON basecube.dim12 = " + " testdim2.id and (testdim2.dt = 'latest') ", null,
         " group by basecube.dim1 != 'x' AND testdim2.id != 10", null,
         getWhereForHourly2days(cubeName, "C1_testfact3_raw_base"));
     String expected2 =
-      getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND basecube.dim2 != 10 booleancut,"
-          + " round(sum(basecube.msr2)/1000) msr2 FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND basecube.dim2 != 10 as `booleancut`,"
+          + " round(sum(basecube.msr2)/1000) as `msr2` FROM ", null,
         " group by basecube.dim1 != 'x' AND basecube.dim2 != 10",
         getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
@@ -430,7 +495,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
 
   @Test
   public void testFallbackPartCol() throws Exception {
-    Configuration conf = getConfWithStorages("C1,C2,C3,C4");
+    Configuration conf = getConfWithStorages("C1");
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
     String hql, expected;
     // Prefer fact that has a storage with part col on queried time dim
@@ -442,17 +507,18 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     // If going to fallback timedim, and partitions are missing, then error should be missing partition on that
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C4");
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
-    SemanticException exc =
-      getSemanticExceptionInRewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
-    PruneCauses.BriefAndDetailedError pruneCause = extractPruneCause(exc);
+    LensException exc =
+      getLensExceptionInRewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
+    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) exc;
+    PruneCauses.BriefAndDetailedError pruneCause = ne.getJsonMessage();
     assertTrue(pruneCause.getBrief().contains("Missing partitions"));
     assertEquals(pruneCause.getDetails().get("testfact2_base").iterator().next().getCause(), MISSING_PARTITIONS);
     assertEquals(pruneCause.getDetails().get("testfact2_base").iterator().next().getMissingPartitions().size(), 1);
     assertEquals(
       pruneCause.getDetails().get("testfact2_base").iterator().next().getMissingPartitions().iterator().next(),
       "ttd:["
-        + UpdatePeriod.SECONDLY.format().format(DateUtils.addDays(DateUtils.truncate(TWODAYS_BACK, Calendar.HOUR), -10))
-        + ", " + UpdatePeriod.SECONDLY.format().format(DateUtils.addDays(DateUtils.truncate(NOW, Calendar.HOUR), 10))
+        + UpdatePeriod.SECONDLY.format(DateUtils.addDays(DateUtils.truncate(TWODAYS_BACK, Calendar.HOUR), -10))
+        + ", " + UpdatePeriod.SECONDLY.format(DateUtils.addDays(DateUtils.truncate(NOW, Calendar.HOUR), 10))
         + ")");
 
     // fail on partial false. Should go to fallback column. Also testing transitivity of timedim relations
@@ -481,17 +547,24 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertEquals(ctx.getCandidateFactSets().size(), 1);
     assertEquals(ctx.getCandidateFactSets().iterator().next().size(), 1);
     CandidateFact cfact = ctx.getCandidateFactSets().iterator().next().iterator().next();
-    assertEquals(cfact.getRangeToWhereClause().size(), 2);
-    for(Map.Entry<TimeRange, String> entry: cfact.getRangeToWhereClause().entrySet()) {
+
+    assertEquals(cfact.getRangeToStoragePartMap().size(), 2);
+    Set<String> storages = Sets.newHashSet();
+    for(Map<String, String> entry: cfact.getRangeToStorageWhereMap().values()) {
+      storages.addAll(entry.keySet());
+    }
+    assertEquals(storages.size(), 1);
+    String storage = storages.iterator().next();
+    for(Map.Entry<TimeRange, Map<String, String>> entry: cfact.getRangeToStorageWhereMap().entrySet()) {
       if (entry.getKey().getPartitionColumn().equals("dt")) {
-        ASTNode parsed = HQLParser.parseExpr(entry.getValue());
+        ASTNode parsed = HQLParser.parseExpr(entry.getValue().get(storage));
         assertEquals(parsed.getToken().getType(), KW_AND);
-        assertTrue(entry.getValue().substring(((CommonToken) parsed.getToken()).getStopIndex() + 1).toLowerCase()
-          .contains(dTimeWhereClause));
-        assertFalse(entry.getValue().substring(0, ((CommonToken) parsed.getToken()).getStartIndex()).toLowerCase()
-          .contains("and"));
+        assertTrue(entry.getValue().get(storage).substring(((CommonToken) parsed.getToken()).getStopIndex() + 1)
+          .toLowerCase().contains(dTimeWhereClause));
+        assertFalse(entry.getValue().get(storage).substring(0, ((CommonToken) parsed.getToken()).getStartIndex())
+          .toLowerCase().contains("and"));
       } else if (entry.getKey().getPartitionColumn().equals("ttd")) {
-        assertFalse(entry.getValue().toLowerCase().contains("and"));
+        assertFalse(entry.getValue().get(storage).toLowerCase().contains("and"));
       } else {
         throw new LensException("Unexpected");
       }

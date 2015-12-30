@@ -67,8 +67,7 @@ public class TestLensDatabaseCommands extends LensCliApplicationTest {
     assertEquals(result, "Successfully switched to my_db");
     if (cascade) {
       String createOutput = cubeCommand.createCube(
-        new File(TestLensDatabaseCommands.class.getClassLoader().getResource("sample-cube.xml").toURI())
-          .getAbsolutePath());
+        new File(TestLensDatabaseCommands.class.getClassLoader().getResource("sample-cube.xml").toURI()));
       assertEquals(createOutput, "succeeded");
       assertTrue(cubeCommand.showCubes().contains("sample_cube"));
     }

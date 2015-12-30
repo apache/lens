@@ -47,8 +47,11 @@ public class FactPartitionBasedQueryCostCalculator implements QueryCostCalculato
    */
 
   @SuppressWarnings("unchecked") // required for (Set<FactPartition>) casting
-  private double getTotalPartitionCost(final AbstractQueryContext queryContext, LensDriver driver)
+  private Double getTotalPartitionCost(final AbstractQueryContext queryContext, LensDriver driver)
     throws LensException {
+    if (queryContext.getDriverRewriterPlan(driver) == null) {
+      return null;
+    }
     double cost = 0;
     for (Map.Entry<String, Set<?>> entry : getAllPartitions(queryContext, driver).entrySet()) {
       // Have to do instanceof check, since it can't be handled by polymorphism.
@@ -86,7 +89,8 @@ public class FactPartitionBasedQueryCostCalculator implements QueryCostCalculato
 
   @Override
   public QueryCost calculateCost(final AbstractQueryContext queryContext, LensDriver driver) throws LensException {
-    return new FactPartitionBasedQueryCost(getTotalPartitionCost(queryContext, driver));
+    Double cost = getTotalPartitionCost(queryContext, driver);
+    return cost == null ? null : new FactPartitionBasedQueryCost(cost);
   }
 
   public Map<String, Set<?>> getAllPartitions(AbstractQueryContext queryContext, LensDriver driver) {

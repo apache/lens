@@ -28,7 +28,6 @@ import javax.ws.rs.NotFoundException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
-import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServerConf;
@@ -38,14 +37,13 @@ import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.*;
-import org.apache.hadoop.hive.ql.metadata.*;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hive.service.cli.CLIService;
-import org.apache.hive.service.cli.HiveSQLException;
-import org.apache.thrift.TException;
 
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -201,8 +199,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       log.info("Created cube " + cube.getName());
     } catch (HiveException e) {
       throw new LensException(e);
-    } catch (ParseException e) {
-      throw new LensException(e);
     } finally {
       release(sessionid);
     }
@@ -264,8 +260,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       msClient.alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube, parent));
       log.info("Cube updated " + cube.getName());
     } catch (HiveException e) {
-      throw new LensException(e);
-    } catch (ParseException e) {
       throw new LensException(e);
     } finally {
       release(sessionid);
@@ -876,7 +870,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
         String dateStr = partSpec.get(partCol);
         Date date = null;
         try {
-          date = period.format().parse(dateStr);
+          date = period.parse(dateStr);
         } catch (Exception e) {
           continue;
         }
@@ -925,11 +919,9 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
     String storageName, String filter) throws LensException {
     try {
       acquire(sessionid);
-      String tableName = MetastoreUtil.getStorageTableName(cubeTableName,
-        Storage.getPrefix(storageName));
+      String tableName = MetastoreUtil.getStorageTableName(cubeTableName, Storage.getPrefix(storageName));
       CubeMetastoreClient msClient = getClient(sessionid);
-      List<Partition> partitions = msClient.getPartitionsByFilter(
-        tableName, filter);
+      List<Partition> partitions = msClient.getPartitionsByFilter(tableName, filter);
       for (Partition part : partitions) {
         try {
           Map<String, Date> timeSpec = new HashMap<String, Date>();
@@ -1109,8 +1101,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       log.info("Created dimension " + dimension.getName());
     } catch (HiveException e) {
       throw new LensException(e);
-    } catch (ParseException e) {
-      throw new LensException(e);
     } finally {
       release(sessionid);
     }
@@ -1152,8 +1142,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
         JAXBUtils.dimensionFromXDimension(dimension));
       log.info("Altered dimension " + dimName);
     } catch (HiveException e) {
-      throw new LensException(e);
-    } catch (ParseException e) {
       throw new LensException(e);
     } finally {
       release(sessionid);
@@ -1198,28 +1186,33 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
     }
   }
 
-  private List<String> getTablesFromDB(LensSessionHandle sessionid,
-    String dbName, boolean prependDbName)
-    throws MetaException, UnknownDBException, HiveSQLException, TException, LensException {
-    List<String> tables = getSession(sessionid).getMetaStoreClient().getAllTables(
-      dbName);
-    List<String> result = new ArrayList<String>();
-    if (tables != null && !tables.isEmpty()) {
-      Iterator<String> it = tables.iterator();
-      while (it.hasNext()) {
-        String tblName = it.next();
-        org.apache.hadoop.hive.metastore.api.Table tbl =
-          getSession(sessionid).getMetaStoreClient().getTable(dbName, tblName);
-        if (tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY) == null) {
-          if (prependDbName) {
-            result.add(dbName + "." + tblName);
-          } else {
-            result.add(tblName);
+  private List<String> getNativeTablesFromDB(LensSessionHandle sessionid, String dbName, boolean prependDbName)
+    throws LensException {
+    IMetaStoreClient msc = null;
+    try {
+      msc = getSession(sessionid).getMetaStoreClient();
+      List<String> tables = msc.getAllTables(
+        dbName);
+      List<String> result = new ArrayList<String>();
+      if (tables != null && !tables.isEmpty()) {
+        List<org.apache.hadoop.hive.metastore.api.Table> tblObjects =
+          msc.getTableObjectsByName(dbName, tables);
+        Iterator<org.apache.hadoop.hive.metastore.api.Table> it = tblObjects.iterator();
+        while (it.hasNext()) {
+          org.apache.hadoop.hive.metastore.api.Table tbl = it.next();
+          if (tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY) == null) {
+            if (prependDbName) {
+              result.add(dbName + "." + tbl.getTableName());
+            } else {
+              result.add(tbl.getTableName());
+            }
           }
         }
       }
+      return result;
+    } catch (Exception e) {
+      throw new LensException("Error getting native tables from DB", e);
     }
-    return result;
   }
 
   @Override
@@ -1240,24 +1233,16 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       }
       List<String> tables;
       if (!StringUtils.isBlank(dbName)) {
-        tables = getTablesFromDB(sessionid, dbName, false);
+        tables = getNativeTablesFromDB(sessionid, dbName, false);
       } else {
         log.info("Getting tables from all dbs");
         List<String> alldbs = getAllDatabases(sessionid);
         tables = new ArrayList<String>();
         for (String db : alldbs) {
-          tables.addAll(getTablesFromDB(sessionid, db, true));
+          tables.addAll(getNativeTablesFromDB(sessionid, db, true));
         }
       }
       return tables;
-    } catch (HiveSQLException e) {
-      throw new LensException(e);
-    } catch (MetaException e) {
-      throw new LensException(e);
-    } catch (UnknownDBException e) {
-      throw new NotFoundException("Database " + dbName + " does not exist");
-    } catch (TException e) {
-      throw new LensException(e);
     } catch (HiveException e) {
       throw new LensException(e);
     } finally {
@@ -1448,7 +1433,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public HealthStatus getHealthStatus() {

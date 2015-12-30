@@ -23,17 +23,14 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import org.apache.lens.cube.parse.HQLParser;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 public class ExprColumn extends CubeColumn {
   public static final char EXPRESSION_DELIMITER = '|';
@@ -46,11 +43,11 @@ public class ExprColumn extends CubeColumn {
   private int hashCode;
 
   // for backward compatibility
-  public ExprColumn(FieldSchema column, String displayString, String expression) {
+  public ExprColumn(FieldSchema column, String displayString, String expression) throws LensException {
     this(column, displayString, new ExprSpec(expression, null, null));
   }
 
-  public ExprColumn(FieldSchema column, String displayString, ExprSpec... expressions) {
+  public ExprColumn(FieldSchema column, String displayString, ExprSpec... expressions) throws LensException {
     super(column.getName(), column.getComment(), displayString, null, null, 0.0);
 
     if (expressions == null || expressions.length == 0) {
@@ -124,6 +121,7 @@ public class ExprColumn extends CubeColumn {
   public static class ExprSpec {
     @Getter
     @Setter
+    @NonNull
     private String expr;
     @Getter
     @Setter
@@ -136,20 +134,18 @@ public class ExprColumn extends CubeColumn {
     private boolean hasHashCode = false;
     private transient int hashCode;
 
-    public ExprSpec(String expr, Date startTime, Date endTime) {
+    public ExprSpec(@NonNull String expr, Date startTime, Date endTime) throws LensException {
       this.expr = expr;
       this.startTime = startTime;
       this.endTime = endTime;
+      // validation
+      getASTNode();
     }
 
-    public synchronized ASTNode getASTNode() {
+    public synchronized ASTNode getASTNode() throws LensException {
       if (astNode == null) {
-        try {
-          if (StringUtils.isNotBlank(expr)) {
-            astNode = HQLParser.parseExpr(getExpr());
-          }
-        } catch (ParseException e) {
-          throw new IllegalArgumentException("Expression can't be parsed: " + getExpr(), e);
+        if (StringUtils.isNotBlank(expr)) {
+          astNode = MetastoreUtil.parseExpr(getExpr());
         }
       }
       return astNode;
@@ -160,8 +156,14 @@ public class ExprColumn extends CubeColumn {
       if (!hasHashCode) {
         final int prime = 31;
         int result = 1;
-        if (getASTNode() != null) {
-          String exprNormalized = HQLParser.getString(getASTNode());
+        ASTNode astNode;
+        try {
+          astNode = getASTNode();
+        } catch (LensException e) {
+          throw new IllegalArgumentException(e);
+        }
+        if (astNode != null) {
+          String exprNormalized = HQLParser.getString(astNode);
           result = prime * result + exprNormalized.hashCode();
         }
         result = prime * result + ((getStartTime() == null) ? 0 : COLUMN_TIME_FORMAT.get().format(
@@ -262,9 +264,17 @@ public class ExprColumn extends CubeColumn {
       return false;
     }
     // Compare expressions for both - compare ASTs
-    List<ASTNode> myExpressions = getExpressionASTList();
-    List<ASTNode> otherExpressions = other.getExpressionASTList();
-
+    List<ASTNode> myExpressions, otherExpressions;
+    try {
+      myExpressions = getExpressionASTList();
+    } catch (LensException e) {
+      throw new IllegalArgumentException(e);
+    }
+    try {
+      otherExpressions = other.getExpressionASTList();
+    } catch (LensException e) {
+      throw new IllegalArgumentException(e);
+    }
     for (int i = 0; i < myExpressions.size(); i++) {
       if (!HQLParser.equalsAST(myExpressions.get(i), otherExpressions.get(i))) {
         return false;
@@ -316,11 +326,11 @@ public class ExprColumn extends CubeColumn {
    *
    * @return the ast
    */
-  public ASTNode getAst() {
+  public ASTNode getAst() throws LensException {
     return getExpressionASTList().get(0);
   }
 
-  public List<ASTNode> getExpressionASTList() {
+  public List<ASTNode> getExpressionASTList() throws LensException {
     synchronized (expressionSet) {
       if (astNodeList.isEmpty()) {
         for (ExprSpec expr : expressionSet) {
@@ -366,15 +376,15 @@ public class ExprColumn extends CubeColumn {
    * Add an expression to existing set of expressions for this column
    *
    * @param expression
-   * @throws ParseException
+   * @throws LensException
    */
-  public void addExpression(ExprSpec expression) throws ParseException {
+  public void addExpression(ExprSpec expression) throws LensException {
     if (expression == null || expression.getExpr().isEmpty()) {
       throw new IllegalArgumentException("Empty expression not allowed");
     }
 
     // Validate if expression can be correctly parsed
-    HQLParser.parseExpr(expression.getExpr());
+    MetastoreUtil.parseExpr(expression.getExpr());
     synchronized (expressionSet) {
       expressionSet.add(expression);
     }

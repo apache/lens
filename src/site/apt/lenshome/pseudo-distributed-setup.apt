@@ -22,7 +22,7 @@ Pseudo Distributed Setup
   Lens pseudo-distributed setup is done using docker. Hive server and hadoop daemons are run as separate processes in lens pseudo-distributed setup. Lens docker files are located in
 
 +---+
-  incubator-lens/lens-docker/lens-test
+  lens/lens-docker/lens-test
 +---+
 
   The above directory contains the lens docker images that can be used for development and testing.

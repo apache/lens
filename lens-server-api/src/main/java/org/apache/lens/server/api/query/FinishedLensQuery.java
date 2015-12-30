@@ -19,12 +19,12 @@
 package org.apache.lens.server.api.query;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 
 import org.apache.hadoop.conf.Configuration;
@@ -44,7 +44,7 @@ import lombok.ToString;
  *
  * @see java.lang.Object#hashCode()
  */
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = "selectedDriver")
 /*
  * (non-Javadoc)
  *
@@ -121,7 +121,14 @@ public class FinishedLensQuery {
    */
   @Getter
   @Setter
-  private int rows;
+  private Integer rows;
+
+  /**
+   * The file size.
+   */
+  @Getter
+  @Setter
+  private Long fileSize;
 
   /**
    * The error message.
@@ -145,18 +152,18 @@ public class FinishedLensQuery {
   private long driverEndTime;
 
   /**
-   * The metadata class.
-   */
-  @Getter
-  @Setter
-  private String metadataClass;
-
-  /**
    * The query name.
    */
   @Getter
   @Setter
   private String queryName;
+
+  /**
+   * The selected driver's fully qualified name.
+   */
+  @Getter
+  @Setter
+  private String driverName;
 
   @Getter
   private LensDriver selectedDriver;
@@ -189,21 +196,42 @@ public class FinishedLensQuery {
       this.queryName = ctx.getQueryName().toLowerCase();
     }
     this.selectedDriver = ctx.getSelectedDriver();
+    if (null != ctx.getSelectedDriver()) {
+      this.driverName = ctx.getSelectedDriver().getFullyQualifiedName();
+    }
   }
 
-  public QueryContext toQueryContext(Configuration conf, Collection<LensDriver> drivers) throws LensException {
-    QueryContext qctx = new QueryContext(userQuery, submitter, new LensConf(), conf, drivers, null, submissionTime,
-      false);
+  public QueryContext toQueryContext(Configuration conf, Collection<LensDriver> drivers) {
+
+    if (null == selectedDriver && null != driverName) {
+      selectedDriver = getDriverFromName(drivers);
+    }
+
+    QueryContext qctx =
+      new QueryContext(userQuery, submitter, new LensConf(), conf, drivers, selectedDriver, submissionTime,
+        false);
+
     qctx.setQueryHandle(QueryHandle.fromString(handle));
     qctx.setLaunchTime(this.startTime);
     qctx.setEndTime(getEndTime());
-    qctx.setStatusSkippingTransitionTest(new QueryStatus(0.0, QueryStatus.Status.valueOf(getStatus()),
+    qctx.setStatusSkippingTransitionTest(new QueryStatus(0.0, null, QueryStatus.Status.valueOf(getStatus()),
         getErrorMessage() == null ? "" : getErrorMessage(), getResult() != null, null, null, null));
     qctx.getDriverStatus().setDriverStartTime(getDriverStartTime());
     qctx.getDriverStatus().setDriverFinishTime(getDriverEndTime());
     qctx.setResultSetPath(getResult());
     qctx.setQueryName(getQueryName());
     return qctx;
+  }
+
+  private LensDriver getDriverFromName(Collection<LensDriver> drivers) {
+    Iterator<LensDriver> iterator = drivers.iterator();
+    while (iterator.hasNext()) {
+      LensDriver driver = iterator.next();
+      if (driverName.equals(driver.getFullyQualifiedName())) {
+        return driver;
+      }
+    }
+    return null;
   }
 
   public ImmutableSet<WaitingQueriesSelectionPolicy> getDriverSelectionPolicies() {

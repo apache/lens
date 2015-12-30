@@ -46,6 +46,10 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
+  /** ResultFormatter core and max pool size */
+  private static final int CORE_POOL_SIZE = 5;
+  private static final int MAX_POOL_SIZE = 10;
+
   private final LogSegregationContext logSegregationContext;
 
   /**
@@ -54,6 +58,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
    * @param queryService the query service
    */
   public ResultFormatter(QueryExecutionServiceImpl queryService, @NonNull LogSegregationContext logSegregationContext) {
+    super(CORE_POOL_SIZE, MAX_POOL_SIZE);
     this.queryService = queryService;
     this.logSegregationContext = logSegregationContext;
   }
@@ -65,17 +70,16 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
    */
   @Override
   public void process(QueryExecuted event) {
-    formatOutput(event);
+    formatOutput(queryService.getQueryContext(event.getQueryHandle()));
   }
 
   /**
    * Format output.
    *
-   * @param event the event
+   * @param ctx the query context
    */
-  private void formatOutput(QueryExecuted event) {
-    QueryHandle queryHandle = event.getQueryHandle();
-    QueryContext ctx = queryService.getQueryContext(queryHandle);
+  private void formatOutput(QueryContext ctx) {
+    QueryHandle queryHandle = ctx.getQueryHandle();
     this.logSegregationContext.setLogSegragationAndQueryId(ctx.getQueryHandleString());
     try {
       if (!ctx.isPersistent()) {
@@ -86,9 +90,8 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
         log.info("Result formatter for {}", queryHandle);
         LensResultSet resultSet = queryService.getDriverResultset(queryHandle);
         boolean isPersistedInDriver = resultSet instanceof PersistentResultSet;
-        if (isPersistedInDriver) {
-          // skip result formatting if persisted size is huge
-          Path persistedDirectory = new Path(ctx.getHdfsoutPath());
+        if (isPersistedInDriver) {          // skip result formatting if persisted size is huge
+          Path persistedDirectory = new Path(ctx.getDriverResultPath());
           FileSystem fs = persistedDirectory.getFileSystem(ctx.getConf());
           long size = fs.getContentSummary(persistedDirectory).getLength();
           long threshold = ctx.getConf().getLong(LensConfConstants.RESULT_FORMAT_SIZE_THRESHOLD,
@@ -112,7 +115,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           }
           if (isPersistedInDriver) {
             log.info("Result formatter for {} in persistent result", queryHandle);
-            Path persistedDirectory = new Path(ctx.getHdfsoutPath());
+            Path persistedDirectory = new Path(ctx.getDriverResultPath());
             // write all files from persistent directory
             ((PersistedOutputFormatter) formatter).addRowsFromPersistedPath(persistedDirectory);
           } else {
@@ -121,6 +124,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
             while (inmemory.hasNext()) {
               ((InMemoryOutputFormatter) formatter).writeRow(inmemory.next());
             }
+            inmemory.setFullyAccessed(true);
           }
           if (ctx.getConf().getBoolean(LensConfConstants.QUERY_OUTPUT_WRITE_FOOTER,
             LensConfConstants.DEFAULT_OUTPUT_WRITE_FOOTER)) {
@@ -134,7 +138,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
         log.info("Result formatter has completed. Final path:{}", formatter.getFinalOutputPath());
       }
     } catch (Exception e) {
-      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      MetricsService metricsService = LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(ResultFormatter.class, "formatting-errors");
       log.warn("Exception while formatting result for {}", queryHandle, e);
       try {

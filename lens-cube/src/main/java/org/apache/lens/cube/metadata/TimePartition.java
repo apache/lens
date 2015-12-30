@@ -37,10 +37,8 @@ public class TimePartition implements Comparable<TimePartition>, Named {
 
   private TimePartition(@NonNull UpdatePeriod updatePeriod, @NonNull Date date) {
     this.updatePeriod = updatePeriod;
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(date);
     this.date = updatePeriod.truncate(date);
-    this.dateString = updatePeriod.format().format(this.date);
+    this.dateString = updatePeriod.format(this.date);
   }
 
   public static TimePartition of(UpdatePeriod updatePeriod, Date date) throws LensException {
@@ -58,7 +56,7 @@ public class TimePartition implements Comparable<TimePartition>, Named {
         throw new LensException(getWrongUpdatePeriodMessage(updatePeriod, dateString));
       }
       try {
-        return TimePartition.of(updatePeriod, updatePeriod.format().parse(dateString));
+        return TimePartition.of(updatePeriod, updatePeriod.parse(dateString));
       } catch (ParseException e) {
         throw new LensException(getWrongUpdatePeriodMessage(updatePeriod, dateString), e);
       }
@@ -123,6 +121,7 @@ public class TimePartition implements Comparable<TimePartition>, Named {
     return rangeUpto(next());
   }
 
+
   @Override
   public String getName() {
     return getDateString();
@@ -130,5 +129,13 @@ public class TimePartition implements Comparable<TimePartition>, Named {
 
   public TimePartitionRange emptyRange() throws LensException {
     return this.rangeUpto(this);
+  }
+
+  public static TimePartition max(TimePartition p1, TimePartition p2) {
+    return p1.compareTo(p2) >= 0 ? p1 : p2;
+  }
+
+  public static TimePartition min(TimePartition p1, TimePartition p2) {
+    return p1.compareTo(p2) < 0 ? p1 : p2;
   }
 }

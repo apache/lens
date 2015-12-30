@@ -133,11 +133,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   protected void createDriver() throws LensException {
     dataBase = TestRemoteHiveDriver.class.getSimpleName().toLowerCase();
     conf = new HiveConf(remoteConf);
-    conf.addResource("hivedriver-site.xml");
+    conf.addResource("drivers/hive/hive1/hivedriver-site.xml");
     driver = new HiveDriver();
     conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
     conf.setClass(HiveDriver.HIVE_QUERY_HOOK_CLASS, MockDriverQueryHook.class, DriverQueryHook.class);
-    driver.configure(conf);
+    driver.configure(conf, "hive", "hive1");
     drivers = Lists.<LensDriver>newArrayList(driver);
     System.out.println("TestRemoteHiveDriver created");
   }
@@ -155,7 +155,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     HiveConf thConf = new HiveConf(conf, TestRemoteHiveDriver.class);
     thConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
     final HiveDriver thrDriver = new HiveDriver();
-    thrDriver.configure(thConf);
+    thrDriver.configure(thConf, "hive", "hive1");
     QueryContext ctx = createContext("USE " + dataBase, conf, thrDriver);
     thrDriver.execute(ctx);
 
@@ -235,12 +235,12 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   public void testHiveDriverPersistence() throws Exception {
     System.out.println("@@@@ start_persistence_test");
     HiveConf driverConf = new HiveConf(remoteConf, TestRemoteHiveDriver.class);
-    driverConf.addResource("hivedriver-site.xml");
+    driverConf.addResource("drivers/hive/hive1/hivedriver-site.xml");
     driverConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
     driverConf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, false);
 
     final HiveDriver oldDriver = new HiveDriver();
-    oldDriver.configure(driverConf);
+    oldDriver.configure(driverConf, "hive", "hive1");
 
     driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
@@ -274,9 +274,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     // Write driver to stream
     ByteArrayOutputStream driverBytes = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(driverBytes);
     try {
-      oldDriver.writeExternal(new ObjectOutputStream(driverBytes));
+      oldDriver.writeExternal(out);
     } finally {
+      out.close();
       driverBytes.close();
     }
 
@@ -284,7 +286,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     ByteArrayInputStream driverInput = new ByteArrayInputStream(driverBytes.toByteArray());
     HiveDriver newDriver = new HiveDriver();
     newDriver.readExternal(new ObjectInputStream(driverInput));
-    newDriver.configure(driverConf);
+    newDriver.configure(driverConf, "hive", "hive1");
     driverInput.close();
 
     ctx1 = readContext(ctx1bytes, newDriver);
@@ -311,7 +313,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       boolean isDriverAvailable = (ctx.getSelectedDriver() != null);
       out.writeBoolean(isDriverAvailable);
       if (isDriverAvailable) {
-        out.writeUTF(ctx.getSelectedDriver().getClass().getName());
+        out.writeUTF(ctx.getSelectedDriver().getFullyQualifiedName());
       }
     } finally {
       out.flush();
@@ -340,7 +342,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       ctx.setConf(driver.getConf());
       boolean driverAvailable = in.readBoolean();
       if (driverAvailable) {
-        String clsName = in.readUTF();
+        String driverQualifiedName = in.readUTF();
         ctx.setSelectedDriver(driver);
       }
     } finally {

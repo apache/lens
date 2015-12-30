@@ -19,9 +19,9 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
+import static org.apache.lens.cube.parse.CubeQueryConfUtil.*;
+
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -29,14 +29,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateDimAvailableException;
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
 
@@ -45,16 +48,11 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CubeQueryContext implements TrackQueriedColumns {
+public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   public static final String TIME_RANGE_FUNC = "time_range_in";
   public static final String NOW = "now";
   public static final String DEFAULT_TABLE = "_default_";
@@ -131,9 +129,9 @@ public class CubeQueryContext implements TrackQueriedColumns {
   protected final Map<Dimension, Set<CandidateDim>> candidateDims = new HashMap<Dimension, Set<CandidateDim>>();
 
   // query trees
-  @Getter
+  @Getter @Setter
   private ASTNode havingAST;
-  @Getter
+  @Getter @Setter
   private ASTNode selectAST;
 
   // Will be set after the Fact is picked and time ranges replaced
@@ -141,7 +139,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
   @Setter
   private ASTNode whereAST;
 
-  @Getter
+  @Getter @Setter
   private ASTNode orderByAST;
   // Setter is used in promoting the select when promotion is on.
   @Getter
@@ -151,7 +149,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
   private CubeMetastoreClient metastoreClient;
   @Getter
   @Setter
-  private JoinResolver.AutoJoinContext autoJoinCtx;
+  private AutoJoinContext autoJoinCtx;
   @Getter
   @Setter
   private ExpressionResolver.ExpressionResolverContext exprCtx;
@@ -166,7 +164,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     new HashMap<Dimension, PruneCauses<CubeDimensionTable>>();
 
   public CubeQueryContext(ASTNode ast, QB qb, Configuration queryConf, HiveConf metastoreConf)
-    throws SemanticException {
+    throws LensException {
     this.ast = ast;
     this.qb = qb;
     this.conf = queryConf;
@@ -175,7 +173,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     try {
       metastoreClient = CubeMetastoreClient.getInstance(metastoreConf);
     } catch (HiveException e) {
-      throw new SemanticException(e);
+      throw new LensException(e);
     }
     if (qb.getParseInfo().getWhrForClause(clauseName) != null) {
       this.whereAST = qb.getParseInfo().getWhrForClause(clauseName);
@@ -209,7 +207,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     return dimensions != null && !dimensions.isEmpty();
   }
 
-  private void extractMetaTables() throws SemanticException {
+  private void extractMetaTables() throws LensException {
     List<String> tabAliases = new ArrayList<String>(qb.getTabAliases());
     Set<String> missing = new HashSet<String>();
     for (String alias : tabAliases) {
@@ -223,12 +221,12 @@ public class CubeQueryContext implements TrackQueriedColumns {
       boolean added = addJoinChain(alias, false);
       if (!added) {
         log.info("Queried tables do not exist. Missing table:{}", alias);
-        throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+        throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getLensErrorInfo());
       }
     }
   }
 
-  private boolean addJoinChain(String alias, boolean isOptional) throws SemanticException {
+  private boolean addJoinChain(String alias, boolean isOptional) throws LensException {
     boolean retVal = false;
     String aliasLowerCaseStr = alias.toLowerCase();
     JoinChain joinchain = null;
@@ -258,7 +256,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       boolean added = addQueriedTable(alias, destTable, isOptional, true);
       if (!added) {
         log.info("Queried tables do not exist. Missing tables:{}", destTable);
-        throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+        throw new LensException(LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getLensErrorInfo());
       }
       log.info("Added join chain for {}", destTable);
       return true;
@@ -267,11 +265,11 @@ public class CubeQueryContext implements TrackQueriedColumns {
     return retVal;
   }
 
-  public boolean addQueriedTable(String alias) throws SemanticException {
+  public boolean addQueriedTable(String alias) throws LensException {
     return addQueriedTable(alias, false);
   }
 
-  private boolean addQueriedTable(String alias, boolean isOptional) throws SemanticException {
+  private boolean addQueriedTable(String alias, boolean isOptional) throws LensException {
     String tblName = qb.getTabNameForAlias(alias);
     if (tblName == null) {
       tblName = alias;
@@ -295,10 +293,10 @@ public class CubeQueryContext implements TrackQueriedColumns {
    * @param isChainedDimension pass true when you're adding the dimension as a joinchain destination, pass false when
    *                           this table is mentioned by name in the user query
    * @return true if added
-   * @throws SemanticException
+   * @throws LensException
    */
   private boolean addQueriedTable(String alias, String tblName, boolean isOptional, boolean isChainedDimension)
-    throws SemanticException {
+    throws LensException {
     alias = alias.toLowerCase();
     if (cubeTbls.containsKey(alias)) {
       return true;
@@ -307,7 +305,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       if (metastoreClient.isCube(tblName)) {
         if (cube != null) {
           if (!cube.getName().equalsIgnoreCase(tblName)) {
-            throw new SemanticException(ErrorMsg.MORE_THAN_ONE_CUBE, cube.getName(), tblName);
+            throw new LensException(LensCubeErrorCode.MORE_THAN_ONE_CUBE.getLensErrorInfo(), cube.getName(), tblName);
           }
         }
         cube = metastoreClient.getCube(tblName);
@@ -398,22 +396,22 @@ public class CubeQueryContext implements TrackQueriedColumns {
     boolean isRequiredInJoinChain = false;
   }
 
-  public void addOptionalJoinDimTable(String alias, boolean isRequired) throws SemanticException {
+  public void addOptionalJoinDimTable(String alias, boolean isRequired) throws LensException {
     addOptionalDimTable(alias, null, isRequired, null, false, (String[])null);
   }
 
   public void addOptionalExprDimTable(String dimAlias, String queriedExpr, String srcTableAlias,
-    CandidateTable candidate, String... cols) throws SemanticException {
+    CandidateTable candidate, String... cols) throws LensException {
     addOptionalDimTable(dimAlias, candidate, false, queriedExpr, false, srcTableAlias, cols);
   }
 
   public void addOptionalDimTable(String alias, CandidateTable candidate, boolean isRequiredInJoin, String cubeCol,
-    boolean isRef, String... cols) throws SemanticException {
+    boolean isRef, String... cols) throws LensException {
     addOptionalDimTable(alias, candidate, isRequiredInJoin, cubeCol, true, null, cols);
   }
 
   private void addOptionalDimTable(String alias, CandidateTable candidate, boolean isRequiredInJoin, String cubeCol,
-    boolean isRef, String tableAlias, String... cols) throws SemanticException {
+    boolean isRef, String tableAlias, String... cols) throws LensException {
     alias = alias.toLowerCase();
     try {
       if (!addQueriedTable(alias, true)) {
@@ -441,10 +439,12 @@ public class CubeQueryContext implements TrackQueriedColumns {
       if (!optDim.isRequiredInJoinChain) {
         optDim.isRequiredInJoinChain = isRequiredInJoin;
       }
-      log.info("Adding optional dimension:{} optDim:{} {} isRef:{}", dim , optDim,
-        (cubeCol == null ? "" : " for column:" + cubeCol),  isRef);
+      if (log.isDebugEnabled()) {
+        log.debug("Adding optional dimension:{} optDim:{} {} isRef:{}", dim , optDim,
+          (cubeCol == null ? "" : " for column:" + cubeCol),  isRef);
+      }
     } catch (HiveException e) {
-      throw new SemanticException(e);
+      throw new LensException(e);
     }
   }
 
@@ -498,6 +498,9 @@ public class CubeQueryContext implements TrackQueriedColumns {
   }
 
   public void print() {
+    if (!log.isDebugEnabled()) {
+      return;
+    }
     StringBuilder builder = new StringBuilder();
     builder.append("ASTNode:" + ast.dump() + "\n");
     builder.append("QB:");
@@ -578,7 +581,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       builder.append("\n Destination:");
       builder.append("\n\t dest expr:" + qb.getParseInfo().getDestForClause(clause).dump());
     }
-    log.info(builder.toString());
+    log.debug(builder.toString());
   }
 
   void printJoinTree(QBJoinTree joinTree, StringBuilder builder) {
@@ -643,7 +646,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     return null;
   }
 
-  public ASTNode getJoinTree() {
+  public ASTNode getJoinAST() {
     return qb.getParseInfo().getJoinExpr();
   }
 
@@ -661,6 +664,9 @@ public class CubeQueryContext implements TrackQueriedColumns {
   public Integer getLimitValue() {
     return qb.getParseInfo().getDestLimit(getClause());
   }
+  public void setLimitValue(Integer value) {
+    qb.getParseInfo().setDestLimit(getClause(), value);
+  }
 
   private String getStorageStringWithAlias(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, String alias) {
     if (cubeTbls.get(alias) instanceof CubeInterface) {
@@ -674,14 +680,14 @@ public class CubeQueryContext implements TrackQueriedColumns {
     return StorageUtil.getWhereClause(dimsToQuery.get(cubeTbls.get(alias)), alias);
   }
 
-  String getQBFromString(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery) throws SemanticException {
-    String fromString = null;
-    if (getJoinTree() == null) {
+  String getQBFromString(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
+    String fromString;
+    if (getJoinAST() == null) {
       if (cube != null) {
         fromString = fact.getStorageString(getAliasForTableName(cube.getName()));
       } else {
         if (dimensions.size() != 1) {
-          throw new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);
+          throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo());
         }
         Dimension dim = dimensions.iterator().next();
         fromString = dimsToQuery.get(dim).getStorageString(getAliasForTableName(dim.getName()));
@@ -695,7 +701,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
   }
 
   private void getQLString(QBJoinTree joinTree, StringBuilder builder, CandidateFact fact,
-    Map<Dimension, CandidateDim> dimsToQuery) throws SemanticException {
+    Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     String joiningTable = null;
     if (joinTree.getBaseSrc()[0] == null) {
       if (joinTree.getJoinSrc() != null) {
@@ -734,11 +740,11 @@ public class CubeQueryContext implements TrackQueriedColumns {
         dimsToQuery.get(cubeTbls.get(joiningTable)).setWhereClauseAdded();
       }
     } else {
-      throw new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);
+      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo());
     }
   }
 
-  void setNonexistingParts(Map<String, Set<String>> nonExistingParts) throws SemanticException {
+  void setNonexistingParts(Map<String, Set<String>> nonExistingParts) throws LensException {
     if (!nonExistingParts.isEmpty()) {
       ByteArrayOutputStream out = null;
       String partsStr;
@@ -748,27 +754,27 @@ public class CubeQueryContext implements TrackQueriedColumns {
         mapper.writeValue(out, nonExistingParts);
         partsStr = out.toString("UTF-8");
       } catch (Exception e) {
-        throw new SemanticException("Error writing non existing parts", e);
+        throw new LensException("Error writing non existing parts", e);
       } finally {
         if (out != null) {
           try {
             out.close();
           } catch (IOException e) {
-            throw new SemanticException(e);
+            throw new LensException(e);
           }
         }
       }
-      conf.set(CubeQueryConfUtil.NON_EXISTING_PARTITIONS, partsStr);
+      conf.set(NON_EXISTING_PARTITIONS, partsStr);
     } else {
-      conf.unset(CubeQueryConfUtil.NON_EXISTING_PARTITIONS);
+      conf.unset(NON_EXISTING_PARTITIONS);
     }
   }
 
   public String getNonExistingParts() {
-    return conf.get(CubeQueryConfUtil.NON_EXISTING_PARTITIONS);
+    return conf.get(NON_EXISTING_PARTITIONS);
   }
 
-  private Map<Dimension, CandidateDim> pickCandidateDimsToQuery(Set<Dimension> dimensions) throws SemanticException {
+  private Map<Dimension, CandidateDim> pickCandidateDimsToQuery(Set<Dimension> dimensions) throws LensException {
     Map<Dimension, CandidateDim> dimsToQuery = new HashMap<Dimension, CandidateDim>();
     if (!dimensions.isEmpty()) {
       for (Dimension dim : dimensions) {
@@ -787,26 +793,27 @@ public class CubeQueryContext implements TrackQueriedColumns {
               mapper.writeValue(out, dimPruningMsgs.get(dim).getJsonObject());
               reason = out.toString("UTF-8");
             } catch (Exception e) {
-              throw new SemanticException("Error writing dim pruning messages", e);
+              throw new LensException("Error writing dim pruning messages", e);
             } finally {
               if (out != null) {
                 try {
                   out.close();
                 } catch (IOException e) {
-                  throw new SemanticException(e);
+                  throw new LensException(e);
                 }
               }
             }
           }
-          throw new SemanticException(ErrorMsg.NO_CANDIDATE_DIM_AVAILABLE, dim.getName(), reason);
+          log.error("Query rewrite failed due to NO_CANDIDATE_DIM_AVAILABLE, Cause {}",
+                  dimPruningMsgs.get(dim).toJsonObject());
+          throw new NoCandidateDimAvailableException(dimPruningMsgs.get(dim));
         }
       }
     }
-
     return dimsToQuery;
   }
 
-  private Set<CandidateFact> pickCandidateFactToQuery() throws SemanticException {
+  private Set<CandidateFact> pickCandidateFactToQuery() throws LensException {
     Set<CandidateFact> facts = null;
     if (hasCubeInQuery()) {
       if (candidateFactSets.size() > 0) {
@@ -822,18 +829,19 @@ public class CubeQueryContext implements TrackQueriedColumns {
             mapper.writeValue(out, factPruningMsgs.getJsonObject());
             reason = out.toString("UTF-8");
           } catch (Exception e) {
-            throw new SemanticException("Error writing fact pruning messages", e);
+            throw new LensException("Error writing fact pruning messages", e);
           } finally {
             if (out != null) {
               try {
                 out.close();
               } catch (IOException e) {
-                throw new SemanticException(e);
+                throw new LensException(e);
               }
             }
           }
         }
-        throw new SemanticException(ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE, reason);
+        log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}", factPruningMsgs.toJsonObject());
+        throw new NoCandidateFactAvailableException(factPruningMsgs);
       }
     }
     return facts;
@@ -843,7 +851,24 @@ public class CubeQueryContext implements TrackQueriedColumns {
   @Getter private Collection<CandidateFact> pickedFacts;
   @Getter private Collection<CandidateDim> pickedDimTables;
 
-  public String toHQL() throws SemanticException {
+  private void addRangeClauses(CandidateFact fact) throws LensException {
+    if (fact != null) {
+      // resolve timerange positions and replace it by corresponding where clause
+      for (TimeRange range : getTimeRanges()) {
+        for (Map.Entry<String, String> entry : fact.getRangeToStorageWhereMap().get(range).entrySet()) {
+          String table = entry.getKey();
+          String rangeWhere = entry.getValue();
+          if (!StringUtils.isBlank(rangeWhere)) {
+            ASTNode rangeAST = HQLParser.parseExpr(rangeWhere);
+            range.getParent().setChild(range.getChildIndex(), rangeAST);
+          }
+          fact.getStorgeWhereClauseMap().put(table, getWhereTree());
+        }
+      }
+    }
+  }
+
+  public String toHQL() throws LensException {
     Set<CandidateFact> cfacts = pickCandidateFactToQuery();
     Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
     if (autoJoinCtx != null) {
@@ -857,11 +882,13 @@ public class CubeQueryContext implements TrackQueriedColumns {
         // copy ASTs for each fact
         for (CandidateFact cfact : cfacts) {
           cfact.copyASTs(this);
-          cfact.updateTimeranges(this);
-          factDimMap.put(cfact, new HashSet<Dimension>(dimsToQuery.keySet()));
+          factDimMap.put(cfact, new HashSet<>(dimsToQuery.keySet()));
         }
-      } else {
-        SingleFactHQLContext.addRangeClauses(this, cfacts.iterator().next());
+      }
+    }
+    if (cfacts != null) {
+      for (CandidateFact fact : cfacts) {
+        addRangeClauses(fact);
       }
     }
 
@@ -869,7 +896,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
     Set<Dimension> exprDimensions = new HashSet<Dimension>();
     if (cfacts != null) {
       for (CandidateFact cfact : cfacts) {
-        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(cfact, dimsToQuery, cfacts.size() > 1);
+        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(cfact, dimsToQuery, cfacts.size() > 1 ? cfact : this);
         exprDimensions.addAll(factExprDimTables);
         if (cfacts.size() > 1) {
           factDimMap.get(cfact).addAll(factExprDimTables);
@@ -877,7 +904,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       }
     } else {
       // dim only query
-      exprDimensions.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, false));
+      exprDimensions.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, this));
     }
     dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimensions));
 
@@ -914,7 +941,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
       }
       dimsToQuery.putAll(pickCandidateDimsToQuery(joiningTables));
     }
-    log.info("Picked Fact:{} dimsToQuery: {}" + dimsToQuery, cfacts);
+    log.info("Picked Fact:{} dimsToQuery: {}", cfacts, dimsToQuery);
     pickedDimTables = dimsToQuery.values();
     pickedFacts = cfacts;
     if (cfacts != null) {
@@ -925,26 +952,26 @@ public class CubeQueryContext implements TrackQueriedColumns {
         }
       }
     }
-    hqlContext = createHQLContext(cfacts, dimsToQuery, factDimMap, this);
+    hqlContext = createHQLContext(cfacts, dimsToQuery, factDimMap);
     return hqlContext.toHQL();
   }
 
   private HQLContextInterface createHQLContext(Set<CandidateFact> facts, Map<Dimension, CandidateDim> dimsToQuery,
-    Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
+    Map<CandidateFact, Set<Dimension>> factDimMap) throws LensException {
     if (facts == null || facts.size() == 0) {
-      return new DimOnlyHQLContext(dimsToQuery, query);
+      return new DimOnlyHQLContext(dimsToQuery, this, this);
     } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() > 1) {
       //create single fact with multiple storage context
-      return new SingleFactMultiStorageHQLContext(facts.iterator().next(), dimsToQuery, query);
+      return new SingleFactMultiStorageHQLContext(facts.iterator().next(), dimsToQuery, this, this);
     } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() == 1) {
       // create single fact context
-      return new SingleFactHQLContext(facts.iterator().next(), dimsToQuery, query);
+      return new SingleFactSingleStorageHQLContext(facts.iterator().next(), dimsToQuery, this, this);
     } else {
-      return new MultiFactHQLContext(facts, dimsToQuery, factDimMap, query);
+      return new MultiFactHQLContext(facts, dimsToQuery, factDimMap, this);
     }
   }
 
-  public ASTNode toAST(Context ctx) throws SemanticException {
+  public ASTNode toAST(Context ctx) throws LensException {
     String hql = toHQL();
     ParseDriver pd = new ParseDriver();
     ASTNode tree;
@@ -952,17 +979,13 @@ public class CubeQueryContext implements TrackQueriedColumns {
       log.info("HQL:{}", hql);
       tree = pd.parse(hql, ctx);
     } catch (ParseException e) {
-      throw new SemanticException(e);
+      throw new LensException(e);
     }
     return ParseUtils.findRootNonNullToken(tree);
   }
 
   public Set<String> getColumnsQueried(String tblName) {
     return tblAliasToColumns.get(getAliasForTableName(tblName));
-  }
-
-  public void addColumnsQueried(AbstractCubeTable table, String column) {
-    addColumnsQueried(getAliasForTableName(table.getName()), column);
   }
 
   public void addColumnsQueriedWithTimeDimCheck(String alias, String timeDimColumn) {
@@ -1122,8 +1145,7 @@ public class CubeQueryContext implements TrackQueriedColumns {
   }
 
   public boolean shouldReplaceTimeDimWithPart() {
-    return getConf().getBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL,
-      CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL);
+    return getConf().getBoolean(REPLACE_TIMEDIM_WITH_PART_COL, DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL);
   }
 
   public String getPartitionColumnOfTimeDim(String timeDimName) {

@@ -26,7 +26,7 @@
   <parent>
     <artifactId>apache-lens</artifactId>
     <groupId>org.apache.lens</groupId>
-    <version>2.3.0-beta-incubating-SNAPSHOT</version>
+    <version>2.5.0-beta-SNAPSHOT</version>
   </parent>
 
   <artifactId>lens-cube</artifactId>
@@ -78,10 +78,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

@@ -632,3 +632,11 @@ All the source code provided by AOP Alliance is Public Domain.
 For org.tukaani:xz library
 
 The Java implementation of XZ has been put into the public domain.
+
+For ch.qos.logback librabry
+
+logback-core, logback-classic are dual licensed under Eclipse Public License v1.0 and
+GNU Lesser General Public License version 2.1. Full text of the licenses is available in files LICENSE-EPL and
+LICENSE-LGPL. The licenses are also available at http://www.eclipse.org/legal/epl-v10.html and
+http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+

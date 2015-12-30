@@ -70,7 +70,7 @@ public class DriverSelectorQueryContext {
       String metricId = ctx.driverSpecificConf.get(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
       if (!StringUtils.isBlank(metricId)) {
         ctx.driverSpecificConf.set(LensConfConstants.QUERY_METRIC_DRIVER_STACK_NAME,
-          metricId + "-" + driver.getClass().getSimpleName());
+          metricId + "-" + driver.getFullyQualifiedName());
       }
       ctx.setQuery(userQuery);
       driverQueryContextMap.put(driver, ctx);
@@ -198,7 +198,7 @@ public class DriverSelectorQueryContext {
         log.error("Setting driver plan failed for driver {}", driver, e);
         String expMsg = LensUtil.getCauseMessage(e);
         driverQueryContext.setDriverQueryPlanGenerationError(e);
-        detailedFailureCause.append("\n Driver :").append(driver.getClass().getName());
+        detailedFailureCause.append("\n Driver :").append(driver.getFullyQualifiedName());
         detailedFailureCause.append(" Cause :" + expMsg);
         if (failureCause != null && !failureCause.equals(expMsg)) {
           useBuilder = true;

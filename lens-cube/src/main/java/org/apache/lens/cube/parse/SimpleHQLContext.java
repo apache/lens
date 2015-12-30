@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.server.api.error.LensException;
 
+import org.apache.commons.lang.StringUtils;
+
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * Making this as an abstract class because it provides constructors without all expressions being set.
  */
 @Slf4j
+@Data
 public abstract class SimpleHQLContext implements HQLContextInterface {
 
   private String select;
@@ -70,11 +73,12 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
    * <p></p>
    * Leaving this empty implementation for the case of all expressions being passed in constructor. If other
    * constructors are used the missing expressions should be set here
+   * @throws LensException
    */
-  protected void setMissingExpressions() throws SemanticException {
+  protected void setMissingExpressions() throws LensException {
   }
 
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws LensException {
     setMissingExpressions();
     String qfmt = getQueryFormat();
     Object[] queryTreeStrings = getQueryTreeStrings();
@@ -85,7 +89,7 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
     return baseQuery;
   }
 
-  private String[] getQueryTreeStrings() throws SemanticException {
+  private String[] getQueryTreeStrings() throws LensException {
     List<String> qstrs = new ArrayList<String>();
     qstrs.add(select);
     qstrs.add(from);
@@ -129,57 +133,4 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
     }
     return queryFormat.toString();
   }
-
-  public String getFrom() {
-    return from;
-  }
-
-  public String getWhere() {
-    return where;
-  }
-
-  public String getSelect() {
-    return select;
-  }
-
-  public String getGroupby() {
-    return groupby;
-  }
-
-  public String getHaving() {
-    return having;
-  }
-
-  public String getOrderby() {
-    return orderby;
-  }
-
-  public Integer getLimit() {
-    return limit;
-  }
-
-  protected void setFrom(String from) {
-    this.from = from;
-  }
-
-  protected void setWhere(String where) {
-    this.where = where;
-  }
-
-  protected void setSelect(String select) {
-    this.select = select;
-  }
-
-  protected void setGroupby(String groupby) {
-    this.groupby = groupby;
-  }
-
-  protected void setHaving(String having) {
-    this.having = having;
-  }
-
-  protected void setOrderby(String orderby) {
-    this.orderby = orderby;
-  }
-
 }

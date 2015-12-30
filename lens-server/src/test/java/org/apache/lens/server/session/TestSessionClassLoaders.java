@@ -25,7 +25,7 @@ import java.util.HashMap;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.LensServerConf;
-import org.apache.lens.server.LensTestUtil;
+import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 
@@ -57,7 +57,7 @@ public class TestSessionClassLoaders {
      * test2.jar containing ClassLoaderTestClass2.class added to session via addResource
      */
     // Create test databases and tables
-    LensTestUtil.createTestDatabaseResources(new String[]{DB1}, conf);
+    LensServerTestUtil.createTestDatabaseResources(new String[]{DB1}, conf);
 
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
     conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "target/resources");

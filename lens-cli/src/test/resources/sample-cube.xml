@@ -41,6 +41,13 @@
         </table_references>
       </ref_spec>
     </dim_attribute>
+    <dim_attribute name="dimDetail" type="string" description="City name to which the customer belongs"
+                   display_string="Customer City">
+      <ref_spec>
+        <chain_ref_column chain_name="testdimchain" ref_col="detail" />
+        <chain_ref_column chain_name="testdetailchain" ref_col="name" />
+      </ref_spec>
+    </dim_attribute>
   </dim_attributes>
   <expressions>
     <expression name="expr_msr5" type="DOUBLE">
@@ -48,4 +55,30 @@
       <expr_spec expr = "measure3 + measure4 + 0.01" start_time='2013-12-12T00:00:00'/>
     </expression>
   </expressions>
+  <join_chains>
+    <join_chain name="testdimchain">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sample_cube" column="dim1" />
+              <to table="test_dim" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain name="testdetailchain">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sample_cube" column="dim2" />
+              <to table="test_detail" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
 </x_base_cube>

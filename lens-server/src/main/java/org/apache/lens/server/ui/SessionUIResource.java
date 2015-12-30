@@ -79,7 +79,7 @@ public class SessionUIResource {
    * @throws LensException the lens exception
    */
   public SessionUIResource() throws LensException {
-    sessionService = (SessionService) LensServices.get().getService("session");
+    sessionService = LensServices.get().getService(SessionService.NAME);
   }
 
   /**

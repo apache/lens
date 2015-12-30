@@ -22,9 +22,9 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,7 +38,7 @@ class LightestDimensionResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     if (!cubeql.getCandidateDimTables().isEmpty()) {
       for (Map.Entry<Dimension, Set<CandidateDim>> entry : cubeql.getCandidateDimTables().entrySet()) {
         if (entry.getValue().isEmpty()) {

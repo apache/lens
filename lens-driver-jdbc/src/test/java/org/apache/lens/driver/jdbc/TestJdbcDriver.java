@@ -18,6 +18,9 @@
  */
 package org.apache.lens.driver.jdbc;
 
+import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.*;
+import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.ConnectionPoolProperties.*;
+
 import static org.testng.Assert.*;
 
 import java.sql.*;
@@ -76,16 +79,16 @@ public class TestJdbcDriver {
   @BeforeTest
   public void testCreateJdbcDriver() throws Exception {
     baseConf = new Configuration();
-    baseConf.set(JDBCDriverConfConstants.JDBC_DRIVER_CLASS, "org.hsqldb.jdbc.JDBCDriver");
-    baseConf.set(JDBCDriverConfConstants.JDBC_DB_URI, "jdbc:hsqldb:mem:jdbcTestDB");
-    baseConf.set(JDBCDriverConfConstants.JDBC_USER, "SA");
-    baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
-    baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
-    baseConf.setClass(JDBCDriverConfConstants.JDBC_QUERY_HOOK_CLASS, MockDriverQueryHook.class, DriverQueryHook.class);
+    baseConf.set(JDBC_DRIVER_CLASS, "org.hsqldb.jdbc.JDBCDriver");
+    baseConf.set(JDBC_DB_URI, "jdbc:hsqldb:mem:jdbcTestDB");
+    baseConf.set(JDBC_USER, "SA");
+    baseConf.set(JDBC_PASSWORD, "");
+    baseConf.set(JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
+    baseConf.setClass(JDBC_QUERY_HOOK_CLASS, MockDriverQueryHook.class, DriverQueryHook.class);
     hConf = new HiveConf(baseConf, this.getClass());
 
     driver = new JDBCDriver();
-    driver.configure(baseConf);
+    driver.configure(baseConf, "jdbc", "jdbc1");
 
     assertNotNull(driver);
     assertTrue(driver.configured);
@@ -258,7 +261,7 @@ public class TestJdbcDriver {
 
     // Test connection leak for estimate
     final int maxEstimateConnections =
-      driver.getEstimateConnectionConf().getInt(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE, 50);
+      driver.getEstimateConnectionConf().getInt(JDBC_POOL_MAX_SIZE.getConfigKey(), 50);
     for (int i = 0; i < maxEstimateConnections + 10; i++) {
       try {
         log.info("Iteration#{}", (i + 1));
@@ -306,12 +309,12 @@ public class TestJdbcDriver {
     metricConf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestJdbcDriver.class.getSimpleName());
     driver.estimate(createExplainContext(query1, metricConf));
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
-
+    String driverQualifiledName = driver.getFullyQualifiedName();
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-columnar-sql-rewrite",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-jdbc-prepare-statement",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-thru-prepare",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-check-allowed-query")));
+      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-columnar-sql-rewrite",
+      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-jdbc-prepare-statement",
+      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-thru-prepare",
+      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-jdbc-check-allowed-query")));
   }
 
   @Test
@@ -620,7 +623,7 @@ public class TestJdbcDriver {
     final String query = "SELECT * from invalid_conn_close2";
     QueryContext ctx = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
 
-    for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
+    for (int i = 0; i < JDBC_POOL_MAX_SIZE.getDefaultValue(); i++) {
       executeAsync(ctx);
       driver.updateStatus(ctx);
       System.out.println("@@@@ QUERY " + (i + 1));
@@ -661,7 +664,7 @@ public class TestJdbcDriver {
     final String query = "SELECT * from valid_conn_close";
     QueryContext ctx = createQueryContext(query);
 
-    for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
+    for (int i = 0; i < ConnectionPoolProperties.JDBC_POOL_MAX_SIZE.getDefaultValue(); i++) {
       LensResultSet resultSet = driver.execute(ctx);
       assertNotNull(resultSet);
       if (resultSet instanceof InMemoryResultSet) {
@@ -781,12 +784,11 @@ public class TestJdbcDriver {
     assertTrue(estimateConf != driver.getConf());
 
     // Validate overridden conf
-    assertEquals(estimateConf.get(JDBCDriverConfConstants.JDBC_USER), "estimateUser");
-    assertEquals(estimateConf.get(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE), "50");
-    assertEquals(estimateConf.get(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME), "800");
-    assertEquals(estimateConf.get(JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT), "25000");
-    assertEquals(estimateConf.get(JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION),
-      "15");
+    assertEquals(estimateConf.get(JDBC_USER), "estimateUser");
+    assertEquals(estimateConf.get(JDBC_POOL_MAX_SIZE.getConfigKey()), "50");
+    assertEquals(estimateConf.get(JDBC_POOL_IDLE_TIME.getConfigKey()), "800");
+    assertEquals(estimateConf.get(JDBC_GET_CONNECTION_TIMEOUT.getConfigKey()), "25000");
+    assertEquals(estimateConf.get(JDBC_MAX_STATEMENTS_PER_CONNECTION.getConfigKey()), "15");
   }
 
   @Test
@@ -837,6 +839,7 @@ public class TestJdbcDriver {
     assertEquals(estimatePool.getMaxIdleTime(), 800);
     assertEquals(estimatePool.getCheckoutTimeout(), 25000);
     assertEquals(estimatePool.getMaxStatementsPerConnection(), 15);
+    assertEquals(estimatePool.getProperties().get("random_key"), "random_value");
   }
 
 }

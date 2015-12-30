@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cli.commands;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -29,12 +30,15 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
+import lombok.NonNull;
+
 /**
  * The Class LensDimensionCommands.
  */
 @Component
-@UserDocumentation(title = "Dimension Management", description = "These commands provide CRUD for Dimensions")
-public class LensDimensionCommands extends LogicalTableCrudCommand<XDimension> {
+@UserDocumentation(title = "Commands for Dimension Management",
+  description = "These commands provide CRUD for Dimensions")
+public class LensDimensionCommands extends ConceptualTableCrudCommand<XDimension> {
 
   /**
    * Show dimensions.
@@ -56,7 +60,7 @@ public class LensDimensionCommands extends LogicalTableCrudCommand<XDimension> {
     help = "Create a new Dimension, taking spec from <path-to-dimension-spec file>")
   public String createDimension(
     @CliOption(key = {"", "path"}, mandatory = true, help =
-      "<path-to-dimension-spec file>") String path) {
+      "<path-to-dimension-spec file>") @NonNull final File path) {
     return create(path, false);
   }
 
@@ -87,7 +91,7 @@ public class LensDimensionCommands extends LogicalTableCrudCommand<XDimension> {
     help = "update dimension <dimension_name>, taking spec from <path-to-dimension-spec file>")
   public String updateDimension(
     @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension_name>") String name,
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimension-spec-file>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimension-spec-file>") @NonNull final File path) {
     return update(name, path);
   }
 

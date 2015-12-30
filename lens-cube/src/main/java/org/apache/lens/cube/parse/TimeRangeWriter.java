@@ -21,10 +21,9 @@ package org.apache.lens.cube.parse;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.FactPartition;
-
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.server.api.error.LensException;
 
 public interface TimeRangeWriter {
   String getTimeRangeWhereClause(CubeQueryContext cubeQueryContext, String tableName, Set<FactPartition> parts)
-    throws SemanticException;
+    throws LensException;
 }

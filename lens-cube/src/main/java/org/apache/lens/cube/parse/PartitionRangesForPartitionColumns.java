@@ -41,10 +41,12 @@ public class PartitionRangesForPartitionColumns extends HashMap<String, RangesPa
       .rangeUpto(partition.next().withUpdatePeriod(UpdatePeriod.values()[0])));
   }
 
-  public Set<String> toSet() {
+  public Set<String> toSet(Set<String> partColsQueried) {
     Set<String> ret = Sets.newHashSet();
     for (Map.Entry<String, RangesPartitionTimeline> entry : entrySet()) {
-      ret.add(entry.getKey() + ":" + entry.getValue().getRanges());
+      if (partColsQueried.contains(entry.getKey())) {
+        ret.add(entry.getKey() + ":" + entry.getValue().getRanges());
+      }
     }
     return ret;
   }

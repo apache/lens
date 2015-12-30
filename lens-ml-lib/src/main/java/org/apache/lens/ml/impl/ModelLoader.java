@@ -55,13 +55,12 @@ public class ModelLoader {
    * The Constant TEST_REPORT_BASE_DIR.
    */
   public static final String TEST_REPORT_BASE_DIR = "lens.ml.test.basedir";
-  /**
-   * The Constant TEST_REPORT_BASE_DIR_DEFAULT.
-   */
-  public static final String TEST_REPORT_BASE_DIR_DEFAULT = "file:///tmp/ml_reports";
-  /**
-   * The Constant MODEL_CACHE_SIZE.
-   */
+
+  /** The Constant TEST_REPORT_BASE_DIR_DEFAULT. */
+  public static final String TEST_REPORT_BASE_DIR_DEFAULT = MODEL_PATH_BASE_DIR_DEFAULT + "/ml_reports";
+
+  // Model cache settings
+  /** The Constant MODEL_CACHE_SIZE. */
   public static final long MODEL_CACHE_SIZE = 10;
 
   // Model cache settings

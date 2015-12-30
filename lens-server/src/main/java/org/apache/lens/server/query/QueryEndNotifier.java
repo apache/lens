@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.query;
 
+import static org.apache.lens.server.api.LensConfConstants.*;
+
 import java.util.Date;
 import java.util.Properties;
 
@@ -32,7 +34,7 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryContext;
@@ -58,9 +60,6 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
   /** The Constant EMAIL_ERROR_COUNTER. */
   public static final String EMAIL_ERROR_COUNTER = "email-send-errors";
 
-  /** The conf. */
-  private final HiveConf conf;
-
   /** The from. */
   private final String from;
 
@@ -78,37 +77,38 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
   private final LogSegregationContext logSegregationContext;
 
-  /**
-   * Instantiates a new query end notifier.
+  /** QueryEndNotifier core and max pool size */
+  private static final int CORE_POOL_SIZE = 2;
+  private static final int MAX_POOL_SIZE = 5;
+
+  /** Instantiates a new query end notifier.
    *
    * @param queryService the query service
-   * @param hiveConf     the hive conf
-   */
+   * @param hiveConf     the hive conf */
   public QueryEndNotifier(QueryExecutionServiceImpl queryService, HiveConf hiveConf,
-      @NonNull final LogSegregationContext logSegregationContext) {
+    @NonNull final LogSegregationContext logSegregationContext) {
+    super(CORE_POOL_SIZE, MAX_POOL_SIZE);
     this.queryService = queryService;
-    this.conf = hiveConf;
-    from = conf.get(LensConfConstants.MAIL_FROM_ADDRESS);
-    host = conf.get(LensConfConstants.MAIL_HOST);
-    port = conf.get(LensConfConstants.MAIL_PORT);
-    mailSmtpTimeout = Integer.parseInt(
-        conf.get(LensConfConstants.MAIL_SMTP_TIMEOUT, LensConfConstants.MAIL_DEFAULT_SMTP_TIMEOUT));
-    mailSmtpConnectionTimeout = Integer.parseInt(conf.get(LensConfConstants.MAIL_SMTP_CONNECTIONTIMEOUT,
-      LensConfConstants.MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
+    HiveConf conf = hiveConf;
+    from = conf.get(MAIL_FROM_ADDRESS);
+    host = conf.get(MAIL_HOST);
+    port = conf.get(MAIL_PORT);
+    mailSmtpTimeout = Integer.parseInt(conf.get(MAIL_SMTP_TIMEOUT, MAIL_DEFAULT_SMTP_TIMEOUT));
+    mailSmtpConnectionTimeout = Integer.parseInt(conf.get(MAIL_SMTP_CONNECTIONTIMEOUT,
+      MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
     this.logSegregationContext = logSegregationContext;
   }
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
-   */
+   * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent) */
   @Override
-  public void process(QueryEnded event) {
+  public void process(final QueryEnded event) {
     if (event.getCurrentValue() == QueryStatus.Status.CLOSED) {
       return;
     }
-    QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
+    QueryContext queryContext = event.getQueryContext();
     if (queryContext == null) {
       log.warn("Could not find the context for {} for event:{}. No email generated", event.getQueryHandle(),
         event.getCurrentValue());
@@ -116,45 +116,43 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     }
     this.logSegregationContext.setLogSegragationAndQueryId(queryContext.getQueryHandleString());
 
-    boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(LensConfConstants.QUERY_MAIL_NOTIFY,
-      LensConfConstants.WHETHER_MAIL_NOTIFY_DEFAULT));
-
+    boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(QUERY_MAIL_NOTIFY,
+      WHETHER_MAIL_NOTIFY_DEFAULT));
     if (!whetherMailNotify) {
       return;
     }
 
-    String queryName = queryContext.getQueryName();
-    queryName = queryName == null ? "" : queryName;
-    String mailSubject = "Query " + queryName + " " + queryContext.getStatus().getStatus() + ": "
-      + event.getQueryHandle();
+    try {
+      //Create and Send EMAIL
+      String queryName = queryContext.getQueryName();
+      String mailSubject = "Query " + (StringUtils.isBlank(queryName) ? "" : (queryName + " "))
+        + queryContext.getStatus().getStatus() + ": " + event.getQueryHandle();
 
-    String mailMessage = createMailMessage(queryContext);
+      String mailMessage = createMailMessage(queryContext);
 
-    String to = queryContext.getSubmittedUser() + "@" + queryService.getServerDomain();
+      String to = queryContext.getSubmittedUser() + "@" + queryService.getServerDomain();
 
-    String cc = queryContext.getConf().get(LensConfConstants.QUERY_RESULT_EMAIL_CC,
-      LensConfConstants.QUERY_RESULT_DEFAULT_EMAIL_CC);
+      String cc = queryContext.getConf().get(QUERY_RESULT_EMAIL_CC, QUERY_RESULT_DEFAULT_EMAIL_CC);
 
-    log.info("Sending completion email for query handle: {}", event.getQueryHandle());
-    sendMail(host, port, new Email(from, to, cc, mailSubject, mailMessage), mailSmtpTimeout, mailSmtpConnectionTimeout);
+      log.info("Sending completion email for query handle: {}", event.getQueryHandle());
+      sendMail(host, port, new Email(from, to, cc, mailSubject, mailMessage), mailSmtpTimeout,
+          mailSmtpConnectionTimeout);
+    } catch (Exception e) {
+      MetricsService metricsService = LensServices.get().getService(MetricsService.NAME);
+      metricsService.incrCounter(QueryEndNotifier.class, EMAIL_ERROR_COUNTER);
+      log.error("Error sending query end email", e);
+    }
   }
 
-  /**
-   * Creates the mail message.
+  /** Creates the mail message.
    *
    * @param queryContext the query context
-   * @return the string
-   */
+   * @return the string */
   private String createMailMessage(QueryContext queryContext) {
     StringBuilder msgBuilder = new StringBuilder();
     switch (queryContext.getStatus().getStatus()) {
     case SUCCESSFUL:
-      msgBuilder.append("Result available at ");
-      String baseURI = conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL);
-      msgBuilder.append(baseURI);
-      msgBuilder.append("queryapi/queries/");
-      msgBuilder.append(queryContext.getQueryHandle());
-      msgBuilder.append("/httpresultset");
+      msgBuilder.append(getResultMessage(queryContext));
       break;
     case FAILED:
       msgBuilder.append(queryContext.getStatus().getStatusMessage());
@@ -166,11 +164,19 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     case CANCELED:
       msgBuilder.append(queryContext.getStatus().getStatusMessage());
       break;
-    case CLOSED:
     default:
       break;
     }
     return msgBuilder.toString();
+  }
+
+  private String getResultMessage(QueryContext queryContext) {
+    try {
+      return queryService.getResultset(queryContext.getQueryHandle()).toQueryResult().toPrettyString();
+    } catch (LensException e) {
+      log.error("Error retrieving result of query handle {} for sending e-mail", queryContext.getQueryHandle(), e);
+      return "Error retrieving result.";
+    }
   }
 
   @Data
@@ -181,48 +187,41 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     private final String subject;
     private final String message;
   }
-  /**
-   * Send mail.
+
+  /** Send mail.
    *
    * @param host                      the host
    * @param port                      the port
    * @param email                     the email
    * @param mailSmtpTimeout           the mail smtp timeout
-   * @param mailSmtpConnectionTimeout the mail smtp connection timeout
-   */
+   * @param mailSmtpConnectionTimeout the mail smtp connection timeout */
   public static void sendMail(String host, String port,
-    Email email, int mailSmtpTimeout, int mailSmtpConnectionTimeout) {
+    Email email, int mailSmtpTimeout, int mailSmtpConnectionTimeout) throws Exception{
     Properties props = System.getProperties();
     props.put("mail.smtp.host", host);
     props.put("mail.smtp.port", port);
     props.put("mail.smtp.timeout", mailSmtpTimeout);
     props.put("mail.smtp.connectiontimeout", mailSmtpConnectionTimeout);
     Session session = Session.getDefaultInstance(props, null);
-    try {
-      MimeMessage message = new MimeMessage(session);
-      message.setFrom(new InternetAddress(email.getFrom()));
-      for (String recipient : email.getTo().trim().split("\\s*,\\s*")) {
-        message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-      }
-      if (email.getCc() != null && email.getCc().length() > 0) {
-        for (String recipient : email.getCc().trim().split("\\s*,\\s*")) {
-          message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(recipient));
-        }
-      }
-      message.setSubject(email.getSubject());
-      message.setSentDate(new Date());
-
-      MimeBodyPart messagePart = new MimeBodyPart();
-      messagePart.setText(email.getMessage());
-      Multipart multipart = new MimeMultipart();
-
-      multipart.addBodyPart(messagePart);
-      message.setContent(multipart);
-      Transport.send(message);
-    } catch (Exception e) {
-      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
-      metricsService.incrCounter(QueryEndNotifier.class, EMAIL_ERROR_COUNTER);
-      log.error("Error sending query end email", e);
+    MimeMessage message = new MimeMessage(session);
+    message.setFrom(new InternetAddress(email.getFrom()));
+    for (String recipient : email.getTo().trim().split("\\s*,\\s*")) {
+      message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
     }
+    if (email.getCc() != null && email.getCc().length() > 0) {
+      for (String recipient : email.getCc().trim().split("\\s*,\\s*")) {
+        message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(recipient));
+      }
+    }
+    message.setSubject(email.getSubject());
+    message.setSentDate(new Date());
+
+    MimeBodyPart messagePart = new MimeBodyPart();
+    messagePart.setText(email.getMessage());
+    Multipart multipart = new MimeMultipart();
+
+    multipart.addBodyPart(messagePart);
+    message.setContent(multipart);
+    Transport.send(message);
   }
 }

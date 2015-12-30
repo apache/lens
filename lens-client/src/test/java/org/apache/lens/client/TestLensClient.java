@@ -80,5 +80,6 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
     Assert.assertTrue(client.getAllDatabases().contains("testclientdb"));
     client.dropDatabase("testclientdb", false);
     Assert.assertFalse(client.getAllDatabases().contains("testclientdb"));
+    Assert.assertTrue(RequestTestFilter.isAccessed(), "RequestTestFilter not invoked");
   }
 }

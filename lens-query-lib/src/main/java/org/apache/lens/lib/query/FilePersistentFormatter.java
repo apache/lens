@@ -29,24 +29,20 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.PersistedOutputFormatter;
 import org.apache.lens.server.api.query.QueryContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * File formatter for {@link PersistedOutputFormatter}
  * <p></p>
  * This is a {@link WrappedFileFormatter} which can wrap any {@link FileFormatter}.
  */
+@Slf4j
 public class FilePersistentFormatter extends WrappedFileFormatter implements PersistedOutputFormatter {
-
-  /**
-   * The Constant LOG.
-   */
-  public static final Log LOG = LogFactory.getLog(FilePersistentFormatter.class);
 
   /*
    * (non-Javadoc)
@@ -123,7 +119,7 @@ public class FilePersistentFormatter extends WrappedFileFormatter implements Per
       }
 
       for (Map.Entry<PartFile, FileStatus> entry : partFileMap.entrySet()) {
-        LOG.info("Processing file:" + entry.getValue().getPath());
+        log.info("Processing file:{}", entry.getValue().getPath());
         BufferedReader in = null;
         try {
           // default encoding in hadoop filesystem is utf-8

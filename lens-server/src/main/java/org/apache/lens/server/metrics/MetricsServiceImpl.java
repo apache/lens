@@ -48,7 +48,7 @@ import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.healthcheck.LensServiceHealthCheck;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.quota.QuotaServiceImpl;
-import org.apache.lens.server.scheduler.QuerySchedulerServiceImpl;
+import org.apache.lens.server.scheduler.SchedulerServiceImpl;
 import org.apache.lens.server.session.DatabaseResourceService;
 import org.apache.lens.server.session.HiveSessionService;
 
@@ -238,7 +238,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   }
 
   private QueryExecutionService getQuerySvc() {
-    return (QueryExecutionService) LensServices.get().getService(QueryExecutionService.NAME);
+    return LensServices.get().getService(QueryExecutionService.NAME);
   }
 
   /** The time between polls. */
@@ -253,7 +253,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   public synchronized void init(HiveConf hiveConf) {
     queryStatusListener = new AsyncQueryStatusListener();
     sessionEventListener = new AsyncSessionEventListener();
-    LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
+    LensEventService eventService = LensServices.get().getService(LensEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     eventService.addListenerForType(sessionEventListener, SessionEvent.class);
     metricRegistry = LensMetricsRegistry.getStaticRegistry();
@@ -263,7 +263,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     healthCheck.register(CubeMetastoreService.NAME, new LensServiceHealthCheck(CubeMetastoreService.NAME));
     healthCheck.register(HiveSessionService.NAME, new LensServiceHealthCheck(HiveSessionService.NAME));
     healthCheck.register(QueryExecutionServiceImpl.NAME, new LensServiceHealthCheck(QueryExecutionServiceImpl.NAME));
-    healthCheck.register(QuerySchedulerServiceImpl.NAME, new LensServiceHealthCheck(QuerySchedulerServiceImpl.NAME));
+    healthCheck.register(SchedulerServiceImpl.NAME, new LensServiceHealthCheck(SchedulerServiceImpl.NAME));
     healthCheck.register(QuotaServiceImpl.NAME, new LensServiceHealthCheck(QuotaServiceImpl.NAME));
     healthCheck.register(MetricsServiceImpl.NAME, new LensServiceHealthCheck(MetricsServiceImpl.NAME));
     healthCheck.register(EventServiceImpl.NAME, new LensServiceHealthCheck(EventServiceImpl.NAME));
@@ -439,7 +439,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public synchronized void stop() {
     // unregister
-    LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
+    LensEventService eventService = LensServices.get().getService(LensEventService.NAME);
     if (eventService != null) {
       eventService.removeListener(queryStatusListener);
     }

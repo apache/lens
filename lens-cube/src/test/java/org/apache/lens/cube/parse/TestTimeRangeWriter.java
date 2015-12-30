@@ -19,16 +19,19 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
+import static org.apache.lens.cube.metadata.UpdatePeriod.*;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.FactPartition;
-import org.apache.lens.cube.metadata.UpdatePeriod;
-
-import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.server.api.error.LensException;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -46,22 +49,32 @@ public abstract class TestTimeRangeWriter {
 
   public abstract void validateConsecutive(String whereClause, DateFormat format);
 
-  public abstract void validateSingle(String whereClause, DateFormat object);
+  public void validateSingle(String whereClause, DateFormat format) {
+    List<String> parts = new ArrayList<String>();
+    if (format == null) {
+      parts.add(getDateStringWithOffset(DAILY, -1));
+    } else {
+      parts.add(format.format(getDateWithOffset(DAILY, -1)));
+    }
+
+    System.out.println("Expected :" + StorageUtil.getWherePartClause("dt", "test", parts));
+    Assert.assertEquals(whereClause, StorageUtil.getWherePartClause("dt", "test", parts));
+  }
 
   public static final DateFormat DB_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
   @Test
   public void testDisjointParts() {
     Set<FactPartition> answeringParts = new LinkedHashSet<FactPartition>();
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.TWO_MONTHS_BACK, UpdatePeriod.MONTHLY, null, null));
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.TWODAYS_BACK, UpdatePeriod.DAILY, null, null));
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.NOW, UpdatePeriod.HOURLY, null, null));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(MONTHLY, -2), MONTHLY, null, null));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -2), DAILY, null, null));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(HOURLY, 0), HOURLY, null, null));
 
-    SemanticException th = null;
+    LensException th = null;
     String whereClause = null;
     try {
       whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       log.error("Semantic exception while testing disjoint parts.", e);
       th = e;
     }
@@ -69,22 +82,23 @@ public abstract class TestTimeRangeWriter {
     if (failDisjoint()) {
       Assert.assertNotNull(th);
       Assert
-        .assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.CANNOT_USE_TIMERANGE_WRITER.getErrorCode());
+        .assertEquals(th.getErrorCode(), LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.
+            getLensErrorInfo().getErrorCode());
     } else {
       Assert.assertNull(th);
       validateDisjoint(whereClause, null);
     }
 
     // test with format
-    answeringParts = new LinkedHashSet<FactPartition>();
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.TWO_MONTHS_BACK, UpdatePeriod.MONTHLY, null, DB_FORMAT));
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.TWODAYS_BACK, UpdatePeriod.DAILY, null, DB_FORMAT));
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.NOW, UpdatePeriod.HOURLY, null, DB_FORMAT));
+    answeringParts = new LinkedHashSet<>();
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(MONTHLY, -2), MONTHLY, null, DB_FORMAT));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -2), DAILY, null, DB_FORMAT));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(HOURLY, 0), HOURLY, null, DB_FORMAT));
 
     th = null;
     try {
       whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       th = e;
     }
 
@@ -98,33 +112,33 @@ public abstract class TestTimeRangeWriter {
   }
 
   @Test
-  public void testConsecutiveDayParts() throws SemanticException {
+  public void testConsecutiveDayParts() throws LensException {
     Set<FactPartition> answeringParts = new LinkedHashSet<FactPartition>();
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.ONE_DAY_BACK, UpdatePeriod.DAILY, null, null));
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.TWODAYS_BACK, UpdatePeriod.DAILY, null, null));
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.NOW, UpdatePeriod.DAILY, null, null));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, null));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -2), DAILY, null, null));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, 0), DAILY, null, null));
 
     String whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
     validateConsecutive(whereClause, null);
 
     answeringParts = new LinkedHashSet<FactPartition>();
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.ONE_DAY_BACK, UpdatePeriod.DAILY, null, DB_FORMAT));
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.TWODAYS_BACK, UpdatePeriod.DAILY, null, DB_FORMAT));
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.NOW, UpdatePeriod.DAILY, null, DB_FORMAT));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, DB_FORMAT));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -2), DAILY, null, DB_FORMAT));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, 0), DAILY, null, DB_FORMAT));
 
     whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
     validateConsecutive(whereClause, DB_FORMAT);
   }
 
   @Test
-  public void testSinglePart() throws SemanticException {
+  public void testSinglePart() throws LensException {
     Set<FactPartition> answeringParts = new LinkedHashSet<FactPartition>();
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.ONE_DAY_BACK, UpdatePeriod.DAILY, null, null));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, null));
     String whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
     validateSingle(whereClause, null);
 
     answeringParts = new LinkedHashSet<FactPartition>();
-    answeringParts.add(new FactPartition("dt", CubeTestSetup.ONE_DAY_BACK, UpdatePeriod.DAILY, null, DB_FORMAT));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, DB_FORMAT));
     whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
     validateSingle(whereClause, DB_FORMAT);
 

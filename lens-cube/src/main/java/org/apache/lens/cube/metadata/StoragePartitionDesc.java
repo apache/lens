@@ -73,7 +73,7 @@ public class StoragePartitionDesc extends AddPartitionDesc.OnePartitionDesc {
     if (fullPartSpec == null) {
       fullPartSpec = new HashMap<String, String>();
       for (Map.Entry<String, Date> entry : timePartSpec.entrySet()) {
-        fullPartSpec.put(entry.getKey(), updatePeriod.format().format(entry.getValue()));
+        fullPartSpec.put(entry.getKey(), updatePeriod.format(entry.getValue()));
       }
       if (nonTimePartSpec != null) {
         fullPartSpec.putAll(nonTimePartSpec);

@@ -34,6 +34,7 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
 
 import org.mockito.Matchers;
@@ -56,7 +57,7 @@ import com.codahale.metrics.MetricRegistry;
  */
 @PrepareForTest(RewriteUtil.class)
 @PowerMockIgnore({"org.apache.log4j.*", "javax.management.*", "javax.xml.*",
-  "com.sun.org.apache.xerces.internal.jaxp.*", "ch.qos.logback.*", "org.slf4j.*", "org.w3c.dom*"})
+  "com.sun.org.apache.xerces.internal.jaxp.*", "ch.qos.logback.*", "org.slf4j.*", "org.w3c.dom*", "org.mockito.*"})
 public class TestRewriting {
   /**
    * We need a special {@link IObjectFactory}.
@@ -76,7 +77,7 @@ public class TestRewriting {
   // change the number, if more tests for success needs to be added
   static final int NUM_SUCCESS = 36;
 
-  private CubeQueryRewriter getMockedRewriter() throws SemanticException, ParseException, LensException {
+  private CubeQueryRewriter getMockedRewriter() throws ParseException, LensException, HiveException {
     CubeQueryRewriter mockwriter = Mockito.mock(CubeQueryRewriter.class);
     Mockito.when(mockwriter.rewrite(Matchers.any(String.class))).thenAnswer(new Answer<CubeQueryContext>() {
       @Override
@@ -106,11 +107,11 @@ public class TestRewriting {
    *
    * @param query the query
    * @return the mocked cube context
-   * @throws SemanticException the semantic exception
+   * @throws LensException the lens exception
    * @throws ParseException    the parse exception
    */
   private CubeQueryContext getMockedCubeContext(String query)
-    throws SemanticException, ParseException, LensException {
+    throws ParseException, LensException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
     Mockito.when(context.toHQL()).thenReturn(query.substring(4));
     Mockito.when(context.toAST(Matchers.any(Context.class))).thenReturn(HQLParser.parseHQL(query.substring(4), hconf));
@@ -122,10 +123,10 @@ public class TestRewriting {
    *
    * @param ast the ast
    * @return the mocked cube context
-   * @throws SemanticException the semantic exception
    * @throws ParseException    the parse exception
+   * @throws LensException  the lens exception
    */
-  private CubeQueryContext getMockedCubeContext(ASTNode ast) throws SemanticException, ParseException {
+  private CubeQueryContext getMockedCubeContext(ASTNode ast) throws ParseException, LensException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
     if (ast.getToken().getType() == HiveParser.TOK_QUERY) {
       if (((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
@@ -167,16 +168,16 @@ public class TestRewriting {
    * Test cube query.
    *
    * @throws ParseException    the parse exception
-   * @throws SemanticException the semantic exception
    * @throws LensException     the lens exception
+   * @throws HiveException
    */
   @Test
-  public void testCubeQuery() throws ParseException, SemanticException, LensException {
+  public void testCubeQuery() throws ParseException, LensException, HiveException {
     List<LensDriver> drivers = new ArrayList<LensDriver>();
     MockDriver driver = new MockDriver();
     LensConf lensConf = new LensConf();
     Configuration conf = new Configuration();
-    driver.configure(conf);
+    driver.configure(conf, null, null);
     drivers.add(driver);
 
     CubeQueryRewriter mockWriter = getMockedRewriter();
@@ -189,7 +190,7 @@ public class TestRewriting {
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
     conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestRewriting.class.getSimpleName());
-    driver.configure(conf);
+    driver.configure(conf, null, null);
     String q2 = "cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
@@ -200,11 +201,11 @@ public class TestRewriting {
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestRewriting-MockDriver-RewriteUtil-rewriteQuery",
-      "lens.MethodMetricGauge.TestRewriting-MockDriver-1-RewriteUtil-rewriteQuery-toHQL")));
+      "lens.MethodMetricGauge.TestRewriting-"+driver.getFullyQualifiedName()+"-RewriteUtil-rewriteQuery",
+      "lens.MethodMetricGauge.TestRewriting-"+driver.getFullyQualifiedName()+"-1-RewriteUtil-rewriteQuery-toHQL")));
     conf.unset(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
 
-    q2 = "insert overwrite directory '/tmp/rewrite' cube select name from table";
+    q2 = "insert overwrite directory 'target/rewrite' cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -212,7 +213,7 @@ public class TestRewriting {
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
-    q2 = "insert overwrite local directory '/tmp/rewrite' cube select name from table";
+    q2 = "insert overwrite local directory 'target/rewrite' cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -220,7 +221,7 @@ public class TestRewriting {
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
-    q2 = "insert overwrite local directory '/tmp/example-output' cube select id,name from dim_table";
+    q2 = "insert overwrite local directory 'target/example-output' cube select id,name from dim_table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -244,7 +245,7 @@ public class TestRewriting {
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
-    q2 = "insert overwrite directory '/tmp/rewrite' select * from (cube select name from table) a";
+    q2 = "insert overwrite directory 'target/rewrite' select * from (cube select name from table) a";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -289,9 +290,10 @@ public class TestRewriting {
     runRewrites(RewriteUtil.rewriteQuery(ctx));
     reg = LensMetricsRegistry.getStaticRegistry();
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-1-RewriteUtil-rewriteQuery-toHQL",
-      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-2-RewriteUtil-rewriteQuery-toHQL",
-      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-RewriteUtil-rewriteQuery")));
+      "lens.MethodMetricGauge.TestRewriting-"+driver.getFullyQualifiedName()+"-1-RewriteUtil-rewriteQuery-toHQL",
+      "lens.MethodMetricGauge.TestRewriting-multiple-"+driver.getFullyQualifiedName()
+        +"-2-RewriteUtil-rewriteQuery-toHQL",
+      "lens.MethodMetricGauge.TestRewriting-multiple-"+driver.getFullyQualifiedName()+"-RewriteUtil-rewriteQuery")));
     conf.unset(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
 
     q2 = "select * from (cube select name from table) a full outer join"
@@ -321,7 +323,7 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
 
-    q2 = "insert overwrite directory '/tmp/rewrite' "
+    q2 = "insert overwrite directory 'target/rewrite' "
       + "select * from (cube select name from table union all cube select name2 from table2) u";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
@@ -417,7 +419,7 @@ public class TestRewriting {
 
     // failing query for second driver
     MockDriver driver2 = new MockDriver();
-    driver2.configure(conf);
+    driver2.configure(conf, null, null);
     drivers.add(driver2);
 
     Assert.assertEquals(drivers.size(), 2);

@@ -105,7 +105,7 @@ public class JoinChain implements Named {
    * @param table
    * @param name
    */
-  public JoinChain(AbstractCubeTable table, String name) {
+  public JoinChain(AbstractBaseTable table, String name) {
     boolean isCube = (table instanceof Cube);
     this.name = name;
     this.paths = new ArrayList<Path>();
@@ -178,7 +178,8 @@ public class JoinChain implements Named {
         relationShip = new TableRelationship(from.getDestColumn(),
           client.getDimension(from.getDestTable()),
           to.getDestColumn(),
-          client.getDimension(to.getDestTable()));
+          client.getDimension(to.getDestTable()),
+          to.isMapsToMany());
       }
       return relationShip;
     }
@@ -203,7 +204,8 @@ public class JoinChain implements Named {
           relationShip = new TableRelationship(from.getDestColumn(),
             fromTable,
             to.getDestColumn(),
-            client.getDimension(to.getDestTable()));
+            client.getDimension(to.getDestTable()),
+            to.isMapsToMany());
         }
       }
       return relationShip;

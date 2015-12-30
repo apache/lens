@@ -24,7 +24,8 @@
 <configuration>
   <property>
     <name>lens.server.drivers</name>
-    <value>org.apache.lens.driver.hive.HiveDriver,org.apache.lens.driver.jdbc.JDBCDriver</value>
+    <value>hive:org.apache.lens.driver.hive.HiveDriver,jdbc:org.apache.lens.driver.jdbc.JDBCDriver,
+      mock:org.apache.lens.server.common.FailingQueryDriver</value> <!--$LENS_CONF/drivers-->
   </property>
 
   <property>
@@ -96,7 +97,7 @@
 
   <property>
     <name>lens.server.ws.resourcenames</name>
-    <value>session,metastore,query,quota,scheduler,index,log,test</value>
+    <value>session,metastore,query,quota,scheduler,index,log,test,savedquery</value>
     <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
   </property>
 
@@ -104,6 +105,12 @@
     <name>lens.server.test.ws.resource.impl</name>
     <value>org.apache.lens.server.TestResource</value>
     <description>Implementation class for Test Resource</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.ws.resource.impl</name>
+    <value>org.apache.lens.server.query.save.SavedQueryResource</value>
+    <description>Implementation class for saved query Resource</description>
   </property>
 
   <property>
@@ -120,9 +127,9 @@
   </property>
 
   <property>
-    <!-- Immediately insert all finished queries to DB -->
-    <name>lens.server.max.finished.queries</name>
-    <value>1</value>
+    <!-- run every second -->
+    <name>lens.server.purge.interval</name>
+    <value>1000</value>
   </property>
 
   <property>
@@ -131,15 +138,26 @@
   </property>
 
   <property>
-    <name>lens.server.servicenames</name>
-    <value>session,query,metastore,scheduler,quota,mocknonlens</value>
+    <name>lens.server.savedquery.jdbc.dialectclass</name>
+    <value>org.apache.lens.server.query.save.SavedQueryDao$HSQLDialect</value>
+    <description>Dialect of the target DB, Default is HSQL</description>
   </property>
 
+  <property>
+    <name>lens.server.servicenames</name>
+    <value>session,query,metastore,scheduler,quota,mocknonlens,savedquery</value>
+  </property>
 
   <property>
     <name>lens.server.mocknonlens.service.impl</name>
     <value>org.apache.lens.server.MockNonLensService</value>
     <description>Implementation class for session service</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.service.impl</name>
+    <value>org.apache.lens.server.query.save.SavedQueryServiceImpl</value>
+    <description>Implementation class for saved query service</description>
   </property>
 
   <property>
@@ -157,6 +175,12 @@
   <property>
     <name>lens.server.database.resource.dir</name>
     <value>target/resources</value>
+  </property>
+
+  <property>
+    <name>lens.server.statistics.warehouse.dir</name>
+    <value>file://${project.build.directory}/lens/statistics/warehouse</value>
+    <description>Default top level location where stats are moved by the log statistics store.</description>
   </property>
 
   <property>

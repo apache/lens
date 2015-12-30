@@ -18,10 +18,7 @@
  */
 package org.apache.lens.server.api.error;
 
-import static org.apache.lens.api.error.LensCommonErrorCode.INTERNAL_SERVER_ERROR;
-
-import static com.google.common.base.Preconditions.checkArgument;
-
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,6 +26,7 @@ import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.result.LensErrorTO;
 
 import com.google.common.collect.ImmutableList;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -50,14 +48,14 @@ public class LensMultiCauseException extends LensException {
   @Getter(AccessLevel.PROTECTED)
   private final ImmutableList<LensException> causes;
 
-  public LensMultiCauseException(final String errMsg, @NonNull
-    final ImmutableList<LensException> causes) {
+  public LensMultiCauseException(@NonNull final ImmutableList<LensException> excpList) {
+    super(getAppropriateError(excpList));
+    this.causes = excpList;
+  }
 
-    super(errMsg, INTERNAL_SERVER_ERROR.getValue());
-    checkArgument(causes.size() >= 2, "LensMultiCauseException should only be created when there are atleast "
-        + "two causes. An instance of LensException should be sufficient if there is only one cause.");
-
-    this.causes = causes;
+  // Get appropriate error code
+  public static LensException getAppropriateError(final ImmutableList<LensException> excpList) {
+    return Collections.max(excpList);
   }
 
   @Override

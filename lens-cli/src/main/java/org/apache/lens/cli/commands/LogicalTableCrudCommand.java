@@ -18,14 +18,114 @@
  */
 package org.apache.lens.cli.commands;
 
-import org.apache.lens.cli.table.XFlattenedColumnTable;
-import org.apache.lens.cli.table.XJoinChainTable;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.XPartition;
+import org.apache.lens.api.metastore.XStorageTableElement;
+
+import com.google.common.base.Joiner;
 
 public abstract class LogicalTableCrudCommand<T> extends LensCRUDCommand<T> {
-  public String getAllFields(String table, boolean flattened) {
-    return new XFlattenedColumnTable(getClient().getQueryableFields(table, flattened), table).toString();
+  public String showAll(String filter) {
+    List<String> all = getAll(filter);
+    if (all == null || all.isEmpty()) {
+      return "No " + getSingleObjectName() + " found" + (filter == null ? "" : " for " + filter);
+    }
+    return Joiner.on("\n").join(all);
   }
-  public String getAllJoinChains(String table) {
-    return new XJoinChainTable(getClient().getJoinChains(table)).toString();
+
+  public String showAllStorages(String tableName) {
+    String sep = "";
+    StringBuilder sb = new StringBuilder();
+    List<String> storages = getAllStorages(tableName);
+    if (storages != null) {
+      for (String storage : storages) {
+        if (!storage.isEmpty()) {
+          sb.append(sep).append(storage);
+          sep = "\n";
+        }
+      }
+    }
+    String ret = sb.toString();
+    return ret.isEmpty() ? "No storage found for " + tableName : ret;
   }
+
+  public String addStorage(String tableName, File path) {
+    return doAddStorage(tableName, getValidPath(path, false, true)).toString().toLowerCase();
+  }
+
+  public String getStorage(String tableName, String storage) {
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(readStorage(tableName, storage)));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  public String dropStorage(String tableName, String storageName) {
+    return doDropStorage(tableName, storageName).toString().toLowerCase();
+  }
+
+  public String dropAllStorages(String tableName) {
+    return doDropAllStorages(tableName).toString();
+  }
+
+  public String getAllPartitions(String tableName, String storageName, String filter) {
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(readAllPartitions(tableName, storageName, filter)));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  public String addPartition(String tableName, String storageName, File path) {
+    return doAddPartition(tableName, storageName,
+        getValidPath(path, false, true)).toString().toLowerCase();
+  }
+
+  public String updatePartition(String tableName, String storageName, File path) {
+    return doUpdatePartition(tableName, storageName, getValidPath(path, false, true)).toString()
+      .toLowerCase();
+  }
+
+  public String addPartitions(String tableName, String storageName, String path) {
+    return doAddPartitions(tableName, storageName,
+        getValidPath(new File(path), false, true)).toString().toLowerCase();
+  }
+
+  public String updatePartitions(String tableName, String storageName, String path) {
+    return doUpdatePartitions(tableName, storageName,
+        getValidPath(new File(path), false, true)).toString().toLowerCase();
+  }
+
+  public String dropPartitions(String tableName, String storageName, String filter) {
+    return doDropPartitions(tableName, storageName, filter).toString().toLowerCase();
+  }
+
+  protected abstract List<String> getAll(String filter);
+
+  public abstract List<String> getAllStorages(String name);
+
+  public abstract APIResult doAddStorage(String name, String path);
+
+  protected abstract XStorageTableElement readStorage(String tableName, String storage);
+
+  public abstract APIResult doDropStorage(String tableName, String storageName);
+
+  public abstract APIResult doDropAllStorages(String name);
+
+  protected abstract List<XPartition> readAllPartitions(String tableName, String storageName, String filter);
+
+  protected abstract APIResult doAddPartition(String tableName, String storageName, String path);
+
+  protected abstract APIResult doAddPartitions(String tableName, String storageName, String path);
+
+  protected abstract APIResult doDropPartitions(String tableName, String storageName, String filter);
+
+  protected abstract APIResult doUpdatePartition(String tableName, String storageName, String validPath);
+
+  protected abstract APIResult doUpdatePartitions(String tableName, String storageName, String validPath);
 }

@@ -20,6 +20,9 @@ package org.apache.lens.server.query;
 
 import static org.testng.Assert.*;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +33,7 @@ import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEvent;
@@ -92,7 +96,6 @@ public class TestEventService {
    * the genericEvent event occurs, that object's appropriate
    * method is invoked.
    *
-   * @see GenericEventEvent
    */
   class GenericEventListener extends AsyncEventListener<LensEvent> {
 
@@ -119,7 +122,6 @@ public class TestEventService {
    * the mockFailed event occurs, that object's appropriate
    * method is invoked.
    *
-   * @see MockFailedEvent
    */
   class MockFailedListener implements LensEventListener<QueryFailed> {
 
@@ -146,7 +148,6 @@ public class TestEventService {
    * the mockEnded event occurs, that object's appropriate
    * method is invoked.
    *
-   * @see MockEndedEvent
    */
   class MockEndedListener implements LensEventListener<QueryEnded> {
 
@@ -278,6 +279,7 @@ public class TestEventService {
    */
   @BeforeTest
   public void setup() throws Exception {
+    System.setProperty(LensConfConstants.CONFIG_LOCATION, "target/test-classes/");
     LensServices.get().init(LensServerConf.getHiveConf());
     LensServices.get().start();
     service = LensServices.get().getService(LensEventService.NAME);
@@ -290,7 +292,7 @@ public class TestEventService {
    */
   @Test
   public void testAddListener() {
-    int listenersBefore = ((EventServiceImpl) service).getEventListeners().keySet().size();
+    int listenersBefore = service.getEventListeners().keySet().size();
     genericEventListener = new GenericEventListener();
     service.addListenerForType(genericEventListener, LensEvent.class);
     endedListener = new MockEndedListener();
@@ -417,8 +419,10 @@ public class TestEventService {
     QueryHandle query = new QueryHandle(UUID.randomUUID());
     String user = "user";
     long now = System.currentTimeMillis();
-    QueryFailed failed = new QueryFailed(now, QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, null);
-    QuerySuccess success = new QuerySuccess(now, QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
+    QueryFailed failed
+      = new QueryFailed(null, now, QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, null);
+    QuerySuccess success
+      = new QuerySuccess(null, now, QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
     QueuePositionChange positionChange = new QueuePositionChange(now, 1, 0, query);
 
     try {
@@ -500,6 +504,48 @@ public class TestEventService {
 
     latch.await();
 
+  }
+
+  @Test
+  public void testAysncEventListenerPoolThreads(){
+    AsyncEventListener<QuerySuccess> ayncListener = new DummyAsncEventListener();
+    for(int i=0; i<10; i++){
+      try {
+        //A pool thread is created each time an event is submitted until core pool size is reached which is 5
+        //for this test case.  @see org.apache.lens.server.api.events.AsyncEventListener.processor
+        ayncListener.onEvent(null);
+      } catch (LensException e) {
+        assert(false); //Not Expected
+      }
+    }
+
+    //Verify the core pool Threads after the events have been fired
+    ThreadGroup currentTG = Thread.currentThread().getThreadGroup();
+    int count = currentTG.activeCount();
+    Thread[] threads = new Thread[count];
+    currentTG.enumerate(threads);
+    Set<String> aysncThreadNames = new HashSet<String>();
+    for(Thread t : threads){
+      if (t.getName().contains("DummyAsncEventListener_AsyncThread")){
+        aysncThreadNames.add(t.getName());
+      }
+    }
+    assertTrue(aysncThreadNames.containsAll(Arrays.asList(
+      "DummyAsncEventListener_AsyncThread-1",
+      "DummyAsncEventListener_AsyncThread-2",
+      "DummyAsncEventListener_AsyncThread-3",
+      "DummyAsncEventListener_AsyncThread-4",
+      "DummyAsncEventListener_AsyncThread-5")));
+  }
+
+  private static class DummyAsncEventListener extends AsyncEventListener<QuerySuccess> {
+    public DummyAsncEventListener(){
+      super(5, 10); //core pool = 5 and max Pool size =10
+    }
+    @Override
+    public void process(QuerySuccess event) {
+      throw new RuntimeException("Simulated Exception");
+    }
   }
 
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.api.util;
 
+import java.util.HashMap;
 import java.util.Set;
 
 import org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory;
@@ -82,5 +83,14 @@ public final class LensUtil {
     } catch (final ReflectiveOperationException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  public static <K, V> HashMap<K, V> getHashMap(Object... args) {
+    assert (args.length % 2 == 0);
+    HashMap<K, V> map = new HashMap<>();
+    for (int i = 0; i < args.length; i += 2) {
+      map.put((K) args[i], (V) args[i + 1]);
+    }
+    return map;
   }
 }

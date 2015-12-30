@@ -21,7 +21,6 @@ package org.apache.lens.cube.metadata;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.UpdatePeriod.UpdatePeriodComparator;
-import org.apache.lens.cube.parse.DateUtil;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -30,7 +29,7 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Lists;
 
-public final class CubeFactTable extends AbstractCubeTable {
+public class CubeFactTable extends AbstractCubeTable {
   private String cubeName;
   private final Map<String, Set<UpdatePeriod>> storageUpdatePeriods;
 
@@ -154,7 +153,7 @@ public final class CubeFactTable extends AbstractCubeTable {
     List<String> partitions = new ArrayList<String>();
     Date dt = cal.getTime();
     while (dt.compareTo(toDate) < 0) {
-      String part = interval.format().format(cal.getTime());
+      String part = interval.format(cal.getTime());
       partitions.add(part);
       cal.add(interval.calendarField(), 1);
       dt = cal.getTime();
@@ -222,7 +221,7 @@ public final class CubeFactTable extends AbstractCubeTable {
    */
   public List<String> getValidColumns() {
     String validColsStr =
-        MetastoreUtil.getNamedStringValue(getProperties(), MetastoreUtil.getValidColumnsKey(getName()));
+      MetastoreUtil.getNamedStringValue(getProperties(), MetastoreUtil.getValidColumnsKey(getName()));
     return validColsStr == null ? null : Arrays.asList(StringUtils.split(validColsStr.toLowerCase(), ','));
   }
 
@@ -332,7 +331,7 @@ public final class CubeFactTable extends AbstractCubeTable {
 
   public Date getRelativeStartTime() {
     try {
-      return DateUtil.resolveRelativeDate(getProperties().get(MetastoreConstants.FACT_RELATIVE_START_TIME), new Date());
+      return DateUtil.resolveRelativeDate(getProperties().get(MetastoreConstants.FACT_RELATIVE_START_TIME), now());
     } catch (Exception e) {
       return new Date(Long.MIN_VALUE);
     }
@@ -350,7 +349,19 @@ public final class CubeFactTable extends AbstractCubeTable {
     }
   }
 
+  public Date getRelativeEndTime() {
+    try {
+      return DateUtil.resolveRelativeDate(getProperties().get(MetastoreConstants.FACT_RELATIVE_END_TIME), now());
+    } catch (Exception e) {
+      return new Date(Long.MAX_VALUE);
+    }
+  }
+
   public Date getEndTime() {
-    return getAbsoluteEndTime();
+    return Collections.min(Lists.newArrayList(getRelativeEndTime(), getAbsoluteEndTime()));
+  }
+
+  public Date now() {
+    return new Date();
   }
 }

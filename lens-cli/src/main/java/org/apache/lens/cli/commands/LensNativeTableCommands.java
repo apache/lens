@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  * The Class LensNativeTableCommands.
  */
 @Component
-@UserDocumentation(title = "Native Table management", description = "Read operations on native tables")
+@UserDocumentation(title = "Commands for Native Table Management", description = "Read operations on native tables")
 public class LensNativeTableCommands extends LensCRUDCommand<XNativeTable> {
 
   /**

@@ -25,7 +25,7 @@
   <parent>
     <artifactId>apache-lens</artifactId>
     <groupId>org.apache.lens</groupId>
-    <version>2.3.0-beta-incubating-SNAPSHOT</version>
+    <version>2.5.0-beta-SNAPSHOT</version>
   </parent>
 
   <artifactId>lens-regression</artifactId>
@@ -63,7 +63,46 @@
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-multipart</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-exec</artifactId>
+    </dependency>
   </dependencies>
+
+  <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>hive-udf-jars</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <property name="build.compiler" value="extJavac" />
+                                <property name="compile_classpath" refid="maven.compile.classpath" />
+                                <mkdir dir="${project.build.directory}/additional-classes" />
+                                <javac includeantruntime="false" srcdir="src/additional/java" destdir="${project.build.directory}/additional-classes" classpath="${compile_classpath}" />
+                                <mkdir dir="${project.build.directory}/testjars" />
+                                <jar destfile="${project.build.directory}/testjars/hiveudftest.jar">
+                                    <fileset dir="${project.build.directory}/additional-classes" includes="SampleUdf.class" />
+                                </jar>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
 
 </project>

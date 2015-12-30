@@ -20,11 +20,11 @@ package org.apache.lens.cube.parse;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.server.api.error.LensException;
 
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import com.google.common.collect.Lists;
 
@@ -34,21 +34,27 @@ import com.google.common.collect.Lists;
  */
 class MultiFactHQLContext extends SimpleHQLContext {
 
-  private Map<Dimension, CandidateDim> dimsToQuery;
   private Set<CandidateFact> facts;
   private CubeQueryContext query;
-  private Map<CandidateFact, Set<Dimension>> factDimMap;
+  private Map<CandidateFact, SimpleHQLContext> factHQLContextMap = new HashMap<>();
 
   MultiFactHQLContext(Set<CandidateFact> facts, Map<Dimension, CandidateDim> dimsToQuery,
-    Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
+    Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws LensException {
     super();
     this.query = query;
     this.facts = facts;
-    this.dimsToQuery = dimsToQuery;
-    this.factDimMap = factDimMap;
+    for (CandidateFact fact : facts) {
+      if (fact.getStorageTables().size() > 1) {
+        factHQLContextMap.put(fact, new SingleFactMultiStorageHQLContext(fact, dimsToQuery, query, fact));
+      } else {
+        factHQLContextMap.put(fact,
+          new SingleFactSingleStorageHQLContext(fact, dimsToQuery, factDimMap.get(fact), query,
+            DefaultQueryAST.fromCandidateFact(fact, fact.getStorageTables().iterator().next(), fact)));
+      }
+    }
   }
 
-  protected void setMissingExpressions() throws SemanticException {
+  protected void setMissingExpressions() throws LensException {
     setSelect(getSelectString());
     setFrom(getFromString());
     setWhere(getWhereString());
@@ -73,13 +79,12 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return null;
   }
 
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws LensException {
     return query.getInsertClause() + super.toHQL();
   }
 
-  private String getSelectString() throws SemanticException {
-    Map<Integer, List<Integer>> selectToFactIndex =
-      new HashMap<Integer, List<Integer>>(query.getSelectAST().getChildCount());
+  private String getSelectString() throws LensException {
+    Map<Integer, List<Integer>> selectToFactIndex = new HashMap<>(query.getSelectAST().getChildCount());
     int fi = 1;
     for (CandidateFact fact : facts) {
       for (int ind : fact.getSelectIndices()) {
@@ -93,8 +98,8 @@ class MultiFactHQLContext extends SimpleHQLContext {
     StringBuilder select = new StringBuilder();
     for (int i = 0; i < query.getSelectAST().getChildCount(); i++) {
       if (selectToFactIndex.get(i) == null) {
-        throw new SemanticException(ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT, HQLParser.getString((ASTNode) query
-          .getSelectAST().getChild(i)));
+        throw new LensException(LensCubeErrorCode.EXPRESSION_NOT_IN_ANY_FACT.getLensErrorInfo(),
+          HQLParser.getString((ASTNode) query.getSelectAST().getChild(i)));
       }
       if (selectToFactIndex.get(i).size() == 1) {
         select.append("mq").append(selectToFactIndex.get(i).get(0)).append(".")
@@ -116,29 +121,14 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return select.toString();
   }
 
-  public Map<Dimension, CandidateDim> getDimsToQuery() {
-    return dimsToQuery;
-  }
-
-  public Set<CandidateFact> getFactsToQuery() {
-    return facts;
-  }
-
-  private String getFromString() throws SemanticException {
+  private String getFromString() throws LensException {
     StringBuilder fromBuilder = new StringBuilder();
     int aliasCount = 1;
-    Iterator<CandidateFact> iter = facts.iterator();
-    while (iter.hasNext()) {
-      CandidateFact fact = iter.next();
-      FactHQLContext facthql = new FactHQLContext(fact, dimsToQuery, factDimMap.get(fact), query);
-      fromBuilder.append("(");
-      fromBuilder.append(facthql.toHQL());
-      fromBuilder.append(")");
-      fromBuilder.append(" mq" + aliasCount);
-      aliasCount++;
-      if (iter.hasNext()) {
-        fromBuilder.append(" full outer join ");
-      }
+    String sep = "";
+    for (CandidateFact fact : facts) {
+      SimpleHQLContext facthql = factHQLContextMap.get(fact);
+      fromBuilder.append(sep).append("(").append(facthql.toHQL()).append(")").append(" mq").append(aliasCount++);
+      sep = " full outer join ";
     }
     CandidateFact firstFact = facts.iterator().next();
     if (!firstFact.getDimFieldIndices().isEmpty()) {

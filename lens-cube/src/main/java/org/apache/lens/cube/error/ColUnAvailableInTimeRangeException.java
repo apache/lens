@@ -35,7 +35,7 @@ public class ColUnAvailableInTimeRangeException extends LensException {
 
   public ColUnAvailableInTimeRangeException(@NonNull final ColUnAvailableInTimeRange colUnAvailableInTimeRange) {
 
-    super(COLUMN_UNAVAILABLE_IN_TIME_RANGE.getValue());
+    super(COLUMN_UNAVAILABLE_IN_TIME_RANGE.getLensErrorInfo());
     this.colUnAvailableInTimeRange = colUnAvailableInTimeRange;
   }
 
@@ -52,8 +52,8 @@ public class ColUnAvailableInTimeRangeException extends LensException {
   protected LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection, final String errorMsg,
       final String stackTrace) {
 
-    return LensErrorTO.composedOf(COLUMN_UNAVAILABLE_IN_TIME_RANGE.getValue(), errorMsg, stackTrace,
-        colUnAvailableInTimeRange);
+    return LensErrorTO.composedOf(COLUMN_UNAVAILABLE_IN_TIME_RANGE.getLensErrorInfo().getErrorCode(),
+        errorMsg, stackTrace, colUnAvailableInTimeRange);
   }
 
 }

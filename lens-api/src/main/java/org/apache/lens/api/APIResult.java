@@ -25,6 +25,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.*;
 
+import org.apache.lens.api.jaxb.LensJAXBContext;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -62,7 +64,7 @@ public class APIResult {
 
   static {
     try {
-      JAXB_CONTEXT = JAXBContext.newInstance(APIResult.class);
+      JAXB_CONTEXT = new LensJAXBContext(APIResult.class);
     } catch (JAXBException e) {
       throw new RuntimeException(e);
     }
@@ -71,7 +73,7 @@ public class APIResult {
   /**
    * API Result status.
    */
-  public static enum Status {
+  public enum Status {
 
     /**
      * The succeeded.
@@ -150,11 +152,13 @@ public class APIResult {
   }
 
   private static String extractCause(Throwable e) {
-    String cause = null;
-    while ((cause == null || cause.isEmpty()) && e != null) {
-      cause = e.getMessage();
+    StringBuilder cause = new StringBuilder();
+    String sep = "";
+    while (e != null) {
+      cause.append(sep).append(e.getMessage());
       e = e.getCause();
+      sep = ": ";
     }
-    return cause;
+    return cause.toString();
   }
 }

@@ -23,8 +23,8 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.TimePartition;
+import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
-import org.apache.lens.cube.parse.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
 import com.google.common.base.Strings;

@@ -180,4 +180,35 @@
       projection wont be changed, result might include duplicate values.
     </description>
   </property>
+  <property>
+    <name>lens.cube.query.enable.storages.union</name>
+    <value>false</value>
+    <description>Sometimes One storage table doesn't contain all required partitions, and the query needs to be
+      answered from two storage tables. Enabling this (make value = &lt;true&gt;) allows rewrite of such queries.
+      If it's &lt;false&gt;, then such queries will fail in rewrite phase.
+      The feature should only be enabled when all the aggregate
+      functions used in the query (explicitly or implicitly picked from default aggregates of used measures) are
+      transitive. Transitive aggregate functions are those that follow the following property:\
+      \
+      &lt;&lt;&lt;f(a, b, c, d) = f(f(a, b), f(c, d)) for all possible values of a,b,c,d.&gt;&gt;&gt;\
+      \
+      e.g. SUM, MAX, MIN etc are transitive aggregate functions, while AVG, COUNT etc are not.
+    </description>
+  </property>
+  <property>
+    <name>lens.cube.query.enable.flattening.bridge.tables</name>
+    <value>false</value>
+    <description>Flag specifies if fields selected have to be flattened or not, if they are coming from tables with many
+      to many relationship in join. If false, field selection will be simple join and selecting the field. If true, the
+      fields from bridge tables will be aggregated grouped by join key.
+    </description>
+  </property>
+  <property>
+    <name>lens.cube.query.bridge.table.field.aggregator</name>
+    <value>collect_set</value>
+    <description>The field aggregator function to be used for aggregating fields from bridge tables. Would be used
+      only when flattening is enabled. The value can be passed for each query. During typical deployments it would
+      be passed for each driver, as the function could be different for each driver.
+    </description>
+  </property>
 </configuration>

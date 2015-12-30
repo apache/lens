@@ -21,27 +21,21 @@ package org.apache.lens.client;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
-import javax.xml.XMLConstants;
 import javax.xml.bind.*;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.DateTime;
 import org.apache.lens.api.StringList;
+import org.apache.lens.api.jaxb.LensJAXBContext;
 import org.apache.lens.api.metastore.*;
 
 import org.glassfish.jersey.media.multipart.*;
-import org.xml.sax.SAXException;
 
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
@@ -57,15 +51,9 @@ public class LensMetadataClient {
 
   static {
     try {
-      ClassLoader classLoader = LensMetadataClient.class.getClassLoader();
-      SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-      URI uri = classLoader.getResource("cube-0.1.xsd").toURI();
-      log.info("URI for cube schema: {}", uri.toString());
-      Schema schema = sf.newSchema(uri.toURL());
-      JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
+      JAXBContext jaxbContext = new LensJAXBContext(ObjectFactory.class);
       JAXB_UNMARSHALLER = jaxbContext.createUnmarshaller();
-      JAXB_UNMARSHALLER.setSchema(schema);
-    } catch (JAXBException | URISyntaxException | MalformedURLException | SAXException e) {
+    } catch (JAXBException e) {
       log.error("Could not initialize JAXBContext. ", e);
       throw new RuntimeException("Could not initialize JAXBContext. ", e);
     }
@@ -86,8 +74,7 @@ public class LensMetadataClient {
 
 
   private WebTarget getMetastoreWebTarget() {
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-    return getMetastoreWebTarget(client);
+    return getMetastoreWebTarget(connection.buildClient());
   }
 
   public List<String> getAlldatabases() {

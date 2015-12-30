@@ -19,8 +19,13 @@
 package org.apache.lens.lib.query;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -37,10 +42,8 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.hive.service.cli.ColumnDescriptor;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -189,6 +192,39 @@ public abstract class TestAbstractFileFormatter {
   }
 
   /**
+   * Test formatter persistence
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  @Test
+  public void testFormatterPersistence() throws IOException, ClassNotFoundException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv", getMockedResultSet());
+
+    // Write formatter to stream
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    try {
+      new ObjectOutputStream(outputStream).writeObject(formatter);
+    } finally {
+      outputStream.close();
+    }
+    // Create another formatter from the stream
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+    WrappedFileFormatter newFormatter = createFormatter();
+    try {
+      newFormatter=(WrappedFileFormatter)new ObjectInputStream(inputStream).readObject();
+    } finally {
+      inputStream.close();
+    }
+
+    Assert.assertEquals(formatter.getFinalOutputPath(), newFormatter.getFinalOutputPath());
+    Assert.assertEquals(formatter.getFileSize(), newFormatter.getFileSize());
+    Assert.assertEquals(formatter.getNumRows(), newFormatter.getNumRows());
+    Assert.assertEquals(formatter.getMetadata().toJson(), newFormatter.getMetadata().toJson());
+  }
+
+  /**
    * Creates the formatter.
    *
    * @return the wrapped file formatter
@@ -207,36 +243,47 @@ public abstract class TestAbstractFileFormatter {
   }
 
   /**
-   * Test formatter.
-   *
-   * @param conf            the conf
-   * @param charsetEncoding the charset encoding
-   * @param outputParentDir the output parent dir
-   * @param fileExtn        the file extn
-   * @param columnNames     the column names
-   * @throws IOException Signals that an I/O exception has occurred.
+   * Creates the query context
+   * @param conf      the conf
+   * @param queryName the name of query
+   * @return the query context
    */
-  protected void testFormatter(Configuration conf, String charsetEncoding, String outputParentDir, String fileExtn,
-    LensResultSetMetadata columnNames) throws IOException {
-
+  protected QueryContext createContext(Configuration conf, String queryName) {
     final LensDriver mockDriver = new MockDriver();
     try {
-      mockDriver.configure(conf);
+      mockDriver.configure(conf, null, null);
     } catch (LensException e) {
       Assert.fail(e.getMessage());
     }
-    QueryContext ctx = QueryContext.createContextWithSingleDriver("test writer query", "testuser", new LensConf(),
-        conf, mockDriver, null, false);
+    QueryContext ctx = QueryContext.createContextWithSingleDriver("test writer query", "testuser",
+      new LensConf(), conf, mockDriver, null, false);
 
     ctx.setSelectedDriver(mockDriver);
-    formatter = createFormatter();
+    ctx.setQueryName(queryName);
+    return ctx;
+  }
 
+  /**
+   * Validates the formatter
+   * @param conf              the conf
+   * @param charsetEncoding   the charset encoding
+   * @param outputParentDir   the output parent dir
+   * @param fileExtn          the file extn
+   * @param columnNames       the column names
+   * @param ctx               the query context
+   * @param expectedFinalPath the final path of output
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  public void validateFormatter(Configuration conf, String charsetEncoding, String outputParentDir, String fileExtn,
+    LensResultSetMetadata columnNames, QueryContext ctx, Path expectedFinalPath) throws IOException {
+    formatter = createFormatter();
     formatter.init(ctx, columnNames);
 
     // check output spec
     Assert.assertEquals(formatter.getEncoding(), charsetEncoding);
     Path tmpPath = formatter.getTmpPath();
-    Path expectedTmpPath = new Path(outputParentDir, ctx.getQueryHandle() + ".tmp" + fileExtn);
+    Path expectedTmpPath = new Path(outputParentDir, ctx.getQueryHandle()
+      + ".tmp" + fileExtn);
     Assert.assertEquals(tmpPath, expectedTmpPath);
 
     // write header, rows and footer;
@@ -251,9 +298,47 @@ public abstract class TestAbstractFileFormatter {
     formatter.close();
     Assert.assertFalse(fs.exists(tmpPath));
     Path finalPath = new Path(formatter.getFinalOutputPath());
-    Path expectedFinalPath = new Path(outputParentDir, ctx.getQueryHandle() + fileExtn).makeQualified(fs);
     Assert.assertEquals(finalPath, expectedFinalPath);
     Assert.assertTrue(fs.exists(finalPath));
+  }
+
+  /**
+   * Test formatter.
+   *
+   * @param conf            the conf
+   * @param charsetEncoding the charset encoding
+   * @param outputParentDir the output parent dir
+   * @param fileExtn        the file extn
+   * @param columnNames     the column names
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  protected void testFormatter(Configuration conf, String charsetEncoding, String outputParentDir, String fileExtn,
+    LensResultSetMetadata columnNames) throws IOException {
+
+    QueryContext ctx = createContext(conf, null);
+
+    Path expectedFinalPath = new Path(outputParentDir, ctx.getQueryHandle() + fileExtn);
+    FileSystem fs = expectedFinalPath.getFileSystem(conf);
+    expectedFinalPath = expectedFinalPath.makeQualified(fs);
+    validateFormatter(conf, charsetEncoding, outputParentDir, fileExtn, columnNames, ctx, expectedFinalPath);
+  }
+
+  /**
+   * Test Formatter with a different final path
+   * @param conf              the conf
+   * @param charsetEncoding   the charset encoding
+   * @param outputParentDir   the output parent dir
+   * @param fileExtn          the file extn
+   * @param columnNames       the column names
+   * @param queryName         the name of the query
+   * @param expectedFinalPath Final path of the output
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
+  protected void testFormatterWithFinalPath(Configuration conf, String charsetEncoding, String outputParentDir,
+    String fileExtn, LensResultSetMetadata columnNames, String queryName, Path expectedFinalPath) throws IOException {
+    QueryContext ctx = createContext(conf, queryName);
+
+    validateFormatter(conf, charsetEncoding, outputParentDir, fileExtn, columnNames, ctx, expectedFinalPath);
   }
 
   /**
@@ -308,39 +393,11 @@ public abstract class TestAbstractFileFormatter {
   }
 
   protected LensResultSetMetadata getMockedResultSet() {
-    return new LensResultSetMetadata() {
-
-      @Override
-      public List<ColumnDescriptor> getColumns() {
-        List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>();
-        columns.add(new ColumnDescriptor(new FieldSchema("firstcol", "int", ""), 0));
-        columns.add(new ColumnDescriptor(new FieldSchema("format(secondcol,2)", "string", ""), 1));
-        columns.add(new ColumnDescriptor(new FieldSchema("thirdcol", "varchar(20)", ""), 2));
-        columns.add(new ColumnDescriptor(new FieldSchema("fourthcol", "char(15)", ""), 3));
-        columns.add(new ColumnDescriptor(new FieldSchema("fifthcol", "array<tinyint>", ""), 4));
-        columns.add(new ColumnDescriptor(new FieldSchema("sixthcol", "struct<a:int,b:varchar(10)>", ""), 5));
-        columns.add(new ColumnDescriptor(new FieldSchema("seventhcol", "map<int,char(10)>", ""), 6));
-        return columns;
-      }
-    };
+    return MockLensResultSetMetadata.createMockedResultSet();
   }
 
   protected LensResultSetMetadata getMockedResultSetWithoutComma() {
-    return new LensResultSetMetadata() {
-
-      @Override
-      public List<ColumnDescriptor> getColumns() {
-        List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>();
-        columns.add(new ColumnDescriptor(new FieldSchema("firstcol", "int", ""), 0));
-        columns.add(new ColumnDescriptor(new FieldSchema("secondcol", "string", ""), 1));
-        columns.add(new ColumnDescriptor(new FieldSchema("thirdcol", "varchar(20)", ""), 2));
-        columns.add(new ColumnDescriptor(new FieldSchema("fourthcol", "char(15)", ""), 3));
-        columns.add(new ColumnDescriptor(new FieldSchema("fifthcol", "array<tinyint>", ""), 4));
-        columns.add(new ColumnDescriptor(new FieldSchema("sixthcol", "struct<a:int,b:varchar(10)>", ""), 5));
-        columns.add(new ColumnDescriptor(new FieldSchema("seventhcol", "map<int,char(10)>", ""), 6));
-        return columns;
-      }
-    };
+    return MockLensResultSetMetadata.createMockedResultSetWithoutComma();
   }
 
   /**

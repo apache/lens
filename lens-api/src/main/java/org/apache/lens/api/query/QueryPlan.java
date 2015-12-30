@@ -114,32 +114,8 @@ public class QueryPlan extends QuerySubmitResult {
   @Getter
   private QueryCostTO queryCost;
 
-  /**
-   * The error.
-   */
-  @XmlElement
-  @Getter
-  private boolean error = false;
-
-  /**
-   * The error msg.
-   */
-  @XmlElement
-  @Getter
-  private String errorMsg;
-
   public String getPlanString() throws UnsupportedEncodingException {
     return URLDecoder.decode(planString, "UTF-8");
   }
 
-  /**
-   * Instantiates a new query plan.
-   *
-   * @param hasError the has error
-   * @param errorMsg the error msg
-   */
-  public QueryPlan(boolean hasError, String errorMsg) {
-    this.error = hasError;
-    this.errorMsg = errorMsg;
-  }
 }

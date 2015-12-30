@@ -18,20 +18,22 @@
  */
 package org.apache.lens.server.error;
 
+import org.apache.lens.server.api.LensErrorInfo;
+
 public enum LensServerErrorCode {
 
-  SESSION_ID_NOT_PROVIDED(2001),
-  NULL_OR_EMPTY_OR_BLANK_QUERY(2002),
-  UNSUPPORTED_QUERY_SUBMIT_OPERATION(2003);
+  SESSION_ID_NOT_PROVIDED(2001, 0),
+  NULL_OR_EMPTY_OR_BLANK_QUERY(2002, 0),
+  UNSUPPORTED_QUERY_SUBMIT_OPERATION(2003, 0);
 
-  public int getValue() {
-    return this.errorCode;
+  public LensErrorInfo getLensErrorInfo() {
+    return this.errorInfo;
   }
 
-  private LensServerErrorCode(final int code) {
-    this.errorCode = code;
+  LensServerErrorCode(final int code, final int weight) {
+    this.errorInfo = new LensErrorInfo(code, weight, name());
   }
 
-  private final int errorCode;
+  private final LensErrorInfo errorInfo;
 
 }

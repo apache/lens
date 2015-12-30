@@ -305,6 +305,6 @@ public abstract class DriverQueryPlan {
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
     return new QueryPlan(new ArrayList<>(tablesQueried), hasSubQuery, execMode != null ? execMode.name() : null,
       scanMode != null ? scanMode.name() : null, handle,
-      URLEncoder.encode(getPlan(), "UTF-8"), new QueryCostTOBuilder(getCost()).build(), false, null);
+      URLEncoder.encode(getPlan(), "UTF-8"), new QueryCostTOBuilder(getCost()).build());
   }
 }

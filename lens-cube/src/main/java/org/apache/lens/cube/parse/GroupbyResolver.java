@@ -25,13 +25,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.lens.cube.metadata.AbstractBaseTable;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.Tree;
@@ -56,7 +55,7 @@ class GroupbyResolver implements ContextRewriter {
   }
 
   private void promoteSelect(CubeQueryContext cubeql, List<String> nonMsrNonAggSelExprsWithoutAlias,
-    List<String> groupByExprs) throws SemanticException {
+    List<String> groupByExprs) throws LensException {
     if (!selectPromotionEnabled) {
       return;
     }
@@ -73,18 +72,12 @@ class GroupbyResolver implements ContextRewriter {
 
         if (!groupByExprs.contains(expr)) {
           if (!cubeql.isAggregateExpr(expr)) {
-            ASTNode exprAST;
-            try {
-              exprAST = HQLParser.parseExpr(expr);
-            } catch (ParseException e) {
-              throw new SemanticException(e);
-            }
+            ASTNode exprAST = HQLParser.parseExpr(expr);
             ASTNode groupbyAST = cubeql.getGroupByAST();
             if (!isConstantsUsed(exprAST)) {
               if (groupbyAST != null) {
                 // groupby ast exists, add the expression to AST
                 groupbyAST.addChild(exprAST);
-                exprAST.setParent(groupbyAST);
               } else {
                 // no group by ast exist, create one
                 ASTNode newAST = new ASTNode(new CommonToken(TOK_GROUPBY));
@@ -124,7 +117,7 @@ class GroupbyResolver implements ContextRewriter {
   }
 
   private void promoteGroupby(CubeQueryContext cubeql, List<String> selectExprs, List<String> groupByExprs)
-    throws SemanticException {
+    throws LensException {
     if (!groupbyPromotionEnabled) {
       return;
     }
@@ -140,12 +133,7 @@ class GroupbyResolver implements ContextRewriter {
     int index = 0;
     for (String expr : groupByExprs) {
       if (!contains(cubeql, selectExprs, expr)) {
-        ASTNode exprAST;
-        try {
-          exprAST = HQLParser.parseExpr(expr);
-        } catch (ParseException e) {
-          throw new SemanticException(e);
-        }
+        ASTNode exprAST = HQLParser.parseExpr(expr);
         addChildAtIndex(index, cubeql.getSelectAST(), exprAST);
         index++;
       }
@@ -164,11 +152,10 @@ class GroupbyResolver implements ContextRewriter {
       parent.setChild(i + 1, ch);
     }
     parent.setChild(index, child);
-    child.setParent(parent);
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     // Process Aggregations by making sure that all group by keys are projected;
     // and all projection fields are added to group by keylist;
     List<String> selectExprs = new ArrayList<String>();

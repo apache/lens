@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.lens.server.LensTestUtil;
+import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -53,7 +53,7 @@ public class TestDatabaseResourceService {
 
   @BeforeClass
   public void setup() throws Exception {
-    LensTestUtil.createTestDatabaseResources(testDatabases, conf);
+    LensServerTestUtil.createTestDatabaseResources(testDatabases, conf);
     // Start resource service.
     conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "target/resources");
     dbResService = new DatabaseResourceService(DatabaseResourceService.NAME);

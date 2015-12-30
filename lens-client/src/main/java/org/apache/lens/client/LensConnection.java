@@ -19,6 +19,7 @@
 package org.apache.lens.client;
 
 import java.net.ConnectException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -108,14 +109,30 @@ public class LensConnection {
     return client.target(params.getBaseConnectionUrl()).path(params.getMetastoreResourcePath());
   }
 
+  public Client buildClient() {
+    ClientBuilder cb = ClientBuilder.newBuilder().register(MultiPartFeature.class);
+    Iterator<Class<?>> itr = params.getRequestFilters().iterator();
+    while (itr.hasNext()) {
+      cb.register(itr.next());
+    }
+    return cb.build();
+  }
+
   private WebTarget getSessionWebTarget() {
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-    return getSessionWebTarget(client);
+    return getSessionWebTarget(buildClient());
   }
 
   private WebTarget getMetastoreWebTarget() {
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-    return getMetastoreWebTarget(client);
+    return getMetastoreWebTarget(buildClient());
+  }
+
+  public WebTarget getLogWebTarget() {
+    Client client = buildClient();
+    return getLogWebTarget(client);
+  }
+
+  public WebTarget getLogWebTarget(Client client) {
+    return client.target(params.getBaseConnectionUrl()).path(params.getLogResourcePath());
   }
 
   /**
@@ -238,6 +255,17 @@ public class LensConnection {
     StringList result = target.path("resources/list").queryParam("sessionid", this.sessionHandle)
       .queryParam("type", type).request().get(StringList.class);
     return result.getElements();
+  }
+
+  /**
+   * get the logs for a given log file
+   *
+   * @param logFile log segregation
+   */
+  public Response getLogs(String logFile) {
+    WebTarget target = getLogWebTarget();
+    Response result = target.path(logFile).request(MediaType.APPLICATION_OCTET_STREAM).get();
+    return result;
   }
 
   /**

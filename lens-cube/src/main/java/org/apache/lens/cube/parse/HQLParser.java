@@ -18,10 +18,10 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.error.LensCubeErrorCode.COULD_NOT_PARSE_EXPRESSION;
 import static org.apache.lens.cube.error.LensCubeErrorCode.SYNTAX_ERROR;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Number;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
@@ -49,10 +50,16 @@ public final class HQLParser {
   private HQLParser() {
 
   }
+
   public static final Pattern P_WSPACE = Pattern.compile("\\s+");
 
+  public static boolean isTableColumnAST(ASTNode astNode) {
+    return !(astNode == null || astNode.getChildren() == null || astNode.getChildCount() != 2) && astNode.getChild(0)
+      .getType() == HiveParser.TOK_TABLE_OR_COL && astNode.getChild(1).getType() == HiveParser.Identifier;
+  }
+
   public interface ASTNodeVisitor {
-    void visit(TreeNode node) throws SemanticException;
+    void visit(TreeNode node) throws LensException;
   }
 
   public static class TreeNode {
@@ -148,7 +155,7 @@ public final class HQLParser {
       tree = driver.parse(query, ctx);
       tree = ParseUtils.findRootNonNullToken(tree);
     } catch (ParseException e) {
-      throw new LensException(SYNTAX_ERROR.getValue(), e, e.getMessage());
+      throw new LensException(SYNTAX_ERROR.getLensErrorInfo(), e, e.getMessage());
     } catch (IOException e) {
       throw new RuntimeException(e);
     } finally {
@@ -163,9 +170,14 @@ public final class HQLParser {
     return tree;
   }
 
-  public static ASTNode parseExpr(String expr) throws ParseException {
+  public static ASTNode parseExpr(String expr) throws LensException {
     ParseDriver driver = new ParseDriver();
-    ASTNode tree = driver.parseExpression(expr);
+    ASTNode tree;
+    try {
+      tree = driver.parseExpression(expr);
+    } catch (ParseException e) {
+      throw new LensException(COULD_NOT_PARSE_EXPRESSION.getLensErrorInfo(), e, e.getMessage());
+    }
     return ParseUtils.findRootNonNullToken(tree);
   }
 
@@ -194,7 +206,7 @@ public final class HQLParser {
     }
 
     System.out.print(node.getText() + " [" + tokenMapping.get(node.getToken().getType()) + "]");
-    System.out.print(" (l" + level + "c" + child + ")");
+    System.out.print(" (l" + level + "c" + child + "p" + node.getCharPositionInLine() +")");
 
     if (node.getChildCount() > 0) {
       System.out.println(" {");
@@ -281,7 +293,6 @@ public final class HQLParser {
     if (original.getChildren() != null) {
       for (Object o : original.getChildren()) {
         ASTNode childCopy = copyAST((ASTNode) o);
-        childCopy.setParent(copy);
         copy.addChild(childCopy);
       }
     }
@@ -293,9 +304,9 @@ public final class HQLParser {
    *
    * @param root
    * @param visitor
-   * @throws SemanticException
+   * @throws LensException
    */
-  public static void bft(ASTNode root, ASTNodeVisitor visitor) throws SemanticException {
+  public static void bft(ASTNode root, ASTNodeVisitor visitor) throws LensException {
     if (root == null) {
       throw new NullPointerException("Root cannot be null");
     }
@@ -345,9 +356,9 @@ public final class HQLParser {
         buf.append(" true ");
       } else if (KW_FALSE == rootType) {
         buf.append(" false ");
-      } else if (Identifier == rootType && TOK_SELEXPR == ((ASTNode) root.getParent()).getToken().getType()
-        && hasSpaces(rootText)) {
-        // If column alias contains spaces, enclose in back quotes
+      } else if (Identifier == rootType && TOK_SELEXPR == ((ASTNode) root.getParent()).getToken().getType()) {
+        // back quote column alias in all cases. This is required since some alias values can match DB keywords
+        // (example : year as alias) and in such case queries can fail on certain DBs if the alias in not back quoted
         buf.append(" as `").append(rootText).append("` ");
       } else if (Identifier == rootType && TOK_FUNCTIONSTAR == ((ASTNode) root.getParent()).getToken().getType()) {
         // count(*) or count(someTab.*): Don't append space after the identifier
@@ -786,8 +797,11 @@ public final class HQLParser {
     }
 
     // Compare text. For literals, comparison is case sensitive
-    if ((n1.getToken().getType() == StringLiteral && !n1.getText().equals(n2.getText()))
-      || !n1.getText().equalsIgnoreCase(n2.getText())) {
+    if ((n1.getToken().getType() == StringLiteral && !StringUtils.equals(n1.getText(), n2.getText()))) {
+      return false;
+    }
+
+    if (!StringUtils.equalsIgnoreCase(n1.getText(), n2.getText())) {
       return false;
     }
 

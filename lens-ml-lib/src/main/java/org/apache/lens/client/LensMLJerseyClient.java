@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -35,8 +34,6 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -102,7 +99,7 @@ public class LensMLJerseyClient {
   }
 
   protected WebTarget getMLWebTarget() {
-    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
+    Client client = connection.buildClient();
     LensConnectionParams connParams = connection.getLensConnectionParams();
     String baseURI = connParams.getBaseConnectionUrl();
     String mlURI = connParams.getConf().get(LENS_ML_RESOURCE_PATH, DEFAULT_ML_RESOURCE_PATH);

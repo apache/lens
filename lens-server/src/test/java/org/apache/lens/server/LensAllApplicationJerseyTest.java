@@ -29,10 +29,10 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 public abstract class LensAllApplicationJerseyTest extends LensJerseyTest {
 
   /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#configure()
-   */
+     * (non-Javadoc)
+     *
+     * @see org.glassfish.jersey.test.JerseyTest#configure()
+     */
   @Override
   protected Application configure() {
     return new LensApplication();

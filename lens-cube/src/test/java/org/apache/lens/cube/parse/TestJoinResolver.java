@@ -19,12 +19,14 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import static org.testng.Assert.*;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
 import org.apache.lens.server.api.error.LensException;
@@ -32,10 +34,8 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -53,6 +53,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     hconf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
     hconf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
     hconf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
+    hconf.setBoolean(CubeQueryConfUtil.ENABLE_FLATTENING_FOR_BRIDGETABLES, true);
     this.metastore = CubeMetastoreClient.getInstance(hconf);
   }
 
@@ -161,7 +162,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     }
   }
 
-  private String getAutoResolvedFromString(CubeQueryContext query) throws SemanticException {
+  private String getAutoResolvedFromString(CubeQueryContext query) throws LensException {
     return query.getHqlContext().getFrom();
   }
 
@@ -219,7 +220,7 @@ public class TestJoinResolver extends TestQueryRewrite {
 
     // Test 3 Dim only query should throw error
     String errDimOnlyQuery = "select citydim.id, testDim4.name FROM citydim where " + TWO_DAYS_RANGE;
-    getSemanticExceptionInRewrite(errDimOnlyQuery, hconf);
+    getLensExceptionInRewrite(errDimOnlyQuery, hconf);
   }
 
   @Test
@@ -376,7 +377,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testJoinChains() throws SemanticException, ParseException, LensException {
+  public void testJoinChains() throws ParseException, LensException, HiveException {
     String query, hqlQuery, expected;
 
     // Single joinchain with direct link
@@ -497,11 +498,13 @@ public class TestJoinResolver extends TestQueryRewrite {
     expected = getExpectedQuery("basecube",
       "select cubestatecountry.name, cubecitystatecountry.name, sum(basecube.msr2) FROM ",
       ""
-        + " join TestQueryRewrite.c1_citytable citydim on basecube.cityid = citydim.id and (citydim.dt = 'latest')"
-        + " join TestQueryRewrite.c1_statetable statedim_0 on citydim.stateid=statedim_0.id and statedim_0.dt='latest'"
-        + " join TestQueryRewrite.c1_countrytable cubecitystatecountry on statedim_0.countryid=cubecitystatecountry.id"
-        + " join TestQueryRewrite.c1_statetable statedim on basecube.stateid=statedim.id and (statedim.dt = 'latest')"
-        + " join TestQueryRewrite.c1_countrytable cubestatecountry on statedim.countryid=cubestatecountry.id "
+        + " join " + getDbName() + "c1_citytable citydim on basecube.cityid = citydim.id and (citydim.dt = 'latest')"
+        + " join " + getDbName()
+        + "c1_statetable statedim_0 on citydim.stateid=statedim_0.id and statedim_0.dt='latest'"
+        + " join " + getDbName()
+        + "c1_countrytable cubecitystatecountry on statedim_0.countryid=cubecitystatecountry.id"
+        + " join " + getDbName() + "c1_statetable statedim on basecube.stateid=statedim.id and (statedim.dt = 'latest')"
+        + " join " + getDbName() + "c1_countrytable cubestatecountry on statedim.countryid=cubestatecountry.id "
         + "", null, "group by cubestatecountry.name, cubecitystatecountry.name", null,
       getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base")
     );
@@ -574,14 +577,14 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testConflictingJoins() throws ParseException, LensException {
+  public void testConflictingJoins() throws ParseException, LensException, HiveException {
     // Single joinchain with two paths, intermediate dimension accessed separately by name.
     String query = "select cityState.name, citydim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
     try {
       rewrite(query, hconf);
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
@@ -592,7 +595,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       rewrite(query, hconf);
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
@@ -605,7 +608,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       Assert.fail("Should have failed. "
         + "It's not possible to resolve which statedim is being asked for when cityState and cubeState both end at"
         + " statedim table.");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(
         e.getMessage().indexOf("Table statedim has 2 different paths through joinchains"), 0);
     }
@@ -617,7 +620,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       rewrite(query, hconf);
       Assert.fail("Should have failed. "
         + "The table statedim is getting accessed as both cubeState and statedim ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table statedim is getting accessed via two different names: [cubestate, statedim]".toLowerCase());
     }
@@ -627,7 +630,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       rewrite(query, hconf);
       Assert.fail("Should have failed. "
         + "The table statedim is getting accessed as both cubeState and statedim ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table statedim is getting accessed via two different names: [citystate, statedim]".toLowerCase());
     }
@@ -640,14 +643,14 @@ public class TestJoinResolver extends TestQueryRewrite {
       rewrite(failingQuery, conf);
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
-    } catch (SemanticException e) {
+    } catch (LensException e) {
       Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
   }
 
   @Test
-  public void testMultiPaths() throws SemanticException, ParseException, LensException {
+  public void testMultiPaths() throws ParseException, LensException, HiveException {
     String query, hqlQuery, expected;
 
     query = "select testdim3.name, sum(msr2) from testcube where " + TWO_DAYS_RANGE;
@@ -744,13 +747,192 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testUnreachableDim() throws ParseException, LensException {
-    SemanticException e1 = getSemanticExceptionInRewrite("select urdimid from testdim2", hconf);
+  public void testUnreachableDim() throws ParseException, LensException, HiveException {
+    LensException e1 = getLensExceptionInRewrite("select urdimid from testdim2", hconf);
     assertNotNull(e1);
-    assertEquals(e1.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_DIM_HAS_COLUMN.getErrorCode());
+    assertEquals(e1.getErrorCode(), LensCubeErrorCode.NO_DIM_HAS_COLUMN.getLensErrorInfo().getErrorCode());
 
-    SemanticException e2 = getSemanticExceptionInRewrite("select urdimid from testcube where " + TWO_DAYS_RANGE, hconf);
+    LensException e2 = getLensExceptionInRewrite("select urdimid from testcube where " + TWO_DAYS_RANGE, hconf);
     assertNotNull(e2);
-    assertEquals(e2.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+    assertEquals(e2.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
+  }
+
+  @Test
+  public void testBridgeTablesWithoutDimtablePartitioning() throws Exception {
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    String query = "select usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected = getExpectedQuery("basecube", "select usersports.name, sum(basecube.msr2) FROM ",
+      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
+        + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name"
+        + " from " + getDbName() + "c1_user_interests_tbl user_interests"
+        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
+        + " group by user_interests.user_id) usersports"
+        + " on userdim.id = usersports.user_id ",
+      null, "group by usersports.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
+  @Test
+  public void testFlattenBridgeTablesOFF() throws Exception {
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    conf.setBoolean(CubeQueryConfUtil.ENABLE_FLATTENING_FOR_BRIDGETABLES, false);
+    String query = "select usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected = getExpectedQuery("basecube", "select usersports.name, sum(basecube.msr2) FROM ",
+      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
+        + " join " + getDbName() + "c1_user_interests_tbl user_interests on userdim.id = user_interests.user_id"
+        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id",
+      null, "group by usersports.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
+  @Test
+  public void testFlattenBridgeTablesWithCustomAggregate() throws Exception {
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    conf.set(CubeQueryConfUtil.BRIDGE_TABLE_FIELD_AGGREGATOR, "custom_aggr");
+    String query = "select usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected = getExpectedQuery("basecube", "select usersports.name, sum(basecube.msr2) FROM ",
+      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
+        + " join (select user_interests.user_id as user_id,custom_aggr(usersports.name) as name"
+        + " from " + getDbName() + "c1_user_interests_tbl user_interests"
+        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
+        + " group by user_interests.user_id) usersports"
+        + " on userdim.id = usersports.user_id ",
+      null, "group by usersports.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
+  @Test
+  public void testBridgeTablesWithMegringChains() throws Exception {
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    String query = "select userInterestIds.sport_id, usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected = getExpectedQuery("basecube", "select userInterestIds.sport_id, usersports.name,"
+      + " sum(basecube.msr2) FROM ",
+      " join " + getDbName() + "c1_usertable userdim on basecube.userid = userdim.id join (select userinterestids"
+        + ".user_id as user_id,collect_set(userinterestids.sport_id) as sport_id from " + getDbName()
+        + "c1_user_interests_tbl userinterestids group by userinterestids.user_id) userinterestids on userdim.id = "
+        + "userinterestids.user_id join (select userinterestids.user_id as user_id,collect_set(usersports.name) as name"
+        + " from " + getDbName() + "c1_user_interests_tbl userinterestids join "
+        + getDbName() + "c1_sports_tbl usersports on userinterestids.sport_id = usersports.id"
+        + " group by userinterestids.user_id) usersports on userdim.id = usersports.user_id",
+       null, "group by userInterestIds.sport_id, usersports.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
+  @Test
+  public void testBridgeTablesWithMultipleFacts() throws Exception {
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    String query = "select usersports.name, sum(msr2), sum(msr12) from basecube where " + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected1 = getExpectedQuery("basecube",
+        "select usersports.name as `name`, sum(basecube.msr2) as `msr2` FROM ", " join " + getDbName()
+            + "c1_usertable userdim ON basecube.userid = userdim.id "
+            + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name" + " from "
+            + getDbName() + "c1_user_interests_tbl user_interests" + " join " + getDbName()
+            + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
+            + " group by user_interests.user_id) usersports" + " on userdim.id = usersports.user_id ", null,
+        "group by usersports.name", null, getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    String expected2 = getExpectedQuery("basecube",
+        "select usersports.name as `name`, sum(basecube.msr12) as `msr12` FROM ", " join " + getDbName()
+            + "c1_usertable userdim ON basecube.userid = userdim.id "
+            + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name" + " from "
+            + getDbName() + "c1_user_interests_tbl user_interests" + " join " + getDbName()
+            + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
+            + " group by user_interests.user_id) usersports" + " on userdim.id = usersports.user_id ", null,
+        "group by usersports.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c1_testfact2_base"));
+    TestCubeRewriter.compareContains(expected1, hqlQuery);
+    TestCubeRewriter.compareContains(expected2, hqlQuery);
+    String lower = hqlQuery.toLowerCase();
+    assertTrue(
+      lower.startsWith("select coalesce(mq1.name, mq2.name) name, mq2.msr2 msr2, mq1.msr12 msr12 from ")
+      || lower.startsWith("select coalesce(mq1.name, mq2.name) name, mq1.msr2 msr2, mq2.msr12 msr12 from "), hqlQuery);
+
+    assertTrue(hqlQuery.contains("mq1 full outer join ") && hqlQuery.endsWith("mq2 on mq1.name <=> mq2.name"),
+      hqlQuery);
+  }
+
+  @Test
+  public void testBridgeTablesWithMultipleChains() throws Exception {
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    String query = "select usersports.name, xusersports.name, yusersports.name, sum(msr2) from basecube where "
+      + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected = getExpectedQuery("basecube", "select usersports.name, xusersports.name, yusersports.name,"
+      + " sum(basecube.msr2) FROM ",
+      " join " + getDbName() + "c1_usertable userdim_1 on basecube.userid = userdim_1.id "
+      + " join  (select user_interests_1.user_id as user_id, collect_set(usersports.name) as name from "
+      + getDbName() + "c1_user_interests_tbl user_interests_1 join " + getDbName() + "c1_sports_tbl usersports on "
+      + "user_interests_1.sport_id = usersports.id group by user_interests_1.user_id) "
+      + "usersports on userdim_1.id = usersports.user_id"
+      + " join " + getDbName() + "c1_usertable userdim_0 on basecube.yuserid = userdim_0.id "
+      + " join  (select user_interests_0.user_id as user_id,collect_set(yusersports.name) as name from "
+      + getDbName() + "c1_user_interests_tbl user_interests_0 join " + getDbName() + "c1_sports_tbl yusersports on "
+      + " user_interests_0.sport_id = yusersports.id group by user_interests_0.user_id) yusersports on userdim_0.id ="
+      + " yusersports.user_id join " + getDbName() + "c1_usertable userdim on basecube.xuserid = userdim.id"
+      + " join  (select user_interests.user_id as user_id,collect_set(xusersports.name) as name from "
+      + getDbName() + "c1_user_interests_tbl user_interests join " + getDbName() + "c1_sports_tbl xusersports"
+      + " on user_interests.sport_id = xusersports.id group by user_interests.user_id) xusersports on userdim.id = "
+      + " xusersports.user_id", null, "group by usersports.name, xusersports.name, yusersports.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+  @Test
+  public void testBridgeTablesWithDimTablePartitioning() throws Exception {
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
+    String query = "select usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected = getExpectedQuery("basecube", "select usersports.name, sum(basecube.msr2) FROM ",
+      " join " + getDbName() + "c2_usertable userdim ON basecube.userid = userdim.id and userdim.dt='latest' "
+        + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name"
+        + " from " + getDbName() + "c2_user_interests_tbl user_interests"
+        + " join " + getDbName() + "c2_sports_tbl usersports on user_interests.sport_id = usersports.id"
+        + " and usersports.dt='latest and user_interests.dt='latest'"
+        + " group by user_interests.user_id) usersports"
+        + " on userdim.id = usersports.user_id ",
+      null, "group by usersports.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c2_testfact1_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
+  @Test
+  public void testBridgeTablesWithNormalJoins() throws Exception {
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    String query = "select usersports.name, cubestatecountry.name, cubecitystatecountry.name,"
+      + " sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected = getExpectedQuery("basecube", "select usersports.name, cubestatecountry.name, "
+      + "cubecitystatecountry.name, sum(basecube.msr2) FROM ",
+      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
+        + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name"
+        + " from " + getDbName() + "c1_user_interests_tbl user_interests"
+        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
+        + " group by user_interests.user_id) usersports"
+        + " on userdim.id = usersports.user_id "
+        + " join " + getDbName() + "c1_citytable citydim on basecube.cityid = citydim.id and (citydim.dt = 'latest')"
+        + " join " + getDbName()
+        + "c1_statetable statedim_0 on citydim.stateid=statedim_0.id and statedim_0.dt='latest'"
+        + " join " + getDbName()
+        + "c1_countrytable cubecitystatecountry on statedim_0.countryid=cubecitystatecountry.id"
+        + " join " + getDbName() + "c1_statetable statedim on basecube.stateid=statedim.id and (statedim.dt = 'latest')"
+        + " join " + getDbName() + "c1_countrytable cubestatecountry on statedim.countryid=cubestatecountry.id ",
+      null, "group by usersports.name, cubestatecountry.name, cubecitystatecountry.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 }

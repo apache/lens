@@ -19,19 +19,44 @@
 package org.apache.lens.server.api.query;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.driver.MockDriver;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 
-public class MockQueryContext extends AbstractQueryContext {
+import com.beust.jcommander.internal.Lists;
+
+public class MockQueryContext extends QueryContext {
 
   private static final long serialVersionUID = 1L;
 
   public MockQueryContext(final String query, final LensConf qconf,
     final Configuration conf, final Collection<LensDriver> drivers) {
-    super(query, "testuser", qconf, conf, drivers, false);
+    super(query, "testuser", qconf, conf, drivers, drivers.iterator().next(), false);
+  }
+
+  public MockQueryContext() throws LensException {
+    this(new Configuration());
+  }
+
+  public MockQueryContext(final Collection<LensDriver> drivers) throws LensException {
+    this("mock query", new LensConf(), new Configuration(), drivers);
+  }
+
+  public MockQueryContext(Configuration conf) throws LensException {
+    this("mock query", new LensConf(), conf, getDrivers(conf));
+  }
+
+  public static List<LensDriver> getDrivers(Configuration conf) throws LensException {
+    List<LensDriver> drivers = Lists.newArrayList();
+    MockDriver d = new MockDriver();
+    d.configure(conf, null, null);
+    drivers.add(d);
+    return drivers;
   }
 
   @Override

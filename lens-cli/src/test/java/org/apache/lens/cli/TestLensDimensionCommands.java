@@ -63,7 +63,7 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
    */
   public static void createDimension() throws URISyntaxException {
     URL dimensionSpec = TestLensDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
-    getCommand().createDimension(new File(dimensionSpec.toURI()).getAbsolutePath());
+    getCommand().createDimension(new File(dimensionSpec.toURI()));
   }
 
   /**
@@ -95,8 +95,8 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
 
   private void testFields(LensDimensionCommands qCom) {
     String testDimFields = qCom.showQueryableFields("test_dim", true);
-    for (String field : Arrays.asList("detail", "id", "d2id", "name")) {
-      assertTrue(testDimFields.contains(field));
+    for (String field : Arrays.asList("detail", "id", "d2id", "name", "inline", "location")) {
+      assertTrue(testDimFields.contains(field), "Got " + testDimFields);
     }
     assertFalse(testDimFields.contains("measure"));
   }
@@ -126,7 +126,7 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
         "<property name=\"test_dim.prop\" value=\"test\" />"
           + "\n<property name=\"test_dim.prop1\" value=\"test1\" />\n");
 
-      File newFile = new File("/tmp/test_dim1.xml");
+      File newFile = new File("target/test_dim1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
       writer.close();
@@ -137,7 +137,7 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
       String propString1 = "name : test_dim.prop1  value : test1";
       Assert.assertTrue(desc.contains(propString));
 
-      command.updateDimension("test_dim", "/tmp/test_dim1.xml");
+      command.updateDimension("test_dim", new File("target/test_dim1.xml"));
       desc = command.describeDimension("test_dim");
       log.debug(desc);
       Assert.assertTrue(desc.contains(propString));

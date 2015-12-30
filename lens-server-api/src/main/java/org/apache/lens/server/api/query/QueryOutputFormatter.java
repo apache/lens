@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.api.query;
 
+import java.io.Externalizable;
 import java.io.IOException;
 
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
@@ -28,7 +29,7 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
  * This is an abstract interface, user should implement {@link InMemoryOutputFormatter} or
  * {@link PersistedOutputFormatter} for formatting the result.
  */
-public interface QueryOutputFormatter {
+public interface QueryOutputFormatter extends Externalizable {
 
   /**
    * Initialize the formatter.
@@ -79,9 +80,15 @@ public interface QueryOutputFormatter {
   /**
    * Get total number of rows in result.
    *
-   * @return Total number of rows, return -1, if not known
+   * @return Total number of rows, return null, if not known
    */
-  int getNumRows();
+  Integer getNumRows();
+
+  /**
+   * Get size of the resultset file.
+   * @return Total number of rows, return null, if not known
+   */
+  Long getFileSize();
 
   /**
    * Get resultset metadata

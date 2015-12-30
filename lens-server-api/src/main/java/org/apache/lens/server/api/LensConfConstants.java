@@ -52,9 +52,9 @@ public final class LensConfConstants {
   public static final String METASTORE_PFX = "lens.metastore.";
 
   /**
-   * The Constant DRIVER_CLASSES.
+   * The Constant DRIVER_TYPES_AND_CLASSES
    */
-  public static final String DRIVER_CLASSES = SERVER_PFX + "drivers";
+  public static final String DRIVER_TYPES_AND_CLASSES = SERVER_PFX + "drivers";
   /**
    * The Constant DRIVER_SELECTOR_CLASS.
    */
@@ -403,6 +403,21 @@ public final class LensConfConstants {
   public static final String NATIVE_TABLE_NAME = METASTORE_PFX + "native.table.name";
 
   /**
+   * The property name for setting the column mapping, if column names in native table are different
+   */
+  public static final String NATIVE_TABLE_COLUMN_MAPPING = METASTORE_PFX + "native.table.column.mapping";
+
+  /**
+   * The Constant ES_INDEX_NAME.
+   */
+  public static final String ES_INDEX_NAME = METASTORE_PFX + "es.index.name";
+
+  /**
+   * The Constant ES_TYPE_NAME.
+   */
+  public static final String ES_TYPE_NAME = METASTORE_PFX + "es.type.name";
+
+  /**
    * Gets the service impl conf key.
    *
    * @param sName the s name
@@ -716,7 +731,7 @@ public final class LensConfConstants {
    * Interval at which lens session expiry service runs
    */
   public static final String SESSION_EXPIRY_SERVICE_INTERVAL_IN_SECS = SERVER_PFX
-    + "session.expiry.serivce.interval.secs";
+    + "session.expiry.service.interval.secs";
 
   public static final int DEFAULT_SESSION_EXPIRY_SERVICE_INTERVAL_IN_SECS = 3600;
 
@@ -759,14 +774,14 @@ public final class LensConfConstants {
   // Query Purge Configuration
 
   /**
-   * The Constant MAX_NUMBER_OF_FINISHED_QUERY.
+   * The Constant PURGE_INTERVAL.
    */
-  public static final String MAX_NUMBER_OF_FINISHED_QUERY = SERVER_PFX + "max.finished.queries";
+  public static final String PURGE_INTERVAL = SERVER_PFX + "querypurger.sleep.interval";
 
   /**
-   * The Constant DEFAULT_FINISHED_QUERIES.
+   * The Constant DEFAULT_PURGE_INTERVAL.
    */
-  public static final int DEFAULT_FINISHED_QUERIES = 100;
+  public static final int DEFAULT_PURGE_INTERVAL = 10000;
 
   // Server DB configuration
   /**
@@ -911,4 +926,74 @@ public final class LensConfConstants {
    */
   public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY = SERVER_PFX
       + "waiting.queries.selection.policy.factories";
+
+  /**
+   * Key denoting the dialect class property of saved query service.
+   */
+  public static final String JDBC_DIALECT_PROVIDER_CLASS_KEY = "lens.server.savedquery.jdbc.dialectclass";
+
+  /**
+   * Key denoting the default fetch value of saved query list api.
+   */
+  public static final String FETCH_COUNT_SAVED_QUERY_LIST_KEY = "lens.server.savedquery.list.default.count";
+
+  /**
+   * Default fetch count of saved query list api.
+   */
+  public static final int DEFAULT_FETCH_COUNT_SAVED_QUERY_LIST = 20;
+
+  /**
+   * This is the base directory where all drivers are available under lens-server's Conf directory.
+   */
+  public static final String DRIVERS_BASE_DIR = "drivers";
+
+  /**
+   * Name of the property that holds the path of "conf" directory of server
+   */
+  public static final String CONFIG_LOCATION = "config.location";
+
+  /**
+   * Default location of "conf" directory (wrt to lens-server/bin)
+   */
+  public static final String DEFAULT_CONFIG_LOCATION = "../conf";
+
+  /**
+   * The Constant RESULTSET_PURGE_ENABLED.
+   */
+  public static final String RESULTSET_PURGE_ENABLED = SERVER_PFX + "resultset.purge.enabled";
+
+  /**
+   * The Constant DEFAULT_RESULTSET_PURGE_ENABLED
+   */
+  public static final boolean DEFAULT_RESULTSET_PURGE_ENABLED = false;
+
+  /**
+   * The Constant RESULTSET_PURGE_INTERVAL_IN_SECONDS.
+   */
+  public static final String RESULTSET_PURGE_INTERVAL_IN_SECONDS = SERVER_PFX + "resultsetpurger.sleep.interval.secs";
+
+  /*
+   * The Constant DEFAULT_RESULTSET_PURGE_INTERVAL_IN_SECONDS.
+   */
+  public static final int DEFAULT_RESULTSET_PURGE_INTERVAL_IN_SECONDS = 3600;
+
+  /**
+   * The Constant QUERY_RESULTSET_RETENTION.
+   */
+  public static final String QUERY_RESULTSET_RETENTION = SERVER_PFX + "query.resultset.retention";
+
+  /**
+   * The Constant DEFAULT_QUERY_RESULTSET_RETENTION.
+   */
+  public static final String DEFAULT_QUERY_RESULTSET_RETENTION = "1 day";
+
+  /**
+   * The Constant HDFS_OUTPUT_RETENTION.
+   */
+  public static final String HDFS_OUTPUT_RETENTION = SERVER_PFX + "hdfs.output.retention";
+
+  /**
+   * The Constant DEFAULT_HDFS_OUTPUT_RETENTION.
+   */
+  public static final String DEFAULT_HDFS_OUTPUT_RETENTION = "1 day";
 }

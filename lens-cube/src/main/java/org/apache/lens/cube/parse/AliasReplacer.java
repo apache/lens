@@ -25,15 +25,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 
@@ -50,7 +50,7 @@ class AliasReplacer implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     Map<String, String> colToTableAlias = cubeql.getColToTableAlias();
 
     extractTabAliasForCol(cubeql);
@@ -81,7 +81,7 @@ class AliasReplacer implements ContextRewriter {
 
     replaceAliases(cubeql.getWhereAST(), 0, colToTableAlias);
 
-    replaceAliases(cubeql.getJoinTree(), 0, colToTableAlias);
+    replaceAliases(cubeql.getJoinAST(), 0, colToTableAlias);
 
     // Update the aggregate expression set
     AggregateResolver.updateAggregates(cubeql.getSelectAST(), cubeql);
@@ -93,9 +93,9 @@ class AliasReplacer implements ContextRewriter {
   /**
    * Figure out queried dim attributes and measures from the cube query context
    * @param cubeql
-   * @throws SemanticException
+   * @throws LensException
    */
-  private void findDimAttributesAndMeasures(CubeQueryContext cubeql) throws SemanticException {
+  private void findDimAttributesAndMeasures(CubeQueryContext cubeql) throws LensException {
     CubeInterface cube = cubeql.getCube();
     if (cube != null) {
       Set<String> cubeColsQueried = cubeql.getColumnsQueried(cube.getName());
@@ -119,11 +119,11 @@ class AliasReplacer implements ContextRewriter {
     }
   }
 
-  private void extractTabAliasForCol(CubeQueryContext cubeql) throws SemanticException {
+  private void extractTabAliasForCol(CubeQueryContext cubeql) throws LensException {
     extractTabAliasForCol(cubeql, cubeql);
   }
 
-  static void extractTabAliasForCol(CubeQueryContext cubeql, TrackQueriedColumns tqc) throws SemanticException {
+  static void extractTabAliasForCol(CubeQueryContext cubeql, TrackQueriedColumns tqc) throws LensException {
     Map<String, String> colToTableAlias = cubeql.getColToTableAlias();
     Set<String> columns = tqc.getTblAliasToColumns().get(CubeQueryContext.DEFAULT_TABLE);
     if (columns == null) {
@@ -145,19 +145,21 @@ class AliasReplacer implements ContextRewriter {
           if (!inCube) {
             String prevDim = colToTableAlias.get(col.toLowerCase());
             if (prevDim != null && !prevDim.equals(dim.getName())) {
-              throw new SemanticException(ErrorMsg.AMBIGOUS_DIM_COLUMN, col, prevDim, dim.getName());
+              throw new LensException(LensCubeErrorCode.AMBIGOUS_DIM_COLUMN.getLensErrorInfo(),
+                  col, prevDim, dim.getName());
             }
             String dimAlias = cubeql.getAliasForTableName(dim.getName());
             colToTableAlias.put(col.toLowerCase(), dimAlias);
             tqc.addColumnsQueried(dimAlias, col.toLowerCase());
           } else {
             // throw error because column is in both cube and dimension table
-            throw new SemanticException(ErrorMsg.AMBIGOUS_CUBE_COLUMN, col, cubeql.getCube().getName(), dim.getName());
+            throw new LensException(LensCubeErrorCode.AMBIGOUS_CUBE_COLUMN.getLensErrorInfo(), col,
+                cubeql.getCube().getName(), dim.getName());
           }
         }
       }
       if (colToTableAlias.get(col.toLowerCase()) == null) {
-        throw new SemanticException(ErrorMsg.COLUMN_NOT_FOUND, col);
+        throw new LensException(LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo(), col);
       }
     }
   }
@@ -181,7 +183,6 @@ class AliasReplacer implements ContextRewriter {
         ASTNode aliasNode = (ASTNode) node.getChild(0);
         ASTNode newAliasIdent = new ASTNode(new CommonToken(HiveParser.Identifier, newAlias));
         aliasNode.setChild(0, newAliasIdent);
-        newAliasIdent.setParent(aliasNode);
       } else {
         // Just a column ref, we need to make it alias.col
         // '.' will become the parent node
@@ -190,9 +191,7 @@ class AliasReplacer implements ContextRewriter {
         ASTNode tabRefNode = new ASTNode(new CommonToken(HiveParser.TOK_TABLE_OR_COL, "TOK_TABLE_OR_COL"));
 
         tabRefNode.addChild(aliasIdentNode);
-        aliasIdentNode.setParent(tabRefNode);
         dot.addChild(tabRefNode);
-        tabRefNode.setParent(dot);
 
         ASTNode colIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, colName));
 

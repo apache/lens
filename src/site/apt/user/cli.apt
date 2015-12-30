@@ -54,12 +54,6 @@ User CLI Commands
   with <<<arg3>>>. arg4 can be omitted, or if passed, it has to be passed with <<<--arg4>>>.
 
 
-=========================
-
-
-* LENS Commands
-
-
 ** Argument Passing in LENS
 
   Lens supports both the approaches of passing arguments but advises the usage of keyword arguments over list arguments.
@@ -72,14 +66,31 @@ User CLI Commands
   * Arguments are of any type, but there is only one argument of type arg2 or arg3 and that's the argument you intend
      to pass value to.
 
+
+** About the huge number of commands below
+
+  The commands given below is an exhaustive list of commands available in lens cli. The good thing is, you probably
+  don't need to remember any of them. In lens-cli, pressing <<<tab>>> anytime will give you possible keywords.
+  For example, if you don't know the exact command but have an idea that it's related to facts,
+  type fact and press <<<tab>>>. You'll be provided with all possible next keywords.
+  Looking at the options should be helpful to know which to pick
+  for the action you want to perform. Similarly, when you don't know what arguments the command takes, type <<<-->>>
+  and then <<<tab>>> will also provide you with with the arguments of the command.
+  Also, there's a special command <<<help>>> which displays all possible commands with the arguments they expect.
+
+
 ** Known bugs
 
   * If all arguments have same value, Something weird will happen.
 
+================
+
+* LENS CLI Commands
 
 
 
-** Session management
+
+** Commands for Session Management
 
   Opening the lens CLI shell is equivalent to open a session with lens server.This section provides all the commands available for in shell which are applicable for the full session.
 
@@ -92,7 +103,7 @@ User CLI Commands
 *--+--+
 |close/bye|Releases all resources of the server session and exits the shell|
 *--+--+
-|debug [[--enable] To print all logs on cli for debugging purpose]|prints all class level logs and verbose logs on cli for debugging purpose. 'debug false'  to turn off all class level logging and verbose level logging |
+|debug [[--enable] ]|prints all class level logs and verbose logs on cli for debugging purpose. 'debug false' to turn off all class level logging and verbose level logging |
 *--+--+
 |get [--key] \<key\>|Fetches and prints session parameter specified with name <<<key>>> from lens server|
 *--+--+
@@ -108,13 +119,13 @@ User CLI Commands
 *--+--+
 |show params|Fetches and prints all session parameter from lens server|
 *--+--+
-|verbose [[--enable] Print the clilogger logs on cli]|Show cliLogger logs on cli'verbose false'  turns off the cliLogger logs on console|
+|verbose [[--enable] ]|Show cliLogger logs on cli. 'verbose false'  turns off the cliLogger logs on console|
 *--+--+
   <<Lens Connection Commands>>
 
 ===
 
-** Database management commands
+** Commands for Database Management
 
   These commands provide CRUD for databases
 
@@ -133,7 +144,7 @@ User CLI Commands
 
 ===
 
-** Storage Management
+** Commands for Storage Management
 
   These commands provide CRUD for Storages
 
@@ -154,7 +165,7 @@ User CLI Commands
 
 ===
 
-** OLAP Data cube metadata management
+** Commands for OLAP Data Cube Management
 
   These commands provide CRUD for cubes
 
@@ -181,7 +192,7 @@ User CLI Commands
 
 ===
 
-** Dimension Management
+** Commands for Dimension Management
 
   These commands provide CRUD for Dimensions
 
@@ -206,7 +217,7 @@ User CLI Commands
 
 ===
 
-** Management of Facts
+** Commands for Facts Management
 
   These command provide CRUD for facts, associated storages, and fact partitions
 
@@ -251,7 +262,7 @@ User CLI Commands
 
 ===
 
-** Commands for Dimension Tables
+** Commands for Dimension Tables Management
 
   These commands provide CRUD for dimension tables, associated storages, and fact partitions
 
@@ -294,7 +305,7 @@ User CLI Commands
 
 ===
 
-** Native Table management
+** Commands for Native Table Management
 
   Read operations on native tables
 
@@ -309,7 +320,7 @@ User CLI Commands
 
 ===
 
-** Query Management
+** Commands for Query Management
 
   This section provides commands for query life cycle - submit, check status,
   fetch results, kill or list all the queries. Also provides commands for
@@ -336,21 +347,34 @@ User CLI Commands
 *--+--+
 |prepQuery prepare [--query] \<query-string\> [--name \<query-name\>]|Prepapre query <<<query-string>>> and return prepare handle. Can optionaly provide <<<query-name>>>|
 *--+--+
-|query details [--query_handle] \<query_handle\>|Get query details of query with handle <<<query_handle>>>|
+|query details [[--query_handle] \<query_handle\>]|Get query details of query with handle <<<query_handle>>>.If not provided, takes last query handle interacted with.|
 *--+--+
 |query execute [--query] \<query-string\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<query-string>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required|
 *--+--+
 |query explain [--query] \<query-string\> [--save_location \<save_location\>]|Explain execution plan of query <<<query-string>>>. Can optionally save the plan to a file by providing <<<save_location>>>|
 *--+--+
-|query kill [--query_handle] \<query_handle\>|Kill query with handle <<<query_handle>>>|
+|query kill [[--query_handle] \<query_handle\>]|Kill query with handle <<<query_handle>>>.If not provided, takes last query handle interacted with.|
 *--+--+
-|query list [--state \<query-status\>] [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all queries. Various filter options can be provided(optionally),  as can be seen from the command syntax|
+|query list [--state \<query-status\>] [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--driver \<driver-where-query-ran\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all queries. Various filter options can be provided(optionally),  as can be seen from the command syntax|
 *--+--+
-|query results [--query_handle] \<query_handle\> [--save_location \<save_location\>] [--async \<async\>]|get results of query with query handle <<<query_handle>>>. If async is false then wait till the query execution is completed, it's by default true. Can optionally save the results to a file by providing <<<save_location>>>.|
+|query results [[--query_handle] \<query_handle\>] [--save_location \<save_location\>] [--async \<async\>]|get results of query with query handle <<<query_handle>>>. If not provided, takes last query handle interacted with.If async is false then wait till the query execution is completed, it's by default true. Can optionally save the results to a file by providing <<<save_location>>>.|
 *--+--+
-|query status [--query_handle] \<query_handle\>|Fetch status of executed query having query handle <<<query_handle>>>|
+|query status [[--query_handle] \<query_handle\>]|Fetch status of executed query having query handle <<<query_handle>>>. If not provided, takes last query handle interacted with.|
 *--+--+
   <<Lens Query Commands>>
+
+===
+
+** Commands for Accessing Logs
+
+  This section provides commands for fetching logs under LENS_LOG_DIR.
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|show logs [--log_handle] \<log_handle\> [--save_location \<save_location\>]|show logs for the given handle <<<log_handle>>>. Handle can either be a query handle or request id. You can optionally provide a location to save the logs as <<<save_location>>>|
+*--+--+
+  <<Lens Log Resource Commands>>
 
 ===
 

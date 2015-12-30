@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.query.*;
+import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientSingletonWrapper;
 import org.apache.lens.client.LensMetadataClient;
 import org.apache.lens.client.LensStatement;
@@ -83,15 +84,15 @@ public class SampleQueries {
         }
       }
       queries.queryAll();
-      if (queries.retCode != 0) {
-        System.exit(queries.retCode);
-      }
     } finally {
       if (queries != null) {
         queries.close();
       }
       long end = System.currentTimeMillis();
       System.out.println("Total time for running examples(in millis) :" + (end-start));
+    }
+    if (queries.retCode != 0) {
+      System.exit(queries.retCode);
     }
   }
 
@@ -132,29 +133,34 @@ public class SampleQueries {
       }
       total++;
       System.out.println("Query:" + query);
-      QueryHandle handle = queryClient.executeQuery(query, true, null).getData();
-      System.out.println("Status:" + queryClient.getQuery().getStatus());
-      System.out.println("Total time in millis:"
-        + (queryClient.getQuery().getFinishTime() - queryClient.getQuery().getSubmissionTime()));
-      System.out.println("Driver run time in millis:"
-        + (queryClient.getQuery().getDriverFinishTime() - queryClient.getQuery().getDriverStartTime()));
-      if (queryClient.wasQuerySuccessful()) {
-        success++;
-        if (queryClient.getQuery().getStatus().isResultSetAvailable()) {
-          System.out.println("Result:");
-          QueryResult queryResult = queryClient.getResultSet();
-          if (queryResult instanceof InMemoryQueryResult) {
-            InMemoryQueryResult result = (InMemoryQueryResult) queryResult;
-            for (ResultRow row : result.getRows()) {
-              System.out.println(StringUtils.join(row.getValues(), "\t"));
+      try {
+        QueryHandle handle = queryClient.executeQuery(query, true, null).getData();
+        System.out.println("Status:" + queryClient.getQuery().getStatus());
+        System.out.println("Total time in millis:"
+          + (queryClient.getQuery().getFinishTime() - queryClient.getQuery().getSubmissionTime()));
+        System.out.println("Driver run time in millis:"
+          + (queryClient.getQuery().getDriverFinishTime() - queryClient.getQuery().getDriverStartTime()));
+        if (queryClient.wasQuerySuccessful()) {
+          success++;
+          if (queryClient.getQuery().getStatus().isResultSetAvailable()) {
+            System.out.println("Result:");
+            QueryResult queryResult = queryClient.getResultSet();
+            if (queryResult instanceof InMemoryQueryResult) {
+              InMemoryQueryResult result = (InMemoryQueryResult) queryResult;
+              for (ResultRow row : result.getRows()) {
+                System.out.println(StringUtils.join(row.getValues(), "\t"));
+              }
+            } else if (queryResult instanceof PersistentQueryResult) {
+              PersistentQueryResult persistentQueryResult = (PersistentQueryResult) queryResult;
+              System.out.println("Result stored at " + persistentQueryResult.getPersistedURI());
             }
-          } else if (queryResult instanceof PersistentQueryResult) {
-            PersistentQueryResult persistentQueryResult = (PersistentQueryResult) queryResult;
-            System.out.println("Result stored at " + persistentQueryResult.getPersistedURI());
+            queryClient.closeResultSet();
           }
-          queryClient.closeResultSet();
+        } else {
+          retCode = 1;
         }
-      } else {
+      } catch (Exception e) {
+        LensClient.getCliLooger().error("Exception for example query : \"{}\"", query, e);
         retCode = 1;
       }
       System.out.println("--------------------");

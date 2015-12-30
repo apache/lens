@@ -19,7 +19,10 @@
 package org.apache.lens.server.api.query;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -206,6 +209,10 @@ public abstract class AbstractQueryContext implements Serializable {
     return getDriverContext().getDriverRewriterPlan(driver);
   }
 
+  public String getQueue() {
+    return getConf().get(LensConfConstants.MAPRED_JOB_QUEUE_NAME);
+  }
+
   /**
    * Runnable to wrap estimate computation for a driver. Failure cause and success status
    * are stored as field members
@@ -256,7 +263,7 @@ public abstract class AbstractQueryContext implements Serializable {
       String expMsg = LensUtil.getCauseMessage(e);
       driverQueryContext.setDriverQueryCostEstimateError(e);
       failureCause = new StringBuilder("Driver :")
-        .append(driver.getClass().getName())
+        .append(driver.getFullyQualifiedName())
         .append(" Cause :")
         .append(expMsg)
         .toString();

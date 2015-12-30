@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.apache.lens.cube.parse.TimeRange;
 
 import com.google.common.base.Optional;
 

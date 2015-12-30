@@ -28,7 +28,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 
@@ -142,7 +144,7 @@ public class TestExprColumn {
   }
 
   @Test
-  public void testExprColumnCreationErrors() {
+  public void testExprColumnCreationErrors() throws LensException {
     FieldSchema colSchema = new FieldSchema("errorColumn", "double", "multi exprcol");
 
     // no expression spec passed
@@ -157,16 +159,16 @@ public class TestExprColumn {
     try {
       ExprColumn col1 = new ExprColumn(colSchema, "NoExprInExprSpec", new ExprSpec(null, null, null));
       fail(col1 + " should not be created");
-    } catch (IllegalArgumentException e) {
-      assertTrue(e.getMessage().contains("No expression string specified for column errorColumn at index:0"));
+    } catch (NullPointerException e) {
+      // pass
     }
 
     // Parse error in expr passed in exprspec
     try {
       ExprColumn col1 = new ExprColumn(colSchema, "NoExprInExprSpec", new ExprSpec("(a+b", null, null));
       fail(col1 + " should not be created");
-    } catch (IllegalArgumentException e) {
-      assertTrue(e.getMessage().contains("Expression can't be parsed: (a+b"), e.getMessage());
+    } catch (LensException e) {
+      assertEquals(e.getErrorCode(), LensCubeErrorCode.EXPRESSION_NOT_PARSABLE.getLensErrorInfo().getErrorCode());
     }
 
     // Parse error in expr passed in exprspec
@@ -174,8 +176,8 @@ public class TestExprColumn {
       ExprColumn col1 = new ExprColumn(colSchema, "NoExprInExprSpec", new ExprSpec("a + b", null, null),
         new ExprSpec("(a+b", null, null));
       fail(col1 + " should not be created");
-    } catch (IllegalArgumentException e) {
-      assertTrue(e.getMessage().contains("Expression can't be parsed: (a+b"));
+    } catch (LensException e) {
+      assertEquals(e.getErrorCode(), LensCubeErrorCode.EXPRESSION_NOT_PARSABLE.getLensErrorInfo().getErrorCode());
     }
 
     // no expression passed in exprspec
@@ -183,8 +185,8 @@ public class TestExprColumn {
       ExprColumn col1 = new ExprColumn(colSchema, "NoExprInExprSpecAt1", new ExprSpec("a + b", null, null),
         new ExprSpec(null, null, null));
       fail(col1 + " should not be created");
-    } catch (IllegalArgumentException e) {
-      assertTrue(e.getMessage().contains("No expression string specified for column errorColumn at index:1"));
+    } catch (NullPointerException e) {
+      // pass
     }
 
     // startTime after endTime

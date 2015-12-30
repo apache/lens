@@ -41,8 +41,9 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.LensApplication;
+import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.LensTestUtil;
+import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.api.metrics.MethodMetrics;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.common.TestResourceFile;
@@ -78,24 +79,24 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    metricsSvc = (MetricsServiceImpl) LensServices.get().getService(MetricsService.NAME);
-    metastoreService = (CubeMetastoreServiceImpl) LensServices.get().getService(CubeMetastoreServiceImpl.NAME);
+    metricsSvc = LensServices.get().getService(MetricsService.NAME);
+    metastoreService = LensServices.get().getService(CubeMetastoreService.NAME);
     lensSessionId = metastoreService.openSession("foo", "bar", new HashMap<String, String>());
     methodMetricsMap = metricsSvc.getMethodMetricsFactory().getMethodMetricsMap();
     //reset
   }
 
   private void createTable(String tblName) throws InterruptedException {
-    LensTestUtil.createTable(tblName, target(), lensSessionId);
+    LensServerTestUtil.createTable(tblName, target(), lensSessionId);
   }
 
   private void loadData(String tblName, final String testDataFile) throws InterruptedException {
-    LensTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
+    LensServerTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
   }
 
   @AfterTest
   public void tearDown() throws Exception {
-    LensTestUtil.dropTable(TestQueryService.TEST_TABLE, target(), lensSessionId);
+    LensServerTestUtil.dropTable(TestQueryService.TEST_TABLE, target(), lensSessionId);
     metastoreService.closeSession(lensSessionId);
     super.tearDown();
   }

@@ -25,7 +25,10 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.server.LensApplicationListener;
+import org.apache.lens.server.LensRequestContextInitFilter;
+import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -40,6 +43,9 @@ public class MetastoreApp extends Application {
     classes.add(LoggingFilter.class);
     classes.add(MultiPartFeature.class);
     classes.add(LensApplicationListener.class);
+    classes.add(LensJAXBContextResolver.class);
+    classes.add(LensRequestContextInitFilter.class);
+    classes.add(LensJAXBValidationExceptionMapper.class);
     return classes;
   }
 }

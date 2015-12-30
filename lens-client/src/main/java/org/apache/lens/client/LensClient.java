@@ -28,15 +28,17 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.client.exceptions.LensBriefErrorException;
 import org.apache.lens.client.model.BriefError;
 import org.apache.lens.client.model.IdBriefErrorTemplate;
 import org.apache.lens.client.model.IdBriefErrorTemplateKey;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import lombok.Getter;
@@ -55,10 +57,14 @@ public class LensClient {
   private LensConnection connection;
   private final HashMap<QueryHandle, LensStatement> statementMap =
     Maps.newHashMap();
+  @Getter
   private final LensStatement statement;
 
-  public static Log getCliLooger() {
-    return LogFactory.getLog(CLILOGGER);
+  @Getter
+  private PathValidator pathValidator;
+
+  public static Logger getCliLooger() {
+    return LoggerFactory.getLogger(CLILOGGER);
   }
 
   public LensClient() {
@@ -187,11 +193,11 @@ public class LensClient {
   }
 
   public QueryStatus getQueryStatus(QueryHandle query) {
-    return new LensStatement(connection).getQuery(query).getStatus();
+    return statement.getQuery(query).getStatus();
   }
 
   public LensQuery getQueryDetails(QueryHandle handle) {
-    return new LensStatement(connection).getQuery(handle);
+    return statement.getQuery(handle);
   }
 
   public QueryStatus getQueryStatus(String q) {
@@ -202,8 +208,8 @@ public class LensClient {
     return getQueryDetails(QueryHandle.fromString(handle));
   }
 
-  public QueryPlan getQueryPlan(String q) {
-    return new LensStatement(connection).explainQuery(q);
+  public LensAPIResult<QueryPlan> getQueryPlan(String q) throws LensAPIException {
+    return statement.explainQuery(q);
   }
 
   public boolean killQuery(QueryHandle q) {
@@ -221,16 +227,18 @@ public class LensClient {
     return getLensStatement(query).getResultSet();
   }
 
-  public List<QueryHandle> getQueries(String state, String queryName, String user, long fromDate, long toDate) {
-    return new LensStatement(connection).getAllQueries(state, queryName, user, fromDate, toDate);
+  public List<QueryHandle> getQueries(String state, String queryName, String user, String driver, long fromDate,
+    long toDate) {
+    return statement.getAllQueries(state, queryName, user, driver, fromDate, toDate);
   }
-
 
   private void connectToLensServer() {
     log.debug("Connecting to lens server {}", new LensConnectionParams(conf));
     connection = new LensConnection(new LensConnectionParams(conf));
     connection.open(password);
     log.debug("Successfully connected to server {}", connection);
+    pathValidator = new PathValidator(connection.getLensConnectionParams().getSessionConf());
+    Preconditions.checkNotNull(pathValidator, "Error in initializing Path Validator.");
   }
 
 
@@ -563,11 +571,11 @@ public class LensClient {
     return mc.updatePartitionsOfDimensionTable(table, storage, partsSpec);
   }
 
-  public QueryPrepareHandle prepare(String sql, String queryName) {
+  public LensAPIResult<QueryPrepareHandle> prepare(String sql, String queryName) throws LensAPIException {
     return statement.prepareQuery(sql, queryName);
   }
 
-  public QueryPlan explainAndPrepare(String sql, String queryName) {
+  public LensAPIResult<QueryPlan> explainAndPrepare(String sql, String queryName) throws LensAPIException {
     return statement.explainAndPrepare(sql, queryName);
   }
 
@@ -600,4 +608,7 @@ public class LensClient {
     return this.connection.listResourcesFromConnection(type);
   }
 
+  public Response getLogs(String logFile) {
+    return this.connection.getLogs(logFile);
+  }
 }

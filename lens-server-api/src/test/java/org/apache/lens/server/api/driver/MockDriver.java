@@ -40,6 +40,7 @@ import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.hadoop.conf.Configuration;
+
 import org.apache.hive.service.cli.ColumnDescriptor;
 
 import com.beust.jcommander.internal.Sets;
@@ -48,7 +49,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * The Class MockDriver.
  */
-public class MockDriver implements LensDriver {
+public class MockDriver extends AbstractLensDriver {
   private static AtomicInteger mockDriverId = new AtomicInteger();
 
   /**
@@ -77,7 +78,7 @@ public class MockDriver implements LensDriver {
 
   @Override
   public String toString() {
-    return "MockDriver:" + driverId;
+    return getFullyQualifiedName()+":"+driverId;
   }
 
   @Override
@@ -91,9 +92,15 @@ public class MockDriver implements LensDriver {
    * @see org.apache.lens.server.api.driver.LensDriver#configure(org.apache.hadoop.conf.Configuration)
    */
   @Override
-  public void configure(Configuration conf) throws LensException {
+  public void configure(Configuration conf, String driverType, String driverName) throws LensException {
     this.conf = conf;
     ioTestVal = conf.getInt("mock.driver.test.val", -1);
+    this.conf.addResource(getDriverResourcePath("failing-query-driver-site.xml"));
+  }
+
+  @Override
+  public String getFullyQualifiedName() {
+    return "mock/fail1";
   }
 
   /**
@@ -248,9 +255,15 @@ public class MockDriver implements LensDriver {
     return new PersistentResultSet() {
 
       @Override
-      public int size() throws LensException {
+      public Integer size() throws LensException {
         // TODO Auto-generated method stub
-        return 0;
+        return null;
+      }
+
+      @Override
+      public Long getFileSize() throws LensException {
+        // TODO Auto-generated method stub
+        return null;
       }
 
       @Override
@@ -290,13 +303,13 @@ public class MockDriver implements LensDriver {
    * @see org.apache.lens.server.api.driver.LensDriver#fetchResultSet(org.apache.lens.server.api.query.QueryContext)
    */
   @Override
-  public LensResultSet fetchResultSet(QueryContext context) throws LensException {
+  public LensResultSet fetchResultSet(final QueryContext context) throws LensException {
     return new InMemoryResultSet() {
 
       @Override
-      public int size() throws LensException {
+      public Integer size() throws LensException {
         // TODO Auto-generated method stub
-        return 0;
+        return null;
       }
 
       @Override
@@ -332,6 +345,11 @@ public class MockDriver implements LensDriver {
       public boolean hasNext() throws LensException {
         // TODO Auto-generated method stub
         return false;
+      }
+
+      @Override
+      public boolean canBePurged() {
+        return true;
       }
     };
   }

@@ -80,7 +80,7 @@ public class TestSessionResource extends LensJerseyTest {
    */
   @BeforeTest
   public void setUp() throws Exception {
-    metricsSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
+    metricsSvc = LensServices.get().getService(MetricsService.NAME);
     super.setUp();
   }
 
@@ -169,7 +169,14 @@ public class TestSessionResource extends LensJerseyTest {
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
     Assert.assertTrue(sessionParams.getElements().contains("my.conf=myvalue"));
-
+    // get server params on session
+    try {
+      paramtarget.queryParam("sessionid", handle).queryParam("key", "lens.server.persist.location").request()
+        .get(StringList.class);
+      Assert.fail("Expected 404");
+    } catch (Exception ne) {
+      Assert.assertTrue(ne instanceof NotFoundException);
+    }
     // get all params verbose
     sessionParams = paramtarget.queryParam("sessionid", handle).queryParam("verbose", true).request()
       .get(StringList.class);
@@ -301,7 +308,7 @@ public class TestSessionResource extends LensJerseyTest {
       Assert.assertNotNull(handle);
 
       // verify aux jars are loaded
-      HiveSessionService service = (HiveSessionService) LensServices.get().getService(SessionService.NAME);
+      HiveSessionService service = LensServices.get().getService(SessionService.NAME);
       ClassLoader loader = service.getSession(handle).getSessionState().getConf().getClassLoader();
       boolean found = false;
       for (URL path : ((URLClassLoader) loader).getURLs()) {

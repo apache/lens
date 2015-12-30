@@ -22,50 +22,30 @@ import java.util.*;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 public class SchemaGraph {
   /*
    * An edge in the schema graph
    */
+  @Data
+  @AllArgsConstructor
+  @RequiredArgsConstructor
   public static class TableRelationship {
-    @Getter
     final String fromColumn;
-    @Getter
     final AbstractCubeTable fromTable;
-    @Getter
     final String toColumn;
-    @Getter
     final AbstractCubeTable toTable;
-
-    public TableRelationship(String fromCol, AbstractCubeTable fromTab, String toCol, AbstractCubeTable toTab) {
-      fromColumn = fromCol;
-      fromTable = fromTab;
-      toColumn = toCol;
-      toTable = toTab;
-    }
+    boolean mapsToMany = false;
 
     @Override
     public String toString() {
-      return fromTable.getName() + "." + fromColumn + "->" + toTable.getName() + "." + toColumn;
+      return fromTable.getName() + "." + fromColumn + "->" + toTable.getName() + "." + toColumn
+        + (mapsToMany ? "[n]" : "");
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof TableRelationship)) {
-        return false;
-      }
-
-      TableRelationship other = (TableRelationship) obj;
-
-      return fromColumn.equals(other.fromColumn) && toColumn.equals(other.toColumn)
-        && fromTable.equals(other.fromTable) && toTable.equals(other.toTable);
-    }
-
-    @Override
-    public int hashCode() {
-      return toString().hashCode();
-    }
   }
 
   /**
@@ -331,7 +311,7 @@ public class SchemaGraph {
           if (metastore.isDimension(destTableName)) {
             // Cube -> Dimension or Dimension -> Dimension reference
             Dimension relatedDim = metastore.getDimension(destTableName);
-            addLinks(refDim.getName(), cubeTable, destColumnName, relatedDim, outGraph, inGraph);
+            addLinks(refDim.getName(), cubeTable, destColumnName, relatedDim, ref.isMapsToMany(), outGraph, inGraph);
           } else {
             throw new HiveException("Dim -> Cube references are not supported: " + dim.getName() + "."
               + refDim.getName() + "->" + destTableName + "." + destColumnName);
@@ -342,9 +322,10 @@ public class SchemaGraph {
   }
 
   private void addLinks(String srcCol, AbstractCubeTable srcTbl, String destCol, AbstractCubeTable destTbl,
-    Map<AbstractCubeTable, Set<TableRelationship>> outGraph, Map<AbstractCubeTable, Set<TableRelationship>> inGraph) {
+    boolean mapsToMany, Map<AbstractCubeTable, Set<TableRelationship>> outGraph,
+    Map<AbstractCubeTable, Set<TableRelationship>> inGraph) {
 
-    TableRelationship rel = new TableRelationship(srcCol, srcTbl, destCol, destTbl);
+    TableRelationship rel = new TableRelationship(srcCol, srcTbl, destCol, destTbl, mapsToMany);
 
     Set<TableRelationship> inEdges = inGraph.get(destTbl);
     if (inEdges == null) {

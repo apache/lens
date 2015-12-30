@@ -21,7 +21,8 @@
 -->
 <x_partition_list xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
-  <partition fact_or_dimension_table_name="fact1" location="/tmp/fact1" update_period="HOURLY">
+  <partition fact_or_dimension_table_name="fact1" location="${project.build.directory}/metastore/fact1"
+    update_period="HOURLY">
     <time_partition_spec>
       <part_spec_element key="dt" value="2014-03-27T12:00:00"/>
     </time_partition_spec>

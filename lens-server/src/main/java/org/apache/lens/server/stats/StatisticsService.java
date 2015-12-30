@@ -21,6 +21,7 @@ package org.apache.lens.server.stats;
 import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.stats.store.StatisticsStore;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -84,8 +85,7 @@ public class StatisticsService extends AbstractService {
   @Override
   public synchronized void start() {
     if (store != null) {
-      store.start((org.apache.lens.server.api.events.LensEventService) LensServices.get().getService(
-        EventServiceImpl.NAME));
+      store.start(LensServices.get().<EventServiceImpl>getService(LensEventService.NAME));
     } else {
       LOG.warn("Unable to start the LogStore.");
     }
@@ -101,8 +101,7 @@ public class StatisticsService extends AbstractService {
   @Override
   public synchronized void stop() {
     if (store != null) {
-      store.stop((org.apache.lens.server.api.events.LensEventService) LensServices.get().getService(
-        EventServiceImpl.NAME));
+      store.stop(LensServices.get().<EventServiceImpl>getService(LensEventService.NAME));
     } else {
       LOG.warn("Not starting the LogStore as it was not started.");
     }

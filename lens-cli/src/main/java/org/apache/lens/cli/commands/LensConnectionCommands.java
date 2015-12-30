@@ -18,7 +18,7 @@
  */
 package org.apache.lens.cli.commands;
 
-import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.ProcessingException;
@@ -28,14 +28,19 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
 import org.apache.lens.client.LensClient;
 
-import org.apache.log4j.*;
-
+import org.slf4j.LoggerFactory;
 import org.springframework.shell.core.ExitShellRequest;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
+import ch.qos.logback.classic.*;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.*;
+
 import com.google.common.base.Joiner;
+
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -44,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-@UserDocumentation(title = "Session management",
+@UserDocumentation(title = "Commands for Session Management",
   description = "Opening the lens CLI shell is equivalent to open a session with lens server."
     + "This section provides all the commands available for in shell which are applicable for the full session.")
 public class LensConnectionCommands extends BaseLensCommand {
@@ -95,7 +100,7 @@ public class LensConnectionCommands extends BaseLensCommand {
    */
   @CliCommand(value = "add jar", help = "Adds jar resource to the session")
   public String addJar(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-server-side>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-server-side>") @NonNull String path) {
     APIResult result = getClient().addJarResource(path);
     return result.getMessage();
   }
@@ -108,7 +113,7 @@ public class LensConnectionCommands extends BaseLensCommand {
    */
   @CliCommand(value = "remove jar", help = "Removes a jar resource from session")
   public String removeJar(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-server-side>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-server-side>") @NonNull String path) {
     APIResult result = getClient().removeJarResource(path);
     return result.getMessage();
   }
@@ -121,7 +126,7 @@ public class LensConnectionCommands extends BaseLensCommand {
    */
   @CliCommand(value = "add file", help = "Adds a file resource to session")
   public String addFile(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-file-on-server-side>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-file-on-server-side>") @NonNull String path) {
     APIResult result = getClient().addFileResource(path);
     return result.getMessage();
   }
@@ -130,11 +135,11 @@ public class LensConnectionCommands extends BaseLensCommand {
    * Removes the file.
    *
    * @param path the path
-   * @return the string
+   * @return the stringadd
    */
   @CliCommand(value = "remove file", help = "removes a file resource from session")
   public String removeFile(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-file-on-server-side>") String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-file-on-server-side>") @NonNull String path) {
     APIResult result = getClient().removeFileResource(path);
     return result.getMessage();
   }
@@ -177,8 +182,7 @@ public class LensConnectionCommands extends BaseLensCommand {
     help = "prints all class level logs and verbose logs on cli for debugging purpose."
       + " 'debug false' to turn off all class level logging and verbose level logging ")
   public void debug(@CliOption(key = {"", "enable"},
-    mandatory = false, unspecifiedDefaultValue = "true",
-    help = "To print all logs on cli for debugging purpose") boolean enable) {
+      mandatory = false, unspecifiedDefaultValue = "true") boolean enable) {
     Logger logger = LoggerUtil.getRootLogger();
     Logger cliLogger = LoggerUtil.getCliLogger();
     if (enable) {
@@ -197,8 +201,7 @@ public class LensConnectionCommands extends BaseLensCommand {
   @CliCommand(value = {"verbose"},
     help = "Show cliLogger logs on cli. 'verbose false'  turns off the cliLogger logs on console")
   public void verbose(@CliOption(key = {"", "enable"},
-    mandatory = false, unspecifiedDefaultValue = "true",
-    help = "Print the clilogger logs on cli") boolean enable) {
+      mandatory = false, unspecifiedDefaultValue = "true") boolean enable) {
     Logger cliLogger = LoggerUtil.getCliLogger();
     if (enable) {
       LoggerUtil.addConsoleAppenderIfNotPresent(cliLogger);
@@ -213,37 +216,36 @@ public class LensConnectionCommands extends BaseLensCommand {
 
     public static Logger getRootLogger() {
       if (logger == null) {
-        logger = Logger.getRootLogger();
+        logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
       }
       return logger;
     }
 
     public static Logger getCliLogger() {
       if (cliLogger == null) {
-        cliLogger = Logger.getLogger(LensClient.CLILOGGER);
+        cliLogger = (Logger) LoggerFactory.getLogger(LensClient.CLILOGGER);
       }
       return cliLogger;
     }
 
-    public static ConsoleAppender getConsoleAppender() {
-      return getConsoleAppender(getPatternLayout());
-    }
-
-    public static ConsoleAppender getConsoleAppender(Layout layout) {
-      ConsoleAppender consoleAppender = new ConsoleAppender();
+    public static ConsoleAppender<ILoggingEvent> getConsoleAppender(PatternLayout layout, Context context) {
+      ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<ILoggingEvent>();
+      consoleAppender.setContext(context);
       consoleAppender.setLayout(layout);
-      consoleAppender.activateOptions();
+      consoleAppender.start();
       return consoleAppender;
     }
 
-    public static PatternLayout getPatternLayout() {
+    public static PatternLayout getPatternLayout(LoggerContext context) {
       String conversionPattern = "%d [%t] %F %-7p - %m%n";
-      return getPatternLayout(conversionPattern);
+      return getPatternLayout(conversionPattern, context);
     }
 
-    public static PatternLayout getPatternLayout(String conversionPattern) {
+    public static PatternLayout getPatternLayout(String conversionPattern, Context context) {
       PatternLayout layout = new PatternLayout();
-      layout.setConversionPattern(conversionPattern);
+      layout.setPattern(conversionPattern);
+      layout.setContext(context);
+      layout.start();
       return layout;
     }
 
@@ -255,35 +257,34 @@ public class LensConnectionCommands extends BaseLensCommand {
      */
     public static void addConsoleAppenderIfNotPresent(Logger logger) {
       boolean isConsoleAppenderAdded = false;
-      Layout layout = null;
-      Enumeration appenderSeries = logger.getAllAppenders();
-      while (appenderSeries.hasMoreElements()) {
-        Appender appender = (Appender) appenderSeries.nextElement();
+      PatternLayout layout = null;
+      Iterator<Appender<ILoggingEvent>> appenderSeries = logger.iteratorForAppenders();
+      while (appenderSeries.hasNext()) {
+        Appender<ILoggingEvent> appender = (Appender<ILoggingEvent>) appenderSeries.next();
         if (appender instanceof ConsoleAppender) {
           isConsoleAppenderAdded = true;
           break;
-        } else {
-          layout = appender.getLayout();
         }
       }
       if (!isConsoleAppenderAdded) {
         if (layout == null) {
-          layout = LoggerUtil.getPatternLayout();
+          layout = LoggerUtil.getPatternLayout(logger.getLoggerContext());
         }
         if (logger.getLevel() == null) {
           logger.setLevel(Level.DEBUG);
         }
-        ConsoleAppender consoleAppender = LoggerUtil.getConsoleAppender(layout);
+        ConsoleAppender<ILoggingEvent> consoleAppender = LoggerUtil.getConsoleAppender(layout,
+          logger.getLoggerContext());
         logger.addAppender(consoleAppender);
       }
     }
 
     public static void removeConsoleAppender(Logger logger) {
-      Enumeration appenderSeries = logger.getAllAppenders();
-      while (appenderSeries.hasMoreElements()) {
-        Appender appender = (Appender) appenderSeries.nextElement();
+      Iterator<Appender<ILoggingEvent>> appenderSeries = logger.iteratorForAppenders();
+      while (appenderSeries.hasNext()) {
+        Appender<ILoggingEvent> appender = (Appender<ILoggingEvent>) appenderSeries.next();
         if (appender instanceof ConsoleAppender) {
-          logger.removeAppender(appender);
+          logger.detachAppender(appender);
         }
       }
     }

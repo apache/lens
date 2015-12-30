@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MetastoreUIResource {
 
   public CubeMetastoreService getSvc() {
-    return (CubeMetastoreService) LensServices.get().getService("metastore");
+    return LensServices.get().getService(CubeMetastoreService.NAME);
   }
 
   private void checkSessionHandle(LensSessionHandle sessionHandle) {

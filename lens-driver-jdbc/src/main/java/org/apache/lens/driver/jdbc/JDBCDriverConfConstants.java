@@ -18,6 +18,8 @@
  */
 package org.apache.lens.driver.jdbc;
 
+import lombok.Getter;
+
 /**
  * The Interface JDBCDriverConfConstants.
  */
@@ -27,6 +29,9 @@ public final class JDBCDriverConfConstants {
 
   /** The Constant JDBC_DRIVER_PFX. */
   public static final String JDBC_DRIVER_PFX = "lens.driver.jdbc.";
+
+  /** The Constant JDBC_CONNECTION_PROPERTIES. */
+  public static final String JDBC_CONNECTION_PROPERTIES = JDBC_DRIVER_PFX + "connection.properties";
 
   /** The Constant JDBC_CONNECTION_PROVIDER. */
   public static final String JDBC_CONNECTION_PROVIDER = JDBC_DRIVER_PFX + "connection.provider";
@@ -47,29 +52,32 @@ public final class JDBCDriverConfConstants {
   /** The Constant JDBC_PASSWORD. */
   public static final String JDBC_PASSWORD = JDBC_DRIVER_PFX + "db.password";
 
-  /** The Constant JDBC_POOL_MAX_SIZE. */
-  public static final String JDBC_POOL_MAX_SIZE = JDBC_DRIVER_PFX + "pool.max.size";
+  public enum ConnectionPoolProperties {
+    /** The Constant JDBC_POOL_MAX_SIZE_DEFAULT. */
+    JDBC_POOL_MAX_SIZE("maxPoolSize", JDBC_DRIVER_PFX + "pool.max.size", 15),
+    /** The Constant JDBC_POOL_IDLE_TIME. */
+    JDBC_POOL_IDLE_TIME("maxIdleTime", JDBC_DRIVER_PFX + "pool.idle.time", 600),
+    /** JDBC_MAX_IDLE_TIME_EXCESS_CONNECTIONS  */
+    JDBC_MAX_IDLE_TIME_EXCESS_CONNECTIONS("maxIdleTimeExcessConnections", JDBC_DRIVER_PFX
+      + "max.idle.time.excess.connections", 600),
+    /** The Constant JDBC_MAX_STATEMENTS_PER_CONNECTION. */
+    JDBC_MAX_STATEMENTS_PER_CONNECTION("maxStatementsPerConnection", JDBC_DRIVER_PFX + "pool.max.statements", 20),
+    /** The Constant JDBC_GET_CONNECTION_TIMEOUT. */
+    JDBC_GET_CONNECTION_TIMEOUT("checkoutTimeout", JDBC_DRIVER_PFX + "get.connection.timeout", 10000);
 
-  /** The Constant JDBC_POOL_MAX_SIZE_DEFAULT. */
-  public static final int JDBC_POOL_MAX_SIZE_DEFAULT = 15;
+    @Getter
+    private final String poolProperty;
+    @Getter
+    private final String configKey;
+    @Getter
+    private final int defaultValue;
 
-  /** The Constant JDBC_POOL_IDLE_TIME. */
-  public static final String JDBC_POOL_IDLE_TIME = JDBC_DRIVER_PFX + "pool.idle.time";
-
-  /** The Constant JDBC_POOL_IDLE_TIME_DEFAULT. */
-  public static final int JDBC_POOL_IDLE_TIME_DEFAULT = 600;
-
-  /** The Constant JDBC_MAX_STATEMENTS_PER_CONNECTION. */
-  public static final String JDBC_MAX_STATEMENTS_PER_CONNECTION = JDBC_DRIVER_PFX + "pool.max.statements";
-
-  /** The Constant JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT. */
-  public static final int JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT = 20;
-
-  /** The Constant JDBC_GET_CONNECTION_TIMEOUT. */
-  public static final String JDBC_GET_CONNECTION_TIMEOUT = JDBC_DRIVER_PFX + "get.connection.timeout";
-
-  /** The Constant JDBC_GET_CONNECTION_TIMEOUT_DEFAULT. */
-  public static final int JDBC_GET_CONNECTION_TIMEOUT_DEFAULT = 10000;
+    ConnectionPoolProperties(String poolProperty, String configKey, int defaultValue) {
+      this.poolProperty = poolProperty;
+      this.configKey = configKey;
+      this.defaultValue = defaultValue;
+    }
+  }
 
   /** The Constant JDBC_EXPLAIN_KEYWORD_PARAM. */
   public static final String JDBC_EXPLAIN_KEYWORD_PARAM = JDBC_DRIVER_PFX + "explain.keyword";
@@ -100,5 +108,6 @@ public final class JDBCDriverConfConstants {
     + "query.launching.constraint.factories";
 
   public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY = JDBC_DRIVER_PFX
-      + "waiting.queries.selection.policy.factories";
+    + "waiting.queries.selection.policy.factories";
+  public static final String REGEX_REPLACEMENT_VALUES = JDBC_DRIVER_PFX + "regex.replacement.values";
 }

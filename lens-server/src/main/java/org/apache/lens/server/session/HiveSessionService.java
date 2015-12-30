@@ -37,6 +37,7 @@ import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
+import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.session.SessionClosed;
 import org.apache.lens.server.api.session.SessionExpired;
 import org.apache.lens.server.api.session.SessionOpened;
@@ -451,7 +452,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public HealthStatus getHealthStatus() {
@@ -496,7 +497,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   private void closeInternal(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
     // Inform query service
-    BaseLensService svc = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
+    BaseLensService svc = LensServices.get().getService(QueryExecutionService.NAME);
     if (svc instanceof QueryExecutionServiceImpl) {
       ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
     }

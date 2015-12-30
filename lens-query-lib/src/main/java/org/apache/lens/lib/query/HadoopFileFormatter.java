@@ -28,6 +28,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Reporter;
 
+import com.google.common.base.Strings;
+
 /**
  * A hadoop file formatter
  * <p></p>
@@ -55,11 +57,14 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
     if (StringUtils.isBlank(pathStr)) {
       throw new IllegalArgumentException("No output path specified");
     }
-    outputPath = new Path(pathStr, ctx.getQueryHandle().toString());
-    Path tmpWorkPath = new Path(outputPath + ".tmp");
+    String outputPathStr = Strings.isNullOrEmpty(ctx.getQueryName()) ? ""
+      : LensFileOutputFormat.getValidOutputFileName(ctx.getQueryName()) + "-";
+    outputPath = new Path(pathStr, outputPathStr + ctx.getQueryHandle().toString());
+    Path tmpWorkPath = new Path(pathStr, ctx.getQueryHandle().toString() + ".tmp");
     try {
       rowWriter = LensFileOutputFormat.createRecordWriter(ctx.getConf(), tmpWorkPath, Reporter.NULL,
         ctx.getCompressOutput(), ctx.getOuptutFileExtn(), ctx.getResultEncoding());
+      numRows=0;
     } catch (IOException e) {
       throw new IllegalArgumentException("Could not create tmp path");
     }
@@ -119,6 +124,7 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
       finalPath = finalPath.makeQualified(fs);
       fs.rename(rowWriter.getTmpPath(), finalPath);
       ctx.setResultSetPath(finalPath.toString());
+      fileSize = fs.getFileStatus(finalPath).getLen();
     }
   }
 
@@ -129,7 +135,9 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
    */
   @Override
   public void close() throws IOException {
-    rowWriter.close(Reporter.NULL);
+    if (null != rowWriter) {
+      rowWriter.close(Reporter.NULL);
+    }
   }
 
   @Override

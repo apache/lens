@@ -24,7 +24,10 @@
   <attributes>
     <dim_attribute name="id" type="INT"/>
     <dim_attribute name="name" type="STRING"/>
-    <dim_attribute name="gender" type="STRING" />
+    <dim_attribute name="gender" type="STRING">
+      <values>M</values>
+      <values>F</values>
+    </dim_attribute>
     <dim_attribute name="age" type="INT" />
     <dim_attribute name="city_id" type="INT" />
     <dim_attribute name="customer_city_name" type="string" description="City name to which the customer belongs"

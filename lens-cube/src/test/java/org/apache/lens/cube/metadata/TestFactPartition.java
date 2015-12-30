@@ -39,8 +39,8 @@ public class TestFactPartition {
 
   @Test
   public void testGetFormattedFilter() throws Exception {
-    String dailyFormat = DAILY.format().format(DATE);
-    String hourlyFormat = HOURLY.format().format(DATE);
+    String dailyFormat = DAILY.format(DATE);
+    String hourlyFormat = HOURLY.format(DATE);
     assertEquals(fp1.getFormattedFilter("table"), "table.p = '" + dailyFormat + "'");
     assertEquals(fp2.getFormattedFilter("table2"),
       "table2.p = '" + dailyFormat + "' AND table2.q = '" + hourlyFormat + "'");

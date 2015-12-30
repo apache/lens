@@ -29,6 +29,7 @@ public class QueryClosed extends QueryEnded {
   /**
    * Instantiates a new query closed.
    *
+   * @param ctx       the query context
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
@@ -36,9 +37,14 @@ public class QueryClosed extends QueryEnded {
    * @param user      the user
    * @param cause     the cause
    */
-  public QueryClosed(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
+  public QueryClosed(QueryContext ctx, long eventTime, QueryStatus.Status prev, QueryStatus.Status current,
+    QueryHandle handle,
     String user, String cause) {
-    super(eventTime, prev, current, handle, user, cause);
+    super(ctx, eventTime, prev, current, handle, user, cause);
     checkCurrentState(QueryStatus.Status.CLOSED);
+  }
+
+  public QueryClosed(QueryContext ctx, QueryStatus.Status prevState, QueryStatus.Status currState, String cause) {
+    this(ctx, ctx.getClosedTime(), prevState, currState, ctx.getQueryHandle(), ctx.getSubmittedUser(), cause);
   }
 }

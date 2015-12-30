@@ -29,7 +29,6 @@ import org.apache.lens.cube.metadata.timeline.RangesPartitionTimeline;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import com.google.common.collect.Maps;
 
@@ -47,7 +46,7 @@ class MaxCoveringFactResolver implements ContextRewriter {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) {
     if (failOnPartialData) {
       // if fail on partial data is true, by the time this resolver starts,
       // all candidate fact sets are covering full time range. We can avoid

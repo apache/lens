@@ -36,10 +36,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.Partition;
-import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.metadata.*;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -61,7 +58,7 @@ public class TestStatisticsLogPartitionHandler {
   @Test
   public void testPartitionHandler() throws Exception {
     HiveConf conf = configureHiveTables();
-    String fileName = "/tmp/lensstats.log";
+    String fileName = "target/lensstats.log";
     File f = createDummyFile(fileName);
     StatisticsLogPartitionHandler handler = new StatisticsLogPartitionHandler();
     handler.initialize(conf);
@@ -75,8 +72,12 @@ public class TestStatisticsLogPartitionHandler {
     Partition p = partitionSet.iterator().next();
     Assert.assertEquals(p.getTable().getTableName(), EVENT_NAME);
     Assert.assertEquals(p.getTable().getDbName(), LensConfConstants.DEFAULT_STATISTICS_DATABASE);
-    Assert.assertEquals(p.getDataLocation(), new Path(LensConfConstants.DEFAULT_STATISTICS_WAREHOUSE, EVENT_NAME
-      + "/random/" + EVENT_NAME + ".log"));
+    Assert.assertEquals(p.getDataLocation(),
+      new Path(
+        conf.get(LensConfConstants.STATISTICS_WAREHOUSE_KEY, LensConfConstants.DEFAULT_STATISTICS_WAREHOUSE),
+        EVENT_NAME + "/random/" + EVENT_NAME + ".log"
+      )
+    );
     Assert.assertFalse(f.exists());
     h.dropTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE, EVENT_NAME, true, true);
   }

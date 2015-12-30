@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.metadata.DateFactory.*;
+
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,13 +45,13 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateDisjoint(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.MONTHLY.format().format(CubeTestSetup.TWO_MONTHS_BACK));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.TWODAYS_BACK));
-      parts.add(UpdatePeriod.HOURLY.format().format(CubeTestSetup.NOW));
+      parts.add(UpdatePeriod.MONTHLY.format(TWO_MONTHS_BACK));
+      parts.add(UpdatePeriod.DAILY.format(TWODAYS_BACK));
+      parts.add(UpdatePeriod.HOURLY.format(NOW));
     } else {
-      parts.add(format.format(CubeTestSetup.TWO_MONTHS_BACK));
-      parts.add(format.format(CubeTestSetup.TWODAYS_BACK));
-      parts.add(format.format(CubeTestSetup.NOW));
+      parts.add(format.format(TWO_MONTHS_BACK));
+      parts.add(format.format(TWODAYS_BACK));
+      parts.add(format.format(NOW));
     }
 
     System.out.println("Expected :" + StorageUtil.getWherePartClause("dt", "test", parts));
@@ -60,30 +62,16 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateConsecutive(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.ONE_DAY_BACK));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.TWODAYS_BACK));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.NOW));
+      parts.add(getDateStringWithOffset(UpdatePeriod.DAILY, -1));
+      parts.add(getDateStringWithOffset(UpdatePeriod.DAILY, -2));
+      parts.add(getDateStringWithOffset(UpdatePeriod.DAILY, 0));
     } else {
-      parts.add(format.format(CubeTestSetup.ONE_DAY_BACK));
-      parts.add(format.format(CubeTestSetup.TWODAYS_BACK));
-      parts.add(format.format(CubeTestSetup.NOW));
+      parts.add(format.format(getDateWithOffset(UpdatePeriod.DAILY, -1)));
+      parts.add(format.format(getDateWithOffset(UpdatePeriod.DAILY, -2)));
+      parts.add(format.format(getDateWithOffset(UpdatePeriod.DAILY, 0)));
     }
 
     System.out.println("Expected :" + StorageUtil.getWherePartClause("dt", "test", parts));
     Assert.assertEquals(whereClause, StorageUtil.getWherePartClause("dt", "test", parts));
   }
-
-  @Override
-  public void validateSingle(String whereClause, DateFormat format) {
-    List<String> parts = new ArrayList<String>();
-    if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.ONE_DAY_BACK));
-    } else {
-      parts.add(format.format(CubeTestSetup.ONE_DAY_BACK));
-    }
-
-    System.out.println("Expected :" + StorageUtil.getWherePartClause("dt", "test", parts));
-    Assert.assertEquals(whereClause, StorageUtil.getWherePartClause("dt", "test", parts));
-  }
-
 }

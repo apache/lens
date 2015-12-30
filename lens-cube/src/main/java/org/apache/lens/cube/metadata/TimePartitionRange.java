@@ -18,9 +18,9 @@
  */
 package org.apache.lens.cube.metadata;
 
+import java.util.Date;
 import java.util.Iterator;
 
-import org.apache.lens.cube.parse.DateUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import lombok.Data;
@@ -32,6 +32,10 @@ import lombok.Data;
 public class TimePartitionRange implements Iterable<TimePartition>, Named {
   private TimePartition begin;
   private TimePartition end;
+
+  public static TimePartitionRange between(Date from, Date to, UpdatePeriod period) throws LensException {
+    return TimePartition.of(period, from).rangeUpto(TimePartition.of(period, to));
+  }
 
   public TimePartitionRange(TimePartition begin, TimePartition end) throws LensException {
     if (end.before(begin)) {

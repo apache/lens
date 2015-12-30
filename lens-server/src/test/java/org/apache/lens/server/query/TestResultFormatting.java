@@ -18,7 +18,9 @@
  */
 package org.apache.lens.server.query;
 
-import static org.testng.Assert.assertTrue;
+import static org.apache.lens.server.LensServerTestUtil.*;
+
+import static org.testng.Assert.*;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -38,11 +40,11 @@ import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.query.InMemoryOutputFormatter;
 import org.apache.lens.server.api.query.PersistedOutputFormatter;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.common.TestResourceFile;
 
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
@@ -52,7 +54,6 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -80,11 +81,11 @@ public class TestResultFormatting extends LensJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
+    queryService = LensServices.get().getService(QueryExecutionService.NAME);
     lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
-    LensTestUtil.createTable(testTable, target(), lensSessionId,
+    createTable(testTable, target(), lensSessionId,
       "(ID INT, IDSTR STRING, IDARR ARRAY<INT>, IDSTRARR ARRAY<STRING>)");
-    LensTestUtil.loadDataFromClasspath(testTable, TestResourceFile.TEST_DATA2_FILE.getValue(), target(), lensSessionId);
+    loadDataFromClasspath(testTable, TestResourceFile.TEST_DATA2_FILE.getValue(), target(), lensSessionId);
   }
 
   /*
@@ -94,7 +95,7 @@ public class TestResultFormatting extends LensJerseyTest {
    */
   @AfterTest
   public void tearDown() throws Exception {
-    LensTestUtil.dropTable(testTable, target(), lensSessionId);
+    dropTable(testTable, target(), lensSessionId);
     queryService.closeSession(lensSessionId);
     super.tearDown();
   }
@@ -137,15 +138,15 @@ public class TestResultFormatting extends LensJerseyTest {
     conf.addProperty(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, null);
 
-    conf.addProperty(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
+    queryService.conf.set(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
-
+    queryService.conf.unset(LensConfConstants.RESULT_FS_READ_URL);
   }
 
   // test with execute async post with result formatter, get query, get results
 
   /**
-   * Test result formatter hdf spersistent result.
+   * Test result formatter hdfs persistent result.
    *
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
@@ -156,8 +157,9 @@ public class TestResultFormatting extends LensJerseyTest {
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, null);
 
-    conf.addProperty(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
+    queryService.conf.set(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
+    queryService.conf.unset(LensConfConstants.RESULT_FS_READ_URL);
   }
 
   /**
@@ -216,9 +218,9 @@ public class TestResultFormatting extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
     QueryHandle handle = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-          new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
-    Assert.assertNotNull(handle);
+    assertNotNull(handle);
 
     // Get query
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
@@ -231,7 +233,7 @@ public class TestResultFormatting extends LensJerseyTest {
       Thread.sleep(1000);
     }
 
-    Assert.assertEquals(ctx.getStatus().getStatus(), status);
+    assertEquals(ctx.getStatus().getStatus(), status);
 
     if (status.equals(QueryStatus.Status.SUCCESSFUL)) {
       QueryContext qctx = queryService.getQueryContext(handle);
@@ -245,12 +247,12 @@ public class TestResultFormatting extends LensJerseyTest {
       } else if (!isDir) {
         // isDir is true if the formatter is skipped due to result being the max size allowed
         if (qctx.isDriverPersistent()) {
-          Assert.assertTrue(qctx.getQueryOutputFormatter() instanceof PersistedOutputFormatter);
+          assertTrue(qctx.getQueryOutputFormatter() instanceof PersistedOutputFormatter);
         } else {
-          Assert.assertTrue(qctx.getQueryOutputFormatter() instanceof InMemoryOutputFormatter);
+          assertTrue(qctx.getQueryOutputFormatter() instanceof InMemoryOutputFormatter);
         }
       } else {
-        Assert.assertNull(qctx.getQueryOutputFormatter());
+        assertNull(qctx.getQueryOutputFormatter());
       }
       // fetch results
       TestQueryService.validatePersistedResult(handle, target(), lensSessionId, new String[][]{
@@ -265,8 +267,12 @@ public class TestResultFormatting extends LensJerseyTest {
       assertTrue(ctx.getDriverStartTime() > 0);
       assertTrue(ctx.getDriverFinishTime() > 0);
       assertTrue(ctx.getFinishTime() > 0);
-      Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
+      assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
     }
   }
 
+  @AfterTest
+  public void waitForPurge() throws InterruptedException {
+    waitForPurge(0, queryService.finishedQueries);
+  }
 }

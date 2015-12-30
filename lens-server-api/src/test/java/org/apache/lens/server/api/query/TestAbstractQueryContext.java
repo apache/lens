@@ -18,22 +18,25 @@
  */
 package org.apache.lens.server.api.query;
 
+import static org.apache.lens.api.Priority.HIGH;
+import static org.apache.lens.server.api.LensConfConstants.*;
+import static org.apache.lens.server.api.LensServerAPITestUtil.getConfiguration;
+
+import static org.testng.Assert.*;
+
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.LensMetricsRegistry;
+import org.apache.lens.server.api.query.priority.MockQueryPriorityDecider;
 
 import org.apache.hadoop.conf.Configuration;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -45,59 +48,33 @@ public class TestAbstractQueryContext {
 
   @Test
   public void testMetricsConfigEnabled() throws LensException {
-    Configuration conf = new Configuration();
-    List<LensDriver> testDrivers = new ArrayList<LensDriver>();
-    MockDriver mdriver = new MockDriver();
-    mdriver.configure(conf);
-    testDrivers.add(mdriver);
-    conf.setBoolean(LensConfConstants.ENABLE_QUERY_METRICS, true);
-    MockQueryContext ctx = new MockQueryContext("mock query", new LensConf(), conf, testDrivers);
-    String uniqueMetridId = ctx.getConf().get(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
-    Assert.assertNotNull(uniqueMetridId);
-    UUID.fromString(uniqueMetridId);
-    StringBuilder expectedStackName = new StringBuilder();
-    expectedStackName.append(uniqueMetridId).append("-").append(MockDriver.class.getSimpleName());
-    Assert.assertEquals(ctx.getDriverConf(mdriver).get(LensConfConstants.QUERY_METRIC_DRIVER_STACK_NAME),
-      expectedStackName.toString());
+    MockQueryContext ctx = new MockQueryContext(getConfiguration(ENABLE_QUERY_METRICS, true));
+    String uniqueMetridId = ctx.getConf().get(QUERY_METRIC_UNIQUE_ID_CONF_KEY);
+    assertNotNull(uniqueMetridId);
+    assertEquals(ctx.getSelectedDriverConf().get(QUERY_METRIC_DRIVER_STACK_NAME),
+      uniqueMetridId + "-" + new MockDriver().getFullyQualifiedName());
   }
 
   @Test
   public void testMetricsConfigDisabled() throws LensException {
-    Configuration conf = new Configuration();
-    List<LensDriver> testDrivers = new ArrayList<LensDriver>();
-    MockDriver mdriver = new MockDriver();
-    mdriver.configure(conf);
-    testDrivers.add(mdriver);
-    conf.setBoolean(LensConfConstants.ENABLE_QUERY_METRICS, false);
-    MockQueryContext ctx = new MockQueryContext("mock query", new LensConf(), conf, testDrivers);
-    Assert.assertNull(ctx.getConf().get(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY));
-    Assert.assertNull(ctx.getDriverConf(mdriver).get(LensConfConstants.QUERY_METRIC_DRIVER_STACK_NAME));
+    MockQueryContext ctx = new MockQueryContext(getConfiguration(ENABLE_QUERY_METRICS, false));
+    assertNull(ctx.getConf().get(QUERY_METRIC_UNIQUE_ID_CONF_KEY));
+    assertNull(ctx.getSelectedDriverConf().get(QUERY_METRIC_DRIVER_STACK_NAME));
   }
 
   @Test
   public void testEstimateGauges() throws LensException {
-    Configuration conf = new Configuration();
-    List<LensDriver> testDrivers = new ArrayList<LensDriver>();
-    MockDriver mdriver = new MockDriver();
-    mdriver.configure(conf);
-    testDrivers.add(mdriver);
-    conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestAbstractQueryContext.class.getSimpleName());
-    MockQueryContext ctx = new MockQueryContext("mock query", new LensConf(), conf, testDrivers);
+    MockQueryContext ctx = new MockQueryContext(getConfiguration(QUERY_METRIC_UNIQUE_ID_CONF_KEY,
+      TestAbstractQueryContext.class.getSimpleName()));
     ctx.estimateCostForDrivers();
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
-
-    Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestAbstractQueryContext-MockDriver-driverEstimate")));
+    assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
+      "lens.MethodMetricGauge.TestAbstractQueryContext-"+new MockDriver().getFullyQualifiedName()+"-driverEstimate")));
   }
 
   @Test
   public void testTransientState() throws LensException, IOException, ClassNotFoundException {
-    Configuration conf = new Configuration();
-    List<LensDriver> testDrivers = new ArrayList<LensDriver>();
-    MockDriver mdriver = new MockDriver();
-    mdriver.configure(conf);
-    testDrivers.add(mdriver);
-    MockQueryContext ctx = new MockQueryContext("mock query", new LensConf(), conf, testDrivers);
+    MockQueryContext ctx = new MockQueryContext();
     ByteArrayOutputStream bios = new ByteArrayOutputStream();
     ObjectOutputStream out = new ObjectOutputStream(bios);
     byte[] ctxBytes = null;
@@ -116,7 +93,58 @@ public class TestAbstractQueryContext {
       in.close();
     }
     ctxRead.initTransientState();
-    ctxRead.setConf(conf);
-    Assert.assertNotNull(ctxRead.getHiveConf());
+    ctxRead.setConf(ctx.getConf());
+    assertNotNull(ctxRead.getHiveConf());
+  }
+
+  @Test
+  public void testPrioritySetting() throws LensException {
+    MockQueryContext ctx = new MockQueryContext();
+    Priority p = ctx.decidePriority(ctx.getSelectedDriver(), new MockQueryPriorityDecider());
+    assertEquals(p, HIGH);
+    assertEquals(ctx.getPriority(), HIGH);
+  }
+
+  @Test
+  public void testReadAndWriteExternal() throws Exception {
+    Configuration conf = new Configuration();
+    List<LensDriver> drivers = MockQueryContext.getDrivers(conf);
+    MockQueryContext ctx = new MockQueryContext(drivers);
+    String driverQuery = "driver query";
+    ctx.setSelectedDriverQuery(driverQuery);
+    assertNotNull(ctx.getSelectedDriverQuery());
+    assertEquals(ctx.getSelectedDriverQuery(), driverQuery);
+    assertEquals(ctx.getDriverQuery(ctx.getSelectedDriver()), driverQuery);
+
+    ByteArrayOutputStream bios = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(bios);
+    byte[] ctxBytes = null;
+    try {
+      out.writeObject(ctx);
+      ctxBytes = bios.toByteArray();
+    } finally {
+      out.close();
+    }
+    ByteArrayInputStream bais = new ByteArrayInputStream(ctxBytes);
+    ObjectInputStream in = new ObjectInputStream(bais);
+    MockQueryContext ctxRead = null;
+    try {
+      ctxRead = (MockQueryContext) in.readObject();
+    } finally {
+      in.close();
+    }
+    ctxRead.initTransientState();
+    ctxRead.setConf(ctx.getConf());
+    assertNotNull(ctxRead.getHiveConf());
+    assertNotNull(ctxRead.getSelectedDriverQuery());
+    assertEquals(ctxRead.getSelectedDriverQuery(), driverQuery);
+
+    //Create DriverSelectorQueryContext by passing all the drivers and the user query
+    DriverSelectorQueryContext driverCtx = new DriverSelectorQueryContext(ctxRead.getUserQuery(), ctxRead.getConf(),
+      drivers);
+    ctxRead.setDriverContext(driverCtx);
+    ctxRead.getDriverContext().setSelectedDriver(ctx.getSelectedDriver());
+    ctxRead.setDriverQuery(ctxRead.getSelectedDriver(), ctxRead.getSelectedDriverQuery());
+    assertEquals(ctxRead.getDriverQuery(ctxRead.getSelectedDriver()), driverQuery);
   }
 }

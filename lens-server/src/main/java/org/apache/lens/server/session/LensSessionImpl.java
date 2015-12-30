@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.NotFoundException;
 
@@ -65,7 +66,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   private long sessionTimeout;
 
   /** The conf. */
-  private Configuration conf = createDefaultConf();
+  private Configuration conf = new Configuration(createDefaultConf());
 
   /**
    * Keep track of DB static resources which failed to be added to this session
@@ -102,16 +103,27 @@ public class LensSessionImpl extends HiveSessionImpl {
     persistInfo.setSessionConf(sessionConf);
   }
 
+  private static Configuration sessionDefaultConfig;
   /**
    * Creates the default conf.
    *
    * @return the configuration
    */
-  public static Configuration createDefaultConf() {
-    Configuration conf = new Configuration(false);
-    conf.addResource("lenssession-default.xml");
-    conf.addResource("lens-site.xml");
-    return conf;
+  public static synchronized Configuration createDefaultConf() {
+    if (sessionDefaultConfig == null) {
+      Configuration conf = new Configuration(false);
+      conf.addResource("lenssession-default.xml");
+      conf.addResource("lens-site.xml");
+      sessionDefaultConfig = new Configuration(false);
+      Iterator<Map.Entry<String, String>> confItr = conf.iterator();
+      while (confItr.hasNext()) {
+        Map.Entry<String, String> prop = confItr.next();
+        if (!prop.getKey().startsWith(LensConfConstants.SERVER_PFX)) {
+          sessionDefaultConfig.set(prop.getKey(), prop.getValue());
+        }
+      }
+    }
+    return sessionDefaultConfig;
   }
 
   /** The default hive session conf. */
@@ -424,12 +436,10 @@ public class LensSessionImpl extends HiveSessionImpl {
     final String location;
     // For tests
     /** The restore count. */
-    @Getter
-    transient int restoreCount;
+    transient AtomicInteger restoreCount = new AtomicInteger();
 
     /** Set of databases for which this resource has been added */
     final transient Set<String> databases = new HashSet<String>();
-
 
     /**
      * Instantiates a new resource entry.
@@ -457,7 +467,15 @@ public class LensSessionImpl extends HiveSessionImpl {
      * Restored resource.
      */
     public void restoredResource() {
-      restoreCount++;
+      restoreCount.incrementAndGet();
+    }
+
+    /**
+     * Returns the value of restoreCount for the resource
+     * @return
+     */
+    public int getRestoreCount(){
+      return restoreCount.get();
     }
 
     /*

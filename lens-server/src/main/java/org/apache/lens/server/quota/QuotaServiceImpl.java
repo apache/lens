@@ -44,7 +44,7 @@ public class QuotaServiceImpl extends BaseLensService implements QuotaService {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   @Override
   public HealthStatus getHealthStatus() {

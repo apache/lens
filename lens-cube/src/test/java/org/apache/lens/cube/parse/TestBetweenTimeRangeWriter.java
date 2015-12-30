@@ -19,12 +19,12 @@
 
 package org.apache.lens.cube.parse;
 
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import static org.apache.lens.cube.metadata.DateFactory.NOW;
+import static org.apache.lens.cube.metadata.DateFactory.TWODAYS_BACK;
+import static org.apache.lens.cube.metadata.UpdatePeriod.DAILY;
 
-import org.apache.lens.cube.metadata.UpdatePeriod;
+import java.text.DateFormat;
+import java.util.Date;
 
 import org.testng.Assert;
 
@@ -50,9 +50,9 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
     String expected = null;
     if (format == null) {
       expected =
-        getBetweenClause("test", "dt", CubeTestSetup.TWODAYS_BACK, CubeTestSetup.NOW, UpdatePeriod.DAILY.format());
+        getBetweenClause("test", "dt", TWODAYS_BACK, NOW, DAILY.format());
     } else {
-      expected = getBetweenClause("test", "dt", CubeTestSetup.TWODAYS_BACK, CubeTestSetup.NOW, format);
+      expected = getBetweenClause("test", "dt", TWODAYS_BACK, NOW, format);
     }
     Assert.assertEquals(expected, whereClause);
   }
@@ -61,18 +61,5 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
     String first = format.format(start);
     String last = format.format(end);
     return " (" + alias + "." + colName + " BETWEEN '" + first + "' AND '" + last + "') ";
-  }
-
-  @Override
-  public void validateSingle(String whereClause, DateFormat format) {
-    List<String> parts = new ArrayList<String>();
-    if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.ONE_DAY_BACK));
-    } else {
-      parts.add(format.format(CubeTestSetup.ONE_DAY_BACK));
-    }
-
-    System.out.println("Expected :" + StorageUtil.getWherePartClause("dt", "test", parts));
-    Assert.assertEquals(whereClause, StorageUtil.getWherePartClause("dt", "test", parts));
   }
 }

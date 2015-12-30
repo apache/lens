@@ -29,6 +29,7 @@ public class QueryFailed extends QueryEnded {
   /**
    * Instantiates a new query failed.
    *
+   * @param ctx       the query context
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
@@ -36,9 +37,14 @@ public class QueryFailed extends QueryEnded {
    * @param user      the user
    * @param cause     the cause
    */
-  public QueryFailed(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
+  public QueryFailed(QueryContext ctx, long eventTime, QueryStatus.Status prev, QueryStatus.Status current,
+    QueryHandle handle,
     String user, String cause) {
-    super(eventTime, prev, current, handle, user, cause);
+    super(ctx, eventTime, prev, current, handle, user, cause);
     checkCurrentState(QueryStatus.Status.FAILED);
+  }
+
+  public QueryFailed(QueryContext ctx, QueryStatus.Status prevState, QueryStatus.Status currState, String cause) {
+    this(ctx, ctx.getEndTime(), prevState, currState, ctx.getQueryHandle(), ctx.getSubmittedUser(), cause);
   }
 }

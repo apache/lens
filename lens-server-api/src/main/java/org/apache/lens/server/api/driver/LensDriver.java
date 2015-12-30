@@ -20,11 +20,14 @@ package org.apache.lens.server.api.driver;
 
 import java.io.Externalizable;
 
+import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
-import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.PreparedQueryContext;
+import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.QueryCost;
@@ -37,7 +40,6 @@ import com.google.common.collect.ImmutableSet;
  * The Interface LensDriver.
  */
 public interface LensDriver extends Externalizable {
-
   /**
    * Get driver configuration
    */
@@ -47,9 +49,11 @@ public interface LensDriver extends Externalizable {
    * Configure driver with {@link Configuration} passed.
    *
    * @param conf The configuration object
+   * @param driverType Type of the driver (Example: hive, jdbc, el)
+   * @param driverName Name of this driver
    * @throws LensException the lens exception
    */
-  void configure(Configuration conf) throws LensException;
+  void configure(Configuration conf, String driverType, String driverName) throws LensException;
 
   /**
    * Estimate the cost of execution for given query.
@@ -199,4 +203,20 @@ public interface LensDriver extends Externalizable {
    * null is never returned.
    */
   ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies();
+
+
+  /**
+   * @return fully qualified name of this driver. This should be unique for each driver instance. This name can be used
+   * for referring to the driver while logging, persisting and restoring driver details,etc.
+   * (Examples: hive/hive1, jdbc/mysql1 )
+   */
+  String getFullyQualifiedName();
+
+  /**
+   * decide priority based on query's cost. The cost should be already computed by estimate call, but it's
+   * not guaranteed to be pre-computed. It's up to the driver to do an on-demand computation of cost.
+   * @see QueryContext#decidePriority(LensDriver, QueryPriorityDecider) that handles this on-demand computation.
+   * @param queryContext
+   */
+  Priority decidePriority(QueryContext queryContext);
 }

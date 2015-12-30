@@ -89,7 +89,7 @@ public class TestLensApplication extends LensJerseyTest {
 
   @Test
   public void testMetricService() {
-    MetricsService metrics = ((MetricsService) LensServices.get().getService(MetricsService.NAME));
+    MetricsService metrics = LensServices.get().getService(MetricsService.NAME);
     List<ScheduledReporter> reporters = ((MetricsServiceImpl) metrics).getReporters();
 
     assertEquals(reporters.size(), 1, "mismatch in the number of reporters");
