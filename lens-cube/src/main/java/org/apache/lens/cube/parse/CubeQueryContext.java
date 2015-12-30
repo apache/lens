@@ -665,7 +665,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     return qb.getParseInfo().getDestLimit(getClause());
   }
   public void setLimitValue(Integer value) {
-    qb.getParseInfo().setDestLimit(getClause(), value);
+    qb.getParseInfo().setDestLimit(getClause(), 0, value);
   }
 
   private String getStorageStringWithAlias(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, String alias) {

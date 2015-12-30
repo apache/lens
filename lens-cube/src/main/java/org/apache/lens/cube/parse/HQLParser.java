@@ -18,10 +18,10 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.Number;
 import static org.apache.lens.cube.error.LensCubeErrorCode.COULD_NOT_PARSE_EXPRESSION;
 import static org.apache.lens.cube.error.LensCubeErrorCode.SYNTAX_ERROR;
-
-import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -40,7 +40,6 @@ import org.apache.hadoop.hive.ql.parse.*;
 import org.antlr.runtime.tree.Tree;
 
 import com.google.common.base.Optional;
-
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -525,17 +524,11 @@ public final class HQLParser {
       }
 
     } else if (TOK_DIR == rootType) {
+      //TODO: handle local
       buf.append(" directory ");
       for (int i = 0; i < root.getChildCount(); i++) {
         toInfixString((ASTNode) root.getChild(i), buf);
       }
-
-    } else if (TOK_LOCAL_DIR == rootType) {
-      buf.append(" local directory ");
-      for (int i = 0; i < root.getChildCount(); i++) {
-        toInfixString((ASTNode) root.getChild(i), buf);
-      }
-
     } else if (TOK_TAB == rootType) {
       buf.append(" table ");
       for (int i = 0; i < root.getChildCount(); i++) {
@@ -723,8 +716,12 @@ public final class HQLParser {
       assert (node.getChildCount() != 0);
       if (node.getChild(0).getType() == HiveParser.Identifier) {
         String functionName = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
-        if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
-          return true;
+        try {
+          if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
+            return true;
+          }
+        } catch (SemanticException e) {
+          return false;
         }
       }
     }

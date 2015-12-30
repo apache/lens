@@ -39,14 +39,17 @@ import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
 import org.apache.hadoop.hive.ql.io.HiveFileFormatUtils;
-import org.apache.hadoop.hive.ql.metadata.*;
+import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -220,10 +223,10 @@ public class CubeMetastoreClient {
               partition.getTPartition().getSd().getSerdeInfo().getParameters());
             latestPart.setLocation(partition.getLocation());
             latestPart.setInputFormatClass(partition.getInputFormatClass());
-            latestPart.setOutputFormatClass(partition.getOutputFormatClass());
+            latestPart.setOutputFormatClass(partition.getOutputFormatClass().asSubclass(HiveOutputFormat.class));
             // the following is a fix because hive has a bug: https://issues.apache.org/jira/browse/HIVE-11278.
             latestPart.getTPartition().getSd().setOutputFormat(
-              HiveFileFormatUtils.getOutputFormatSubstitute(partition.getOutputFormatClass(), false).getName());
+              HiveFileFormatUtils.getOutputFormatSubstitute(partition.getOutputFormatClass()).getName());
             latestPart.getTPartition().getSd().getSerdeInfo()
               .setSerializationLib(partition.getTPartition().getSd().getSerdeInfo().getSerializationLib());
             latestParts.add(latestPart);
