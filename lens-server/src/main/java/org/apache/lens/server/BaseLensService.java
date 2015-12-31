@@ -18,11 +18,7 @@
  */
 package org.apache.lens.server;
 
-import java.io.Externalizable;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,10 +42,8 @@ import org.apache.lens.server.user.UserConfigLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.lang3.StringUtils;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.auth.AuthenticationProviderFactory;
 import org.apache.hive.service.auth.HiveAuthFactory;
@@ -166,7 +160,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
   }
 
   protected LensEventService getEventService() {
-    LensEventService  eventService = LensServices.get().getService(LensEventService.NAME);
+    LensEventService eventService = LensServices.get().getService(LensEventService.NAME);
     if (eventService == null) {
       throw new NullPointerException("Could not get event service");
     }
@@ -175,6 +169,28 @@ public abstract class BaseLensService extends CompositeService implements Extern
 
   protected void notifyEvent(LensEvent event) throws LensException {
     getEventService().notifyEvent(event);
+  }
+
+  /**
+   * Restore session from previous instance of lens server.
+   *
+   * @param sessionHandle the session handle
+   * @param userName      the user name
+   * @param password      the password
+   * @throws LensException the lens exception
+   */
+  public void restoreSession(LensSessionHandle sessionHandle, String userName, String password) throws LensException {
+    HandleIdentifier handleIdentifier = new HandleIdentifier(sessionHandle.getPublicId(), sessionHandle.getSecretId());
+    SessionHandle hiveSessionHandle = new SessionHandle(new TSessionHandle(handleIdentifier.toTHandleIdentifier()));
+    try {
+      SessionHandle restoredHandle = cliService.restoreSession(hiveSessionHandle, userName, password,
+        new HashMap<String, String>());
+      LensSessionHandle restoredSession = new LensSessionHandle(restoredHandle.getHandleIdentifier().getPublicId(),
+        restoredHandle.getHandleIdentifier().getSecretId());
+      SESSION_MAP.put(restoredSession.getPublicId().toString(), restoredSession);
+    } catch (HiveSQLException e) {
+      throw new LensException("Error restoring session " + sessionHandle, e);
+    }
   }
 
   /**

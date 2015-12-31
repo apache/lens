@@ -378,7 +378,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
     for (LensSessionImpl.LensSessionPersistInfo persistInfo : restorableSessions) {
       try {
         LensSessionHandle sessionHandle = persistInfo.getSessionHandle();
-//        restoreSession(sessionHandle, persistInfo.getUsername(), persistInfo.getPassword());
+        restoreSession(sessionHandle, persistInfo.getUsername(), persistInfo.getPassword());
         LensSessionImpl session = getSession(sessionHandle);
         session.setLastAccessTime(persistInfo.getLastAccessTime());
         session.getLensSessionPersistInfo().setConfig(persistInfo.getConfig());
