@@ -893,7 +893,7 @@ public final class JAXBUtils {
       partition.setOutputFormatClass(outputFormatClass);
       // Again a hack, for the issue described in HIVE-11278
       partition.getTPartition().getSd().setOutputFormat(
-        HiveFileFormatUtils.getOutputFormatSubstitute(outputFormatClass, false).getName());
+        HiveFileFormatUtils.getOutputFormatSubstitute(outputFormatClass).getName());
     }
     partition.getParameters().put(MetastoreConstants.PARTITION_UPDATE_PERIOD, xp.getUpdatePeriod().name());
     partition.getTPartition().getSd().getSerdeInfo().setSerializationLib(xp.getSerdeClassname());

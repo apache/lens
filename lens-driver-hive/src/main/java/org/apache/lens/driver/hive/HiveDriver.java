@@ -18,7 +18,8 @@
  */
 package org.apache.lens.driver.hive;
 
-import static org.apache.lens.driver.hive.LensHiveErrorCode.*;
+import static org.apache.lens.driver.hive.LensHiveErrorCode.HIVE_ERROR;
+import static org.apache.lens.driver.hive.LensHiveErrorCode.SEMANTIC_ERROR;
 import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import java.io.ByteArrayInputStream;
@@ -61,16 +62,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.TaskStatus;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
 import org.apache.hive.service.cli.thrift.TOperationHandle;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
@@ -640,30 +637,30 @@ public class HiveDriver extends AbstractLensDriver {
       }
 
       float progress = 0f;
-      String jsonTaskStatus = opStatus.getTaskStatus();
+      String jsonTaskStatus = "Random task status";
       String errorMsg = null;
-      if (StringUtils.isNotBlank(jsonTaskStatus)) {
-        ObjectMapper mapper = new ObjectMapper();
-        in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
-        List<TaskStatus> taskStatuses = mapper.readValue(in, new TypeReference<List<TaskStatus>>() {
-        });
-        int completedTasks = 0;
-        StringBuilder errorMessage = new StringBuilder();
-        for (TaskStatus taskStat : taskStatuses) {
-          String tstate = taskStat.getTaskState();
-          if ("FINISHED_STATE".equalsIgnoreCase(tstate)) {
-            completedTasks++;
-          }
-          if ("FAILED_STATE".equalsIgnoreCase(tstate)) {
-            appendTaskIds(errorMessage, taskStat);
-            errorMessage.append(" has failed! ");
-          }
-        }
-        progress = taskStatuses.size() == 0 ? 0 : (float) completedTasks / taskStatuses.size();
-        errorMsg = errorMessage.toString();
-      } else {
-        log.warn("Empty task statuses");
-      }
+//      if (StringUtils.isNotBlank(jsonTaskStatus)) {
+//        ObjectMapper mapper = new ObjectMapper();
+//        in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
+//        List<TaskStatus> taskStatuses = mapper.readValue(in, new TypeReference<List<TaskStatus>>() {
+//        });
+//        int completedTasks = 0;
+//        StringBuilder errorMessage = new StringBuilder();
+//        for (TaskStatus taskStat : taskStatuses) {
+//          String tstate = taskStat.getTaskState();
+//          if ("FINISHED_STATE".equalsIgnoreCase(tstate)) {
+//            completedTasks++;
+//          }
+//          if ("FAILED_STATE".equalsIgnoreCase(tstate)) {
+//            appendTaskIds(errorMessage, taskStat);
+//            errorMessage.append(" has failed! ");
+//          }
+//        }
+//        progress = taskStatuses.size() == 0 ? 0 : (float) completedTasks / taskStatuses.size();
+//        errorMsg = errorMessage.toString();
+//      } else {
+//        log.warn("Empty task statuses");
+//      }
       String error = null;
       if (StringUtils.isNotBlank(errorMsg)) {
         error = errorMsg;
@@ -673,8 +670,8 @@ public class HiveDriver extends AbstractLensDriver {
       context.getDriverStatus().setErrorMessage(error);
       context.getDriverStatus().setProgressMessage(jsonTaskStatus);
       context.getDriverStatus().setProgress(progress);
-      context.getDriverStatus().setDriverStartTime(opStatus.getOperationStarted());
-      context.getDriverStatus().setDriverFinishTime(opStatus.getOperationCompleted());
+//      context.getDriverStatus().setDriverStartTime(opStatus.getOperationStarted());
+//      context.getDriverStatus().setDriverFinishTime(opStatus.getOperationCompleted());
     } catch (Exception e) {
       log.error("Error getting query status", e);
       handleHiveServerError(context, e);
@@ -696,13 +693,13 @@ public class HiveDriver extends AbstractLensDriver {
    * @param message  the message
    * @param taskStat the task stat
    */
-  private void appendTaskIds(StringBuilder message, TaskStatus taskStat) {
-    message.append(taskStat.getTaskId()).append("(");
-    message.append(taskStat.getType()).append("):");
-    if (taskStat.getExternalHandle() != null) {
-      message.append(taskStat.getExternalHandle()).append(":");
-    }
-  }
+//  private void appendTaskIds(StringBuilder message, TaskStatus taskStat) {
+//    message.append(taskStat.getTaskId()).append("(");
+//    message.append(taskStat.getType()).append("):");
+//    if (taskStat.getExternalHandle() != null) {
+//      message.append(taskStat.getExternalHandle()).append(":");
+//    }
+//  }
 
   /*
    * (non-Javadoc)

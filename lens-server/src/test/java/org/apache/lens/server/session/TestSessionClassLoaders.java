@@ -62,7 +62,7 @@ public class TestSessionClassLoaders {
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
     conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "target/resources");
 
-    CLIService cliService = new CLIService();
+    CLIService cliService = new CLIService(null);
     cliService.init(conf);
 
     sessionService = new HiveSessionService(cliService);

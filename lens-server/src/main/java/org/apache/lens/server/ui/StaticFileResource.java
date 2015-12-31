@@ -96,7 +96,8 @@ public class StaticFileResource {
       if (e.getCause() instanceof FileNotFoundException || e instanceof FileNotFoundException) {
         throw new NotFoundException("Not Found: " + filePath);
       }
-      throw new WebApplicationException("Server error: " + e.getCause(), e);
+      throw new RuntimeException(e);
+//      throw new WebApplicationException("Server error: " + e.getCause(), e);
     }
   }
 

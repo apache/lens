@@ -132,9 +132,12 @@ public final class RewriteUtil {
             if (parent.getToken().getType() == HiveParser.TOK_SUBQUERY) {
               // less for the next start and for close parenthesis
               cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");
-            } else if (parent.getToken().getType() == HiveParser.TOK_UNION) {
+            } else if (parent.getToken().getType() == HiveParser.TOK_UNIONALL) {
               // one less for the next start and less the size of string 'UNION ALL'
               cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine() - 1, "UNION ALL");
+            } else if (parent.getToken().getType() == HiveParser.TOK_UNIONDISTINCT) {
+              // one less for the next start and less the size of string 'UNION ALL'
+              cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine() - 1, "UNION DISTINCT");
             } else {
               // Not expected to reach here
               log.warn("Unknown query pattern found with AST:{}", ast.dump());

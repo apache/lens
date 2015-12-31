@@ -21,6 +21,7 @@ package org.apache.lens.server.metastore;
 import static org.apache.lens.server.metastore.JAXBUtils.*;
 
 import java.util.*;
+import java.util.Date;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;

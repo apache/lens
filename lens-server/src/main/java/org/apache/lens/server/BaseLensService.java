@@ -178,28 +178,6 @@ public abstract class BaseLensService extends CompositeService implements Extern
   }
 
   /**
-   * Restore session from previous instance of lens server.
-   *
-   * @param sessionHandle the session handle
-   * @param userName      the user name
-   * @param password      the password
-   * @throws LensException the lens exception
-   */
-  public void restoreSession(LensSessionHandle sessionHandle, String userName, String password) throws LensException {
-    HandleIdentifier handleIdentifier = new HandleIdentifier(sessionHandle.getPublicId(), sessionHandle.getSecretId());
-    SessionHandle hiveSessionHandle = new SessionHandle(new TSessionHandle(handleIdentifier.toTHandleIdentifier()));
-    try {
-      SessionHandle restoredHandle = cliService.restoreSession(hiveSessionHandle, userName, password,
-        new HashMap<String, String>());
-      LensSessionHandle restoredSession = new LensSessionHandle(restoredHandle.getHandleIdentifier().getPublicId(),
-        restoredHandle.getHandleIdentifier().getSecretId());
-      SESSION_MAP.put(restoredSession.getPublicId().toString(), restoredSession);
-    } catch (HiveSQLException e) {
-      throw new LensException("Error restoring session " + sessionHandle, e);
-    }
-  }
-
-  /**
    * Do passwd auth.
    *
    * @param userName the user name
@@ -218,8 +196,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
       try {
         AuthenticationProviderFactory.AuthMethods authMethod = AuthenticationProviderFactory.AuthMethods
           .getValidAuthMethod(authType);
-        PasswdAuthenticationProvider provider = AuthenticationProviderFactory.getAuthenticationProvider(authMethod,
-          cliService.getHiveConf());
+        PasswdAuthenticationProvider provider = AuthenticationProviderFactory.getAuthenticationProvider(authMethod);
         provider.Authenticate(userName, password);
       } catch (Exception e) {
         log.error("Auth error: ", e);

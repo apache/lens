@@ -45,16 +45,6 @@ public interface SessionService {
                                 Map<String, String> configuration)
     throws LensException;
 
-  /**
-   * Restore session from previous instance of lens server.
-   *
-   * @param sessionHandle the session handle
-   * @param userName      the user name
-   * @param password      the password
-   * @throws LensException the lens exception
-   */
-
-  void restoreSession(LensSessionHandle sessionHandle, String userName, String password) throws LensException;
 
   /**
    * Close session.

@@ -183,7 +183,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getCanonicalName());
       serviceMode = conf.getEnum(SERVER_MODE,
         SERVICE_MODE.valueOf(DEFAULT_SERVER_MODE));
-      cliService = new CLIService();
+      cliService = new CLIService(null);
       UserConfigLoaderFactory.init(conf);
       // Add default services
       addService(cliService);

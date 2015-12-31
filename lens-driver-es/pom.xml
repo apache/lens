@@ -45,6 +45,10 @@
             <artifactId>hive-service</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.lens</groupId>
             <artifactId>lens-cube</artifactId>
             <version>${project.version}</version>

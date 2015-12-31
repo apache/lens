@@ -25,8 +25,6 @@ import java.io.ObjectOutput;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.ws.rs.NotFoundException;
-
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.server.LensServices;
@@ -74,7 +72,6 @@ public class LensSessionImpl extends HiveSessionImpl {
   private final Map<String, List<ResourceEntry>> failedDBResources = new HashMap<String, List<ResourceEntry>>();
 
 
-
   /**
    * Cache of database specific class loaders for this session
    * This is updated lazily on add/remove resource calls and switch database calls.
@@ -104,6 +101,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   private static Configuration sessionDefaultConfig;
+
   /**
    * Creates the default conf.
    *
@@ -146,7 +144,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public LensSessionImpl(TProtocolVersion protocol, String username, String password, HiveConf serverConf,
     Map<String, String> sessionConf, String ipAddress) {
-    super(protocol, username, password, serverConf, sessionConf, ipAddress);
+    super(protocol, username, password, serverConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password, sessionConf);
     sessionTimeout = 1000 * serverConf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
       LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
@@ -174,7 +172,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public LensSessionImpl(SessionHandle sessionHandle, TProtocolVersion protocol, String username, String password,
     HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
-    super(sessionHandle, protocol, username, password, serverConf, sessionConf, ipAddress);
+    super(sessionHandle, protocol, username, password, serverConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password, sessionConf);
     sessionTimeout = 1000 * serverConf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
       LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
@@ -222,13 +220,9 @@ public class LensSessionImpl extends HiveSessionImpl {
    * @see org.apache.hive.service.cli.session.HiveSessionImpl#acquire()
    */
   public synchronized void acquire() {
-    try {
-      super.acquire();
-      // Update thread's class loader with current DBs class loader
-      Thread.currentThread().setContextClassLoader(getClassLoader(getCurrentDatabase()));
-    } catch (HiveSQLException e) {
-      throw new NotFoundException("Could not acquire the session", e);
-    }
+    super.acquire(true);
+    // Update thread's class loader with current DBs class loader
+    Thread.currentThread().setContextClassLoader(getClassLoader(getCurrentDatabase()));
   }
 
   /*
@@ -238,7 +232,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public synchronized void release() {
     lastAccessTime = System.currentTimeMillis();
-    super.release();
+    super.release(true);
   }
 
   public boolean isActive() {
@@ -474,7 +468,7 @@ public class LensSessionImpl extends HiveSessionImpl {
      * Returns the value of restoreCount for the resource
      * @return
      */
-    public int getRestoreCount(){
+    public int getRestoreCount() {
       return restoreCount.get();
     }
 

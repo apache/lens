@@ -52,7 +52,7 @@ public class TestSessionExpiry {
     HiveConf conf = LensServerConf.createHiveConf();
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
     conf.setLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
-    CLIService cliService = new CLIService();
+    CLIService cliService = new CLIService(null);
     cliService.init(conf);
     HiveSessionService lensService = new HiveSessionService(cliService);
     lensService.init(conf);
@@ -91,7 +91,7 @@ public class TestSessionExpiry {
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
     conf.setLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
     conf.setInt(LensConfConstants.SESSION_EXPIRY_SERVICE_INTERVAL_IN_SECS, 1);
-    CLIService cliService = new CLIService();
+    CLIService cliService = new CLIService(null);
     cliService.init(conf);
     HiveSessionService lensService = new HiveSessionService(cliService);
     lensService.init(conf);
