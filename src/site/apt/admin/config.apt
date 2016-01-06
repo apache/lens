@@ -165,7 +165,7 @@ Lens server configuration
 *--+--+---+--+
 |68|lens.server.savedquery.ws.resource.impl|org.apache.lens.server.query.save.SavedQueryResource|Implementation class for Saved query Resource|
 *--+--+---+--+
-|69|lens.server.scheduler.service.impl|org.apache.lens.server.scheduler.QuerySchedulerService|Implementation class for query scheduler service|
+|69|lens.server.scheduler.service.impl|org.apache.lens.server.scheduler.SchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
 |70|lens.server.scheduler.ws.resource.impl|org.apache.lens.server.scheduler.ScheduleResource|Implementation class for query scheduler resource|
 *--+--+---+--+

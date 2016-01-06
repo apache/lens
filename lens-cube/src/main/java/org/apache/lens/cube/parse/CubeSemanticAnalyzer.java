@@ -52,7 +52,7 @@ public class CubeSemanticAnalyzer extends SemanticAnalyzer {
 
   @Override
   public void analyzeInternal(ASTNode ast) throws SemanticException {
-    reset(false);
+    reset(true);
     cubeQB = new QB(null, null, false);
 
     if (ast.getToken().getType() == HiveParser.TOK_QUERY) {
