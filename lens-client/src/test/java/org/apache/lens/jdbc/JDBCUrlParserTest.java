@@ -78,10 +78,9 @@ public class JDBCUrlParserTest {
   public void testJDBCWithCustomHostAndPortAndDB() {
     String uri = "jdbc:lens://myhost:9000/mydb";
     LensConnectionParams params = JDBCUtils.parseUrl(uri);
-    // Assert.assertEquals( "myhost",
-    // params.getHost(),"The host name should be myhost");
-    // Assert.assertEquals( 9000, params.getPort(),"The port should be 9000");
-    Assert.assertEquals("mydb", params.getDbName(), "The database should be mydb");
+    Assert.assertEquals(params.getBaseConnectionUrl(), "http://myhost:9000/lensapi",
+      "The base url  should be http://myhost:9000/lensapi");
+    Assert.assertEquals(params.getDbName(), "mydb", "The database should be mydb");
     Assert.assertTrue(params.getSessionVars().isEmpty(), "Session Variable list should be empty");
     Assert.assertTrue(params.getLensConfs().isEmpty(), "The conf list should be empty");
     Assert.assertTrue(params.getLensVars().isEmpty(), "The lens var list should be empty");
