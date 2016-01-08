@@ -773,6 +773,10 @@ public class TestCubeMetastoreClient {
 
     StorageTableDesc s1 = new StorageTableDesc(TextInputFormat.class, HiveIgnoreKeyTextOutputFormat.class,
       datePartSingleton, datePartKeySingleton);
+
+    s1.getTblProps().put(MetastoreUtil.getStoragetableStartTimesKey(), "2015, now-10 days");
+    s1.getTblProps().put(MetastoreUtil.getStoragetableEndTimesKey(), "now - 1 day");
+
     Map<String, Set<UpdatePeriod>> updatePeriods = getHashMap(c1, Sets.newHashSet(HOURLY, DAILY));
     Map<String, StorageTableDesc> storageTables = getHashMap(c1, s1);
 
@@ -794,6 +798,9 @@ public class TestCubeMetastoreClient {
       String storageTableName = getFactOrDimtableStorageTableName(factName, entry);
       assertTrue(client.tableExists(storageTableName));
     }
+    String storageTable = getFactOrDimtableStorageTableName(factName, c1);
+    assertRangeValidityForStorageTable(storageTable);
+
 
     Map<String, Date> timeParts = getTimePartitionByOffsets(getDatePartitionKey(), 0, "non_existing_part_col", 0);
     // test error on adding invalid partition
@@ -845,6 +852,20 @@ public class TestCubeMetastoreClient {
     assertFalse(client.factPartitionExists(cubeFact.getName(), c1, HOURLY, timeParts, emptyHashMap));
     assertFalse(client.factPartitionExists(cubeFact.getName(), c1, HOURLY, timeParts2, emptyHashMap));
     assertFalse(client.latestPartitionExists(cubeFact.getName(), c1, getDatePartitionKey()));
+  }
+
+  private void assertRangeValidityForStorageTable(String storageTable) throws HiveException, LensException {
+    Object[][] testCases = new Object[][] {
+      {"now - 15 days", "now - 11 days", false},
+      {"now - 15 days", "now - 1 hour", false},
+      {"now - 9 days", "now - 1 hour", false},
+      {"now - 3 hour", "now - 1 hour", false},
+      {"now - 9 days", "now - 2 days", true},
+    };
+    for(Object[] testCase: testCases) {
+      assertEquals(client.isStorageTableCandidateForRange(storageTable, testCase[0].toString(), testCase[1].toString()),
+        testCase[2]);
+    }
   }
 
   @Test(priority = 2)

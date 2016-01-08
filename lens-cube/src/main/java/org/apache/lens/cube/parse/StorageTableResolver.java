@@ -565,7 +565,7 @@ class StorageTableResolver implements ContextRewriter {
     Iterator<String> it = storageTbls.iterator();
     while (it.hasNext()) {
       String storageTableName = it.next();
-      if (!isStorageTableCandidateForRange(storageTableName, fromDate, toDate)) {
+      if (!client.isStorageTableCandidateForRange(storageTableName, fromDate, toDate)) {
         skipStorageCauses.put(storageTableName, new SkipStorageCause(RANGE_NOT_ANSWERABLE));
         it.remove();
       } else if (!client.partColExists(storageTableName, partCol)) {
@@ -683,32 +683,6 @@ class StorageTableResolver implements ContextRewriter {
       updatePeriods, addNonExistingParts, failOnPartialData, skipStorageCauses, missingPartitions)
       && getPartitions(fact, floorToDate, toDate, partCol, partitions,
         updatePeriods, addNonExistingParts, failOnPartialData, skipStorageCauses, missingPartitions);
-  }
-
-  private boolean isStorageTableCandidateForRange(String storageTableName, Date fromDate, Date toDate) throws
-    HiveException, LensException {
-    Date now = new Date();
-    String startProperty = client.getTable(storageTableName).getProperty(getStoragetableStartTimesKey());
-    if (StringUtils.isNotBlank(startProperty)) {
-      for (String timeStr : startProperty.split("\\s*,\\s*")) {
-        if (toDate.before(DateUtil.resolveDate(timeStr, now))) {
-          log.info("from date {} is before validity start time: {}, hence discarding {}",
-            toDate, timeStr, storageTableName);
-          return false;
-        }
-      }
-    }
-    String endProperty = client.getTable(storageTableName).getProperty(getStoragetableEndTimesKey());
-    if (StringUtils.isNotBlank(endProperty)) {
-      for (String timeStr : endProperty.split("\\s*,\\s*")) {
-        if (fromDate.after(DateUtil.resolveDate(timeStr, now))) {
-          log.info("to date {} is after validity end time: {}, hence discarding {}",
-            fromDate, timeStr, storageTableName);
-          return false;
-        }
-      }
-    }
-    return true;
   }
 
   private void updateFactPartitionStorageTablesFrom(CubeFactTable fact,
