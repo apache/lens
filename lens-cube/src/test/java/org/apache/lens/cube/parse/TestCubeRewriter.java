@@ -417,6 +417,21 @@ public class TestCubeRewriter extends TestQueryRewrite {
       }
       conf.setBoolean(CubeQueryConfUtil.ENABLE_STORAGES_UNION, true);
 
+      hqlQuery = rewrite("select ascii(cityid) as `City ID`, msr8, msr7 as `Third measure` "
+        + "from testCube where cityid = 'a' and zipcode = 'b' and " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+
+      expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
+        "SELECT testcube.alias0 as `City ID`, sum(testcube.alias1) + max(testcube.alias2), "
+          + "case when sum(testcube.alias1) = 0 then 0 else sum(testcube.alias3)/sum(testcube.alias1) end "
+          + "as `Third Measure`",
+        null, "group by testcube.alias0",
+        "select ascii(testcube.cityid) as `alias0`, sum(testcube.msr2) as `alias1`, "
+          + "max(testcube.msr3) as `alias2`, "
+          + "sum(case when testcube.cityid = 'x' then testcube.msr21 else testcube.msr22 end) as `alias3`",
+        "testcube.cityid = 'a' and testcube.zipcode = 'b'", "group by ascii(testcube.cityid)");
+
+      compareQueries(hqlQuery, expected);
+
       hqlQuery = rewrite("select cityid as `City ID`, msr8, msr7 as `Third measure` "
         + "from testCube where cityid = 'a' and zipcode = 'b' and " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
 

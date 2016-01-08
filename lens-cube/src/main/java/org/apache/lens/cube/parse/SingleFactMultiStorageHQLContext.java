@@ -185,7 +185,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       outerAST.addChild(dotAST);
       innerToOuterASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
       return outerAST;
-    } else if (isTableColumnAST(astNode)) {
+    } else if (isTableColumnAST(astNode) || isNonAggregateFunctionAST(astNode)) {
       if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
         return innerToOuterASTs.get(new HashableASTNode(astNode));
       }
