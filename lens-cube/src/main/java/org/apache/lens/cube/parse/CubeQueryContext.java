@@ -34,6 +34,8 @@ import org.apache.lens.cube.error.NoCandidateDimAvailableException;
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.cube.parse.join.AutoJoinContext;
+import org.apache.lens.cube.parse.join.JoinUtils;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -387,7 +389,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   // required by a candidate table to get a denormalized field from reference
   // or required in a join chain
   @ToString
-  static class OptionalDimCtx {
+  public static class OptionalDimCtx {
     OptionalDimCtx() {
     }
 
@@ -407,44 +409,40 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
 
   public void addOptionalDimTable(String alias, CandidateTable candidate, boolean isRequiredInJoin, String cubeCol,
     boolean isRef, String... cols) throws LensException {
-    addOptionalDimTable(alias, candidate, isRequiredInJoin, cubeCol, true, null, cols);
+    addOptionalDimTable(alias, candidate, isRequiredInJoin, cubeCol, isRef, null, cols);
   }
 
   private void addOptionalDimTable(String alias, CandidateTable candidate, boolean isRequiredInJoin, String cubeCol,
     boolean isRef, String tableAlias, String... cols) throws LensException {
     alias = alias.toLowerCase();
-    try {
-      if (!addQueriedTable(alias, true)) {
-        throw new SemanticException("Could not add queried table or chain:" + alias);
+    if (!addQueriedTable(alias, true)) {
+      throw new LensException(LensCubeErrorCode.QUERIED_TABLE_NOT_FOUND.getLensErrorInfo(), alias);
+    }
+    Dimension dim = (Dimension) cubeTbls.get(alias);
+    OptionalDimCtx optDim = optionalDimensions.get(dim);
+    if (optDim == null) {
+      optDim = new OptionalDimCtx();
+      optionalDimensions.put(dim, optDim);
+    }
+    if (cols != null && candidate != null) {
+      for (String col : cols) {
+        optDim.colQueried.add(col);
       }
-      Dimension dim = (Dimension) cubeTbls.get(alias);
-      OptionalDimCtx optDim = optionalDimensions.get(dim);
-      if (optDim == null) {
-        optDim = new OptionalDimCtx();
-        optionalDimensions.put(dim, optDim);
+      optDim.requiredForCandidates.add(candidate);
+    }
+    if (cubeCol != null) {
+      if (isRef) {
+        updateRefColDim(cubeCol, dim);
+      } else {
+        updateExprColDim(tableAlias, cubeCol, dim);
       }
-      if (cols != null && candidate != null) {
-        for (String col : cols) {
-          optDim.colQueried.add(col);
-        }
-        optDim.requiredForCandidates.add(candidate);
-      }
-      if (cubeCol != null) {
-        if (isRef) {
-          updateRefColDim(cubeCol, dim);
-        } else {
-          updateExprColDim(tableAlias, cubeCol, dim);
-        }
-      }
-      if (!optDim.isRequiredInJoinChain) {
-        optDim.isRequiredInJoinChain = isRequiredInJoin;
-      }
-      if (log.isDebugEnabled()) {
-        log.debug("Adding optional dimension:{} optDim:{} {} isRef:{}", dim , optDim,
-          (cubeCol == null ? "" : " for column:" + cubeCol),  isRef);
-      }
-    } catch (HiveException e) {
-      throw new LensException(e);
+    }
+    if (!optDim.isRequiredInJoinChain) {
+      optDim.isRequiredInJoinChain = isRequiredInJoin;
+    }
+    if (log.isDebugEnabled()) {
+      log.debug("Adding optional dimension:{} optDim:{} {} isRef:{}", dim, optDim,
+        (cubeCol == null ? "" : " for column:" + cubeCol), isRef);
     }
   }
 
@@ -684,10 +682,13 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     String fromString;
     if (getJoinAST() == null) {
       if (cube != null) {
+        if (dimensions.size() > 0) {
+          throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAILABLE.getLensErrorInfo());
+        }
         fromString = fact.getStorageString(getAliasForTableName(cube.getName()));
       } else {
         if (dimensions.size() != 1) {
-          throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo());
+          throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAILABLE.getLensErrorInfo());
         }
         Dimension dim = dimensions.iterator().next();
         fromString = dimsToQuery.get(dim).getStorageString(getAliasForTableName(dim.getName()));
@@ -702,7 +703,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
 
   private void getQLString(QBJoinTree joinTree, StringBuilder builder, CandidateFact fact,
     Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
-    String joiningTable = null;
+    List<String> joiningTables = new ArrayList<>();
     if (joinTree.getBaseSrc()[0] == null) {
       if (joinTree.getJoinSrc() != null) {
         getQLString(joinTree.getJoinSrc(), builder, fact, dimsToQuery);
@@ -710,12 +711,10 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     } else { // (joinTree.getBaseSrc()[0] != null){
       String alias = joinTree.getBaseSrc()[0].toLowerCase();
       builder.append(getStorageStringWithAlias(fact, dimsToQuery, alias));
-      if (joinTree.getJoinCond()[0].getJoinType().equals(JoinType.RIGHTOUTER)) {
-        joiningTable = alias;
-      }
+      joiningTables.add(alias);
     }
     if (joinTree.getJoinCond() != null) {
-      builder.append(JoinResolver.getJoinTypeStr(joinTree.getJoinCond()[0].getJoinType()));
+      builder.append(JoinUtils.getJoinTypeStr(joinTree.getJoinCond()[0].getJoinType()));
       builder.append(" JOIN ");
     }
     if (joinTree.getBaseSrc()[1] == null) {
@@ -725,22 +724,24 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     } else { // (joinTree.getBaseSrc()[1] != null){
       String alias = joinTree.getBaseSrc()[1].toLowerCase();
       builder.append(getStorageStringWithAlias(fact, dimsToQuery, alias));
-      if (joinTree.getJoinCond()[0].getJoinType().equals(JoinType.LEFTOUTER)) {
-        joiningTable = alias;
-      }
+      joiningTables.add(alias);
     }
 
     String joinCond = joinConds.get(joinTree);
     if (joinCond != null) {
       builder.append(" ON ");
       builder.append(joinCond);
-      if (joiningTable != null) {
-        // assuming the joining table to be dimension table
-        DimOnlyHQLContext.appendWhereClause(builder, getWhereClauseWithAlias(dimsToQuery, joiningTable), true);
-        dimsToQuery.get(cubeTbls.get(joiningTable)).setWhereClauseAdded();
+      // joining tables will contain all tables involved in joins.
+      // we need to push storage filters for Dimensions into join conditions, thus the following code
+      // takes care of the same.
+      for (String joiningTable : joiningTables) {
+        if (cubeTbls.get(joiningTable) instanceof Dimension) {
+          DimOnlyHQLContext.appendWhereClause(builder, getWhereClauseWithAlias(dimsToQuery, joiningTable), true);
+          dimsToQuery.get(cubeTbls.get(joiningTable)).setWhereClauseAdded(joiningTable);
+        }
       }
     } else {
-      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo());
+      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAILABLE.getLensErrorInfo());
     }
   }
 
@@ -1062,7 +1063,6 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
 
     return isCubeMeasure(msrname);
   }
-
   public boolean isAggregateExpr(String expr) {
     return aggregateExprs.contains(expr == null ? null : expr.toLowerCase());
   }

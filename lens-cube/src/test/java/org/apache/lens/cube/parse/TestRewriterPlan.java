@@ -67,8 +67,9 @@ public class TestRewriterPlan extends TestQueryRewrite {
   public void testPlanExtractionForComplexQuery() throws Exception {
     // complex query
     Configuration conf = getConfWithStorages("C1,C2");
-    CubeQueryContext ctx = rewriteCtx("cube select citydim.name, SUM(msr2) from testCube where citydim.name != \"XYZ\""
-      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", conf);
+    CubeQueryContext ctx = rewriteCtx("cube select cubecity.name, SUM(msr2) from testCube where "
+      + " cubecity.name != \"XYZ\" and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by cubecity.name limit 50",
+      conf);
     ctx.toHQL();
     RewriterPlan plan = new RewriterPlan(Collections.singleton(ctx));
     Assert.assertNotNull(plan);
@@ -90,8 +91,9 @@ public class TestRewriterPlan extends TestQueryRewrite {
     Configuration conf = getConfWithStorages("C1,C2");
     CubeQueryContext ctx1 = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
     ctx1.toHQL();
-    CubeQueryContext ctx2 = rewriteCtx("cube select citydim.name, SUM(msr2) from testCube where citydim.name != \"XYZ\""
-      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", conf);
+    CubeQueryContext ctx2 = rewriteCtx("cube select cubecity.name, SUM(msr2) from testCube where "
+      + " cubecity.name != \"XYZ\" and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by cubecity.name limit 50",
+      conf);
     ctx2.toHQL();
     RewriterPlan plan = new RewriterPlan(Arrays.asList(ctx1, ctx2));
     Assert.assertNotNull(plan);

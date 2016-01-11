@@ -30,13 +30,7 @@
     <dim_attributes>
         <dim_attribute name="dim1" type="INT" />
         <dim_attribute name="dim2" type="INT" start_time='2013-12-01T00:00:00' />
-        <dim_attribute name="dim3" type="INT">
-            <ref_spec>
-                <table_references>
-                    <table_reference table="dim_table" column="id" />
-                </table_references>
-            </ref_spec>
-        </dim_attribute>
+        <dim_attribute name="dim3" type="INT"/>
     </dim_attributes>
     <expressions>
         <expression name="expr_msr5" type="DOUBLE">

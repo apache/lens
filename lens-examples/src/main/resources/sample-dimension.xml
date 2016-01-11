@@ -25,14 +25,24 @@
     <dim_attribute name="id" type="INT"/>
     <dim_attribute name="name" type="STRING"/>
     <dim_attribute name="detail" type="STRING" start_time='2013-12-01T00:00:00'/>
-    <dim_attribute name="d2id" type="INT" start_time='2013-12-01T00:00:00' join_key="true">
-      <ref_spec>
-        <table_references>
-          <table_reference table="sample_dim2" column="id"/>
-        </table_references>
-      </ref_spec>
-    </dim_attribute>
+    <dim_attribute name="d2id" type="INT" start_time='2013-12-01T00:00:00'/>
   </attributes>
+
+  <join_chains>
+    <join_chain name="sample_dim2_chain">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sample_dim" column="d2id" />
+              <to table="sample_dim2" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
+
   <properties>
     <property name="dimension.sample_dim.timed.dimension" value="dt"/>
   </properties>

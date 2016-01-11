@@ -23,7 +23,6 @@ import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.base.Preconditions;
@@ -38,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractBaseTable extends AbstractCubeTable {
   private final Set<ExprColumn> expressions;
-  private static final List<FieldSchema> COLUMNS = new ArrayList<FieldSchema>();
+  private static final List<FieldSchema> COLUMNS = new ArrayList<>();
   private final Map<String, ExprColumn> exprMap;
   @Getter
   private final Set<JoinChain> joinChains;
@@ -52,9 +51,9 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     properties, double weight) {
     super(name, COLUMNS, properties, weight);
 
-    exprMap = new HashMap<String, ExprColumn>();
+    exprMap = new HashMap<>();
     if (exprs == null) {
-      this.expressions = new HashSet<ExprColumn>();
+      this.expressions = new HashSet<>();
     } else {
       this.expressions = exprs;
     }
@@ -66,10 +65,10 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     if (joinChains != null) {
       this.joinChains = joinChains;
     } else {
-      this.joinChains = new HashSet<JoinChain>();
+      this.joinChains = new HashSet<>();
     }
 
-    chainMap = new HashMap<String, JoinChain>();
+    chainMap = new HashMap<>();
     for (JoinChain chain : this.joinChains) {
       chainMap.put(chain.getName().toLowerCase(), chain);
     }
@@ -78,12 +77,12 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   public AbstractBaseTable(Table tbl) {
     super(tbl);
     this.expressions = getExpressions(getName(), getProperties());
-    exprMap = new HashMap<String, ExprColumn>();
+    exprMap = new HashMap<>();
     for (ExprColumn expr : expressions) {
       exprMap.put(expr.getName().toLowerCase(), expr);
     }
     this.joinChains = getJoinChains(this, getJoinChainListPropKey(getName()), getProperties());
-    chainMap = new HashMap<String, JoinChain>();
+    chainMap = new HashMap<>();
     for (JoinChain chain : joinChains) {
       chainMap.put(chain.getName().toLowerCase(), chain);
     }
@@ -110,7 +109,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   }
 
   private static Set<ExprColumn> getExpressions(String name, Map<String, String> props) {
-    Set<ExprColumn> exprs = new HashSet<ExprColumn>();
+    Set<ExprColumn> exprs = new HashSet<>();
     String exprStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getExpressionListKey(name));
     if (!StringUtils.isBlank(exprStr)) {
       String[] names = exprStr.split(",");
@@ -152,7 +151,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   }
 
   public ExprColumn getExpressionByName(String exprName) {
-    return exprMap.get(exprName == null ? exprName : exprName.toLowerCase());
+    return exprMap.get(exprName == null ? null : exprName.toLowerCase());
   }
 
   public CubeColumn getColumnByName(String column) {
@@ -162,10 +161,9 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   /**
    * Alters the expression if already existing or just adds if it is new expression.
    *
-   * @param expr
-   * @throws HiveException
+   * @param expr ExprColumn
    */
-  public void alterExpression(ExprColumn expr) throws HiveException {
+  public void alterExpression(ExprColumn expr) {
     if (expr == null) {
       throw new NullPointerException("Cannot add null expression");
     }
@@ -183,9 +181,9 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   }
 
   /**
-   * Remove the measure with name specified
+   * Remove the expression with name specified
    *
-   * @param exprName
+   * @param exprName expression name
    */
   public void removeExpression(String exprName) {
     if (exprMap.containsKey(exprName.toLowerCase())) {
@@ -197,7 +195,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   }
 
   public Set<String> getExpressionNames() {
-    Set<String> exprNames = new HashSet<String>();
+    Set<String> exprNames = new HashSet<>();
     for (ExprColumn f : getExpressions()) {
       exprNames.add(f.getName().toLowerCase());
     }
@@ -225,10 +223,9 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   /**
    * Alters the joinchain if already existing or just adds if it is new chain
    *
-   * @param joinchain
-   * @throws HiveException
+   * @param joinchain join chain
    */
-  public void alterJoinChain(JoinChain joinchain) throws HiveException {
+  public void alterJoinChain(JoinChain joinchain) {
     if (joinchain == null) {
       throw new NullPointerException("Cannot add null joinchain");
     }
@@ -251,20 +248,20 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   }
 
   /**
-   * Returns the property key for Cube/Dimension specific join chain list
+   * Get the property key for Cube/Dimension specific join chain list
    *
-   * @param tblname
-   * @return
+   * @param tblName table name
+   * @return the property key for Cube/Dimension specific join chain list
    */
-  protected abstract String getJoinChainListPropKey(String tblname);
+  protected abstract String getJoinChainListPropKey(String tblName);
 
   /**
    * Get join chains from properties
    *
-   * @return
+   * @return set of join chains
    */
   private static Set<JoinChain> getJoinChains(AbstractBaseTable tbl, String propName, Map<String, String> props) {
-    Set<JoinChain> joinChains = new HashSet<JoinChain>();
+    Set<JoinChain> joinChains = new HashSet<>();
     String joinChainsStr = MetastoreUtil.getNamedStringValue(props, propName);
     if (!StringUtils.isBlank(joinChainsStr)) {
       String[] cnames = joinChainsStr.split(",");
@@ -277,7 +274,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   }
 
   public Set<String> getJoinChainNames() {
-    Set<String> chainNames = new HashSet<String>();
+    Set<String> chainNames = new HashSet<>();
     for (JoinChain f : getJoinChains()) {
       chainNames.add(f.getName().toLowerCase());
     }
@@ -286,9 +283,9 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
 
 
   /**
-   * Remove the joinchain with name specified
+   * Remove the join chain with name specified
    *
-   * @param chainName
+   * @param chainName chain name
    */
   public boolean removeJoinChain(String chainName) {
     if (chainMap.containsKey(chainName.toLowerCase())) {

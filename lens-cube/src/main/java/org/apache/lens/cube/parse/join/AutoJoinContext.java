@@ -16,12 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.parse.join;
 
 import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.join.JoinPath;
+import org.apache.lens.cube.metadata.join.TableRelationship;
+import org.apache.lens.cube.parse.*;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,13 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class AutoJoinContext {
   // Map of a joined table to list of all possible paths from that table to
   // the target
-  private final Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths;
-  @Getter
-  // User supplied partial join conditions
-  private final Map<AbstractCubeTable, String> partialJoinConditions;
-  // True if the query contains user supplied partial join conditions
-  @Getter
-  private final boolean partialJoinChains;
+  private final Map<Aliased<Dimension>, List<JoinPath>> allPaths;
+  private Set<Dimension> requiredDimensions;
   @Getter
   // Map of joined table to the join type (if provided by user)
   private final Map<AbstractCubeTable, JoinType> tableJoinTypeMap;
@@ -59,32 +57,28 @@ public class AutoJoinContext {
   // Map of a joined table to its columns which are part of any of the join
   // paths. This is used in candidate table resolver
   @Getter
-  private Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathFromColumns =
-    new HashMap<Dimension, Map<AbstractCubeTable, List<String>>>();
+  private Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathFromColumns = new HashMap<>();
 
   @Getter
-  private Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathToColumns =
-    new HashMap<Dimension, Map<AbstractCubeTable, List<String>>>();
+  private Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathToColumns = new HashMap<>();
 
-  // there can be separate join clause for each fact incase of multi fact queries
+  // there can be separate join clause for each fact in-case of multi fact queries
   @Getter
-  Map<CandidateFact, JoinClause> factClauses = new HashMap<CandidateFact, JoinClause>();
+  Map<CandidateFact, JoinClause> factClauses = new HashMap<>();
   @Getter
   @Setter
   JoinClause minCostClause;
   private final boolean flattenBridgeTables;
   private final String bridgeTableFieldAggr;
 
-  public AutoJoinContext(Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths,
-                         Map<Dimension, CubeQueryContext.OptionalDimCtx> optionalDimensions,
-                         Map<AbstractCubeTable, String> partialJoinConditions,
-                         boolean partialJoinChains, Map<AbstractCubeTable, JoinType> tableJoinTypeMap,
+  public AutoJoinContext(Map<Aliased<Dimension>, List<JoinPath>> allPaths,
+                         Set<Dimension> requiredDimensions,
+                         Map<AbstractCubeTable, JoinType> tableJoinTypeMap,
                          AbstractCubeTable autoJoinTarget, String joinTypeCfg, boolean joinsResolved,
                          boolean flattenBridgeTables, String bridgeTableFieldAggr) {
     this.allPaths = allPaths;
+    this.requiredDimensions = requiredDimensions;
     initJoinPathColumns();
-    this.partialJoinConditions = partialJoinConditions;
-    this.partialJoinChains = partialJoinChains;
     this.tableJoinTypeMap = tableJoinTypeMap;
     this.autoJoinTarget = autoJoinTarget;
     this.joinTypeCfg = joinTypeCfg;
@@ -110,9 +104,9 @@ public class AutoJoinContext {
   // Populate map of tables to their columns which are present in any of the
   // join paths
   private void initJoinPathColumns() {
-    for (List<SchemaGraph.JoinPath> paths : allPaths.values()) {
+    for (List<JoinPath> paths : allPaths.values()) {
       for (int i = 0; i < paths.size(); i++) {
-        SchemaGraph.JoinPath jp = paths.get(i);
+        JoinPath jp = paths.get(i);
         jp.initColumnsForTable();
       }
     }
@@ -122,32 +116,32 @@ public class AutoJoinContext {
   public void refreshJoinPathColumns() {
     joinPathFromColumns.clear();
     joinPathToColumns.clear();
-    for (Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> joinPathEntry : allPaths.entrySet()) {
-      List<SchemaGraph.JoinPath> joinPaths = joinPathEntry.getValue();
+    for (Map.Entry<Aliased<Dimension>, List<JoinPath>> joinPathEntry : allPaths.entrySet()) {
+      List<JoinPath> joinPaths = joinPathEntry.getValue();
       Map<AbstractCubeTable, List<String>> fromColPaths = joinPathFromColumns.get(joinPathEntry.getKey().getObject());
       Map<AbstractCubeTable, List<String>> toColPaths = joinPathToColumns.get(joinPathEntry.getKey().getObject());
       if (fromColPaths == null) {
-        fromColPaths = new HashMap<AbstractCubeTable, List<String>>();
+        fromColPaths = new HashMap<>();
         joinPathFromColumns.put(joinPathEntry.getKey().getObject(), fromColPaths);
       }
 
       if (toColPaths == null) {
-        toColPaths = new HashMap<AbstractCubeTable, List<String>>();
+        toColPaths = new HashMap<>();
         joinPathToColumns.put(joinPathEntry.getKey().getObject(), toColPaths);
       }
       populateJoinPathCols(joinPaths, fromColPaths, toColPaths);
     }
   }
 
-  private void populateJoinPathCols(List<SchemaGraph.JoinPath> joinPaths,
+  private void populateJoinPathCols(List<JoinPath> joinPaths,
     Map<AbstractCubeTable, List<String>> fromPathColumns, Map<AbstractCubeTable, List<String>> toPathColumns) {
-    for (SchemaGraph.JoinPath path : joinPaths) {
-      for (SchemaGraph.TableRelationship edge : path.getEdges()) {
+    for (JoinPath path : joinPaths) {
+      for (TableRelationship edge : path.getEdges()) {
         AbstractCubeTable fromTable = edge.getFromTable();
         String fromColumn = edge.getFromColumn();
         List<String> columnsOfFromTable = fromPathColumns.get(fromTable);
         if (columnsOfFromTable == null) {
-          columnsOfFromTable = new ArrayList<String>();
+          columnsOfFromTable = new ArrayList<>();
           fromPathColumns.put(fromTable, columnsOfFromTable);
         }
         columnsOfFromTable.add(fromColumn);
@@ -157,7 +151,7 @@ public class AutoJoinContext {
         String toColumn = edge.getToColumn();
         List<String> columnsOfToTable = toPathColumns.get(toTable);
         if (columnsOfToTable == null) {
-          columnsOfToTable = new ArrayList<String>();
+          columnsOfToTable = new ArrayList<>();
           toPathColumns.put(toTable, columnsOfToTable);
         }
         columnsOfToTable.add(toColumn);
@@ -170,10 +164,6 @@ public class AutoJoinContext {
     joinPathFromColumns.remove(dim);
   }
 
-  public Map<AbstractCubeTable, String> getPartialJoinConditions() {
-    return partialJoinConditions;
-  }
-
   public String getFromString(String fromTable, CandidateFact fact, Set<Dimension> qdims,
     Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) throws LensException {
     String fromString = fromTable;
@@ -181,7 +171,7 @@ public class AutoJoinContext {
     if (qdims == null || qdims.isEmpty()) {
       return fromString;
     }
-    // Compute the merged join clause string for the min cost joinclause
+    // Compute the merged join clause string for the min cost joinClause
     String clause = getMergedJoinClause(cubeql, cubeql.getAutoJoinCtx().getJoinClause(fact), dimsToQuery);
 
     fromString += clause;
@@ -191,18 +181,13 @@ public class AutoJoinContext {
   // Some refactoring needed to account for multiple join paths
   public String getMergedJoinClause(CubeQueryContext cubeql, JoinClause joinClause,
                                     Map<Dimension, CandidateDim> dimsToQuery) {
-    Set<String> clauses = new LinkedHashSet<String>();
+    Set<String> clauses = new LinkedHashSet<>();
     String joinTypeStr = "";
     JoinType joinType = JoinType.INNER;
 
-    // this flag is set to true if user has specified a partial join chain
-    if (!partialJoinChains) {
-      // User has not specified any join conditions. In this case, we rely on
-      // configuration for the join type
-      if (StringUtils.isNotBlank(joinTypeCfg)) {
-        joinType = JoinType.valueOf(joinTypeCfg.toUpperCase());
-        joinTypeStr = JoinResolver.getJoinTypeStr(joinType);
-      }
+    if (StringUtils.isNotBlank(joinTypeCfg)) {
+      joinType = JoinType.valueOf(joinTypeCfg.toUpperCase());
+      joinTypeStr = JoinUtils.getJoinTypeStr(joinType);
     }
 
     Iterator<JoinTree> iter = joinClause.getJoinTree().dft();
@@ -216,11 +201,7 @@ public class AutoJoinContext {
 
     while (iter.hasNext()) {
       JoinTree cur = iter.next();
-      if (partialJoinChains) {
-        joinType = cur.getJoinType();
-        joinTypeStr = JoinResolver.getJoinTypeStr(joinType);
-      }
-      SchemaGraph.TableRelationship rel = cur.parentRelationship;
+      TableRelationship rel = cur.parentRelationship;
       String toAlias, fromAlias;
       fromAlias = cur.parent.getAlias();
       toAlias = cur.getAlias();
@@ -233,29 +214,13 @@ public class AutoJoinContext {
 
       if (JoinType.INNER == joinType || JoinType.LEFTOUTER == joinType || JoinType.LEFTSEMI == joinType) {
         // For inner and left joins push filter of right table
-        userFilter = partialJoinConditions.get(rel.getToTable());
-        if (partialJoinConditions.containsKey(rel.getFromTable())) {
-          if (StringUtils.isNotBlank(userFilter)) {
-            userFilter += (" AND " + partialJoinConditions.get(rel.getFromTable()));
-          } else {
-            userFilter = partialJoinConditions.get(rel.getFromTable());
-          }
-        }
         storageFilter = getStorageFilter(dimsToQuery, rel.getToTable(), toAlias);
-        dimsToQuery.get(rel.getToTable()).setWhereClauseAdded();
+        dimsToQuery.get(rel.getToTable()).setWhereClauseAdded(toAlias);
       } else if (JoinType.RIGHTOUTER == joinType) {
         // For right outer joins, push filters of left table
-        userFilter = partialJoinConditions.get(rel.getFromTable());
-        if (partialJoinConditions.containsKey(rel.getToTable())) {
-          if (StringUtils.isNotBlank(userFilter)) {
-            userFilter += (" AND " + partialJoinConditions.get(rel.getToTable()));
-          } else {
-            userFilter = partialJoinConditions.get(rel.getToTable());
-          }
-        }
         if (rel.getFromTable() instanceof Dimension) {
           storageFilter = getStorageFilter(dimsToQuery, rel.getFromTable(), fromAlias);
-          dimsToQuery.get(rel.getFromTable()).setWhereClauseAdded();
+          dimsToQuery.get(rel.getFromTable()).setWhereClauseAdded(fromAlias);
         }
       } else if (JoinType.FULLOUTER == joinType) {
         // For full outer we need to push filters of both left and right
@@ -263,19 +228,11 @@ public class AutoJoinContext {
         String leftFilter = null, rightFilter = null;
         String leftStorageFilter = null, rightStorgeFilter = null;
 
-        if (StringUtils.isNotBlank(partialJoinConditions.get(rel.getFromTable()))) {
-          leftFilter = partialJoinConditions.get(rel.getFromTable()) + " and ";
-        }
-
         if (rel.getFromTable() instanceof Dimension) {
           leftStorageFilter = getStorageFilter(dimsToQuery, rel.getFromTable(), fromAlias);
           if (StringUtils.isNotBlank((leftStorageFilter))) {
-            dimsToQuery.get(rel.getFromTable()).setWhereClauseAdded();
+            dimsToQuery.get(rel.getFromTable()).setWhereClauseAdded(fromAlias);
           }
-        }
-
-        if (StringUtils.isNotBlank(partialJoinConditions.get(rel.getToTable()))) {
-          rightFilter = partialJoinConditions.get(rel.getToTable());
         }
 
         rightStorgeFilter = getStorageFilter(dimsToQuery, rel.getToTable(), toAlias);
@@ -283,7 +240,7 @@ public class AutoJoinContext {
           if (StringUtils.isNotBlank((leftStorageFilter))) {
             leftStorageFilter += " and ";
           }
-          dimsToQuery.get(rel.getToTable()).setWhereClauseAdded();
+          dimsToQuery.get(rel.getToTable()).setWhereClauseAdded(toAlias);
         }
 
         userFilter = (leftFilter == null ? "" : leftFilter) + (rightFilter == null ? "" : rightFilter);
@@ -311,7 +268,7 @@ public class AutoJoinContext {
           bridgeGroupbyClause.append(" group by ").append(toAlias).append(".").append(rel.getToColumn());
           // from clause with bridge table
           bridgeFromClause.append(" from ").append(dimsToQuery.get(rel.getToTable()).getStorageString(toAlias));
-          // we need to initialize filter clause with user filter clause or storgae filter if applicable
+          // we need to initialize filter clause with user filter clause or storage filter if applicable
           if (StringUtils.isNotBlank(userFilter)) {
             bridgeFilterClause.append(userFilter);
           }
@@ -345,7 +302,7 @@ public class AutoJoinContext {
         if (cubeql.getTblAliasToColumns().get(toAlias) != null
           && !cubeql.getTblAliasToColumns().get(toAlias).isEmpty()) {
           // there are fields selected from this table after seeing bridge table in path
-          // we should make subquery for this selection
+          // we should make subQuery for this selection
           clause.append(joinTypeStr).append(" join ");
           clause.append(bridgeSelectClause.toString());
           for (String col : cubeql.getTblAliasToColumns().get(toAlias)) {
@@ -363,7 +320,7 @@ public class AutoJoinContext {
             } else {
               clause.append(" where");
             }
-            clause.append(bridgeFilter.toString());
+            clause.append(bridgeFilter);
           }
           clause.append(bridgeGroupbyClause.toString());
           clause.append(") ").append(toAlias);
@@ -382,7 +339,7 @@ public class AutoJoinContext {
         }
       } else {
         // Simple join clause is :
-        // jointype + " join " + destTable + " on " + joincond + [" and" + userfilter] + ["and" + storageFilter]
+        // joinType + " join " + destTable + " on " + joinCond + [" and" + userFilter] + ["and" + storageFilter]
         clause.append(joinTypeStr).append(" join ");
         //Add storage table name followed by alias
         clause.append(dimsToQuery.get(rel.getToTable()).getStorageString(toAlias));
@@ -402,11 +359,11 @@ public class AutoJoinContext {
     return StringUtils.join(clauses, "");
   }
 
-  public Set<Dimension> getDimsOnPath(Map<Aliased<Dimension>, List<SchemaGraph.TableRelationship>> joinChain,
+  public Set<Dimension> getDimsOnPath(Map<Aliased<Dimension>, List<TableRelationship>> joinChain,
     Set<Dimension> qdims) {
-    Set<Dimension> dimsOnPath = new HashSet<Dimension>();
-    for (Map.Entry<Aliased<Dimension>, List<SchemaGraph.TableRelationship>> entry : joinChain.entrySet()) {
-      List<SchemaGraph.TableRelationship> chain = entry.getValue();
+    Set<Dimension> dimsOnPath = new HashSet<>();
+    for (Map.Entry<Aliased<Dimension>, List<TableRelationship>> entry : joinChain.entrySet()) {
+      List<TableRelationship> chain = entry.getValue();
       Dimension table = entry.getKey().getObject();
 
       // check if join with this dimension is required
@@ -415,7 +372,7 @@ public class AutoJoinContext {
       }
 
       for (int i = chain.size() - 1; i >= 0; i--) {
-        SchemaGraph.TableRelationship rel = chain.get(i);
+        TableRelationship rel = chain.get(i);
         dimsOnPath.add((Dimension) rel.getToTable());
       }
     }
@@ -444,7 +401,7 @@ public class AutoJoinContext {
 
   // Includes both queried join paths and optional join paths
   public Set<String> getAllJoinPathColumnsOfTable(AbstractCubeTable table) {
-    Set<String> allPaths = new HashSet<String>();
+    Set<String> allPaths = new HashSet<>();
     for (Map<AbstractCubeTable, List<String>> optPaths : joinPathFromColumns.values()) {
       if (optPaths.get(table) != null) {
         allPaths.addAll(optPaths.get(table));
@@ -461,19 +418,19 @@ public class AutoJoinContext {
   }
 
   public void pruneAllPaths(CubeInterface cube, final Set<CandidateFact> cfacts,
-    final Map<Dimension, CandidateDim> dimsToQuery) {
+    final Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     // Remove join paths which cannot be satisfied by the resolved candidate
     // fact and dimension tables
     if (cfacts != null) {
       // include columns from all picked facts
-      Set<String> factColumns = new HashSet<String>();
-      for (CandidateFact cfact : cfacts) {
-        factColumns.addAll(cfact.getColumns());
+      Set<String> factColumns = new HashSet<>();
+      for (CandidateFact cFact : cfacts) {
+        factColumns.addAll(cFact.getColumns());
       }
 
-      for (List<SchemaGraph.JoinPath> paths : allPaths.values()) {
+      for (List<JoinPath> paths : allPaths.values()) {
         for (int i = 0; i < paths.size(); i++) {
-          SchemaGraph.JoinPath jp = paths.get(i);
+          JoinPath jp = paths.get(i);
           List<String> cubeCols = jp.getColumnsForTable((AbstractCubeTable) cube);
           if (cubeCols != null && !factColumns.containsAll(cubeCols)) {
             // This path requires some columns from the cube which are not
@@ -493,29 +450,29 @@ public class AutoJoinContext {
   /**
    * Prunes allPaths by removing paths which contain columns that are not present in any candidate dims.
    *
-   * @param candidateDims
+   * @param candidateDims candidate dimensions
    */
-  public void pruneAllPathsForCandidateDims(Map<Dimension, Set<CandidateDim>> candidateDims) {
-    Map<Dimension, Set<String>> dimColumns = new HashMap<Dimension, Set<String>>();
+  public void pruneAllPathsForCandidateDims(Map<Dimension, Set<CandidateDim>> candidateDims) throws LensException {
+    Map<Dimension, Set<String>> dimColumns = new HashMap<>();
     // populate all columns present in candidate dims for each dimension
     for (Map.Entry<Dimension, Set<CandidateDim>> entry : candidateDims.entrySet()) {
       Dimension dim = entry.getKey();
-      Set<String> allColumns = new HashSet<String>();
+      Set<String> allColumns = new HashSet<>();
       for (CandidateDim cdim : entry.getValue()) {
         allColumns.addAll(cdim.getColumns());
       }
       dimColumns.put(dim, allColumns);
     }
-    for (List<SchemaGraph.JoinPath> paths : allPaths.values()) {
+    for (List<JoinPath> paths : allPaths.values()) {
       for (int i = 0; i < paths.size(); i++) {
-        SchemaGraph.JoinPath jp = paths.get(i);
+        JoinPath jp = paths.get(i);
         for (AbstractCubeTable refTable : jp.getAllTables()) {
           List<String> cols = jp.getColumnsForTable(refTable);
           if (refTable instanceof Dimension) {
             if (cols != null && (dimColumns.get(refTable) == null || !dimColumns.get(refTable).containsAll(cols))) {
               // This path requires some columns from the cube which are not present in any candidate dim
               // Remove this path
-              log.info("Removing join path:{} as columns :{} dont exist", jp, cols);
+              log.info("Removing join path:{} as columns :{} don't exist", jp, cols);
               paths.remove(i);
               i--;
               break;
@@ -527,32 +484,39 @@ public class AutoJoinContext {
     pruneEmptyPaths(allPaths);
   }
 
-  private void pruneEmptyPaths(Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths) {
-    Iterator<Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>>> iter = allPaths.entrySet().iterator();
+  private void pruneEmptyPaths(Map<Aliased<Dimension>, List<JoinPath>> allPaths) throws LensException {
+    Iterator<Map.Entry<Aliased<Dimension>, List<JoinPath>>> iter = allPaths.entrySet().iterator();
+    Set<Dimension> noPathDims = new HashSet<>();
     while (iter.hasNext()) {
-      Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> entry = iter.next();
+      Map.Entry<Aliased<Dimension>, List<JoinPath>> entry = iter.next();
       if (entry.getValue().isEmpty()) {
+        noPathDims.add(entry.getKey().getObject());
         iter.remove();
       }
     }
+    noPathDims.retainAll(requiredDimensions);
+
+    if (!noPathDims.isEmpty()) {
+      throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getLensErrorInfo(), autoJoinTarget.getName(),
+        noPathDims.toString());
+    }
   }
 
-  private Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> pruneFactPaths(CubeInterface cube,
-    final CandidateFact cfact) {
-    Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> prunedPaths
-      = new HashMap<Aliased<Dimension>, List<SchemaGraph.JoinPath>>();
+  private Map<Aliased<Dimension>, List<JoinPath>> pruneFactPaths(CubeInterface cube,
+    final CandidateFact cFact) throws LensException {
+    Map<Aliased<Dimension>, List<JoinPath>> prunedPaths = new HashMap<>();
     // Remove join paths which cannot be satisfied by the candidate fact
-    for (Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> ppaths : allPaths.entrySet()) {
-      prunedPaths.put(ppaths.getKey(), new ArrayList<SchemaGraph.JoinPath>(ppaths.getValue()));
-      List<SchemaGraph.JoinPath> paths = prunedPaths.get(ppaths.getKey());
+    for (Map.Entry<Aliased<Dimension>, List<JoinPath>> ppaths : allPaths.entrySet()) {
+      prunedPaths.put(ppaths.getKey(), new ArrayList<>(ppaths.getValue()));
+      List<JoinPath> paths = prunedPaths.get(ppaths.getKey());
       for (int i = 0; i < paths.size(); i++) {
-        SchemaGraph.JoinPath jp = paths.get(i);
+        JoinPath jp = paths.get(i);
         List<String> cubeCols = jp.getColumnsForTable((AbstractCubeTable) cube);
-        if (cubeCols != null && !cfact.getColumns().containsAll(cubeCols)) {
+        if (cubeCols != null && !cFact.getColumns().containsAll(cubeCols)) {
           // This path requires some columns from the cube which are not
           // present in the candidate fact
           // Remove this path
-          log.info("Removing join path:{} as columns :{} dont exist", jp, cubeCols);
+          log.info("Removing join path:{} as columns :{} don't exist", jp, cubeCols);
           paths.remove(i);
           i--;
         }
@@ -562,15 +526,15 @@ public class AutoJoinContext {
     return prunedPaths;
   }
 
-  private void pruneAllPaths(final Map<Dimension, CandidateDim> dimsToQuery) {
+  private void pruneAllPaths(final Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     // Remove join paths which cannot be satisfied by the resolved dimension
     // tables
     if (dimsToQuery != null && !dimsToQuery.isEmpty()) {
       for (CandidateDim candidateDim : dimsToQuery.values()) {
-        Set<String> dimCols = candidateDim.dimtable.getAllFieldNames();
-        for (List<SchemaGraph.JoinPath> paths : allPaths.values()) {
+        Set<String> dimCols = candidateDim.getTable().getAllFieldNames();
+        for (List<JoinPath> paths : allPaths.values()) {
           for (int i = 0; i < paths.size(); i++) {
-            SchemaGraph.JoinPath jp = paths.get(i);
+            JoinPath jp = paths.get(i);
             List<String> candidateDimCols = jp.getColumnsForTable(candidateDim.getBaseTable());
             if (candidateDimCols != null && !dimCols.containsAll(candidateDimCols)) {
               // This path requires some columns from the dimension which are
@@ -592,33 +556,30 @@ public class AutoJoinContext {
    * cartesian product of join paths of all dimensions
    */
   private Iterator<JoinClause> getJoinClausesForAllPaths(final CandidateFact fact,
-    final Set<Dimension> qdims, final CubeQueryContext cubeql) {
-    Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths;
+    final Set<Dimension> qDims, final CubeQueryContext cubeql) throws LensException {
+    Map<Aliased<Dimension>, List<JoinPath>> allPaths;
     // if fact is passed only look at paths possible from fact to dims
     if (fact != null) {
       allPaths = pruneFactPaths(cubeql.getCube(), fact);
     } else {
-      allPaths = new LinkedHashMap<Aliased<Dimension>, List<SchemaGraph.JoinPath>>(this.allPaths);
+      allPaths = new LinkedHashMap<>(this.allPaths);
     }
     // prune allPaths with qdims
-    log.info("pruning allPaths before generating all permutations.");
-    log.info("allPaths: {}", allPaths);
-    log.info("qdims: {}", qdims);
-    pruneAllPathsWithQueriedDims(allPaths, qdims);
+    pruneAllPathsWithQueriedDims(allPaths, qDims);
 
     // Number of paths in each path set
     final int[] groupSizes = new int[allPaths.values().size()];
     // Total number of elements in the cartesian product
     int numSamples = 1;
     // All path sets
-    final List<List<SchemaGraph.JoinPath>> pathSets = new ArrayList<List<SchemaGraph.JoinPath>>();
+    final List<List<JoinPath>> pathSets = new ArrayList<>();
     // Dimension corresponding to the path sets
-    final List<Aliased<Dimension>> dimensions = new ArrayList<Aliased<Dimension>>(groupSizes.length);
+    final List<Aliased<Dimension>> dimensions = new ArrayList<>(groupSizes.length);
 
     int i = 0;
-    for (Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> entry : allPaths.entrySet()) {
+    for (Map.Entry<Aliased<Dimension>, List<JoinPath>> entry : allPaths.entrySet()) {
       dimensions.add(entry.getKey());
-      List<SchemaGraph.JoinPath> group = entry.getValue();
+      List<JoinPath> group = entry.getValue();
       pathSets.add(group);
       groupSizes[i] = group.size();
       numSamples *= groupSizes[i];
@@ -639,19 +600,18 @@ public class AutoJoinContext {
 
       @Override
       public JoinClause next() {
-        Map<Aliased<Dimension>, List<SchemaGraph.TableRelationship>> chain
-          = new LinkedHashMap<Aliased<Dimension>, List<SchemaGraph.TableRelationship>>();
+        Map<Aliased<Dimension>, List<TableRelationship>> chain = new LinkedHashMap<>();
         //generate next permutation.
         for (int i = groupSizes.length - 1, base = sample; i >= 0; base /= groupSizes[i], i--) {
           selection[i] = base % groupSizes[i];
         }
         for (int i = 0; i < selection.length; i++) {
           int selectedPath = selection[i];
-          List<SchemaGraph.TableRelationship> path = pathSets.get(i).get(selectedPath).getEdges();
+          List<TableRelationship> path = pathSets.get(i).get(selectedPath).getEdges();
           chain.put(dimensions.get(i), path);
         }
 
-        Set<Dimension> dimsOnPath = getDimsOnPath(chain, qdims);
+        Set<Dimension> dimsOnPath = getDimsOnPath(chain, qDims);
 
         sample++;
         // Cost of join = number of tables joined in the clause
@@ -668,17 +628,17 @@ public class AutoJoinContext {
   /**
    * Given allPaths, it will remove entries where key is a non-join chain dimension and not contained in qdims
    *
-   * @param allPaths
-   * @param qdims
+   * @param allPaths All join paths
+   * @param qDims queried dimensions
    */
-  private void pruneAllPathsWithQueriedDims(Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths,
-    Set<Dimension> qdims) {
-    Iterator<Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>>> iter = allPaths.entrySet().iterator();
-    while (iter.hasNext()) {
-      Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> cur = iter.next();
-      if (!qdims.contains(cur.getKey().getObject())) {
+  private void pruneAllPathsWithQueriedDims(Map<Aliased<Dimension>, List<JoinPath>> allPaths,
+    Set<Dimension> qDims) {
+    Iterator<Map.Entry<Aliased<Dimension>, List<JoinPath>>> iterator = allPaths.entrySet().iterator();
+    while (iterator.hasNext()) {
+      Map.Entry<Aliased<Dimension>, List<JoinPath>> cur = iterator.next();
+      if (!qDims.contains(cur.getKey().getObject())) {
         log.info("removing from allPaths: {}", cur);
-        iter.remove();
+        iterator.remove();
       }
     }
   }
@@ -686,7 +646,7 @@ public class AutoJoinContext {
   public Set<Dimension> pickOptionalTables(final CandidateFact fact,
     Set<Dimension> qdims, CubeQueryContext cubeql) throws LensException {
     // Find the min cost join clause and add dimensions in the clause as optional dimensions
-    Set<Dimension> joiningOptionalTables = new HashSet<Dimension>();
+    Set<Dimension> joiningOptionalTables = new HashSet<>();
     if (qdims == null) {
       return joiningOptionalTables;
     }
@@ -718,16 +678,15 @@ public class AutoJoinContext {
     }
 
     minCostClause.initChainColumns();
-    // prune candidate dims of joiningOptionalTables wrt joinging columns
+    // prune candidate dims of joiningOptionalTables wrt joining columns
     for (Dimension dim : joiningOptionalTables) {
       for (Iterator<CandidateDim> i = cubeql.getCandidateDimTables().get(dim).iterator(); i.hasNext();) {
-        CandidateDim cdim = i.next();
-        CubeDimensionTable dimtable = cdim.dimtable;
-        if (!cdim.getColumns().containsAll(minCostClause.chainColumns.get(dim))) {
+        CandidateDim cDim = i.next();
+        if (!cDim.getColumns().containsAll(minCostClause.chainColumns.get(dim))) {
           i.remove();
-          log.info("Not considering dimtable:{} as its columns are not part of any join paths. Join columns:{}",
-            dimtable, minCostClause.chainColumns.get(dim));
-          cubeql.addDimPruningMsgs(dim, cdim.dimtable,
+          log.info("Not considering dimTable:{} as its columns are not part of any join paths. Join columns:{}",
+            cDim.getTable(), minCostClause.chainColumns.get(dim));
+          cubeql.addDimPruningMsgs(dim, cDim.getTable(),
             CandidateTablePruneCause.noColumnPartOfAJoinPath(minCostClause.chainColumns.get(dim)));
         }
       }
@@ -740,7 +699,7 @@ public class AutoJoinContext {
     return joiningOptionalTables;
   }
 
-  public Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> getAllPaths() {
+  public Map<Aliased<Dimension>, List<JoinPath>> getAllPaths() {
     return allPaths;
   }
 

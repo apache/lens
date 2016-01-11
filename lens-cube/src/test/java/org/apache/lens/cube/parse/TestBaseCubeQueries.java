@@ -421,15 +421,15 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   @Test
   public void testMultiFactQueryWithJoins() throws Exception {
     // query with join
-    String hqlQuery = rewrite("select testdim2.name, msr12, roundedmsr2 from basecube where " + TWO_DAYS_RANGE, conf);
+    String hqlQuery = rewrite("select dim2chain.name, msr12, roundedmsr2 from basecube where " + TWO_DAYS_RANGE, conf);
     String expected1 = getExpectedQuery(cubeName,
-        "select testdim2.name as `name`, sum(basecube.msr12) as `msr12` FROM ", " JOIN " + getDbName()
-            + "c1_testdim2tbl testdim2 ON basecube.dim2 = " + " testdim2.id and (testdim2.dt = 'latest') ", null,
-        " group by testdim2.name", null, getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
+        "select dim2chain.name as `name`, sum(basecube.msr12) as `msr12` FROM ", " JOIN " + getDbName()
+            + "c1_testdim2tbl dim2chain ON basecube.dim2 = " + " dim2chain.id and (dim2chain.dt = 'latest') ", null,
+        " group by dim2chain.name", null, getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
     String expected2 = getExpectedQuery(cubeName,
-        "select testdim2.name as `name`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", " JOIN " + getDbName()
-            + "c1_testdim2tbl testdim2 ON basecube.dim2 = " + " testdim2.id and (testdim2.dt = 'latest') ", null,
-        " group by testdim2.name", null, getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
+        "select dim2chain.name as `name`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", " JOIN " + getDbName()
+            + "c1_testdim2tbl dim2chain ON basecube.dim2 = " + " dim2chain.id and (dim2chain.dt = 'latest') ", null,
+        " group by dim2chain.name", null, getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
     TestCubeRewriter.compareContains(expected1, hqlQuery);
     TestCubeRewriter.compareContains(expected2, hqlQuery);
     assertTrue(hqlQuery.toLowerCase().startsWith(
@@ -444,9 +444,9 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testMultiFactQueryWithDenormColumn() throws Exception {
     // query with denorm variable
     String hqlQuery = rewrite("select dim2, msr13, roundedmsr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
-    String expected1 = getExpectedQuery(cubeName, "select testdim2.id as `dim2`, max(basecube.msr13) as `msr13` FROM ",
-        " JOIN " + getDbName() + "c1_testdim2tbl testdim2 ON basecube.dim12 = "
-            + " testdim2.id and (testdim2.dt = 'latest') ", null, " group by testdim2.id", null,
+    String expected1 = getExpectedQuery(cubeName, "select dim2chain.id as `dim2`, max(basecube.msr13) as `msr13` FROM ",
+        " JOIN " + getDbName() + "c1_testdim2tbl dim2chain ON basecube.dim12 = "
+            + " dim2chain.id and (dim2chain.dt = 'latest') ", null, " group by dim2chain.id", null,
         getWhereForHourly2days(cubeName, "C1_testFact3_RAW_BASE"));
     String expected2 = getExpectedQuery(cubeName,
         "select basecube.dim2 as `dim2`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
@@ -470,10 +470,10 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
         "select booleancut, round(sum(msr2)/1000), avg(msr13 + msr14) from basecube" + " where " + TWO_DAYS_RANGE,
         conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND testdim2.id != 10 as `booleancut`,"
+      getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND dim2chain.id != 10 as `booleancut`,"
           + " avg(basecube.msr13 + basecube.msr14) as `expr3` FROM ", " JOIN " + getDbName()
-          + "c1_testdim2tbl testdim2 ON basecube.dim12 = " + " testdim2.id and (testdim2.dt = 'latest') ", null,
-        " group by basecube.dim1 != 'x' AND testdim2.id != 10", null,
+          + "c1_testdim2tbl dim2chain ON basecube.dim12 = " + " dim2chain.id and (dim2chain.dt = 'latest') ", null,
+        " group by basecube.dim1 != 'x' AND dim2chain.id != 10", null,
         getWhereForHourly2days(cubeName, "C1_testfact3_raw_base"));
     String expected2 =
       getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND basecube.dim2 != 10 as `booleancut`,"

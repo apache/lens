@@ -19,11 +19,15 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+
 import java.io.IOException;
 
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.ErrorCollectionFactory;
 import org.apache.lens.api.error.LensError;
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
@@ -114,6 +118,12 @@ public abstract class TestQueryRewrite {
     }
   }
 
+  protected void assertLensExceptionInRewrite(String query, Configuration conf, LensCubeErrorCode expectedError)
+    throws LensException, ParseException {
+    LensException e = getLensExceptionInRewrite(query, conf);
+    assertNotNull(e);
+    assertEquals(e.getErrorCode(), expectedError.getLensErrorInfo().getErrorCode());
+  }
   protected String getLensExceptionErrorMessageInRewrite(String query, Configuration conf) throws LensException,
       ParseException, ClassNotFoundException {
     try {

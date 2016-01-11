@@ -33,12 +33,7 @@
   <dim_attributes>
     <dim_attribute name="dim1" type="INT"/>
     <dim_attribute name="dim2" type="INT" start_time='2013-12-01T00:00:00'/>
-    <dim_attribute name="dim3" type="INT" join_key="true">
-      <ref_spec>
-        <table_references>
-          <table_reference table="sample_dim" column="id"/>
-        </table_references>
-      </ref_spec>
+    <dim_attribute name="dim3" type="INT">
     </dim_attribute>
   </dim_attributes>
   <expressions>
@@ -47,4 +42,18 @@
       <expr_spec expr = "measure3 + measure4 + 0.01" end_time='2013-12-12T00:00:00'/>
     </expression>
   </expressions>
+  <join_chains>
+    <join_chain name="sample_dim_chain">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sample_cube" column="dim3" />
+              <to table="sample_dim" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
 </x_base_cube>

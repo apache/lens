@@ -25,13 +25,7 @@
     <dim_attribute name="id" type="INT" />
     <dim_attribute name="name" type="STRING" />
     <dim_attribute name="detail" type="STRING" start_time='2013-12-01T00:00:00' />
-    <dim_attribute name="d2id" type="INT" start_time='2013-12-01T00:00:00'>
-      <ref_spec>
-        <table_references>
-          <table_reference table="test_dim2" column="id" />
-        </table_references>
-      </ref_spec>
-    </dim_attribute>
+    <dim_attribute name="d2id" type="INT" start_time='2013-12-01T00:00:00'/>
     <dim_attribute name="inline" type="STRING" >
       <values>A</values>
       <values>B</values>
@@ -46,6 +40,20 @@
     </dim_attribute>
   </attributes>
 
+  <join_chains>
+    <join_chain name="dim2chain">
+      <paths>
+        <path>
+         <edges>
+            <edge>
+              <from table="test_dim" column="d2id" />
+              <to table="test_detail" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
   <properties>
     <property name="test_dim.prop" value="test" />
     <property name="dimension.test_dim.timed.dimension" value="dt" />

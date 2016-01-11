@@ -63,13 +63,18 @@ public class TestDBStorage {
   /**
    * The db1.
    */
-  Storage db1 = new DBStorage(DB_STORAGE1, DB_STORAGE1, null);
+  Storage db1;
 
   /**
    * The db2.
    */
-  Storage db2 = new DBStorage(DB_STORAGE2, DB_STORAGE2, null);
+  Storage db2;
 
+  TestDBStorage() throws Exception {
+    db1 = new DBStorage(DB_STORAGE1, DB_STORAGE1, null);
+    db2 = new DBStorage(DB_STORAGE2, DB_STORAGE2, null);
+
+  }
   /**
    * Setup.
    *
@@ -105,7 +110,7 @@ public class TestDBStorage {
    * @throws HiveException the hive exception
    */
   @Test(groups = "first")
-  public void testDBStorage() throws HiveException {
+  public void testDBStorage() throws Exception {
     CubeMetastoreClient cc = CubeMetastoreClient.getInstance(conf);
     if (!cc.tableExists(DB_STORAGE1)) {
       cc.createStorage(db1);

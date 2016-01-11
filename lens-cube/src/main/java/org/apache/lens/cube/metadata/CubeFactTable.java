@@ -20,12 +20,12 @@ package org.apache.lens.cube.metadata;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.UpdatePeriod.UpdatePeriodComparator;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Lists;
@@ -261,11 +261,11 @@ public class CubeFactTable extends AbstractCubeTable {
    *
    * @param storage
    * @param updatePeriods
-   * @throws HiveException
    */
-  public void alterStorage(String storage, Set<UpdatePeriod> updatePeriods) throws HiveException {
+  public void alterStorage(String storage, Set<UpdatePeriod> updatePeriods) throws LensException{
     if (!storageUpdatePeriods.containsKey(storage)) {
-      throw new HiveException("Invalid storage" + storage);
+      throw new LensException(LensCubeErrorCode.ERROR_IN_ENTITY_DEFINITION.getLensErrorInfo(),
+        "Invalid storage" + storage);
     }
     storageUpdatePeriods.put(storage, updatePeriods);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
@@ -276,9 +276,8 @@ public class CubeFactTable extends AbstractCubeTable {
    *
    * @param storage
    * @param updatePeriods
-   * @throws HiveException
    */
-  void addStorage(String storage, Set<UpdatePeriod> updatePeriods) throws HiveException {
+  void addStorage(String storage, Set<UpdatePeriod> updatePeriods) {
     storageUpdatePeriods.put(storage, updatePeriods);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
   }
@@ -296,12 +295,12 @@ public class CubeFactTable extends AbstractCubeTable {
   }
 
   @Override
-  public void alterColumn(FieldSchema column) throws HiveException {
+  public void alterColumn(FieldSchema column) {
     super.alterColumn(column);
   }
 
   @Override
-  public void addColumns(Collection<FieldSchema> columns) throws HiveException {
+  public void addColumns(Collection<FieldSchema> columns) {
     super.addColumns(columns);
   }
 

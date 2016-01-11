@@ -24,13 +24,15 @@ import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
-import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.cube.metadata.join.JoinPath;
+import org.apache.lens.cube.parse.join.AutoJoinContext;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
+
+import com.google.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,41 +41,15 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class JoinResolver implements ContextRewriter {
-
-  private Map<AbstractCubeTable, String> partialJoinConditions;
   private Map<AbstractCubeTable, JoinType> tableJoinTypeMap;
-  private boolean partialJoinChain;
   private AbstractCubeTable target;
   private HashMap<Dimension, List<JoinChain>> dimensionInJoinChain = new HashMap<Dimension, List<JoinChain>>();
 
   public JoinResolver(Configuration conf) {
   }
 
-  static String getJoinTypeStr(JoinType joinType) {
-    if (joinType == null) {
-      return "";
-    }
-    switch (joinType) {
-    case FULLOUTER:
-      return " full outer";
-    case INNER:
-      return " inner";
-    case LEFTOUTER:
-      return " left outer";
-    case LEFTSEMI:
-      return " left semi";
-    case UNIQUE:
-      return " unique";
-    case RIGHTOUTER:
-      return " right outer";
-    default:
-      return "";
-    }
-  }
-
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
-    partialJoinConditions = new HashMap<AbstractCubeTable, String>();
     tableJoinTypeMap = new HashMap<AbstractCubeTable, JoinType>();
     try {
       resolveJoins(cubeql);
@@ -86,9 +62,25 @@ class JoinResolver implements ContextRewriter {
     QB cubeQB = cubeql.getQb();
     boolean joinResolverDisabled = cubeql.getConf().getBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS,
         CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
+
+    if (!joinResolverDisabled && (!cubeql.getNonChainedDimensions().isEmpty() && cubeql.hasCubeInQuery())
+      || ((cubeql.getNonChainedDimensions().size() > 1) && !cubeql.hasCubeInQuery())) {
+      log.warn("Disabling auto join resolver as there are direct dimensions queried");
+      joinResolverDisabled = true;
+    }
     if (joinResolverDisabled) {
       if (cubeql.getJoinAST() != null) {
         cubeQB.setQbJoinTree(genJoinTree(cubeql.getJoinAST(), cubeql));
+      } else {
+        if (cubeql.hasCubeInQuery()) {
+          if (!cubeql.getNonChainedDimensions().isEmpty()) {
+            throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAILABLE.getLensErrorInfo());
+          }
+        } else {
+          if (cubeql.getNonChainedDimensions().size() > 1) {
+            throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAILABLE.getLensErrorInfo());
+          }
+        }
       }
     } else {
       autoResolveJoins(cubeql);
@@ -118,37 +110,28 @@ class JoinResolver implements ContextRewriter {
    * @throws HiveException
    */
   private void autoResolveJoins(CubeQueryContext cubeql) throws LensException, HiveException {
-    // Check if this query needs a join -
-    // A join is needed if there is a cube and at least one dimension, or, 0
-    // cubes and more than one
-    // dimensions
-    processJoinChains(cubeql);
-    Set<Dimension> dimensions = cubeql.getNonChainedDimensions();
-    // Add dimensions specified in the partial join tree
-    ASTNode joinClause = cubeql.getQb().getParseInfo().getJoinExpr();
-    if (joinClause == null) {
-      // Only cube in the query
-      if (cubeql.hasCubeInQuery()) {
-        target = (AbstractCubeTable) cubeql.getCube();
-      } else {
-        String targetDimAlias = cubeql.getQb().getTabAliases().iterator().next();
-        String targetDimTable = cubeql.getQb().getTabNameForAlias(targetDimAlias);
-        if (targetDimTable == null) {
-          log.warn("Null table for alias {}", targetDimAlias);
-          return;
-        }
-        target = cubeql.getMetastoreClient().getDimension(targetDimTable);
-      }
-    }
-    searchDimensionTables(cubeql.getMetastoreClient(), joinClause);
-    if (target == null) {
-      log.warn("Can't resolve joins for null target");
+    if (cubeql.getJoinchains().isEmpty()) {
+      // Joins not required
+      log.info("No dimension tables to resolve and no join chains present!");
       return;
     }
-
-    Set<Dimension> dimTables = new HashSet<Dimension>(dimensions);
-    for (AbstractCubeTable partiallyJoinedTable : partialJoinConditions.keySet()) {
-      dimTables.add((Dimension) partiallyJoinedTable);
+    processJoinChains(cubeql);
+    // Find the target
+    if (cubeql.hasCubeInQuery()) {
+      // Only cube in the query
+      target = (AbstractCubeTable) cubeql.getCube();
+    } else {
+      String targetDimAlias = cubeql.getQb().getTabAliases().iterator().next();
+      String targetDimTable = cubeql.getQb().getTabNameForAlias(targetDimAlias);
+      if (targetDimTable == null) {
+        log.warn("Null table for alias {}", targetDimAlias);
+        throw new LensException(LensCubeErrorCode.JOIN_TARGET_NOT_CUBE_TABLE.getLensErrorInfo(), targetDimAlias);
+      }
+      target = cubeql.getMetastoreClient().getDimension(targetDimTable);
+      if (target == null) {
+        log.warn("Can't resolve joins for null target");
+        throw new LensException(LensCubeErrorCode.JOIN_TARGET_NOT_CUBE_TABLE.getLensErrorInfo(), targetDimTable);
+      }
     }
 
     for (JoinChain chain : cubeql.getJoinchains().values()) {
@@ -157,84 +140,14 @@ class JoinResolver implements ContextRewriter {
       }
     }
 
-    // Remove target
-    dimTables.remove(target);
-    if (dimTables.isEmpty() && cubeql.getJoinchains().isEmpty()) {
-      // Joins not required
-      log.info("No dimension tables to resolve and no join chains present!");
-      return;
-    }
+    Map<Aliased<Dimension>, List<JoinPath>> multipleJoinPaths = new LinkedHashMap<>();
 
-
-    SchemaGraph graph = cubeql.getMetastoreClient().getSchemaGraph();
-    Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> multipleJoinPaths =
-      new LinkedHashMap<Aliased<Dimension>, List<SchemaGraph.JoinPath>>();
-
-    // Resolve join path for each dimension accessed in the query
-    for (Dimension joinee : dimTables) {
-      if (dimensionInJoinChain.get(joinee) == null) {
-        // Find all possible join paths
-        SchemaGraph.GraphSearch search = new SchemaGraph.GraphSearch(joinee, target, graph);
-        List<SchemaGraph.JoinPath> joinPaths = search.findAllPathsToTarget();
-        if (joinPaths != null && !joinPaths.isEmpty()) {
-          Aliased<Dimension> aliasedJoinee = Aliased.create(joinee);
-          multipleJoinPaths.put(aliasedJoinee, new ArrayList<SchemaGraph.JoinPath>(search.findAllPathsToTarget()));
-          addOptionalTables(cubeql, multipleJoinPaths.get(aliasedJoinee), cubeql.getDimensions().contains(joinee));
-        } else {
-          // No link to cube from this dim, can't proceed with query
-          if (log.isDebugEnabled()) {
-            graph.print();
-          }
-          log.warn("No join path between {} and {}", joinee.getName(), target.getName());
-          if (cubeql.getDimensions().contains(joinee)) {
-            throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getLensErrorInfo(),
-                joinee.getName(), target.getName());
-          } else {
-            // if joinee is optional dim table, remove those candidate facts
-            Set<CandidateTable> candidates = cubeql.getOptionalDimensionMap().get(joinee).requiredForCandidates;
-            for (CandidateTable candidate : candidates) {
-              if (candidate instanceof CandidateFact) {
-                if (cubeql.getCandidateFacts().contains(candidate)) {
-                  log.info("Not considering fact:{} as there is no join path to {}", candidate, joinee);
-                  cubeql.getCandidateFacts().remove(candidate);
-                  cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
-                    CandidateTablePruneCode.COLUMN_NOT_FOUND));
-                }
-              } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
-                log.info("Not considering dimtable:{} as there is no join path to {}", candidate, joinee);
-                cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
-                cubeql.addDimPruningMsgs(
-                  (Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
-                  new CandidateTablePruneCause(CandidateTablePruneCode.COLUMN_NOT_FOUND)
-                );
-              }
-            }
-          }
-        }
-      } else if (dimensionInJoinChain.get(joinee).size() > 1) {
-        throw new LensException("Table " + joinee.getName() + " has "
-          +dimensionInJoinChain.get(joinee).size() + " different paths through joinchains "
-          +"(" + dimensionInJoinChain.get(joinee) + ")"
-          +" used in query. Couldn't determine which one to use");
-      } else {
-        // the case when dimension is used only once in all joinchains.
-        if (isJoinchainDestination(cubeql, joinee)) {
-          throw new LensException("Table " + joinee.getName() + " is getting accessed via two different names: "
-            + "[" + dimensionInJoinChain.get(joinee).get(0).getName() + ", " + joinee.getName() + "]");
-        }
-        // table is accessed with chain and no chain
-        if (cubeql.getNonChainedDimensions().contains(joinee)) {
-          throw new LensException("Table " + joinee.getName() + " is getting accessed via joinchain: "
-            + dimensionInJoinChain.get(joinee).get(0).getName() + " and no chain at all");
-        }
-      }
-    }
     // populate paths from joinchains
     for (JoinChain chain : cubeql.getJoinchains().values()) {
       Dimension dimension = cubeql.getMetastoreClient().getDimension(chain.getDestTable());
       Aliased<Dimension> aliasedDimension = Aliased.create(dimension, chain.getName());
       if (multipleJoinPaths.get(aliasedDimension) == null) {
-        multipleJoinPaths.put(aliasedDimension, new ArrayList<SchemaGraph.JoinPath>());
+        multipleJoinPaths.put(aliasedDimension, new ArrayList<JoinPath>());
       }
       multipleJoinPaths.get(aliasedDimension).addAll(
         chain.getRelationEdges(cubeql.getMetastoreClient()));
@@ -243,96 +156,13 @@ class JoinResolver implements ContextRewriter {
       CubeQueryConfUtil.DEFAULT_ENABLE_FLATTENING_FOR_BRIDGETABLES);
     String bridgeTableFieldAggr = cubeql.getConf().get(CubeQueryConfUtil.BRIDGE_TABLE_FIELD_AGGREGATOR,
       CubeQueryConfUtil.DEFAULT_BRIDGE_TABLE_FIELD_AGGREGATOR);
+    Set<Dimension> requiredDimensions = Sets.newHashSet(cubeql.getDimensions());
+    requiredDimensions.removeAll(cubeql.getOptionalDimensions());
     AutoJoinContext joinCtx =
-      new AutoJoinContext(multipleJoinPaths, cubeql.optionalDimensions, partialJoinConditions, partialJoinChain,
+      new AutoJoinContext(multipleJoinPaths, requiredDimensions,
         tableJoinTypeMap, target, cubeql.getConf().get(CubeQueryConfUtil.JOIN_TYPE_KEY), true, flattenBridgeTables,
         bridgeTableFieldAggr);
     cubeql.setAutoJoinCtx(joinCtx);
-  }
-
-  private boolean isJoinchainDestination(CubeQueryContext cubeql, Dimension dimension) {
-    for (JoinChain chain : cubeql.getJoinchains().values()) {
-      if (chain.getDestTable().equalsIgnoreCase(dimension.getName())) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private void addOptionalTables(CubeQueryContext cubeql, List<SchemaGraph.JoinPath> joinPathList, boolean required)
-    throws LensException {
-    for (SchemaGraph.JoinPath joinPath : joinPathList) {
-      for (TableRelationship rel : joinPath.getEdges()) {
-        // Add the joined tables to the queries table sets so that they are
-        // resolved in candidate resolver
-        cubeql.addOptionalJoinDimTable(rel.getToTable().getName(), required);
-      }
-    }
-  }
-
-  private void setTarget(CubeMetastoreClient metastore, ASTNode node) throws  HiveException, LensException  {
-    String targetTableName = HQLParser.getString(HQLParser.findNodeByPath(node, TOK_TABNAME, Identifier));
-    if (metastore.isDimension(targetTableName)) {
-      target = metastore.getDimension(targetTableName);
-    } else if (metastore.isCube(targetTableName)) {
-      target = (AbstractCubeTable) metastore.getCube(targetTableName);
-    } else {
-      throw new LensException(LensCubeErrorCode.JOIN_TARGET_NOT_CUBE_TABLE.getLensErrorInfo(), targetTableName);
-    }
-  }
-
-  private void searchDimensionTables(CubeMetastoreClient metastore, ASTNode node) throws HiveException, LensException {
-    if (node == null) {
-      return;
-    }
-    // User has specified join conditions partially. We need to store join
-    // conditions as well as join types
-    partialJoinChain = true;
-    if (isJoinToken(node)) {
-      ASTNode left = (ASTNode) node.getChild(0);
-      ASTNode right = (ASTNode) node.getChild(1);
-      // Get table name and
-
-      String tableName = HQLParser.getString(HQLParser.findNodeByPath(right, TOK_TABNAME, Identifier));
-
-      Dimension dimension = metastore.getDimension(tableName);
-      String joinCond = "";
-      if (node.getChildCount() > 2) {
-        // User has specified a join condition for filter pushdown.
-        joinCond = HQLParser.getString((ASTNode) node.getChild(2));
-      }
-      partialJoinConditions.put(dimension, joinCond);
-      tableJoinTypeMap.put(dimension, getJoinType(node));
-      if (isJoinToken(left)) {
-        searchDimensionTables(metastore, left);
-      } else {
-        if (left.getToken().getType() == TOK_TABREF) {
-          setTarget(metastore, left);
-        }
-      }
-    } else if (node.getToken().getType() == TOK_TABREF) {
-      setTarget(metastore, node);
-    }
-
-  }
-
-  private JoinType getJoinType(ASTNode node) {
-    switch (node.getToken().getType()) {
-    case TOK_LEFTOUTERJOIN:
-      return JoinType.LEFTOUTER;
-    case TOK_LEFTSEMIJOIN:
-      return JoinType.LEFTSEMI;
-    case TOK_RIGHTOUTERJOIN:
-      return JoinType.RIGHTOUTER;
-    case TOK_FULLOUTERJOIN:
-      return JoinType.FULLOUTER;
-    case TOK_JOIN:
-      return JoinType.INNER;
-    case TOK_UNIQUEJOIN:
-      return JoinType.UNIQUE;
-    default:
-      return JoinType.INNER;
-    }
   }
 
   // Recursively find out join conditions
@@ -418,7 +248,7 @@ class JoinResolver implements ContextRewriter {
       }
       children[1] = alias;
       joinTree.setBaseSrc(children);
-      // remember rhs table for semijoin
+      // remember rhs table for semi join
       if (!joinTree.getNoSemiJoin()) {
         joinTree.addRHSSemijoin(alias);
       }
@@ -431,7 +261,7 @@ class JoinResolver implements ContextRewriter {
       cubeql.setJoinCond(joinTree, HQLParser.getString(joinCond));
     } else {
       // No join condition specified. this should be an error
-      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAIABLE.getLensErrorInfo());
+      throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAILABLE.getLensErrorInfo());
     }
     return joinTree;
   }
