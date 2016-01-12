@@ -31,12 +31,14 @@ import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -1193,6 +1195,10 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       msc = getSession(sessionid).getMetaStoreClient();
       List<String> tables = msc.getAllTables(
         dbName);
+      Configuration conf = getSession(sessionid).getSessionConf();
+      if (!conf.getBoolean(LensConfConstants.EXCLUDE_CUBE_TABLES, LensConfConstants.DEFAULT_EXCLUDE_CUBE_TABLES)) {
+        return tables;
+      }
       List<String> result = new ArrayList<String>();
       if (tables != null && !tables.isEmpty()) {
         List<org.apache.hadoop.hive.metastore.api.Table> tblObjects =

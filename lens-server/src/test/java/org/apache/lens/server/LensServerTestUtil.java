@@ -223,13 +223,16 @@ public final class LensServerTestUtil {
    * @param tableName the table name
    * @throws HiveException the hive exception
    */
-  public static void createHiveTable(String tableName) throws HiveException {
+  public static void createHiveTable(String tableName, Map<String, String> parameters) throws HiveException {
     List<FieldSchema> columns = new ArrayList<FieldSchema>();
     columns.add(new FieldSchema("col1", "string", ""));
     List<FieldSchema> partCols = new ArrayList<FieldSchema>();
     partCols.add(new FieldSchema("pcol1", "string", ""));
     Map<String, String> params = new HashMap<String, String>();
     params.put("test.hive.table.prop", "tvalue");
+    if (null != parameters && !parameters.isEmpty()) {
+      params.putAll(parameters);
+    }
     Table tbl = Hive.get().newTable(tableName);
     tbl.setTableType(TableType.MANAGED_TABLE);
     tbl.getTTable().getSd().setCols(columns);

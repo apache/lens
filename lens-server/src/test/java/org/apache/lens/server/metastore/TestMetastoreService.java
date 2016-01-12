@@ -50,6 +50,7 @@ import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.api.util.LensUtil;
 
@@ -2415,7 +2416,7 @@ public class TestMetastoreService extends LensJerseyTest {
       // create hive table
       String tableName = "test_simple_table";
       SessionState.get().setCurrentDatabase(DB);
-      LensServerTestUtil.createHiveTable(tableName);
+      LensServerTestUtil.createHiveTable(tableName, new HashMap<String, String>());
 
       WebTarget target = target().path("metastore").path("nativetables");
       // get all native tables
@@ -2446,6 +2447,29 @@ public class TestMetastoreService extends LensJerseyTest {
         .queryParam("dbOption", "current").request(mediaType).get(StringList.class);
       assertEquals(nativetables.getElements().size(), 1);
       assertEquals(nativetables.getElements().get(0), tableName);
+
+      // test for lens.session.metastore.exclude.cubetables.from.nativetables session config
+      String cubeTableName = "test_cube_table";
+      Map<String, String> params = new HashMap<String, String>();
+      params.put(MetastoreConstants.TABLE_TYPE_KEY, CubeTableType.CUBE.name());
+      LensServerTestUtil.createHiveTable(cubeTableName, params);
+
+      // Test for excluding cube tables
+      nativetables = target.queryParam("sessionid", lensSessionId).queryParam("dbName", DB)
+        .queryParam("dbOption", "current").request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
+
+      // Test for not excluding cube tables
+      Map<String, String> sessionConf = new HashMap<String, String>();
+      sessionConf.put(LensConfConstants.EXCLUDE_CUBE_TABLES, "false");
+      LensSessionHandle lensSessionId2 =
+        metastoreService.openSession("foo", "bar", sessionConf);
+      nativetables = target.queryParam("sessionid", lensSessionId2).queryParam("dbName", DB)
+        .queryParam("dbOption", "current").request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 2);
+      assertTrue(nativetables.getElements().contains(tableName));
+      assertTrue(nativetables.getElements().contains(cubeTableName));
 
       // Now get the table
       JAXBElement<XNativeTable> actualElement = target.path(tableName).queryParam(
