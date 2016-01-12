@@ -220,7 +220,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     if (astNode == null) {
       return null;
     }
-    if (isAggregateAST(astNode) || isTableColumnAST(astNode)) {
+    if (isAggregateAST(astNode) || isTableColumnAST(astNode) || isNonAggregateFunctionAST(astNode)) {
       if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
         ASTNode ret = innerToOuterASTs.get(new HashableASTNode(astNode));
         // Set parent null for quicker GC
