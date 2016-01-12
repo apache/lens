@@ -563,6 +563,10 @@ public class CubeTestSetup {
     chainRefs.add(new ChainRefCol("timedatechain2", "full_date"));
     cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("test_time_dim2", "date", "chained dim"),
       "Timedim full date", chainRefs, null, null, null, null));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("cityid1", "int", "id to city"),
+      "City1", null, null, null));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("cityid2", "int", "id to city"),
+      "City2", null, null, null));
 
     Map<String, JoinChain> joinChains = new HashMap<>();
     addCubeChains(joinChains, TEST_CUBE_NAME);
@@ -712,6 +716,26 @@ public class CubeTestSetup {
             add(new TableReference(cubeName, "dim2"));
             add(new TableReference("testdim2", "id"));
             add(new TableReference("testdim2", "cityid"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeCity1", new JoinChain("cubeCity1", "cube-city", "city thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "cityid1"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeCity2", new JoinChain("cubeCity2", "cube-city", "city thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "cityid2"));
             add(new TableReference("citydim", "id"));
           }
         });
@@ -1345,6 +1369,7 @@ public class CubeTestSetup {
     // add dimensions of the cube
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
+    factColumns.add(new FieldSchema("cityid1", "int", "city id"));
     factColumns.add(new FieldSchema("stateid", "int", "city id"));
     factColumns.add(new FieldSchema("test_time_dim_day_id", "int", "time id"));
     factColumns.add(new FieldSchema("test_time_dim_day_id2", "int", "time id"));
@@ -1580,6 +1605,7 @@ public class CubeTestSetup {
     // add dimensions of the cube
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
+    factColumns.add(new FieldSchema("cityid2", "int", "city id"));
     factColumns.add(new FieldSchema("test_time_dim_hour_id", "int", "time id"));
     factColumns.add(new FieldSchema("test_time_dim_hour_id2", "int", "time id"));
     factColumns.add(new FieldSchema("cdim2", "int", "cycledim id"));
@@ -1714,6 +1740,8 @@ public class CubeTestSetup {
     // add dimensions of the cube
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
+    factColumns.add(new FieldSchema("cityid1", "int", "city id"));
+    factColumns.add(new FieldSchema("cityid2", "int", "city id"));
     factColumns.add(new FieldSchema("stateid", "int", "state id"));
     factColumns.add(new FieldSchema("countryid", "int", "country id"));
     factColumns.add(new FieldSchema("dim1", "string", "dim1"));

@@ -156,7 +156,9 @@ class StorageTableResolver implements ContextRewriter {
 
   private void resolveDimStorageTablesAndPartitions(CubeQueryContext cubeql) throws LensException {
     Set<Dimension> allDims = new HashSet<Dimension>(cubeql.getDimensions());
-    allDims.addAll(cubeql.getOptionalDimensions());
+    for (Aliased<Dimension> dim : cubeql.getOptionalDimensions()) {
+      allDims.add(dim.getObject());
+    }
     for (Dimension dim : allDims) {
       Set<CandidateDim> dimTables = cubeql.getCandidateDimTables().get(dim);
       if (dimTables == null || dimTables.isEmpty()) {

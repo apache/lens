@@ -36,4 +36,8 @@ public class Aliased<T extends Named> {
   public static <K extends Named> Aliased<K> create(K obj, String alias) {
     return new Aliased<K>(obj, alias);
   }
+
+  public String getName() {
+    return object.getName();
+  }
 }

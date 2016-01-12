@@ -57,10 +57,10 @@ public class AutoJoinContext {
   // Map of a joined table to its columns which are part of any of the join
   // paths. This is used in candidate table resolver
   @Getter
-  private Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathFromColumns = new HashMap<>();
+  private Map<Aliased<Dimension>, Map<AbstractCubeTable, List<String>>> joinPathFromColumns = new HashMap<>();
 
   @Getter
-  private Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathToColumns = new HashMap<>();
+  private Map<Aliased<Dimension>, Map<AbstractCubeTable, List<String>>> joinPathToColumns = new HashMap<>();
 
   // there can be separate join clause for each fact in-case of multi fact queries
   @Getter
@@ -122,12 +122,12 @@ public class AutoJoinContext {
       Map<AbstractCubeTable, List<String>> toColPaths = joinPathToColumns.get(joinPathEntry.getKey().getObject());
       if (fromColPaths == null) {
         fromColPaths = new HashMap<>();
-        joinPathFromColumns.put(joinPathEntry.getKey().getObject(), fromColPaths);
+        joinPathFromColumns.put(joinPathEntry.getKey(), fromColPaths);
       }
 
       if (toColPaths == null) {
         toColPaths = new HashMap<>();
-        joinPathToColumns.put(joinPathEntry.getKey().getObject(), toColPaths);
+        joinPathToColumns.put(joinPathEntry.getKey(), toColPaths);
       }
       populateJoinPathCols(joinPaths, fromColPaths, toColPaths);
     }
@@ -159,8 +159,8 @@ public class AutoJoinContext {
     }
   }
 
-  public void removeJoinedTable(Dimension dim) {
-    allPaths.remove(Aliased.create(dim));
+  public void removeJoinedTable(Aliased<Dimension> dim) {
+    allPaths.remove(dim);
     joinPathFromColumns.remove(dim);
   }
 

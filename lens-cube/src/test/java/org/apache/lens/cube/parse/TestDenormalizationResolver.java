@@ -267,7 +267,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     // candidate
     Assert.assertEquals(getLensExceptionErrorMessageInRewrite(
         "select citydim.name, citydim.statename, citydim.nocandidatecol " + "from citydim", conf),
-        "No dimension table has the queried columns " + "for citydim, columns: [name, statename, nocandidatecol]");
+      "No dimension table has the queried columns " + "for citydim, columns: [name, statename, nocandidatecol]");
   }
 
   @Test
@@ -329,6 +329,20 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 
+  @Test
+  public void testTwoFieldsFromDifferentChainButSameTable() throws Exception {
+    String hqlQuery = rewrite("select cubecity1.name, cubecity2.name, msr2 from testcube where " + TWO_DAYS_RANGE,
+      conf);
+    String joinExpr = " join " + getDbName()
+      + "c1_citytable cubecity1 on testcube.cityid1 = cubecity1.id and (cubecity1.dt = 'latest') "
+      + " join " + getDbName()
+      + "c1_citytable cubecity2 on testcube.cityid2 = cubecity2.id and (cubecity2.dt = 'latest')";
+    String expected =
+      getExpectedQuery("testcube", "select cubecity1.name, cubecity2.name, sum(testcube.msr2) FROM ",
+        joinExpr, null, " group by cubecity1.name, cubecity2.name", null,
+        getWhereForHourly2days("testcube", "c1_testfact2_raw"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
   @Test
   public void testDimensionQueryWithTwoRefCols() throws Exception {
     Configuration tConf = new Configuration(conf);

@@ -96,13 +96,14 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
 
   @Getter
   // Mapping of a qualified column name to its table alias
-  private final Map<String, String> colToTableAlias = new HashMap<String, String>();
+  private final Map<String, String> colToTableAlias = new HashMap<>();
 
-  @Getter()
-  private final Set<Set<CandidateFact>> candidateFactSets = new HashSet<Set<CandidateFact>>();
+  @Getter
+  private final Set<Set<CandidateFact>> candidateFactSets = new HashSet<>();
 
+  @Getter
   // would be added through join chains and de-normalized resolver
-  protected Map<Dimension, OptionalDimCtx> optionalDimensions = new HashMap<Dimension, OptionalDimCtx>();
+  protected Map<Aliased<Dimension>, OptionalDimCtx> optionalDimensionMap = new HashMap<>();
 
   // Alias to table object mapping of tables accessed in this query
   @Getter
@@ -351,10 +352,10 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
 
   // map of ref column in query to set of Dimension that have the column - which are added as optional dims
   @Getter
-  private Map<String, Set<Dimension>>  refColToDim = Maps.newHashMap();
+  private Map<String, Set<Aliased<Dimension>>>  refColToDim = Maps.newHashMap();
 
-  public void updateRefColDim(String col, Dimension dim) {
-    Set<Dimension> refDims = refColToDim.get(col.toLowerCase());
+  public void updateRefColDim(String col, Aliased<Dimension> dim) {
+    Set<Aliased<Dimension>> refDims = refColToDim.get(col.toLowerCase());
     if (refDims == null) {
       refDims = Sets.newHashSet();
       refColToDim.put(col.toLowerCase(), refDims);
@@ -371,12 +372,12 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   // map of expression column in query to set of Dimension that are accessed in the expression column - which are added
   // as optional dims
   @Getter
-  private Map<QueriedExprColumn, Set<Dimension>>  exprColToDim = Maps.newHashMap();
+  private Map<QueriedExprColumn, Set<Aliased<Dimension>>>  exprColToDim = Maps.newHashMap();
 
-  public void updateExprColDim(String tblAlias, String col, Dimension dim) {
+  public void updateExprColDim(String tblAlias, String col, Aliased<Dimension> dim) {
 
     QueriedExprColumn qexpr = new QueriedExprColumn(col, tblAlias);
-    Set<Dimension> exprDims = exprColToDim.get(qexpr);
+    Set<Aliased<Dimension>> exprDims = exprColToDim.get(qexpr);
     if (exprDims == null) {
       exprDims = Sets.newHashSet();
       exprColToDim.put(qexpr, exprDims);
@@ -419,10 +420,11 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
       throw new LensException(LensCubeErrorCode.QUERIED_TABLE_NOT_FOUND.getLensErrorInfo(), alias);
     }
     Dimension dim = (Dimension) cubeTbls.get(alias);
-    OptionalDimCtx optDim = optionalDimensions.get(dim);
+    Aliased<Dimension> aliasedDim = Aliased.create(dim, alias);
+    OptionalDimCtx optDim = optionalDimensionMap.get(aliasedDim);
     if (optDim == null) {
       optDim = new OptionalDimCtx();
-      optionalDimensions.put(dim, optDim);
+      optionalDimensionMap.put(aliasedDim, optDim);
     }
     if (cols != null && candidate != null) {
       for (String col : cols) {
@@ -432,16 +434,16 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     }
     if (cubeCol != null) {
       if (isRef) {
-        updateRefColDim(cubeCol, dim);
+        updateRefColDim(cubeCol, aliasedDim);
       } else {
-        updateExprColDim(tableAlias, cubeCol, dim);
+        updateExprColDim(tableAlias, cubeCol, aliasedDim);
       }
     }
     if (!optDim.isRequiredInJoinChain) {
       optDim.isRequiredInJoinChain = isRequiredInJoin;
     }
     if (log.isDebugEnabled()) {
-      log.debug("Adding optional dimension:{} optDim:{} {} isRef:{}", dim, optDim,
+      log.debug("Adding optional dimension:{} optDim:{} {} isRef:{}", aliasedDim, optDim,
         (cubeCol == null ? "" : " for column:" + cubeCol), isRef);
     }
   }
@@ -872,6 +874,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   public String toHQL() throws LensException {
     Set<CandidateFact> cfacts = pickCandidateFactToQuery();
     Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
+    log.info("facts:{}, dimsToQuery: {}", cfacts, dimsToQuery);
     if (autoJoinCtx != null) {
       // prune join paths for picked fact and dimensions
       autoJoinCtx.pruneAllPaths(cube, cfacts, dimsToQuery);
@@ -908,6 +911,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
       exprDimensions.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, this));
     }
     dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimensions));
+    log.info("facts:{}, dimsToQuery: {}", cfacts, dimsToQuery);
 
     // pick denorm tables for the picked fact and dimensions
     Set<Dimension> denormTables = new HashSet<Dimension>();
@@ -923,6 +927,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
       denormTables.addAll(deNormCtx.rewriteDenormctx(null, dimsToQuery, false));
     }
     dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables));
+    log.info("facts:{}, dimsToQuery: {}", cfacts, dimsToQuery);
     // Prune join paths once denorm tables are picked
     if (autoJoinCtx != null) {
       // prune join paths for picked fact and dimensions
@@ -1129,12 +1134,8 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     }
   }
 
-  public Set<Dimension> getOptionalDimensions() {
-    return optionalDimensions.keySet();
-  }
-
-  public Map<Dimension, OptionalDimCtx> getOptionalDimensionMap() {
-    return optionalDimensions;
+  public Set<Aliased<Dimension>> getOptionalDimensions() {
+    return optionalDimensionMap.keySet();
   }
 
   /**
