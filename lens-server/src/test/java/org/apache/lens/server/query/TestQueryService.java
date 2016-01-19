@@ -1254,6 +1254,22 @@ public class TestQueryService extends LensJerseyTest {
       // server configuration should not set
       assertNull(dconf.get("lens.server.persist.location"));
     }
+
+    checkDefaultConfigConsistency();
+  }
+
+  public void checkDefaultConfigConsistency() {
+    Configuration conf = LensSessionImpl.createDefaultConf();
+    assertNotNull(conf.get("lens.query.enable.persistent.resultset"));
+    boolean isDriverPersistent = conf.getBoolean("lens.query.enable.persistent.resultset", false);
+    conf.setBoolean("lens.query.enable.persistent.resultset", isDriverPersistent ? false : true);
+    conf.set("new_random_property", "new_random_property");
+
+    // Get the default conf again and verify its not modified by previous operations
+    conf = LensSessionImpl.createDefaultConf();
+    boolean isDriverPersistentNow = conf.getBoolean("lens.query.enable.persistent.resultset", false);
+    assertEquals(isDriverPersistentNow, isDriverPersistent);
+    assertNull(conf.get("new_random_property"));
   }
 
   /**

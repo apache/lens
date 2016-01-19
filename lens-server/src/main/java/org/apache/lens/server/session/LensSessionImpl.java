@@ -66,7 +66,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   private long sessionTimeout;
 
   /** The conf. */
-  private Configuration conf = new Configuration(createDefaultConf());
+  private Configuration conf = createDefaultConf();
 
   /**
    * Keep track of DB static resources which failed to be added to this session
@@ -123,7 +123,8 @@ public class LensSessionImpl extends HiveSessionImpl {
         }
       }
     }
-    return sessionDefaultConfig;
+    //Not exposing sessionDefaultConfig directly to insulate it form modifications
+    return new Configuration(sessionDefaultConfig);
   }
 
   /** The default hive session conf. */
