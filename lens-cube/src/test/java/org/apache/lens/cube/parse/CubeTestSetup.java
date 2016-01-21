@@ -945,6 +945,18 @@ public class CubeTestSetup {
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("userid", "int", "userid")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("xuserid", "int", "userid")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("yuserid", "int", "userid")));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("xsports", "array<string>", ""),
+      "xuser sports", "xusersports", "name", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("ysports", "array<string>", ""),
+      "yuser sports", "yusersports", "name", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("sports", "array<string>", ""),
+      "user sports", "usersports", "name", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("sportids", "array<int>", ""),
+      "user sports", "userInterestIds", "sport_id", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("statecountry", "string", ""),
+      "state country", "cubestatecountry", "name", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("citycountry", "string", ""),
+      "city country", "cubecitystatecountry", "name", null, null, null));
 
     Map<String, String> cubeProperties = new HashMap<>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(BASE_CUBE_NAME),
@@ -1104,9 +1116,13 @@ public class CubeTestSetup {
     cubeDimensions2.add(
       new ReferencedDimAttribute(new FieldSchema("cityStateCapital", "string", "State's capital thru city"),
         "State's capital thru city", "cityState", "capital", null, null, null));
-    client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, exprs, joinChains, cubeProperties);
+    Set<ExprColumn> baseExprs = new HashSet<>(exprs);
+    baseExprs.add(new ExprColumn(new FieldSchema("substrsprorts", "String", "substr of sports"), "substr sports",
+      "substr(sports, 10)"));
 
-    Map<String, String> derivedProperties = new HashMap<String, String>();
+    client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, baseExprs, joinChains, cubeProperties);
+
+    Map<String, String> derivedProperties = new HashMap<>();
     derivedProperties.put(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE, "true");
     Set<String> measures = new HashSet<>();
     measures.add("msr1");

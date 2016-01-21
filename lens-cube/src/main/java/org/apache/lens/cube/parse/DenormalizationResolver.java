@@ -37,6 +37,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,14 +68,13 @@ public class DenormalizationResolver implements ContextRewriter {
 
   @ToString
   public static class PickedReference {
-    TableReference reference;
+    @Getter
     ChainRefCol chainRef;
     String srcAlias;
     String pickedFor;
 
-    PickedReference(TableReference reference, String srcAlias, String pickedFor) {
+    PickedReference(String srcAlias, String pickedFor) {
       this.srcAlias = srcAlias;
-      this.reference = reference;
       this.pickedFor = pickedFor;
     }
 
@@ -83,38 +83,22 @@ public class DenormalizationResolver implements ContextRewriter {
       this.chainRef = chainRef;
       this.pickedFor = pickedFor;
     }
-
-    String getDestTable() {
-      if (chainRef != null) {
-        return chainRef.getChainName();
-      }
-      return reference.getDestTable();
-    }
-
-    String getRefColumn() {
-      if (chainRef != null) {
-        return chainRef.getRefColumn();
-      }
-      return reference.getDestColumn();
-    }
   }
 
   public static class DenormalizationContext {
     // map of column name to all references
-    private Map<String, Set<ReferencedQueriedColumn>> referencedCols =
-      new HashMap<String, Set<ReferencedQueriedColumn>>();
+    private Map<String, Set<ReferencedQueriedColumn>> referencedCols = new HashMap<>();
 
     // candidate table name to all the references columns it needs
-    private Map<String, Set<ReferencedQueriedColumn>> tableToRefCols =
-      new HashMap<String, Set<ReferencedQueriedColumn>>();
+    private Map<String, Set<ReferencedQueriedColumn>> tableToRefCols = new HashMap<>();
 
     private CubeQueryContext cubeql;
 
     // set of all picked references once all candidate tables are picked
-    private Set<PickedReference> pickedRefs = new HashSet<PickedReference>();
+    private Set<PickedReference> pickedRefs = new HashSet<>();
     // index on column name for picked references with map from column name to
     // pickedrefs
-    private Map<String, Set<PickedReference>> pickedReferences = new HashMap<String, Set<PickedReference>>();
+    private Map<String, Set<PickedReference>> pickedReferences = new HashMap<>();
 
     DenormalizationContext(CubeQueryContext cubeql) {
       this.cubeql = cubeql;
@@ -123,7 +107,7 @@ public class DenormalizationResolver implements ContextRewriter {
     void addReferencedCol(String col, ReferencedQueriedColumn refer) {
       Set<ReferencedQueriedColumn> refCols = referencedCols.get(col);
       if (refCols == null) {
-        refCols = new HashSet<ReferencedQueriedColumn>();
+        refCols = new HashSet<>();
         referencedCols.put(col, refCols);
       }
       refCols.add(refer);
@@ -144,7 +128,7 @@ public class DenormalizationResolver implements ContextRewriter {
             log.info("Adding denormalized column for column:{} for table:{}", col, table);
             Set<ReferencedQueriedColumn> refCols = tableToRefCols.get(table.getName());
             if (refCols == null) {
-              refCols = new HashSet<ReferencedQueriedColumn>();
+              refCols = new HashSet<>();
               tableToRefCols.put(table.getName(), refCols);
             }
             refCols.add(refer);
@@ -167,7 +151,7 @@ public class DenormalizationResolver implements ContextRewriter {
     private void addPickedReference(String col, PickedReference refer) {
       Set<PickedReference> refCols = pickedReferences.get(col);
       if (refCols == null) {
-        refCols = new HashSet<PickedReference>();
+        refCols = new HashSet<>();
         pickedReferences.put(col, refCols);
       }
       refCols.add(refer);
@@ -187,7 +171,7 @@ public class DenormalizationResolver implements ContextRewriter {
 
     public Set<Dimension> rewriteDenormctx(CandidateFact cfact, Map<Dimension, CandidateDim> dimsToQuery,
       boolean replaceFact) throws LensException {
-      Set<Dimension> refTbls = new HashSet<Dimension>();
+      Set<Dimension> refTbls = new HashSet<>();
 
       if (!tableToRefCols.isEmpty()) {
         // pick referenced columns for fact
@@ -206,7 +190,8 @@ public class DenormalizationResolver implements ContextRewriter {
         // Add the picked references to dimsToQuery
         for (PickedReference picked : pickedRefs) {
           if (isPickedFor(picked, cfact, dimsToQuery)) {
-            refTbls.add((Dimension) cubeql.getCubeTableForAlias(picked.getDestTable()));
+            refTbls.add((Dimension) cubeql.getCubeTableForAlias(picked.getChainRef().getChainName()));
+            cubeql.addColumnsQueried(picked.getChainRef().getChainName(), picked.getChainRef().getRefColumn());
           }
         }
       }
@@ -286,10 +271,11 @@ public class DenormalizationResolver implements ContextRewriter {
           return;
         }
         ASTNode newTableNode =
-          new ASTNode(new CommonToken(HiveParser.Identifier, query.getAliasForTableName(refered.getDestTable())));
+          new ASTNode(new CommonToken(HiveParser.Identifier, refered.getChainRef().getChainName()));
         tableNode.setChild(0, newTableNode);
 
-        ASTNode newColumnNode = new ASTNode(new CommonToken(HiveParser.Identifier, refered.getRefColumn()));
+        ASTNode newColumnNode = new ASTNode(new CommonToken(HiveParser.Identifier,
+          refered.getChainRef().getRefColumn()));
         node.setChild(1, newColumnNode);
       } else {
         // recurse down

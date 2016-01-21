@@ -306,7 +306,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
       System.err.println("__FAILED__ " + method + "\n\tExpected: " + expected + "\n\t---------\n\tActual: " + actual);
     }
-    assertTrue(actualTrimmed.toLowerCase().contains(expectedTrimmed.toLowerCase()));
+    assertTrue(actualTrimmed.toLowerCase().contains(expectedTrimmed.toLowerCase()), "Expected:" + expected
+      + "Actual:" + actual);
   }
 
   @Test

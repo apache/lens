@@ -167,7 +167,7 @@ public class AutoJoinContext {
   public String getFromString(String fromTable, CandidateFact fact, Set<Dimension> qdims,
     Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) throws LensException {
     String fromString = fromTable;
-    log.info("All paths dump:{}", cubeql.getAutoJoinCtx().getAllPaths());
+    log.info("All paths dump:{} Queried dims:{}", cubeql.getAutoJoinCtx().getAllPaths(), qdims);
     if (qdims == null || qdims.isEmpty()) {
       return fromString;
     }

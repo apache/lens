@@ -86,7 +86,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     expectedClauses.add(getDbName()
       + "c1_testdim4tbl dim4chain on testdim3.testdim4id = dim4chain.id and (dim4chain.dt = 'latest')");
 
-    List<String> actualClauses = new ArrayList<String>();
+    List<String> actualClauses = new ArrayList<>();
     for (String clause : StringUtils.splitByWholeSeparator(getAutoResolvedFromString(rewrittenQuery), "join")) {
       if (StringUtils.isNotBlank(clause)) {
         actualClauses.add(clause.trim());
@@ -135,13 +135,13 @@ public class TestJoinResolver extends TestQueryRewrite {
     String hqlQuery = rewrite(query, hconf);
     String expected = getExpectedQuery("testcube", "select citydim.name, testDim4.name, sum(testcube.msr2) FROM ",
       " left outer JOIN " + getDbName() + "c1_citytable citydim on testcube.cityid = citydim.id +"
-      + " and (( citydim . name ) =  'FOOBAR' ) and (citydim.dt = 'latest')"
-      + " right outer join " + getDbName()
-      + "c1_testdim2tbl testdim2 on testcube.dim2 = testdim2.id and (testdim2.dt = 'latest')"
-      + " right outer join " + getDbName() + "c1_testdim3tbl testdim3 on testdim2.testdim3id = testdim3.id and "
-      + "(testdim3.dt = 'latest') "
-      + " right outer join " + getDbName() + "c1_testdim4tbl testdim4 on testdim3.testdim4id = testdim4.id and "
-      + "(( testdim4 . name ) =  'TESTDIM4NAME' ) and (testdim4.dt = 'latest')",
+        + " and (( citydim . name ) =  'FOOBAR' ) and (citydim.dt = 'latest')"
+        + " right outer join " + getDbName()
+        + "c1_testdim2tbl testdim2 on testcube.dim2 = testdim2.id and (testdim2.dt = 'latest')"
+        + " right outer join " + getDbName() + "c1_testdim3tbl testdim3 on testdim2.testdim3id = testdim3.id and "
+        + "(testdim3.dt = 'latest') "
+        + " right outer join " + getDbName() + "c1_testdim4tbl testdim4 on testdim3.testdim4id = testdim4.id and "
+        + "(( testdim4 . name ) =  'TESTDIM4NAME' ) and (testdim4.dt = 'latest')",
       null, "group by citydim.name, testdim4.name", null,
       getWhereForDailyAndHourly2days("testcube", "c1_summary3"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
@@ -177,7 +177,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     // Check that aliases are preserved in the join clause
     String expected = getExpectedQuery("testcube", "select cubecity.name, sum(testcube.msr2) FROM ",
       " left outer join " + getDbName()
-      + "c1_citytable cubecity ON testcube.cityid = cubecity.id and (cubecity.dt = 'latest')",
+        + "c1_citytable cubecity ON testcube.cityid = cubecity.id and (cubecity.dt = 'latest')",
       null, " group by cubecity.name", null, getWhereForHourly2days("testcube", "c1_testfact2"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
@@ -186,7 +186,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     // Check that aliases are preserved in the join clause
     expected = getExpectedQuery("testcube", "select cubecity.name, sum(testcube.msr2) FROM ",
       " full outer join " + getDbName()
-      + "c1_citytable cubecity ON testcube.cityid = cubecity.id and (cubecity.dt = 'latest')",
+        + "c1_citytable cubecity ON testcube.cityid = cubecity.id and (cubecity.dt = 'latest')",
       null, " group by cubecity.name", null, getWhereForHourly2days("testcube", "c1_testfact2"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
@@ -195,7 +195,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     // Check that aliases are preserved in the join clause
     expected = getExpectedQuery("testcube", "select cubecity.name, sum(testcube.msr2) FROM ",
       " right outer join " + getDbName()
-      + "c1_citytable cubecity ON testcube.cityid = cubecity.id",
+        + "c1_citytable cubecity ON testcube.cityid = cubecity.id",
       null, " and (cubecity.dt = 'latest') group by cubecity.name", null,
       getWhereForHourly2days("testcube", "c1_testfact2"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
@@ -224,7 +224,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     // Check that aliases are preserved in the join clause
     String expected = getExpectedQuery("t", "select cubecity.name, sum(t.msr2) FROM ",
       " left outer join " + getDbName()
-      + "c1_citytable cubecity ON t.cityid = cubecity.id and (cubecity.dt = 'latest')",
+        + "c1_citytable cubecity ON t.cityid = cubecity.id and (cubecity.dt = 'latest')",
       null, " group by cubecity.name", null, getWhereForHourly2days("t", "c1_testfact2"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
@@ -237,7 +237,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     String hqlQuery = rewrite(query, tConf);
     String expected =
       getExpectedQuery("citydim", "select citydim.name, citystate.name from ", " inner join " + getDbName()
-        + "c1_statetable citystate on citydim.stateid = citystate.id and (citystate.dt = 'latest')",
+          + "c1_statetable citystate on citydim.stateid = citystate.id and (citystate.dt = 'latest')",
         null, " limit 10", "c1_citytable", true);
     compareQueries(hqlQuery, expected);
   }
@@ -252,7 +252,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     String hqlQuery = rewrite(queryWithJoin, tConf);
     String expected =
       getExpectedQuery("citydim", "select citydim.name, statedim.name from ", " inner join " + getDbName()
-        + "c1_statetable statedim on citydim.stateid = statedim.id and citydim.dt='latest' and statedim.dt='latest'",
+          + "c1_statetable statedim on citydim.stateid = statedim.id and citydim.dt='latest' and statedim.dt='latest'",
         null, null, "c1_citytable", false);
     compareQueries(hqlQuery, expected);
   }
@@ -264,7 +264,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     String hqlQuery = rewrite(q1, hconf);
     String expected =
       getExpectedQuery("citydim", "select citydim.name, statedim.name from ", " left outer join " + getDbName()
-        + "c1_statetable statedim on citydim.stateid = statedim.id and citydim.dt='latest' and statedim.dt='latest'",
+          + "c1_statetable statedim on citydim.stateid = statedim.id and citydim.dt='latest' and statedim.dt='latest'",
         null, null, "c1_citytable", false);
     compareQueries(hqlQuery, expected);
 
@@ -273,7 +273,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     hqlQuery = rewrite(q2, hconf);
     expected =
       getExpectedQuery("citydim", "select citydim.name, statedim.name from ", " right outer join " + getDbName()
-        + "c1_statetable statedim on citydim.stateid = statedim.id and citydim.dt='latest' and statedim.dt='latest'",
+          + "c1_statetable statedim on citydim.stateid = statedim.id and citydim.dt='latest' and statedim.dt='latest'",
         null, null, "c1_citytable", false);
     compareQueries(hqlQuery, expected);
 
@@ -282,8 +282,10 @@ public class TestJoinResolver extends TestQueryRewrite {
     hqlQuery = rewrite(q3, hconf);
     expected =
       getExpectedQuery("citydim", "select citydim.name, statedim.name from ", " full outer join " + getDbName()
-        + "c1_statetable statedim on citydim.stateid = statedim.id and citydim.dt='latest' and statedim.dt='latest'",
+          + "c1_statetable statedim on citydim.stateid = statedim.id and citydim.dt='latest' and statedim.dt='latest'",
         null, null, "c1_citytable", false);
+    compareQueries(hqlQuery, expected);
+
   }
 
   @Test
@@ -294,7 +296,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     String hqlQuery = rewrite(q, conf);
     String expected =
       getExpectedQuery("citydim", "select citydim.name, citystate.name from ", " left outer join " + getDbName()
-        + "c1_statetable citystate on citydim.stateid = citystate.id and (citystate.dt = 'latest')",
+          + "c1_statetable citystate on citydim.stateid = citystate.id and (citystate.dt = 'latest')",
         null, " limit 10", "c1_citytable", true);
     compareQueries(hqlQuery, expected);
 
@@ -302,7 +304,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     hqlQuery = rewrite(q, conf);
     expected =
       getExpectedQuery("citydim", "select citydim.name, citystate.name from ", " right outer join " + getDbName()
-        + "c1_statetable citystate on citydim.stateid = citystate.id and (citydim.dt = 'latest')",
+          + "c1_statetable citystate on citydim.stateid = citystate.id and (citydim.dt = 'latest')",
         " citystate.dt='latest' ", "limit 10", "c1_citytable", false);
     compareQueries(hqlQuery, expected);
 
@@ -451,8 +453,8 @@ public class TestJoinResolver extends TestQueryRewrite {
 
     // Test 4 Dim only query with join chains
 
-    List<String> expectedClauses = new ArrayList<String>();
-    List<String> actualClauses = new ArrayList<String>();
+    List<String> expectedClauses = new ArrayList<>();
+    List<String> actualClauses = new ArrayList<>();
     String dimOnlyQuery = "select testDim2.name, testDim2.cityStateCapital FROM testDim2 where " + TWO_DAYS_RANGE;
     CubeQueryRewriter driver = new CubeQueryRewriter(hconf, hconf);
     CubeQueryContext rewrittenQuery = driver.rewrite(dimOnlyQuery);
@@ -636,7 +638,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     CubeQueryContext rewrittenQuery = driver.rewrite(dimOnlyQuery);
     rewrittenQuery.toHQL();
     Dimension citydim = CubeMetastoreClient.getInstance(hconf).getDimension("citydim");
-    Set<String> cdimTables = new HashSet<String>();
+    Set<String> cdimTables = new HashSet<>();
     for (CandidateDim cdim : rewrittenQuery.getCandidateDims().get(citydim)) {
       cdimTables.add(cdim.getName());
     }
@@ -659,184 +661,5 @@ public class TestJoinResolver extends TestQueryRewrite {
       LensCubeErrorCode.NO_JOIN_PATH);
     assertLensExceptionInRewrite("select unreachableDim_chain.name from testcube where " + TWO_DAYS_RANGE, hconf,
       LensCubeErrorCode.NO_FACT_HAS_COLUMN);
-  }
-
-  @Test
-  public void testBridgeTablesWithoutDimtablePartitioning() throws Exception {
-    Configuration conf = new Configuration(hconf);
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
-    String query = "select usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    String hqlQuery = rewrite(query, conf);
-    String expected = getExpectedQuery("basecube", "select usersports.name, sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
-        + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name"
-        + " from " + getDbName() + "c1_user_interests_tbl user_interests"
-        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
-        + " group by user_interests.user_id) usersports"
-        + " on userdim.id = usersports.user_id ",
-      null, "group by usersports.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
-    TestCubeRewriter.compareQueries(hqlQuery, expected);
-  }
-
-  @Test
-  public void testFlattenBridgeTablesOFF() throws Exception {
-    Configuration conf = new Configuration(hconf);
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
-    conf.setBoolean(CubeQueryConfUtil.ENABLE_FLATTENING_FOR_BRIDGETABLES, false);
-    String query = "select usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    String hqlQuery = rewrite(query, conf);
-    String expected = getExpectedQuery("basecube", "select usersports.name, sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
-        + " join " + getDbName() + "c1_user_interests_tbl user_interests on userdim.id = user_interests.user_id"
-        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id",
-      null, "group by usersports.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
-    TestCubeRewriter.compareQueries(hqlQuery, expected);
-  }
-
-  @Test
-  public void testFlattenBridgeTablesWithCustomAggregate() throws Exception {
-    Configuration conf = new Configuration(hconf);
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
-    conf.set(CubeQueryConfUtil.BRIDGE_TABLE_FIELD_AGGREGATOR, "custom_aggr");
-    String query = "select usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    String hqlQuery = rewrite(query, conf);
-    String expected = getExpectedQuery("basecube", "select usersports.name, sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
-        + " join (select user_interests.user_id as user_id,custom_aggr(usersports.name) as name"
-        + " from " + getDbName() + "c1_user_interests_tbl user_interests"
-        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
-        + " group by user_interests.user_id) usersports"
-        + " on userdim.id = usersports.user_id ",
-      null, "group by usersports.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
-    TestCubeRewriter.compareQueries(hqlQuery, expected);
-  }
-
-  @Test
-  public void testBridgeTablesWithMegringChains() throws Exception {
-    Configuration conf = new Configuration(hconf);
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
-    String query = "select userInterestIds.sport_id, usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    String hqlQuery = rewrite(query, conf);
-    String expected = getExpectedQuery("basecube", "select userInterestIds.sport_id, usersports.name,"
-      + " sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c1_usertable userdim on basecube.userid = userdim.id join (select userinterestids"
-        + ".user_id as user_id,collect_set(userinterestids.sport_id) as sport_id from " + getDbName()
-        + "c1_user_interests_tbl userinterestids group by userinterestids.user_id) userinterestids on userdim.id = "
-        + "userinterestids.user_id join (select userinterestids.user_id as user_id,collect_set(usersports.name) as name"
-        + " from " + getDbName() + "c1_user_interests_tbl userinterestids join "
-        + getDbName() + "c1_sports_tbl usersports on userinterestids.sport_id = usersports.id"
-        + " group by userinterestids.user_id) usersports on userdim.id = usersports.user_id",
-       null, "group by userInterestIds.sport_id, usersports.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
-    TestCubeRewriter.compareQueries(hqlQuery, expected);
-  }
-
-  @Test
-  public void testBridgeTablesWithMultipleFacts() throws Exception {
-    Configuration conf = new Configuration(hconf);
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
-    String query = "select usersports.name, sum(msr2), sum(msr12) from basecube where " + TWO_DAYS_RANGE;
-    String hqlQuery = rewrite(query, conf);
-    String expected1 = getExpectedQuery("basecube",
-        "select usersports.name as `name`, sum(basecube.msr2) as `msr2` FROM ", " join " + getDbName()
-            + "c1_usertable userdim ON basecube.userid = userdim.id "
-            + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name" + " from "
-            + getDbName() + "c1_user_interests_tbl user_interests" + " join " + getDbName()
-            + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
-            + " group by user_interests.user_id) usersports" + " on userdim.id = usersports.user_id ", null,
-        "group by usersports.name", null, getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
-    String expected2 = getExpectedQuery("basecube",
-        "select usersports.name as `name`, sum(basecube.msr12) as `msr12` FROM ", " join " + getDbName()
-            + "c1_usertable userdim ON basecube.userid = userdim.id "
-            + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name" + " from "
-            + getDbName() + "c1_user_interests_tbl user_interests" + " join " + getDbName()
-            + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
-            + " group by user_interests.user_id) usersports" + " on userdim.id = usersports.user_id ", null,
-        "group by usersports.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact2_base"));
-    TestCubeRewriter.compareContains(expected1, hqlQuery);
-    TestCubeRewriter.compareContains(expected2, hqlQuery);
-    String lower = hqlQuery.toLowerCase();
-    assertTrue(
-      lower.startsWith("select coalesce(mq1.name, mq2.name) name, mq2.msr2 msr2, mq1.msr12 msr12 from ")
-      || lower.startsWith("select coalesce(mq1.name, mq2.name) name, mq1.msr2 msr2, mq2.msr12 msr12 from "), hqlQuery);
-
-    assertTrue(hqlQuery.contains("mq1 full outer join ") && hqlQuery.endsWith("mq2 on mq1.name <=> mq2.name"),
-      hqlQuery);
-  }
-
-  @Test
-  public void testBridgeTablesWithMultipleChains() throws Exception {
-    Configuration conf = new Configuration(hconf);
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
-    String query = "select usersports.name, xusersports.name, yusersports.name, sum(msr2) from basecube where "
-      + TWO_DAYS_RANGE;
-    String hqlQuery = rewrite(query, conf);
-    String expected = getExpectedQuery("basecube", "select usersports.name, xusersports.name, yusersports.name,"
-      + " sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c1_usertable userdim_1 on basecube.userid = userdim_1.id "
-      + " join  (select user_interests_1.user_id as user_id, collect_set(usersports.name) as name from "
-      + getDbName() + "c1_user_interests_tbl user_interests_1 join " + getDbName() + "c1_sports_tbl usersports on "
-      + "user_interests_1.sport_id = usersports.id group by user_interests_1.user_id) "
-      + "usersports on userdim_1.id = usersports.user_id"
-      + " join " + getDbName() + "c1_usertable userdim_0 on basecube.yuserid = userdim_0.id "
-      + " join  (select user_interests_0.user_id as user_id,collect_set(yusersports.name) as name from "
-      + getDbName() + "c1_user_interests_tbl user_interests_0 join " + getDbName() + "c1_sports_tbl yusersports on "
-      + " user_interests_0.sport_id = yusersports.id group by user_interests_0.user_id) yusersports on userdim_0.id ="
-      + " yusersports.user_id join " + getDbName() + "c1_usertable userdim on basecube.xuserid = userdim.id"
-      + " join  (select user_interests.user_id as user_id,collect_set(xusersports.name) as name from "
-      + getDbName() + "c1_user_interests_tbl user_interests join " + getDbName() + "c1_sports_tbl xusersports"
-      + " on user_interests.sport_id = xusersports.id group by user_interests.user_id) xusersports on userdim.id = "
-      + " xusersports.user_id", null, "group by usersports.name, xusersports.name, yusersports.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
-    TestCubeRewriter.compareQueries(hqlQuery, expected);
-  }
-  @Test
-  public void testBridgeTablesWithDimTablePartitioning() throws Exception {
-    Configuration conf = new Configuration(hconf);
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
-    String query = "select usersports.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    String hqlQuery = rewrite(query, conf);
-    String expected = getExpectedQuery("basecube", "select usersports.name, sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c2_usertable userdim ON basecube.userid = userdim.id and userdim.dt='latest' "
-        + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name"
-        + " from " + getDbName() + "c2_user_interests_tbl user_interests"
-        + " join " + getDbName() + "c2_sports_tbl usersports on user_interests.sport_id = usersports.id"
-        + " and usersports.dt='latest and user_interests.dt='latest'"
-        + " group by user_interests.user_id) usersports"
-        + " on userdim.id = usersports.user_id ",
-      null, "group by usersports.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c2_testfact1_base"));
-    TestCubeRewriter.compareQueries(hqlQuery, expected);
-  }
-
-  @Test
-  public void testBridgeTablesWithNormalJoins() throws Exception {
-    Configuration conf = new Configuration(hconf);
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
-    String query = "select usersports.name, cubestatecountry.name, cubecitystatecountry.name,"
-      + " sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    String hqlQuery = rewrite(query, conf);
-    String expected = getExpectedQuery("basecube", "select usersports.name, cubestatecountry.name, "
-      + "cubecitystatecountry.name, sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c1_usertable userdim ON basecube.userid = userdim.id "
-        + " join (select user_interests.user_id as user_id,collect_set(usersports.name) as name"
-        + " from " + getDbName() + "c1_user_interests_tbl user_interests"
-        + " join " + getDbName() + "c1_sports_tbl usersports on user_interests.sport_id = usersports.id"
-        + " group by user_interests.user_id) usersports"
-        + " on userdim.id = usersports.user_id "
-        + " join " + getDbName() + "c1_citytable citydim on basecube.cityid = citydim.id and (citydim.dt = 'latest')"
-        + " join " + getDbName()
-        + "c1_statetable statedim_0 on citydim.stateid=statedim_0.id and statedim_0.dt='latest'"
-        + " join " + getDbName()
-        + "c1_countrytable cubecitystatecountry on statedim_0.countryid=cubecitystatecountry.id"
-        + " join " + getDbName() + "c1_statetable statedim on basecube.stateid=statedim.id and (statedim.dt = 'latest')"
-        + " join " + getDbName() + "c1_countrytable cubestatecountry on statedim.countryid=cubestatecountry.id ",
-      null, "group by usersports.name, cubestatecountry.name, cubecitystatecountry.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
-    TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 }
