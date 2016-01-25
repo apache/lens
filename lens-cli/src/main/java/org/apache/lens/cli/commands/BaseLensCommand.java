@@ -194,4 +194,13 @@ public class BaseLensCommand implements ExecutionProcessor {
     return pathValidator.removePrefixBeforeURI(path);
   }
 
+  public String getOrDefaultQueryHandleString(String queryHandleString) {
+    if (queryHandleString != null) {
+      return queryHandleString;
+    }
+    if (getClient().getStatement().getQuery() != null) {
+      return getClient().getStatement().getQueryHandleString();
+    }
+    throw new IllegalArgumentException("Query handle not provided and no queries interacted with in the session.");
+  }
 }
