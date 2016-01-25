@@ -89,8 +89,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     String expected =
       getExpectedQuery(cubeName,
         "select dim3chain.name, testcube.dim2big1, max(testcube.msr3), sum(testcube.msr2) FROM ", " JOIN "
-          + getDbName() + "c2_testdim2tbl3 dim2chain " + "on testcube.dim2big1 = dim2chain.bigid1" + " join "
-          + getDbName() + "c2_testdim3tbl dim3chain on " + "dim2chain.testdim3id = dim3chain.id", null,
+          + getDbName() + "c2_testdim2tbl3 testdim2 " + "on testcube.dim2big1 = testdim2.bigid1" + " join "
+          + getDbName() + "c2_testdim3tbl dim3chain on " + "testdim2.testdim3id = dim3chain.id", null,
         " group by dim3chain.name, (testcube.dim2big1)", null,
         getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
         null);

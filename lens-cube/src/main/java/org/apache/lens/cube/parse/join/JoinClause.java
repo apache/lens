@@ -122,13 +122,10 @@ public class JoinClause implements Comparable<JoinClause> {
       // Last element in this list is link from cube to first dimension
       for (int i = entry.getValue().size() - 1; i >= 0; i--) {
         // Adds a child if needed, or returns a child already existing corresponding to the given link.
-        current = current.addChild(entry.getValue().get(i), cubeql, aliasUsage);
+        current = current.addChild(entry.getValue().get(i), aliasUsage);
       }
       // This is a destination table. Decide alias separately. e.g. chainname
-      // nullcheck is necessary because dimensions can be destinations too. In that case getAlias() == null
-      if (entry.getKey().getAlias() != null) {
-        current.setAlias(entry.getKey().getAlias());
-      }
+      current.setAlias(entry.getKey().getAlias());
     }
     if (root.getSubtrees().size() > 0) {
       root.setAlias(cubeql.getAliasForTableName(

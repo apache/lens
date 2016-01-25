@@ -22,7 +22,6 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.join.TableRelationship;
-import org.apache.lens.cube.parse.CubeQueryContext;
 
 import org.apache.hadoop.hive.ql.parse.JoinType;
 
@@ -57,8 +56,7 @@ public class JoinTree {
     this.depthFromRoot = depthFromRoot;
   }
 
-  public JoinTree addChild(TableRelationship tableRelationship,
-                           CubeQueryContext query, Map<String, Integer> aliasUsage) {
+  public JoinTree addChild(TableRelationship tableRelationship, Map<String, Integer> aliasUsage) {
     if (getSubtrees().get(tableRelationship) == null) {
       JoinTree current = new JoinTree(this, tableRelationship,
         this.depthFromRoot + 1);
@@ -68,7 +66,7 @@ public class JoinTree {
       // And for destination tables, an alias will be decided from here but might be
       // overridden outside this function.
       AbstractCubeTable destTable = tableRelationship.getToTable();
-      current.setAlias(query.getAliasForTableName(destTable.getName()));
+      current.setAlias(destTable.getName());
       if (aliasUsage.get(current.getAlias()) == null) {
         aliasUsage.put(current.getAlias(), 0);
       } else {
