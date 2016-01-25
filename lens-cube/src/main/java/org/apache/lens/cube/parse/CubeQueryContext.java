@@ -465,6 +465,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   }
 
   public void addFactPruningMsgs(CubeFactTable fact, CandidateTablePruneCause factPruningMsg) {
+    log.info("Pruning fact {} with cause: {}", fact, factPruningMsg);
     factPruningMsgs.addPruningMsg(fact, factPruningMsg);
   }
 
