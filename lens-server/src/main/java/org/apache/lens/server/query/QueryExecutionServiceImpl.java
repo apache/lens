@@ -432,7 +432,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         log.info("Driver {} for type {} is loaded", driverPath.getName(), driverType);
       } catch (Exception e) {
         log.error("Could not load driver {} of type {}", driverPath.getName(), driverType, e);
-        throw new LensException("Could not load driver "+driverPath.getName()+ " of type "+ driverType);
+        throw new LensException("Could not load driver "+driverPath.getName()+ " of type "+ driverType, e);
       }
     }
   }

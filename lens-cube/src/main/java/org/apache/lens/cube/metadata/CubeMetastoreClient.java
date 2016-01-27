@@ -40,14 +40,16 @@ import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
 import org.apache.hadoop.hive.ql.io.HiveFileFormatUtils;
-import org.apache.hadoop.hive.ql.metadata.*;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -232,6 +234,20 @@ public class CubeMetastoreClient {
       }
     }
     return latestParts;
+  }
+
+  public boolean isLensQueryableTable(String tableName) {
+    try {
+      Table table = getTable(tableName);
+      String typeProperty = table.getProperty(MetastoreConstants.TABLE_TYPE_KEY);
+      if (StringUtils.isBlank(typeProperty)) {
+        return false;
+      }
+      CubeTableType type = CubeTableType.valueOf(typeProperty);
+      return type == CubeTableType.CUBE || type == CubeTableType.DIMENSION;
+    } catch (HiveException e) {
+      return false;
+    }
   }
 
 

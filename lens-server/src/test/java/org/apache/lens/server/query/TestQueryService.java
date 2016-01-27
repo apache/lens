@@ -228,7 +228,7 @@ public class TestQueryService extends LensJerseyTest {
     Collection<LensDriver> drivers = queryService.getDrivers();
     assertEquals(drivers.size(), 4);
     Set<String> driverNames = new HashSet<String>(drivers.size());
-    for(LensDriver driver : drivers){
+    for (LensDriver driver : drivers) {
       assertEquals(driver.getConf().get("lens.driver.test.drivername"), driver.getFullyQualifiedName());
       driverNames.add(driver.getFullyQualifiedName());
     }
@@ -458,7 +458,7 @@ public class TestQueryService extends LensJerseyTest {
     Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
     LensAPIResult result = response.readEntity(LensAPIResult.class);
     List<LensErrorTO> childErrors = result.getLensErrorTO().getChildErrors();
-    boolean hiveSemanticErrorExists=false;
+    boolean hiveSemanticErrorExists = false;
     for (LensErrorTO error : childErrors) {
       if (error.getCode() == LensDriverErrorCode.SEMANTIC_ERROR.getLensErrorInfo().getErrorCode()) {
         hiveSemanticErrorExists = true;
@@ -1335,7 +1335,7 @@ public class TestQueryService extends LensJerseyTest {
         if (driver instanceof HiveDriver) {
           addedToHiveDriver =
             ((HiveDriver) driver).areDBResourcesAddedForSession(sessionHandle.getPublicId().toString(), DB_WITH_JARS);
-          if (addedToHiveDriver){
+          if (addedToHiveDriver) {
             break; //There are two Hive drivers now both pointing to same hive server. So break after first success
           }
         }
@@ -1382,7 +1382,8 @@ public class TestQueryService extends LensJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "cube select ID from nonexist"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+      "cube sdfelect ID from cube_nonexist"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "estimate"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
@@ -1392,8 +1393,9 @@ public class TestQueryService extends LensJerseyTest {
 
 
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
-      LensCubeErrorCode.NEITHER_CUBE_NOR_DIMENSION.getLensErrorInfo().getErrorCode(),
-      "Neither cube nor dimensions accessed in the query", TestDataUtils.MOCK_STACK_TRACE);
+      LensCubeErrorCode.SYNTAX_ERROR.getLensErrorInfo().getErrorCode(),
+      "Syntax Error: line 1:5 cannot recognize input near 'sdfelect' 'ID' 'from' in select clause",
+      TestDataUtils.MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
@@ -1458,17 +1460,17 @@ public class TestQueryService extends LensJerseyTest {
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 
     assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-DRIVER_SELECTION",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-CUBE_REWRITE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-DRIVER_ESTIMATE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-RewriteUtil-rewriteQuery",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-CUBE_REWRITE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-DRIVER_ESTIMATE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-RewriteUtil-rewriteQuery",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-CUBE_REWRITE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-DRIVER_ESTIMATE",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-RewriteUtil-rewriteQuery",
-        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-PARALLEL_ESTIMATE")),
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-DRIVER_SELECTION",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-CUBE_REWRITE",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-DRIVER_ESTIMATE",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive1-RewriteUtil-rewriteQuery",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-CUBE_REWRITE",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-DRIVER_ESTIMATE",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-hive/hive2-RewriteUtil-rewriteQuery",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-CUBE_REWRITE",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-DRIVER_ESTIMATE",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-jdbc/jdbc1-RewriteUtil-rewriteQuery",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-PARALLEL_ESTIMATE")),
       reg.getGauges().keySet().toString());
   }
 

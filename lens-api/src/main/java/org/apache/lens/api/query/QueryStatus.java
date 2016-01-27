@@ -220,6 +220,11 @@ public class QueryStatus implements Serializable {
     return status.equals(Status.QUEUED);
   }
 
+  public boolean failed() {
+    return status.equals(Status.FAILED);
+  }
+
+
   /**
    * Checks if is valid transition.
    *

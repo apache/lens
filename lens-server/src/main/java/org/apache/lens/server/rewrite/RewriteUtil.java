@@ -22,9 +22,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
@@ -38,6 +37,7 @@ import org.apache.lens.server.api.query.AbstractQueryContext;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
@@ -52,14 +52,6 @@ public final class RewriteUtil {
   private RewriteUtil() {
 
   }
-
-  /** The cube pattern. */
-  static Pattern cubePattern = Pattern.compile(".*CUBE(.*)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE
-    | Pattern.DOTALL);
-
-  /** The matcher. */
-  static Matcher matcher = null;
-
   /**
    * The Class CubeQueryInfo.
    */
@@ -92,13 +84,14 @@ public final class RewriteUtil {
     if (log.isDebugEnabled()) {
       log.debug("User query AST:{}", ast.dump());
     }
-    List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
-    findCubePositions(ast, cubeQueries, query);
+    List<CubeQueryInfo> cubeQueries = new ArrayList<>();
+    findCubePositions(ast, cubeQueries, query, conf);
     for (CubeQueryInfo cqi : cubeQueries) {
       cqi.query = query.substring(cqi.startPos, cqi.endPos);
     }
     return cubeQueries;
   }
+
 
   /**
    * Find cube positions.
@@ -108,7 +101,8 @@ public final class RewriteUtil {
    * @param originalQuery the original query
    * @throws LensException the lens exception
    */
-  private static void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries, String originalQuery)
+  private static void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries, String originalQuery,
+    HiveConf conf)
     throws LensException {
     int childCount = ast.getChildCount();
     if (ast.getToken() != null) {
@@ -116,13 +110,22 @@ public final class RewriteUtil {
         log.debug("First child: {} Type:{}", ast.getChild(0), ((ASTNode) ast.getChild(0)).getToken().getType());
       }
       if (ast.getToken().getType() == HiveParser.TOK_QUERY
-        && ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
+        && (isCubeKeywordNode((ASTNode) ast.getChild(0)) || isFromNodeWithCubeTable((ASTNode) ast.getChild(0), conf))) {
         log.debug("Inside cube clause");
         CubeQueryInfo cqi = new CubeQueryInfo();
         cqi.cubeAST = ast;
         if (ast.getParent() != null) {
           ASTNode parent = (ASTNode) ast.getParent();
-          cqi.startPos = ast.getCharPositionInLine();
+          if (isCubeKeywordNode((ASTNode) ast.getChild(0))) {
+            cqi.startPos = ast.getCharPositionInLine();
+          } else {
+            ASTNode selectAST = (ASTNode) ast.getChild(1).getChild(1);
+            // Left most child of select AST will have char position just after select / select distinct
+            // Go back one "select[ distinct]"
+            cqi.startPos = getStartPos(originalQuery, HQLParser.leftMostChild(selectAST).getCharPositionInLine(),
+              "distinct");
+            cqi.startPos = getStartPos(originalQuery, cqi.startPos, "select");
+          }
           int ci = ast.getChildIndex();
           if (parent.getToken() == null || parent.getToken().getType() == HiveParser.TOK_EXPLAIN
             || parent.getToken().getType() == HiveParser.TOK_CREATETABLE) {
@@ -134,7 +137,17 @@ public final class RewriteUtil {
               cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");
             } else if (parent.getToken().getType() == HiveParser.TOK_UNION) {
               // one less for the next start and less the size of string 'UNION ALL'
-              cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine() - 1, "UNION ALL");
+              ASTNode nextChild = (ASTNode) parent.getChild(ci + 1);
+              if (isCubeKeywordNode((ASTNode) nextChild.getChild(0))) {
+                cqi.endPos = getEndPos(originalQuery, nextChild.getCharPositionInLine() - 1, "UNION ALL");
+              } else {
+                // Go back one "union all select[ distinct]"
+                cqi.endPos = getEndPos(originalQuery, nextChild.getChild(1).getChild(1).getCharPositionInLine() - 1,
+                  "distinct");
+                cqi.endPos = getEndPos(originalQuery, cqi.endPos, "select");
+                cqi.endPos = getEndPos(originalQuery, cqi.endPos, "union all");
+              }
+
             } else {
               // Not expected to reach here
               log.warn("Unknown query pattern found with AST:{}", ast.dump());
@@ -156,12 +169,45 @@ public final class RewriteUtil {
         cubeQueries.add(cqi);
       } else {
         for (int childPos = 0; childPos < childCount; ++childPos) {
-          findCubePositions((ASTNode) ast.getChild(childPos), cubeQueries, originalQuery);
+          findCubePositions((ASTNode) ast.getChild(childPos), cubeQueries, originalQuery, conf);
         }
       }
     } else {
       log.warn("Null AST!");
     }
+  }
+
+  private static boolean isCubeTableNode(ASTNode node, HiveConf conf) throws LensException {
+    if (node.getType() == HiveParser.TOK_TABREF || node.getType() == HiveParser.TOK_TABNAME) {
+      return isCubeTableNode((ASTNode) node.getChild(0), conf);
+    }
+    if (node.getText().contains("JOIN")) {
+      if (isCubeTableNode((ASTNode) node.getChild(0), conf)) {
+        for (int i = 1; i < node.getChildCount(); i += 2) {
+          if (!isCubeTableNode((ASTNode) node.getChild(i), conf)) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+    return node.getType() == HiveParser.Identifier && getClient(conf).isLensQueryableTable(node.getText());
+  }
+
+  private static boolean isFromNodeWithCubeTable(ASTNode child, HiveConf conf) throws LensException {
+    return child.getType() == HiveParser.TOK_FROM && isCubeTableNode((ASTNode) child.getChild(0), conf);
+  }
+
+  public static CubeMetastoreClient getClient(HiveConf conf) throws LensException {
+    try {
+      return CubeMetastoreClient.getInstance(conf);
+    } catch (HiveException e) {
+      throw new LensException("Couldn't get instance of metastore client", e);
+    }
+  }
+
+  private static boolean isCubeKeywordNode(ASTNode child) {
+    return child.getToken().getType() == HiveParser.KW_CUBE;
   }
 
   /**
@@ -173,17 +219,38 @@ public final class RewriteUtil {
    * @return the end pos
    */
   private static int getEndPos(String query, int backTrackIndex, String... backTrackStr) {
+    backTrackIndex = backTrack(query, backTrackIndex, backTrackStr);
+    while (backTrackIndex > 0 && Character.isSpaceChar(query.charAt(backTrackIndex - 1))) {
+      backTrackIndex--;
+    }
+    return backTrackIndex;
+  }
+
+  private static int backTrack(String query, int backTrackIndex, String... backTrackStr) {
     if (backTrackStr != null) {
       String q = query.substring(0, backTrackIndex).toLowerCase();
-      for (int i = 0; i < backTrackStr.length; i++) {
-        if (q.trim().endsWith(backTrackStr[i].toLowerCase())) {
-          backTrackIndex = q.lastIndexOf(backTrackStr[i].toLowerCase());
+      for (String aBackTrackStr : backTrackStr) {
+        if (q.trim().endsWith(aBackTrackStr.toLowerCase())) {
+          backTrackIndex = q.lastIndexOf(aBackTrackStr.toLowerCase());
           break;
         }
       }
     }
-    while (Character.isSpaceChar(query.charAt(backTrackIndex - 1))) {
-      backTrackIndex--;
+    return backTrackIndex;
+  }
+
+  /**
+   * Gets the end pos.
+   *
+   * @param query          the query
+   * @param backTrackIndex the back track index
+   * @param backTrackStr   the back track str
+   * @return the end pos
+   */
+  private static int getStartPos(String query, int backTrackIndex, String... backTrackStr) {
+    backTrackIndex = backTrack(query, backTrackIndex, backTrackStr);
+    while (backTrackIndex < query.length() && Character.isSpaceChar(query.charAt(backTrackIndex))) {
+      backTrackIndex++;
     }
     return backTrackIndex;
   }
@@ -224,7 +291,7 @@ public final class RewriteUtil {
     try {
 
       String replacedQuery = getReplacedQuery(ctx.getPhase1RewrittenQuery());
-      Map<LensDriver, DriverRewriterRunnable> runnables = new LinkedHashMap<LensDriver, DriverRewriterRunnable>();
+      Map<LensDriver, DriverRewriterRunnable> runnables = new LinkedHashMap<>();
       List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery, ctx.getHiveConf());
 
       for (LensDriver driver : ctx.getDriverContext().getDrivers()) {
@@ -246,8 +313,7 @@ public final class RewriteUtil {
   }
 
   public static DriverQueryPlan getRewriterPlan(DriverRewriterRunnable rewriter) {
-    RewriterPlan plan = new RewriterPlan(rewriter.cubeQueryCtx);
-    return plan;
+    return new RewriterPlan(rewriter.cubeQueryCtx);
   }
 
   public static class DriverRewriterRunnable implements Runnable {
@@ -275,15 +341,15 @@ public final class RewriteUtil {
     private String rewrittenQuery;
 
     public DriverRewriterRunnable(LensDriver driver,
-                                  AbstractQueryContext ctx,
-                                  List<CubeQueryInfo> cubeQueries,
-                                  String replacedQuery) {
+      AbstractQueryContext ctx,
+      List<CubeQueryInfo> cubeQueries,
+      String replacedQuery) {
       this.driver = driver;
       this.ctx = ctx;
       this.cubeQueries = cubeQueries;
       this.replacedQuery = replacedQuery;
       if (cubeQueries != null) {
-        cubeQueryCtx = new ArrayList<CubeQueryContext>(cubeQueries.size());
+        cubeQueryCtx = new ArrayList<>(cubeQueries.size());
       }
     }
 
@@ -296,7 +362,7 @@ public final class RewriteUtil {
       }
 
       MethodMetricsContext rewriteGauge = MethodMetricsFactory
-          .createMethodGauge(ctx.getDriverConf(driver), true, REWRITE_QUERY_GAUGE);
+        .createMethodGauge(ctx.getDriverConf(driver), true, REWRITE_QUERY_GAUGE);
       StringBuilder builder = new StringBuilder();
       int start = 0;
       CubeQueryRewriter rewriter = null;
@@ -320,7 +386,7 @@ public final class RewriteUtil {
           // Parse and rewrite individual cube query
           CubeQueryContext cqc = rewriter.rewrite(cqi.query);
           MethodMetricsContext toHQLGauge = MethodMetricsFactory
-              .createMethodGauge(ctx.getDriverConf(driver), true, qIndex + "-" + TOHQL_GAUGE);
+            .createMethodGauge(ctx.getDriverConf(driver), true, qIndex + "-" + TOHQL_GAUGE);
           // toHQL actually generates the rewritten query
           String hqlQuery = cqc.toHQL();
           cubeQueryCtx.add(cqc);
@@ -368,25 +434,9 @@ public final class RewriteUtil {
       log.warn("Driver : {}  Skipped for the query rewriting due to ", driver, e);
       ctx.setDriverRewriteError(driver, e);
       failureCause = new StringBuilder(" Driver :")
-          .append(driver.getFullyQualifiedName())
-          .append(" Cause :" + e.getLocalizedMessage())
-          .toString();
+        .append(driver.getFullyQualifiedName())
+        .append(" Cause :" + e.getLocalizedMessage())
+        .toString();
     }
   }
-
-  /**
-   * Checks if is cube query.
-   *
-   * @param query the query
-   * @return true, if is cube query
-   */
-  public static boolean isCubeQuery(String query) {
-    if (matcher == null) {
-      matcher = cubePattern.matcher(query);
-    } else {
-      matcher.reset(query);
-    }
-    return matcher.matches();
-  }
-
 }

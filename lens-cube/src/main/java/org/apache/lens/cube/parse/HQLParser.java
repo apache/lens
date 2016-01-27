@@ -833,4 +833,11 @@ public final class HQLParser {
 
     return true;
   }
+
+  public static ASTNode leftMostChild(ASTNode node) {
+    while (node.getChildren() != null) {
+      node = (ASTNode) node.getChild(0);
+    }
+    return node;
+  }
 }

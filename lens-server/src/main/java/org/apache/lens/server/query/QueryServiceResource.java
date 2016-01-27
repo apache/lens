@@ -199,7 +199,8 @@ public class QueryServiceResource {
    * {@link org.apache.lens.api.query.SubmitOp#EXECUTE} operation.
    * {@link QueryPlan} in case of {@link org.apache.lens.api.query.SubmitOp#EXPLAIN} operation.
    * {@link QueryHandleWithResultSet} in case {@link org.apache.lens.api.query.SubmitOp#EXECUTE_WITH_TIMEOUT}
-   * operation. {@link QueryCostTO} in case of {@link org.apache.lens.api.query.SubmitOp#ESTIMATE} operation.
+   * operation. {@link org.apache.lens.api.result.QueryCostTO} in case of
+   * {@link org.apache.lens.api.query.SubmitOp#ESTIMATE} operation.
    */
   @POST
   @Path("queries")

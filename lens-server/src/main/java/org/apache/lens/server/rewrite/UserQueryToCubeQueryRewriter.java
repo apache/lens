@@ -39,7 +39,7 @@ import com.google.common.collect.Lists;
  * @see LensConfConstants#QUERY_PHASE1_REWRITERS
  */
 public class UserQueryToCubeQueryRewriter {
-  List<Phase1Rewriter> phase1RewriterList = Lists.newArrayList();
+  List<Phase1Rewriter> phase1RewriterList = Lists.<Phase1Rewriter>newArrayList(new CubeKeywordRemover());
 
   public UserQueryToCubeQueryRewriter(Configuration conf) throws LensException {
     try {
