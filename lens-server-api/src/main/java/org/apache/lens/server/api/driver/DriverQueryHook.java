@@ -21,6 +21,7 @@
  */
 package org.apache.lens.server.api.driver;
 
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 
 /**
@@ -45,6 +46,7 @@ public interface DriverQueryHook {
   /**
    * Should be Called before launch on the driver
    * @param ctx
+   * @throws LensException
    */
-  void preLaunch(AbstractQueryContext ctx);
+  void preLaunch(AbstractQueryContext ctx) throws LensException;
 }
