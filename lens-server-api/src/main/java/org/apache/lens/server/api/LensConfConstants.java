@@ -996,4 +996,14 @@ public final class LensConfConstants {
    * The Constant DEFAULT_HDFS_OUTPUT_RETENTION.
    */
   public static final String DEFAULT_HDFS_OUTPUT_RETENTION = "1 day";
+
+  /**
+   * The Constant EXCLUDE_CUBE_TABLES.
+   */
+  public static final String EXCLUDE_CUBE_TABLES = SESSION_PFX + "metastore.exclude.cubetables.from.nativetables";
+
+  /**
+   * The Constant DEFAULT_EXCLUDE_CUBE_TABLES.
+   */
+  public static final boolean DEFAULT_EXCLUDE_CUBE_TABLES = true;
 }

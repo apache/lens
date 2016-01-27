@@ -25,22 +25,21 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Lists;
 
 public class DerivedCube extends AbstractCubeTable implements CubeInterface {
 
-  private static final List<FieldSchema> COLUMNS = new ArrayList<FieldSchema>();
+  private static final List<FieldSchema> COLUMNS = new ArrayList<>();
 
   static {
     COLUMNS.add(new FieldSchema("dummy", "string", "dummy column"));
   }
 
   private final Cube parent;
-  private final Set<String> measures = new HashSet<String>();
-  private final Set<String> dimensions = new HashSet<String>();
+  private final Set<String> measures = new HashSet<>();
+  private final Set<String> dimensions = new HashSet<>();
 
   public DerivedCube(String name, Set<String> measures, Set<String> dimensions, Cube parent) throws LensException {
     this(name, measures, dimensions, new HashMap<String, String>(), 0L, parent);
@@ -99,8 +98,8 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
     this.parent = parent;
   }
 
-  private Set<CubeMeasure> cachedMeasures = new HashSet<CubeMeasure>();
-  private Set<CubeDimAttribute> cachedDims = new HashSet<CubeDimAttribute>();
+  private Set<CubeMeasure> cachedMeasures = new HashSet<>();
+  private Set<CubeDimAttribute> cachedDims = new HashSet<>();
 
   public Set<CubeMeasure> getMeasures() {
     synchronized (measures) {
@@ -152,7 +151,7 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
   }
 
   public static Set<String> getMeasures(String name, Map<String, String> props) {
-    Set<String> measures = new HashSet<String>();
+    Set<String> measures = new HashSet<>();
     String measureStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getCubeMeasureListKey(name));
     measures.addAll(Arrays.asList(StringUtils.split(measureStr, ',')));
     return measures;
@@ -161,7 +160,7 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
   public Set<String> getTimedDimensions() {
     String str = getProperties().get(MetastoreUtil.getCubeTimedDimensionListKey(getName()));
     if (str != null) {
-      Set<String> timedDimensions = new HashSet<String>();
+      Set<String> timedDimensions = new HashSet<>();
       timedDimensions.addAll(Arrays.asList(StringUtils.split(str, ',')));
       return timedDimensions;
     } else {
@@ -170,7 +169,7 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
   }
 
   public static Set<String> getDimensions(String name, Map<String, String> props) {
-    Set<String> dimensions = new HashSet<String>();
+    Set<String> dimensions = new HashSet<>();
     String dimStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getCubeDimensionListKey(name));
     dimensions.addAll(Arrays.asList(StringUtils.split(dimStr, ',')));
     return dimensions;
@@ -236,10 +235,9 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
   /**
    * Add a new measure
    *
-   * @param measure
-   * @throws HiveException
+   * @param measure measure name
    */
-  public void addMeasure(String measure) throws HiveException {
+  public void addMeasure(String measure) {
     measures.add(measure.toLowerCase());
     updateMeasureProperties();
   }
@@ -247,10 +245,9 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
   /**
    * Add a new dimension
    *
-   * @param dimension
-   * @throws HiveException
+   * @param dimension attribute name
    */
-  public void addDimension(String dimension) throws HiveException {
+  public void addDimension(String dimension) {
     dimensions.add(dimension.toLowerCase());
     updateDimAttributeProperties();
   }
@@ -287,7 +284,7 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
 
   @Override
   public Set<String> getDimAttributeNames() {
-    Set<String> dimNames = new HashSet<String>();
+    Set<String> dimNames = new HashSet<>();
     for (CubeDimAttribute f : getDimAttributes()) {
       MetastoreUtil.addColumnNames(f, dimNames);
     }
@@ -311,7 +308,7 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
 
   @Override
   public Set<String> getAllFieldNames() {
-    Set<String> fieldNames = new HashSet<String>();
+    Set<String> fieldNames = new HashSet<>();
     fieldNames.addAll(getMeasureNames());
     fieldNames.addAll(getDimAttributeNames());
     fieldNames.addAll(getTimedDimensions());

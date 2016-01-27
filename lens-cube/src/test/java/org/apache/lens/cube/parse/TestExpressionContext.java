@@ -50,7 +50,7 @@ public class TestExpressionContext extends TestQueryRewrite {
   public void testNestedExpressions() throws Exception {
     CubeQueryContext nestedExprQL = rewriteCtx("select nestedexpr from testCube where " + TWO_DAYS_RANGE, conf);
     Assert.assertNotNull(nestedExprQL.getExprCtx());
-    List<String> expectedExpressions = new ArrayList<String>();
+    List<String> expectedExpressions = new ArrayList<>();
     expectedExpressions.add("avg(( testcube . roundedmsr2 ))");
     expectedExpressions.add("avg(( testcube . equalsums ))");
     expectedExpressions.add(" case  when (( testcube . substrexpr ) =  'xyz' ) then avg(( testcube . msr5 ))"
@@ -60,14 +60,14 @@ public class TestExpressionContext extends TestQueryRewrite {
     expectedExpressions.add("avg(((( testcube . msr3 ) + ( testcube . msr2 )) /  100 ))");
     expectedExpressions.add(" case  when (substr(( testcube . dim1 ),  3 ) =  'xyz' ) then avg(( testcube . msr5 ))"
       + " when (substr(( testcube . dim1 ),  3 ) =  'abc' ) then (avg(( testcube . msr4 )) /  100 ) end ");
-    expectedExpressions.add(" case  when (substr(ascii(( testdim2 . name )),  3 ) =  'xyz' ) then"
-      + " avg(( testcube . msr5 )) when (substr(ascii(( testdim2 . name )),  3 ) =  'abc' ) then"
+    expectedExpressions.add(" case  when (substr(ascii(( dim2chain . name )),  3 ) =  'xyz' ) then"
+      + " avg(( testcube . msr5 )) when (substr(ascii(( dim2chain . name )),  3 ) =  'abc' ) then"
       + " (avg(( testcube . msr4 )) /  100 ) end ");
     expectedExpressions.add(" case  when (substr(( testcube . dim1 ),  3 ) =  'xyz' ) then avg((( testcube . msr2 )"
       + " + ( testcube . msr3 ))) when (substr(( testcube . dim1 ),  3 ) =  'abc' ) then"
       + " (avg(( testcube . msr4 )) /  100 ) end ");
-    expectedExpressions.add(" case  when (substr(ascii(( testdim2 . name )),  3 ) =  'xyz' ) then"
-      + " avg((( testcube . msr2 ) + ( testcube . msr3 ))) when (substr(ascii(( testdim2 . name )),  3 ) =  'abc' )"
+    expectedExpressions.add(" case  when (substr(ascii(( dim2chain . name )),  3 ) =  'xyz' ) then"
+      + " avg((( testcube . msr2 ) + ( testcube . msr3 ))) when (substr(ascii(( dim2chain . name )),  3 ) =  'abc' )"
       + " then (avg(( testcube . msr4 )) /  100 ) end ");
     expectedExpressions.add(" case  when (( testcube . substrexpr ) =  'xyz' ) then avg((( testcube . msr2 )"
       + " + ( testcube . msr3 ))) when (( testcube . substrexpr ) =  'abc' ) then (avg(( testcube . msr4 )) /  100 )"
@@ -75,11 +75,11 @@ public class TestExpressionContext extends TestQueryRewrite {
     expectedExpressions.add(" case  when (substr(( testcube . dim1 ),  3 ) =  'xyz' ) then avg((( testcube . msr2 )"
       + " + ( testcube . msr3 ))) when (substr(( testcube . dim1 ),  3 ) =  'abc' ) then"
       + " (avg(( testcube . msr4 )) /  100 ) end ");
-    expectedExpressions.add(" case  when (substr(ascii(( testdim2 . name )),  3 ) =  'xyz' ) then"
-      + " avg((( testcube . msr2 ) + ( testcube . msr3 ))) when (substr(ascii(( testdim2 . name )),  3 ) =  'abc' )"
+    expectedExpressions.add(" case  when (substr(ascii(( dim2chain . name )),  3 ) =  'xyz' ) then"
+      + " avg((( testcube . msr2 ) + ( testcube . msr3 ))) when (substr(ascii(( dim2chain . name )),  3 ) =  'abc' )"
       + " then (avg(( testcube . msr4 )) /  100 ) end ");
 
-    List<String> actualExpressions = new ArrayList<String>();
+    List<String> actualExpressions = new ArrayList<>();
     for (ExprSpecContext esc : nestedExprQL.getExprCtx().getExpressionContext("nestedexpr", "testcube").getAllExprs()) {
       actualExpressions.add(HQLParser.getString(esc.getFinalAST()));
     }
@@ -92,14 +92,14 @@ public class TestExpressionContext extends TestQueryRewrite {
     CubeQueryContext nestedExprQL = rewriteCtx("select nestedExprWithTimes from testCube where " + TWO_DAYS_RANGE,
       conf);
     Assert.assertNotNull(nestedExprQL.getExprCtx());
-    List<String> expectedExpressions = new ArrayList<String>();
+    List<String> expectedExpressions = new ArrayList<>();
     expectedExpressions.add("avg(( testcube . roundedmsr2 ))");
     expectedExpressions.add("avg(( testcube . equalsums ))");
     expectedExpressions.add("avg(round((( testcube . msr2 ) /  1000 )))");
     expectedExpressions.add("avg((( testcube . msr3 ) + ( testcube . msr4 )))");
     expectedExpressions.add("avg(((( testcube . msr3 ) + ( testcube . msr2 )) /  100 ))");
 
-    List<String> actualExpressions = new ArrayList<String>();
+    List<String> actualExpressions = new ArrayList<>();
     for (ExprSpecContext esc : nestedExprQL.getExprCtx()
       .getExpressionContext("nestedexprwithtimes", "testcube").getAllExprs()) {
       actualExpressions.add(HQLParser.getString(esc.getFinalAST()));

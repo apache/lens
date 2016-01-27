@@ -27,7 +27,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 
-import org.apache.lens.api.metastore.XJoinChains;
+import org.apache.lens.api.metastore.*;
 import org.apache.lens.cli.commands.LensDimensionCommands;
 import org.apache.lens.cli.table.XJoinChainTable;
 import org.apache.lens.client.LensClient;
@@ -62,6 +62,8 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
    *           the URI syntax exception
    */
   public static void createDimension() throws URISyntaxException {
+    getCommand().createDimension(new File(
+      TestLensCubeCommands.class.getClassLoader().getResource("test-detail.xml").toURI()));
     URL dimensionSpec = TestLensDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
     getCommand().createDimension(new File(dimensionSpec.toURI()));
   }
@@ -81,16 +83,38 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
     createDimension();
     dimensionList = getCommand().showDimensions();
     Assert.assertTrue(dimensionList.contains("test_dim"));
+    Assert.assertTrue(dimensionList.contains("test_detail"));
     testFields(getCommand());
     testJoinChains(getCommand());
     testUpdateCommand(new File(dimensionSpec.toURI()), getCommand());
     getCommand().dropDimension("test_dim");
+    getCommand().dropDimension("test_detail");
     dimensionList = getCommand().showDimensions();
     Assert.assertFalse(dimensionList.contains("test_dim"));
+    Assert.assertFalse(dimensionList.contains("test_detail"));
   }
 
   private void testJoinChains(LensDimensionCommands command) {
-    assertEquals(command.showJoinChains("test_dim"), new XJoinChainTable(new XJoinChains()).toString());
+    XJoinChains chains = new XJoinChains();
+    XJoinChain chain1 = new XJoinChain();
+    chain1.setPaths(new XJoinPaths());
+    XJoinPath path = new XJoinPath();
+    path.setEdges(new XJoinEdges());
+    XJoinEdge edge1 = new XJoinEdge();
+    XTableReference ref1 = new XTableReference();
+    ref1.setTable("test_dim");
+    ref1.setColumn("d2id");
+    XTableReference ref2 = new XTableReference();
+    ref2.setTable("test_detail");
+    ref2.setColumn("id");
+    edge1.setFrom(ref1);
+    edge1.setTo(ref2);
+    path.getEdges().getEdge().add(edge1);
+    chain1.setName("dim2chain");
+    chain1.getPaths().getPath().add(path);
+    chain1.setDestTable("test_detail");
+    chains.getJoinChain().add(chain1);
+    assertEquals(command.showJoinChains("test_dim"), new XJoinChainTable(chains).toString());
   }
 
   private void testFields(LensDimensionCommands qCom) {

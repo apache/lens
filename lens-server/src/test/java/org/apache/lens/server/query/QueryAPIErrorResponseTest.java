@@ -27,12 +27,11 @@ import static org.apache.lens.server.common.RestAPITestUtil.*;
 import static org.apache.lens.server.common.TestDataUtils.*;
 import static org.apache.lens.server.error.LensServerErrorCode.*;
 
-import java.util.Arrays;
+import static org.testng.Assert.assertTrue;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.apache.lens.api.LensConf;
@@ -40,6 +39,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.SupportedQuerySubmitOperations;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.cube.error.ColUnAvailableInTimeRange;
 import org.apache.lens.server.LensJerseyTest;
@@ -160,21 +160,21 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     final String testQuery = "select * from non_existing_table";
     Response response = estimate(target(), Optional.of(sessionId), Optional.of(testQuery));
 
-    final String expectedErrMsg = "Semantic Error : Error while compiling statement: "
+    final String expectedErrMsg1 = "Semantic Error : Error while compiling statement: "
       + "FAILED: SemanticException [Error 10001]: Line 1:31 Table not found 'non_existing_table'";
 
-    LensErrorTO childError1 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
-      expectedErrMsg, MOCK_STACK_TRACE);
-    LensErrorTO childError2 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE);
+    final String expectedErrMsg2 = "Semantic Error : user lacks privilege or object not found: NON_EXISTING_TABLE";
 
-    LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
-        expectedErrMsg, MOCK_STACK_TRACE, Arrays.asList(childError1, childError2));
+    LensErrorTO expectedLensErrorTO1 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
+            expectedErrMsg1, MOCK_STACK_TRACE);
 
-    ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(Status.BAD_REQUEST,
-      expectedLensErrorTO);
+    LensErrorTO expectedLensErrorTO2 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
+            expectedErrMsg2, MOCK_STACK_TRACE);
 
-    expectedData.verify(response);
+    LensErrorTO responseLensErrorTO = response.readEntity(LensAPIResult.class).getLensErrorTO();
+
+    assertTrue(expectedLensErrorTO1.getMessage().equals(responseLensErrorTO.getMessage())
+            || expectedLensErrorTO2.getMessage().equals(responseLensErrorTO.getMessage()));
   }
 
   @Test

@@ -16,28 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+/*
+ *
+ */
+package org.apache.lens.server.rewrite;
 
-import org.apache.lens.cube.metadata.Named;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.rewrite.Phase1Rewriter;
 
-@Data
-@AllArgsConstructor
-public class Aliased<T extends Named> {
-  T object;
-  String alias;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 
-  public static <K extends Named> Aliased<K> create(K obj) {
-    return create(obj, null);
+public class CubeKeywordRemover implements Phase1Rewriter {
+  @Override
+  public String rewrite(String query, Configuration queryConf, HiveConf metastoreConf) throws LensException {
+    return query.replaceAll("(?i)cube\\s+select", "select");
   }
 
-  public static <K extends Named> Aliased<K> create(K obj, String alias) {
-    return new Aliased<K>(obj, alias);
-  }
+  @Override
+  public void init(Configuration rewriteConf) {
 
-  public String getName() {
-    return object.getName();
   }
 }

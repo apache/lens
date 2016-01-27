@@ -23,6 +23,8 @@ import java.util.*;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.StorageConstants;
 
+import org.apache.commons.lang.StringUtils;
+
 public final class StorageUtil {
   private StorageUtil() {
 
@@ -153,6 +155,10 @@ public final class StorageUtil {
   }
 
   public static String getWhereClause(CandidateDim dim, String alias) {
-    return getWhereClause(dim.getWhereClause(), alias);
+    if (!dim.isWhereClauseAdded(alias) && !StringUtils.isBlank(dim.getWhereClause())) {
+      return getWhereClause(dim.getWhereClause(), alias);
+    } else {
+      return null;
+    }
   }
 }

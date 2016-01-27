@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.driver.hive;
+package org.apache.lens.server.api.error;
 
 import org.apache.lens.server.api.LensErrorInfo;
 
-public enum LensHiveErrorCode {
+public enum LensDriverErrorCode {
 
-  SEMANTIC_ERROR(4001, 10000), HIVE_ERROR(4002, 10000);
+  SEMANTIC_ERROR(4001, 10000), DRIVER_ERROR(4002, 10000);
 
   public LensErrorInfo getLensErrorInfo() {
     return this.errorInfo;
   }
 
-  LensHiveErrorCode(final int code, final int weight) {
+  LensDriverErrorCode(final int code, final int weight) {
     this.errorInfo = new LensErrorInfo(code, weight, name());
   }
 

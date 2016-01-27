@@ -283,7 +283,7 @@ lens-shell>
 
 +---+
 
-  CUBE SELECT [DISTINCT] select_expr, select_expr, ...
+  [CUBE] SELECT [DISTINCT] select_expr, select_expr, ...
   FROM cube_table_reference
   [WHERE [where_condition AND] [TIME_RANGE_IN(colName, from, to)]]
   [GROUP BY col_list]

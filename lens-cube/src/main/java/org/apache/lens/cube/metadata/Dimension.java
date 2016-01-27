@@ -24,9 +24,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -48,7 +48,7 @@ public class Dimension extends AbstractBaseTable {
     super(name, expressions, joinChains, properties, weight);
     this.attributes = attributes;
 
-    attributeMap = new HashMap<String, CubeDimAttribute>();
+    attributeMap = new HashMap<>();
     for (CubeDimAttribute dim : attributes) {
       attributeMap.put(dim.getName().toLowerCase(), dim);
     }
@@ -59,7 +59,7 @@ public class Dimension extends AbstractBaseTable {
     super(tbl);
     this.attributes = getAttributes(getName(), getProperties());
 
-    attributeMap = new HashMap<String, CubeDimAttribute>();
+    attributeMap = new HashMap<>();
     for (CubeDimAttribute attr : attributes) {
       addAllAttributesToMap(attr);
     }
@@ -108,7 +108,7 @@ public class Dimension extends AbstractBaseTable {
   }
 
   public static Set<CubeDimAttribute> getAttributes(String name, Map<String, String> props) {
-    Set<CubeDimAttribute> attributes = new HashSet<CubeDimAttribute>();
+    Set<CubeDimAttribute> attributes = new HashSet<>();
     String attrStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getDimAttributeListKey(name));
     String[] names = attrStr.split(",");
     for (String attrName : names) {
@@ -134,11 +134,6 @@ public class Dimension extends AbstractBaseTable {
   protected String getJoinChainListPropKey(String tblname) {
     return MetastoreUtil.getDimensionJoinChainListKey(tblname);
   }
-
-//  public boolean isChainedColumn(String name) {
-//    Preconditions.checkArgument(name != null);
-//    return ((ReferencedDimAtrribute) attributeMap.get(name.toLowerCase())).isChainedColumn();
-//  }
 
   @Override
   public int hashCode() {
@@ -185,13 +180,8 @@ public class Dimension extends AbstractBaseTable {
    * Alters the attribute if already existing or just adds if it is new attribute
    *
    * @param attribute
-   * @throws HiveException
    */
-  public void alterAttribute(CubeDimAttribute attribute) throws HiveException {
-    if (attribute == null) {
-      throw new NullPointerException("Cannot add null attribute");
-    }
-
+  public void alterAttribute(@NonNull CubeDimAttribute attribute) {
     // Replace dimension if already existing
     if (attributeMap.containsKey(attribute.getName().toLowerCase())) {
       attributes.remove(getAttributeByName(attribute.getName()));

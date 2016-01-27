@@ -30,7 +30,7 @@ import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
-import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
+import org.apache.lens.cube.metadata.ReferencedDimAttribute.ChainRefCol;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
@@ -147,7 +147,7 @@ public class TestCubeMetastoreClient {
     CubeMetastoreClient.close();
   }
 
-  private static void defineCube(String cubeName, String cubeNameWithProps, String derivedCubeName,
+  private static void defineCube(final String cubeName, String cubeNameWithProps, String derivedCubeName,
     String derivedCubeNameWithProps) throws LensException {
     cubeMeasures = new HashSet<>();
     cubeMeasures.add(new ColumnMeasure(
@@ -177,21 +177,16 @@ public class TestCubeMetastoreClient {
     }
     cubeDimensions = new HashSet<>();
     List<CubeDimAttribute> locationHierarchy = new ArrayList<>();
-    locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("zipcode", "int", "zip"), "Zip refer",
-      new TableReference("zipdim", "zipcode")));
-    locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("cityid", "int", "city"), "City refer",
-      new TableReference("citydim", "id")));
-    locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("stateid", "int", "state"), "State refer",
-      new TableReference("statedim", "id")));
-    locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("countryid", "int", "country"), "Country refer",
-      new TableReference("countrydim", "id")));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("zipcode", "int", "zip")));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("cityid", "int", "city")));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("stateid", "int", "state")));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("countryid", "int", "country")));
     List<String> regions = Arrays.asList("APAC", "EMEA", "USA");
     locationHierarchy.add(new BaseDimAttribute(new FieldSchema("regionname", "string", "region"), "regionname", null,
       null, null, null, regions));
     cubeDimensions.add(new HierarchicalDimAttribute("location", "location hierarchy", locationHierarchy));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim1", "string", "basedim")));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2", "id", "ref dim"), "Dim2 refer",
-      new TableReference("testdim2", "id")));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim2", "id", "ref dim"), "Dim2 refer", null, null, null));
     Set<CubeDimAttribute> dummyDimAttributes = Sets.newHashSet();
     for (int i = 0; i < 5000; i++) {
       dummyDimAttributes.add(new BaseDimAttribute(new FieldSchema("dummy_dim" + i, "string", "dummy dim " + i),
@@ -224,15 +219,14 @@ public class TestCubeMetastoreClient {
       "SUBSTR EXPR", expr1, expr2));
 
     List<CubeDimAttribute> locationHierarchyWithStartTime = new ArrayList<>();
-    locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("zipcode2", "int", "zip"),
-      "Zip refer2", new TableReference("zipdim", "zipcode"), NOW, NOW,
-      100.0, true, 1000L));
-    locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("cityid2", "int", "city"),
-      "City refer2", new TableReference("citydim", "id"), NOW, null, null));
-    locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("stateid2", "int", "state"),
-      "state refer2", new TableReference("statedim", "id"), NOW, null, 100.0));
-    locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("countryid2", "int", "country"),
-      "Country refer2", new TableReference("countrydim", "id"), null, null, null));
+    locationHierarchyWithStartTime.add(new BaseDimAttribute(new FieldSchema("zipcode2", "int", "zip"),
+      "Zip refer2", NOW, NOW, 100.0, 1000L));
+    locationHierarchyWithStartTime.add(new BaseDimAttribute(new FieldSchema("cityid2", "int", "city"),
+      "City refer2", NOW, null, null));
+    locationHierarchyWithStartTime.add(new BaseDimAttribute(new FieldSchema("stateid2", "int", "state"),
+      "state refer2", NOW, null, 100.0));
+    locationHierarchyWithStartTime.add(new BaseDimAttribute(new FieldSchema("countryid2", "int", "country"),
+      "Country refer2", null, null, null));
     locationHierarchyWithStartTime.add(new BaseDimAttribute(new FieldSchema("regionname2", "string", "region"),
       "regionname2", null, null, null, null, regions));
 
@@ -240,19 +234,10 @@ public class TestCubeMetastoreClient {
       .add(new HierarchicalDimAttribute("location2", "localtion hierarchy2", locationHierarchyWithStartTime));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim1startTime", "string", "basedim"),
       "Dim With starttime", NOW, null, 100.0));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2start", "string", "ref dim"),
-      "Dim2 with starttime", new TableReference("testdim2", "id"),
-      NOW, NOW, 100.0));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim2start", "string", "ref dim"),
+      "Dim2 with starttime", NOW, NOW, 100.0));
 
-    List<TableReference> multiRefs = new ArrayList<>();
-    multiRefs.add(new TableReference("testdim2", "id"));
-    multiRefs.add(new TableReference("testdim3", "id"));
-    multiRefs.add(new TableReference("testdim4", "id"));
-
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim3", "string", "multi ref dim"), "Dim3 refer",
-      multiRefs));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim3start", "string", "multi ref dim"),
-      "Dim3 with starttime", multiRefs, NOW, null, 100.0));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim3", "string", "multi ref dim")));
 
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("region", "string", "region dim"), "region", null, null,
       null, null, regions));
@@ -278,7 +263,81 @@ public class TestCubeMetastoreClient {
     chain.add(new TableReference("citydim", "id"));
     cityChain.addPath(chain);
     joinChains.add(cityChain);
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("zipcityname", "string", "zip city name"),
+    joinChains.add(new JoinChain("cubeState", "cube-state", "state thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "stateid"));
+            add(new TableReference("statedim", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "stateid2"));
+            add(new TableReference("statedim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("cubeCountry", "cube-country", "country thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "countryid2"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("dim2chain", "cube-dim2", "state thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2"));
+            add(new TableReference("testdim2", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2start"));
+            add(new TableReference("testdim2", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim3"));
+            add(new TableReference("testdim2", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("dim3chain", "cube-dim3", "state thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim3"));
+            add(new TableReference("testdim3", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("dim4chain", "cube-dim4", "state thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim3"));
+            add(new TableReference("testdim4", "id"));
+          }
+        });
+      }
+    });
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("zipcityname", "string", "zip city name"),
       "Zip city name", "cityFromZip", "name", null, null, null));
     cubeMeasures.addAll(dummyMeasure);
     cubeDimensions.addAll(dummyDimAttributes);
@@ -302,45 +361,118 @@ public class TestCubeMetastoreClient {
   }
 
   private static void defineUberDims() throws LensException {
+    Map<String, String> dimProps = new HashMap<>();
     // Define zip dimension
     zipAttrs.add(new BaseDimAttribute(new FieldSchema("zipcode", "int", "code")));
     zipAttrs.add(new BaseDimAttribute(new FieldSchema("f1", "string", "field1")));
     zipAttrs.add(new BaseDimAttribute(new FieldSchema("f2", "string", "field1")));
-    List<TableReference> stateRefs = Lists.newArrayList(new TableReference("statedim", "id"),
-      new TableReference("stateWeatherDim", "id"));
-    zipAttrs.add(new ReferencedDimAtrribute(new FieldSchema("stateid", "int", "state id"), "State refer", stateRefs));
-    zipAttrs.add(new ReferencedDimAtrribute(new FieldSchema("cityid", "int", "city id"), "City refer",
-      new TableReference("citydim", "id")));
-    zipAttrs.add(new ReferencedDimAtrribute(new FieldSchema("countryid", "int", "country id"), "Country refer",
-      new TableReference("countrydim", "id")));
-    zipDim = new Dimension("zipdim", zipAttrs);
+    zipAttrs.add(new BaseDimAttribute(new FieldSchema("stateid", "int", "state id"), "State refer", null, null, null));
+    zipAttrs.add(new BaseDimAttribute(new FieldSchema("cityid", "int", "city id"), "City refer", null, null, null));
+    zipAttrs.add(new BaseDimAttribute(new FieldSchema("countryid", "int", "country id"), "Country refer", null, null,
+      null));
+    zipAttrs.add(new ReferencedDimAttribute(new FieldSchema("statename", "name", "state name"), "State Name",
+      "zipstate", "name", null, null, null));
+
+    Set<JoinChain> joinChains = new HashSet<>();
+    joinChains.add(new JoinChain("zipCity", "zip-city", "city thru zip") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("zipdim", "cityid"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("zipState", "zip-state", "state thru zip") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("zipdim", "stateid"));
+            add(new TableReference("statedim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("zipCountry", "zip-country", "country thru zip") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("zipdim", "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
+    zipDim = new Dimension("zipdim", zipAttrs, null, joinChains, dimProps, 0L);
 
     // Define city table
+    joinChains = new HashSet<>();
+    dimProps = new HashMap<>();
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "city name")));
-    cityAttrs.add(new ReferencedDimAtrribute(new FieldSchema("stateid", "int", "state id"), "State refer",
-      new TableReference("statedim", "id")));
+    cityAttrs.add(new BaseDimAttribute(new FieldSchema("stateid", "int", "state id"), "State refer", null, null, null));
+    cityAttrs.add(new ReferencedDimAttribute(new FieldSchema("statename", "name", "state name"), "State Name",
+      "citystate", "name", null, null, null));
     dimExpressions.add(new ExprColumn(new FieldSchema("stateAndCountry", "String", "state and country together"),
-      "State and Country", new ExprSpec("concat(statedim.name, \":\", countrydim.name)", null, null),
+      "State and Country", new ExprSpec("concat(cityState.name, \":\", cityCountry.name)", null, null),
       new ExprSpec("state_and_country", null, null)));
     dimExpressions.add(new ExprColumn(new FieldSchema("CityAddress", "string", "city with state and city and zip"),
-      "City Address", "concat(citydim.name, \":\", statedim.name, \":\", countrydim.name, \":\", zipcode.code)"));
-    Map<String, String> dimProps = getHashMap(getDimTimedDimensionKey("citydim"), getDatePartitionKey());
-    cityDim = new Dimension("citydim", cityAttrs, dimExpressions, dimProps, 0L);
+      "City Address", "concat(citydim.name, \":\", cityState.name, \":\", cityCountry.name, \":\", zipcode.code)"));
+    dimProps.put(MetastoreUtil.getDimTimedDimensionKey("citydim"), TestCubeMetastoreClient.getDatePartitionKey());
+
+
+    joinChains.add(new JoinChain("cityState", "city-state", "state thru city") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("citydim", "stateid"));
+            add(new TableReference("statedim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("cityCountry", "city-state", "country thru city") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("citydim", "stateid"));
+            add(new TableReference("statedim", "id"));
+            add(new TableReference("statedim", "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
+    cityDim = new Dimension("citydim", cityAttrs, dimExpressions, joinChains, dimProps, 0L);
 
     // Define state table
+    joinChains = new HashSet<>();
+    dimProps = new HashMap<>();
     stateAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "state id"), "State ID", null, null, null));
     stateAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "state name")));
     stateAttrs.add(new BaseDimAttribute(new FieldSchema("capital", "string", "state capital")));
-    stateAttrs.add(new ReferencedDimAtrribute(new FieldSchema("countryid", "int", "country id"), "Country refer",
-      new TableReference("countrydim", "id")));
+    stateAttrs.add(new BaseDimAttribute(new FieldSchema("countryid", "int", "country id"), "Country refer", null,
+      null, null));
+    stateAttrs.add(new ReferencedDimAttribute(new FieldSchema("countryname", "name", "country name"), "country Name",
+      "statecountry", "name", null, null, null));
+    joinChains.add(new JoinChain("stateCountry", "state country", "country thru state") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("statedim", "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
     stateDim = new Dimension("statedim", stateAttrs);
 
     countryAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "country id")));
     countryAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "country name")));
     countryAttrs.add(new BaseDimAttribute(new FieldSchema("capital", "string", "country capital")));
     countryAttrs.add(new BaseDimAttribute(new FieldSchema("region", "string", "region name")));
-    countryDim = new Dimension("countrydim", stateAttrs);
+    countryDim = new Dimension("countrydim", countryAttrs);
 
   }
 
@@ -380,9 +512,9 @@ public class TestCubeMetastoreClient {
     assertTrue(client.tableExists(stateDim.getName()));
     assertTrue(client.tableExists(countryDim.getName()));
 
-    validateDim(zipDim, zipAttrs, "zipcode", "stateid");
-    validateDim(cityDim, cityAttrs, "id", "stateid");
-    validateDim(stateDim, stateAttrs, "id", "countryid");
+    validateDim(zipDim, zipAttrs, "zipcode", "statename");
+    validateDim(cityDim, cityAttrs, "id", "statename");
+    validateDim(stateDim, stateAttrs, "id", "countryname");
     validateDim(countryDim, countryAttrs, "id", null);
 
     // validate expression in citydim
@@ -396,7 +528,7 @@ public class TestCubeMetastoreClient {
 
     ExprColumn stateCountryExpr = new ExprColumn(new FieldSchema("stateAndCountry", "String",
       "state and country together with hiphen as separator"), "State and Country",
-      "concat(statedim.name, \"-\", countrydim.name)");
+      "concat(citystate.name, \"-\", citycountry.name)");
     ExprSpec expr1 = new ExprSpec();
     expr1.setExpr("concat(countrydim.name, \"-\", countrydim.name)");
     stateCountryExpr.addExpression(expr1);
@@ -420,20 +552,18 @@ public class TestCubeMetastoreClient {
     ExprColumn stateAndCountryActual = city.getExpressionByName("stateAndCountry");
     assertNotNull(stateAndCountryActual.getExpressions());
     assertEquals(2, stateAndCountryActual.getExpressions().size());
-    assertTrue(stateAndCountryActual.getExpressions().contains("concat(statedim.name, \"-\", countrydim.name)"));
-    assertTrue(stateAndCountryActual.getExpressions()
-      .contains("concat(countrydim.name, \"-\", countrydim.name)"));
+    assertTrue(stateAndCountryActual.getExpressions().contains("concat(citystate.name, \"-\", citycountry.name)"));
+    assertTrue(stateAndCountryActual.getExpressions().contains("concat(countrydim.name, \"-\", countrydim.name)"));
 
     assertNotNull(city.getExpressionByName("stateAndCountry"));
     assertEquals(city.getExpressionByName("stateAndCountry").getExpr(),
-      "concat(statedim.name, \"-\", countrydim.name)");
+      "concat(citystate.name, \"-\", citycountry.name)");
 
     stateAndCountryActual.removeExpression("concat(countrydim.name, \"-\", countrydim.name)");
     city.alterExpression(stateAndCountryActual);
     client.alterDimension(city.getName(), city);
     Dimension cityAltered = client.getDimension(city.getName());
     assertEquals(1, cityAltered.getExpressionByName("stateAndCountry").getExpressions().size());
-
 
     List<TableReference> chain = new ArrayList<>();
     chain.add(new TableReference("zipdim", "cityid"));
@@ -449,12 +579,11 @@ public class TestCubeMetastoreClient {
     Dimension toAlter = new Dimension(tbl);
     toAlter.alterAttribute(new BaseDimAttribute(new FieldSchema("newZipDim", "int", "new dim added"), null, null, null,
       null, 1000L));
-    toAlter.alterAttribute(new ReferencedDimAtrribute(new FieldSchema("newRefDim", "int", "new ref-dim added"),
-      "New city ref", new TableReference("citydim", "id")));
+    toAlter.alterAttribute(new ReferencedDimAttribute(new FieldSchema("newRefDim", "int", "new ref-dim added"),
+      "New city ref", "cubecity", "name", null, null, null));
     toAlter.alterAttribute(new BaseDimAttribute(new FieldSchema("f2", "varchar", "modified field")));
-    List<TableReference> stateRefs = Lists.newArrayList(new TableReference("statedim", "id"));
-    toAlter.alterAttribute(new ReferencedDimAtrribute(new FieldSchema("stateid", "int", "state id"), "State refer",
-      stateRefs));
+    toAlter.alterAttribute(new BaseDimAttribute(new FieldSchema("stateid", "int", "state id"), "State refer altered",
+      null, null, null));
     toAlter.removeAttribute("f1");
     toAlter.getProperties().put("alter.prop", "altered");
     toAlter.alterExpression(new ExprColumn(new FieldSchema("formattedcode", "string", "formatted zipcode"),
@@ -463,7 +592,6 @@ public class TestCubeMetastoreClient {
 
     client.alterDimension(zipDim.getName(), toAlter);
     Dimension altered = client.getDimension(zipDim.getName());
-
 
     assertEquals(toAlter, altered);
     assertNotNull(altered.getAttributeByName("newZipDim"));
@@ -481,26 +609,24 @@ public class TestCubeMetastoreClient {
     assertEquals((((BaseDimAttribute) newzipdim).getNumOfDistinctValues().get()), Long.valueOf(1000));
 
     CubeDimAttribute newrefdim = altered.getAttributeByName("newRefDim");
-    assertTrue(newrefdim instanceof ReferencedDimAtrribute);
-    assertEquals(((ReferencedDimAtrribute) newrefdim).getReferences().size(), 1);
-    assertEquals(((ReferencedDimAtrribute) newrefdim).getReferences().get(0).getDestTable(), cityDim.getName());
-    assertEquals(((ReferencedDimAtrribute) newrefdim).getReferences().get(0).getDestColumn(), "id");
+    assertTrue(newrefdim instanceof ReferencedDimAttribute);
+    assertEquals(((ReferencedDimAttribute) newrefdim).getChainRefColumns().size(), 1);
+    assertEquals(((ReferencedDimAttribute) newrefdim).getChainRefColumns().get(0).getChainName(), "cubecity");
+    assertEquals(((ReferencedDimAttribute) newrefdim).getChainRefColumns().get(0).getRefColumn(), "name");
 
     CubeDimAttribute f2 = altered.getAttributeByName("f2");
     assertTrue(f2 instanceof BaseDimAttribute);
     assertEquals(((BaseDimAttribute) f2).getType(), "varchar");
 
     CubeDimAttribute stateid = altered.getAttributeByName("stateid");
-    assertTrue(stateid instanceof ReferencedDimAtrribute);
-    assertEquals(((ReferencedDimAtrribute) stateid).getReferences().size(), 1);
-    assertEquals(((ReferencedDimAtrribute) stateid).getReferences().get(0).getDestTable(), stateDim.getName());
-    assertEquals(((ReferencedDimAtrribute) stateid).getReferences().get(0).getDestColumn(), "id");
+    assertTrue(stateid instanceof BaseDimAttribute);
+    assertEquals(stateid.getDisplayString(), "State refer altered");
 
     assertEquals(altered.getProperties().get("alter.prop"), "altered");
 
     assertEquals(altered.getChainByName("stateFromZip"), zipState);
 
-    assertEquals(altered.getJoinChains().size(), 1);
+    assertEquals(altered.getJoinChains().size(), 4);
     JoinChain zipchain = altered.getChainByName("stateFromZip");
     assertEquals(zipchain.getDisplayString(), "Zip State");
     assertEquals(zipchain.getDescription(), "zip State desc");
@@ -518,14 +644,14 @@ public class TestCubeMetastoreClient {
     Table dimTbl = client.getHiveTable(udim.getName());
     assertTrue(client.isDimension(dimTbl));
     Dimension dim = new Dimension(dimTbl);
-    assertTrue(udim.equals(dim));
+    assertTrue(udim.equals(dim), "Equals failed for " + dim.getName());
     assertTrue(udim.equals(client.getDimension(udim.getName())));
     assertEquals(dim.getAttributes().size(), attrs.size());
     assertNotNull(dim.getAttributeByName(basedim));
     assertTrue(dim.getAttributeByName(basedim) instanceof BaseDimAttribute);
     if (referdim != null) {
       assertNotNull(dim.getAttributeByName(referdim));
-      assertTrue(dim.getAttributeByName(referdim) instanceof ReferencedDimAtrribute);
+      assertTrue(dim.getAttributeByName(referdim) instanceof ReferencedDimAttribute);
     }
     assertEquals(udim.getAttributeNames().size() + udim.getExpressionNames().size(), dim.getAllFieldNames().size());
   }
@@ -575,7 +701,7 @@ public class TestCubeMetastoreClient {
     assertTrue(cube2.getJoinChainNames().contains("cityfromzip"));
     assertTrue(cube2.getJoinChainNames().contains("city"));
     assertFalse(cube2.getJoinChains().isEmpty());
-    assertEquals(cube2.getJoinChains().size(), 2);
+    assertEquals(cube2.getJoinChains().size(), 7);
     JoinChain zipchain = cube2.getChainByName("cityfromzip");
     assertEquals(zipchain.getDisplayString(), "Zip City");
     assertEquals(zipchain.getDescription(), "zip city desc");
@@ -598,7 +724,7 @@ public class TestCubeMetastoreClient {
     assertEquals(citychain.getPaths().get(0).getReferences().get(0).toString(), "testmetastorecube.cityid");
     assertEquals(citychain.getPaths().get(0).getReferences().get(1).toString(), "citydim.id");
     assertNotNull(cube2.getDimAttributeByName("zipcityname"));
-    ChainRefCol zipCityChain = ((ReferencedDimAtrribute) cube2.getDimAttributeByName("zipcityname"))
+    ChainRefCol zipCityChain = ((ReferencedDimAttribute) cube2.getDimAttributeByName("zipcityname"))
       .getChainRefColumns().get(0);
     assertEquals(zipCityChain.getChainName(), "cityfromzip");
     assertEquals(zipCityChain.getRefColumn(), "name");
@@ -773,6 +899,10 @@ public class TestCubeMetastoreClient {
 
     StorageTableDesc s1 = new StorageTableDesc(TextInputFormat.class, HiveIgnoreKeyTextOutputFormat.class,
       datePartSingleton, datePartKeySingleton);
+
+    s1.getTblProps().put(MetastoreUtil.getStoragetableStartTimesKey(), "2015, now-10 days");
+    s1.getTblProps().put(MetastoreUtil.getStoragetableEndTimesKey(), "now - 1 day");
+
     Map<String, Set<UpdatePeriod>> updatePeriods = getHashMap(c1, Sets.newHashSet(HOURLY, DAILY));
     Map<String, StorageTableDesc> storageTables = getHashMap(c1, s1);
 
@@ -794,6 +924,9 @@ public class TestCubeMetastoreClient {
       String storageTableName = getFactOrDimtableStorageTableName(factName, entry);
       assertTrue(client.tableExists(storageTableName));
     }
+    String storageTable = getFactOrDimtableStorageTableName(factName, c1);
+    assertRangeValidityForStorageTable(storageTable);
+
 
     Map<String, Date> timeParts = getTimePartitionByOffsets(getDatePartitionKey(), 0, "non_existing_part_col", 0);
     // test error on adding invalid partition
@@ -845,6 +978,20 @@ public class TestCubeMetastoreClient {
     assertFalse(client.factPartitionExists(cubeFact.getName(), c1, HOURLY, timeParts, emptyHashMap));
     assertFalse(client.factPartitionExists(cubeFact.getName(), c1, HOURLY, timeParts2, emptyHashMap));
     assertFalse(client.latestPartitionExists(cubeFact.getName(), c1, getDatePartitionKey()));
+  }
+
+  private void assertRangeValidityForStorageTable(String storageTable) throws HiveException, LensException {
+    Object[][] testCases = new Object[][] {
+      {"now - 15 days", "now - 11 days", false},
+      {"now - 15 days", "now - 1 hour", false},
+      {"now - 9 days", "now - 1 hour", false},
+      {"now - 3 hour", "now - 1 hour", false},
+      {"now - 9 days", "now - 2 days", true},
+    };
+    for(Object[] testCase: testCases) {
+      assertEquals(client.isStorageTableCandidateForRange(storageTable, testCase[0].toString(), testCase[1].toString()),
+        testCase[2]);
+    }
   }
 
   @Test(priority = 2)

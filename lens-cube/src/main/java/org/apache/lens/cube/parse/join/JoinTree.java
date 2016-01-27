@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.parse.join;
 
 import java.util.*;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
-import org.apache.lens.cube.metadata.SchemaGraph;
+import org.apache.lens.cube.metadata.join.TableRelationship;
 
 import org.apache.hadoop.hive.ql.parse.JoinType;
 
@@ -36,11 +36,10 @@ public class JoinTree {
   //parent of the node
   JoinTree parent;
   // current table is parentRelationship.destTable;
-  SchemaGraph.TableRelationship parentRelationship;
+  TableRelationship parentRelationship;
   // Alias for the join clause
   String alias;
-  private Map<SchemaGraph.TableRelationship, JoinTree> subtrees =
-    new LinkedHashMap<SchemaGraph.TableRelationship, JoinTree>();
+  private Map<TableRelationship, JoinTree> subtrees = new LinkedHashMap<>();
   // Number of nodes from root to this node. depth of root is 0. Unused for now.
   private int depthFromRoot;
   // join type of the current table.
@@ -50,25 +49,24 @@ public class JoinTree {
     return new JoinTree(null, null, 0);
   }
 
-  public JoinTree(JoinTree parent, SchemaGraph.TableRelationship tableRelationship,
+  public JoinTree(JoinTree parent, TableRelationship tableRelationship,
                   int depthFromRoot) {
     this.parent = parent;
     this.parentRelationship = tableRelationship;
     this.depthFromRoot = depthFromRoot;
   }
 
-  public JoinTree addChild(SchemaGraph.TableRelationship tableRelationship,
-                           CubeQueryContext cubeql, Map<String, Integer> aliasUsage) {
+  public JoinTree addChild(TableRelationship tableRelationship, Map<String, Integer> aliasUsage) {
     if (getSubtrees().get(tableRelationship) == null) {
       JoinTree current = new JoinTree(this, tableRelationship,
         this.depthFromRoot + 1);
       // Set alias. Need to compute only when new node is being created.
       // The following code ensures that For intermediate tables, aliases are given
-      // in the order citydim, citydim_0, citydim_1, ...
+      // in the order cityDim, cityDim_0, cityDim_1, ...
       // And for destination tables, an alias will be decided from here but might be
       // overridden outside this function.
       AbstractCubeTable destTable = tableRelationship.getToTable();
-      current.setAlias(cubeql.getAliasForTableName(destTable.getName()));
+      current.setAlias(destTable.getName());
       if (aliasUsage.get(current.getAlias()) == null) {
         aliasUsage.put(current.getAlias(), 0);
       } else {
@@ -110,9 +108,9 @@ public class JoinTree {
 
       @Override
       public JoinTree next() {
-        JoinTree retval = remaining.remove(0);
-        remaining.addAll(retval.getSubtrees().values());
-        return retval;
+        JoinTree retVal = remaining.remove(0);
+        remaining.addAll(retVal.getSubtrees().values());
+        return retVal;
       }
 
       @Override
@@ -138,9 +136,9 @@ public class JoinTree {
 
       @Override
       public JoinTree next() {
-        JoinTree retval = joinTreeStack.pop();
-        joinTreeStack.addAll(retval.getSubtrees().values());
-        return retval;
+        JoinTree retVal = joinTreeStack.pop();
+        joinTreeStack.addAll(retVal.getSubtrees().values());
+        return retVal;
       }
 
       @Override
@@ -151,7 +149,7 @@ public class JoinTree {
   }
 
   public Set<JoinTree> leaves() {
-    Set<JoinTree> leaves = new HashSet<JoinTree>();
+    Set<JoinTree> leaves = new HashSet<>();
     Iterator<JoinTree> dft = dft();
     while (dft.hasNext()) {
       JoinTree cur = dft.next();

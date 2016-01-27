@@ -311,4 +311,10 @@
     <description>Whether to fail the query of data is partial</description>
   </property>
 
+  <property>
+    <name>lens.session.metastore.exclude.cubetables.from.nativetables</name>
+    <value>true</value>
+    <description>Exclude cube related tables when fetching native tables</description>
+  </property>
+
 </configuration>

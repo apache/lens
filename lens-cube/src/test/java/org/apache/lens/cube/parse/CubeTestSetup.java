@@ -31,7 +31,7 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
-import org.apache.lens.cube.metadata.ReferencedDimAtrribute.ChainRefCol;
+import org.apache.lens.cube.metadata.ReferencedDimAttribute.ChainRefCol;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
@@ -519,14 +519,10 @@ public class CubeTestSetup {
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("d_time", "timestamp", "d time")));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("processing_time", "timestamp", "processing time")));
     List<CubeDimAttribute> locationHierarchy = new ArrayList<CubeDimAttribute>();
-    locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("zipcode", "int", "zip"), "Zip refer",
-      new TableReference("zipdim", "code")));
-    locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("cityid", "int", "city"), "City refer",
-      new TableReference("citydim", "id")));
-    locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("stateid", "int", "state"), "State refer",
-      new TableReference("statedim", "id")));
-    locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("countryid", "int", "country"), "Country refer",
-      new TableReference("countrydim", "id")));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("zipcode", "int", "zip")));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("cityid", "int", "city")));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("stateid", "int", "state")));
+    locationHierarchy.add(new BaseDimAttribute(new FieldSchema("countryid", "int", "country")));
     List<String> regions = Arrays.asList("APAC", "EMEA", "USA");
     locationHierarchy.add(new BaseDimAttribute(new FieldSchema("regionname", "string", "region"), "regionname", null,
       null, null, null, regions));
@@ -535,66 +531,45 @@ public class CubeTestSetup {
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim1", "string", "basedim")));
     // Added for ambiguity test
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("ambigdim1", "string", "used in testColumnAmbiguity")));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2", "int", "ref dim"), "Dim2 refer",
-      new TableReference("testdim2", "id")));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("cdim2", "int", "ref dim"), "Dim2 refer",
-      new TableReference("cycledim1", "id"), NOW, null, null));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("urdimid", "int", "ref dim"), "urdim refer",
-      new TableReference("unreachableDim", "id"), null, null, null, false, 10L));
-
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("dim2", "int", "ref dim"), "dim2 refer",
+      "dim2chain", "id", null, null, 0.0));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("cdim2", "int", "ref dim"), "Dim2 refer", NOW, null, null));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("urdimid", "int", "ref dim"), "urdim refer",
+      null, null, 10.0));
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("unreachableName", "string", ""), "urdim name",
+      "unreachableDim_chain", "name", null, null, 10.0));
     // denormalized reference
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2big1", "bigint", "ref dim"), "Dim2 refer",
-      new TableReference("testdim2", "bigid1")));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2big2", "bigint", "ref dim"), "Dim2 refer",
-      new TableReference("testdim2", "bigid2")));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2bignew", "bigint", "ref dim"), "Dim2 refer",
-      new TableReference("testdim2", "bigidnew"), NOW, null, null));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim_hour_id", "int", "ref dim"),
-      "Timedim reference", new TableReference("hourdim", "id"), null, null, null));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim_day_id", "int", "ref dim"),
-      "Timedim reference", new TableReference("daydim", "id"), null, null, null));
-    // not creating test_time_dim_hour_id2 ref dim attribute to avoid the reference in schema graph for other paths
-    // the column is only defined in chain
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("dim2big1", "bigint", "ref dim"), "dim2 refer",
+      "dim2chain", "bigid1", null, null, 0.0));
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("dim2big2", "bigint", "ref dim"), "dim2 refer",
+      "dim2chain", "bigid2", null, null, 0.0));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim2bignew", "bigint", "ref dim"), "Dim2 refer",
+      NOW, null, null));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("test_time_dim_hour_id", "int", "ref dim"),
+      "Timedim reference", null, null, null));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("test_time_dim_day_id", "int", "ref dim"),
+      "Timedim reference", null, null, null));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("test_time_dim_hour_id2", "int", "ref dim")));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("test_time_dim_day_id2", "int", "ref dim")));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("testdim3id", "int", "direct id to testdim3"),
-      "Timedim reference", new TableReference("testdim3", "id"), null, null, null));
-
-    List<TableReference> references = new ArrayList<TableReference>();
-    references.add(new TableReference("daydim", "full_date"));
-    references.add(new TableReference("hourdim", "full_hour"));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim", "date", "ref dim"),
-      "Timedim full date", references, null, null, null, false));
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("testDim3id", "string", "direct id to testdim3"),
+      "dim3 refer", "dim3chain", "id", null, null, 0.0));
+    List<ChainRefCol> references = new ArrayList<>();
+    references.add(new ChainRefCol("timedatechain1", "full_date"));
+    references.add(new ChainRefCol("timehourchain1", "full_hour"));
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("test_time_dim", "date", "ref dim"),
+      "Timedim full date", references, null, null, null, null));
     List<ChainRefCol> chainRefs = new ArrayList<>();
-    chainRefs.add(new ChainRefCol("timehourchain", "full_hour"));
-    chainRefs.add(new ChainRefCol("timedatechain", "full_date"));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim2", "date", "chained dim"),
+    chainRefs.add(new ChainRefCol("timehourchain2", "full_hour"));
+    chainRefs.add(new ChainRefCol("timedatechain2", "full_date"));
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("test_time_dim2", "date", "chained dim"),
       "Timedim full date", chainRefs, null, null, null, null));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("cityid1", "int", "id to city"),
+      "City1", null, null, null));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("cityid2", "int", "id to city"),
+      "City2", null, null, null));
 
-    Set<JoinChain> joinchains = new HashSet<JoinChain>();
-    JoinChain timeHourChain = new JoinChain("timehourchain", "time chain", "time dim thru hour dim");
-    List<TableReference> paths = new ArrayList<TableReference>();
-    paths.add(new TableReference("testcube", "test_time_dim_hour_id2"));
-    paths.add(new TableReference("hourdim", "id"));
-    timeHourChain.addPath(paths);
-    joinchains.add(timeHourChain);
-
-    JoinChain timeDateChain = new JoinChain("timedatechain", "time chain", "time dim thru date dim");
-    paths = new ArrayList<TableReference>();
-    paths.add(new TableReference("testcube", "test_time_dim_day_id2"));
-    paths.add(new TableReference("daydim", "id"));
-    timeDateChain.addPath(paths);
-    joinchains.add(timeDateChain);
-    joinchains.add(new JoinChain("cubeState", "cube-state", "state thru cube") {
-      {
-        addPath(new ArrayList<TableReference>() {
-          {
-            add(new TableReference("basecube", "stateid"));
-            add(new TableReference("statedim", "id"));
-          }
-        });
-      }
-    });
+    Map<String, JoinChain> joinChains = new HashMap<>();
+    addCubeChains(joinChains, TEST_CUBE_NAME);
 
     exprs = new HashSet<ExprColumn>();
     exprs.add(new ExprColumn(new FieldSchema("avgmsr", "double", "avg measure"), "Avg Msr", "avg(msr1 + msr2)"));
@@ -629,9 +604,9 @@ public class CubeTestSetup {
     exprs.add(new ExprColumn(new FieldSchema("booleancut", "boolean", "a boolean expression"), "Boolean cut",
       "(dim1 != 'x' AND dim2 != 10)"));
     exprs.add(new ExprColumn(new FieldSchema("substrexpr", "string", "a sub-string expression"), "Substr expr",
-      new ExprSpec("substr(dim1, 3))", null, null), new ExprSpec("substr(ascii(testdim2.name), 3)", null, null)));
+      new ExprSpec("substr(dim1, 3))", null, null), new ExprSpec("substr(ascii(dim2chain.name), 3)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("substrexprdim2", "string", "a sub-string expression"), "Substr expr",
-      new ExprSpec("substr(dim2, 3))", null, null), new ExprSpec("substr(ascii(testdim2.name), 3)", null, null)));
+      new ExprSpec("substr(dim2, 3))", null, null), new ExprSpec("substr(ascii(dim2chain.name), 3)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("indiasubstr", "boolean", "nested sub string expression"), "Nested expr",
       "substrexpr = 'INDIA'"));
     exprs.add(new ExprColumn(new FieldSchema("refexpr", "string", "expression which facts and dimensions"),
@@ -641,9 +616,9 @@ public class CubeTestSetup {
     exprs.add(new ExprColumn(new FieldSchema("newexpr", "string", "expression which non existing colun"),
       "new measure expr", "myfun(newmeasure)"));
     exprs.add(new ExprColumn(new FieldSchema("cityAndState", "String", "city and state together"), "City and State",
-      "concat(citydim.name, \":\", statedim.name)"));
+      "concat(cubecity.name, \":\", cubestate.name)"));
     exprs.add(new ExprColumn(new FieldSchema("cityStateName", "String", "city state"), "City State",
-      "concat('CityState:', citydim.statename)"));
+      "concat('CityState:', cubecity.statename)"));
     exprs.add(new ExprColumn(new FieldSchema("cubeStateName", "String", "statename from cubestate"), "CubeState Name",
       "substr(cubestate.name, 5)"));
     exprs.add(new ExprColumn(new FieldSchema("substrdim2big1", "String", "substr of dim2big1"), "dim2big1 substr",
@@ -660,7 +635,8 @@ public class CubeTestSetup {
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
     cubeProperties.put(MetastoreConstants.TIMEDIM_RELATION + "d_time", "test_time_dim+[-10 days,10 days]");
 
-    client.createCube(TEST_CUBE_NAME, cubeMeasures, cubeDimensions, exprs, joinchains, cubeProperties);
+    client.createCube(TEST_CUBE_NAME, cubeMeasures, cubeDimensions, exprs, Sets.newHashSet(joinChains.values()),
+      cubeProperties);
 
     Set<String> measures = new HashSet<String>();
     measures.add("msr1");
@@ -669,6 +645,9 @@ public class CubeTestSetup {
     Set<String> dimensions = new HashSet<String>();
     dimensions.add("dim1");
     dimensions.add("dim2");
+    dimensions.add("dim2big1");
+    dimensions.add("dim2big2");
+    dimensions.add("dim2bignew");
     // Try creating derived cube with non existant dim/measures
     try{
       client.createDerivedCube(TEST_CUBE_NAME, DERIVED_CUBE_NAME,
@@ -683,10 +662,273 @@ public class CubeTestSetup {
       measures, dimensions, new HashMap<String, String>(), 5L);
   }
 
+  private void addCubeChains(Map<String, JoinChain> joinChains, final String cubeName) {
+    joinChains.put("timehourchain1", new JoinChain("timehourchain1", "time chain", "time dim thru hour dim") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "test_time_dim_hour_id"));
+            add(new TableReference("hourdim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("timedatechain1", new JoinChain("timedatechain1", "time chain", "time dim thru date dim") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "test_time_dim_day_id"));
+            add(new TableReference("daydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("timehourchain2", new JoinChain("timehourchain2", "time chain", "time dim thru hour dim") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "test_time_dim_hour_id2"));
+            add(new TableReference("hourdim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("timedatechain2", new JoinChain("timedatechain2", "time chain", "time dim thru date dim") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "test_time_dim_day_id2"));
+            add(new TableReference("daydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeCity", new JoinChain("cubeCity", "cube-city", "city thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "cityid"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2"));
+            add(new TableReference("testdim2", "id"));
+            add(new TableReference("testdim2", "cityid"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeCity1", new JoinChain("cubeCity1", "cube-city", "city thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "cityid1"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeCity2", new JoinChain("cubeCity2", "cube-city", "city thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "cityid2"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeState",  new JoinChain("cubeState", "cube-state", "state thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "stateid"));
+            add(new TableReference("statedim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeZip",  new JoinChain("cubeZip", "cube-zip", "Zipcode thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "zipcode"));
+            add(new TableReference("zipdim", "code"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeCountry",  new JoinChain("cubeCountry", "cube-country", "country thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("dim2chain", new JoinChain("dim2chain", "cube-testdim2", "testdim2 thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2"));
+            add(new TableReference("testdim2", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2big1"));
+            add(new TableReference("testdim2", "bigid1"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2big2"));
+            add(new TableReference("testdim2", "bigid2"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2bignew"));
+            add(new TableReference("testdim2", "bigidnew"));
+          }
+        });
+      }
+    });
+    joinChains.put("dim3chain", new JoinChain("dim3chain", "cube-testdim3", "cyclicdim thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2"));
+            add(new TableReference("testdim2", "id"));
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2big1"));
+            add(new TableReference("testdim2", "bigid1"));
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2big2"));
+            add(new TableReference("testdim2", "bigid2"));
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2bignew"));
+            add(new TableReference("testdim2", "bigidnew"));
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("dim4chain", new JoinChain("dim4chain", "cube-testdim3", "cyclicdim thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2"));
+            add(new TableReference("testdim2", "id"));
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+            add(new TableReference("testdim3", "testdim4id"));
+            add(new TableReference("testdim4", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2big1"));
+            add(new TableReference("testdim2", "bigid1"));
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+            add(new TableReference("testdim3", "testdim4id"));
+            add(new TableReference("testdim4", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2big2"));
+            add(new TableReference("testdim2", "bigid2"));
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+            add(new TableReference("testdim3", "testdim4id"));
+            add(new TableReference("testdim4", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "dim2bignew"));
+            add(new TableReference("testdim2", "bigidnew"));
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+            add(new TableReference("testdim3", "testdim4id"));
+            add(new TableReference("testdim4", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+            add(new TableReference("testdim3", "testdim4id"));
+            add(new TableReference("testdim4", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cdimChain", new JoinChain("cdimChain", "cube-cyclicdim", "cyclicdim thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "cdim2"));
+            add(new TableReference("cycledim1", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("unreachableDim_chain", new JoinChain("unreachableDim_chain", "cube-unreachableDim",
+      "unreachableDim thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "urdimid"));
+            add(new TableReference("unreachableDim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.put("cubeCountry",  new JoinChain("cubeCountry", "cube-country", "country thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
+  }
   private void createBaseAndDerivedCubes(CubeMetastoreClient client)
     throws HiveException, ParseException, LensException {
-    Set<CubeMeasure> cubeMeasures2 = new HashSet<CubeMeasure>(cubeMeasures);
-    Set<CubeDimAttribute> cubeDimensions2 = new HashSet<CubeDimAttribute>(cubeDimensions);
+    Set<CubeMeasure> cubeMeasures2 = new HashSet<>(cubeMeasures);
+    Set<CubeDimAttribute> cubeDimensions2 = new HashSet<>(cubeDimensions);
     cubeMeasures2.add(new ColumnMeasure(new FieldSchema("msr11", "int", "first measure")));
     cubeMeasures2.add(new ColumnMeasure(new FieldSchema("msr12", "float", "second measure"), "Measure2", null, "SUM",
       "RS"));
@@ -696,15 +938,27 @@ public class CubeTestSetup {
       "COUNT", null));
 
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("dim11", "string", "basedim")));
-    cubeDimensions2.add(new ReferencedDimAtrribute(new FieldSchema("dim12", "int", "ref dim"), "Dim2 refer",
-      new TableReference("testdim2", "id")));
-    cubeDimensions2.add(new ReferencedDimAtrribute(new FieldSchema("dim22", "int", "ref dim"), "Dim2 refer",
-      "dim2chain", "id", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("dim12", "int", "ref dim"), "Dim2 refer",
+      "dim2chain", "id", null, null, null)); // used as key in the chains
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("dim22", "int", "ref dim"), "Dim2 refer",
+      "dim2chain", "id", null, null, null)); // not used as key in the chains
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("userid", "int", "userid")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("xuserid", "int", "userid")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("yuserid", "int", "userid")));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("xsports", "array<string>", ""),
+      "xuser sports", "xusersports", "name", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("ysports", "array<string>", ""),
+      "yuser sports", "yusersports", "name", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("sports", "array<string>", ""),
+      "user sports", "usersports", "name", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("sportids", "array<int>", ""),
+      "user sports", "userInterestIds", "sport_id", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("statecountry", "string", ""),
+      "state country", "cubestatecountry", "name", null, null, null));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("citycountry", "string", ""),
+      "city country", "cubecitystatecountry", "name", null, null, null));
 
-    Map<String, String> cubeProperties = new HashMap<String, String>();
+    Map<String, String> cubeProperties = new HashMap<>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(BASE_CUBE_NAME),
       "d_time,pt,it,et,test_time_dim,test_time_dim2");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim", "ttd");
@@ -717,166 +971,174 @@ public class CubeTestSetup {
     cubeProperties.put(MetastoreConstants.TIMEDIM_RELATION + "processing_time", "test_time_dim+[-5 days,5 days]");
     cubeProperties.put(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE, "false");
 
-    Set<JoinChain> joinchains = new HashSet<JoinChain>() {
+    Map<String, JoinChain> joinChainMap = new HashMap<>();
+    addCubeChains(joinChainMap, "basecube");
+    // update new paths
+    joinChainMap.get("dim2chain").addPath(new ArrayList<TableReference>() {
       {
-        add(new JoinChain("cityState", "city-state", "state thru city") {
+        add(new TableReference("basecube", "dim12"));
+        add(new TableReference("testdim2", "id"));
+      }
+    });
+    joinChainMap.get("dim3chain").addPath(new ArrayList<TableReference>() {
+      {
+        add(new TableReference("basecube", "dim12"));
+        add(new TableReference("testdim2", "id"));
+        add(new TableReference("testdim2", "testdim3id"));
+        add(new TableReference("testdim3", "id"));
+      }
+    });
+    joinChainMap.get("dim4chain").addPath(new ArrayList<TableReference>() {
+      {
+        add(new TableReference("basecube", "dim12"));
+        add(new TableReference("testdim2", "id"));
+        add(new TableReference("testdim2", "testdim3id"));
+        add(new TableReference("testdim3", "id"));
+        add(new TableReference("testdim3", "testdim4id"));
+        add(new TableReference("testdim4", "id"));
+      }
+    });
+    Set<JoinChain> joinChains = Sets.newHashSet(joinChainMap.values());
+    joinChains.add(new JoinChain("cityState", "city-state", "state thru city") {
+      {
+        addPath(new ArrayList<TableReference>() {
           {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "cityid"));
-                add(new TableReference("citydim", "id"));
-                add(new TableReference("citydim", "stateid"));
-                add(new TableReference("statedim", "id"));
-              }
-            });
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "cityid"));
-                add(new TableReference("citydim", "id"));
-                add(new TableReference("citydim", "statename"));
-                add(new TableReference("statedim", "name"));
-              }
-            });
+            add(new TableReference("basecube", "cityid"));
+            add(new TableReference("citydim", "id"));
+            add(new TableReference("citydim", "stateid"));
+            add(new TableReference("statedim", "id"));
           }
         });
-        add(new JoinChain("cubeState", "cube-state", "state thru cube") {
+        addPath(new ArrayList<TableReference>() {
           {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "stateid"));
-                add(new TableReference("statedim", "id"));
-              }
-            });
-          }
-        });
-        add(new JoinChain("cityZip", "city-zip", "zip thru city") {
-          {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "cityid"));
-                add(new TableReference("citydim", "id"));
-                add(new TableReference("citydim", "zipcode"));
-                add(new TableReference("zipdim", "code"));
-              }
-            });
-          }
-        });
-        add(new JoinChain("cubeStateCountry", "cube-state-country", "country through state") {
-          {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "stateid"));
-                add(new TableReference("statedim", "id"));
-                add(new TableReference("statedim", "countryid"));
-                add(new TableReference("countrydim", "id"));
-              }
-            });
-          }
-        });
-        add(new JoinChain("cubeCityStateCountry", "cube-city-state-country", "country through state through city") {
-          {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "cityid"));
-                add(new TableReference("citydim", "id"));
-                add(new TableReference("citydim", "stateid"));
-                add(new TableReference("statedim", "id"));
-                add(new TableReference("statedim", "countryid"));
-                add(new TableReference("countrydim", "id"));
-              }
-            });
-          }
-        });
-        add(new JoinChain("dim2chain", "dim2chain", "dim2chain") {
-          {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "dim2"));
-                add(new TableReference("testdim2", "id"));
-              }
-            });
-          }
-        });
-        add(new JoinChain("userSports", "user-sports", "user sports") {
-          {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "userid"));
-                add(new TableReference("userdim", "id"));
-                add(new TableReference("userdim", "id"));
-                add(new TableReference("user_interests", "user_id", true));
-                add(new TableReference("user_interests", "sport_id"));
-                add(new TableReference("sports", "id"));
-              }
-            });
-          }
-        });
-        add(new JoinChain("userInterestIds", "user-interestsIds", "user interest ids") {
-          {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "userid"));
-                add(new TableReference("userdim", "id"));
-                add(new TableReference("userdim", "id"));
-                add(new TableReference("user_interests", "user_id", true));
-              }
-            });
-          }
-        });
-        add(new JoinChain("xuserSports", "xuser-sports", "xuser sports") {
-          {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "xuserid"));
-                add(new TableReference("userdim", "id"));
-                add(new TableReference("userdim", "id"));
-                add(new TableReference("user_interests", "user_id", true));
-                add(new TableReference("user_interests", "sport_id"));
-                add(new TableReference("sports", "id"));
-              }
-            });
-          }
-        });
-        add(new JoinChain("yuserSports", "user-sports", "user sports") {
-          {
-            addPath(new ArrayList<TableReference>() {
-              {
-                add(new TableReference("basecube", "yuserid"));
-                add(new TableReference("userdim", "id"));
-                add(new TableReference("userdim", "id"));
-                add(new TableReference("user_interests", "user_id", true));
-                add(new TableReference("user_interests", "sport_id"));
-                add(new TableReference("sports", "id"));
-              }
-            });
+            add(new TableReference("basecube", "cityid"));
+            add(new TableReference("citydim", "id"));
+            add(new TableReference("citydim", "statename"));
+            add(new TableReference("statedim", "name"));
           }
         });
       }
-    };
+    });
+    joinChains.add(new JoinChain("cityZip", "city-zip", "zip thru city") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "cityid"));
+            add(new TableReference("citydim", "id"));
+            add(new TableReference("citydim", "zipcode"));
+            add(new TableReference("zipdim", "code"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("cubeStateCountry", "cube-state-country", "country through state") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "stateid"));
+            add(new TableReference("statedim", "id"));
+            add(new TableReference("statedim", "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("cubeCityStateCountry", "cube-city-state-country", "country through state thru city") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "cityid"));
+            add(new TableReference("citydim", "id"));
+            add(new TableReference("citydim", "stateid"));
+            add(new TableReference("statedim", "id"));
+            add(new TableReference("statedim", "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("userSports", "user-sports", "user sports") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "userid"));
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("user_interests", "user_id", true));
+            add(new TableReference("user_interests", "sport_id"));
+            add(new TableReference("sports", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("userInterestIds", "user-interestsIds", "user interest ids") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "userid"));
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("user_interests", "user_id", true));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("xuserSports", "xuser-sports", "xuser sports") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "xuserid"));
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("user_interests", "user_id", true));
+            add(new TableReference("user_interests", "sport_id"));
+            add(new TableReference("sports", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("yuserSports", "user-sports", "user sports") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "yuserid"));
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("userdim", "id"));
+            add(new TableReference("user_interests", "user_id", true));
+            add(new TableReference("user_interests", "sport_id"));
+            add(new TableReference("sports", "id"));
+          }
+        });
+      }
+    });
 
     // add ref dim through chain
     cubeDimensions2.add(
-      new ReferencedDimAtrribute(new FieldSchema("cityStateCapital", "string", "State's capital thru city"),
+      new ReferencedDimAttribute(new FieldSchema("cityStateCapital", "string", "State's capital thru city"),
         "State's capital thru city", "cityState", "capital", null, null, null));
-    client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, exprs, joinchains, cubeProperties);
+    Set<ExprColumn> baseExprs = new HashSet<>(exprs);
+    baseExprs.add(new ExprColumn(new FieldSchema("substrsprorts", "String", "substr of sports"), "substr sports",
+      "substr(sports, 10)"));
 
-    Map<String, String> derivedProperties = new HashMap<String, String>();
+    client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, baseExprs, joinChains, cubeProperties);
+
+    Map<String, String> derivedProperties = new HashMap<>();
     derivedProperties.put(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE, "true");
-    Set<String> measures = new HashSet<String>();
+    Set<String> measures = new HashSet<>();
     measures.add("msr1");
     measures.add("msr11");
-    Set<String> dimensions = new HashSet<String>();
+    Set<String> dimensions = new HashSet<>();
     dimensions.add("dim1");
     dimensions.add("dim11");
     dimensions.add("d_time");
     client.createDerivedCube(BASE_CUBE_NAME, DERIVED_CUBE_NAME1, measures, dimensions, derivedProperties, 5L);
 
-    measures = new HashSet<String>();
+    measures = new HashSet<>();
     measures.add("msr2");
     measures.add("msr12");
     measures.add("msr13");
     measures.add("msr14");
-    dimensions = new HashSet<String>();
+    dimensions = new HashSet<>();
     dimensions.add("cityid");
     dimensions.add("stateid");
     dimensions.add("userid");
@@ -884,20 +1146,33 @@ public class CubeTestSetup {
     dimensions.add("yuserid");
     dimensions.add("dim1");
     dimensions.add("dim2");
+    dimensions.add("dim2big1");
+    dimensions.add("dim2big2");
+    dimensions.add("dim2bignew");
     dimensions.add("dim11");
     dimensions.add("dim12");
     dimensions.add("dim22");
     dimensions.add("d_time");
     dimensions.add("test_time_dim");
+    dimensions.add("test_time_dim2");
+    dimensions.add("test_time_dim_hour_id");
+    dimensions.add("test_time_dim_day_id");
+    dimensions.add("test_time_dim_hour_id2");
+    dimensions.add("test_time_dim_day_id2");
     client.createDerivedCube(BASE_CUBE_NAME, DERIVED_CUBE_NAME2, measures, dimensions, derivedProperties, 10L);
-    measures = new HashSet<String>();
+    measures = new HashSet<>();
     measures.add("msr3");
     measures.add("msr13");
-    dimensions = new HashSet<String>();
+    dimensions = new HashSet<>();
     dimensions.add("dim1");
     dimensions.add("location");
     dimensions.add("d_time");
     dimensions.add("test_time_dim");
+    dimensions.add("test_time_dim2");
+    dimensions.add("test_time_dim_hour_id");
+    dimensions.add("test_time_dim_day_id");
+    dimensions.add("test_time_dim_hour_id2");
+    dimensions.add("test_time_dim_day_id2");
     client.createDerivedCube(BASE_CUBE_NAME, DERIVED_CUBE_NAME3, measures, dimensions, derivedProperties, 20L);
 
     // create base cube facts
@@ -1110,6 +1385,7 @@ public class CubeTestSetup {
     // add dimensions of the cube
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
+    factColumns.add(new FieldSchema("cityid1", "int", "city id"));
     factColumns.add(new FieldSchema("stateid", "int", "city id"));
     factColumns.add(new FieldSchema("test_time_dim_day_id", "int", "time id"));
     factColumns.add(new FieldSchema("test_time_dim_day_id2", "int", "time id"));
@@ -1301,7 +1577,7 @@ public class CubeTestSetup {
     }
   }
 
-  private void createCubeFactWeekly(CubeMetastoreClient client) throws HiveException {
+  private void createCubeFactWeekly(CubeMetastoreClient client) throws Exception {
     String factName = "testFactWeekly";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(cubeMeasures.size());
     for (CubeMeasure measure : cubeMeasures) {
@@ -1345,6 +1621,7 @@ public class CubeTestSetup {
     // add dimensions of the cube
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
+    factColumns.add(new FieldSchema("cityid2", "int", "city id"));
     factColumns.add(new FieldSchema("test_time_dim_hour_id", "int", "time id"));
     factColumns.add(new FieldSchema("test_time_dim_hour_id2", "int", "time id"));
     factColumns.add(new FieldSchema("cdim2", "int", "cycledim id"));
@@ -1479,6 +1756,8 @@ public class CubeTestSetup {
     // add dimensions of the cube
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
+    factColumns.add(new FieldSchema("cityid1", "int", "city id"));
+    factColumns.add(new FieldSchema("cityid2", "int", "city id"));
     factColumns.add(new FieldSchema("stateid", "int", "state id"));
     factColumns.add(new FieldSchema("countryid", "int", "country id"));
     factColumns.add(new FieldSchema("dim1", "string", "dim1"));
@@ -1527,7 +1806,7 @@ public class CubeTestSetup {
     }
   }
 
-  private void createCubeFactMonthly(CubeMetastoreClient client) throws HiveException {
+  private void createCubeFactMonthly(CubeMetastoreClient client) throws Exception {
     String factName = "testFactMonthly";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(cubeMeasures.size());
     for (CubeMeasure measure : cubeMeasures) {
@@ -1561,7 +1840,7 @@ public class CubeTestSetup {
   }
 
   // DimWithTwoStorages
-  private void createCityTable(CubeMetastoreClient client) throws HiveException, ParseException, LensException {
+  private void createCityTable(CubeMetastoreClient client) throws Exception {
     Set<CubeDimAttribute> cityAttrs = new HashSet<CubeDimAttribute>();
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "city name")));
@@ -1569,24 +1848,72 @@ public class CubeTestSetup {
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("ambigdim2", "string", "used in testColumnAmbiguity")));
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("nocandidatecol", "string", "used in testing no"
       + " candidate available")));
-    cityAttrs.add(new ReferencedDimAtrribute(new FieldSchema("stateid", "int", "state id"), "State refer",
-      new TableReference("statedim", "id")));
-    cityAttrs.add(new ReferencedDimAtrribute(new FieldSchema("statename", "string", "state name"), "State name",
-      new TableReference("statedim", "name")));
-    cityAttrs.add(new ReferencedDimAtrribute(new FieldSchema("zipcode", "int", "zip code"), "Zip refer",
-      new TableReference("zipdim", "code")));
+    cityAttrs.add(new BaseDimAttribute(new FieldSchema("stateid", "int", "state id")));
+    cityAttrs.add(new ReferencedDimAttribute(new FieldSchema("statename", "string", "state name"), "State name",
+      "citystate", "name", null, null, null, null));
+    cityAttrs.add(new BaseDimAttribute(new FieldSchema("zipcode", "int", "zip code")));
     Map<String, String> dimProps = new HashMap<String, String>();
     dimProps.put(MetastoreUtil.getDimTimedDimensionKey("citydim"), TestCubeMetastoreClient.getDatePartitionKey());
     Set<ExprColumn> exprs = new HashSet<ExprColumn>();
     exprs.add(new ExprColumn(new FieldSchema("CityAddress", "string", "city with state and city and zip"),
       "City Address",
-      new ExprSpec("concat(citydim.name, \":\", statedim.name, \":\", countrydim.name, \":\", zipdim.code)", null,
-        null), new ExprSpec("concat(citydim.name, \":\", statedim.name)", null, null)));
+      new ExprSpec("concat(citydim.name, \":\", citystate.name, \":\", citycountry.name, \":\", cityzip.code)", null,
+        null), new ExprSpec("concat(citydim.name, \":\", citystate.name)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("CityState", "string", "city's state"),
       "City State", new ExprSpec("concat(citydim.name, \":\", citydim.statename)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("AggrExpr", "int", "count(name)"), "city count",
       new ExprSpec("count(name)", null, null)));
-    Dimension cityDim = new Dimension("citydim", cityAttrs, exprs, dimProps, 0L);
+    Set<JoinChain> joinchains = new HashSet<JoinChain>() {
+      {
+        add(new JoinChain("cityState", "city-state", "state thru city") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("citydim", "stateid"));
+                add(new TableReference("statedim", "id"));
+              }
+            });
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("citydim", "statename"));
+                add(new TableReference("statedim", "name"));
+              }
+            });
+          }
+        });
+      }
+    };
+    joinchains.add(new JoinChain("cityCountry", "cube-zip", "country thru city") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("citydim", "stateid"));
+            add(new TableReference("statedim", "id"));
+            add(new TableReference("statedim", "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("citydim", "statename"));
+            add(new TableReference("statedim", "name"));
+            add(new TableReference("statedim", "countryid"));
+            add(new TableReference("countrydim", "id"));
+          }
+        });
+      }
+    });
+    joinchains.add(new JoinChain("cityZip", "city-zip", "Zipcode thru city") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("citydim", "zipcode"));
+            add(new TableReference("zipdim", "code"));
+          }
+        });
+      }
+    });
+    Dimension cityDim = new Dimension("citydim", cityAttrs, exprs, joinchains, dimProps, 0L);
     client.createDimension(cityDim);
 
     String dimName = "citytable";
@@ -1655,13 +1982,13 @@ public class CubeTestSetup {
 
   }
 
-  private void createTestDim2(CubeMetastoreClient client) throws HiveException {
+  private void createTestDim2(CubeMetastoreClient client) throws Exception {
     String dimName = "testDim2";
     Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
 
-    Set<JoinChain> joinchains = new HashSet<JoinChain>();
+    Set<JoinChain> joinchains = new HashSet<>();
     JoinChain cityState = new JoinChain("cityState", "city-state", "state thru city");
-    List<TableReference> statePaths1 = new ArrayList<TableReference>();
+    List<TableReference> statePaths1 = new ArrayList<>();
     statePaths1.add(new TableReference("testDim2", "cityid"));
     statePaths1.add(new TableReference("citydim", "id"));
     statePaths1.add(new TableReference("citydim", "stateid"));
@@ -1674,24 +2001,64 @@ public class CubeTestSetup {
     statePaths2.add(new TableReference("statedim", "name"));
     cityState.addPath(statePaths2);
     joinchains.add(cityState);
-
-
+    joinchains.add(new JoinChain("dim2city", "dim2-city", "city thru dim2") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("testdim2", "cityid"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+      }
+    });
+    joinchains.add(new JoinChain("dim3chain", "dim3-chain", "dim3 thru dim2") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("testdim2", "testDim3id"));
+            add(new TableReference("testdim3", "id"));
+          }
+        });
+      }
+    });
+    joinchains.add(new JoinChain("unreachableDim_chain", "dim2-unreachableDim", "unreachableDim thru dim2") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("testdim2", "urdimid"));
+            add(new TableReference("unreachableDim", "id"));
+          }
+        });
+      }
+    });
+    joinchains.add(new JoinChain("dim4chain", "cube-testdim3", "cyclicdim thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("testdim2", "testdim3id"));
+            add(new TableReference("testdim3", "id"));
+            add(new TableReference("testdim3", "testdim4id"));
+            add(new TableReference("testdim4", "id"));
+          }
+        });
+      }
+    });
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("bigid1", "bigint", "big id")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("bigid2", "bigint", "big id")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("bigidnew", "bigint", "big id")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
-    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("testDim3id", "string", "f-key to testdim3"), "Dim3 refer",
-      new TableReference("testdim3", "id")));
-    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("cityId", "string", "f-key to citydim"), "cityid",
-      new TableReference("citydim", "id")));
-    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("cityname", "string", "name"), "cityid",
-      new TableReference("citydim", "name"), null, null, 0.0, false));
-    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("urdimid", "int", "ref dim"), "urdim refer",
-      new TableReference("unreachableDim", "id"), null, null, null, false, 10L));
-
+    dimAttrs.add(new ReferencedDimAttribute(new FieldSchema("testDim3id", "string", "f-key to testdim3"), "dim3 refer",
+      "dim3chain", "id", null, null, 0.0));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("cityId", "string", "f-key to citydim")));
+    dimAttrs.add(new ReferencedDimAttribute(new FieldSchema("cityname", "string", "name"), "cityname",
+      "dim2city", "name", null, null, 0.0));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("urdimid", "int", "ref dim"), "urdim refer",
+      null, null, 10.0));
+    dimAttrs.add(new ReferencedDimAttribute(new FieldSchema("unreachableName", "string", ""), "urdim name",
+      "unreachableDim_chain", "name", null, null, 10.0));
     // add ref dim through chain
-    dimAttrs.add(new ReferencedDimAtrribute(
+    dimAttrs.add(new ReferencedDimAttribute(
       new FieldSchema("cityStateCapital", "string", "State's capital thru city"), "State's capital thru city",
       "cityState", "capital", null, null, null));
 
@@ -1753,7 +2120,7 @@ public class CubeTestSetup {
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 20L, dumpPeriods, dimProps, storageTables);
   }
 
-  private void createTimeDims(CubeMetastoreClient client) throws HiveException {
+  private void createTimeDims(CubeMetastoreClient client) throws Exception {
     String dimName = "dayDim";
     Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
@@ -1812,17 +2179,30 @@ public class CubeTestSetup {
 
   }
 
-  private void createTestDim3(CubeMetastoreClient client) throws HiveException {
+  private void createTestDim3(CubeMetastoreClient client) throws Exception {
     String dimName = "testDim3";
 
     Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
-    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("testDim4id", "string", "f-key to testdim4"), "Dim4 refer",
-      new TableReference("testdim4", "id")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("testDim4id", "string", "f-key to testdim4")));
     Map<String, String> dimProps = new HashMap<String, String>();
     dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
-    Dimension testDim3 = new Dimension(dimName, dimAttrs, dimProps, 0L);
+    Set<JoinChain> joinchains = new HashSet<JoinChain>() {
+      {
+        add(new JoinChain("dim4chain", "dim4-chain", "dim4 thru dim3") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("testdim3", "testDim4id"));
+                add(new TableReference("testdim4", "id"));
+              }
+            });
+          }
+        });
+      }
+    };
+    Dimension testDim3 = new Dimension(dimName, dimAttrs, null, joinchains, dimProps, 0L);
     client.createDimension(testDim3);
 
     String dimTblName = "testDim3Tbl";
@@ -1855,7 +2235,7 @@ public class CubeTestSetup {
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
 
-  private void createTestDim4(CubeMetastoreClient client) throws HiveException {
+  private void createTestDim4(CubeMetastoreClient client) throws Exception {
     String dimName = "testDim4";
 
     Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
@@ -1896,17 +2276,30 @@ public class CubeTestSetup {
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
 
-  private void createCyclicDim1(CubeMetastoreClient client) throws HiveException {
+  private void createCyclicDim1(CubeMetastoreClient client) throws Exception {
     String dimName = "cycleDim1";
 
     Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
-    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("cyleDim2Id", "string", "link to cyclic dim 2"),
-      "cycle refer2", new TableReference("cycleDim2", "id")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("cyleDim2Id", "string", "link to cyclic dim 2")));
     Map<String, String> dimProps = new HashMap<String, String>();
     dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
-    Dimension cycleDim1 = new Dimension(dimName, dimAttrs, dimProps, 0L);
+    Set<JoinChain> joinchains = new HashSet<JoinChain>() {
+      {
+        add(new JoinChain("cycledim2chain", "cycledim2chain", "cycledim2chain") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("cycledim1", "cyleDim2Id"));
+                add(new TableReference("cycleDim2", "id"));
+              }
+            });
+          }
+        });
+      }
+    };
+    Dimension cycleDim1 = new Dimension(dimName, dimAttrs, null, joinchains, dimProps, 0L);
     client.createDimension(cycleDim1);
 
     String dimTblName = "cycleDim1Tbl";
@@ -1941,17 +2334,30 @@ public class CubeTestSetup {
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
 
-  private void createCyclicDim2(CubeMetastoreClient client) throws HiveException {
+  private void createCyclicDim2(CubeMetastoreClient client) throws Exception {
     String dimName = "cycleDim2";
 
     Set<CubeDimAttribute> dimAttrs = new HashSet<CubeDimAttribute>();
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
-    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("cyleDim1Id", "string", "link to cyclic dim 1"),
-      "Cycle refer1", new TableReference("cycleDim1", "id")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("cyleDim1Id", "string", "link to cyclic dim 1")));
     Map<String, String> dimProps = new HashMap<String, String>();
     dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
-    Dimension cycleDim2 = new Dimension(dimName, dimAttrs, dimProps, 0L);
+    Set<JoinChain> joinchains = new HashSet<JoinChain>() {
+      {
+        add(new JoinChain("cycledim1chain", "cycledim1chain", "cycledim1chain") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("cycledim2", "cyleDim1Id"));
+                add(new TableReference("cycleDim1", "id"));
+              }
+            });
+          }
+        });
+      }
+    };
+    Dimension cycleDim2 = new Dimension(dimName, dimAttrs, null, joinchains, dimProps, 0L);
     client.createDimension(cycleDim2);
 
     String dimTblName = "cycleDim2Tbl";
@@ -2113,11 +2519,24 @@ public class CubeTestSetup {
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("capital", "string", "field2")));
-    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("countryid", "string", "link to country table"),
-      "Country refer", new TableReference("countrydim", "id")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("countryid", "string", "link to country table")));
     Map<String, String> dimProps = new HashMap<String, String>();
     dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
-    Dimension countryDim = new Dimension(dimName, dimAttrs, dimProps, 0L);
+    Set<JoinChain> joinchains = new HashSet<JoinChain>() {
+      {
+        add(new JoinChain("countrychain", "countrychain", "countrychain") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("statedim", "countryid"));
+                add(new TableReference("country", "id"));
+              }
+            });
+          }
+        });
+      }
+    };
+    Dimension countryDim = new Dimension(dimName, dimAttrs, null, joinchains, dimProps, 0L);
     client.createDimension(countryDim);
 
     String dimTblName = "statetable";

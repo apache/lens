@@ -151,6 +151,7 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     void addDirectlyAvailable(CandidateTable cTable) {
+      log.debug("Directly available in {}", cTable);
       directlyAvailableIn.add(cTable);
     }
 
@@ -447,6 +448,7 @@ class ExpressionResolver implements ContextRewriter {
         }
         // Replace picked expressions in all the base trees
         replacePickedExpressions(queryAST);
+        log.debug("Picked expressions: {}", pickedExpressions);
         for (Set<PickedExpression> peSet : pickedExpressions.values()) {
           for (PickedExpression pe : peSet) {
             exprDims.addAll(pe.pickedCtx.exprDims);
@@ -518,6 +520,7 @@ class ExpressionResolver implements ContextRewriter {
         for (ExpressionContext ec : ecSet) {
           if (ec.getSrcTable().getName().equals(cTable.getBaseTable().getName())) {
             if (!ec.directlyAvailableIn.contains(cTable)) {
+              log.debug("{} is not directly evaluable in {}", ec, cTable);
               if (ec.evaluableExpressions.get(cTable) != null && !ec.evaluableExpressions.get(cTable).isEmpty()) {
                 // pick first evaluable expression
                 Set<PickedExpression> peSet = pickedExpressions.get(ecEntry.getKey());

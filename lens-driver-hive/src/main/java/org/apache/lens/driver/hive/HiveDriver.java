@@ -62,12 +62,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.TaskStatus;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
 import org.apache.hive.service.cli.thrift.TOperationHandle;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
@@ -576,7 +580,7 @@ public class HiveDriver extends AbstractLensDriver {
     if (ex.getMessage().contains("SemanticException")) {
       throw new LensException(SEMANTIC_ERROR.getLensErrorInfo(), ex, ex.getMessage());
     }
-    throw new LensException(HIVE_ERROR.getLensErrorInfo(), ex, ex.getMessage());
+    throw new LensException(DRIVER_ERROR.getLensErrorInfo(), ex, ex.getMessage());
   }
 
   /*

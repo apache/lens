@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.parse.join;
 
 import java.util.*;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.Dimension;
-import org.apache.lens.cube.metadata.SchemaGraph;
-
-import org.apache.hadoop.hive.ql.parse.JoinType;
+import org.apache.lens.cube.metadata.join.TableRelationship;
+import org.apache.lens.cube.parse.Aliased;
+import org.apache.lens.cube.parse.CubeQueryContext;
 
 import lombok.Getter;
 import lombok.ToString;
@@ -36,13 +36,13 @@ public class JoinClause implements Comparable<JoinClause> {
   @Getter
   private final Set<Dimension> dimsInPath;
   private CubeQueryContext cubeql;
-  private final Map<Aliased<Dimension>, List<SchemaGraph.TableRelationship>> chain;
+  private final Map<Aliased<Dimension>, List<TableRelationship>> chain;
   @Getter
   private final JoinTree joinTree;
-  transient Map<AbstractCubeTable, Set<String>> chainColumns = new HashMap<AbstractCubeTable, Set<String>>();
+  transient Map<AbstractCubeTable, Set<String>> chainColumns = new HashMap<>();
 
   public JoinClause(CubeQueryContext cubeql, Map<Aliased<Dimension>,
-    List<SchemaGraph.TableRelationship>> chain, Set<Dimension> dimsInPath) {
+    List<TableRelationship>> chain, Set<Dimension> dimsInPath) {
     this.cubeql = cubeql;
     this.chain = chain;
     this.joinTree = mergeJoinChains(chain);
@@ -51,18 +51,18 @@ public class JoinClause implements Comparable<JoinClause> {
   }
 
   void initChainColumns() {
-    for (List<SchemaGraph.TableRelationship> path : chain.values()) {
-      for (SchemaGraph.TableRelationship edge : path) {
+    for (List<TableRelationship> path : chain.values()) {
+      for (TableRelationship edge : path) {
         Set<String> fcols = chainColumns.get(edge.getFromTable());
         if (fcols == null) {
-          fcols = new HashSet<String>();
+          fcols = new HashSet<>();
           chainColumns.put(edge.getFromTable(), fcols);
         }
         fcols.add(edge.getFromColumn());
 
         Set<String> tocols = chainColumns.get(edge.getToTable());
         if (tocols == null) {
-          tocols = new HashSet<String>();
+          tocols = new HashSet<>();
           chainColumns.put(edge.getToTable(), tocols);
         }
         tocols.add(edge.getToColumn());
@@ -114,26 +114,18 @@ public class JoinClause implements Comparable<JoinClause> {
    * @param chain Joins in Linear format.
    * @return Joins in Tree format
    */
-  public JoinTree mergeJoinChains(Map<Aliased<Dimension>, List<SchemaGraph.TableRelationship>> chain) {
-    Map<String, Integer> aliasUsage = new HashMap<String, Integer>();
+  public JoinTree mergeJoinChains(Map<Aliased<Dimension>, List<TableRelationship>> chain) {
+    Map<String, Integer> aliasUsage = new HashMap<>();
     JoinTree root = JoinTree.createRoot();
-    for (Map.Entry<Aliased<Dimension>, List<SchemaGraph.TableRelationship>> entry : chain.entrySet()) {
+    for (Map.Entry<Aliased<Dimension>, List<TableRelationship>> entry : chain.entrySet()) {
       JoinTree current = root;
       // Last element in this list is link from cube to first dimension
       for (int i = entry.getValue().size() - 1; i >= 0; i--) {
         // Adds a child if needed, or returns a child already existing corresponding to the given link.
-        current = current.addChild(entry.getValue().get(i), cubeql, aliasUsage);
-        if (cubeql.getAutoJoinCtx().isPartialJoinChains()) {
-          JoinType joinType = cubeql.getAutoJoinCtx().getTableJoinTypeMap().get(entry.getKey().getObject());
-          //This ensures if (sub)paths are same, but join type is not same, merging will not happen.
-          current.setJoinType(joinType);
-        }
+        current = current.addChild(entry.getValue().get(i), aliasUsage);
       }
       // This is a destination table. Decide alias separately. e.g. chainname
-      // nullcheck is necessary because dimensions can be destinations too. In that case getAlias() == null
-      if (entry.getKey().getAlias() != null) {
-        current.setAlias(entry.getKey().getAlias());
-      }
+      current.setAlias(entry.getKey().getAlias());
     }
     if (root.getSubtrees().size() > 0) {
       root.setAlias(cubeql.getAliasForTableName(

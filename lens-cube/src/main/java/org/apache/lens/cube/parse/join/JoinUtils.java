@@ -16,28 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.parse.join;
 
-import org.apache.lens.cube.metadata.Named;
+import org.apache.hadoop.hive.ql.parse.JoinType;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+public class JoinUtils {
 
-@Data
-@AllArgsConstructor
-public class Aliased<T extends Named> {
-  T object;
-  String alias;
-
-  public static <K extends Named> Aliased<K> create(K obj) {
-    return create(obj, null);
+  private JoinUtils() {
   }
 
-  public static <K extends Named> Aliased<K> create(K obj, String alias) {
-    return new Aliased<K>(obj, alias);
-  }
-
-  public String getName() {
-    return object.getName();
+  public static String getJoinTypeStr(JoinType joinType) {
+    if (joinType == null) {
+      return "";
+    }
+    switch (joinType) {
+    case FULLOUTER:
+      return " full outer";
+    case INNER:
+      return " inner";
+    case LEFTOUTER:
+      return " left outer";
+    case LEFTSEMI:
+      return " left semi";
+    case UNIQUE:
+      return " unique";
+    case RIGHTOUTER:
+      return " right outer";
+    default:
+      return "";
+    }
   }
 }

@@ -682,8 +682,8 @@ public class TestHiveDriver {
       driver.estimate(createExplainContext("SELECT ID FROM nonexist", conf));
       fail("Should not reach here");
     } catch (LensException e) {
-      assertEquals(LensUtil.getCauseMessage(e), "Error while"
-        + " compiling statement: FAILED: SemanticException [Error 10001]: Line 1:32 Table not found 'nonexist'");
+      assertTrue(LensUtil.getCauseMessage(e).contains("Error while"
+        + " compiling statement: FAILED: SemanticException [Error 10001]: Line 1:32 Table not found 'nonexist'"));
     }
   }
 

@@ -411,6 +411,20 @@ public class TestJdbcDriver {
     }
   }
 
+  @Test
+  public void testJdbcSqlException() throws Exception {
+    final String query = "SELECT invalid_column FROM execute_test";
+    try {
+      PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
+      driver.validate(pContext);
+      driver.prepare(pContext);
+    } catch (LensException e) {
+      assertEquals(e.getErrorInfo().getErrorCode(), 4001);
+      assertEquals(e.getErrorInfo().getErrorName(), "SEMANTIC_ERROR");
+      assertTrue(e.getMessage().contains("user lacks privilege or object not found: EXECUTE_TEST"));
+    }
+  }
+
   /**
    * Test type casting of char, varchar, nvarchar and decimal type
    *

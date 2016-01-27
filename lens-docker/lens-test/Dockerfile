@@ -17,7 +17,7 @@
 
 FROM inmobi/docker-hive
 
-RUN wget http://apache.mirrors.lucidnetworks.net/spark/spark-1.3.0/spark-1.3.0-bin-hadoop2.4.tgz
+RUN wget https://archive.apache.org/dist/spark/spark-1.3.0/spark-1.3.0-bin-hadoop2.4.tgz
 RUN gunzip spark-1.3.0-bin-hadoop2.4.tgz
 RUN tar -xvf spark-1.3.0-bin-hadoop2.4.tar
 RUN mv spark-1.3.0-bin-hadoop2.4 /usr/local

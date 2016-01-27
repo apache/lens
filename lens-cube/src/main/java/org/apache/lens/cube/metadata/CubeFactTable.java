@@ -20,15 +20,18 @@ package org.apache.lens.cube.metadata;
 
 import java.util.*;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.UpdatePeriod.UpdatePeriodComparator;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class CubeFactTable extends AbstractCubeTable {
   private String cubeName;
   private final Map<String, Set<UpdatePeriod>> storageUpdatePeriods;
@@ -80,7 +83,7 @@ public class CubeFactTable extends AbstractCubeTable {
   }
 
   private static Map<String, Set<UpdatePeriod>> getUpdatePeriods(String name, Map<String, String> props) {
-    Map<String, Set<UpdatePeriod>> storageUpdatePeriods = new HashMap<String, Set<UpdatePeriod>>();
+    Map<String, Set<UpdatePeriod>> storageUpdatePeriods = new HashMap<>();
     String storagesStr = props.get(MetastoreUtil.getFactStorageListKey(name));
     if (!StringUtils.isBlank(storagesStr)) {
       String[] storages = storagesStr.split(",");
@@ -88,7 +91,7 @@ public class CubeFactTable extends AbstractCubeTable {
         String updatePeriodStr = props.get(MetastoreUtil.getFactUpdatePeriodKey(name, storage));
         if (StringUtils.isNotBlank(updatePeriodStr)) {
           String[] periods = updatePeriodStr.split(",");
-          Set<UpdatePeriod> updatePeriods = new TreeSet<UpdatePeriod>();
+          Set<UpdatePeriod> updatePeriods = new TreeSet<>();
           for (String period : periods) {
             updatePeriods.add(UpdatePeriod.valueOf(period));
           }
@@ -258,11 +261,11 @@ public class CubeFactTable extends AbstractCubeTable {
    *
    * @param storage
    * @param updatePeriods
-   * @throws HiveException
    */
-  public void alterStorage(String storage, Set<UpdatePeriod> updatePeriods) throws HiveException {
+  public void alterStorage(String storage, Set<UpdatePeriod> updatePeriods) throws LensException{
     if (!storageUpdatePeriods.containsKey(storage)) {
-      throw new HiveException("Invalid storage" + storage);
+      throw new LensException(LensCubeErrorCode.ERROR_IN_ENTITY_DEFINITION.getLensErrorInfo(),
+        "Invalid storage" + storage);
     }
     storageUpdatePeriods.put(storage, updatePeriods);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
@@ -273,9 +276,8 @@ public class CubeFactTable extends AbstractCubeTable {
    *
    * @param storage
    * @param updatePeriods
-   * @throws HiveException
    */
-  void addStorage(String storage, Set<UpdatePeriod> updatePeriods) throws HiveException {
+  void addStorage(String storage, Set<UpdatePeriod> updatePeriods) {
     storageUpdatePeriods.put(storage, updatePeriods);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
   }
@@ -293,12 +295,12 @@ public class CubeFactTable extends AbstractCubeTable {
   }
 
   @Override
-  public void alterColumn(FieldSchema column) throws HiveException {
+  public void alterColumn(FieldSchema column) {
     super.alterColumn(column);
   }
 
   @Override
-  public void addColumns(Collection<FieldSchema> columns) throws HiveException {
+  public void addColumns(Collection<FieldSchema> columns) {
     super.addColumns(columns);
   }
 
@@ -321,20 +323,28 @@ public class CubeFactTable extends AbstractCubeTable {
     getProperties().put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, Boolean.toString(isAggregated));
   }
 
-  public Date getAbsoluteStartTime() {
+  public Date getDateFromProperty(String propKey, boolean relative, boolean start) {
+    String prop = getProperties().get(propKey);
     try {
-      return DateUtil.resolveAbsoluteDate(getProperties().get(MetastoreConstants.FACT_ABSOLUTE_START_TIME));
-    } catch (Exception e) {
-      return new Date(Long.MIN_VALUE);
+      if (StringUtils.isNotBlank(prop)) {
+        if (relative) {
+          return DateUtil.resolveRelativeDate(prop, now());
+        } else {
+          return DateUtil.resolveAbsoluteDate(prop);
+        }
+      }
+    } catch (LensException e) {
+      log.error("unable to parse {} {} date: {}", relative ? "relative" : "absolute", start ? "start" : "end", prop);
     }
+    return start ? DateUtil.MIN_DATE : DateUtil.MAX_DATE;
+  }
+
+  public Date getAbsoluteStartTime() {
+    return getDateFromProperty(MetastoreConstants.FACT_ABSOLUTE_START_TIME, false, true);
   }
 
   public Date getRelativeStartTime() {
-    try {
-      return DateUtil.resolveRelativeDate(getProperties().get(MetastoreConstants.FACT_RELATIVE_START_TIME), now());
-    } catch (Exception e) {
-      return new Date(Long.MIN_VALUE);
-    }
+    return getDateFromProperty(MetastoreConstants.FACT_RELATIVE_START_TIME, true, true);
   }
 
   public Date getStartTime() {
@@ -342,19 +352,11 @@ public class CubeFactTable extends AbstractCubeTable {
   }
 
   public Date getAbsoluteEndTime() {
-    try {
-      return DateUtil.resolveAbsoluteDate(getProperties().get(MetastoreConstants.FACT_ABSOLUTE_END_TIME));
-    } catch (Exception e) {
-      return new Date(Long.MAX_VALUE);
-    }
+    return getDateFromProperty(MetastoreConstants.FACT_ABSOLUTE_END_TIME, false, false);
   }
 
   public Date getRelativeEndTime() {
-    try {
-      return DateUtil.resolveRelativeDate(getProperties().get(MetastoreConstants.FACT_RELATIVE_END_TIME), now());
-    } catch (Exception e) {
-      return new Date(Long.MAX_VALUE);
-    }
+    return getDateFromProperty(MetastoreConstants.FACT_RELATIVE_END_TIME, true, false);
   }
 
   public Date getEndTime() {

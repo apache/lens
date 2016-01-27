@@ -335,6 +335,8 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
+|cube select \<query-string-without-cube-select\> [--async \<async\>] [--name \<query-name\>]|Execute cube query <<<cube select query-string-without-cube-select>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.|
+*--+--+
 |prepQuery destroy [--prepare_handle] \<prepare_handle\>|Destroy prepared query with handle <<<prepare_handle>>>|
 *--+--+
 |prepQuery details [--prepare_handle] \<prepare_handle\>|Get prepared query with handle <<<prepare_handle>>>|
@@ -349,7 +351,7 @@ User CLI Commands
 *--+--+
 |query details [[--query_handle] \<query_handle\>]|Get query details of query with handle <<<query_handle>>>.If not provided, takes last query handle interacted with.|
 *--+--+
-|query execute [--query] \<query-string\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<query-string>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required|
+|query execute [--query] \<query-string\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<query-string>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.|
 *--+--+
 |query explain [--query] \<query-string\> [--save_location \<save_location\>]|Explain execution plan of query <<<query-string>>>. Can optionally save the plan to a file by providing <<<save_location>>>|
 *--+--+
@@ -360,6 +362,8 @@ User CLI Commands
 |query results [[--query_handle] \<query_handle\>] [--save_location \<save_location\>] [--async \<async\>]|get results of query with query handle <<<query_handle>>>. If not provided, takes last query handle interacted with.If async is false then wait till the query execution is completed, it's by default true. Can optionally save the results to a file by providing <<<save_location>>>.|
 *--+--+
 |query status [[--query_handle] \<query_handle\>]|Fetch status of executed query having query handle <<<query_handle>>>. If not provided, takes last query handle interacted with.|
+*--+--+
+|select \<query-string-without-select\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<select query-string-without-select>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.|
 *--+--+
   <<Lens Query Commands>>
 
@@ -372,7 +376,7 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|show logs [--log_handle] \<log_handle\> [--save_location \<save_location\>]|show logs for the given handle <<<log_handle>>>. Handle can either be a query handle or request id. You can optionally provide a location to save the logs as <<<save_location>>>|
+|show logs [[--log_handle] \<log_handle\>] [--save_location \<save_location\>]|show logs for the given handle <<<log_handle>>>. Handle can either be a query handle or request id. If not provided, takes last query handle interacted with. You can optionally provide a location to save the logs as <<<save_location>>>|
 *--+--+
   <<Lens Log Resource Commands>>
 

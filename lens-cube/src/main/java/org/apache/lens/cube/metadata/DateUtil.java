@@ -54,7 +54,8 @@ public final class DateUtil {
    * <NUM>UNIT or Hardcoded dates in DD-MM-YYYY hh:mm:ss,sss
    */
   public static final String UNIT;
-
+  public static final Date MAX_DATE = new Date(Long.MAX_VALUE);
+  public static final Date MIN_DATE = new Date(Long.MIN_VALUE);
   static {
     StringBuilder sb = new StringBuilder();
     String sep = "";

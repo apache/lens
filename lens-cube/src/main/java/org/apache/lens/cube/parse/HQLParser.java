@@ -205,7 +205,7 @@ public final class HQLParser {
     }
 
     System.out.print(node.getText() + " [" + tokenMapping.get(node.getToken().getType()) + "]");
-    System.out.print(" (l" + level + "c" + child + "p" + node.getCharPositionInLine() +")");
+    System.out.print(" (l" + level + "c" + child + "p" + node.getCharPositionInLine() + ")");
 
     if (node.getChildCount() > 0) {
       System.out.println(" {");
@@ -716,16 +716,27 @@ public final class HQLParser {
       assert (node.getChildCount() != 0);
       if (node.getChild(0).getType() == HiveParser.Identifier) {
         String functionName = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
-        try {
-          if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
-            return true;
-          }
-        } catch (SemanticException e) {
-          return false;
+        if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
+          return true;
         }
       }
     }
 
+    return false;
+  }
+
+  public static boolean isNonAggregateFunctionAST(ASTNode node) {
+    int exprTokenType = node.getToken().getType();
+    if (exprTokenType == HiveParser.TOK_FUNCTION || exprTokenType == HiveParser.TOK_FUNCTIONDI
+      || exprTokenType == HiveParser.TOK_FUNCTIONSTAR) {
+      assert (node.getChildCount() != 0);
+      if (node.getChild(0).getType() == HiveParser.Identifier) {
+        String functionName = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
+        if (FunctionRegistry.getGenericUDAFResolver(functionName) == null) {
+          return true;
+        }
+      }
+    }
     return false;
   }
 
@@ -814,5 +825,12 @@ public final class HQLParser {
     }
 
     return true;
+  }
+
+  public static ASTNode leftMostChild(ASTNode node) {
+    while (node.getChildren() != null) {
+      node = (ASTNode) node.getChild(0);
+    }
+    return node;
   }
 }

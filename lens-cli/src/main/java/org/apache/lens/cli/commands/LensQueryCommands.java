@@ -61,22 +61,42 @@ import com.google.common.base.Joiner;
     + "  <<<query execute cube select id,name from dim_table where name != \"\"first\"\">>>,\n"
     + "  will be parsed as <<<cube select id,name from dim_table where name != \"first\">>>")
 public class LensQueryCommands extends BaseLensCommand {
-  private static final String DEFAULT_QUERY_HANDLE_DESCRIPTION =
+  public static final String DEFAULT_QUERY_HANDLE_DESCRIPTION =
     "If not provided, takes last query handle interacted with.";
+  private static final String ASYNC_DOC =
+    "If <async> is true, The query is launched in async manner and query handle is returned. It's by default false.";
+  private static final String QUERY_NAME_DOC = "<query name> can also be provided, though not required.";
 
-  /**
-   * Execute query.
-   *
-   * @param sql       the sql
-   * @param async    the asynch
-   * @param queryName the query name
-   * @return the string
-   */
+  @CliCommand(value = "select",
+    help = "Execute query <select query-string-without-select>. " + ASYNC_DOC + " " + QUERY_NAME_DOC)
+  public String executeSelectQuery(
+    @CliOption(key = {""}, mandatory = true, help = "<query-string-without-select>") String sql,
+    @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
+      specifiedDefaultValue = "true", help = "<async>") boolean async,
+    @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName) {
+    return executeQuery("select " + sql, async, queryName);
+  }
+
+  @CliCommand(value = "cube select",
+    help = "Execute cube query <cube select query-string-without-cube-select>. " + ASYNC_DOC + " " + QUERY_NAME_DOC)
+  public String executeCubeSelectQuery(
+    @CliOption(key = {""}, mandatory = true, help = "<query-string-without-cube-select>") String sql,
+    @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
+      specifiedDefaultValue = "true", help = "<async>") boolean async,
+    @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName) {
+    return executeQuery("cube select " + sql, async, queryName);
+  }
+
+    /**
+     * Execute query.
+     *
+     * @param sql       the sql
+     * @param async    the asynch
+     * @param queryName the query name
+     * @return the string
+     */
   @CliCommand(value = "query execute",
-    help = "Execute query <query-string>."
-      +
-      " If <async> is true, The query is launched in async manner and query handle is returned. It's by default false."
-      + " <query name> can also be provided, though not required")
+    help = "Execute query <query-string>. " + ASYNC_DOC + " " + QUERY_NAME_DOC)
   public String executeQuery(
     @CliOption(key = {"", "query"}, mandatory = true, help = "<query-string>") String sql,
     @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
@@ -138,16 +158,6 @@ public class LensQueryCommands extends BaseLensCommand {
         .append(") seconds.\n");
     }
     return b.toString();
-  }
-
-  public String getOrDefaultQueryHandleString(String queryHandleString) {
-    if (queryHandleString != null) {
-      return queryHandleString;
-    }
-    if (getClient().getStatement().getQuery() != null) {
-      return getClient().getStatement().getQueryHandleString();
-    }
-    throw new IllegalArgumentException("Query handle not provided and no queries interacted with in the session.");
   }
 
   /**

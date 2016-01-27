@@ -393,25 +393,13 @@
     <xs:complexContent>
       <xs:extension base="x_field">
         <xs:sequence>
-          <xs:element name="ref_spec" maxOccurs="1" minOccurs="0">
+          <xs:element type="x_chain_column" name="chain_ref_column" maxOccurs="unbounded" minOccurs="0">
             <xs:annotation>
               <xs:documentation>
-                Reference specifiction needs to be specified if the attribute is a reference attribute. It
-                can either be table reference or a chained column
-
-                ref_spec can be specified as a list of table references to
-                which the attribute is refering to.
-                For ex : userid refers user.id, xuser.id, yuser.id, zuser.id.
-
-                Alternately, ref_spec could be list of chained columns each specifed with chain name and column name.
+                Chain column specification needs to be specified if the attribute is a reference attribute.
+                It can be list of chained columns each specified with chain name and column name.
               </xs:documentation>
             </xs:annotation>
-            <xs:complexType>
-              <xs:choice maxOccurs="1" minOccurs="1">
-                <xs:element type="x_table_references" name="table_references" maxOccurs="1" minOccurs="1"/>
-                <xs:element type="x_chain_column" name="chain_ref_column" maxOccurs="unbounded" minOccurs="1"/>
-              </xs:choice>
-            </xs:complexType>
           </xs:element>
           <xs:element name="hierarchy" type="x_dim_attributes" maxOccurs="1" minOccurs="0">
             <xs:annotation>
@@ -471,13 +459,6 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute type="xs:boolean" name="join_key" default="true">
-          <xs:annotation>
-            <xs:documentation>
-              This flag will tell whether the attribute can be used as a join key or not
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -529,17 +510,6 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-  </xs:complexType>
-
-  <xs:complexType name="x_table_references">
-    <xs:annotation>
-      <xs:documentation>
-        Set of table references.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element type="x_table_reference" name="table_reference" maxOccurs="unbounded" minOccurs="1"/>
-    </xs:sequence>
   </xs:complexType>
 
   <xs:element name="x_join_chains" type="x_join_chains"/>

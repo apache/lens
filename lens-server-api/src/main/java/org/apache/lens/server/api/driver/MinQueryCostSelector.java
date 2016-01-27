@@ -18,13 +18,18 @@
  */
 package org.apache.lens.server.api.driver;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.apache.hadoop.conf.Configuration;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class MinQueryCostSelector implements DriverSelector {
 
   /**
@@ -38,12 +43,15 @@ public class MinQueryCostSelector implements DriverSelector {
   public LensDriver select(final AbstractQueryContext ctx, final Configuration conf) {
 
     final Collection<LensDriver> drivers = ctx.getDriverContext().getDriversWithValidQueryCost();
-
+    log.info("Candidate drivers: {}", drivers);
+    for (LensDriver driver : drivers) {
+      log.debug("Cost on driver {}: {}", driver, ctx.getDriverQueryCost(driver));
+    }
     return Collections.min(drivers, new Comparator<LensDriver>() {
       @Override
       public int compare(LensDriver d1, LensDriver d2) {
-        final QueryCost c1 = ctx.getDriverContext().getDriverQueryCost(d1);
-        final QueryCost c2 = ctx.getDriverContext().getDriverQueryCost(d2);
+        final QueryCost c1 = ctx.getDriverQueryCost(d1);
+        final QueryCost c2 = ctx.getDriverQueryCost(d2);
         return c1.compareTo(c2);
       }
     });

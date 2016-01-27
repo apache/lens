@@ -18,9 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.lens.cube.metadata.CubeDimensionTable;
 import org.apache.lens.cube.metadata.Dimension;
@@ -45,15 +43,19 @@ public class CandidateDim implements CandidateTable {
   @Setter
   private String whereClause;
   private boolean dbResolved = false;
-  private boolean whereClauseAdded = false;
+  private Map<String, Boolean> whereClauseAdded = new HashMap<>();
   private Dimension baseTable;
 
   public boolean isWhereClauseAdded() {
-    return whereClauseAdded;
+    return !whereClauseAdded.isEmpty();
   }
 
-  public void setWhereClauseAdded() {
-    this.whereClauseAdded = true;
+  public boolean isWhereClauseAdded(String alias) {
+    return whereClauseAdded.get(alias) == null ? false : whereClauseAdded.get(alias);
+  }
+
+  public void setWhereClauseAdded(String alias) {
+    this.whereClauseAdded.put(alias, true);
   }
 
   CandidateDim(CubeDimensionTable dimtable, Dimension dim) {

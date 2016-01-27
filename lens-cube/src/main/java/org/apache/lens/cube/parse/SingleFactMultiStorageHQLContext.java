@@ -185,7 +185,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       outerAST.addChild(dotAST);
       innerToOuterASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
       return outerAST;
-    } else if (isTableColumnAST(astNode)) {
+    } else if (isTableColumnAST(astNode) || isNonAggregateFunctionAST(astNode)) {
       if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
         return innerToOuterASTs.get(new HashableASTNode(astNode));
       }
@@ -220,7 +220,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     if (astNode == null) {
       return null;
     }
-    if (isAggregateAST(astNode) || isTableColumnAST(astNode)) {
+    if (isAggregateAST(astNode) || isTableColumnAST(astNode) || isNonAggregateFunctionAST(astNode)) {
       if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
         ASTNode ret = innerToOuterASTs.get(new HashableASTNode(astNode));
         // Set parent null for quicker GC

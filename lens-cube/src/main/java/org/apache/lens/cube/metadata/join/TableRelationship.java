@@ -16,28 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.metadata.join;
 
-import org.apache.lens.cube.metadata.Named;
+import org.apache.lens.cube.metadata.AbstractCubeTable;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
+/*
+ * An edge in the schema graph
+ */
 @Data
 @AllArgsConstructor
-public class Aliased<T extends Named> {
-  T object;
-  String alias;
+@RequiredArgsConstructor
+public class TableRelationship {
+  final String fromColumn;
+  final AbstractCubeTable fromTable;
+  final String toColumn;
+  final AbstractCubeTable toTable;
+  boolean mapsToMany = false;
 
-  public static <K extends Named> Aliased<K> create(K obj) {
-    return create(obj, null);
+  @Override
+  public String toString() {
+    return fromTable.getName() + "." + fromColumn + "->" + toTable.getName() + "." + toColumn
+      + (mapsToMany ? "[n]" : "");
   }
 
-  public static <K extends Named> Aliased<K> create(K obj, String alias) {
-    return new Aliased<K>(obj, alias);
-  }
-
-  public String getName() {
-    return object.getName();
-  }
 }

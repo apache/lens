@@ -16,28 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+/*
+ *
+ */
+package org.apache.lens.server.rewrite;
 
-import org.apache.lens.cube.metadata.Named;
+import static org.testng.Assert.assertEquals;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
-@Data
-@AllArgsConstructor
-public class Aliased<T extends Named> {
-  T object;
-  String alias;
+public class CubeKeywordRemoverTest {
+  CubeKeywordRemover cubeKeywordRemover = new CubeKeywordRemover();
 
-  public static <K extends Named> Aliased<K> create(K obj) {
-    return create(obj, null);
+  @DataProvider
+  public Object[][] cubeQueryDataProvider() {
+    return new Object[][]{
+      {"cube select blah blah", "select blah blah"},
+      {"cube\tselect blah blah", "select blah blah"},
+      {"cube\nselect blah blah", "select blah blah"},
+      {"CUBE sElEct blAh blAh", "select blAh blAh"},
+    };
   }
 
-  public static <K extends Named> Aliased<K> create(K obj, String alias) {
-    return new Aliased<K>(obj, alias);
-  }
-
-  public String getName() {
-    return object.getName();
+  @Test(dataProvider = "cubeQueryDataProvider")
+  public void testRewrite(String userQuery, String expected) throws Exception {
+    assertEquals(cubeKeywordRemover.rewrite(userQuery, null, null), expected);
   }
 }
