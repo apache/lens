@@ -716,8 +716,12 @@ public final class HQLParser {
       assert (node.getChildCount() != 0);
       if (node.getChild(0).getType() == HiveParser.Identifier) {
         String functionName = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
-        if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
-          return true;
+        try {
+          if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
+            return true;
+          }
+        } catch (SemanticException e) {
+          e.printStackTrace();
         }
       }
     }
@@ -732,8 +736,12 @@ public final class HQLParser {
       assert (node.getChildCount() != 0);
       if (node.getChild(0).getType() == HiveParser.Identifier) {
         String functionName = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
-        if (FunctionRegistry.getGenericUDAFResolver(functionName) == null) {
-          return true;
+        try {
+          if (FunctionRegistry.getGenericUDAFResolver(functionName) == null) {
+            return true;
+          }
+        } catch (SemanticException e) {
+          e.printStackTrace();
         }
       }
     }

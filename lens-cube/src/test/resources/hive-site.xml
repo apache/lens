@@ -47,4 +47,9 @@
     <description>JDBC connect string for a JDBC metastore</description>
   </property>
 
+  <property>
+    <name>datanucleus.schema.autoCreateTables</name>
+    <value>true</value>
+  </property>
+
 </configuration>

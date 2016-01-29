@@ -18,8 +18,6 @@
  */
 package org.apache.lens.driver.hive;
 
-import static org.apache.lens.driver.hive.LensHiveErrorCode.HIVE_ERROR;
-import static org.apache.lens.driver.hive.LensHiveErrorCode.SEMANTIC_ERROR;
 import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import java.io.ByteArrayInputStream;
@@ -44,6 +42,7 @@ import org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
+import org.apache.lens.server.api.error.LensDriverErrorCode;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
@@ -62,13 +61,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.TaskStatus;
+//import org.apache.hadoop.hive.ql.TaskStatus;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
-import org.apache.hive.service.cli.thrift.TOperationHandle;
-import org.apache.hive.service.cli.thrift.TProtocolVersion;
-import org.apache.hive.service.cli.thrift.TSessionHandle;
+import org.apache.hive.service.rpc.thrift.TOperationHandle;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TSessionHandle;
+//import org.apache.hive.service.cli.thrift.TOperationHandle;
+//import org.apache.hive.service.cli.thrift.TProtocolVersion;
+//import org.apache.hive.service.cli.thrift.TSessionHandle;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -578,9 +580,9 @@ public class HiveDriver extends AbstractLensDriver {
 
   private LensException handleHiveSQLException(HiveSQLException ex) throws LensException {
     if (ex.getMessage().contains("SemanticException")) {
-      throw new LensException(SEMANTIC_ERROR.getLensErrorInfo(), ex, ex.getMessage());
+      throw new LensException(LensDriverErrorCode.SEMANTIC_ERROR.getLensErrorInfo(), ex, ex.getMessage());
     }
-    throw new LensException(DRIVER_ERROR.getLensErrorInfo(), ex, ex.getMessage());
+    throw new LensException(LensDriverErrorCode.DRIVER_ERROR.getLensErrorInfo(), ex, ex.getMessage());
   }
 
   /*

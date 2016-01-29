@@ -53,7 +53,7 @@ import org.apache.hive.service.cli.HandleIdentifier;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
-import org.apache.hive.service.cli.thrift.TSessionHandle;
+import org.apache.hive.service.rpc.thrift.TSessionHandle;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -183,10 +183,10 @@ public abstract class BaseLensService extends CompositeService implements Extern
     HandleIdentifier handleIdentifier = new HandleIdentifier(sessionHandle.getPublicId(), sessionHandle.getSecretId());
     SessionHandle hiveSessionHandle = new SessionHandle(new TSessionHandle(handleIdentifier.toTHandleIdentifier()));
     try {
-      SessionHandle restoredHandle = cliService.restoreSession(hiveSessionHandle, userName, password,
+      cliService.createSessionWithSessionHandle(hiveSessionHandle, userName, password,
         new HashMap<String, String>());
-      LensSessionHandle restoredSession = new LensSessionHandle(restoredHandle.getHandleIdentifier().getPublicId(),
-        restoredHandle.getHandleIdentifier().getSecretId());
+      LensSessionHandle restoredSession = new LensSessionHandle(hiveSessionHandle.getHandleIdentifier().getPublicId(),
+        hiveSessionHandle.getHandleIdentifier().getSecretId());
       SESSION_MAP.put(restoredSession.getPublicId().toString(), restoredSession);
     } catch (HiveSQLException e) {
       throw new LensException("Error restoring session " + sessionHandle, e);

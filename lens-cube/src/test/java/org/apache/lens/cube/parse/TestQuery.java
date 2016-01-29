@@ -34,7 +34,6 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -126,6 +125,7 @@ public class TestQuery {
       query = query.substring(nextJoinIndex + joinDetails.getJoinType().name().length());
     }
   }
+
   @Data
   private class JoinDetails {
     private JoinType joinType;
@@ -225,13 +225,16 @@ public class TestQuery {
     } else if (expected.actualQuery == null) {
       return false;
     }
-    boolean equals = false;
+    return stringEquals(expected) || astEquals(expected);
+  }
+
+  private boolean astEquals(TestQuery expected) {
     try {
-      equals = equalsAST(this.getAST(), expected.getAST());
+      return equalsAST(this.getAST(), expected.getAST());
     } catch (LensException e) {
       log.error("AST not valid", e);
+      return false;
     }
-    return equals || stringEquals(expected);
   }
 
   private boolean stringEquals(TestQuery expected) {

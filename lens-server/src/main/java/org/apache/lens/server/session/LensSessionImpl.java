@@ -40,7 +40,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.HiveSessionImpl;
-import org.apache.hive.service.cli.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 
 import lombok.AccessLevel;
 import lombok.Data;
@@ -84,20 +84,20 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   /**
    * Inits the persist info.
-   *
-   * @param sessionHandle the session handle
-   * @param username      the username
-   * @param password      the password
    * @param sessionConf   the session conf
    */
-  private void initPersistInfo(SessionHandle sessionHandle, String username, String password,
-    Map<String, String> sessionConf) {
-    persistInfo.setSessionHandle(new LensSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(), sessionHandle
-      .getHandleIdentifier().getSecretId()));
-    persistInfo.setUsername(username);
-    persistInfo.setPassword(password);
+  private void initPersistInfo(Map<String, String> sessionConf) {
+    persistInfo.setSessionHandle(new LensSessionHandle(getSessionHandle().getHandleIdentifier().getPublicId(),
+      getSessionHandle().getHandleIdentifier().getSecretId()));
+    persistInfo.setUsername(getUserName());
+    persistInfo.setPassword(getPassword());
     persistInfo.setLastAccessTime(lastAccessTime);
     persistInfo.setSessionConf(sessionConf);
+    if (sessionConf != null) {
+      for (Map.Entry<String, String> entry : sessionConf.entrySet()) {
+        conf.set(entry.getKey(), entry.getValue());
+      }
+    }
   }
 
   private static Configuration sessionDefaultConfig;
@@ -140,20 +140,13 @@ public class LensSessionImpl extends HiveSessionImpl {
    * @param username    the username
    * @param password    the password
    * @param serverConf  the server conf
-   * @param sessionConf the session conf
    * @param ipAddress   the ip address
    */
   public LensSessionImpl(TProtocolVersion protocol, String username, String password, HiveConf serverConf,
-    Map<String, String> sessionConf, String ipAddress) {
+    String ipAddress) {
     super(protocol, username, password, serverConf, ipAddress);
-    initPersistInfo(getSessionHandle(), username, password, sessionConf);
     sessionTimeout = 1000 * serverConf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
       LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
-    if (sessionConf != null) {
-      for (Map.Entry<String, String> entry : sessionConf.entrySet()) {
-        conf.set(entry.getKey(), entry.getValue());
-      }
-    }
   }
 
   public Configuration getSessionConf() {
@@ -168,15 +161,19 @@ public class LensSessionImpl extends HiveSessionImpl {
    * @param username      the username
    * @param password      the password
    * @param serverConf    the server conf
-   * @param sessionConf   the session conf
    * @param ipAddress     the ip address
    */
   public LensSessionImpl(SessionHandle sessionHandle, TProtocolVersion protocol, String username, String password,
-    HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
+    HiveConf serverConf, String ipAddress) {
     super(sessionHandle, protocol, username, password, serverConf, ipAddress);
-    initPersistInfo(getSessionHandle(), username, password, sessionConf);
     sessionTimeout = 1000 * serverConf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
       LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
+  }
+
+  @Override
+  public void open(Map<String, String> sessionConfMap) throws HiveSQLException {
+    super.open(sessionConfMap);
+    initPersistInfo(sessionConfMap);
   }
 
   @Override

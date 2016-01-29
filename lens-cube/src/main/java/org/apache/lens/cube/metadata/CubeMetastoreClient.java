@@ -226,7 +226,7 @@ public class CubeMetastoreClient {
             latestPart.setOutputFormatClass(partition.getOutputFormatClass().asSubclass(HiveOutputFormat.class));
             // the following is a fix because hive has a bug: https://issues.apache.org/jira/browse/HIVE-11278.
             latestPart.getTPartition().getSd().setOutputFormat(
-              HiveFileFormatUtils.getOutputFormatSubstitute(partition.getOutputFormatClass(), false).getName());
+              HiveFileFormatUtils.getOutputFormatSubstitute(partition.getOutputFormatClass()).getName());
             latestPart.getTPartition().getSd().getSerdeInfo()
               .setSerializationLib(partition.getTPartition().getSd().getSerdeInfo().getSerializationLib());
             latestParts.add(latestPart);

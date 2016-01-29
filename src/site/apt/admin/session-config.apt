@@ -98,6 +98,6 @@ Lens session configuration
 *--+--+---+--+
 |37|lens.session.loggedin.user| |The username used to log in to lens. e.g. LDAP user|
 *--+--+---+--+
-|38|lens.session.metastore.exclude.cubetables.from.nativetables|true|Exclude cube related tables when fetching native tables.|
+|38|lens.session.metastore.exclude.cubetables.from.nativetables|true|Exclude cube related tables when fetching native tables|
 *--+--+---+--+
 The configuration parameters and their default values
