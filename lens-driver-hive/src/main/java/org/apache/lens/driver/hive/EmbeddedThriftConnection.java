@@ -36,6 +36,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
   /** The connected. */
   private boolean connected;
+  private EmbeddedThriftBinaryCLIService service;
 
   /*
    * (non-Javadoc)
@@ -45,10 +46,17 @@ public class EmbeddedThriftConnection implements ThriftConnection {
   @Override
   public ThriftCLIServiceClient getClient() throws LensException {
     if (!connected) {
-      client = new ThriftCLIServiceClient(new EmbeddedThriftBinaryCLIService());
+      client = new ThriftCLIServiceClient(getService());
       connected = true;
     }
     return client;
+  }
+
+  private EmbeddedThriftBinaryCLIService getService() {
+    if (service == null) {
+      service = new EmbeddedThriftBinaryCLIService();
+    }
+    return service;
   }
 
   /*
@@ -63,5 +71,6 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
   @Override
   public void init(HiveConf conf, String user) {
+    getService().init(conf);
   }
 }
