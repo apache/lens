@@ -1006,4 +1006,15 @@ public final class LensConfConstants {
    * The Constant DEFAULT_EXCLUDE_CUBE_TABLES.
    */
   public static final boolean DEFAULT_EXCLUDE_CUBE_TABLES = true;
+
+  /**
+   * This property defines the TTL secs for all result sets of
+   * type {@link org.apache.lens.server.api.driver.InMemoryResultSet} beyond which they are eligible for purging
+   */
+  public static final String INMEMORY_RESULT_SET_TTL_SECS = SERVER_PFX + "inmemory.resultset.ttl.secs";
+
+  /**
+   * Default value of  INMEMORY_RESULT_SET_TTL_SECS is 300 secs (5 minutes)
+   */
+  public static final int DEFAULT_INMEMORY_RESULT_SET_TTL_SECS = 300;
 }
