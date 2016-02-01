@@ -25,6 +25,8 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
@@ -132,9 +134,11 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   protected final Map<Dimension, Set<CandidateDim>> candidateDims = new HashMap<Dimension, Set<CandidateDim>>();
 
   // query trees
-  @Getter @Setter
+  @Getter
+  @Setter
   private ASTNode havingAST;
-  @Getter @Setter
+  @Getter
+  @Setter
   private ASTNode selectAST;
 
   // Will be set after the Fact is picked and time ranges replaced
@@ -142,7 +146,8 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   @Setter
   private ASTNode whereAST;
 
-  @Getter @Setter
+  @Getter
+  @Setter
   private ASTNode orderByAST;
   // Setter is used in promoting the select when promotion is on.
   @Getter
@@ -352,7 +357,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
 
   // map of ref column in query to set of Dimension that have the column - which are added as optional dims
   @Getter
-  private Map<String, Set<Aliased<Dimension>>>  refColToDim = Maps.newHashMap();
+  private Map<String, Set<Aliased<Dimension>>> refColToDim = Maps.newHashMap();
 
   public void updateRefColDim(String col, Aliased<Dimension> dim) {
     Set<Aliased<Dimension>> refDims = refColToDim.get(col.toLowerCase());
@@ -369,10 +374,11 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     private String exprCol;
     private String alias;
   }
+
   // map of expression column in query to set of Dimension that are accessed in the expression column - which are added
   // as optional dims
   @Getter
-  private Map<QueriedExprColumn, Set<Aliased<Dimension>>>  exprColToDim = Maps.newHashMap();
+  private Map<QueriedExprColumn, Set<Aliased<Dimension>>> exprColToDim = Maps.newHashMap();
 
   public void updateExprColDim(String tblAlias, String col, Aliased<Dimension> dim) {
 
@@ -400,7 +406,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   }
 
   public void addOptionalJoinDimTable(String alias, boolean isRequired) throws LensException {
-    addOptionalDimTable(alias, null, isRequired, null, false, (String[])null);
+    addOptionalDimTable(alias, null, isRequired, null, false, (String[]) null);
   }
 
   public void addOptionalExprDimTable(String dimAlias, String queriedExpr, String srcTableAlias,
@@ -665,6 +671,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   public Integer getLimitValue() {
     return qb.getParseInfo().getDestLimit(getClause());
   }
+
   public void setLimitValue(Integer value) {
     qb.getParseInfo().setDestLimit(getClause(), value);
   }
@@ -809,7 +816,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
             }
           }
           log.error("Query rewrite failed due to NO_CANDIDATE_DIM_AVAILABLE, Cause {}",
-                  dimPruningMsgs.get(dim).toJsonObject());
+            dimPruningMsgs.get(dim).toJsonObject());
           throw new NoCandidateDimAvailableException(dimPruningMsgs.get(dim));
         }
       }
@@ -852,8 +859,10 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   }
 
   private HQLContextInterface hqlContext;
-  @Getter private Collection<CandidateFact> pickedFacts;
-  @Getter private Collection<CandidateDim> pickedDimTables;
+  @Getter
+  private Collection<CandidateFact> pickedFacts;
+  @Getter
+  private Collection<CandidateDim> pickedDimTables;
 
   private void addRangeClauses(CandidateFact fact) throws LensException {
     if (fact != null) {
@@ -881,7 +890,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
       autoJoinCtx.pruneAllPaths(cube, cfacts, dimsToQuery);
     }
 
-    Map<CandidateFact, Set<Dimension>> factDimMap = new HashMap<CandidateFact, Set<Dimension>>();
+    Map<CandidateFact, Set<Dimension>> factDimMap = new HashMap<>();
     if (cfacts != null) {
       if (cfacts.size() > 1) {
         // copy ASTs for each fact
@@ -890,8 +899,6 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
           factDimMap.put(cfact, new HashSet<>(dimsToQuery.keySet()));
         }
       }
-    }
-    if (cfacts != null) {
       for (CandidateFact fact : cfacts) {
         addRangeClauses(fact);
       }
@@ -906,6 +913,9 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
         if (cfacts.size() > 1) {
           factDimMap.get(cfact).addAll(factExprDimTables);
         }
+      }
+      if (cfacts.size() > 1) {
+        havingAST = MultiFactHQLContext.pushDownHaving(havingAST, this, cfacts);
       }
     } else {
       // dim only query
@@ -957,6 +967,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
         for (CandidateFact cfact : cfacts) {
           cfact.updateASTs(this);
         }
+        whereAST = MultiFactHQLContext.convertHavingToWhere(havingAST, this, cfacts, new DefaultAliasDecider());
       }
     }
     hqlContext = createHQLContext(cfacts, dimsToQuery, factDimMap);
@@ -1069,6 +1080,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
 
     return isCubeMeasure(msrname);
   }
+
   public boolean isAggregateExpr(String expr) {
     return aggregateExprs.contains(expr == null ? null : expr.toLowerCase());
   }
