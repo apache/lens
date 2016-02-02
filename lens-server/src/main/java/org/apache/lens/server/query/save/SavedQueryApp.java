@@ -18,31 +18,17 @@
  */
 package org.apache.lens.server.query.save;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
 
-import org.apache.lens.server.LensApplicationListener;
-import org.apache.lens.server.LensRequestContextInitFilter;
-
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.apache.lens.server.BaseApp;
 
 /**
  * The Class SavedQueryApp.
  */
 @ApplicationPath("/savedquery")
-public class SavedQueryApp extends Application {
+public class SavedQueryApp extends BaseApp {
   @Override
-  public Set<Class<?>> getClasses() {
-    final Set<Class<?>> classes = new HashSet<Class<?>>();
-    classes.add(SavedQueryResource.class);
-    classes.add(MultiPartFeature.class);
-    classes.add(LensRequestContextInitFilter.class);
-    classes.add(LoggingFilter.class);
-    classes.add(LensApplicationListener.class);
-    return classes;
+  protected Class getResource() {
+    return SavedQueryResource.class;
   }
 }

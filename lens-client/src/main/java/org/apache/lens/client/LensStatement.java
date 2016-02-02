@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 
@@ -41,11 +42,13 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Top level class which is used to execute lens queries.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class LensStatement {
 
   /** The connection. */
@@ -125,7 +128,7 @@ public class LensStatement {
    */
   public LensAPIResult<QueryPrepareHandle> prepareQuery(String sql, String queryName) throws LensAPIException {
     if (!connection.isOpen()) {
-      throw new IllegalStateException("Lens Connection has to be " + "established before querying");
+      throw new IllegalStateException("Lens Connection has to be established before querying");
     }
 
     Client client = connection.buildClient();
@@ -151,7 +154,7 @@ public class LensStatement {
    */
   public LensAPIResult<QueryPlan> explainAndPrepare(String sql, String queryName) throws LensAPIException {
     if (!connection.isOpen()) {
-      throw new IllegalStateException("Lens Connection has to be " + "established before querying");
+      throw new IllegalStateException("Lens Connection has to be established before querying");
     }
 
     Client client = connection.buildClient();
@@ -186,6 +189,8 @@ public class LensStatement {
     if (!StringUtils.isBlank(queryName)) {
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(), queryName));
     }
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
     return mp;
   }
 
@@ -260,6 +265,7 @@ public class LensStatement {
         .get(LensQuery.class);
       return query;
     } catch (Exception e) {
+      log.error("Failed to get query status, cause:", e);
       throw new IllegalStateException("Failed to get query status, cause:" + e.getMessage());
     }
   }
@@ -277,7 +283,8 @@ public class LensStatement {
       return target.path(handle.toString()).queryParam("sessionid", connection.getSessionHandle()).request()
         .get(LensPreparedQuery.class);
     } catch (Exception e) {
-      throw new IllegalStateException("Failed to get query status, cause:" + e.getMessage());
+      log.error("Failed to get prepared query, cause:", e);
+      throw new IllegalStateException("Failed to get prepared query, cause:" + e.getMessage());
     }
   }
 
@@ -290,7 +297,7 @@ public class LensStatement {
    */
   private LensAPIResult<QueryHandle> executeQuery(String sql, String queryName) throws LensAPIException {
     if (!connection.isOpen()) {
-      throw new IllegalStateException("Lens Connection has to be " + "established before querying");
+      throw new IllegalStateException("Lens Connection has to be established before querying");
     }
 
     Client client  = connection.buildClient();
@@ -301,7 +308,8 @@ public class LensStatement {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(), queryName == null ? ""
       : queryName));
-
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
     WebTarget target = getQueryWebTarget(client);
 
     Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
@@ -333,7 +341,8 @@ public class LensStatement {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(), queryName == null ? ""
       : queryName));
-
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
     QueryHandle handle = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
@@ -358,7 +367,8 @@ public class LensStatement {
       .getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), sql));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "explain"));
-
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
     WebTarget target = getQueryWebTarget(client);
 
     Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
@@ -432,6 +442,7 @@ public class LensStatement {
       return target.path(query.getQueryHandle().toString()).path("resultsetmetadata")
         .queryParam("sessionid", connection.getSessionHandle()).request().get(QueryResultSetMetadata.class);
     } catch (Exception e) {
+      log.error("Failed to get resultset metadata, cause:", e);
       throw new IllegalStateException("Failed to get resultset metadata, cause:" + e.getMessage());
     }
   }
@@ -452,15 +463,17 @@ public class LensStatement {
    */
   public QueryResult getResultSet(LensQuery query) {
     if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
-      throw new IllegalArgumentException("Result set metadata " + "can be only queries for successful queries");
+      throw new IllegalArgumentException("Result set metadata can be only queries for successful queries");
     }
     Client client = connection.buildClient();
 
     try {
       WebTarget target = getQueryWebTarget(client);
       return target.path(query.getQueryHandle().toString()).path("resultset")
-        .queryParam("sessionid", connection.getSessionHandle()).request().get(QueryResult.class);
+        .queryParam("sessionid", connection.getSessionHandle()).request(MediaType.APPLICATION_XML_TYPE).get(
+          QueryResult.class);
     } catch (Exception e) {
+      log.error("Failed to get resultset, cause:", e);
       throw new IllegalStateException("Failed to get resultset, cause:" + e.getMessage());
     }
   }
@@ -482,7 +495,8 @@ public class LensStatement {
       return target.path(query.getQueryHandle().toString()).path("httpresultset")
         .queryParam("sessionid", connection.getSessionHandle()).request().get();
     } catch (Exception e) {
-      throw new IllegalStateException("Failed to get resultset, cause:" + e.getMessage());
+      log.error("Failed to get http resultset, cause:", e);
+      throw new IllegalStateException("Failed to get http resultset, cause:" + e.getMessage());
     }
   }
 

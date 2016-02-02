@@ -214,7 +214,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     URL resource = TestLensDimensionTableCommands.class.getClassLoader().getResource("dim-local-storage-element.xml");
     command.addNewDimStorage("dim_table2", new File(resource.toURI()));
     result = command.getDimStorages("dim_table2");
-    assertEquals(DIM_LOCAL, result);
+    assertEquals(result, DIM_LOCAL);
 
     result = command.getStorageFromDim("dim_table2", DIM_LOCAL);
     String partString = "DAILY";

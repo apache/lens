@@ -29,57 +29,57 @@
     <!-- means dt-20days <= ot <= dt-1hour -->
   </properties>
   <measures>
-    <measure name="unit_sales" type="BIGINT" default_aggr="SUM" display_string="Unit Sales" format_string="#,###"/>
-    <measure name="store_sales" type="DOUBLE" default_aggr="SUM" display_string="Store Sales" format_string="#,###.##"/>
-    <measure name="store_cost" type="DOUBLE" default_aggr="SUM" display_string="Store Cost" format_string="#,###.00"
+    <measure name="unit_sales" _type="BIGINT" default_aggr="SUM" display_string="Unit Sales" format_string="#,###"/>
+    <measure name="store_sales" _type="DOUBLE" default_aggr="SUM" display_string="Store Sales" format_string="#,###.##"/>
+    <measure name="store_cost" _type="DOUBLE" default_aggr="SUM" display_string="Store Cost" format_string="#,###.00"
      start_time='2015-03-01T00:00:00' />
-    <measure name="line_item_quantity" type="INT" default_aggr="SUM" display_string="Line item quantity"/>
-    <measure name="line_item_product_price" type="FLOAT" default_aggr="SUM" display_string="Line item product price"/>
-    <measure name="line_item_discount_amount" type="FLOAT" default_aggr="SUM" display_string="Line item discount"/>
-    <measure name="line_item_tax" type="FLOAT" default_aggr="SUM" display_string="Line item tax"/>
-    <measure name="max_line_item_price" type="FLOAT" default_aggr="MAX" display_string="Maximum Line item price"/>
-    <measure name="max_line_item_discount" type="FLOAT" default_aggr="MAX"
+    <measure name="line_item_quantity" _type="INT" default_aggr="SUM" display_string="Line item quantity"/>
+    <measure name="line_item_product_price" _type="FLOAT" default_aggr="SUM" display_string="Line item product price"/>
+    <measure name="line_item_discount_amount" _type="FLOAT" default_aggr="SUM" display_string="Line item discount"/>
+    <measure name="line_item_tax" _type="FLOAT" default_aggr="SUM" display_string="Line item tax"/>
+    <measure name="max_line_item_price" _type="FLOAT" default_aggr="MAX" display_string="Maximum Line item price"/>
+    <measure name="max_line_item_discount" _type="FLOAT" default_aggr="MAX"
      display_string="Maximum Line item discount"/>
-    <measure name="rating" type="FLOAT" default_aggr="AVG"
+    <measure name="rating" _type="FLOAT" default_aggr="AVG"
       display_string="Rating"/>
   </measures>
   <dim_attributes>
-    <dim_attribute name="customer_id" type="INT" />
-    <dim_attribute name="product_id" type="INT" />
-    <dim_attribute name="promotion_id" type="INT" />
-    <dim_attribute name="order_id" type="INT" />
-    <dim_attribute name="order_line_number" type="INT" />
-    <dim_attribute name="order_time" type="TIMESTAMP" />
-    <dim_attribute name="delivery_time" type="TIMESTAMP" />
-    <dim_attribute name="customer_city_id" type="INT" start_time='2015-03-01T00:00:00' />
-    <dim_attribute name="production_city_id" type="INT" />
-    <dim_attribute name="delivery_city_id" type="INT" />
-    <dim_attribute name="customer_city_name" type="string" description="City name to which the customer belongs"
+    <dim_attribute name="customer_id" _type="INT" />
+    <dim_attribute name="product_id" _type="INT" />
+    <dim_attribute name="promotion_id" _type="INT" />
+    <dim_attribute name="order_id" _type="INT" />
+    <dim_attribute name="order_line_number" _type="INT" />
+    <dim_attribute name="order_time" _type="TIMESTAMP" />
+    <dim_attribute name="delivery_time" _type="TIMESTAMP" />
+    <dim_attribute name="customer_city_id" _type="INT" start_time='2015-03-01T00:00:00' />
+    <dim_attribute name="production_city_id" _type="INT" />
+    <dim_attribute name="delivery_city_id" _type="INT" />
+    <dim_attribute name="customer_city_name" _type="string" description="City name to which the customer belongs"
                    display_string="Customer City">
       <chain_ref_column chain_name="customer_city" ref_col="name" />
     </dim_attribute>
     <dim_attribute name="production_location">
       <hierarchy>
-      <dim_attribute name="production_city_name" type="STRING" description="City name in which the product was produced"
+      <dim_attribute name="production_city_name" _type="STRING" description="City name in which the product was produced"
                      display_string="Production City">
         <chain_ref_column chain_name="production_city" ref_col="name" />
       </dim_attribute>
-      <dim_attribute name="production_state" type="STRING" description="State name in which the product was produced"
+      <dim_attribute name="production_state" _type="STRING" description="State name in which the product was produced"
                      display_string="Production State"/>
-      <dim_attribute name="production_country" type="STRING" description="Country name in which the product was produced"
+      <dim_attribute name="production_country" _type="STRING" description="Country name in which the product was produced"
                      display_string="Production Country"/>
       </hierarchy>
     </dim_attribute>
-    <dim_attribute name="delivery_city_name" type="STRING" description="City name to which the product was delivered"
+    <dim_attribute name="delivery_city_name" _type="STRING" description="City name to which the product was delivered"
                    display_string="Delivery City">
       <chain_ref_column chain_name="delivery_city" ref_col="name" />
     </dim_attribute>
   </dim_attributes>
   <expressions>
-    <expression name="profit" type="DOUBLE" display_string="Profit">
+    <expression name="profit" _type="DOUBLE" display_string="Profit">
       <expr_spec expr="store_sales - store_cost"/>
     </expression>
-    <expression name="promotion_sales" type="DOUBLE" display_string="Promotion sales">
+    <expression name="promotion_sales" _type="DOUBLE" display_string="Promotion sales">
       <expr_spec expr="sum(case when promotion_id = 0 then 0 else store_sales end)" start_time='2015-04-12T00:00:00'/>
       <expr_spec expr="sum(case when promotion_id = -1 then 0 when promotion_id = -1 then 0 else store_sales end)"
        end_time="2015-04-12T00:00:00"/>

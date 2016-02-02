@@ -16,50 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.server;
+package org.apache.lens.server;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
+import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
-@ApplicationPath("/ml")
-public class MLApp extends Application {
+public abstract class BaseApp extends Application {
 
-  private final Set<Class<?>> classes;
-
-  /**
-   * Pass additional classes when running in test mode
-   *
-   * @param additionalClasses
-   */
-  public MLApp(Class<?>... additionalClasses) {
-    classes = new HashSet<Class<?>>();
-
-    // register root resource
-    classes.add(MLServiceResource.class);
-    classes.add(MultiPartFeature.class);
-    classes.add(LoggingFilter.class);
-    classes.add(MoxyJsonConfigurationContextResolver.class);
-    classes.add(MoxyJsonFeature.class);
-    for (Class<?> cls : additionalClasses) {
-      classes.add(cls);
-    }
-
-  }
-
-  /**
-   * Get classes for this resource
-   */
   @Override
   public Set<Class<?>> getClasses() {
+    final Set<Class<?>> classes = new HashSet<>();
+    // register root resource
+    classes.add(getResource());
+    classes.add(MultiPartFeature.class);
+    classes.add(LensJAXBContextResolver.class);
+    classes.add(LensJAXBValidationExceptionMapper.class);
+    classes.add(LensRequestContextInitFilter.class);
+    classes.add(LoggingFilter.class);
+    classes.add(LensApplicationListener.class);
+    classes.add(MoxyJsonConfigurationContextResolver.class);
+    classes.add(MoxyJsonFeature.class);
     return classes;
   }
+
+  protected abstract Class getResource();
 }

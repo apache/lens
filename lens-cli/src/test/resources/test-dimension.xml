@@ -22,20 +22,20 @@
 <x_dimension name="test_dim" xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <attributes>
-    <dim_attribute name="id" type="INT" />
-    <dim_attribute name="name" type="STRING" />
-    <dim_attribute name="detail" type="STRING" start_time='2013-12-01T00:00:00' />
-    <dim_attribute name="d2id" type="INT" start_time='2013-12-01T00:00:00'/>
-    <dim_attribute name="inline" type="STRING" >
+    <dim_attribute name="id" _type="INT" />
+    <dim_attribute name="name" _type="STRING" />
+    <dim_attribute name="detail" _type="STRING" start_time='2013-12-01T00:00:00' />
+    <dim_attribute name="d2id" _type="INT" start_time='2013-12-01T00:00:00'/>
+    <dim_attribute name="inline" _type="STRING" >
       <values>A</values>
       <values>B</values>
       <values>C</values>
     </dim_attribute>
     <dim_attribute name="location">
       <hierarchy>
-        <dim_attribute name="zipcode" type="INT" />
-        <dim_attribute name="city" type="STRING" />
-        <dim_attribute name="state" type="STRING" />
+        <dim_attribute name="zipcode" _type="INT" />
+        <dim_attribute name="city" _type="STRING" />
+        <dim_attribute name="state" _type="STRING" />
       </hierarchy>
     </dim_attribute>
   </attributes>

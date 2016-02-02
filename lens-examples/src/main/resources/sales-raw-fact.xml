@@ -22,23 +22,23 @@
 <x_fact_table cube_name="sales" name="sales_raw_fact" weight="500.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
-    <column comment="" name="order_time" type="TIMESTAMP"/>
-    <column comment="" name="delivery_time" type="TIMESTAMP"/>
-    <column comment="" name="customer_id" type="INT"/>
-    <column comment="" name="product_id" type="INT"/>
-    <column comment="" name="order_id" type="INT"/>
-    <column comment="" name="promotion_id" type="INT"/>
-    <column comment="" name="order_line_number" type="INT"/>
-    <column comment="" name="customer_city_id" type="INT"/>
-    <column comment="" name="production_city_id" type="INT"/>
-    <column comment="" name="delivery_city_id" type="INT"/>
-    <column comment="" name="unit_sales" type="BIGINT"/>
-    <column comment="" name="store_sales" type="DOUBLE"/>
-    <column comment="" name="store_cost" type="DOUBLE"/>
-    <column comment="" name="line_item_quantity" type="INT"/>
-    <column comment="" name="line_item_product_price" type="INT"/>
-    <column comment="" name="line_item_discount_amount" type="INT"/>
-    <column comment="" name="line_item_tax" type="INT"/>
+    <column comment="" name="order_time" _type="TIMESTAMP"/>
+    <column comment="" name="delivery_time" _type="TIMESTAMP"/>
+    <column comment="" name="customer_id" _type="INT"/>
+    <column comment="" name="product_id" _type="INT"/>
+    <column comment="" name="order_id" _type="INT"/>
+    <column comment="" name="promotion_id" _type="INT"/>
+    <column comment="" name="order_line_number" _type="INT"/>
+    <column comment="" name="customer_city_id" _type="INT"/>
+    <column comment="" name="production_city_id" _type="INT"/>
+    <column comment="" name="delivery_city_id" _type="INT"/>
+    <column comment="" name="unit_sales" _type="BIGINT"/>
+    <column comment="" name="store_sales" _type="DOUBLE"/>
+    <column comment="" name="store_cost" _type="DOUBLE"/>
+    <column comment="" name="line_item_quantity" _type="INT"/>
+    <column comment="" name="line_item_product_price" _type="INT"/>
+    <column comment="" name="line_item_discount_amount" _type="INT"/>
+    <column comment="" name="line_item_tax" _type="INT"/>
   </columns>
   <properties>
     <property name="cube.fact.is.aggregated" value="false"/>
@@ -51,9 +51,9 @@
       <storage_name>local</storage_name>
       <table_desc external="true" field_delimiter="," table_location="/tmp/examples/rawfact">
         <part_cols>
-          <column comment="Process time partition" name="pt" type="STRING"/>
-          <column comment="Order time partition" name="ot" type="STRING"/>
-          <column comment="Delivery time partition" name="dt" type="STRING"/>
+          <column comment="Process time partition" name="pt" _type="STRING"/>
+          <column comment="Order time partition" name="ot" _type="STRING"/>
+          <column comment="Delivery time partition" name="dt" _type="STRING"/>
         </part_cols>
         <time_part_cols>pt</time_part_cols>
         <time_part_cols>ot</time_part_cols>

@@ -31,6 +31,7 @@ import static org.testng.Assert.assertTrue;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.datatype.DatatypeConfigurationException;
 
@@ -41,6 +42,7 @@ import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.SupportedQuerySubmitOperations;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.result.LensErrorTO;
+import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
 import org.apache.lens.cube.error.ColUnAvailableInTimeRange;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensRequestContextInitFilter;
@@ -50,12 +52,10 @@ import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 import org.apache.lens.server.metastore.MetastoreResource;
 import org.apache.lens.server.session.SessionResource;
 
-import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -91,24 +91,14 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
     return new ResourceConfig(LensRequestContextInitFilter.class, SessionResource.class, MetastoreResource.class,
       QueryServiceResource.class, MultiPartFeature.class, LensExceptionMapper.class, LensJAXBContextResolver.class,
-      LensRequestContextInitFilter.class, LensJAXBValidationExceptionMapper.class);
+      LensRequestContextInitFilter.class, LensJAXBValidationExceptionMapper.class,
+      MoxyJsonConfigurationContextResolver.class, MoxyJsonFeature.class);
   }
 
-  @Override
-  protected void configureClient(ClientConfig config) {
-    config.register(MultiPartFeature.class);
-    config.register(LensJAXBContextResolver.class);
-  }
+  @Test(dataProvider = "mediaTypeData")
+  public void testErrorResponseWhenSessionIdIsAbsent(MediaType mt) {
 
-  @Override
-  protected TestContainerFactory getTestContainerFactory() {
-    return new InMemoryTestContainerFactory();
-  }
-
-  @Test
-  public void testErrorResponseWhenSessionIdIsAbsent() {
-
-    Response response = estimate(target(), Optional.<LensSessionHandle>absent(), Optional.of(MOCK_QUERY));
+    Response response = estimate(target(), Optional.<LensSessionHandle>absent(), Optional.of(MOCK_QUERY), mt);
 
     final String expectedErrMsg = "Session id not provided. Please provide a session id.";
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
@@ -118,12 +108,12 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     expectedData.verify(response);
   }
 
-  @Test
-  public void testErrorResponseWhenQueryIsAbsent() {
+  @Test(dataProvider = "mediaTypeData")
+  public void testErrorResponseWhenQueryIsAbsent(MediaType mt) {
 
-    LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf());
+    LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf(), mt);
     Optional<String> testQuery = Optional.absent();
-    Response response = estimate(target(), Optional.of(sessionId), testQuery);
+    Response response = estimate(target(), Optional.of(sessionId), testQuery, mt);
 
     final String expectedErrMsg = "Query is not provided, or it is empty or blank. Please provide a valid query.";
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
@@ -133,13 +123,13 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     expectedData.verify(response);
   }
 
-  @Test
-  public void testErrorResponseWhenInvalidOperationIsSubmitted() {
+  @Test(dataProvider = "mediaTypeData")
+  public void testErrorResponseWhenInvalidOperationIsSubmitted(MediaType mt) {
 
-    LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf());
+    LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf(), mt);
 
     Response response = postQuery(target(), Optional.of(sessionId), Optional.of(MOCK_QUERY),
-        Optional.of(INVALID_OPERATION));
+        Optional.of(INVALID_OPERATION), mt);
 
     final String expectedErrMsg = "Provided Operation is not supported. Supported Operations are: "
       + "[estimate, execute, explain, execute_with_timeout]";
@@ -152,17 +142,16 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     expectedData.verify(response);
   }
 
-  @Test
-  public void testErrorResponseWhenLensMultiCauseExceptionOccurs() {
+  @Test(dataProvider = "mediaTypeData")
+  public void testErrorResponseWhenLensMultiCauseExceptionOccurs(MediaType mt) {
 
-    LensSessionHandle sessionId = openSession(target(), "foo", "bar");
+    LensSessionHandle sessionId = openSession(target(), "foo", "bar", mt);
 
     final String testQuery = "select * from non_existing_table";
-    Response response = estimate(target(), Optional.of(sessionId), Optional.of(testQuery));
+    Response response = estimate(target(), Optional.of(sessionId), Optional.of(testQuery), mt);
 
     final String expectedErrMsg1 = "Semantic Error : Error while compiling statement: "
       + "FAILED: SemanticException [Error 10001]: Line 1:31 Table not found 'non_existing_table'";
-
     final String expectedErrMsg2 = "Semantic Error : user lacks privilege or object not found: NON_EXISTING_TABLE";
 
     LensErrorTO expectedLensErrorTO1 = LensErrorTO.composedOf(INTERNAL_SERVER_ERROR.getValue(),
@@ -174,15 +163,16 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     LensErrorTO responseLensErrorTO = response.readEntity(LensAPIResult.class).getLensErrorTO();
 
     assertTrue(expectedLensErrorTO1.getMessage().equals(responseLensErrorTO.getMessage())
-            || expectedLensErrorTO2.getMessage().equals(responseLensErrorTO.getMessage()));
+            || expectedLensErrorTO2.getMessage().equals(responseLensErrorTO.getMessage()),
+      "Message is " + responseLensErrorTO.getMessage());
   }
 
-  @Test
-  public void testErrorResponseWithSyntaxErrorInQuery() {
+  @Test(dataProvider = "mediaTypeData")
+  public void testErrorResponseWithSyntaxErrorInQuery(MediaType mt) {
 
-    LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf());
+    LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf(), mt);
 
-    Response response = estimate(target(), Optional.of(sessionId), Optional.of(MOCK_QUERY));
+    Response response = estimate(target(), Optional.of(sessionId), Optional.of(MOCK_QUERY), mt);
 
     final String expectedErrMsg = "Syntax Error: line 1:0 cannot recognize input near 'mock' '-' 'query'";
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(SYNTAX_ERROR.getLensErrorInfo().getErrorCode(),
@@ -192,8 +182,8 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     expectedData.verify(response);
   }
 
-  @Test
-  public void testQueryColumnWithBothStartDateAndEndDate() throws DatatypeConfigurationException {
+  @Test(dataProvider = "mediaTypeData")
+  public void testQueryColumnWithBothStartDateAndEndDate(MediaType mt) throws DatatypeConfigurationException {
 
     /* This test will have a col which has both start date and end date set */
     /* Col will be queried for a time range which does not fall in start date and end date */
@@ -208,11 +198,11 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       + "before Friday, January 30, 2015 11:00:00 PM UTC. Please adjust the selected time range accordingly.";
 
     testColUnAvailableInTimeRange(Optional.of(startDateOneJan2015),
-      Optional.of(endDateThirtyJan2015), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix);
+      Optional.of(endDateThirtyJan2015), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix, mt);
   }
 
-  @Test
-  public void testQueryColumnWithOnlyStartDate() throws DatatypeConfigurationException {
+  @Test(dataProvider = "mediaTypeData")
+  public void testQueryColumnWithOnlyStartDate(MediaType mt) throws DatatypeConfigurationException {
 
     /* This test will have a col which has only start date set */
     /* Col will be queried for a time range which is before start date */
@@ -226,11 +216,11 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       + "Please adjust the selected time range accordingly.";
 
     testColUnAvailableInTimeRange(Optional.of(startDateOneJan2015),
-      Optional.<DateTime>absent(), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix);
+      Optional.<DateTime>absent(), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix, mt);
   }
 
-  @Test
-  public void testQueryColumnWithOnlyEndDate() throws DatatypeConfigurationException {
+  @Test(dataProvider = "mediaTypeData")
+  public void testQueryColumnWithOnlyEndDate(MediaType mt) throws DatatypeConfigurationException {
 
     /* This test will have a col which has only end date set */
     /* Col will be queried for a time range which is after end date */
@@ -244,12 +234,12 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       + "Please adjust the selected time range accordingly.";
 
     testColUnAvailableInTimeRange(Optional.<DateTime>absent(),
-      Optional.of(endDateThirtyJan2015), queryFromOneJan2016, queryTillThreeJan2016, expectedErrMsgSuffix);
+      Optional.of(endDateThirtyJan2015), queryFromOneJan2016, queryTillThreeJan2016, expectedErrMsgSuffix, mt);
   }
 
   private void testColUnAvailableInTimeRange(@NonNull final Optional<DateTime> colStartDate,
     @NonNull final Optional<DateTime> colEndDate, @NonNull DateTime queryFrom, @NonNull DateTime queryTill,
-    @NonNull final String expectedErrorMsgSuffix) throws DatatypeConfigurationException {
+    @NonNull final String expectedErrorMsgSuffix, @NonNull final MediaType mt) throws DatatypeConfigurationException {
 
     final WebTarget target = target();
     final String testDb = getRandomDbName();
@@ -258,21 +248,21 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     final String testFact = getRandomFactName();
 
     /* Setup: Begin */
-    LensSessionHandle sessionId = openSession(target, "foo", "bar", new LensConf());
+    LensSessionHandle sessionId = openSession(target, "foo", "bar", new LensConf(), mt);
 
     try {
 
-      createAndSetCurrentDbFailFast(target, sessionId, testDb);
+      createAndSetCurrentDbFailFast(target, sessionId, testDb, mt);
 
       /* Create a test cube with test dimension field having a start Date and end Date */
       XDimAttribute testXDim = createXDimAttribute(testDimensionField, colStartDate, colEndDate);
       XCube xcube = createXCubeWithDummyMeasure(testCube, Optional.of("dt"), testXDim);
-      createCubeFailFast(target, sessionId, xcube);
+      createCubeFailFast(target, sessionId, xcube, mt);
 
       /* Create a fact with test dimension field */
       XColumn xColumn = createXColumn(testDimensionField);
       XFactTable xFactTable = createXFactTableWithColumns(testFact, testCube, xColumn);
-      createFactFailFast(target, sessionId, xFactTable);
+      createFactFailFast(target, sessionId, xFactTable, mt);
 
       /* Setup: End */
 
@@ -280,7 +270,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       final String testQuery = "cube select " + testDimensionField + " from " + testCube + " where TIME_RANGE_IN(dt, "
         + "\"" + dtf.print(queryFrom) + "\",\"" + dtf.print(queryTill) + "\")";
 
-      Response response = estimate(target, Optional.of(sessionId), Optional.of(testQuery));
+      Response response = estimate(target, Optional.of(sessionId), Optional.of(testQuery), mt);
 
       final String expectedErrMsg = testDimensionField + expectedErrorMsgSuffix;
 
@@ -297,8 +287,8 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
       expectedData.verify(response);
     } finally {
-      dropDatabaseFailFast(target, sessionId, testDb);
-      closeSessionFailFast(target, sessionId);
+      dropDatabaseFailFast(target, sessionId, testDb, mt);
+      closeSessionFailFast(target, sessionId, mt);
     }
   }
 }

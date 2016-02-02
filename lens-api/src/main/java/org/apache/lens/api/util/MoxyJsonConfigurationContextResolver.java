@@ -16,13 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.metastore;
+package org.apache.lens.api.util;
 
+import javax.ws.rs.ext.ContextResolver;
 
-public class TestMetastoreServiceJSON { //extends TestMetastoreService {
-  /*public TestMetastoreServiceJSON() {
-    super();
-    mediaType = MediaType.APPLICATION_JSON;
-    dbPFX = "TestMetastoreServiceJSON_";
-  }*/
+import org.eclipse.persistence.jaxb.MarshallerProperties;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
+
+public final class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfig> {
+
+  @Override
+  public MoxyJsonConfig getContext(final Class<?> type) {
+    final MoxyJsonConfig configuration = new MoxyJsonConfig();
+    configuration.setIncludeRoot(true);
+    configuration.setFormattedOutput(true);
+    configuration.setMarshalEmptyCollections(false);
+    configuration.marshallerProperty(MarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
+    configuration.unmarshallerProperty(MarshallerProperties.JSON_WRAPPER_AS_ARRAY_NAME, true);
+    return configuration;
+  }
 }

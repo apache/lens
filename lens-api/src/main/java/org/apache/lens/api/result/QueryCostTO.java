@@ -70,6 +70,6 @@ public class QueryCostTO extends QuerySubmitResult implements Serializable {
    */
   @XmlElement
   @Getter
-  private QueryCostType type;
+  private QueryCostType costType;
 
 }

@@ -225,7 +225,7 @@
     </xs:annotation>
     <xs:complexContent>
       <xs:extension base="x_field">
-        <xs:attribute type="x_measure_type" name="type" use="required"/>
+        <xs:attribute type="x_measure_type" name="_type" use="required"/>
         <xs:attribute type="xs:string" name="default_aggr">
           <xs:annotation>
             <xs:documentation>
@@ -323,7 +323,7 @@
           </xs:annotation>
           <xs:element type="x_expr_spec" name="expr_spec" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
-        <xs:attribute type="xs:string" name="type" use="required">
+        <xs:attribute type="xs:string" name="_type" use="required">
           <xs:annotation>
             <xs:documentation>
               The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN, TINYINT,
@@ -424,7 +424,7 @@
             </xs:annotation>
           </xs:element>
         </xs:sequence>
-        <xs:attribute type="xs:string" name="type">
+        <xs:attribute type="xs:string" name="_type">
           <xs:annotation>
             <xs:documentation>
               The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN,TINYINT,
@@ -689,7 +689,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:attribute name="name" type="xs:string" use="required"/>
-    <xs:attribute type="xs:string" name="type" use="required">
+    <xs:attribute type="xs:string" name="_type" use="required">
       <xs:annotation>
         <xs:documentation>
           The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN, TINYINT,
@@ -1006,7 +1006,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="storage_table" minOccurs="1" maxOccurs="unbounded" type="x_storage_table_element"/>
+      <xs:element name="storage_table" minOccurs="0" maxOccurs="unbounded" type="x_storage_table_element"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -1264,7 +1264,7 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="owner" type="xs:string" use="required">
+    <xs:attribute name="owner" type="xs:string" use="optional">
       <xs:annotation>
         <xs:documentation>
           Owner of the table.

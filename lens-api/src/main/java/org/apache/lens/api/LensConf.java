@@ -51,7 +51,7 @@ public class LensConf implements Serializable {
    */
   @XmlElementWrapper
   @Getter
-  private final Map<String, String> properties = new HashMap<String, String>();
+  private final Map<String, String> properties = new HashMap<>();
 
   /**
    * Adds the property.

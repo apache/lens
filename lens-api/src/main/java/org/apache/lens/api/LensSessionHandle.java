@@ -31,6 +31,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.lens.api.jaxb.LensJAXBContext;
 
@@ -63,6 +64,7 @@ public class LensSessionHandle {
    */
   @XmlElement
   @Getter
+  @XmlJavaTypeAdapter(UUIDAdapter.class)
   private UUID publicId;
 
   /**
@@ -70,6 +72,7 @@ public class LensSessionHandle {
    */
   @XmlElement
   @Getter
+  @XmlJavaTypeAdapter(UUIDAdapter.class)
   private UUID secretId;
 
   /**

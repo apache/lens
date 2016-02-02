@@ -22,18 +22,18 @@
 <x_base_cube name="cube_with_no_weight_facts" xmlns="uri:lens:cube:0.1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
     <measures>
-        <measure name="measure1" type="BIGINT" />
-        <measure name="measure2" type="INT" default_aggr="SUM" />
-        <measure name="measure3" type="FLOAT" default_aggr="MAX" start_time='2013-12-12T00:00:00' />
-        <measure name="measure4" type="DOUBLE" default_aggr="MIN" />
+        <measure name="measure1" _type="BIGINT" />
+        <measure name="measure2" _type="INT" default_aggr="SUM" />
+        <measure name="measure3" _type="FLOAT" default_aggr="MAX" start_time='2013-12-12T00:00:00' />
+        <measure name="measure4" _type="DOUBLE" default_aggr="MIN" />
     </measures>
     <dim_attributes>
-        <dim_attribute name="dim1" type="INT" />
-        <dim_attribute name="dim2" type="INT" start_time='2013-12-01T00:00:00' />
-        <dim_attribute name="dim3" type="INT"/>
+        <dim_attribute name="dim1" _type="INT" />
+        <dim_attribute name="dim2" _type="INT" start_time='2013-12-01T00:00:00' />
+        <dim_attribute name="dim3" _type="INT"/>
     </dim_attributes>
     <expressions>
-        <expression name="expr_msr5" type="DOUBLE">
+        <expression name="expr_msr5" _type="DOUBLE">
             <expr_spec expr = "measure3 + measure4" end_time='2013-12-12T00:00:00'/>
             <expr_spec expr = "measure3 + measure4 + 0.01" start_time='2013-12-12T00:00:00'/>
         </expression>

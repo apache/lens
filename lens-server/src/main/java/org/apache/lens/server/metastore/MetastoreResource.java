@@ -40,8 +40,6 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
-import org.glassfish.jersey.media.multipart.FormDataParam;
-
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
@@ -850,11 +848,9 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
    * state {@link Status#FAILED}, if create has failed
    */
-  @Consumes({MediaType.MULTIPART_FORM_DATA})
   @POST
   @Path("/facts")
-  public APIResult createFactTable(@FormDataParam("sessionid") LensSessionHandle sessionid,
-    @FormDataParam("fact") XFactTable fact)
+  public APIResult createFactTable(@QueryParam("sessionid") LensSessionHandle sessionid, XFactTable fact)
     throws LensException {
     checkSessionId(sessionid);
     try {
@@ -1093,6 +1089,8 @@ public class MetastoreResource {
     XPartition partition) {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition is null", partition);
+    checkNonNullArgs("Partition elements are null", partition.getFactOrDimensionTableName(),
+      partition.getUpdatePeriod());
     try {
       return successOrPartialOrFailure(getSvc().addPartitionToFactStorage(sessionid, factName, storage, partition), 1);
     } catch (LensException exc) {
@@ -1121,6 +1119,8 @@ public class MetastoreResource {
     XPartition partition) {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition is null", partition);
+    checkNonNullArgs("Partition elements are null", partition.getFactOrDimensionTableName(),
+      partition.getUpdatePeriod());
     try {
       getSvc().updatePartition(sessionid, factName, storage, partition);
     } catch (LensException exc) {
@@ -1239,8 +1239,8 @@ public class MetastoreResource {
    */
   @POST
   @Path("/dimtables")
-  public APIResult createDimensionTable(@FormDataParam("sessionid") LensSessionHandle sessionid,
-    @FormDataParam("dimensionTable") XDimensionTable dimensionTable) {
+  public APIResult createDimensionTable(@QueryParam("sessionid") LensSessionHandle sessionid,
+                                        XDimensionTable dimensionTable) {
     checkSessionId(sessionid);
     try {
       getSvc().createDimensionTable(sessionid, dimensionTable);
@@ -1514,6 +1514,8 @@ public class MetastoreResource {
     XPartition partition) {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition is null", partition);
+    checkNonNullArgs("Partition elements are null", partition.getFactOrDimensionTableName(),
+      partition.getUpdatePeriod());
     try {
       return successOrPartialOrFailure(getSvc().addPartitionToDimStorage(sessionid, dimTableName, storage, partition),
         1);
@@ -1538,10 +1540,12 @@ public class MetastoreResource {
   @Path("/dimtables/{dimTableName}/storages/{storage}/partition")
   public APIResult updatePartitionOfDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("dimTableName") String dimTableName,
-    @PathParam("storage") String storage,
+                                               @PathParam("storage") String storage,
     XPartition partition) {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition is null", partition);
+    checkNonNullArgs("Partition elements are null", partition.getFactOrDimensionTableName(),
+      partition.getUpdatePeriod());
     try {
       getSvc().updatePartition(sessionid, dimTableName, storage, partition);
     } catch (LensException exc) {

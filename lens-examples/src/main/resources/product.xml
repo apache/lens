@@ -22,16 +22,16 @@
 <x_dimension name="product" xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <attributes>
-    <dim_attribute name="id" type="INT"/>
-    <dim_attribute name="SKU_number" type="INT" />
-    <dim_attribute name="description" type="STRING" />
-    <dim_attribute name="color" type="STRING" />
-    <dim_attribute name="weight" type="FLOAT" />
-    <dim_attribute name="category" type="STRING" />
-    <dim_attribute name="manufacturer" type="STRING" />
+    <dim_attribute name="id" _type="INT"/>
+    <dim_attribute name="SKU_number" _type="INT" />
+    <dim_attribute name="description" _type="STRING" />
+    <dim_attribute name="color" _type="STRING" />
+    <dim_attribute name="weight" _type="FLOAT" />
+    <dim_attribute name="category" _type="STRING" />
+    <dim_attribute name="manufacturer" _type="STRING" />
   </attributes>
   <expressions>
-    <expression name="isHeavy" type="boolean">
+    <expression name="isHeavy" _type="boolean">
       <expr_spec expr = "weight > 10" end_time="2015-04-12T00:00:00"/>
       <expr_spec expr = "weight > 50" start_time="2015-04-12T00:00:00"/>
     </expression>

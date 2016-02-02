@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.client.*;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.*;
@@ -34,8 +35,6 @@ import org.apache.lens.api.DateTime;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.jaxb.LensJAXBContext;
 import org.apache.lens.api.metastore.*;
-
-import org.glassfish.jersey.media.multipart.*;
 
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
@@ -87,30 +86,27 @@ public class LensMetadataClient {
 
   public String getCurrentDatabase() {
     WebTarget target = getMetastoreWebTarget();
-    String database = target.path("databases").path("current")
+    return target.path("databases").path("current")
       .queryParam("sessionid", connection.getSessionHandle())
       .request().get(String.class);
-    return database;
   }
 
 
   public APIResult setDatabase(String database) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("databases").path("current")
+    return target.path("databases").path("current")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML_TYPE)
       .put(Entity.xml(database), APIResult.class);
-    return result;
   }
 
   public APIResult createDatabase(String database, boolean ignoreIfExists) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("databases")
+    return target.path("databases")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("ignoreIfExisting", ignoreIfExists)
       .request(MediaType.APPLICATION_XML)
       .post(Entity.xml(database), APIResult.class);
-    return result;
   }
 
   public APIResult createDatabase(String database) {
@@ -156,19 +152,17 @@ public class LensMetadataClient {
 
   public APIResult dropAllCubes() {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("cubes")
+    return target.path("cubes")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML).delete(APIResult.class);
-    return result;
   }
 
   public APIResult createCube(XCube cube) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("cubes")
+    return target.path("cubes")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXCube(cube)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XCube>>(objFact.createXCube(cube)){}), APIResult.class);
   }
 
   private <T> T readFromXML(String filename) throws JAXBException, IOException {
@@ -194,11 +188,10 @@ public class LensMetadataClient {
 
   public APIResult updateCube(String cubeName, XCube cube) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("cubes").path(cubeName)
+    return target.path("cubes").path(cubeName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .put(Entity.xml(objFact.createXCube(cube)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XCube>>(objFact.createXCube(cube)){}), APIResult.class);
   }
 
   public APIResult updateCube(String cubeName, String cubeSpec) {
@@ -239,10 +232,9 @@ public class LensMetadataClient {
 
   public APIResult dropCube(String cubeName) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("cubes").path(cubeName)
+    return target.path("cubes").path(cubeName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML).delete(APIResult.class);
-    return result;
   }
 
   public List<String> getAllDimensions() {
@@ -255,19 +247,18 @@ public class LensMetadataClient {
 
   public APIResult dropAllDimensions() {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimensions")
+    return target.path("dimensions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML).delete(APIResult.class);
-    return result;
   }
 
   public APIResult createDimension(XDimension dimension) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimensions")
+    return target.path("dimensions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXDimension(dimension)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XDimension>>(objFact.createXDimension(dimension)){}),
+        APIResult.class);
   }
 
   public APIResult createDimension(String dimSpec) {
@@ -280,11 +271,11 @@ public class LensMetadataClient {
 
   public APIResult updateDimension(String dimName, XDimension dimension) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimensions").path(dimName)
+    return target.path("dimensions").path(dimName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .put(Entity.xml(objFact.createXDimension(dimension)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XDimension>>(objFact.createXDimension(dimension)){}),
+        APIResult.class);
   }
 
   public APIResult updateDimension(String dimName, String dimSpec) {
@@ -306,10 +297,9 @@ public class LensMetadataClient {
 
   public APIResult dropDimension(String dimName) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimensions").path(dimName)
+    return target.path("dimensions").path(dimName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML).delete(APIResult.class);
-    return result;
   }
 
   public List<String> getAllStorages() {
@@ -323,11 +313,10 @@ public class LensMetadataClient {
 
   public APIResult createNewStorage(XStorage storage) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("storages")
+    return target.path("storages")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXStorage(storage)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XStorage>>(objFact.createXStorage(storage)){}), APIResult.class);
   }
 
 
@@ -341,20 +330,18 @@ public class LensMetadataClient {
 
   public APIResult dropAllStorages() {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("storages")
+    return target.path("storages")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public APIResult updateStorage(String storageName, XStorage storage) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("storages").path(storageName)
+    return target.path("storages").path(storageName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .put(Entity.xml(objFact.createXStorage(storage)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XStorage>>(objFact.createXStorage(storage)){}), APIResult.class);
   }
 
   public APIResult updateStorage(String storageName, String storage) {
@@ -377,11 +364,10 @@ public class LensMetadataClient {
 
   public APIResult dropStorage(String storageName) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("storages").path(storageName)
+    return target.path("storages").path(storageName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public List<String> getAllFactTables(String cubeName) {
@@ -411,12 +397,11 @@ public class LensMetadataClient {
 
   public APIResult deleteAllFactTables(boolean cascade) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts")
+    return target.path("facts")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("cascade", cascade)
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
 
@@ -432,17 +417,10 @@ public class LensMetadataClient {
 
   public APIResult createFactTable(XFactTable f) {
     WebTarget target = getMetastoreWebTarget();
-    FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid")
-      .build(), this.connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("fact").fileName("fact").build(),
-      objFact.createXFactTable(f), MediaType.APPLICATION_XML_TYPE));
-    APIResult result = target.path("facts")
-      .request(MediaType.APPLICATION_XML_TYPE)
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        APIResult.class);
-    return result;
+    return target.path("facts")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .post(Entity.xml(new GenericEntity<JAXBElement<XFactTable>>(objFact.createXFactTable(f)){}), APIResult.class);
   }
 
   public APIResult createFactTable(String factSpec) {
@@ -455,11 +433,10 @@ public class LensMetadataClient {
 
   public APIResult updateFactTable(String factName, XFactTable table) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(factName)
+    return target.path("facts").path(factName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML_TYPE)
-      .put(Entity.xml(objFact.createXFactTable(table)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XFactTable>>(objFact.createXFactTable(table)){}), APIResult.class);
   }
 
   public APIResult updateFactTable(String factName, String table) {
@@ -472,12 +449,11 @@ public class LensMetadataClient {
 
   public APIResult dropFactTable(String factName, boolean cascade) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(factName)
+    return target.path("facts").path(factName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("cascade", cascade)
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public APIResult dropFactTable(String factName) {
@@ -495,20 +471,19 @@ public class LensMetadataClient {
 
   public APIResult dropAllStoragesOfFactTable(String factName) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(factName).path("storages")
+    return target.path("facts").path(factName).path("storages")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public APIResult addStorageToFactTable(String factname, XStorageTableElement storage) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(factname).path("storages")
+    return target.path("facts").path(factname).path("storages")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXStorageTableElement(storage)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XStorageTableElement>>(
+        objFact.createXStorageTableElement(storage)){}), APIResult.class);
   }
 
   public APIResult addStorageToFactTable(String factname, String storageSpec) {
@@ -521,11 +496,10 @@ public class LensMetadataClient {
 
   public APIResult dropStorageFromFactTable(String factName, String storageName) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(factName).path("storages").path(storageName)
+    return target.path("facts").path(factName).path("storages").path(storageName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public XStorageTableElement getStorageOfFactTable(String factName, String storageName) {
@@ -557,13 +531,12 @@ public class LensMetadataClient {
 
   public APIResult dropPartitionsOfFactTable(String factName, String storage, String filter) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(factName)
+    return target.path("facts").path(factName)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("filter", filter)
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public APIResult dropPartitionsOfFactTable(String factName, String storage) {
@@ -575,13 +548,12 @@ public class LensMetadataClient {
     String values = Joiner.on(",").skipNulls().join(partitions);
 
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(factName)
+    return target.path("facts").path(factName)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("values", values)
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
 
@@ -610,18 +582,11 @@ public class LensMetadataClient {
 
   public APIResult createDimensionTable(XDimensionTable table) {
     WebTarget target = getMetastoreWebTarget();
-
-    FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-      this.connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("dimensionTable").fileName("dimtable").build(),
-      objFact.createXDimensionTable(table), MediaType.APPLICATION_XML_TYPE));
-
-    APIResult result = target.path("dimtables")
+    return target.path("dimtables")
+      .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XDimensionTable>>(objFact.createXDimensionTable(table)){}),
+        APIResult.class);
   }
 
   public APIResult createDimensionTable(String tableXml) {
@@ -636,11 +601,11 @@ public class LensMetadataClient {
   public APIResult updateDimensionTable(XDimensionTable table) {
     String dimTableName = table.getTableName();
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTableName)
+    return target.path("dimtables").path(dimTableName)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .put(Entity.xml(objFact.createXDimensionTable(table)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XDimensionTable>>(objFact.createXDimensionTable(table)){}),
+        APIResult.class);
   }
 
   public APIResult updateDimensionTable(String dimTblName, String dimSpec) {
@@ -655,12 +620,11 @@ public class LensMetadataClient {
 
   public APIResult dropDimensionTable(String table, boolean cascade) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(table)
+    return target.path("dimtables").path(table)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("cascade", cascade)
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public APIResult dropDimensionTable(String table) {
@@ -689,11 +653,11 @@ public class LensMetadataClient {
 
   public APIResult addStorageToDimTable(String dimTblName, XStorageTableElement table) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName).path("storages")
+    return target.path("dimtables").path(dimTblName).path("storages")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXStorageTableElement(table)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XStorageTableElement>>(
+        objFact.createXStorageTableElement(table)){}), APIResult.class);
   }
 
   public APIResult addStorageToDimTable(String dimTblName, String table) {
@@ -717,22 +681,20 @@ public class LensMetadataClient {
 
   public APIResult dropAllStoragesOfDimension(String dimTblName) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName).path("storages")
+    return target.path("dimtables").path(dimTblName).path("storages")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
 
   public APIResult dropStoragesOfDimensionTable(String dimTblName, String storage) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName)
+    return target.path("dimtables").path(dimTblName)
       .path("storages").path(storage)
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public List<XPartition> getAllPartitionsOfDimensionTable(String dimTblName, String storage,
@@ -755,13 +717,12 @@ public class LensMetadataClient {
   public APIResult dropAllPartitionsOfDimensionTable(String dimTblName, String storage,
     String filter) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName)
+    return target.path("dimtables").path(dimTblName)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("filter", filter)
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public APIResult dropAllPartitionsOfDimensionTable(String dimTblName, String storage) {
@@ -772,24 +733,23 @@ public class LensMetadataClient {
     List<String> vals) {
     String values = Joiner.on(",").skipNulls().join(vals);
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName)
+    return target.path("dimtables").path(dimTblName)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("values", values)
       .request(MediaType.APPLICATION_XML)
       .delete(APIResult.class);
-    return result;
   }
 
   public APIResult addPartitionToDimensionTable(String dimTblName, String storage,
     XPartition partition) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName)
+    return target.path("dimtables").path(dimTblName)
       .path("storages").path(storage).path("partition")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XPartition>>(objFact.createXPartition(partition)){}),
+        APIResult.class);
   }
 
   public APIResult addPartitionToDimensionTable(String dimTblName, String storage,
@@ -804,12 +764,12 @@ public class LensMetadataClient {
   public APIResult addPartitionsToDimensionTable(String dimTblName, String storage,
     XPartitionList partitions) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName)
+    return target.path("dimtables").path(dimTblName)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXPartitionList(partitions)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XPartitionList>>(objFact.createXPartitionList(partitions)){}),
+        APIResult.class);
   }
 
   public APIResult addPartitionsToDimensionTable(String dimTblName, String storage,
@@ -824,12 +784,12 @@ public class LensMetadataClient {
   public APIResult addPartitionToFactTable(String fact, String storage,
     XPartition partition) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(fact)
+    return target.path("facts").path(fact)
       .path("storages").path(storage).path("partition")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XPartition>>(objFact.createXPartition(partition)){}),
+        APIResult.class);
   }
 
   public APIResult addPartitionToFactTable(String fact, String storage,
@@ -844,12 +804,12 @@ public class LensMetadataClient {
   public APIResult addPartitionsToFactTable(String fact, String storage,
     XPartitionList partitions) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(fact)
+    return target.path("facts").path(fact)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(objFact.createXPartitionList(partitions)), APIResult.class);
-    return result;
+      .post(Entity.xml(new GenericEntity<JAXBElement<XPartitionList>>(objFact.createXPartitionList(partitions)){}),
+        APIResult.class);
   }
 
   public APIResult addPartitionsToFactTable(String fact, String storage,
@@ -864,12 +824,12 @@ public class LensMetadataClient {
   public APIResult updatePartitionOfDimensionTable(String dimTblName, String storage,
     XPartition partition) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName)
+    return target.path("dimtables").path(dimTblName)
       .path("storages").path(storage).path("partition")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .put(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XPartition>>(objFact.createXPartition(partition)){}),
+        APIResult.class);
   }
 
   public APIResult updatePartitionOfDimensionTable(String dimTblName, String storage,
@@ -884,12 +844,12 @@ public class LensMetadataClient {
   public APIResult updatePartitionsOfDimensionTable(String dimTblName, String storage,
     XPartitionList partitions) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("dimtables").path(dimTblName)
+    return target.path("dimtables").path(dimTblName)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .put(Entity.xml(objFact.createXPartitionList(partitions)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XPartitionList>>(objFact.createXPartitionList(partitions)){}),
+        APIResult.class);
   }
 
   public APIResult updatePartitionsOfDimensionTable(String dimTblName, String storage,
@@ -904,12 +864,12 @@ public class LensMetadataClient {
   public APIResult updatePartitionOfFactTable(String fact, String storage,
     XPartition partition) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(fact)
+    return target.path("facts").path(fact)
       .path("storages").path(storage).path("partition")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .put(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XPartition>>(objFact.createXPartition(partition)){}),
+        APIResult.class);
   }
 
   public APIResult updatePartitionOfFactTable(String fact, String storage,
@@ -924,12 +884,12 @@ public class LensMetadataClient {
   public APIResult updatePartitionsOfFactTable(String fact, String storage,
     XPartitionList partitions) {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("facts").path(fact)
+    return target.path("facts").path(fact)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
-      .put(Entity.xml(objFact.createXPartitionList(partitions)), APIResult.class);
-    return result;
+      .put(Entity.xml(new GenericEntity<JAXBElement<XPartitionList>>(objFact.createXPartitionList(partitions)){}),
+        APIResult.class);
   }
 
   public APIResult updatePartitionsOfFactTable(String fact, String storage,

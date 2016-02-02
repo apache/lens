@@ -27,7 +27,7 @@
   <storage_name>dim_local</storage_name>
   <table_desc external="true" field_delimiter="," table_location="${project.build.directory}/metastore/examples/local">
     <part_cols>
-      <column comment="Time column" name="dt" type="STRING"/>
+      <column comment="Time column" name="dt" _type="STRING"/>
     </part_cols>
     <time_part_cols>dt</time_part_cols>
   </table_desc>

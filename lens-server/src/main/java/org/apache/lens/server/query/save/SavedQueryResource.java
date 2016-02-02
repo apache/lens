@@ -35,7 +35,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.error.ErrorCollection;
-import org.apache.lens.api.query.QuerySubmitResult;
+import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.save.ListResponse;
 import org.apache.lens.api.query.save.ParameterParserResponse;
 import org.apache.lens.api.query.save.ResourceModifiedResponse;
@@ -253,7 +253,7 @@ public class SavedQueryResource {
   @POST
   @Path("/savedqueries/{id}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public LensAPIResult<? extends QuerySubmitResult> run(
+  public LensAPIResult<QueryHandle> run(
     @PathParam("id") long id,
     @Context UriInfo info,
     @FormDataParam("sessionid") LensSessionHandle sessionid,

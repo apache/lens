@@ -80,7 +80,7 @@ public abstract class InMemoryResultSet extends LensResultSet {
    * @see org.apache.lens.server.api.driver.LensResultSet#toQueryResult()
    */
   public InMemoryQueryResult toQueryResult() throws LensException {
-    List<ResultRow> rows = new ArrayList<ResultRow>();
+    List<ResultRow> rows = new ArrayList<>();
     while (hasNext()) {
       rows.add(next());
     }

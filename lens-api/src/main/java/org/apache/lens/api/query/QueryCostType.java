@@ -21,6 +21,11 @@
  */
 package org.apache.lens.api.query;
 
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlType;
+
+@XmlType
+@XmlEnum
 public enum QueryCostType {
   LOW, MEDIUM, HIGH
 }

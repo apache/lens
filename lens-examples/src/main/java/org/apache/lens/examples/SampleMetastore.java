@@ -185,6 +185,9 @@ public class SampleMetastore {
       if (metastore.retCode != 0) {
         System.exit(metastore.retCode);
       }
+    } catch (Throwable th) {
+      log.error("Error during creating sample metastore", th);
+      throw th;
     } finally {
       if (metastore != null) {
         metastore.close();

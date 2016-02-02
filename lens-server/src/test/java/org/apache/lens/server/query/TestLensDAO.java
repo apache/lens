@@ -25,15 +25,12 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.ws.rs.core.Application;
-
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.driver.jdbc.JDBCResultSet;
-import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.driver.MockDriver;
 import org.apache.lens.server.api.query.FinishedLensQuery;
@@ -53,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Test(groups = "unit-test")
 @Slf4j
-public class TestLensDAO extends LensJerseyTest {
+public class TestLensDAO {
 
   /**
    * Test lens server dao.
@@ -145,15 +142,5 @@ public class TestLensDAO extends LensJerseyTest {
       Long.MAX_VALUE);
     Assert.assertEquals(daoTestQueryHandles.size(), 1);
     Assert.assertEquals(daoTestQueryHandles.get(0).getHandleId().toString(), finishedHandle);
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#configure()
-   */
-  @Override
-  protected Application configure() {
-    return new QueryApp();
   }
 }

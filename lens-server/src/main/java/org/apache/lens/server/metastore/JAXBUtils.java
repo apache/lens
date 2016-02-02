@@ -792,20 +792,22 @@ public final class JAXBUtils {
     return nonTimePartSpec;
   }
 
-  public static XPartitionList xpartitionListFromPartitionList(List<Partition> partitions, List<String> timePartCols)
-    throws HiveException {
+  public static XPartitionList xpartitionListFromPartitionList(String cubeTableName, List<Partition> partitions,
+    List<String> timePartCols) throws HiveException {
     XPartitionList xPartitionList = new XPartitionList();
     xPartitionList.getPartition();
     if (partitions != null) {
       for (Partition partition : partitions) {
-        xPartitionList.getPartition().add(xpartitionFromPartition(partition, timePartCols));
+        xPartitionList.getPartition().add(xpartitionFromPartition(cubeTableName, partition, timePartCols));
       }
     }
     return xPartitionList;
   }
 
-  public static XPartition xpartitionFromPartition(Partition p, List<String> timePartCols) throws HiveException {
+  public static XPartition xpartitionFromPartition(String cubeTableName, Partition p, List<String> timePartCols)
+    throws HiveException {
     XPartition xp = new XPartition();
+    xp.setFactOrDimensionTableName(cubeTableName);
     xp.setPartitionParameters(new XProperties());
     xp.setSerdeParameters(new XProperties());
     xp.setName(p.getCompleteName());

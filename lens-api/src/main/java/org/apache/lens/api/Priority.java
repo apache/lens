@@ -21,9 +21,14 @@
  */
 package org.apache.lens.api;
 
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlType;
+
 /**
  * The Enum Priority.
  */
+@XmlEnum
+@XmlType
 public enum Priority {
 
   /**

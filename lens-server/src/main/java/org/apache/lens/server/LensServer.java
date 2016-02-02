@@ -121,7 +121,6 @@ public class LensServer {
 
   private ResourceConfig getUIApp() {
     ResourceConfig uiApp = ResourceConfig.forApplicationClass(UIApp.class);
-    uiApp.register(new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".ui_request"), true));
     uiApp.setApplicationName("Lens UI");
     return uiApp;
   }
