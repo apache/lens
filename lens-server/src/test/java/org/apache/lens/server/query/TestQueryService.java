@@ -53,6 +53,7 @@ import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensDriverErrorCode;
 import org.apache.lens.server.api.error.LensException;
@@ -89,6 +90,7 @@ import org.testng.annotations.Test;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -982,6 +984,58 @@ public class TestQueryService extends LensJerseyTest {
     validateInmemoryResult(resultset);
 
     validNotFoundForHttpResult(target(), lensSessionId, handle);
+  }
+
+  @Test
+  public void testTTLForInMemoryResult() throws InterruptedException, IOException, LensException {
+    long inMemoryresultsetTTLMillisBackup = queryService.getInMemoryResultsetTTLMillis();
+    queryService.setInMemoryResultsetTTLMillis(5000); // 5 secs
+    try {
+      // test post execute op
+      final WebTarget target = target().path("queryapi/queries");
+
+      final FormDataMultiPart mp = new FormDataMultiPart();
+      LensConf conf = new LensConf();
+      conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+      conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
+      conf.addProperty(LensConfConstants.QUERY_MAIL_NOTIFY, "false");
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+          MediaType.APPLICATION_XML_TYPE));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
+          + TEST_TABLE));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+          MediaType.APPLICATION_XML_TYPE));
+
+      final QueryHandle handle =
+          target
+              .request()
+              .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+                  new GenericType<LensAPIResult<QueryHandle>>() {
+                  }).getData();
+      assertNotNull(handle);
+
+      waitForQueryToFinish(target(), lensSessionId, handle, Status.SUCCESSFUL);
+
+      // Check TTL
+      QueryContext ctx = queryService.getQueryContext(lensSessionId, handle);
+      long softExpiryTime = ctx.getDriverStatus().getDriverFinishTime()
+          + queryService.getInMemoryResultsetTTLMillis() - 1000; //Keeping buffer of 1 secs
+      int checkCount = 0;
+      while (System.currentTimeMillis() < softExpiryTime) {
+        assertEquals(queryService.getFinishedQueriesCount(), 1);
+        assertEquals(queryService.finishedQueries.peek().canBePurged(), false);
+        assertEquals(((InMemoryResultSet) queryService.getResultset(handle)).canBePurged(), false);
+        checkCount++;
+        Thread.sleep(1000); // sleep for 1 secs and then check again
+      }
+      assertTrue(checkCount >= 2, "CheckCount = " + checkCount); // TTl check at least twice
+
+      Thread.sleep(3000); // should be past TTL after this sleep . purge thread runs every 1 secs for Tests
+      assertEquals(queryService.getFinishedQueriesCount(), 0);
+    } finally {
+      queryService.setInMemoryResultsetTTLMillis(inMemoryresultsetTTLMillisBackup);
+    }
   }
 
   /**

@@ -18,20 +18,28 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.HQLParser.*;
+
 import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
+
+import org.antlr.runtime.CommonToken;
 
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Writes a join query with all the facts involved, with where, groupby and having expressions pushed down to the fact
  * queries.
  */
+@Slf4j
 class MultiFactHQLContext extends SimpleHQLContext {
 
   private Set<CandidateFact> facts;
@@ -76,7 +84,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
   }
 
   private String getWhereString() {
-    return null;
+    return query.getWhereTree();
   }
 
   public String toHQL() throws LensException {
@@ -149,5 +157,80 @@ class MultiFactHQLContext extends SimpleHQLContext {
       }
     }
     return fromBuilder.toString();
+  }
+
+
+  public static ASTNode convertHavingToWhere(ASTNode havingAST, CubeQueryContext context, Set<CandidateFact> cfacts,
+    AliasDecider aliasDecider) throws LensException {
+    if (havingAST == null) {
+      return null;
+    }
+    if (isAggregateAST(havingAST) || isTableColumnAST(havingAST) || isNonAggregateFunctionAST(havingAST)) {
+      // if already present in select, pick alias
+      String alias = null;
+      for (CandidateFact fact : cfacts) {
+        if (fact.isExpressionAnswerable(havingAST, context)) {
+          alias = fact.addAndGetAliasFromSelect(havingAST, aliasDecider);
+          return new ASTNode(new CommonToken(HiveParser.Identifier, alias));
+        }
+      }
+    }
+    if (havingAST.getChildren() != null) {
+      for (int i = 0; i < havingAST.getChildCount(); i++) {
+        ASTNode replaced = convertHavingToWhere((ASTNode) havingAST.getChild(i), context, cfacts, aliasDecider);
+        havingAST.setChild(i, replaced);
+      }
+    }
+    return havingAST;
+  }
+
+  public static ASTNode pushDownHaving(ASTNode ast, CubeQueryContext cubeQueryContext, Set<CandidateFact> cfacts)
+    throws LensException {
+    if (ast == null) {
+      return null;
+    }
+    if (ast.getType() == HiveParser.KW_AND || ast.getType() == HiveParser.TOK_HAVING) {
+      List<ASTNode> children = Lists.newArrayList();
+      for (Node child : ast.getChildren()) {
+        ASTNode newChild = pushDownHaving((ASTNode) child, cubeQueryContext, cfacts);
+        if (newChild != null) {
+          children.add(newChild);
+        }
+      }
+      if (children.size() == 0) {
+        return null;
+      } else if (children.size() == 1) {
+        return children.get(0);
+      } else {
+        ASTNode newASTNode = new ASTNode(ast.getToken());
+        for (ASTNode child : children) {
+          newASTNode.addChild(child);
+        }
+        return newASTNode;
+      }
+    }
+    if (isPrimitiveBooleanExpression(ast)) {
+      CandidateFact fact = pickFactToPushDown(ast, cubeQueryContext, cfacts);
+      if (fact == null) {
+        return ast;
+      }
+      fact.addToHaving(ast);
+      return null;
+    }
+    return ast;
+  }
+
+  private static CandidateFact pickFactToPushDown(ASTNode ast, CubeQueryContext cubeQueryContext, Set<CandidateFact>
+    cfacts) throws LensException {
+    for (CandidateFact fact : cfacts) {
+      if (fact.isExpressionAnswerable(ast, cubeQueryContext)) {
+        return fact;
+      }
+    }
+    return null;
+  }
+
+  private static boolean isPrimitiveBooleanExpression(ASTNode ast) {
+    return HQLParser.FILTER_OPERATORS.contains(ast.getType());
   }
 }

@@ -465,7 +465,9 @@ class ExpressionResolver implements ContextRewriter {
       replaceAST(cubeql, queryAST.getWhereAST());
       replaceAST(cubeql, queryAST.getJoinAST());
       replaceAST(cubeql, queryAST.getGroupByAST());
-      replaceAST(cubeql, queryAST.getHavingAST());
+      // Having AST is resolved by each fact, so that all facts can expand their expressions.
+      // Having ast is not copied now, it's maintained in cubeql, each fact processes that serially.
+      replaceAST(cubeql, cubeql.getHavingAST());
       replaceAST(cubeql, cubeql.getOrderByAST());
     }
 

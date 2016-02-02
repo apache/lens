@@ -38,52 +38,13 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
-import org.antlr.runtime.tree.Tree;
-
-import lombok.Data;
-
 
 public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
 
   private final QueryAST ast;
-  int aliasCounter = 0;
-
-  @Data
-  public static class HashableASTNode {
-    private ASTNode ast;
-    private int hashCode = -1;
-    private boolean hashCodeComputed = false;
-
-    public HashableASTNode(ASTNode ast) {
-      this.ast = ast;
-    }
-
-    public void setAST(ASTNode ast) {
-      this.ast = ast;
-      hashCodeComputed = false;
-    }
-
-    public ASTNode getAST() {
-      return ast;
-    }
-
-    @Override
-    public int hashCode() {
-      if (!hashCodeComputed) {
-        hashCode = getString(ast).hashCode();
-        hashCodeComputed = true;
-      }
-      return hashCode;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      return o instanceof HashableASTNode && this.hashCode() == o.hashCode() && getString(this.getAST())
-        .trim().equalsIgnoreCase(getString(((HashableASTNode) o).getAST()).trim());
-    }
-  }
 
   private Map<HashableASTNode, ASTNode> innerToOuterASTs = new HashMap<>();
+  private AliasDecider aliasDecider = new DefaultAliasDecider();
 
   SingleFactMultiStorageHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery,
     CubeQueryContext query, QueryAST ast)
@@ -174,7 +135,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       ASTNode innerSelectASTWithoutAlias = copyAST(astNode);
       ASTNode innerSelectExprAST = new ASTNode(new CommonToken(HiveParser.TOK_SELEXPR));
       innerSelectExprAST.addChild(innerSelectASTWithoutAlias);
-      String alias = decideAlias(astNode);
+      String alias = aliasDecider.decideAlias(astNode);
       ASTNode aliasNode = new ASTNode(new CommonToken(Identifier, alias));
       innerSelectExprAST.addChild(aliasNode);
       addToInnerSelectAST(innerSelectExprAST);
@@ -192,7 +153,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       ASTNode innerSelectASTWithoutAlias = copyAST(astNode);
       ASTNode innerSelectExprAST = new ASTNode(new CommonToken(HiveParser.TOK_SELEXPR));
       innerSelectExprAST.addChild(innerSelectASTWithoutAlias);
-      String alias = decideAlias(astNode);
+      String alias = aliasDecider.decideAlias(astNode);
       ASTNode aliasNode = new ASTNode(new CommonToken(Identifier, alias));
       innerSelectExprAST.addChild(aliasNode);
       addToInnerSelectAST(innerSelectExprAST);
@@ -247,11 +208,6 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     child.getChild(0).addChild(new ASTNode(new CommonToken(Identifier, tableAlias)));
     child.addChild(new ASTNode(new CommonToken(Identifier, fieldAlias)));
     return child;
-  }
-
-  private String decideAlias(Tree child) {
-    // Can add intelligence in aliases someday. Not required though :)
-    return "alias" + (aliasCounter++);
   }
 
   private static ArrayList<HQLContextInterface> getUnionContexts(CandidateFact fact, Map<Dimension, CandidateDim>

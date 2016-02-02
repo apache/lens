@@ -329,10 +329,10 @@ public class HiveDriver extends AbstractLensDriver {
    */
   public HiveDriver() throws LensException {
     this.sessionLock = new ReentrantLock();
-    lensToHiveSession = new HashMap<String, SessionHandle>();
-    opHandleToSession = new ConcurrentHashMap<OperationHandle, SessionHandle>();
-    orphanedHiveSessions = new ConcurrentLinkedQueue<SessionHandle>();
-    resourcesAddedForSession = new HashMap<SessionHandle, Boolean>();
+    lensToHiveSession = new HashMap<>();
+    opHandleToSession = new ConcurrentHashMap<>();
+    orphanedHiveSessions = new ConcurrentLinkedQueue<>();
+    resourcesAddedForSession = new HashMap<>();
     connectionExpiryThread.setDaemon(true);
     connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
     connectionExpiryThread.start();
@@ -518,8 +518,7 @@ public class HiveDriver extends AbstractLensDriver {
       Configuration qdconf = ctx.getDriverConf(this);
       qdconf.set("mapred.job.name", ctx.getQueryHandle().toString());
       SessionHandle sessionHandle = getSession(ctx);
-      op = getClient().executeStatement(sessionHandle, ctx.getSelectedDriverQuery(),
-        qdconf.getValByRegex(".*"));
+      op = getClient().executeStatement(sessionHandle, ctx.getSelectedDriverQuery(), qdconf.getValByRegex(".*"));
       log.info("The hive operation handle: {}", op);
       ctx.setDriverOpHandle(op.toString());
       hiveHandles.put(ctx.getQueryHandle(), op);

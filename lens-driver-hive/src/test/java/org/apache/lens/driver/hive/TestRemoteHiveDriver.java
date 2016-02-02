@@ -68,6 +68,9 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   /** The remote conf. */
 
   private static HiveConf remoteConf = new HiveConf();
+  static{
+    remoteConf.unset("hive.in.test");
+  }
 
   /**
    * Setup test.

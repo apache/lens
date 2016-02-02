@@ -18,10 +18,10 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Number;
 import static org.apache.lens.cube.error.LensCubeErrorCode.COULD_NOT_PARSE_EXPRESSION;
 import static org.apache.lens.cube.error.LensCubeErrorCode.SYNTAX_ERROR;
+
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -40,6 +40,9 @@ import org.apache.hadoop.hive.ql.parse.*;
 import org.antlr.runtime.tree.Tree;
 
 import com.google.common.base.Optional;
+
+import com.google.common.collect.Sets;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -80,6 +83,7 @@ public final class HQLParser {
   }
 
   public static final Set<Integer> BINARY_OPERATORS;
+  public static final Set<Integer> FILTER_OPERATORS;
   public static final Set<Integer> ARITHMETIC_OPERATORS;
   public static final Set<Integer> UNARY_OPERATORS;
   public static final Set<Integer> PRIMITIVE_TYPES;
@@ -139,6 +143,9 @@ public final class HQLParser {
     primitiveTypes.add(TOK_VARCHAR);
     primitiveTypes.add(TOK_CHAR);
     PRIMITIVE_TYPES = Collections.unmodifiableSet(primitiveTypes);
+
+    FILTER_OPERATORS = Sets.newHashSet(KW_IN, GREATERTHAN, GREATERTHANOREQUALTO, LESSTHAN, LESSTHANOREQUALTO, EQUAL,
+      EQUAL_NS);
   }
 
   public static boolean isArithmeticOp(int tokenType) {
@@ -524,7 +531,6 @@ public final class HQLParser {
       }
 
     } else if (TOK_DIR == rootType) {
-      //TODO: handle local
       buf.append(" directory ");
       for (int i = 0; i < root.getChildCount(); i++) {
         toInfixString((ASTNode) root.getChild(i), buf);
@@ -841,4 +847,39 @@ public final class HQLParser {
     }
     return node;
   }
+  @Data
+  public static class HashableASTNode {
+    private ASTNode ast;
+    private int hashCode = -1;
+    private boolean hashCodeComputed = false;
+
+    public HashableASTNode(ASTNode ast) {
+      this.ast = ast;
+    }
+
+    public void setAST(ASTNode ast) {
+      this.ast = ast;
+      hashCodeComputed = false;
+    }
+
+    public ASTNode getAST() {
+      return ast;
+    }
+
+    @Override
+    public int hashCode() {
+      if (!hashCodeComputed) {
+        hashCode = getString(ast).hashCode();
+        hashCodeComputed = true;
+      }
+      return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      return o instanceof HashableASTNode && this.hashCode() == o.hashCode() && getString(this.getAST())
+        .trim().equalsIgnoreCase(getString(((HashableASTNode) o).getAST()).trim());
+    }
+  }
+
 }

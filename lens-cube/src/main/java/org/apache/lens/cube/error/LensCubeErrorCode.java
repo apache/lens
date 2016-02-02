@@ -57,7 +57,6 @@ public enum LensCubeErrorCode {
   STORAGE_UNION_DISABLED(3031, 1500),
   COULD_NOT_PARSE_EXPRESSION(3032, 1500),
   QUERIED_TABLE_NOT_FOUND(3033, 0),
-
   // Error codes greater than 3100 are errors while doing a metastore operation.
   ERROR_IN_ENTITY_DEFINITION(3101, 100),
   TIMELINE_ABSENT(3102, 100),

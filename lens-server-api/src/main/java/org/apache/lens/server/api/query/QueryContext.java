@@ -203,7 +203,7 @@ public class QueryContext extends AbstractQueryContext {
    * @param drivers All the drivers
    * @param selectedDriver SelectedDriver
    */
-  QueryContext(String userQuery, String user, LensConf qconf, Configuration conf,
+  public QueryContext(String userQuery, String user, LensConf qconf, Configuration conf,
     Collection<LensDriver> drivers, LensDriver selectedDriver, boolean mergeDriverConf) {
     this(userQuery, user, qconf, conf, drivers, selectedDriver, System.currentTimeMillis(), mergeDriverConf);
   }

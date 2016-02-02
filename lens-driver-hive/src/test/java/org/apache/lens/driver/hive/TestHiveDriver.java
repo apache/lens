@@ -53,6 +53,7 @@ import org.apache.hadoop.hive.ql.HiveDriverRunHook;
 import org.apache.hadoop.hive.ql.HiveDriverRunHookContext;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.service.cli.CLIServiceClient;
 import org.apache.hive.service.cli.ColumnDescriptor;
 
 import org.testng.annotations.*;
@@ -74,6 +75,7 @@ public class TestHiveDriver {
 
   /** The conf. */
   protected HiveConf conf;
+  protected Configuration configuration;
 
   /** The driver. */
   protected HiveDriver driver;
@@ -101,6 +103,8 @@ public class TestHiveDriver {
     assertNotNull(System.getProperty("hadoop.bin.path"));
 
     createDriver();
+    configuration = new Configuration();
+    driver.getClient();
     ss = new SessionState(conf, "testuser");
     SessionState.start(ss);
     Hive client = Hive.get(conf);
@@ -109,9 +113,8 @@ public class TestHiveDriver {
     client.createDatabase(database, true);
     SessionState.get().setCurrentDatabase(dataBase);
     sessionid = SessionState.get().getSessionId();
-
     conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
-    QueryContext context = createContext("USE " + dataBase, conf);
+    QueryContext context = createContext("USE " + dataBase, this.configuration);
     driver.execute(context);
     conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
@@ -132,11 +135,14 @@ public class TestHiveDriver {
 
   @BeforeMethod
   public void setDB() {
+    if(SessionState.get() == null) {
+      SessionState.start(new SessionState(conf, "testuser"));
+    }
     SessionState.get().setCurrentDatabase(dataBase);
   }
 
   protected QueryContext createContext(final String query, Configuration conf) throws LensException {
-    QueryContext context = new QueryContext(query, "testuser", new LensConf(), conf, drivers);
+    QueryContext context = new QueryContext(query, "testuser", new LensConf(), conf, drivers, null, false);
     // session id has to be set before calling setDriverQueriesAndPlans
     context.setLensSessionIdentifier(sessionid);
     return context;
@@ -185,13 +191,13 @@ public class TestHiveDriver {
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName + "(ID STRING)" + " TBLPROPERTIES ('"
       + LensConfConstants.STORAGE_COST + "'='500')";
     // Create test table
-    QueryContext context = createContext(createTable, conf);
+    QueryContext context = createContext(createTable, configuration);
     LensResultSet resultSet = driver.execute(context);
     assertNull(resultSet);
 
     // Load some data into the table
     String dataLoad = "LOAD DATA LOCAL INPATH '" + TEST_DATA_FILE + "' OVERWRITE INTO TABLE " + tableName;
-    context = createContext(dataLoad, conf);
+    context = createContext(dataLoad, configuration);
     resultSet = driver.execute(context);
     assertNull(resultSet);
     assertHandleSize(handleSize);
@@ -211,14 +217,14 @@ public class TestHiveDriver {
       + LensConfConstants.STORAGE_COST + "'='500')";
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     // Craete again
-    QueryContext context = createContext(createTable, conf);
+    QueryContext context = createContext(createTable, configuration);
     LensResultSet resultSet = driver.execute(context);
     assertNull(resultSet);
 
     // Load some data into the table
     String dataLoad = "LOAD DATA LOCAL INPATH '" + TEST_DATA_FILE + "' OVERWRITE INTO TABLE " + tableName
       + " partition (dt='today')";
-    context = createContext(dataLoad, conf);
+    context = createContext(dataLoad, configuration);
     resultSet = driver.execute(context);
     assertNull(resultSet);
     assertHandleSize(handleSize);
@@ -236,7 +242,7 @@ public class TestHiveDriver {
     createTestTable("test_insert_overwrite");
     conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     String query = "SELECT ID FROM test_insert_overwrite";
-    QueryContext context = createContext(query, conf);
+    QueryContext context = createContext(query, configuration);
     driver.addPersistentPath(context);
     assertEquals(context.getUserQuery(), query);
     assertNotNull(context.getDriverContext().getDriverQuery(driver));
@@ -255,14 +261,14 @@ public class TestHiveDriver {
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     Hive.get(conf).dropTable("test_temp_output");
     String query = "CREATE TABLE test_temp_output AS SELECT ID FROM test_temp";
-    QueryContext context = createContext(query, conf);
+    QueryContext context = createContext(query, configuration);
     LensResultSet resultSet = driver.execute(context);
     assertNull(resultSet);
     assertHandleSize(handleSize);
 
     // fetch results from temp table
     String select = "SELECT * FROM test_temp_output";
-    context = createContext(select, conf);
+    context = createContext(select, configuration);
     resultSet = driver.execute(context);
     assertHandleSize(handleSize);
     validateInMemoryResult(resultSet, "test_temp_output");
@@ -282,12 +288,12 @@ public class TestHiveDriver {
     // Execute a select query
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     String select = "SELECT ID FROM test_execute";
-    QueryContext context = createContext(select, conf);
+    QueryContext context = createContext(select, configuration);
     resultSet = driver.execute(context);
     assertNotNull(context.getDriverConf(driver).get("mapred.job.name"));
     validateInMemoryResult(resultSet);
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
-    context = createContext(select, conf);
+    context = createContext(select, configuration);
     resultSet = driver.execute(context);
     validatePersistentResult(resultSet, TEST_DATA_FILE, context.getHDFSResultDir(), false);
     conf.set(LensConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT,
@@ -295,7 +301,7 @@ public class TestHiveDriver {
         + " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-',"
         + " 'field.delim'=','  ) STORED AS TEXTFILE ");
     select = "SELECT ID, null, ID FROM test_execute";
-    context = createContext(select, conf);
+    context = createContext(select, configuration);
     resultSet = driver.execute(context);
     validatePersistentResult(resultSet, TEST_DATA_FILE, context.getHDFSResultDir(), true);
     assertHandleSize(handleSize);

@@ -308,6 +308,16 @@
     <value>10000</value>
     <description>The interval(milliseconds) with which purger to run periodically. Default 10 sec. </description>
   </property>
+
+  <property>
+    <name>lens.server.inmemory.resultset.ttl.secs</name>
+    <value>300</value>
+    <description>This property defines the TTL(time to live) in seconds for all result sets of type InMemoryResultSet
+     beyond which they are eligible for purging irrespective of whether the result set has been read or not.
+     The default value is 300 seconds (5 minutes).
+     </description>
+  </property>
+
   <property>
     <name>lens.server.domain</name>
     <value>company.com</value>

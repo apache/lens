@@ -25,6 +25,7 @@ import org.apache.lens.api.query.InMemoryQueryResult;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.error.LensException;
 
+import lombok.Getter;
 import lombok.Setter;
 
 /**
@@ -32,10 +33,13 @@ import lombok.Setter;
  */
 public abstract class InMemoryResultSet extends LensResultSet {
 
-  public abstract boolean seekToStart() throws LensException;
-
   @Setter
   private boolean fullyAccessed = false;
+
+  @Getter
+  private long creationTime = System.currentTimeMillis();;
+
+  public abstract boolean seekToStart() throws LensException;
 
   @Override
   public boolean canBePurged() {
