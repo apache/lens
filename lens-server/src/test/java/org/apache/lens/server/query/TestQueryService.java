@@ -984,6 +984,10 @@ public class TestQueryService extends LensJerseyTest {
     validateInmemoryResult(resultset);
 
     validNotFoundForHttpResult(target(), lensSessionId, handle);
+    waitForPurge(0, queryService.finishedQueries);
+    APIResult result=target.path(handle.toString()).path("resultset")
+      .queryParam("sessionid", lensSessionId).request().delete(APIResult.class);
+    assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
   @Test

@@ -2100,7 +2100,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       acquire(sessionHandle);
       resultSets.remove(queryHandle);
       // Ask driver to close result set
-      getQueryContext(queryHandle).getSelectedDriver().closeResultSet(queryHandle);
+      QueryContext ctx=getQueryContext(queryHandle);
+      if (null != ctx) {
+        ctx.getSelectedDriver().closeResultSet(queryHandle);
+      }
     } finally {
       release(sessionHandle);
     }

@@ -151,7 +151,7 @@ public interface LensDriver extends Externalizable {
   LensResultSet fetchResultSet(QueryContext context) throws LensException;
 
   /**
-   * Close the resultset for the query.
+   * Close the resultset for the query. Closing an already closed resultset should not result in failures.
    *
    * @param handle The query handle
    * @throws LensException the lens exception
