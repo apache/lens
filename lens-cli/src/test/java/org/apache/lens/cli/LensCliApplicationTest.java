@@ -32,7 +32,7 @@ import org.testng.annotations.BeforeTest;
  */
 public class LensCliApplicationTest extends LensAllApplicationJerseyTest {
   public static final String SUCCESS_MESSAGE = "<?xml version=\"1.0\" encoding=\"utf-8\" "
-    + "standalone=\"yes\"?><result><status>succeeded</status><message></message></result>";
+    + "standalone=\"yes\"?><apiresult><status>succeeded</status><message></message></apiresult>";
 
   @Override
   protected int getTestPort() {

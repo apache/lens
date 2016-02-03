@@ -26,6 +26,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import org.apache.lens.api.UUIDAdapter;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -64,6 +67,7 @@ public class QueryHandle extends QuerySubmitResult implements Serializable {
    */
   @XmlElement
   @Getter
+  @XmlJavaTypeAdapter(UUIDAdapter.class)
   private UUID handleId;
 
   /**

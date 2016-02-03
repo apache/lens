@@ -195,10 +195,8 @@ public class ESDriver extends AbstractLensDriver {
 
   @Override
   public void closeResultSet(QueryHandle handle) throws LensException {
-    try {
+    if (resultSetMap.containsKey(handle)) {
       resultSetMap.remove(handle);
-    } catch (NullPointerException e) {
-      throw new LensException("The query does not exist or was already purged", e);
     }
   }
 

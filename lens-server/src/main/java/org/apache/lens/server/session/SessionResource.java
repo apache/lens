@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p></p>
  * This provides api for all things in session.
  */
-@Path("/session")
+@Path("session")
 @Slf4j
 public class SessionResource {
 

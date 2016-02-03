@@ -18,28 +18,18 @@
  */
 package org.apache.lens.server.scheduler;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
 
-import org.apache.lens.server.LensApplicationListener;
-
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.apache.lens.server.BaseApp;
 
 /**
  * The Class SchedulerApp.
  */
-@ApplicationPath("/queryscheduler")
-public class SchedulerApp extends Application {
+@ApplicationPath("/scheduler")
+public class SchedulerApp extends BaseApp {
+
   @Override
-  public Set<Class<?>> getClasses() {
-    final Set<Class<?>> classes = new HashSet<Class<?>>();
-    // register root resource
-    classes.add(ScheduleResource.class);
-    classes.add(LensApplicationListener.class);
-    classes.add(LoggingFilter.class);
-    return classes;
+  protected Class getResource() {
+    return ScheduleResource.class;
   }
 }

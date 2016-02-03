@@ -19,41 +19,32 @@
 /*
  *
  */
-package org.apache.lens.api.query;
+package org.apache.lens.api;
 
-import java.util.List;
+import java.util.UUID;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+public class UUIDAdapter extends XmlAdapter<String, UUID> {
 
-/**
- * The Class QueryResultSetMetadata.
- */
-@XmlRootElement
-/**
- * Instantiates a new query result set metadata.
- *
- * @param columns
- *          the columns
- */
-@AllArgsConstructor
-/**
- * Instantiates a new query result set metadata.
- */
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class QueryResultSetMetadata {
+  @Override
+  public UUID unmarshal(String s) {
+    if (null == s) {
+      return null;
+    }
+    try {
+      return UUID.fromString(s);
+    } catch (IllegalArgumentException e) {
+      return null;
+    }
+  }
 
-  /**
-   * The columns.
-   */
-  @XmlElementWrapper
-  @XmlElement
-  @Getter
-  private List<ResultColumn> columns;
+  @Override
+  public String marshal(UUID uuid) {
+    if (uuid == null) {
+      return null;
+    }
+    return uuid.toString();
+
+  }
 }

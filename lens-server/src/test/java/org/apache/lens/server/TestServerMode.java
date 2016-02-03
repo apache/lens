@@ -61,7 +61,8 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    LensServerTestUtil.createTable("test_table", target(), RestAPITestUtil.openFooBarSession(target()));
+    LensServerTestUtil.createTable("test_table", target(), RestAPITestUtil.openFooBarSession(target(), defaultMT),
+      defaultMT);
   }
 
   /*

@@ -41,83 +41,76 @@ public class FormDataMultiPartFactory {
   }
 
   public static FormDataMultiPart createFormDataMultiPartForQuery(final Optional<LensSessionHandle> sessionId,
-      final Optional<String> query, final Optional<String> operation, final LensConf lensConf) {
+      final Optional<String> query, final Optional<String> operation, final LensConf lensConf, MediaType mt) {
 
     final FormDataMultiPart mp = new FormDataMultiPart();
 
     if (sessionId.isPresent()) {
-      mp.bodyPart(getSessionIdFormDataBodyPart(sessionId.get()));
+      mp.bodyPart(getSessionIdFormDataBodyPart(sessionId.get(), mt));
     }
 
     if (query.isPresent()) {
-      mp.bodyPart(getFormDataBodyPart("query", query.get()));
+      mp.bodyPart(getFormDataBodyPart("query", query.get(), mt));
     }
 
     if (operation.isPresent()) {
-      mp.bodyPart(getFormDataBodyPart("operation", operation.get()));
+      mp.bodyPart(getFormDataBodyPart("operation", operation.get(), mt));
     }
 
-    mp.bodyPart(getFormDataBodyPart("conf", "conf", lensConf));
+    mp.bodyPart(getFormDataBodyPart("conf", "conf", lensConf, mt));
     return mp;
   }
 
-  public static FormDataMultiPart createFormDataMultiPartForSession(final Optional<LensSessionHandle> sessionId,
-      final Optional<String> username, final Optional<String> password, final Optional<LensConf> lensConf) {
+  public static FormDataMultiPart createFormDataMultiPartForSession(
+    final Optional<String> username, final Optional<String> password, final Optional<LensConf> lensConf,
+    final MediaType mt) {
 
     final FormDataMultiPart mp = new FormDataMultiPart();
 
-    if (sessionId.isPresent()) {
-      mp.bodyPart(getSessionIdFormDataBodyPart(sessionId.get()));
-    }
-
     if (username.isPresent()) {
-      mp.bodyPart(getFormDataBodyPart("username", username.get()));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), username.get()));
     }
 
     if (password.isPresent()) {
-      mp.bodyPart(getFormDataBodyPart("password", password.get()));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), password.get()));
     }
 
     if (lensConf.isPresent()) {
-      mp.bodyPart(getFormDataBodyPart("sessionconf", "sessionconf", lensConf.get()));
+      mp.bodyPart(getFormDataBodyPart("sessionconf", "sessionconf", lensConf.get(), mt));
     }
 
     return mp;
   }
 
   public static FormDataMultiPart createFormDataMultiPartForFact(final LensSessionHandle sessionId,
-      final XFactTable xFactTable) {
+      final XFactTable xFactTable, MediaType mt) {
 
     final FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(getSessionIdFormDataBodyPart(sessionId));
-    mp.bodyPart(getFormDataBodyPart("fact", "fact", cubeObjectFactory.createXFactTable(xFactTable)));
+    mp.bodyPart(getSessionIdFormDataBodyPart(sessionId, mt));
+    mp.bodyPart(getFormDataBodyPart("fact", "fact", cubeObjectFactory.createXFactTable(xFactTable), mt));
 
     return mp;
   }
 
-  private static FormDataBodyPart getFormDataBodyPart(final String fdContentDispName, final String value) {
+  private static FormDataBodyPart getFormDataBodyPart(final String fdContentDispName, final String value,
+    final MediaType mt) {
     return new FormDataBodyPart(FormDataContentDisposition.name(fdContentDispName).build(), value,
-        MediaType.APPLICATION_XML_TYPE);
+        mt);
   }
 
-  private static FormDataBodyPart getFormDataBodyPart(final String fdContentDispName, final Object entity) {
+  private static FormDataBodyPart getFormDataBodyPart(final String fdContentDispName, final Object entity,
+    final MediaType mt) {
     return new FormDataBodyPart(FormDataContentDisposition.name(fdContentDispName).build(), entity,
-        MediaType.APPLICATION_XML_TYPE);
+        mt);
   }
 
   private static FormDataBodyPart getFormDataBodyPart(final String fdContentDispName, final String fileName,
-      final Object entity) {
+      final Object entity, final MediaType mt) {
     return new FormDataBodyPart(FormDataContentDisposition.name(fdContentDispName).fileName(fileName).build(), entity,
-        MediaType.APPLICATION_XML_TYPE);
+        mt);
   }
 
-  private static FormDataBodyPart getFormDataBodyPartWithOutEntity(final String fdContentDispName,
-      final String fileName) {
-    return new FormDataBodyPart(FormDataContentDisposition.name(fdContentDispName).fileName(fileName).build(),
-        MediaType.APPLICATION_XML_TYPE);
-  }
-
-  private static FormDataBodyPart getSessionIdFormDataBodyPart(final LensSessionHandle sessionId) {
-    return getFormDataBodyPart("sessionid", sessionId);
+  private static FormDataBodyPart getSessionIdFormDataBodyPart(final LensSessionHandle sessionId, MediaType mt) {
+    return getFormDataBodyPart("sessionid", sessionId, mt);
   }
 }

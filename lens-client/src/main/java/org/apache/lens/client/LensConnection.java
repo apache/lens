@@ -34,12 +34,14 @@ import javax.ws.rs.core.Response;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
+import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
 import org.apache.lens.client.exceptions.LensClientServerConnectionException;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -110,7 +112,8 @@ public class LensConnection {
   }
 
   public Client buildClient() {
-    ClientBuilder cb = ClientBuilder.newBuilder().register(MultiPartFeature.class);
+    ClientBuilder cb = ClientBuilder.newBuilder().register(MultiPartFeature.class).register(MoxyJsonFeature.class)
+      .register(MoxyJsonConfigurationContextResolver.class);
     Iterator<Class<?>> itr = params.getRequestFilters().iterator();
     while (itr.hasNext()) {
       cb.register(itr.next());

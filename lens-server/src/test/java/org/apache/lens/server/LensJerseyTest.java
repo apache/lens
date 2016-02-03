@@ -30,8 +30,12 @@ import java.net.URI;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.lens.api.jaxb.LensJAXBContextResolver;
+import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.LensMetricsUtil;
@@ -44,9 +48,13 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.Service;
 import org.apache.hive.service.Service.STATE;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.test.JerseyTest;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.DataProvider;
 
 import com.google.common.collect.Lists;
 
@@ -59,6 +67,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class LensJerseyTest extends JerseyTest {
 
   private int port = -1;
+  protected MediaType defaultMT = MediaType.APPLICATION_XML_TYPE;
 
   private final LogSegregationContext logSegregationContext = new MappedDiagnosticLogSegregationContext();
 
@@ -79,7 +88,7 @@ public abstract class LensJerseyTest extends JerseyTest {
     super.tearDown();
   }
   protected int getTestPort() {
-    if (!isPortAlreadyFound()) {
+    if (isPortAlreadyFound()) {
       return port;
     }
     ServerSocket socket = null;
@@ -107,6 +116,14 @@ public abstract class LensJerseyTest extends JerseyTest {
   @Override
   protected URI getBaseUri() {
     return UriBuilder.fromUri(getUri()).path("lens-server").build();
+  }
+
+  @Override
+  protected void configureClient(ClientConfig config) {
+    config.register(MultiPartFeature.class);
+    config.register(MoxyJsonFeature.class);
+    config.register(MoxyJsonConfigurationContextResolver.class);
+    config.register(LensJAXBContextResolver.class);
   }
 
   public HiveConf getServerConf() {
@@ -213,6 +230,7 @@ public abstract class LensJerseyTest extends JerseyTest {
     LensServices.get().start();
     System.out.println("Lens services restarted!");
   }
+
   public static void waitForPurge(int allowUnpurgable,
     ConcurrentLinkedQueue<QueryExecutionServiceImpl.FinishedQuery> finishedQueries) throws InterruptedException {
     List<QueryExecutionServiceImpl.FinishedQuery> unPurgable = Lists.newArrayList();
@@ -227,5 +245,22 @@ public abstract class LensJerseyTest extends JerseyTest {
     while (finishedQueries.size() > allowUnpurgable) {
       Thread.sleep(5000);
     }
+  }
+
+  @DataProvider(name = "mediaTypeData")
+  public Object[][] mediaTypeData() {
+    return new Object[][] {
+      {MediaType.APPLICATION_XML_TYPE},
+      {MediaType.APPLICATION_JSON_TYPE},
+    };
+  }
+
+  public static Entity getEntityForString(String o, MediaType mt) {
+    if (mt.equals(MediaType.APPLICATION_JSON_TYPE)) {
+      return Entity.json(o);
+    } else if (mt.equals(MediaType.APPLICATION_XML_TYPE)) {
+      return Entity.xml(o);
+    }
+    return null;
   }
 }

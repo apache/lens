@@ -19,7 +19,6 @@
 
 package org.apache.lens.server.common;
 
-import static org.apache.lens.server.common.FormDataMultiPartFactory.createFormDataMultiPartForFact;
 import static org.apache.lens.server.common.FormDataMultiPartFactory.createFormDataMultiPartForSession;
 
 import static org.testng.Assert.assertEquals;
@@ -28,9 +27,11 @@ import static org.testng.Assert.assertNotNull;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.JAXBElement;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
@@ -38,10 +39,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.ObjectFactory;
 import org.apache.lens.api.metastore.XCube;
 import org.apache.lens.api.metastore.XFactTable;
-import org.apache.lens.api.query.LensQuery;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryResult;
-import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -56,43 +54,43 @@ public class RestAPITestUtil {
     throw new UnsupportedOperationException();
   }
 
-  public static LensSessionHandle openFooBarSession(final WebTarget target) {
-    return openSession(target, "foo", "bar");
-  }
-
-  public static LensSessionHandle openSession(final WebTarget target, final String userName, final String passwd) {
-    return openSession(target, userName, passwd, new LensConf());
+  public static LensSessionHandle openFooBarSession(final WebTarget target, MediaType mt) {
+    return openSession(target, "foo", "bar", mt);
   }
 
   public static LensSessionHandle openSession(final WebTarget target, final String userName, final String passwd,
-    final LensConf conf) {
+    MediaType mt) {
+    return openSession(target, userName, passwd, new LensConf(), mt);
+  }
 
-    final FormDataMultiPart mp = createFormDataMultiPartForSession(Optional.<LensSessionHandle>absent(),
-      Optional.of(userName), Optional.of(passwd), Optional.of(conf));
+  public static LensSessionHandle openSession(final WebTarget target, final String userName, final String passwd,
+    final LensConf conf, MediaType mt) {
 
-    return target.path("session").request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+    final FormDataMultiPart mp = createFormDataMultiPartForSession(Optional.of(userName), Optional.of(passwd),
+      Optional.of(conf), mt);
+
+    return target.path("session").request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
       LensSessionHandle.class);
   }
 
   public static Response estimate(final WebTarget target, final Optional<LensSessionHandle> sessionId,
-    final Optional<String> query) {
-
-    return postQuery(target, sessionId, query, Optional.of("estimate"), Optional.<LensConf>absent());
+    final Optional<String> query, MediaType mt) {
+    return postQuery(target, sessionId, query, Optional.of("estimate"), Optional.<LensConf>absent(), mt);
   }
 
   public static Response execute(final WebTarget target, final Optional<LensSessionHandle> sessionId,
-    final Optional<String> query) {
-    return execute(target, sessionId, query, Optional.<LensConf>absent());
+    final Optional<String> query, MediaType mt) {
+    return execute(target, sessionId, query, Optional.<LensConf>absent(), mt);
   }
 
   public static Response execute(final WebTarget target, final Optional<LensSessionHandle> sessionId,
-    final Optional<String> query, final Optional<LensConf> lensConf) {
-    return postQuery(target, sessionId, query, Optional.of("execute"), lensConf);
+    final Optional<String> query, final Optional<LensConf> lensConf, MediaType mt) {
+    return postQuery(target, sessionId, query, Optional.of("execute"), lensConf, mt);
   }
 
   public static <T> T executeAndGetHandle(final WebTarget target, final Optional<LensSessionHandle> sessionId,
-    final Optional<String> query, final Optional<LensConf> lensConf) {
-    Response resp = postQuery(target, sessionId, query, Optional.of("execute"), lensConf);
+    final Optional<String> query, final Optional<LensConf> lensConf, MediaType mt) {
+    Response resp = postQuery(target, sessionId, query, Optional.of("execute"), lensConf, mt);
     assertEquals(resp.getStatus(), Response.Status.OK.getStatusCode());
     T handle = resp.readEntity(new GenericType<LensAPIResult<T>>() {}).getData();
     assertNotNull(handle);
@@ -100,116 +98,115 @@ public class RestAPITestUtil {
   }
 
   public static Response postQuery(final WebTarget target, final Optional<LensSessionHandle> sessionId,
-    final Optional<String> query, final Optional<String> operation) {
-    return postQuery(target, sessionId, query, operation, Optional.<LensConf>absent());
+                                   final Optional<String> query, final Optional<String> operation, MediaType mt) {
+    return postQuery(target, sessionId, query, operation, Optional.<LensConf>absent(), mt);
   }
 
   public static Response postQuery(final WebTarget target, final Optional<LensSessionHandle> sessionId,
-    final Optional<String> query, final Optional<String> operation, Optional<LensConf> lensConfOptional) {
+    final Optional<String> query, final Optional<String> operation, Optional<LensConf> lensConfOptional, MediaType mt) {
 
     FormDataMultiPart mp = FormDataMultiPartFactory
-      .createFormDataMultiPartForQuery(sessionId, query, operation, lensConfOptional.or(new LensConf()));
+      .createFormDataMultiPartForQuery(sessionId, query, operation, lensConfOptional.or(new LensConf()), mt);
 
-    return target.path("queryapi/queries").request(MediaType.APPLICATION_XML).post(
+    return target.path("queryapi/queries").request(mt).post(
       Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
   }
 
   public static LensQuery executeAndWaitForQueryToFinish(WebTarget target, LensSessionHandle lensSessionId,
-    String query, Optional<LensConf> conf, Optional<QueryStatus.Status> statusOptional) throws InterruptedException {
-    QueryHandle handle = executeAndGetHandle(target, Optional.of(lensSessionId), Optional.of(query), conf);
+    String query, Optional<LensConf> conf, Optional<QueryStatus.Status> statusOptional, MediaType mt)
+    throws InterruptedException {
+    QueryHandle handle = executeAndGetHandle(target, Optional.of(lensSessionId), Optional.of(query), conf, mt);
     if (statusOptional.isPresent()) {
-      return waitForQueryToFinish(target, lensSessionId, handle, statusOptional.get());
+      return waitForQueryToFinish(target, lensSessionId, handle, statusOptional.get(), mt);
     } else {
-      return waitForQueryToFinish(target, lensSessionId, handle);
+      return waitForQueryToFinish(target, lensSessionId, handle, mt);
     }
   }
 
-  public static void closeSessionFailFast(final WebTarget target, final LensSessionHandle sessionId) {
-    APIResult result = closeSession(target, sessionId);
+  public static void closeSessionFailFast(final WebTarget target, final LensSessionHandle sessionId, MediaType mt) {
+    APIResult result = closeSession(target, sessionId, mt);
     checkResponse(result);
   }
 
-  public static APIResult closeSession(final WebTarget target, final LensSessionHandle sessionId) {
-    return target.path("session").queryParam("sessionid", sessionId).request().delete(APIResult.class);
+  public static APIResult closeSession(final WebTarget target, final LensSessionHandle sessionId, MediaType mt) {
+    return target.path("session").queryParam("sessionid", sessionId).request(mt).delete(APIResult.class);
   }
 
-  public static String getCurrentDatabase(final WebTarget target, final LensSessionHandle sessionId) {
+  public static String getCurrentDatabase(final WebTarget target, final LensSessionHandle sessionId, MediaType mt) {
     WebTarget dbTarget = target.path("metastore").path("databases/current");
-    Invocation.Builder builder = dbTarget.queryParam("sessionid", sessionId).request(MediaType.APPLICATION_XML);
+    Invocation.Builder builder = dbTarget.queryParam("sessionid", sessionId).request(mt);
     String response = builder.get(String.class);
     return response;
   }
 
-  public static APIResult createCube(final WebTarget target, final LensSessionHandle sessionId, final XCube cube) {
-
-    return target.path("metastore").path("cubes").queryParam("sessionid", sessionId).request(MediaType.APPLICATION_XML)
-      .post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
+  public static APIResult createCube(final WebTarget target, final LensSessionHandle sessionId, final XCube cube,
+    MediaType mt) {
+    return target.path("metastore").path("cubes").queryParam("sessionid", sessionId).request(mt)
+      .post(Entity.entity(
+        new GenericEntity<JAXBElement<XCube>>(cubeObjectFactory.createXCube(cube)){}, mt), APIResult.class);
   }
 
-  public static void createCubeFailFast(final WebTarget target, final LensSessionHandle sessionId, final XCube cube) {
-    APIResult result = createCube(target, sessionId, cube);
+  public static void createCubeFailFast(final WebTarget target, final LensSessionHandle sessionId, final XCube cube,
+    MediaType mt) {
+    APIResult result = createCube(target, sessionId, cube, mt);
     checkResponse(result);
   }
 
-  public static APIResult createFact(final WebTarget target, final LensSessionHandle sessionId,
-    final XFactTable factTable) {
-
-    FormDataMultiPart mp = createFormDataMultiPartForFact(sessionId, factTable);
-    return target.path("metastore").path("facts").queryParam("sessionid", sessionId).request(MediaType.APPLICATION_XML)
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
-  }
-
   public static void createFactFailFast(final WebTarget target, final LensSessionHandle sessionId,
-    final XFactTable factTable) {
+    final XFactTable factTable, MediaType mt) {
 
-    APIResult result = createFact(target, sessionId, factTable);
+    APIResult result = target.path("metastore").path("facts").queryParam("sessionid", sessionId)
+      .request(mt).post(Entity.entity(
+          new GenericEntity<JAXBElement<XFactTable>>(cubeObjectFactory.createXFactTable(factTable)) {
+          }, mt),
+        APIResult.class);
     checkResponse(result);
   }
 
   public static APIResult setCurrentDatabase(final WebTarget target, final LensSessionHandle sessionId,
-    final String dbName) {
+    final String dbName, MediaType mt) {
 
     WebTarget dbTarget = target.path("metastore").path("databases/current");
-    return dbTarget.queryParam("sessionid", sessionId).request(MediaType.APPLICATION_XML)
+    return dbTarget.queryParam("sessionid", sessionId).request(mt)
       .put(Entity.xml(dbName),
         APIResult.class);
   }
 
   public static void setCurrentDatabaseFailFast(final WebTarget target, final LensSessionHandle sessionId,
-    final String dbName) {
+    final String dbName, MediaType mt) {
 
-    APIResult result = setCurrentDatabase(target, sessionId, dbName);
+    APIResult result = setCurrentDatabase(target, sessionId, dbName, mt);
     checkResponse(result);
   }
 
   public static APIResult createDatabase(final WebTarget target, final LensSessionHandle sessionId,
-    final String dbName) {
+    final String dbName, MediaType mt) {
 
     WebTarget dbTarget = target.path("metastore").path("databases");
-    return dbTarget.queryParam("sessionid", sessionId).request(MediaType.APPLICATION_XML)
+    return dbTarget.queryParam("sessionid", sessionId).request(mt)
       .post(Entity.xml(dbName), APIResult.class);
   }
 
   public static void createDatabaseFailFast(final WebTarget target, final LensSessionHandle sessionId,
-    final String dbName) {
+    final String dbName, MediaType mt) {
 
-    APIResult result = createDatabase(target, sessionId, dbName);
+    APIResult result = createDatabase(target, sessionId, dbName, mt);
     checkResponse(result);
   }
 
   public static void createAndSetCurrentDbFailFast(final WebTarget target, final LensSessionHandle sessionId,
-    final String dbName) {
+    final String dbName, MediaType mt) {
 
-    createDatabaseFailFast(target, sessionId, dbName);
-    setCurrentDatabaseFailFast(target, sessionId, dbName);
+    createDatabaseFailFast(target, sessionId, dbName, mt);
+    setCurrentDatabaseFailFast(target, sessionId, dbName, mt);
   }
 
   public static APIResult dropDatabaseFailFast(final WebTarget target, final LensSessionHandle sessionId,
-    String dbName) {
+    String dbName, MediaType mt) {
 
     WebTarget dbTarget = target.path("metastore").path("databases").path(dbName);
     return dbTarget.queryParam("cascade", "true")
-      .queryParam("sessionid", sessionId).request(MediaType.APPLICATION_XML).delete(APIResult.class);
+      .queryParam("sessionid", sessionId).request(mt).delete(APIResult.class);
   }
 
   private static void checkResponse(final APIResult result) {
@@ -219,32 +216,38 @@ public class RestAPITestUtil {
   }
 
   public static LensQuery waitForQueryToFinish(final WebTarget target, final LensSessionHandle lensSessionHandle,
-    final QueryHandle handle) throws InterruptedException {
-    LensQuery ctx = getLensQuery(target, lensSessionHandle, handle);
+    final QueryHandle handle, MediaType mt) throws InterruptedException {
+    LensQuery ctx = getLensQuery(target, lensSessionHandle, handle, mt);
     while (!ctx.getStatus().finished()) {
-      ctx = getLensQuery(target, lensSessionHandle, handle);
+      ctx = getLensQuery(target, lensSessionHandle, handle, mt);
       Thread.sleep(1000);
     }
     return ctx;
   }
 
   public static LensQuery waitForQueryToFinish(final WebTarget target, final LensSessionHandle lensSessionHandle,
-    final QueryHandle handle, QueryStatus.Status status) throws InterruptedException {
-    LensQuery lensQuery = waitForQueryToFinish(target, lensSessionHandle, handle);
+    final QueryHandle handle, QueryStatus.Status status, MediaType mt) throws InterruptedException {
+    LensQuery lensQuery = waitForQueryToFinish(target, lensSessionHandle, handle, mt);
     assertEquals(lensQuery.getStatus().getStatus(), status);
     return lensQuery;
   }
 
   public static LensQuery getLensQuery(final WebTarget target, final LensSessionHandle lensSessionHandle,
-    final QueryHandle handle) {
-    return target.path("queryapi/queries").path(handle.toString()).queryParam("sessionid", lensSessionHandle).request()
-      .get(LensQuery.class);
+    final QueryHandle handle, MediaType mt) {
+    return target.path("queryapi/queries").path(handle.toString()).queryParam("sessionid", lensSessionHandle)
+      .request(mt).get(LensQuery.class);
   }
 
-  public static QueryResult getLensQueryResult(final WebTarget target, final LensSessionHandle lensSessionHandle,
-    final QueryHandle handle) {
+  public static String getLensQueryResultAsString(final WebTarget target, final LensSessionHandle lensSessionHandle,
+    final QueryHandle handle, MediaType mt) {
     return target.path("queryapi/queries").path(handle.toString()).path("resultset")
-      .queryParam("sessionid", lensSessionHandle).request().get(QueryResult.class);
+      .queryParam("sessionid", lensSessionHandle).request(mt).get(String.class);
+  }
+
+  public static PersistentQueryResult getLensQueryResult(final WebTarget target,
+    final LensSessionHandle lensSessionHandle, final QueryHandle handle, MediaType mt) {
+    return target.path("queryapi/queries").path(handle.toString()).path("resultset")
+      .queryParam("sessionid", lensSessionHandle).request(mt).get(PersistentQueryResult.class);
   }
 
   public static Response getLensQueryHttpResult(final WebTarget target, final LensSessionHandle lensSessionHandle,

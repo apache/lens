@@ -25,9 +25,9 @@ import static org.testng.Assert.*;
 import java.util.*;
 
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensJerseyTest;
@@ -47,8 +47,6 @@ import org.apache.lens.server.common.TestResourceFile;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.testng.annotations.AfterMethod;
@@ -150,17 +148,6 @@ public class TestQueryConstraints extends LensJerseyTest {
     return new TestQueryService.QueryServiceTestApp();
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#configureClient(org.glassfish.jersey.client.ClientConfig)
-   */
-  @Override
-  protected void configureClient(ClientConfig config) {
-    config.register(MultiPartFeature.class);
-    config.register(LensJAXBContextResolver.class);
-  }
-
   /** The test table. */
   public static final String TEST_TABLE = "TEST_TABLE";
 
@@ -171,7 +158,7 @@ public class TestQueryConstraints extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    */
   private void createTable(String tblName) throws InterruptedException {
-    LensServerTestUtil.createTable(tblName, target(), lensSessionId);
+    LensServerTestUtil.createTable(tblName, target(), lensSessionId, defaultMT);
   }
 
   /**
@@ -182,7 +169,7 @@ public class TestQueryConstraints extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    */
   private void loadData(String tblName, final String testDataFile) throws InterruptedException {
-    LensServerTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
+    LensServerTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId, defaultMT);
   }
 
   /**
@@ -192,26 +179,26 @@ public class TestQueryConstraints extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    */
   private void dropTable(String tblName) throws InterruptedException {
-    LensServerTestUtil.dropTable(tblName, target(), lensSessionId);
+    LensServerTestUtil.dropTable(tblName, target(), lensSessionId, defaultMT);
   }
 
-  @Test
-  public void testThrottling() throws InterruptedException {
+  @Test(dataProvider = "mediaTypeData")
+  public void testThrottling(MediaType mt) throws InterruptedException {
     List<QueryHandle> handles = Lists.newArrayList();
     for (int j = 0; j < 5; j++) {
       for (int i = 0; i < 10; i++) {
-        handles.add(launchQuery());
+        handles.add(launchQuery(mt));
         assertValidity();
       }
       // No harm in sleeping, the queries will anyway take time.
       Thread.sleep(1000);
     }
     for (QueryHandle handle : handles) {
-      RestAPITestUtil.waitForQueryToFinish(target(), lensSessionId, handle);
+      RestAPITestUtil.waitForQueryToFinish(target(), lensSessionId, handle, mt);
       assertValidity();
     }
     for (QueryHandle handle : handles) {
-      RestAPITestUtil.getLensQueryResult(target(), lensSessionId, handle);
+      RestAPITestUtil.getLensQueryResultAsString(target(), lensSessionId, handle, mt);
       assertValidity();
     }
   }
@@ -222,10 +209,10 @@ public class TestQueryConstraints extends LensJerseyTest {
       + queryService.getLaunchedQueries());
   }
 
-  private QueryHandle launchQuery() {
+  private QueryHandle launchQuery(MediaType mt) {
     return RestAPITestUtil.executeAndGetHandle(target(), Optional.of(lensSessionId),
       Optional.of("select ID from " + TEST_TABLE),
-      Optional.of(LensServerAPITestUtil.getLensConf(QUERY_METRIC_UNIQUE_ID_CONF_KEY, UUID.randomUUID())));
+      Optional.of(LensServerAPITestUtil.getLensConf(QUERY_METRIC_UNIQUE_ID_CONF_KEY, UUID.randomUUID())), mt);
   }
 
   @AfterMethod

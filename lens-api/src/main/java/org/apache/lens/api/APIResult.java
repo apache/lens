@@ -28,21 +28,24 @@ import javax.xml.bind.annotation.*;
 import org.apache.lens.api.jaxb.LensJAXBContext;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED message- detailed message.
  */
-@XmlRootElement(name = "result")
+@XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
+/*
+ * Instantiates a new API result with values
+ */
+@AllArgsConstructor
 /**
  * Instantiates a new API result.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class APIResult {
-
-  private static final APIResult SUCCESS = new APIResult(Status.SUCCEEDED, "");
   /**
    * The status.
    */
@@ -73,6 +76,8 @@ public class APIResult {
   /**
    * API Result status.
    */
+  @XmlType
+  @XmlEnum
   public enum Status {
 
     /**
@@ -89,23 +94,6 @@ public class APIResult {
     FAILED
   }
 
-  /**
-   * Instantiates a new API result.
-   *
-   * @param status  the status
-   * @param message the message
-   */
-  public APIResult(Status status, String message) {
-    super();
-    this.status = status;
-    this.message = message;
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
     try {
@@ -117,6 +105,7 @@ public class APIResult {
       return e.getMessage();
     }
   }
+  private static final APIResult SUCCESS = new APIResult(Status.SUCCEEDED, "");
 
   public static APIResult partial(int actual, int expected) {
     return new APIResult(Status.PARTIAL, actual + " out of " + expected);

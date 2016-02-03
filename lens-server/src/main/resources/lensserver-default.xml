@@ -455,7 +455,7 @@
 
   <property>
     <name>lens.server.ws.featurenames</name>
-    <value>multipart</value>
+    <value>multipart,moxyjson,moxyjsonconfigresovler</value>
     <description>These JAX-RS Feature(s) would be started in the specified order when lens-server starts up
     </description>
   </property>
@@ -466,6 +466,16 @@
     <description>Implementation class for query scheduler resource</description>
   </property>
 
+  <property>
+    <name>lens.server.moxyjson.ws.feature.impl</name>
+    <value>org.glassfish.jersey.moxy.json.MoxyJsonFeature</value>
+    <description>Enable Moxy json feature </description>
+  </property>
+  <property>
+    <name>lens.server.moxyjsonconfigresovler.ws.feature.impl</name>
+    <value>org.apache.lens.api.util.MoxyJsonConfigurationContextResolver</value>
+    <description>Moxy json configuration resolver</description>
+  </property>
   <property>
     <name>lens.server.ws.filternames</name>
     <value>authentication,consistentState,serverMode</value>

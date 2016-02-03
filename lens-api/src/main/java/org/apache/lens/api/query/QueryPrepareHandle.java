@@ -25,6 +25,9 @@ import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import org.apache.lens.api.UUIDAdapter;
 
 import lombok.*;
 
@@ -56,6 +59,7 @@ public class QueryPrepareHandle extends QuerySubmitResult {
    */
   @XmlElement
   @Getter
+  @XmlJavaTypeAdapter(UUIDAdapter.class)
   private UUID prepareHandleId;
 
   /**

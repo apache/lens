@@ -42,8 +42,6 @@ import org.apache.lens.server.api.query.save.SavedQueryService;
 import org.apache.lens.server.error.LensExceptionMapper;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -110,12 +108,6 @@ public class TestSavedQueryService extends LensJerseyTest {
   @Override
   protected Application configure() {
     return new SavedQueryTestApp();
-  }
-
-  @Override
-  protected void configureClient(ClientConfig config) {
-    config.register(MultiPartFeature.class);
-    config.register(LensJAXBContextResolver.class);
   }
 
   @Test

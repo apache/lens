@@ -22,10 +22,10 @@
 <x_dimension_table dimension_name="sample_db_dim" table_name="dim_table3" weight="100.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
-    <column comment="ID" name="id" type="INT"/>
-    <column comment="name" name="name" type="STRING"/>
-    <column comment="more details" name="detail" type="STRING"/>
-    <column comment="d2 ID" name="d2id" type="INT"/>
+    <column comment="ID" name="id" _type="INT"/>
+    <column comment="name" name="name" _type="STRING"/>
+    <column comment="more details" name="detail" _type="STRING"/>
+    <column comment="d2 ID" name="d2id" _type="INT"/>
   </columns>
   <properties>
     <property name="dim3.prop" value="d1"/>

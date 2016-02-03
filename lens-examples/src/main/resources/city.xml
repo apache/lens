@@ -22,10 +22,10 @@
 <x_dimension name="city" xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <attributes>
-    <dim_attribute name="id" type="INT"/>
-    <dim_attribute name="name" type="STRING"/>
-    <dim_attribute name="POI" type="ARRAY&lt;STRING&gt;" description="Point of interests"/>
-    <dim_attribute name="population" type="BIGINT" />
+    <dim_attribute name="id" _type="INT"/>
+    <dim_attribute name="name" _type="STRING"/>
+    <dim_attribute name="POI" _type="ARRAY&lt;STRING&gt;" description="Point of interests"/>
+    <dim_attribute name="population" _type="BIGINT" />
   </attributes>
   <properties>
     <property name="dimension.city.timed.dimension" value="dt"/>

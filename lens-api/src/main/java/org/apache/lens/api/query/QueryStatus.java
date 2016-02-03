@@ -24,7 +24,9 @@ package org.apache.lens.api.query;
 import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.apache.lens.api.result.LensErrorTO;
 
@@ -67,6 +69,8 @@ public class QueryStatus implements Serializable {
   /**
    * The Enum Status.
    */
+  @XmlType
+  @XmlEnum
   public enum Status {
 
     /**

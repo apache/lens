@@ -23,7 +23,6 @@ import static org.testng.Assert.assertEquals;
 import java.util.List;
 
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.apache.lens.server.api.metrics.MetricsService;
@@ -39,17 +38,7 @@ import com.codahale.metrics.ScheduledReporter;
  * The Class TestLensApplication.
  */
 @Test(alwaysRun = true, groups = "unit-test")
-public class TestLensApplication extends LensJerseyTest {
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#configure()
-   */
-  @Override
-  protected Application configure() {
-    return new LensApplication();
-  }
+public class TestLensApplication extends LensAllApplicationJerseyTest {
 
   /**
    * Setup.

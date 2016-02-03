@@ -20,23 +20,17 @@ package org.apache.lens.server.healthcheck;
 
 import static org.testng.Assert.*;
 
-import javax.ws.rs.core.Application;
-
 import org.apache.lens.server.EventServiceImpl;
-import org.apache.lens.server.LensJerseyTest;
+import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensService;
 import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.metastore.CubeMetastoreServiceImpl;
-import org.apache.lens.server.metastore.MetastoreApp;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.quota.QuotaServiceImpl;
 import org.apache.lens.server.scheduler.SchedulerServiceImpl;
 import org.apache.lens.server.session.HiveSessionService;
-
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -45,7 +39,7 @@ import org.testng.annotations.Test;
 import com.codahale.metrics.health.HealthCheck;
 
 @Test(groups = "unit-test")
-public class TestHealthChecks extends LensJerseyTest {
+public class TestHealthChecks extends LensAllApplicationJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
@@ -54,16 +48,6 @@ public class TestHealthChecks extends LensJerseyTest {
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
-  }
-
-  @Override
-  protected Application configure() {
-    return new MetastoreApp();
-  }
-
-  @Override
-  protected void configureClient(ClientConfig config) {
-    config.register(MultiPartFeature.class);
   }
 
   @Test

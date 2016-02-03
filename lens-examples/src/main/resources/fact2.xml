@@ -22,11 +22,11 @@
 <x_fact_table cube_name="sample_cube" name="fact2" weight="200.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
-    <column comment="" name="dim1" type="INT"/>
-    <column comment="" name="dim3" type="INT"/>
-    <column comment="" name="measure2" type="INT"/>
-    <column comment="" name="measure3" type="FLOAT"/>
-    <column comment="" name="measure4" type="FLOAT"/>
+    <column comment="" name="dim1" _type="INT"/>
+    <column comment="" name="dim3" _type="INT"/>
+    <column comment="" name="measure2" _type="INT"/>
+    <column comment="" name="measure3" _type="FLOAT"/>
+    <column comment="" name="measure4" _type="FLOAT"/>
   </columns>
   <properties>
     <property name="cube.fact.is.aggregated" value="true"/>
@@ -40,7 +40,7 @@
       <storage_name>local</storage_name>
       <table_desc external="true" field_delimiter="," table_location="/tmp/examples/fact2_local">
         <part_cols>
-          <column comment="Time column" name="dt" type="STRING"/>
+          <column comment="Time column" name="dt" _type="STRING"/>
         </part_cols>
         <time_part_cols>dt</time_part_cols>
       </table_desc>

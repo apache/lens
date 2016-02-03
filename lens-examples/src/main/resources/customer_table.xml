@@ -22,12 +22,12 @@
 <x_dimension_table dimension_name="customer" table_name="customer_table" weight="100.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
-    <column comment="ID" name="id" type="INT"/>
-    <column comment="name" name="name" type="STRING"/>
-    <column comment="" name="gender" type="STRING"/>
-    <column comment="" name="age" type="INT"/>
-    <column comment="" name="city_id" type="INT"/>
-    <column comment="" name="customer_credit_status" type="STRING"/>
+    <column comment="ID" name="id" _type="INT"/>
+    <column comment="name" name="name" _type="STRING"/>
+    <column comment="" name="gender" _type="STRING"/>
+    <column comment="" name="age" _type="INT"/>
+    <column comment="" name="city_id" _type="INT"/>
+    <column comment="" name="customer_credit_status" _type="STRING"/>
   </columns>
   <properties>
     <property name="dim4.prop" value="d1"/>
@@ -40,7 +40,7 @@
       <storage_name>local</storage_name>
       <table_desc external="true" field_delimiter="," table_location="/tmp/examples/customer">
         <part_cols>
-          <column comment="Time column" name="dt" type="STRING"/>
+          <column comment="Time column" name="dt" _type="STRING"/>
         </part_cols>
         <time_part_cols>dt</time_part_cols>
       </table_desc>

@@ -22,13 +22,13 @@
 <x_dimension_table dimension_name="product" table_name="product_db_table" weight="100.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
-    <column comment="ID" name="id" type="INT"/>
-    <column comment="SKU_number" name="SKU_number" type="INT"/>
-    <column comment="" name="description" type="STRING"/>
-    <column comment="" name="color" type="STRING"/>
-    <column comment="Category" name="category" type="STRING"/>
-    <column comment="" name="weight" type="FLOAT"/>
-    <column comment="" name="manufacturer" type="STRING"/>
+    <column comment="ID" name="id" _type="INT"/>
+    <column comment="SKU_number" name="SKU_number" _type="INT"/>
+    <column comment="" name="description" _type="STRING"/>
+    <column comment="" name="color" _type="STRING"/>
+    <column comment="Category" name="category" _type="STRING"/>
+    <column comment="" name="weight" _type="FLOAT"/>
+    <column comment="" name="manufacturer" _type="STRING"/>
   </columns>
   <properties>
     <property name="dim4.prop" value="d1"/>
