@@ -86,14 +86,4 @@ public class QueryHandle extends QuerySubmitResult implements Serializable {
     }
     return handleId.toString();
   }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return getHandleIdString();
-  }
 }

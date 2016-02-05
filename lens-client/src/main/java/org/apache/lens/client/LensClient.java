@@ -49,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LensClient {
   public static final String CLILOGGER =  "cliLogger";
   private static final String DEFAULT_PASSWORD = "";
+  @Getter
   private final LensClientConfig conf;
   @Getter
   private final LensMetadataClient mc;

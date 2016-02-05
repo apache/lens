@@ -21,12 +21,16 @@
  */
 package org.apache.lens.api.jaxb;
 
-import java.net.URL;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.util.ValidationEventCollector;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
@@ -38,6 +42,18 @@ import lombok.extern.slf4j.Slf4j;
 public class LensJAXBContext extends JAXBContext {
   private final JAXBContext jaxbContext;
   private final boolean hasTopLevelClass;
+  private static final LensJAXBContext INSTANCE;
+  private static final Unmarshaller UNMARSHALLER;
+
+  static {
+    try {
+      INSTANCE = new LensJAXBContext(org.apache.lens.api.metastore.ObjectFactory.class,
+        org.apache.lens.api.scheduler.ObjectFactory.class);
+      UNMARSHALLER = INSTANCE.createUnmarshaller();
+    } catch (JAXBException e) {
+      throw new RuntimeException("Couldn't create instance of lens jaxb context", e);
+    }
+  }
 
   public LensJAXBContext(Class... classesToBeBoundArray) throws JAXBException {
     jaxbContext = JAXBContext.newInstance(classesToBeBoundArray);
@@ -55,11 +71,12 @@ public class LensJAXBContext extends JAXBContext {
   public Unmarshaller createUnmarshaller() throws JAXBException {
     Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
     if (!hasTopLevelClass) {
-      ClassLoader classLoader = LensJAXBContext.class.getClassLoader();
       SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
       try {
-        URL resource = classLoader.getResource("cube-0.1.xsd");
-        Schema schema = sf.newSchema(resource);
+        Schema schema = sf.newSchema(new Source[]{
+          new StreamSource(getClass().getResourceAsStream("/scheduler-job-0.1.xsd")),
+          new StreamSource(getClass().getResourceAsStream("/cube-0.1.xsd")),
+        });
         unmarshaller.setSchema(schema);
       } catch (SAXException e) {
         throw new JAXBException(e);
@@ -86,6 +103,28 @@ public class LensJAXBContext extends JAXBContext {
         throw new LensJAXBValidationException(event);
       }
       return true;
+    }
+  }
+
+  public LensJAXBContext getInstance() {
+    return INSTANCE;
+  }
+
+  public Unmarshaller getUnmarshaller() {
+    return UNMARSHALLER;
+  }
+
+  public static <T> T unmarshallFromFile(String filename) throws JAXBException, IOException {
+    File file = new File(filename);
+    if (file.exists()) {
+      return ((JAXBElement<T>) UNMARSHALLER.unmarshal(file)).getValue();
+    } else {
+      // load from classpath
+      InputStream stream = LensJAXBContext.class.getResourceAsStream(filename);
+      if (stream == null) {
+        throw new IOException("File not found:" + filename);
+      }
+      return ((JAXBElement<T>) UNMARSHALLER.unmarshal(stream)).getValue();
     }
   }
 }

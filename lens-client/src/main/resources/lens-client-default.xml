@@ -51,4 +51,9 @@
     <value>10</value>
     <description>Interval at which query progress will be polled. Interval has to be given in milliseconds</description>
   </property>
+  <property>
+    <name>lens.cli.json.pretty</name>
+    <value>false</value>
+    <description>Should CLI try to prettify the JSON of an object before priting.</description>
+  </property>
 </configuration>

@@ -11,7 +11,7 @@
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * "AS IS"  BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.apache.lens.api.ToYAMLString;
 import org.apache.lens.api.result.LensErrorTO;
 
 import lombok.*;
@@ -59,7 +60,7 @@ import lombok.*;
  * Instantiates a new query status.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class QueryStatus implements Serializable {
+public class QueryStatus extends ToYAMLString implements Serializable {
 
   /**
    * The Constant serialVersionUID.
@@ -170,43 +171,6 @@ public class QueryStatus implements Serializable {
 
   @XmlElement
   private LensErrorTO lensErrorTO;
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-
-    StringBuilder str = new StringBuilder(" Status : ").append(status.toString()).append("\n");
-    if (statusMessage != null) {
-      str.append(" Message : ").append(statusMessage).append("\n");
-    }
-
-    str.append(" Progress : ").append(progress).append("\n");
-    if (progressMessage != null) {
-      str.append(" Progress Message : ").append(progressMessage).append("\n");
-    }
-
-    if (queueNumber != null) {
-      str.append(" Position in queue : ").append(queueNumber).append("\n");
-    }
-
-    if (errorMessage != null) {
-      str.append(" Error : ").append(errorMessage).append("\n");
-    }
-
-    if (status.equals(Status.SUCCESSFUL)) {
-      if (isResultSetAvailable) {
-        str.append(" Result Available");
-      } else {
-        str.append(" Result Not Available");
-      }
-    }
-
-    return str.toString();
-  }
 
   public boolean finished() {
     return status.equals(Status.SUCCESSFUL) || status.equals(Status.FAILED) || status.equals(Status.CANCELED);

@@ -20,11 +20,13 @@ package org.apache.lens.api.query;
 
 import org.apache.lens.api.scheduler.XJob;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 /**
  * POJO to represent the <code>job</code> table in the database.
  */
 @Data
+@AllArgsConstructor
 public class SchedulerJobInfo {
 
   /**

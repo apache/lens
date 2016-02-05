@@ -72,16 +72,6 @@ public class QueryPrepareHandle extends QuerySubmitResult {
     return new QueryPrepareHandle(UUID.fromString(handle));
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return getQueryHandleString();
-  }
-
   public String getQueryHandleString() {
     return prepareHandleId.toString();
   }

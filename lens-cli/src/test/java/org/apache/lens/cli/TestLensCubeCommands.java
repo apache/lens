@@ -173,9 +173,8 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
       String desc = command.describeCube("sample_cube");
       LensClient client = command.getClient();
       LOG.debug(desc);
-      String propString = "name : sample_cube.prop  value : sample";
-      String propString1 = "name : sample_cube.prop1  value : sample1";
-
+      String propString = "sample_cube.prop: sample";
+      String propString1 = "sample_cube.prop1: sample1";
       assertTrue(desc.contains(propString));
 
       command.updateCube("sample_cube", new File("target/sample_cube1.xml"));

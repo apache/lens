@@ -48,7 +48,6 @@ import lombok.*;
  * Instantiates a new query cost.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString
 public class QueryCostTO extends QuerySubmitResult implements Serializable {
 
   /**

@@ -42,7 +42,7 @@ import lombok.*;
  * Instantiates a new date.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class DateTime {
+public class DateTime extends ToYAMLString {
 
   /**
    * The Date.

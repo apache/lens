@@ -218,7 +218,7 @@ public class LensStatement {
         query.getDriverOpHandle());
     }
     while (!query.getStatus().finished()
-      && !(query.getStatus().toString().equals(Status.CLOSED.toString()))) {
+      && !(query.getStatus().getStatus().equals(Status.CLOSED))) {
       query = getQuery(handle);
       LensClient.getCliLooger().info("Query Status:{} ", query.getStatus());
       try {

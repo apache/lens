@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.lens.api.LensConf;
+import org.apache.lens.api.ToYAMLString;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -62,7 +63,7 @@ import lombok.NoArgsConstructor;
  * Instantiates a new lens prepared query.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LensPreparedQuery {
+public class LensPreparedQuery extends ToYAMLString {
 
   /**
    * The prepare handle.
@@ -112,4 +113,5 @@ public class LensPreparedQuery {
   @XmlElement
   @Getter
   private LensConf conf;
+
 }

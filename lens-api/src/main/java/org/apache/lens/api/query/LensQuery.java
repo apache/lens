@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.Priority;
+import org.apache.lens.api.ToYAMLString;
 
 import lombok.*;
 
@@ -79,7 +80,7 @@ import lombok.*;
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode
-public class LensQuery {
+public class LensQuery extends ToYAMLString {
 
   /**
    * The query handle.

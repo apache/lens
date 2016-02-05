@@ -19,7 +19,6 @@
 package org.apache.lens.cli.commands;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
@@ -73,11 +72,7 @@ public class LensDimensionCommands extends ConceptualTableCrudCommand<XDimension
   @CliCommand(value = "describe dimension", help = "describe dimension <dimension_name>")
   public String describeDimension(
     @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension_name>") String name) {
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getDimension(name)));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    return formatJson(getClient().getDimension(name));
   }
 
   /**

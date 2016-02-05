@@ -24,16 +24,18 @@ Lens client configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|lens.client.dbname|default|Default lens database|
+|1|lens.cli.json.pretty|false|Should CLI try to prettify the JSON of an object before priting.|
 *--+--+---+--+
-|2|lens.client.query.poll.interval|10|Interval at which query progress will be polled. Interval has to be given in milliseconds|
+|2|lens.client.dbname|default|Default lens database|
 *--+--+---+--+
-|3|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
+|3|lens.client.query.poll.interval|10|Interval at which query progress will be polled. Interval has to be given in milliseconds|
 *--+--+---+--+
-|4|lens.client.user.name|anonymous|Lens client user name|
+|4|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
 *--+--+---+--+
-|5|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+|5|lens.client.user.name|anonymous|Lens client user name|
 *--+--+---+--+
-|6|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
+|6|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+*--+--+---+--+
+|7|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
 *--+--+---+--+
 The configuration parameters and their default values

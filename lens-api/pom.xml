@@ -93,14 +93,21 @@
             <arg>-extension</arg>
             <arg>-Xinheritance</arg>
             <arg>-XtoString</arg>
+            <arg>-XtoString-toStringStrategyClass=org.apache.lens.api.jaxb.YAMLToStringStrategy</arg>
             <arg>-Xequals</arg>
             <arg>-XhashCode</arg>
+            <arg>-Xfluent-api</arg>
           </args>
           <plugins>
             <plugin>
               <groupId>org.jvnet.jaxb2_commons</groupId>
               <artifactId>jaxb2-basics</artifactId>
               <version>${jaxb2.basics.plugin.version}</version>
+            </plugin>
+            <plugin>
+              <groupId>org.jvnet.jaxb2_commons</groupId>
+              <artifactId>jaxb2-fluent-api</artifactId>
+              <version>${jaxb2.fluent.plugin.version}</version>
             </plugin>
           </plugins>
         </configuration>

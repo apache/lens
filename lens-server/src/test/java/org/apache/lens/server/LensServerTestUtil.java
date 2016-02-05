@@ -100,7 +100,8 @@ public final class LensServerTestUtil {
       .get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.finished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt).get(LensQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+        .get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -142,7 +143,8 @@ public final class LensServerTestUtil {
         .get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.finished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt).get(LensQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+        .get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -211,7 +213,8 @@ public final class LensServerTestUtil {
       .get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.finished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt).get(LensQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+        .get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }

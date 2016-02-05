@@ -19,7 +19,6 @@
 package org.apache.lens.cli.commands;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
@@ -44,11 +43,7 @@ public abstract class LensCRUDCommand<T> extends BaseLensCommand {
   }
 
   public String describe(String name) {
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(doRead(name)));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    return formatJson(doRead(name));
   }
 
   public String update(String entity, File path) {

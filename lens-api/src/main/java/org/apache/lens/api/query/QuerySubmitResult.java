@@ -24,6 +24,7 @@ package org.apache.lens.api.query;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
+import org.apache.lens.api.ToYAMLString;
 import org.apache.lens.api.result.QueryCostTO;
 
 /**
@@ -32,6 +33,6 @@ import org.apache.lens.api.result.QueryCostTO;
 @XmlRootElement
 @XmlSeeAlso({QueryHandle.class, QueryPrepareHandle.class, QueryHandleWithResultSet.class,
   QueryPlan.class, QueryCostTO.class})
-public abstract class QuerySubmitResult {
+public abstract class QuerySubmitResult extends ToYAMLString {
 
 }

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<lensQuery>
+  <queryHandle>
+    <handleId>28be0bb7-f675-4065-9de4-0c0be6e39068</handleId>
+  </queryHandle>
+  <userQuery>cube select blah blah</userQuery>
+  <submittedUser>user</submittedUser>
+  <priority>HIGH</priority>
+  <isPersistent>true</isPersistent>
+  <selectedDriverName>selected-driver</selectedDriverName>
+  <driverQuery>select blah from driver table</driverQuery>
+  <status>
+    <progress>10.0</progress>
+    <status>RUNNING</status>
+    <statusMessage>query running</statusMessage>
+    <isResultSetAvailable>false</isResultSetAvailable>
+    <lensErrorTO>
+      <code>9999</code>
+      <message>error message</message>
+      <stackTrace>random stack trace</stackTrace>
+    </lensErrorTO>
+    <errorMessage>error message</errorMessage>
+    <progressMessage>progress message</progressMessage>
+    <queueNumber>11</queueNumber>
+  </status>
+  <resultSetPath>/path/to/result</resultSetPath>
+  <driverOpHandle>a6f6fb20-cd1b-44dc-819c-36eb8c99e72c</driverOpHandle>
+  <queryConf>
+    <properties>
+      <entry>
+        <key>key2</key>
+        <value>value2</value>
+      </entry>
+      <entry>
+        <key>key1</key>
+        <value>value1</value>
+      </entry>
+    </properties>
+  </queryConf>
+  <submissionTime>1454420854897</submissionTime>
+  <launchTime>1454420854897</launchTime>
+  <driverStartTime>1454420854897</driverStartTime>
+  <driverFinishTime>1454420854897</driverFinishTime>
+  <finishTime>1454420854897</finishTime>
+  <closedTime>1454420854897</closedTime>
+  <queryName>query name</queryName>
+</lensQuery>

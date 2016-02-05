@@ -24,21 +24,22 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.apache.lens.api.ToXMLString;
 import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientSingletonWrapper;
 
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.impl.Indenter;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
+import org.jvnet.jaxb2_commons.lang.ToString;
 import org.springframework.shell.core.ExecutionProcessor;
 import org.springframework.shell.event.ParseResult;
 
 import com.google.common.collect.Sets;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -46,6 +47,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class BaseLensCommand implements ExecutionProcessor {
+  public static final String LENS_CLI_PREFIX = "lens.cli.";
+  public static final String JSON_PRETTY_SUFFIX = "json.pretty";
 
   /** The mapper. */
   protected ObjectMapper mapper;
@@ -100,11 +103,10 @@ public class BaseLensCommand implements ExecutionProcessor {
     pp = new DefaultPrettyPrinter();
     pp.indentObjectsWith(new Indenter() {
       @Override
-      public void writeIndentation(JsonGenerator jg, int level) throws IOException, JsonGenerationException {
-        if (level > 2) {
-          jg.writeRaw("  ");
-        } else {
-          jg.writeRaw("\n");
+      public void writeIndentation(JsonGenerator jg, int level) throws IOException {
+        jg.writeRaw("\n");
+        for (int i = 0; i < level; i++) {
+          jg.writeRaw(" ");
         }
       }
 
@@ -134,12 +136,25 @@ public class BaseLensCommand implements ExecutionProcessor {
   /**
    * Pretty printing JSON object into CLI String.
    *
-   * @param json to be formatted
+   * @param data to be formatted
    * @return cli formatted string
    */
-  public String formatJson(String json) {
-    return json.replaceAll("\\[ \\{", "\n\n ").replaceAll("\\{", "").replaceAll("}", "").replaceAll("\\[", "")
-      .replaceAll("]", "\n").replaceAll(",", "").replaceAll("\"", "").replaceAll("\n\n", "\n");
+  public String formatJson(Object data) {
+    try {
+      if (data instanceof ToString || data instanceof ToXMLString) {
+        return data.toString();
+      }
+      String json = mapper.writer(pp).writeValueAsString(data);
+      JsonNode tree = mapper.valueToTree(data);
+      System.out.println(tree);
+      if (getClient().getConf().getBoolean(LENS_CLI_PREFIX + JSON_PRETTY_SUFFIX, false)) {
+        return json;
+      }
+      return json.replaceAll("\\[ \\{", "\n\n ").replaceAll("\\{", "").replaceAll("}", "").replaceAll("\\[", "")
+        .replaceAll("]", "\n").replaceAll(",", "").replaceAll("\"", "").replaceAll("\n\n", "\n");
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   /**

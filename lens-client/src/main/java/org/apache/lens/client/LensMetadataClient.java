@@ -18,9 +18,7 @@
  */
 package org.apache.lens.client;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
@@ -45,19 +43,6 @@ public class LensMetadataClient {
   private final LensConnection connection;
   private final LensConnectionParams params;
   private final ObjectFactory objFact;
-
-  public static final Unmarshaller JAXB_UNMARSHALLER;
-
-  static {
-    try {
-      JAXBContext jaxbContext = new LensJAXBContext(ObjectFactory.class);
-      JAXB_UNMARSHALLER = jaxbContext.createUnmarshaller();
-    } catch (JAXBException e) {
-      log.error("Could not initialize JAXBContext. ", e);
-      throw new RuntimeException("Could not initialize JAXBContext. ", e);
-    }
-  }
-
 
   public LensMetadataClient(LensConnection connection) {
     this.connection = connection;
@@ -166,16 +151,7 @@ public class LensMetadataClient {
   }
 
   private <T> T readFromXML(String filename) throws JAXBException, IOException {
-    if (filename.startsWith("/")) {
-      return ((JAXBElement<T>) JAXB_UNMARSHALLER.unmarshal(new File(filename))).getValue();
-    } else {
-      // load from classpath
-      InputStream file = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
-      if (file == null) {
-        throw new IOException("File not found:" + filename);
-      }
-      return ((JAXBElement<T>) JAXB_UNMARSHALLER.unmarshal(file)).getValue();
-    }
+    return LensJAXBContext.unmarshallFromFile(filename);
   }
 
   public APIResult createCube(String cubeSpec) {

@@ -27,6 +27,7 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
 import org.apache.lens.client.LensClient;
+import org.apache.lens.client.LensClientConfig;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.core.ExitShellRequest;
@@ -34,12 +35,15 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import ch.qos.logback.classic.*;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.*;
-
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.ConsoleAppender;
+import ch.qos.logback.core.Context;
 import com.google.common.base.Joiner;
-
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,9 +70,15 @@ public class LensConnectionCommands extends BaseLensCommand {
     if (pair.length != 2) {
       return "Error: Pass parameter as <key>=<value>";
     }
-    APIResult result = getClient().setConnectionParam(pair[0], pair[1]);
-    return result.getMessage();
+    if (pair[0].startsWith(LENS_CLI_PREFIX) || pair[0].startsWith(LensClientConfig.CLIENT_PFX)) {
+      getClient().getConf().set(pair[0], pair[1]);
+      return "Client side Set " + pair[0] + "=" + pair[1];
+    } else {
+      APIResult result = getClient().setConnectionParam(pair[0], pair[1]);
+      return result.getMessage();
+    }
   }
+
 
   /**
    * Gets the param.
@@ -182,7 +192,7 @@ public class LensConnectionCommands extends BaseLensCommand {
     help = "prints all class level logs and verbose logs on cli for debugging purpose."
       + " 'debug false' to turn off all class level logging and verbose level logging ")
   public void debug(@CliOption(key = {"", "enable"},
-      mandatory = false, unspecifiedDefaultValue = "true") boolean enable) {
+    mandatory = false, unspecifiedDefaultValue = "true") boolean enable) {
     Logger logger = LoggerUtil.getRootLogger();
     Logger cliLogger = LoggerUtil.getCliLogger();
     if (enable) {
@@ -201,7 +211,7 @@ public class LensConnectionCommands extends BaseLensCommand {
   @CliCommand(value = {"verbose"},
     help = "Show cliLogger logs on cli. 'verbose false'  turns off the cliLogger logs on console")
   public void verbose(@CliOption(key = {"", "enable"},
-      mandatory = false, unspecifiedDefaultValue = "true") boolean enable) {
+    mandatory = false, unspecifiedDefaultValue = "true") boolean enable) {
     Logger cliLogger = LoggerUtil.getCliLogger();
     if (enable) {
       LoggerUtil.addConsoleAppenderIfNotPresent(cliLogger);

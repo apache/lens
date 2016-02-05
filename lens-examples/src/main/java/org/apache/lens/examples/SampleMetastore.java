@@ -21,7 +21,10 @@ package org.apache.lens.examples;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.xml.bind.*;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.jaxb.LensJAXBContext;

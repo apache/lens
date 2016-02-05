@@ -261,6 +261,6 @@ public abstract class LensJerseyTest extends JerseyTest {
     } else if (mt.equals(MediaType.APPLICATION_XML_TYPE)) {
       return Entity.xml(o);
     }
-    return null;
+    return Entity.entity(o, mt);
   }
 }
