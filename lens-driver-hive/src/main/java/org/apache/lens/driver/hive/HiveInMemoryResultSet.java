@@ -28,6 +28,7 @@ import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
 
 import lombok.extern.slf4j.Slf4j;
@@ -117,7 +118,9 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
   @Override
   public boolean hasNext() throws LensException {
     if (fetchedRowsItr == null || !fetchedRowsItr.hasNext()) {
+      SessionState state = null;
       try {
+        state = SessionState.get();
         rowSet = client.fetchResults(opHandle, orientation, fetchSize, FetchType.QUERY_OUTPUT);
         orientation = FetchOrientation.FETCH_NEXT;
         noMoreResults = rowSet.numRows() == 0;
@@ -131,6 +134,10 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
         fetchedRowsItr = rowSet.iterator();
       } catch (Exception e) {
         throw new LensException(e);
+      } finally {
+        if (state != null) {
+          SessionState.setCurrentSessionState(state);
+        }
       }
     }
     return fetchedRowsItr.hasNext();

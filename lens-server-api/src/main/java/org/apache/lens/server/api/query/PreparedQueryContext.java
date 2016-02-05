@@ -80,7 +80,10 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    * @param conf  the conf
    */
   public PreparedQueryContext(String query, String user, Configuration conf, Collection<LensDriver> drivers) {
-    this(query, user, conf, new LensConf(), drivers);
+    this(query, user, conf, drivers, true);
+  }
+  public PreparedQueryContext(String query, String user, Configuration conf, Collection<LensDriver> drivers, boolean merge) {
+    this(query, user, conf, new LensConf(), drivers, merge);
   }
 
   /**
@@ -93,7 +96,11 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    */
   public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf, Collection<LensDriver>
     drivers) {
-    super(query, user, qconf, conf, drivers, true);
+    this(query, user, conf, qconf, drivers, true);
+  }
+  public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf, Collection<LensDriver>
+    drivers, boolean merge) {
+    super(query, user, qconf, conf, drivers, merge);
     this.preparedTime = new Date();
     this.preparedUser = user;
     this.prepareHandle = new QueryPrepareHandle(UUID.randomUUID());

@@ -40,7 +40,11 @@ public class ExplainQueryContext extends AbstractQueryContext {
    */
   public ExplainQueryContext(final String requestId, String query, final String user, LensConf conf,
       Configuration qconf, Collection<LensDriver> drivers) {
-    super(query, user, conf, qconf, drivers, true);
+    this(requestId, query, user, conf, qconf, drivers, true);
+  }
+  public ExplainQueryContext(final String requestId, String query, final String user, LensConf conf,
+    Configuration qconf, Collection<LensDriver> drivers, boolean merge) {
+    super(query, user, conf, qconf, drivers, merge);
     this.requestId = requestId;
   }
 

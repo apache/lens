@@ -35,7 +35,6 @@ public class EmbeddedThriftConnection implements ThriftConnection {
   private ThriftCLIServiceClient client;
 
   /** The connected. */
-  private boolean connected;
   private EmbeddedThriftBinaryCLIService service;
 
   /*
@@ -45,9 +44,8 @@ public class EmbeddedThriftConnection implements ThriftConnection {
    */
   @Override
   public ThriftCLIServiceClient getClient() throws LensException {
-    if (!connected) {
+    if (client == null) {
       client = new ThriftCLIServiceClient(getService());
-      connected = true;
     }
     return client;
   }

@@ -513,7 +513,9 @@ public class HiveDriver extends AbstractLensDriver {
   public LensResultSet execute(QueryContext ctx) throws LensException {
     OperationHandle op = null;
     LensResultSet result = null;
+    SessionState state = null;
     try {
+      state = SessionState.get();
       addPersistentPath(ctx);
       Configuration qdconf = ctx.getDriverConf(this);
       qdconf.set("mapred.job.name", ctx.getQueryHandle().toString());
@@ -525,7 +527,6 @@ public class HiveDriver extends AbstractLensDriver {
       opHandleToSession.put(op, sessionHandle);
       updateStatus(ctx);
       OperationStatus status = getClient().getOperationStatus(op);
-
       if (status.getState() == OperationState.ERROR) {
         throw new LensException("Unknown error while running query " + ctx.getUserQuery());
       }
@@ -545,6 +546,9 @@ public class HiveDriver extends AbstractLensDriver {
       if (null != op) {
         opHandleToSession.remove(op);
       }
+      if (state != null) {
+        SessionState.setCurrentSessionState(state);
+      }
     }
     return result;
   }
@@ -556,7 +560,9 @@ public class HiveDriver extends AbstractLensDriver {
    */
   @Override
   public void executeAsync(QueryContext ctx) throws LensException {
+    SessionState state = null;
     try {
+      state = SessionState.get();
       addPersistentPath(ctx);
       Configuration qdconf = ctx.getDriverConf(this);
       qdconf.set("mapred.job.name", ctx.getQueryHandle().toString());
@@ -574,6 +580,10 @@ public class HiveDriver extends AbstractLensDriver {
     } catch (HiveSQLException e) {
       handleHiveServerError(ctx, e);
       handleHiveSQLException(e);
+    } finally {
+      if (state != null) {
+        SessionState.setCurrentSessionState(state);
+      }
     }
   }
 
@@ -597,7 +607,9 @@ public class HiveDriver extends AbstractLensDriver {
     }
     OperationHandle hiveHandle = getHiveHandle(context.getQueryHandle());
     ByteArrayInputStream in = null;
+    SessionState state = null;
     try {
+      state = SessionState.get();
       // Get operation status from hive server
       log.debug("GetStatus hiveHandle: {}", hiveHandle);
       OperationStatus opStatus = getClient().getOperationStatus(hiveHandle);
@@ -682,6 +694,9 @@ public class HiveDriver extends AbstractLensDriver {
       handleHiveServerError(context, e);
       throw new LensException("Error getting query status", e);
     } finally {
+      if (state != null) {
+        SessionState.setCurrentSessionState(state);
+      }
       if (in != null) {
         try {
           in.close();
@@ -742,7 +757,9 @@ public class HiveDriver extends AbstractLensDriver {
     OperationHandle opHandle = hiveHandles.remove(handle);
     if (opHandle != null) {
       log.info("CloseQuery hiveHandle: {}", opHandle);
+      SessionState state = null;
       try {
+        state = SessionState.get();
         getClient().closeOperation(opHandle);
       } catch (HiveSQLException e) {
         checkInvalidOperation(handle, e);
@@ -757,6 +774,9 @@ public class HiveDriver extends AbstractLensDriver {
             log.info("Closed orphaned hive session : {}", hiveSession.getHandleIdentifier());
           } catch (HiveSQLException e) {
             log.warn("Error closing orphan hive session : {} ", hiveSession.getHandleIdentifier(), e);
+          }
+          if(state != null) {
+            SessionState.setCurrentSessionState(state);
           }
         }
       }
@@ -773,13 +793,22 @@ public class HiveDriver extends AbstractLensDriver {
     log.info("CancelQuery: {}", handle);
     OperationHandle hiveHandle = getHiveHandle(handle);
     opHandleToSession.remove(hiveHandle);
+    SessionState state = null;
     try {
+      state = SessionState.get();
       log.info("CancelQuery hiveHandle: {}", hiveHandle);
       getClient().cancelOperation(hiveHandle);
       return true;
     } catch (HiveSQLException e) {
+      if (state != null) {
+        SessionState.setCurrentSessionState(state);
+      }
       checkInvalidOperation(handle, e);
       throw new LensException();
+    } finally {
+      if(state != null) {
+        SessionState.setCurrentSessionState(state);
+      }
     }
   }
 
