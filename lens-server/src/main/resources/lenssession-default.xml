@@ -213,6 +213,27 @@
     </description>
   </property>
 
+  <property>
+    <name>lens.query.prefetch.inmemory.resultset</name>
+    <value>true</value>
+    <description>When set to true, specified number of rows of result set will be pre-fetched if the result set is of
+    type InMemoryResultSet and query execution is not asynchronous i.e. query should be launched with
+    operation as EXECUTE_WITH_TIMEOUT.
+    Suggested usage of this property: It can be used by client to stream as well as persist results in server for
+    queries that finish fast and produce results with fewer rows (should be less than number of rows pre-fetched).
+    Note that the results are streamed to the client early, without waiting for persistence to finish.
+    Default value of this property is true.
+    </description>
+  </property>
+
+  <property>
+    <name>lens.query.prefetch.inmemory.resultset.rows</name>
+    <value>100</value>
+    <description>Specifies the number of rows to pre-fetch when lens.query.prefetch.inmemory.resultset is set to true.
+    Default value is 100 rows.
+    </description>
+  </property>
+
   <!--  properties for session -->
   <property>
     <name>lens.session.aux.jars</name>

@@ -18,21 +18,23 @@
  */
 package org.apache.lens.server.api.driver;
 
-
 import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.commons.lang.StringUtils;
+
 import org.apache.hadoop.conf.Configuration;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Abstract class for Lens Driver Implementations. Provides default
  * implementations and some utility methods for drivers
  */
+@Slf4j
 public abstract class AbstractLensDriver implements LensDriver {
   /**
    * Separator used for constructing fully qualified name and driver resource path
@@ -51,6 +53,36 @@ public abstract class AbstractLensDriver implements LensDriver {
       throw new LensException("Driver Type and Name can not be null or empty");
     }
     fullyQualifiedName = new StringBuilder(driverType).append(SEPARATOR).append(driverName).toString();
+  }
+
+  /**
+   * Default implementation for fetchResultSet for all drivers. Should hold good in most cases.
+   * Note : If a driver is sticking to this default implementation, it should
+   * override {@link #createResultSet(QueryContext)}
+   */
+  @Override
+  public LensResultSet fetchResultSet(QueryContext ctx) throws LensException {
+    log.info("FetchResultSet: {}", ctx.getQueryHandle());
+    synchronized (ctx) {
+      if (!ctx.isDriverResultRegistered()) {
+        ctx.registerDriverResult(createResultSet(ctx));
+      }
+    }
+    return ctx.getDriverResult();
+  }
+
+  /**
+   * This method should create ResultSet for the query represented by the context.
+   * Specific driver should override this method to return driver specific LensResultSet whenever the
+   * driver relies on default implementation of {@link #fetchResultSet(QueryContext)}
+   *
+   * Note: Default Implementation throw exception.
+   *
+   * @param ctx
+   * @return
+   */
+  protected LensResultSet createResultSet(QueryContext ctx) throws LensException {
+    throw new LensException(this.getClass().getSimpleName() + " should override method createResultSet(QueryContext)");
   }
 
   /**

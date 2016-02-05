@@ -998,6 +998,26 @@ public final class LensConfConstants {
   public static final String DEFAULT_HDFS_OUTPUT_RETENTION = "1 day";
 
   /**
+   * Pre Fetch results in case of in memory result sets.
+   */
+  public static final String PREFETCH_INMEMORY_RESULTSET = QUERY_PFX + "prefetch.inmemory.resultset";
+
+  /**
+   * Pre Fetch results in case of in memory result sets is enabled by default
+   */
+  public static final boolean DEFAULT_PREFETCH_INMEMORY_RESULTSET = true;
+
+  /**
+   * Pre-Fetch size for in memory results. Makes sense only if {@link #PREFETCH_INMEMORY_RESULTSET} set to true
+   */
+  public static final String PREFETCH_INMEMORY_RESULTSET_ROWS = QUERY_PFX + "prefetch.inmemory.resultset.rows";
+
+  /**
+   * Default Pre-Fetch size for in memory results.
+   */
+  public static final int DEFAULT_PREFETCH_INMEMORY_RESULTSET_ROWS = 100;
+
+  /**
    * The Constant EXCLUDE_CUBE_TABLES.
    */
   public static final String EXCLUDE_CUBE_TABLES = SESSION_PFX + "metastore.exclude.cubetables.from.nativetables";

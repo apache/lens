@@ -79,7 +79,6 @@ public class JDBCResultSet extends InMemoryResultSet {
     this.queryResult = queryResult;
     this.resultSet = resultSet;
     this.closeAfterFetch = closeAfterFetch;
-    seekToStart();
   }
 
   private ResultSetMetaData getRsMetadata() throws LensException {
@@ -289,18 +288,6 @@ public class JDBCResultSet extends InMemoryResultSet {
         row.add(resultSet.getObject(i + 1));
       }
       return new ResultRow(row);
-    } catch (SQLException e) {
-      throw new LensException(e);
-    }
-  }
-
-  @Override
-  public boolean seekToStart() throws LensException {
-    try {
-      if (!resultSet.isClosed() && !resultSet.isBeforeFirst()) {
-        resultSet.beforeFirst();
-      }
-      return true;
     } catch (SQLException e) {
       throw new LensException(e);
     }

@@ -212,6 +212,11 @@ public class QueryStatus implements Serializable {
     return status.equals(Status.SUCCESSFUL) || status.equals(Status.FAILED) || status.equals(Status.CANCELED);
   }
 
+  public boolean successful() {
+    return status.equals(Status.SUCCESSFUL);
+  }
+
+
   public boolean launched() {
     return status.equals(Status.LAUNCHED);
   }

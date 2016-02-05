@@ -63,7 +63,7 @@ public class TestLensDAO {
 
     // Test insert query
     QueryContext queryContext = service.createContext("SELECT ID FROM testTable", "foo@localhost", new LensConf(),
-      new Configuration());
+      new Configuration(), 0);
     long submissionTime = queryContext.getSubmissionTime();
     queryContext.setQueryName("daoTestQuery1");
     queryContext.getDriverContext().setSelectedDriver(new MockDriver());

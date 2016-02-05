@@ -23,7 +23,6 @@ import java.util.Iterator;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
-import org.apache.lens.server.api.error.LensException;
 
 import lombok.NonNull;
 
@@ -67,10 +66,5 @@ public class ESResultSet extends InMemoryResultSet {
   @Override
   public LensResultSetMetadata getMetadata() {
     return resultSetMetadata;
-  }
-
-  @Override
-  public boolean seekToStart() throws LensException {
-    return false;
   }
 }

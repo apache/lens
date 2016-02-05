@@ -63,7 +63,7 @@ import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
 import org.apache.commons.lang3.StringUtils;
 
- import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -235,7 +235,7 @@ public class JDBCDriver extends AbstractLensDriver {
     private boolean isClosed;
 
     /** The lens result set. */
-    private JDBCResultSet lensResultSet;
+    private InMemoryResultSet lensResultSet;
 
     /**
      * Close.
@@ -996,16 +996,13 @@ public class JDBCDriver extends AbstractLensDriver {
     }
   }
 
-  /**
-   * Fetch the results of the query, specified by the handle.
-   *
-   * @param context the context
-   * @return returns the {@link LensResultSet}.
-   * @throws LensException the lens exception
-   */
   @Override
-  public LensResultSet fetchResultSet(QueryContext context) throws LensException {
+  protected LensResultSet createResultSet(QueryContext ctx) throws LensException {
     checkConfigured();
+    return getDriverResult(ctx);
+  }
+
+  private LensResultSet getDriverResult(QueryContext context) throws LensException {
     JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
     if (ctx.isCancelled()) {
       throw new LensException("Result set not available for cancelled query " + context.getQueryHandle());
@@ -1147,6 +1144,5 @@ public class JDBCDriver extends AbstractLensDriver {
   @Override
   public void writeExternal(ObjectOutput arg0) throws IOException {
     // TODO Auto-generated method stub
-
   }
 }
