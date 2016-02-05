@@ -158,8 +158,8 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
       String desc = command.describeFactTable("fact1");
       log.debug(desc);
-      String propString = "name : fact1.prop  value : f1";
-      String propString1 = "name : fact1.prop1  value : f2";
+      String propString = "fact1.prop: f1";
+      String propString1 = "fact1.prop1: f2";
 
       assertTrue(desc.contains(propString));
 

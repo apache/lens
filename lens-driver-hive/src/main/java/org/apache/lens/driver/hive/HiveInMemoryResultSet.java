@@ -82,7 +82,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
     this.closeAfterFecth = closeAfterFecth;
     this.metadata = client.getResultSetMetadata(opHandle);
     this.numColumns = metadata.getColumnDescriptors().size();
-    this.seekToStart();
+    this.orientation = FetchOrientation.FETCH_FIRST;
   }
 
   /*
@@ -102,12 +102,6 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
     HiveResultSetMetadata hrsMeta = new HiveResultSetMetadata();
     hrsMeta.setColumns(metadata.getColumnDescriptors());
     return hrsMeta;
-  }
-
-  @Override
-  public boolean seekToStart() {
-    orientation = FetchOrientation.FETCH_FIRST;
-    return true;
   }
 
   /*

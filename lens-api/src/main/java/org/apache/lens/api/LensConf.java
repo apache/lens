@@ -39,7 +39,7 @@ import lombok.NoArgsConstructor;
  * Instantiates a new lens conf.
  */
 @NoArgsConstructor
-public class LensConf implements Serializable {
+public class LensConf extends ToYAMLString implements Serializable {
 
   /**
    * The Constant serialVersionUID.
@@ -74,5 +74,9 @@ public class LensConf implements Serializable {
    */
   public void addProperties(Map<String, String> props) {
     properties.putAll(props);
+  }
+
+  public String getProperty(Object key) {
+    return properties.get(key);
   }
 }

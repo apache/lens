@@ -1,0 +1,110 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+properties:
+  cube.sales.timed.dimensions.list: order_time,delivery_time
+  cube.timedim.partition.order_time: ot
+  cube.timedim.partition.delivery_time: dt
+  cube.timedim.relation.order_time: delivery_time+[-20 days,-1 hour]
+name: sales
+measures:
+  Unit Sales(unit_sales): type: BIGINT, defaultAggr: SUM, formatString: #,###
+  Store Sales(store_sales): type: DOUBLE, defaultAggr: SUM, formatString: #,###.##
+  Store Cost(store_cost):
+    type: DOUBLE
+    defaultAggr: SUM
+    formatString: #,###.00
+    startTime: 2015-03-01T00:00:00
+  Line item quantity(line_item_quantity): type: INT, defaultAggr: SUM
+  Line item product price(line_item_product_price): type: FLOAT, defaultAggr: SUM
+  Line item discount(line_item_discount_amount): type: FLOAT, defaultAggr: SUM
+  Line item tax(line_item_tax): type: FLOAT, defaultAggr: SUM
+  Maximum Line item price(max_line_item_price): type: FLOAT, defaultAggr: MAX
+  Maximum Line item discount(max_line_item_discount): type: FLOAT, defaultAggr: MAX
+  Rating(rating): type: FLOAT, defaultAggr: AVG
+dimAttributes:
+  customer_id: type: INT
+  product_id: type: INT
+  promotion_id: type: INT
+  order_id: type: INT
+  order_line_number: type: INT
+  order_time: type: TIMESTAMP
+  delivery_time: type: TIMESTAMP
+  customer_city_id:
+    type: INT
+    startTime: 2015-03-01T00:00:00
+  production_city_id: type: INT
+  delivery_city_id: type: INT
+  Customer City(customer_city_name) [City name to which the customer belongs]:
+    chainRefColumn:
+      -
+        chainName: customer_city
+        refCol: name
+    type: string
+  production_location:
+    hierarchy:
+      Production City(production_city_name) [City name in which the product was produced]:
+        chainRefColumn:
+          -
+            chainName: production_city
+            refCol: name
+        type: STRING
+      Production State(production_state) [State name in which the product was produced]: type: STRING
+      Production Country(production_country) [Country name in which the product was produced]: type: STRING
+  Delivery City(delivery_city_name) [City name to which the product was delivered]:
+    chainRefColumn:
+      -
+        chainName: delivery_city
+        refCol: name
+    type: STRING
+expressions:
+  Profit(profit):
+    exprSpec:
+      -
+        expr: store_sales - store_cost
+    type: DOUBLE
+  Promotion sales(promotion_sales):
+    exprSpec:
+      -
+        expr: sum(case when promotion_id = 0 then 0 else store_sales end)
+        startTime: 2015-04-12T00:00:00
+      -
+        expr: sum(case when promotion_id = -1 then 0 when promotion_id = -1 then 0 else store_sales end)
+        endTime: 2015-04-12T00:00:00
+    type: DOUBLE
+joinChains:
+  customer_details:
+    paths:
+      -
+        sales.customer_id=customer.id
+  product_details:
+    paths:
+      -
+        sales.product_id=product.id
+  customer_city:
+    paths:
+      -
+        sales.customer_city_id=city.id
+      -
+        sales.customer_id=customer.id
+        customer.city_id=city.id
+  delivery_city:
+    paths:
+      -
+        sales.delivery_city_id=city.id
+  production_city:
+    paths:
+      -
+        sales.production_city_id=city.id

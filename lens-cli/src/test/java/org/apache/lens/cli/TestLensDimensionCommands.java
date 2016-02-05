@@ -157,8 +157,8 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
 
       String desc = command.describeDimension("test_dim");
       log.debug(desc);
-      String propString = "name : test_dim.prop  value : test";
-      String propString1 = "name : test_dim.prop1  value : test1";
+      String propString = "test_dim.prop: test";
+      String propString1 = "test_dim.prop1: test1";
       Assert.assertTrue(desc.contains(propString));
 
       command.updateDimension("test_dim", new File("target/test_dim1.xml"));

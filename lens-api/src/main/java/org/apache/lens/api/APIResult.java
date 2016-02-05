@@ -18,14 +18,7 @@
  */
 package org.apache.lens.api;
 
-import java.io.StringWriter;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.*;
-
-import org.apache.lens.api.jaxb.LensJAXBContext;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -45,7 +38,7 @@ import lombok.NoArgsConstructor;
  * Instantiates a new API result.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class APIResult {
+public class APIResult extends ToYAMLString {
   /**
    * The status.
    */
@@ -59,19 +52,6 @@ public class APIResult {
   @XmlElement
   @Getter
   private String message;
-
-  /**
-   * The Constant JAXB_CONTEXT.
-   */
-  private static final JAXBContext JAXB_CONTEXT;
-
-  static {
-    try {
-      JAXB_CONTEXT = new LensJAXBContext(APIResult.class);
-    } catch (JAXBException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   /**
    * API Result status.
@@ -94,17 +74,6 @@ public class APIResult {
     FAILED
   }
 
-  @Override
-  public String toString() {
-    try {
-      StringWriter stringWriter = new StringWriter();
-      Marshaller marshaller = JAXB_CONTEXT.createMarshaller();
-      marshaller.marshal(this, stringWriter);
-      return stringWriter.toString();
-    } catch (JAXBException e) {
-      return e.getMessage();
-    }
-  }
   private static final APIResult SUCCESS = new APIResult(Status.SUCCEEDED, "");
 
   public static APIResult partial(int actual, int expected) {

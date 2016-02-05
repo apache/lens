@@ -448,7 +448,7 @@ public class HiveDriver extends AbstractLensDriver {
       explainCtx.getSubmittedUser(), new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier(), false);
 
     // Get result set of explain
-    HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
+    InMemoryResultSet inMemoryResultSet = (InMemoryResultSet) execute(explainQueryCtx);
     List<String> explainOutput = new ArrayList<>();
     while (inMemoryResultSet.hasNext()) {
       explainOutput.add((String) inMemoryResultSet.next().getValues().get(0));
@@ -532,7 +532,7 @@ public class HiveDriver extends AbstractLensDriver {
       }
       result = createResultSet(ctx, true);
       // close the query immediately if the result is not inmemory result set
-      if (result == null || !(result instanceof HiveInMemoryResultSet)) {
+      if (result == null || !(result instanceof InMemoryResultSet)) {
         closeQuery(ctx.getQueryHandle());
       }
       // remove query handle from hiveHandles even in case of inmemory result set
@@ -724,18 +724,6 @@ public class HiveDriver extends AbstractLensDriver {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.server.api.driver.LensDriver#fetchResultSet(org.apache.lens.server.api.query.QueryContext)
-   */
-  @Override
-  public LensResultSet fetchResultSet(QueryContext ctx) throws LensException {
-    log.info("FetchResultSet: {}", ctx.getQueryHandle());
-    // This should be applicable only for a async query
-    return createResultSet(ctx, false);
-  }
-
-  /*
-   * (non-Javadoc)
-   *
    * @see org.apache.lens.server.api.driver.LensDriver#closeResultSet(org.apache.lens.api.query.QueryHandle)
    */
   @Override
@@ -903,6 +891,11 @@ public class HiveDriver extends AbstractLensDriver {
       }
       return connection.getConnection().getClient();
     }
+  }
+
+  @Override
+  protected LensResultSet createResultSet(QueryContext context) throws LensException {
+    return createResultSet(context, false);
   }
 
   /**

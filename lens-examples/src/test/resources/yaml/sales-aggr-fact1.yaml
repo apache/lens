@@ -1,0 +1,60 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+columns:
+  order_time: type: TIMESTAMP
+  delivery_time: type: TIMESTAMP
+  customer_id: type: INT
+  product_id: type: INT
+  promotion_id: type: INT
+  customer_city_id: type: INT
+  production_city_id: type: INT
+  delivery_city_id: type: INT
+  unit_sales: type: BIGINT
+  store_sales: type: DOUBLE
+  store_cost: type: DOUBLE
+  max_line_item_price: type: FLOAT
+  max_line_item_discount: type: FLOAT
+properties:
+  cube.fact.is.aggregated: true
+storageTables:
+  local:
+    updatePeriods: HOURLY, DAILY
+    tableDesc:
+      partCols:
+        pt: type: STRING, comment: Process time partition
+        ot: type: STRING, comment: Order time partition
+        dt: type: STRING, comment: Delivery time partition
+      timePartCols: pt, ot, dt
+      external: true
+      tableLocation: /tmp/examples/aggrfact1
+      fieldDelimiter: ,
+  mydb:
+    updatePeriods: DAILY
+    tableDesc:
+      partCols:
+        pt: type: STRING, comment: Process time partition
+        ot: type: STRING, comment: Order time partition
+        dt: type: STRING, comment: Delivery time partition
+      tableParameters:
+        lens.metastore.native.db.name: default
+      timePartCols: pt, ot, dt
+      external: true
+      tableLocation: /tmp/db-storage.db
+      fieldDelimiter: ,
+      storageHandlerName: org.apache.lens.storage.db.DBStorageHandler
+name: sales_aggr_fact1
+cubeName: sales
+weight: 300.0

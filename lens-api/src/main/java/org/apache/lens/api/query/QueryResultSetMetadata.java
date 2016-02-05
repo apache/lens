@@ -27,6 +27,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.lens.api.ToYAMLString;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,7 +49,7 @@ import lombok.NoArgsConstructor;
  * Instantiates a new query result set metadata.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class QueryResultSetMetadata {
+public class QueryResultSetMetadata extends ToYAMLString {
 
   /**
    * The columns.

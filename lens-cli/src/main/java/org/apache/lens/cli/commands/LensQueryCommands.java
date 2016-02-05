@@ -194,11 +194,7 @@ public class LensQueryCommands extends BaseLensCommand {
     if (query == null) {
       return "Unable to find query for " + qh;
     }
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(query));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    return formatJson(query);
   }
 
   /**

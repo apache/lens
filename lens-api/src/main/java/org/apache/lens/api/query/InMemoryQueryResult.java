@@ -67,4 +67,9 @@ public class InMemoryQueryResult extends QueryResult {
     b.append(numRows).append(" rows ");
     return b.toString();
   }
+
+  @Override
+  public String toString() {
+    return super.toString();
+  }
 }

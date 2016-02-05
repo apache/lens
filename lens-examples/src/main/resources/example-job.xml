@@ -19,16 +19,17 @@
   under the License.
 
 -->
-<job xmlns="uri:lens:job:0.1">
+<job xmlns="uri:lens:job:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="uri:lens:job:0.1 scheduler-job-0.1.xsd ">
     <name>Sample Scheduler job</name>
     <execution>
-        <resource_path>/path/to/a/resource/</resource_path>
         <session>
             <db>myDb</db>
             <conf>
                 <key>userName</key>
                 <value>ajayyadava</value>
             </conf>
+            <resource_path>/path/to/a/resource/</resource_path>
         </session>
         <query>
             <query>cube select measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')</query>

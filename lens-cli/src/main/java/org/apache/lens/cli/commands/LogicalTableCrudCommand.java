@@ -19,7 +19,6 @@
 package org.apache.lens.cli.commands;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
@@ -58,11 +57,7 @@ public abstract class LogicalTableCrudCommand<T> extends LensCRUDCommand<T> {
   }
 
   public String getStorage(String tableName, String storage) {
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(readStorage(tableName, storage)));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    return formatJson(readStorage(tableName, storage));
   }
 
   public String dropStorage(String tableName, String storageName) {
@@ -74,11 +69,7 @@ public abstract class LogicalTableCrudCommand<T> extends LensCRUDCommand<T> {
   }
 
   public String getAllPartitions(String tableName, String storageName, String filter) {
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(readAllPartitions(tableName, storageName, filter)));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    return formatJson(readAllPartitions(tableName, storageName, filter));
   }
 
   public String addPartition(String tableName, String storageName, File path) {

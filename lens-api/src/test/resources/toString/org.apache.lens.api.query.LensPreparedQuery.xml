@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<lensPreparedQuery>
+  <prepareHandle>
+    <prepareHandleId>42d071c5-15d2-4836-982c-4e434ce651b5</prepareHandleId>
+  </prepareHandle>
+  <userQuery>cube select blah</userQuery>
+  <preparedTime>2016-02-02T19:17:34.894+05:30</preparedTime>
+  <preparedUser>user</preparedUser>
+  <selectedDriverName>selected-driver</selectedDriverName>
+  <driverQuery>select blah from driver table</driverQuery>
+  <conf>
+    <properties>
+      <entry>
+        <key>key2</key>
+        <value>value2</value>
+      </entry>
+      <entry>
+        <key>key1</key>
+        <value>value1</value>
+      </entry>
+    </properties>
+  </conf>
+</lensPreparedQuery>
