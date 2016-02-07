@@ -36,15 +36,18 @@ import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.InMemoryQueryResult;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryResult;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.LensJerseyTest;
+import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.InMemoryResultSet;
+import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.common.TestResourceFile;
 
@@ -242,18 +245,26 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
 
   @Test(dataProvider = "success-tests")
   public void testSuccessfulQuery(Boolean lensPersistence, Boolean driverPersistence, MediaType mt)
-    throws InterruptedException {
+    throws InterruptedException, LensException {
     // successful query
     LensConf conf = getLensConf(
       LensConfConstants.QUERY_PERSISTENT_RESULT_SET, lensPersistence,
       LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, driverPersistence);
-    QueryHandle handle = launchAndWaitForQuery(conf, "select ID, IDSTR from " + TEST_TABLE, Status.SUCCESSFUL, mt);
     String expectedKeywords;
+    QueryHandle handle = launchAndWaitForQuery(conf, "select ID, IDSTR from " + TEST_TABLE, Status.SUCCESSFUL, mt);
     if (lensPersistence || driverPersistence) {
       QueryResult result = getLensQueryResult(target(), lensSessionId, handle, mt);
       expectedKeywords = result.toPrettyString();
     } else {
-      expectedKeywords = InMemoryQueryResult.DECLARATION;
+      QueryContext context = queryService.getQueryContext(handle);
+      long creationTime = ((InMemoryResultSet) (context.getSelectedDriver().fetchResultSet(context))).getCreationTime();
+      long inMemoryResultsetTTLSecs =
+          LensServerConf.getHiveConf().getInt(LensConfConstants.INMEMORY_RESULT_SET_TTL_SECS,
+              LensConfConstants.DEFAULT_INMEMORY_RESULT_SET_TTL_SECS);
+      expectedKeywords =
+          QueryEndNotifier.RESULT_AVAILABLE_UNTIL_MSG
+              + QueryEndNotifier.MESSAGE_DATE_FORMATTER.print(creationTime + inMemoryResultsetTTLSecs);
+      getLensQueryResultAsString(target(), lensSessionId, handle, mt); //Reading it so that query can be purged
     }
     WiserMessage message = getMessage();
     assertKeywordsContains(message, handle, "Query SUCCESSFUL", expectedKeywords);
