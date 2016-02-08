@@ -195,6 +195,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertTrue(lower.startsWith("select mq2.roundedmsr2 roundedmsr2, mq1.msr12 msr12 from ")
       || lower.startsWith("select mq1.roundedmsr2 roundedmsr2, mq2.msr12 msr12 from "), hqlQuery);
     assertTrue(lower.contains("mq1 full outer join") && lower.endsWith("mq2"), hqlQuery);
+    assertFalse(lower.contains("mq2 on"), hqlQuery);
     assertFalse(lower.contains("<=>"), hqlQuery);
   }
 
@@ -205,8 +206,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, sum(basecube.msr12) as `msr12` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
     String expected2 = getExpectedQuery(cubeName,
-        "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
-        " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+      "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
+      " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     compareContains(expected1, hqlQuery);
     compareContains(expected2, hqlQuery);
     String lower = hqlQuery.toLowerCase();
@@ -359,7 +360,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   @Test
   public void testMultiFactQueryWithNoAggregates() throws Exception {
     // no aggregates in the query
-    String hqlQuery = rewrite("select dim1, msr11, roundedmsr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
+    String hqlQuery = rewrite("select dim1, msr11, roundedmsr2 from basecube where " + TWO_DAYS_RANGE, conf);
     String expected1 =
       getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, basecube.msr11 as `msr11` FROM ", null, null,
         getWhereForHourly2days(cubeName, "C1_testfact2_raw_base"));
@@ -381,7 +382,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testMultiFactQueryWithColumnAliases() throws Exception {
     // query with aliases passed
     String hqlQuery =
-      rewrite("select dim1 d1, msr12 `my msr12`, roundedmsr2 m2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
+      rewrite("select dim1 d1, msr12 `my msr12`, roundedmsr2 m2 from basecube where " + TWO_DAYS_RANGE, conf);
     String expected1 =
       getExpectedQuery(cubeName, "select basecube.dim1 as `d1`, sum(basecube.msr12) as `expr2` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
@@ -401,7 +402,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   @Test
   public void testMultiFactQueryWithNoDefaultAggregates() throws Exception {
    // query with non default aggregate
-    String hqlQuery = rewrite("select dim1, avg(msr12), avg(msr2) from basecube" + " where " + TWO_DAYS_RANGE, conf);
+    String hqlQuery = rewrite("select dim1, avg(msr12), avg(msr2) from basecube where " + TWO_DAYS_RANGE, conf);
     String expected1 =
       getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, avg(basecube.msr12) as `msr12` FROM ", null,
         " group by basecube.dim1", getWhereForHourly2days(cubeName, "C1_testfact2_raw_base"));
@@ -444,7 +445,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   @Test
   public void testMultiFactQueryWithDenormColumn() throws Exception {
     // query with denorm variable
-    String hqlQuery = rewrite("select dim2, msr13, roundedmsr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
+    String hqlQuery = rewrite("select dim2, msr13, roundedmsr2 from basecube where " + TWO_DAYS_RANGE, conf);
     String expected1 = getExpectedQuery(cubeName, "select dim2chain.id as `dim2`, max(basecube.msr13) as `msr13` FROM ",
         " JOIN " + getDbName() + "c1_testdim2tbl dim2chain ON basecube.dim12 = "
             + " dim2chain.id and (dim2chain.dt = 'latest') ", null, " group by dim2chain.id", null,
@@ -463,12 +464,33 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   }
 
   @Test
+  public void testMultiFactQueryWithDenormColumnInWhere() throws Exception {
+    // query with denorm variable
+    String hqlQuery = rewrite("select dim2, msr13, roundedmsr2 from basecube where dim2 == 10 and " + TWO_DAYS_RANGE,
+      conf);
+    String expected1 = getExpectedQuery(cubeName, "select dim2chain.id as `dim2`, max(basecube.msr13) as `msr13` FROM ",
+      " JOIN " + getDbName() + "c1_testdim2tbl dim2chain ON basecube.dim12 = "
+        + " dim2chain.id and (dim2chain.dt = 'latest') ", "dim2chain.id == 10", " group by dim2chain.id", null,
+      getWhereForHourly2days(cubeName, "C1_testFact3_RAW_BASE"));
+    String expected2 = getExpectedQuery(cubeName,
+      "select basecube.dim2 as `dim2`, round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", "basecube.dim2 == 10",
+      " group by basecube.dim2", getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
+    compareContains(expected1, hqlQuery);
+    compareContains(expected2, hqlQuery);
+    assertTrue(hqlQuery.toLowerCase().startsWith(
+      "select coalesce(mq1.dim2, mq2.dim2) dim2, mq2.msr13 msr13, mq1.roundedmsr2 roundedmsr2 from ")
+      || hqlQuery.toLowerCase().startsWith(
+        "select coalesce(mq1.dim2, mq2.dim2) dim2, mq1.msr13 msr13, mq2.roundedmsr2 roundedmsr2 from "), hqlQuery);
+    assertTrue(hqlQuery.contains("mq1 full outer join ") && hqlQuery.endsWith("mq2 on mq1.dim2 <=> mq2.dim2"),
+      hqlQuery);
+  }
+  @Test
   public void testMultiFactQueryWithExpressionInvolvingDenormVariable() throws Exception {
     // query with expression
     // The expression to be answered from denorm columns
     String hqlQuery =
       rewrite(
-        "select booleancut, round(sum(msr2)/1000), avg(msr13 + msr14) from basecube" + " where " + TWO_DAYS_RANGE,
+        "select booleancut, round(sum(msr2)/1000), avg(msr13 + msr14) from basecube where " + TWO_DAYS_RANGE,
         conf);
     String expected1 =
       getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND dim2chain.id != 10 as `booleancut`,"
@@ -494,6 +516,38 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       hqlQuery);
   }
 
+  @Test
+  public void testMultiFactQueryWithExpressionInvolvingDenormVariableInWhereClause() throws Exception {
+    // query with expression
+    // The expression to be answered from denorm columns
+    String hqlQuery =
+      rewrite(
+        "select booleancut, round(sum(msr2)/1000), avg(msr13 + msr14) from basecube where booleancut == 'true' and "
+          + TWO_DAYS_RANGE, conf);
+    String expected1 =
+      getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND dim2chain.id != 10 as `booleancut`,"
+          + " avg(basecube.msr13 + basecube.msr14) as `expr3` FROM ", " JOIN " + getDbName()
+          + "c1_testdim2tbl dim2chain ON basecube.dim12 = " + " dim2chain.id and (dim2chain.dt = 'latest') ",
+        "(basecube.dim1 != 'x' AND dim2chain.id != 10) == true",
+        " group by basecube.dim1 != 'x' AND dim2chain.id != 10", null,
+        getWhereForHourly2days(cubeName, "C1_testfact3_raw_base"));
+    String expected2 =
+      getExpectedQuery(cubeName, "select basecube.dim1 != 'x' AND basecube.dim2 != 10 as `booleancut`,"
+          + " round(sum(basecube.msr2)/1000) as `msr2` FROM ", "(basecube.dim1 != 'x' AND basecube.dim2 != 10) == true",
+        " group by basecube.dim1 != 'x' AND basecube.dim2 != 10",
+        getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
+    compareContains(expected1, hqlQuery);
+    compareContains(expected2, hqlQuery);
+    assertTrue(hqlQuery.toLowerCase()
+      .startsWith("select coalesce(mq1.booleancut, mq2.booleancut) booleancut, mq2.msr2 msr2,"
+        + " mq1.expr3 expr3 from ")
+      || hqlQuery.toLowerCase()
+        .startsWith("select coalesce(mq1.booleancut, mq2.booleancut) booleancut, mq1.msr2 msr2,"
+          + " mq2.expr3 expr3 from "), hqlQuery);
+    assertTrue(hqlQuery.contains("mq1 full outer join ")
+        && hqlQuery.endsWith("mq2 on mq1.booleancut <=> mq2.booleancut"),
+      hqlQuery);
+  }
   @Test
   public void testFallbackPartCol() throws Exception {
     Configuration conf = getConfWithStorages("C1");

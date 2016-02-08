@@ -68,7 +68,7 @@ public class DefaultQueryAST implements QueryAST {
   public static DefaultQueryAST fromCandidateFact(CandidateFact fact, String storageTable, QueryAST ast) throws
     LensException {
     return new DefaultQueryAST(ast.getSelectAST(),
-      HQLParser.parseExpr(fact.getWhereClause(storageTable.substring(storageTable.indexOf(".") + 1))),
+      fact.getStorageWhereClause(storageTable.substring(storageTable.indexOf(".") + 1)),
       ast.getGroupByAST(), ast.getHavingAST(), ast.getJoinAST(), ast.getOrderByAST(), ast.getLimitValue());
   }
 }

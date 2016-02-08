@@ -875,7 +875,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
             ASTNode rangeAST = HQLParser.parseExpr(rangeWhere);
             range.getParent().setChild(range.getChildIndex(), rangeAST);
           }
-          fact.getStorgeWhereClauseMap().put(table, getWhereTree());
+          fact.getStorgeWhereClauseMap().put(table, HQLParser.parseExpr(getWhereTree()));
         }
       }
     }
@@ -905,7 +905,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     }
 
     // pick dimension tables required during expression expansion for the picked fact and dimensions
-    Set<Dimension> exprDimensions = new HashSet<Dimension>();
+    Set<Dimension> exprDimensions = new HashSet<>();
     if (cfacts != null) {
       for (CandidateFact cfact : cfacts) {
         Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(cfact, dimsToQuery, cfacts.size() > 1 ? cfact : this);
@@ -970,6 +970,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
         whereAST = MultiFactHQLContext.convertHavingToWhere(havingAST, this, cfacts, new DefaultAliasDecider());
       }
     }
+
     hqlContext = createHQLContext(cfacts, dimsToQuery, factDimMap);
     return hqlContext.toHQL();
   }
@@ -982,8 +983,10 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
       //create single fact with multiple storage context
       return new SingleFactMultiStorageHQLContext(facts.iterator().next(), dimsToQuery, this, this);
     } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() == 1) {
+      CandidateFact fact = facts.iterator().next();
       // create single fact context
-      return new SingleFactSingleStorageHQLContext(facts.iterator().next(), dimsToQuery, this, this);
+      return new SingleFactSingleStorageHQLContext(fact, null,
+        dimsToQuery, this, DefaultQueryAST.fromCandidateFact(fact, fact.getStorageTables().iterator().next(), this));
     } else {
       return new MultiFactHQLContext(facts, dimsToQuery, factDimMap, this);
     }

@@ -56,7 +56,6 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     this.ast = ast;
     processSelectAST();
     processGroupByAST();
-    processWhereAST();
     processHavingAST();
     processOrderByAST();
     processLimit();
@@ -73,15 +72,6 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
   private void processGroupByAST() {
     if (ast.getGroupByAST() != null) {
       setGroupby(getString(processExpression(ast.getGroupByAST())));
-    }
-  }
-
-  private void processWhereAST() throws LensException {
-    for (String storageTable : fact.getStorgeWhereClauseMap().keySet()) {
-      ASTNode tree = parseExpr(fact.getStorgeWhereClauseMap().get(storageTable));
-      ASTNode replaced = replaceAST(tree);
-      //TODO: optimize parse/unparse cycle
-      fact.getStorgeWhereClauseMap().put(storageTable, getString(replaced));
     }
   }
 

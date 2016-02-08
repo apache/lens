@@ -76,12 +76,11 @@ public class CandidateFact implements CandidateTable, QueryAST {
   @Getter
   @Setter
   private Integer limitValue;
-  private List<TimeRangeNode> timenodes = Lists.newArrayList();
   private final List<Integer> selectIndices = Lists.newArrayList();
   private final List<Integer> dimFieldIndices = Lists.newArrayList();
   private Collection<String> columns;
   @Getter
-  private final Map<String, String> storgeWhereClauseMap = new HashMap<>();
+  private final Map<String, ASTNode> storgeWhereClauseMap = new HashMap<>();
   @Getter
   private final Map<TimeRange, Map<String, LinkedHashSet<FactPartition>>> rangeToStoragePartMap = new HashMap<>();
   @Getter
@@ -145,18 +144,6 @@ public class CandidateFact implements CandidateTable, QueryAST {
     return alias;
   }
 
-  static class TimeRangeNode {
-    ASTNode timenode;
-    ASTNode parent;
-    int childIndex;
-
-    TimeRangeNode(ASTNode timenode, ASTNode parent, int childIndex) {
-      this.timenode = timenode;
-      this.parent = parent;
-      this.childIndex = childIndex;
-    }
-  }
-
   void incrementPartsQueried(int incr) {
     numQueriedParts += incr;
   }
@@ -174,8 +161,8 @@ public class CandidateFact implements CandidateTable, QueryAST {
   }
 
 
-  public String getWhereClause(String storageTable) {
-    return getStorgeWhereClauseMap().get(storageTable);
+  public ASTNode getStorageWhereClause(String storageTable) {
+    return storgeWhereClauseMap.get(storageTable);
   }
 
   public boolean isExpressionAnswerable(ASTNode node, CubeQueryContext context) throws LensException {
@@ -231,7 +218,7 @@ public class CandidateFact implements CandidateTable, QueryAST {
 
   private Set<String> getColsInExpr(final CubeQueryContext cubeql, final Set<String> cubeCols,
     ASTNode expr) throws LensException {
-    final Set<String> cubeColsInExpr = new HashSet<String>();
+    final Set<String> cubeColsInExpr = new HashSet<>();
     HQLParser.bft(expr, new ASTNodeVisitor() {
       @Override
       public void visit(TreeNode visited) {
@@ -345,7 +332,6 @@ public class CandidateFact implements CandidateTable, QueryAST {
     }
     return null;
   }
-
 
   /**
    * @return the selectIndices
