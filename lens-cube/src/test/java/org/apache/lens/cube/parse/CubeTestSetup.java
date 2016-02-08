@@ -119,7 +119,7 @@ public class CubeTestSetup {
   }
 
   public static String getExpectedUnionQuery(String cubeName, List<String> storages, StoragePartitionProvider provider,
-    String outerSelectPart, String outerWhere, String outerPostWhere, String innerQuerySelectPart,
+    String outerSelectPart, String outerWhere, String outerPostWhere, String innerQuerySelectPart, String innerJoin,
     String innerWhere, String innerPostWhere) {
     if (!innerQuerySelectPart.trim().toLowerCase().endsWith("from")) {
       innerQuerySelectPart += " from ";
@@ -132,12 +132,18 @@ public class CubeTestSetup {
     sb.append(" (");
     String sep = "";
     for (String storage : storages) {
-      sb.append(sep).append(getExpectedQuery(cubeName, innerQuerySelectPart + " ",
-        innerWhere, innerPostWhere, provider.providePartitionsForStorage(storage)));
+      sb.append(sep).append(getExpectedQuery(cubeName, innerQuerySelectPart + " ", innerJoin,
+        innerWhere, innerPostWhere, null, provider.providePartitionsForStorage(storage)));
       sep = " UNION ALL ";
     }
     return sb.append(") ").append(cubeName).append(" ").append(outerWhere == null ? "" : outerWhere)
       .append(" ").append(outerPostWhere == null ? "" : outerPostWhere).toString();
+  }
+  public static String getExpectedUnionQuery(String cubeName, List<String> storages, StoragePartitionProvider provider,
+    String outerSelectPart, String outerWhere, String outerPostWhere, String innerQuerySelectPart,
+    String innerWhere, String innerPostWhere) {
+    return getExpectedUnionQuery(cubeName, storages, provider, outerSelectPart, outerWhere, outerPostWhere,
+      innerQuerySelectPart, null, innerWhere, innerPostWhere);
   }
 
   public static String getExpectedQuery(String cubeName, String selExpr, String whereExpr, String postWhereExpr,
@@ -206,8 +212,11 @@ public class CubeTestSetup {
     assertEquals(1, numTabs);
     for (Map.Entry<String, String> entry : storageTableToWhereClause.entrySet()) {
       String storageTable = entry.getKey();
-      expected.append(selExpr).append(storageTable).append(" ").append(cubeName).append(joinExpr)
-        .append(" WHERE ").append("(");
+      expected.append(selExpr).append(storageTable).append(" ").append(cubeName);
+      if (joinExpr != null) {
+        expected.append(joinExpr);
+      }
+      expected.append(" WHERE ").append("(");
       if (notLatestConditions != null) {
         for (String cond : notLatestConditions) {
           expected.append(cond).append(" AND ");
@@ -553,6 +562,8 @@ public class CubeTestSetup {
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("test_time_dim_day_id2", "int", "ref dim")));
     cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("testDim3id", "string", "direct id to testdim3"),
       "dim3 refer", "dim3chain", "id", null, null, 0.0));
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("cityname", "string", "city name"),
+      "city name", "cubecity", "name", null, null, 0.0));
     List<ChainRefCol> references = new ArrayList<>();
     references.add(new ChainRefCol("timedatechain1", "full_date"));
     references.add(new ChainRefCol("timehourchain1", "full_hour"));
@@ -623,7 +634,8 @@ public class CubeTestSetup {
       "substr(cubestate.name, 5)"));
     exprs.add(new ExprColumn(new FieldSchema("substrdim2big1", "String", "substr of dim2big1"), "dim2big1 substr",
       "substr(dim2big1, 5)"));
-
+    exprs.add(new ExprColumn(new FieldSchema("asciicity", "String", "ascii cityname"), "ascii cityname substr",
+      "ascii(cityname)"));
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(TEST_CUBE_NAME),
       "d_time,pt,it,et,test_time_dim,test_time_dim2");

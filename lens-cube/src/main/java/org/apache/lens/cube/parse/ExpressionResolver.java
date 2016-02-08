@@ -447,7 +447,7 @@ class ExpressionResolver implements ContextRewriter {
           }
         }
         // Replace picked expressions in all the base trees
-        replacePickedExpressions(queryAST);
+        replacePickedExpressions(cfact, queryAST);
         log.debug("Picked expressions: {}", pickedExpressions);
         for (Set<PickedExpression> peSet : pickedExpressions.values()) {
           for (PickedExpression pe : peSet) {
@@ -459,10 +459,16 @@ class ExpressionResolver implements ContextRewriter {
       return exprDims;
     }
 
-    private void replacePickedExpressions(QueryAST queryAST)
+    private void replacePickedExpressions(CandidateFact cfact, QueryAST queryAST)
       throws LensException {
       replaceAST(cubeql, queryAST.getSelectAST());
-      replaceAST(cubeql, queryAST.getWhereAST());
+      if (cfact != null) {
+        for (ASTNode storageWhereClauseAST : cfact.getStorgeWhereClauseMap().values()) {
+          replaceAST(cubeql, storageWhereClauseAST);
+        }
+      } else {
+        replaceAST(cubeql, queryAST.getWhereAST());
+      }
       replaceAST(cubeql, queryAST.getJoinAST());
       replaceAST(cubeql, queryAST.getGroupByAST());
       // Having AST is resolved by each fact, so that all facts can expand their expressions.
