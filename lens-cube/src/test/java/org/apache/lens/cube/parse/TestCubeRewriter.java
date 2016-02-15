@@ -396,6 +396,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     conf.set(getValidUpdatePeriodsKey("testfact", "C1"), "DAILY,HOURLY");
     conf.set(getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
     conf.set(getValidUpdatePeriodsKey("testfact", "C2"), "MONTHLY,DAILY");
+    conf.set(CubeQueryConfUtil.DISABLE_AUTO_JOINS, "false");
     ArrayList<String> storages = Lists.newArrayList("c1_testfact", "c2_testfact");
     try {
       getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(HOURLY, DAILY));
@@ -419,6 +420,26 @@ public class TestCubeRewriter extends TestQueryRewrite {
       }
       conf.setBoolean(CubeQueryConfUtil.ENABLE_STORAGES_UNION, true);
 
+      hqlQuery = rewrite("select ascii(cityname) as `City Name`, msr8, msr7 as `Third measure` "
+        + "from testCube where ascii(cityname) = 'c' and cityname = 'a' and zipcode = 'b' and "
+        + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+      expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
+        "SELECT testcube.alias0 as `City Name`, sum(testcube.alias1) + max(testcube.alias2), "
+          + "case when sum(testcube.alias1) = 0 then 0 else sum(testcube.alias3)/sum(testcube.alias1) end "
+          + "as `Third Measure`",
+        null, "group by testcube.alias0",
+        "select ascii(cubecity.name) as `alias0`, sum(testcube.msr2) as `alias1`, "
+          + "max(testcube.msr3) as `alias2`, "
+          + "sum(case when testcube.cityid = 'x' then testcube.msr21 else testcube.msr22 end) as `alias3`", " join "
+          + getDbName() + "c1_citytable cubecity on testcube.cityid = cubecity.id and (cubecity.dt = 'latest')",
+        "ascii(cubecity.name) = 'c' and cubecity.name = 'a' and testcube.zipcode = 'b'",
+        "group by ascii(cubecity.name))");
+      compareQueries(hqlQuery, expected);
+      hqlQuery = rewrite("select asciicity as `City Name`, msr8, msr7 as `Third measure` "
+        + "from testCube where asciicity = 'c' and cityname = 'a' and zipcode = 'b' and "
+        + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+      compareQueries(hqlQuery, expected);
+
       hqlQuery = rewrite("select ascii(cityid) as `City ID`, msr8, msr7 as `Third measure` "
         + "from testCube where ascii(cityid) = 'c' and cityid = 'a' and zipcode = 'b' and "
         + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
@@ -431,7 +452,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         "select ascii(testcube.cityid) as `alias0`, sum(testcube.msr2) as `alias1`, "
           + "max(testcube.msr3) as `alias2`, "
           + "sum(case when testcube.cityid = 'x' then testcube.msr21 else testcube.msr22 end) as `alias3`",
-        "testcube.alias0 = 'c' and testcube.cityid = 'a' and testcube.zipcode = 'b'",
+        "ascii(testcube.cityid) = 'c' and testcube.cityid = 'a' and testcube.zipcode = 'b'",
         "group by ascii(testcube.cityid)");
 
       compareQueries(hqlQuery, expected);
@@ -447,7 +468,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         "select testcube.cityid as `alias0`, sum(testcube.msr2) as `alias1`, "
           + "max(testcube.msr3) as `alias2`, "
           + "sum(case when testcube.cityid = 'x' then testcube.msr21 else testcube.msr22 end) as `alias3`",
-        "testcube.alias0 = 'a' and testcube.zipcode = 'b'", "group by testcube.cityid");
+        "testcube.cityid = 'a' and testcube.zipcode = 'b'", "group by testcube.cityid");
 
       compareQueries(hqlQuery, expected);
 

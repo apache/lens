@@ -34,6 +34,8 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.driver.InMemoryResultSet;
+import org.apache.lens.server.api.driver.LensResultSet;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
@@ -43,6 +45,9 @@ import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
+
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import lombok.Data;
 import lombok.NonNull;
@@ -59,6 +64,18 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
   /** The Constant EMAIL_ERROR_COUNTER. */
   public static final String EMAIL_ERROR_COUNTER = "email-send-errors";
+
+  /** The time in seconds for which in memory result is available */
+  private final int inMemoryResultsetTTLSecs;
+
+  /** Time formatter for email message corresponding to InMemoryResultset
+   *  Example : 2016-01-25 07:05:46 PM, IST
+   */
+  static final DateTimeFormatter MESSAGE_DATE_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd hh:mm:SS aaa, z");
+
+  /** Mail message corresponding to InMemoryResultset*/
+  static final String RESULT_AVAILABLE_UNTIL_MSG =
+      "Query result is temporarily cached in the server and will be available until ";
 
   /** The from. */
   private final String from;
@@ -97,6 +114,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     mailSmtpConnectionTimeout = Integer.parseInt(conf.get(MAIL_SMTP_CONNECTIONTIMEOUT,
       MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
     this.logSegregationContext = logSegregationContext;
+    this.inMemoryResultsetTTLSecs =conf.getInt(INMEMORY_RESULT_SET_TTL_SECS, DEFAULT_INMEMORY_RESULT_SET_TTL_SECS);
   }
 
   /*
@@ -172,7 +190,13 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
   private String getResultMessage(QueryContext queryContext) {
     try {
-      return queryService.getResultset(queryContext.getQueryHandle()).toQueryResult().toPrettyString();
+      LensResultSet result = queryService.getResultset(queryContext.getQueryHandle());
+      if (result instanceof InMemoryResultSet) { // Do not include the result rows for InMemory results.
+        long availableUntilTime = ((InMemoryResultSet)result).getCreationTime() + inMemoryResultsetTTLSecs;
+        return RESULT_AVAILABLE_UNTIL_MSG + MESSAGE_DATE_FORMATTER.print(availableUntilTime);
+      } else {
+        return result.toQueryResult().toPrettyString();
+      }
     } catch (LensException e) {
       log.error("Error retrieving result of query handle {} for sending e-mail", queryContext.getQueryHandle(), e);
       return "Error retrieving result.";

@@ -239,12 +239,19 @@ public class DenormalizationResolver implements ContextRewriter {
 
     private void replaceReferencedColumns(CandidateFact cfact, boolean replaceFact) throws LensException {
       QueryAST ast = cubeql;
-      if (replaceFact
-        && (tableToRefCols.get(cfact.getName()) != null && !tableToRefCols.get(cfact.getName()).isEmpty())) {
+      boolean factRefExists = cfact != null && tableToRefCols.get(cfact.getName()) != null && !tableToRefCols.get(cfact
+        .getName()).isEmpty();
+      if (replaceFact && factRefExists) {
         ast = cfact;
       }
       resolveClause(cubeql, ast.getSelectAST());
-      resolveClause(cubeql, ast.getWhereAST());
+      if (factRefExists) {
+        for (ASTNode storageWhereClauseAST : cfact.getStorgeWhereClauseMap().values()) {
+          resolveClause(cubeql, storageWhereClauseAST);
+        }
+      } else {
+        resolveClause(cubeql, ast.getWhereAST());
+      }
       resolveClause(cubeql, ast.getGroupByAST());
       resolveClause(cubeql, ast.getHavingAST());
       resolveClause(cubeql, cubeql.getOrderByAST());
