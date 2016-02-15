@@ -240,6 +240,37 @@ public class TestBridgeTableQueries extends TestQueryRewrite {
   }
 
   @Test
+  public void testBridgeTablesWithMultipleChainsWithJoinType() throws Exception {
+    Configuration conf = new Configuration(hConf);
+    conf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "LEFTOUTER");
+    String query = "select usersports.name, xusersports.name, yusersports.name, sum(msr2) from basecube where "
+      + TWO_DAYS_RANGE;
+    String hqlQuery = rewrite(query, conf);
+    String expected = getExpectedQuery("basecube", "select usersports.name, xusersports.name, yusersports.name,"
+      + " sum(basecube.msr2) FROM ",
+      " left outer join " + getDbName() + "c1_usertable userdim_1 on basecube.userid = userdim_1.id "
+      + " left outer join  (select user_interests_1.user_id as user_id, collect_set(usersports.name) as name from "
+      + getDbName() + "c1_user_interests_tbl user_interests_1 join " + getDbName() + "c1_sports_tbl usersports on "
+      + "user_interests_1.sport_id = usersports.id group by user_interests_1.user_id) "
+      + "usersports on userdim_1.id = usersports.user_id"
+      + " left outer join " + getDbName() + "c1_usertable userdim_0 on basecube.yuserid = userdim_0.id "
+      + " left outer join  (select user_interests_0.user_id as user_id,collect_set(yusersports.name) as name from "
+      + getDbName() + "c1_user_interests_tbl user_interests_0 join " + getDbName() + "c1_sports_tbl yusersports on "
+      + " user_interests_0.sport_id = yusersports.id group by user_interests_0.user_id) yusersports on userdim_0.id ="
+      + " yusersports.user_id left outer join " + getDbName()
+      + "c1_usertable userdim on basecube.xuserid = userdim.id"
+      + " left outer join  (select user_interests.user_id as user_id,collect_set(xusersports.name) as name from "
+      + getDbName() + "c1_user_interests_tbl user_interests join " + getDbName() + "c1_sports_tbl xusersports"
+      + " on user_interests.sport_id = xusersports.id group by user_interests.user_id) xusersports on userdim.id = "
+      + " xusersports.user_id", null, "group by usersports.name, xusersports.name, yusersports.name", null,
+      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+    // run with chain ref column
+    query = "select sports, xsports, ysports, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    hqlQuery = rewrite(query, conf);
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+  @Test
   public void testBridgeTablesWithDimTablePartitioning() throws Exception {
     Configuration conf = new Configuration(hConf);
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
