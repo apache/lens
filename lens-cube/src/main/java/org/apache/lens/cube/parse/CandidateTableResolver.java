@@ -122,8 +122,8 @@ class CandidateTableResolver implements ContextRewriter {
       List<CubeDimensionTable> dimtables = cubeql.getMetastoreClient().getAllDimensionTables(dim);
       if (dimtables.isEmpty()) {
         if (!optional) {
-          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo(), dim.getName(),
-            "Dimension tables do not exist");
+          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo(),
+                  dim.getName().concat(" has no dimension tables"));
         } else {
           log.info("Not considering optional dimension {}  as, No dimension tables exist", dim);
           removeOptionalDimWithoutAlias(cubeql, dim);
