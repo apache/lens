@@ -29,6 +29,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
@@ -161,11 +162,9 @@ public class TestHQLParser {
 
     ASTNode where = HQLParser.findNodeByPath(HQLParser.parseHQL(q1, conf), TOK_INSERT, TOK_WHERE);
     String whereStr = HQLParser.getString(where);
-    String expected = "(((((((((( a  <=>  10 ) and (( b  &  c ) =  10 )) "
-      + "and (( d  |  e ) =  10 )) and (( f  ^  g ) =  10 )) "
-      + "and (( h  %  2 ) =  1 )) and ( ~  i  =  10 )) and  not  j ) " + "and  not  k ) and  true ) and  false )";
-    System.out.println(whereStr);
-    Assert.assertEquals(expected, whereStr.trim());
+    String expected = "(( a  <=>  10 ) and (( b  &  c ) =  10 ) and (( d  |  e ) =  10 ) and (( f  ^  g ) =  10 )"
+      + " and (( h  %  2 ) =  1 ) and ( ~  i  =  10 ) and  not  j  and  not  k  and  true  and  false )";
+    Assert.assertEquals(whereStr.trim(), expected);
   }
 
   @Test
@@ -361,5 +360,26 @@ public class TestHQLParser {
     ASTNode selectAST = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
     String genQuery = HQLParser.getString(selectAST);
     Assert.assertEquals(genQuery, select);
+  }
+
+  @DataProvider
+  public Object[][] nAryFlatteningDataProvider() {
+    return new Object[][] {
+      {"a", "a"},
+      {"a or b", "a or b"},
+      {"a or b or c or d", "a or b or c or d"},
+      {"a and b and c and d", "a and b and c and d"},
+      {"a and (b or c)", "a and ( b or c )"},
+      {"a and (b or c or d) and (e or f) and (g and h)", "a and ( b or c or d ) and ( e or f ) and g and h"},
+      // ambiguous, but uniquely understood, or > and.
+      {"a and b or c or d and e or f and g and h", "( a and b ) or c or ( d and e ) or ( f and g and h )"},
+    };
+  }
+
+  @Test(dataProvider = "nAryFlatteningDataProvider")
+  public void testNAryOperatorFlattening(String input, String expected) throws LensException {
+    ASTNode tree = HQLParser.parseExpr(input);
+    String infixString = HQLParser.getString(tree);
+    Assert.assertEquals(infixString, expected);
   }
 }

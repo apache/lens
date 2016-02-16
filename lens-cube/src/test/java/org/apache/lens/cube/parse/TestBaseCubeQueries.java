@@ -810,7 +810,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       "select basecube.dim1 as dim1, basecube.dim11 as dim11, round(sum(basecube.msr2)/1000) as alias1 FROM ",
       null, " group by basecube.dim1, basecube.dim11",
       getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
-    String havingToWhere = " WHERE ((( alias0  >  2 ) or ( alias1  >  0 )) or (( alias2  +  alias1 ) <=  1000 ))";
+    String havingToWhere = " WHERE (( alias0  >  2 ) or ( alias1  >  0 ) or (( alias2  +  alias1 ) <=  1000 ))";
 
     assertFalse(hqlQuery.toLowerCase().contains("having"));
     compareContains(expected1, hqlQuery);

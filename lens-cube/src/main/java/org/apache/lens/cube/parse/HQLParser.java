@@ -703,7 +703,7 @@ public final class HQLParser {
   public static String getString(ASTNode tree) {
     StringBuilder buf = new StringBuilder();
     toInfixString(tree, buf);
-    return buf.toString();
+    return buf.toString().trim().replaceAll("\\s+", " ");
   }
 
   public static String getColName(ASTNode node) {
