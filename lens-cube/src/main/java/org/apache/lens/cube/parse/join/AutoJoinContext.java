@@ -286,7 +286,7 @@ public class AutoJoinContext {
         } else {
           // if bridge clauses are already inited, this is a next table getting joined with bridge table
           // we will append a simple join clause
-          bridgeFromClause.append(joinTypeStr).append(" join ");
+          bridgeFromClause.append(" join ");
           bridgeFromClause.append(dimsToQuery.get(rel.getToTable()).getStorageString(toAlias));
           bridgeFromClause.append(" on ").append(fromAlias).append(".")
             .append(rel.getFromColumn()).append(" = ").append(toAlias)
