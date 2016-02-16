@@ -37,6 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 public class TestHQLParser {
 
   HiveConf conf = new HiveConf();
+  {
+    conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS, false);
+  }
   @Test
   public void testGroupByOrderByGetString() throws Exception {
     String query = "SELECT a,b, sum(c) FROM tab GROUP BY a,f(b), d+e ORDER BY a, g(b), e/100";

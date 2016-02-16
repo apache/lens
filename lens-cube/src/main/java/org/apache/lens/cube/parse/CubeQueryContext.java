@@ -1132,7 +1132,11 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     String insertString = "";
     ASTNode destTree = qb.getParseInfo().getDestForClause(clauseName);
     if (destTree != null && ((ASTNode) (destTree.getChild(0))).getToken().getType() != TOK_TMP_FILE) {
-      insertString = "INSERT OVERWRITE" + HQLParser.getString(qb.getParseInfo().getDestForClause(clauseName));
+      String s = HQLParser.getString(qb.getParseInfo().getDestForClause(clauseName));
+      if(s.endsWith("local")) {
+        s = " local" + s.substring(0, s.length() - 4);
+      }
+      insertString = "INSERT OVERWRITE" + s;
     }
     return insertString;
   }
