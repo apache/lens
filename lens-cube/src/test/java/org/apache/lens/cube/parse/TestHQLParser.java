@@ -362,4 +362,11 @@ public class TestHQLParser {
     String genQuery = HQLParser.getString(selectAST);
     Assert.assertEquals(genQuery, select);
   }
+  @Test
+  public void testToString() throws LensException {
+    String expr = "a or b or c or d";
+    ASTNode parsed = HQLParser.parseExpr(expr);
+    String toString = HQLParser.getString(parsed);
+    System.out.println(toString);
+  }
 }

@@ -18,10 +18,7 @@
  */
 package org.apache.lens.server.api.query;
 
-import static org.apache.lens.server.api.LensConfConstants.DEFAULT_PREFETCH_INMEMORY_RESULTSET;
-import static org.apache.lens.server.api.LensConfConstants.DEFAULT_PREFETCH_INMEMORY_RESULTSET_ROWS;
-import static org.apache.lens.server.api.LensConfConstants.PREFETCH_INMEMORY_RESULTSET;
-import static org.apache.lens.server.api.LensConfConstants.PREFETCH_INMEMORY_RESULTSET_ROWS;
+import static org.apache.lens.server.api.LensConfConstants.*;
 
 import java.util.Collection;
 import java.util.Map;
@@ -34,11 +31,7 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.DriverQueryStatus;
-import org.apache.lens.server.api.driver.InMemoryResultSet;
-import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.driver.LensResultSet;
-import org.apache.lens.server.api.driver.PartiallyFetchedInMemoryResultSet;
+import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
@@ -49,7 +42,6 @@ import org.apache.hadoop.fs.Path;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

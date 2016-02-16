@@ -44,10 +44,8 @@ import org.apache.lens.server.api.user.MockDriverQueryHook;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.HiveDriverRunHook;
@@ -106,7 +104,7 @@ public class TestHiveDriver {
     createDriver();
     configuration = new Configuration();
 
-    ss = new SessionState(conf, "testuser");;
+    ss = new SessionState(conf, "testuser"); ;
     SessionState.start(ss);
     Hive client = Hive.get(conf);
     Database database = new Database();
@@ -507,7 +505,9 @@ public class TestHiveDriver {
     int handleSize = getHandleSize();
     createTestTable("test_cancel_async");
     configuration.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    QueryContext context = createContext("SELECT ID FROM test_cancel_async", configuration);
+    QueryContext context = createContext("select a.id aid, b.id bid from "
+        + "((SELECT ID FROM test_cancel_async) a full outer join (select id from test_cancel_async) b)",
+      configuration);
     driver.executeAsync(context);
     driver.cancelQuery(context.getQueryHandle());
     driver.updateStatus(context);
@@ -542,7 +542,12 @@ public class TestHiveDriver {
     FileSystem fs = actualPath.getFileSystem(conf);
     assertEquals(actualPath, fs.makeQualified(outptuDir));
     List<String> actualRows = new ArrayList<String>();
-    for (FileStatus stat : fs.listStatus(actualPath)) {
+    for (FileStatus stat : fs.listStatus(actualPath, new PathFilter() {
+      @Override
+      public boolean accept(Path path) {
+        return !new File(path.toUri()).isDirectory();
+      }
+    })) {
       FSDataInputStream in = fs.open(stat.getPath());
       BufferedReader br = null;
       try {
@@ -795,7 +800,8 @@ public class TestHiveDriver {
     SessionState.setCurrentSessionState(ss);
     DriverQueryPlan plan = driver.explain(createExplainContext("SELECT explain_test_1.ID, count(1) FROM "
       + " explain_test_1  join explain_test_2 on explain_test_1.ID = explain_test_2.ID"
-      + " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" + " GROUP BY explain_test_1.ID", configuration));
+      + " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" + " GROUP BY explain_test_1.ID",
+      configuration));
 
     assertHandleSize(handleSize);
     assertTrue(plan instanceof HiveQueryPlan);
@@ -820,7 +826,7 @@ public class TestHiveDriver {
     configuration.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     SessionState.setCurrentSessionState(ss);
     String query2 = "SELECT DISTINCT ID FROM explain_test_1";
-    PreparedQueryContext pctx  = createPreparedQueryContext(query2);
+    PreparedQueryContext pctx = createPreparedQueryContext(query2);
     pctx.setSelectedDriver(driver);
     pctx.setLensSessionIdentifier(sessionid);
     DriverQueryPlan plan2 = driver.explainAndPrepare(pctx);

@@ -25,14 +25,20 @@
 
   <property>
      
-    <name>hive.metastore.local</name>
+    <name>lens.server.drivers</name>
      
-    <value>true</value>
+    <value>org.apache.lens.server.api.driver.MockDriver</value>
   </property>
 
   <property>
     <name>hive.metastore.warehouse.dir</name>
     <value>${project.build.directory}/hive/warehouse</value>
+  </property>
+
+  <property>
+    <name>hive.querylog.location</name>
+    <value>${project.build.directory}/query_logs</value>
+    <description>Location of the structured hive logs</description>
   </property>
 
   <property>
@@ -44,11 +50,6 @@
   <property>
     <name>datanucleus.schema.autoCreateTables</name>
     <value>true</value>
-  </property>
-
-  <property>
-    <name>hive.support.sql11.reserved.keywords</name>
-    <value>false</value>
   </property>
 
 </configuration>

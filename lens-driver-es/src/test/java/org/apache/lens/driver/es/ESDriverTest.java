@@ -21,6 +21,8 @@ package org.apache.lens.driver.es;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.testng.annotations.BeforeTest;
 
@@ -37,6 +39,9 @@ public abstract class ESDriverTest {
     esDriverConfig = new ESDriverConfig(config);
     driver.configure(config, "es", "es1");
     mockClientES = (MockClientES) driver.getESClient();
+    HiveConf conf = new HiveConf();
+    conf.addResource(config);
+    SessionState.start(conf);
   }
 
   protected abstract void initializeConfig(Configuration config);
