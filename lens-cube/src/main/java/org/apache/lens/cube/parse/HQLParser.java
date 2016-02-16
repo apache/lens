@@ -402,8 +402,14 @@ public final class HQLParser {
         toInfixString((ASTNode) root.getChild(i), buf);
       }
 
-    } else if (BINARY_OPERATORS.contains(Integer.valueOf(root.getToken().getType()))) {
-      buf.append("(");
+    } else if (BINARY_OPERATORS.contains(root.getToken().getType())) {
+      boolean enclose = true;
+      if(root.getParent() != null && root.getType() ==  root.getParent().getType()) {
+        enclose = false;
+      }
+      if (enclose) {
+        buf.append("(");
+      }
       if (MINUS == rootType && root.getChildCount() == 1) {
         // If minus has only one child, then it's a unary operator.
         // Add Operator name first
@@ -422,7 +428,9 @@ public final class HQLParser {
         // Right operand
         toInfixString((ASTNode) root.getChild(1), buf);
       }
-      buf.append(")");
+      if (enclose) {
+        buf.append(")");
+      }
     } else if (LSQUARE == rootType) {
       // square brackets for array and map types
       toInfixString((ASTNode) root.getChild(0), buf);

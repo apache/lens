@@ -247,7 +247,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    QueryContext ctx = createContext("USE " + dataBase, driverConf, oldDriver);
+    QueryContext ctx = createContext("USE " + dataBase, configuration, oldDriver);
     oldDriver.execute(ctx);
     Assert.assertEquals(0, oldDriver.getHiveHandleSize());
 

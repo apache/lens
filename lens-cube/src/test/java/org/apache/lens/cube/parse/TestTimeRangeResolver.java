@@ -65,7 +65,7 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
   @Test
   public void testFactValidity() throws ParseException, LensException, HiveException, ClassNotFoundException {
     LensException e =
-      getLensExceptionInRewrite("cube select msr2 from " + cubeName + " where " + LAST_YEAR_RANGE,
+      getLensExceptionInRewrite("select msr2 from " + cubeName + " where " + LAST_YEAR_RANGE,
         getConf());
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError causes = ne.getJsonMessage();
@@ -86,7 +86,7 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
   @Test
   public void testAbsoluteValidity() throws ParseException, HiveException, LensException {
     CubeQueryContext ctx =
-      rewriteCtx("cube select msr12 from basecube where " + TWO_DAYS_RANGE + " or " + TWO_DAYS_RANGE_BEFORE_4_DAYS,
+      rewriteCtx("select msr12 from basecube where " + TWO_DAYS_RANGE + " or " + TWO_DAYS_RANGE_BEFORE_4_DAYS,
         getConf());
     assertEquals(ctx.getFactPruningMsgs().get(ctx.getMetastoreClient().getCubeFact("testfact_deprecated")).size(), 1);
     CandidateTablePruneCause pruningMsg =
