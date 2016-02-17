@@ -46,14 +46,13 @@ import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.api.result.QueryCostTO;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.driver.hive.HiveDriver;
+import org.apache.lens.lib.query.FilePersistentFormatter;
 import org.apache.lens.lib.query.FileSerdeFormatter;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.InMemoryResultSet;
-import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.driver.LensResultSetMetadata;
+import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.error.LensDriverErrorCode;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.LensMetricsRegistry;
@@ -697,7 +696,8 @@ public class TestQueryService extends LensJerseyTest {
       fail("unexpected cancel status: " + result.getStatus());
     }
 
-    // Test http download end point
+    // 1. Test http download end point and result path should be correct (when both driver and server persist)
+    // 2. Test Fetch result should fail before query is marked successful
     log.info("Starting httpendpoint test");
     final FormDataMultiPart mp3 = new FormDataMultiPart();
     mp3.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
@@ -707,14 +707,31 @@ public class TestQueryService extends LensJerseyTest {
     mp3.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    conf.addProperty(LensConfConstants.QUERY_OUTPUT_FORMATTER, DeferredPersistentResultFormatter.class.getName());
+    conf.addProperty("deferPersistenceByMillis", 5000); // defer persistence for 5 secs
 
     mp3.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       mt));
     final QueryHandle handle3 = target.request(mt).post(Entity.entity(mp3, MediaType.MULTIPART_FORM_DATA_TYPE),
       new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
-    // Get query
+    QueryContext ctx3 = queryService.getQueryContext(handle3);
+    assertFalse(ctx3.finished()); //Formatting is deferred so query will take time to finish
+    try {
+      queryService.fetchResultSet(lensSessionId, handle3, 0, 100);
+      fail("client should not be allowed to fetch result before query finishes successfully");
+    } catch (NotFoundException e) {
+      // Expected. Ignore
+    }
     waitForQueryToFinish(target(), lensSessionId, handle3, Status.SUCCESSFUL, mt);
+    LensResultSet rs = queryService.getResultset(handle3);
+    //check persisted result path
+    String expectedPath =
+        ctx3.getConf().get(LensConfConstants.RESULT_SET_PARENT_DIR) + "/" + handle3.getHandleIdString()
+            + ctx3.getConf().get(LensConfConstants.QUERY_OUTPUT_FILE_EXTN);
+    assertTrue(((PersistentResultSet) rs).getOutputPath().endsWith(expectedPath));
+
     validateHttpEndPoint(target(), null, handle3, null);
   }
 
@@ -1292,7 +1309,7 @@ public class TestQueryService extends LensJerseyTest {
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     conf.addProperty(LensConfConstants.PREFETCH_INMEMORY_RESULTSET, "true");
     conf.addProperty(LensConfConstants.PREFETCH_INMEMORY_RESULTSET_ROWS, preFetchRows);
-    conf.addProperty(LensConfConstants.QUERY_OUTPUT_FORMATTER, DeferredFileSerdeFormatter.class.getName());
+    conf.addProperty(LensConfConstants.QUERY_OUTPUT_FORMATTER, DeferredInMemoryResultFormatter.class.getName());
     conf.addProperty("deferPersistenceByMillis", deferPersistenceByMillis); // property used for test only
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
         MediaType.APPLICATION_XML_TYPE));
@@ -1324,21 +1341,36 @@ public class TestQueryService extends LensJerseyTest {
         false, true, MediaType.APPLICATION_XML_TYPE);
   }
 
-  private static class DeferredFileSerdeFormatter extends FileSerdeFormatter {
+  private static class DeferredInMemoryResultFormatter extends FileSerdeFormatter {
     /**
      * Defer init so that this output formatter takes significant time.
      */
     @Override
     public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
       super.init(ctx, metadata);
-      long deferPersistenceByMillis = ctx.getConf().getLong("deferPersistenceByMillis", 5000);
-      if (deferPersistenceByMillis > 0) {
-        try {
-          log.info("Deferring result formatting by {} millis", deferPersistenceByMillis);
-          Thread.sleep(deferPersistenceByMillis);
-        } catch (InterruptedException e) {
-          // Ignore
-        }
+      deferFormattingIfApplicable(ctx);
+    }
+  }
+
+  private static class DeferredPersistentResultFormatter extends FilePersistentFormatter {
+    /**
+     * Defer init so that this output formatter takes significant time.
+     */
+    @Override
+    public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
+      super.init(ctx, metadata);
+      deferFormattingIfApplicable(ctx);
+    }
+  }
+
+  private static void deferFormattingIfApplicable(QueryContext ctx) {
+    long deferPersistenceByMillis = ctx.getConf().getLong("deferPersistenceByMillis", 0);
+    if (deferPersistenceByMillis > 0) {
+      try {
+        log.info("Deferring result formatting by {} millis", deferPersistenceByMillis);
+        Thread.sleep(deferPersistenceByMillis);
+      } catch (InterruptedException e) {
+        // Ignore
       }
     }
   }
