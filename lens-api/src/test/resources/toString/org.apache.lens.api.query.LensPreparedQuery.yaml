@@ -20,5 +20,4 @@ Prepared User: user
 Selected Driver Name: selected-driver
 Driver Query: select blah from driver table
 Conf:
-  key2: value2
   key1: value1
