@@ -250,7 +250,7 @@ public class TestColumnarSQLRewriter {
       + "where ( time_dim. time_key ) between '2013-01-01' and '2013-01-31' ) and "
       + "sales_fact___fact.location_key in  (  select location_dim .location_key from "
       + "location_dim where (( location_dim. location_key ) = 'some-loc' ) ) and ";
-   Assert.assertEquals(qtest.allSubQueries.toString().trim(), expected.trim());
+    Assert.assertEquals(qtest.allSubQueries.toString().trim(), expected.trim());
   }
 
   /**
