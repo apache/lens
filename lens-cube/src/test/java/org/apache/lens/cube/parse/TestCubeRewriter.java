@@ -1017,8 +1017,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
       + " on testCube.cityid = citydim.id where " + LAST_HOUR_TIME_RANGE;
 
     String expectedRewrittenQuery = "SELECT ( citydim . name ) as `Alias With Spaces` , sum(( testcube . msr2 )) "
-      + "as `TestMeasure`  FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
-      + "ON (( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) =  '"
+      + "as `TestMeasure` FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
+      + "ON (( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) = '"
       + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "' ))) GROUP BY ( citydim . name )";
 
     String actualRewrittenQuery = rewrite(inputQuery, getConfWithStorages("C2"));
@@ -1034,8 +1034,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
       + " on testCube.cityid = citydim.id where " + LAST_HOUR_TIME_RANGE;
 
     String expectedRewrittenQuery = "SELECT ( citydim . name ) as `Alias With Spaces` , sum(( testcube . msr2 )) "
-      + "as `TestMeasure`  FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
-      + "ON (( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) =  '"
+      + "as `TestMeasure` FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
+      + "ON (( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) = '"
       + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "' ))) GROUP BY ( citydim . name )";
 
     String actualRewrittenQuery = rewrite(inputQuery, getConfWithStorages("C2"));
