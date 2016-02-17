@@ -247,9 +247,9 @@ public class TestColumnarSQLRewriter {
     SessionState.start(hconf);
     qtest.rewrite(query, conf, hconf);
     String expected = "sales_fact___fact.time_key in  (  select time_dim .time_key from time_dim "
-      + "where ( time_dim. time_key ) between  '2013-01-01'  and  '2013-01-31'  ) and "
+      + "where ( time_dim. time_key ) between '2013-01-01' and '2013-01-31' ) and "
       + "sales_fact___fact.location_key in  (  select location_dim .location_key from "
-      + "location_dim where (( location_dim. location_key ) =  'some-loc' ) ) and ";
+      + "location_dim where (( location_dim. location_key ) = 'some-loc' ) ) and ";
     Assert.assertEquals(qtest.allSubQueries.toString().trim(), expected.trim());
   }
 
@@ -1277,13 +1277,13 @@ public class TestColumnarSQLRewriter {
       assertEquals(HQLParser.getString(rewriter.getSelectAST()).trim(), "( t1 . id1 ), ( t2 . id2 ), ( t3 . id3 ),"
         + " ( t1 . name1 ), ( t2 . name2 ), ( t3 . name3 ), count( 1 )",
         "Found :" + HQLParser.getString(rewriter.getSelectAST()));
-      assertEquals(HQLParser.getString(rewriter.getWhereAST()).trim(), "(( t1 . id1 ) =  100 )",
+      assertEquals(HQLParser.getString(rewriter.getWhereAST()).trim(), "(( t1 . id1 ) = 100 )",
         "Found: " + HQLParser.getString(rewriter.getWhereAST()));
       assertEquals(HQLParser.getString(rewriter.getGroupByAST()).trim(), "( t2 . id2 )",
         "Found: " + HQLParser.getString(rewriter.getGroupByAST()));
-      assertEquals(HQLParser.getString(rewriter.getOrderByAST()).trim(), "t3 . id3   asc",
+      assertEquals(HQLParser.getString(rewriter.getOrderByAST()).trim(), "t3 . id3 asc",
         "Found: " + HQLParser.getString(rewriter.getOrderByAST()));
-      assertEquals(HQLParser.getString(rewriter.getHavingAST()).trim(), "(count(( t1 . id1 )) >  2 )",
+      assertEquals(HQLParser.getString(rewriter.getHavingAST()).trim(), "(count(( t1 . id1 )) > 2 )",
         "Found: " + HQLParser.getString(rewriter.getHavingAST()));
       assertTrue(fromStringAfterRewrite.contains("( t1 . t2id ) = ( t2 . id2 )")
         && fromStringAfterRewrite.contains("( t2 . t3id ) = ( t3 . id3 )"), fromStringAfterRewrite);
