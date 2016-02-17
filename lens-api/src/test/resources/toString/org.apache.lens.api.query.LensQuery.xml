@@ -48,10 +48,6 @@
   <queryConf>
     <properties>
       <entry>
-        <key>key2</key>
-        <value>value2</value>
-      </entry>
-      <entry>
         <key>key1</key>
         <value>value1</value>
       </entry>
