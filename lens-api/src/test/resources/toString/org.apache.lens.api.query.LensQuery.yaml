@@ -31,7 +31,6 @@ Status:
 Result Set Path: /path/to/result
 Driver Op Handle: a6f6fb20-cd1b-44dc-819c-36eb8c99e72c
 Query Conf:
-  key2: value2
   key1: value1
 Submission Time: 1454420854897
 Launch Time: 1454420854897
