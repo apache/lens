@@ -61,17 +61,6 @@
   </property>
 
   <property>
-    <name>hive.server2.authentication</name>
-    <value>CUSTOM</value>
-  </property>
-
-  <property>
-    <name>hive.server2.custom.authentication.class</name>
-    <value>org.apache.lens.server.auth.FooBarAuthenticationProvider</value>
-  </property>
-
-
-  <property>
     <name>lens.query.enable.mail.notify</name>
     <value>false</value>
     <description>When a query ends, whether to notify the submitter by mail or not.</description>

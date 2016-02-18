@@ -32,7 +32,6 @@ public class FooBarAuthenticationProvider implements PasswdAuthenticationProvide
 
   /** The allowed combinations. */
   private final String[][] allowedCombinations = new String[][]{{"foo", "bar"}, {"anonymous", ""}};
-
   /*
    * (non-Javadoc)
    *

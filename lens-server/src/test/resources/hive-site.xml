@@ -54,6 +54,11 @@
   </property>
 
   <property>
+    <name>datanucleus.schema.autoCreateTables</name>
+    <value>true</value>
+  </property>
+
+  <property>
     <name>hive.lock.manager</name>
     <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
   </property>
@@ -67,5 +72,16 @@
     <name>hive.server2.query.log.dir</name>
     <value>target/query_logs</value>
   </property>
+
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>CUSTOM</value>
+  </property>
+
+  <property>
+    <name>hive.server2.custom.authentication.class</name>
+    <value>org.apache.lens.server.auth.FooBarAuthenticationProvider</value>
+  </property>
+
 
 </configuration>
