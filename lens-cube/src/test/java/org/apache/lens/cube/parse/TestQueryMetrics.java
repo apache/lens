@@ -41,7 +41,7 @@ public class TestQueryMetrics extends TestQueryRewrite {
     conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestQueryMetrics.class.getSimpleName());
     conf.set(LensConfConstants.QUERY_METRIC_DRIVER_STACK_NAME, "testCubeRewriteStackName");
 
-    rewriteCtx("cube select" + " SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
+    rewriteCtx("select" + " SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(

@@ -69,7 +69,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testCubeQueryExpressionSelection() throws Exception {
     // select with expression
-    String hqlQuery = rewrite("cube select avgmsr from testCube where " + TWO_DAYS_RANGE, conf);
+    String hqlQuery = rewrite("select avgmsr from testCube where " + TWO_DAYS_RANGE, conf);
     String expected =
       getExpectedQuery(cubeName, "select avg(testCube.msr1 + testCube.msr2) FROM ", null, null,
         getWhereForHourly2days("C1_testfact2_raw"));
@@ -222,7 +222,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   public void testExpressionInHaving() throws Exception {
     // expression with having clause
     String hqlQuery =
-      rewrite("cube select booleancut, avgmsr from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'"
+      rewrite("select booleancut, avgmsr from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'"
         + " having msr6 > 100.0", conf);
     String expected =
       getExpectedQuery(cubeName, "select testCube.dim1 != 'x' AND testCube.dim2 != 10 ,"
@@ -237,7 +237,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   public void testExpressionInOrderby() throws Exception {
     // expression with orderby clause
     String hqlQuery =
-      rewrite("cube select avgmsr from testCube " + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'"
+      rewrite("select avgmsr from testCube " + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'"
         + " group by booleancut having msr6 > 100.0 order by booleancut", conf);
     String expected =
       getExpectedQuery(cubeName, "select testCube.dim1 != 'x' AND testCube.dim2 != 10 ,"
@@ -250,7 +250,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testExpressionWithAliasInOrderby() throws Exception {
     String hqlQuery =
-      rewrite("cube select booleancut bc, msr2 from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'"
+      rewrite("select booleancut bc, msr2 from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'"
         + " having msr6 > 100.0 order by bc", conf);
     String expected =
       getExpectedQuery(cubeName, "select testCube.dim1 != 'x' AND testCube.dim2 != 10 as `bc`,"

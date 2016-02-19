@@ -83,7 +83,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
   public void testCubeQueryContinuousUpdatePeriod() throws Exception {
     LensException th = null;
     try {
-      rewrite("cube select" + " SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
+      rewrite("select" + " SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
     } catch (LensException e) {
       th = e;
       log.error("Semantic exception while testing cube query.", e);

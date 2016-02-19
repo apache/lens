@@ -77,7 +77,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
             + TWO_DAYS_RANGE, conf);
     //maxCause : FACT_NOT_AVAILABLE_IN_RANGE, Ordinal : 1
     NoCandidateFactAvailableException ne2 = (NoCandidateFactAvailableException)
-            getLensExceptionInRewrite("cube select dim1 from " + cubeName + " where " + LAST_YEAR_RANGE, getConf());
+            getLensExceptionInRewrite("select dim1 from " + cubeName + " where " + LAST_YEAR_RANGE, getConf());
     assertEquals(ne1.compareTo(ne2), 8);
   }
 
@@ -554,7 +554,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
     String hql, expected;
     // Prefer fact that has a storage with part col on queried time dim
-    hql = rewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
+    hql = rewrite("select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
     expected = getExpectedQuery(BASE_CUBE_NAME, "select sum(basecube.msr12) FROM ", null, null,
       getWhereForDailyAndHourly2days(BASE_CUBE_NAME, "c1_testfact2_base"));
     compareQueries(hql, expected);
@@ -563,7 +563,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C4");
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
     LensException exc =
-      getLensExceptionInRewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
+      getLensExceptionInRewrite("select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) exc;
     PruneCauses.BriefAndDetailedError pruneCause = ne.getJsonMessage();
     assertTrue(pruneCause.getBrief().contains("Missing partitions"));
@@ -578,7 +578,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
 
     // fail on partial false. Should go to fallback column. Also testing transitivity of timedim relations
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
-    hql = rewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
+    hql = rewrite("select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
     String dTimeWhereClause = "basecube.d_time >= '" + HIVE_QUERY_DATE_PARSER.get().format(ABSDATE_PARSER.get().parse(
       getAbsDateFormatString(getDateUptoHours(
         TWODAYS_BACK)))) + "' and "
@@ -598,7 +598,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
 
     // Multiple timedims in single query. test that
     CubeQueryContext ctx =
-      rewriteCtx("cube select msr12 from basecube where " + TWO_DAYS_RANGE + " and " + TWO_DAYS_RANGE_TTD, conf);
+      rewriteCtx("select msr12 from basecube where " + TWO_DAYS_RANGE + " and " + TWO_DAYS_RANGE_TTD, conf);
     assertEquals(ctx.getCandidateFactSets().size(), 1);
     assertEquals(ctx.getCandidateFactSets().iterator().next().size(), 1);
     CandidateFact cfact = ctx.getCandidateFactSets().iterator().next().iterator().next();
