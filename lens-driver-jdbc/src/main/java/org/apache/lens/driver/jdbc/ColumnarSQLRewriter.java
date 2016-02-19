@@ -21,6 +21,7 @@ package org.apache.lens.driver.jdbc;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.apache.lens.api.util.CommonUtils;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
@@ -65,9 +66,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /** The query. */
   protected String query;
 
-  /** The final fact query. */
-  private String finalFactQuery;
-
   /** The limit. */
   private String limit;
 
@@ -86,9 +84,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /** The rewritten query. */
   protected StringBuilder rewrittenQuery = new StringBuilder();
 
-  /** The merged query. */
-  protected StringBuilder mergedQuery = new StringBuilder();
-
   /** The fact filters for push down */
   protected StringBuilder factFilterPush = new StringBuilder();
 
@@ -103,9 +98,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   /** The agg column. */
   protected List<String> aggColumn = new ArrayList<String>();
-
-  /** The filter in join cond. */
-  protected List<String> filterInJoinCond = new ArrayList<String>();
 
   /** The right filter. */
   protected List<String> rightFilter = new ArrayList<String>();
@@ -768,8 +760,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         String alias = "alias" + String.valueOf(count);
         String allaggmeasures = aggmeasures.append(measure).append(" as ").append(alias).toString();
         String aggColAlias = funident + "(" + alias + ")";
-
-        mapAggTabAlias.put(measure, aggColAlias);
+        String measureRegex = "\\s*" + Pattern.quote(funident)
+          + "\\s*\\(\\s*\\Q" + aggCol.replaceAll("\\s+", "\\\\E\\\\s+\\\\Q") + "\\E\\s*\\)\\s*";
+        mapAggTabAlias.put(measureRegex, aggColAlias);
         if (!aggColumn.contains(allaggmeasures)) {
           aggColumn.add(allaggmeasures);
         }
@@ -1050,13 +1043,13 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     // sub query query to the outer query
 
     for (Map.Entry<String, String> entry : mapAggTabAlias.entrySet()) {
-      selectTree = selectTree.replace(entry.getKey(), entry.getValue());
+      selectTree = selectTree.replaceAll(entry.getKey(), entry.getValue());
 
       if (orderByTree != null) {
-        orderByTree = orderByTree.replace(entry.getKey(), entry.getValue());
+        orderByTree = orderByTree.replaceAll(entry.getKey(), entry.getValue());
       }
       if (havingTree != null) {
-        havingTree = havingTree.replace(entry.getKey(), entry.getValue());
+        havingTree = havingTree.replaceAll(entry.getKey(), entry.getValue());
       }
     }
     //for subquery with count function should be replaced with sum in outer query
