@@ -179,9 +179,13 @@ public class FactPartition implements Comparable<FactPartition> {
   }
 
   public double getAllTableWeights(ImmutableMap<String, Double> tableWeights) {
-    float weight = 0;
+    double weight = 0;
+    Map<String, Double> tblWithoutDBWeghts = new HashMap<>();
+    for (Map.Entry<String, Double> entry : tableWeights.entrySet()) {
+      tblWithoutDBWeghts.put(entry.getKey().substring(entry.getKey().indexOf('.') + 1), entry.getValue());
+    }
     for (String tblName : getStorageTables()) {
-      Double tblWeight = tableWeights.get(tblName);
+      Double tblWeight = tblWithoutDBWeghts.get(tblName);
       if (tblWeight != null) {
         weight += tblWeight;
       }
