@@ -115,7 +115,7 @@ public class SavedQueryResource {
     @QueryParam("count") String count) throws LensException {
     try {
       final int countVal = count == null? defaultCount: Integer.parseInt(count);
-      return savedQueryService.list(info.getQueryParameters(), start, countVal);
+      return savedQueryService.list(sessionid, info.getQueryParameters(), start, countVal);
     } catch (LensException e) {
       throw getWrapped(e);
     }
@@ -136,7 +136,7 @@ public class SavedQueryResource {
     @QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("id") long id) throws LensException {
     try {
-      return savedQueryService.get(id);
+      return savedQueryService.get(sessionid, id);
     } catch (LensException e) {
       throw getWrapped(e);
     }
@@ -157,7 +157,7 @@ public class SavedQueryResource {
     @QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("id") long id) throws LensException {
     try {
-      savedQueryService.delete(id);
+      savedQueryService.delete(sessionid, id);
       return new ResourceModifiedResponse(id, "saved_query", DELETED);
     } catch (LensException e) {
       throw getWrapped(e);
@@ -185,7 +185,7 @@ public class SavedQueryResource {
     throws LensException, IOException {
     try {
       validateSampleResolved(savedQuery);
-      long id = savedQueryService.save(savedQuery);
+      long id = savedQueryService.save(sessionid, savedQuery);
       response.setStatus(HttpServletResponse.SC_CREATED);
       response.flush();
       return new ResourceModifiedResponse(id, "saved_query", CREATED);
@@ -215,7 +215,7 @@ public class SavedQueryResource {
     @Context final Response response) throws LensException, IOException {
     try {
       validateSampleResolved(savedQuery);
-      savedQueryService.update(id, savedQuery);
+      savedQueryService.update(sessionid, id, savedQuery);
       response.setStatus(HttpServletResponse.SC_CREATED);
       response.flush();
       return new ResourceModifiedResponse(id, "saved_query", UPDATED);
@@ -260,7 +260,7 @@ public class SavedQueryResource {
     @FormDataParam("conf") LensConf conf) throws LensException {
     final String requestId = this.logSegregationContext.getLogSegragationId();
     try {
-      final SavedQuery savedQuery = savedQueryService.get(id);
+      final SavedQuery savedQuery = savedQueryService.get(sessionid, id);
       final String query = ParameterResolver.resolve(savedQuery, info.getQueryParameters());
       return LensAPIResult.composedOf(
         null,
