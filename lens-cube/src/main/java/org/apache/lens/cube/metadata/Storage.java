@@ -370,7 +370,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    */
   public void updatePartition(Hive client, String fact, Partition partition)
     throws InvalidOperationException, HiveException {
-    client.alterPartition(MetastoreUtil.getFactOrDimtableStorageTableName(fact, getName()), partition);
+    client.alterPartition(MetastoreUtil.getFactOrDimtableStorageTableName(fact, getName()), partition, null);
   }
 
   /**
@@ -385,7 +385,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
     throws InvalidOperationException, HiveException {
     boolean success = false;
     try {
-      client.alterPartitions(MetastoreUtil.getFactOrDimtableStorageTableName(fact, getName()), partitions);
+      client.alterPartitions(MetastoreUtil.getFactOrDimtableStorageTableName(fact, getName()), partitions, null);
       success = true;
     } finally {
       if (success) {

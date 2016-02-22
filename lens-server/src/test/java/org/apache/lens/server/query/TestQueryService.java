@@ -782,7 +782,9 @@ public class TestQueryService extends LensJerseyTest {
     if (fs.getFileStatus(actualPath).isDir()) {
       assertTrue(isDir);
       for (FileStatus fstat : fs.listStatus(actualPath)) {
-        addRowsFromFile(actualRows, fs, fstat.getPath());
+        if (!fstat.isDirectory()) {
+          addRowsFromFile(actualRows, fs, fstat.getPath());
+        }
       }
     } else {
       assertFalse(isDir);
@@ -1593,7 +1595,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       mt));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-      "cube sdfelect ID from cube_nonexist"));
+      "sdfelect ID from cube_nonexist"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "estimate"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       mt));

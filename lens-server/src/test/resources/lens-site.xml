@@ -176,4 +176,14 @@
     <name>lens.server.estimate.timeout.millis</name>
     <value>120000</value>
   </property>
+
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>CUSTOM</value>
+  </property>
+
+  <property>
+    <name>hive.server2.custom.authentication.class</name>
+    <value>org.apache.lens.server.auth.FooBarAuthenticationProvider</value>
+  </property>
 </configuration>

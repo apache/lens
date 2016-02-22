@@ -1891,7 +1891,7 @@ public class CubeMetastoreClient {
     }
     hiveTable.getTTable().getParameters().putAll(cubeTable.getProperties());
     try {
-      getClient().alterTable(table, hiveTable);
+      getClient().alterTable(table, hiveTable, null);
     } catch (InvalidOperationException e) {
       throw new HiveException(e);
     }
@@ -1904,7 +1904,7 @@ public class CubeMetastoreClient {
 
   public void alterHiveTable(String table, Table hiveTable) throws HiveException {
     try {
-      getClient().alterTable(table, hiveTable);
+      getClient().alterTable(table, hiveTable, null);
     } catch (InvalidOperationException e) {
       throw new HiveException(e);
     }

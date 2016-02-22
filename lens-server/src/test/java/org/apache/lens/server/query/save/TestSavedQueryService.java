@@ -31,6 +31,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.*;
 
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.query.save.*;
@@ -96,6 +98,7 @@ public class TestSavedQueryService extends LensJerseyTest {
     Map<String, String> sessionconf = Maps.newHashMap();
     sessionconf.put("test.session.key", "svalue");
     lensSessionId = queryService.openSession("foo", "bar", sessionconf); // @localhost should be removed
+    SessionState.start(new HiveConf());
   }
 
   @AfterTest

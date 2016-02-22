@@ -128,7 +128,7 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
       partSpec.put("dt", key);
       Partition p = client.createPartition(t, partSpec);
       p.setLocation(finalPath.toString());
-      client.alterPartition(database, eventName, p);
+      client.alterPartition(database, eventName, p, null);
       return true;
     } catch (Exception e) {
       LOG.warn("Unable to add the partition ", e);

@@ -20,6 +20,7 @@ package org.apache.lens.server.rewrite;
 
 import java.util.*;
 
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.CubeQueryContext;
@@ -188,6 +189,7 @@ public class TestRewriting {
    */
   @Test
   public void testCubeQuery() throws ParseException, LensException, HiveException {
+    SessionState.start(hconf);
     List<LensDriver> drivers = new ArrayList<LensDriver>();
     MockDriver driver = new MockDriver();
     LensConf lensConf = new LensConf();

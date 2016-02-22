@@ -63,7 +63,6 @@ import com.google.common.collect.Lists;
 /**
  * The Class TestHiveDriver.
  */
-@Test
 public class TestHiveDriver {
 
   /** The Constant TEST_DATA_FILE. */

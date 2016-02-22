@@ -278,6 +278,15 @@ public class EmbeddedThriftConnection implements ThriftConnection {
       }
     }
 
+    @Override
+    public SessionHandle openSession(String username, String password) throws HiveSQLException {
+      try{
+        captureState();
+        return super.openSession(username, password);
+      } finally {
+        restoreState();
+      }
+    }
   }
 
   /** The client. */
@@ -318,6 +327,14 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
   @Override
   public void init(HiveConf conf, String user) {
-    getService().init(conf);
+    SessionState state = null;
+    try {
+      state = SessionState.get();
+      getService().init(conf);
+    } finally {
+      if (state != null) {
+        SessionState.setCurrentSessionState(state);
+      }
+    }
   }
 }
