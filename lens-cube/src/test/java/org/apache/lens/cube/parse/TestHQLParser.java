@@ -21,6 +21,7 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -40,6 +41,7 @@ public class TestHQLParser {
   HiveConf conf = new HiveConf();
   {
     conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS, false);
+    SessionState.start(conf);
   }
   @Test
   public void testGroupByOrderByGetString() throws Exception {
@@ -196,35 +198,19 @@ public class TestHQLParser {
 
   @Test
   public void testOrderbyBrackets() throws Exception {
-    String query = "SELECT id from citytable order by ((citytable.id) asc)";
+    String query = "SELECT id from citytable order by (citytable.id) asc";
     // String hql = rewrite(driver, query);
     ASTNode tree = HQLParser.parseHQL(query, conf);
     ASTNode orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
     String reconstructed = HQLParser.getString(orderByTree);
     System.out.println("RECONSTRUCTED0:" + reconstructed);
-    // Assert.assertEquals("(( citytable  .  id ) asc )", reconstructed);
-    HQLParser.parseHQL("SELECT citytable.id FROM citytable ORDER BY " + reconstructed, conf);
-
-    String query2 = "SELECT id from citytable order by (citytable.id asc)";
-    tree = HQLParser.parseHQL(query2, conf);
-    orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
-    reconstructed = HQLParser.getString(orderByTree);
-    System.out.println("RECONSTRUCTED1:" + reconstructed);
-    HQLParser.parseHQL("SELECT citytable.id FROM citytable ORDER BY " + reconstructed, conf);
-
+    Assert.assertEquals(reconstructed, "citytable . id asc");
     String query3 = "SELECT id, name from citytable order by citytable.id asc, citytable.name desc";
     tree = HQLParser.parseHQL(query3, conf);
     orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
     reconstructed = HQLParser.getString(orderByTree);
     System.out.println("RECONSTRUCTED2:" + reconstructed);
-    HQLParser.parseHQL("SELECT id, name FROM citytable ORDER BY " + reconstructed, conf);
-
-    String query4 = "SELECT id from citytable order by citytable.id";
-    tree = HQLParser.parseHQL(query4, conf);
-    orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
-    reconstructed = HQLParser.getString(orderByTree);
-    System.out.println("RECONSTRUCTED3:" + reconstructed);
-    HQLParser.parseHQL("SELECT citytable.id FROM citytable ORDER BY " + reconstructed, conf);
+    Assert.assertEquals(reconstructed, "citytable . id asc , citytable . name desc");
   }
 
   @Test

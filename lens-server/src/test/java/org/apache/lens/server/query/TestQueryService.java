@@ -1606,7 +1606,7 @@ public class TestQueryService extends LensJerseyTest {
 
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
       LensCubeErrorCode.SYNTAX_ERROR.getLensErrorInfo().getErrorCode(),
-      "Syntax Error: line 1:5 cannot recognize input near 'sdfelect' 'ID' 'from' in select clause",
+      "Syntax Error: line 1:0 cannot recognize input near 'sdfelect' 'ID' 'from'",
       TestDataUtils.MOCK_STACK_TRACE);
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 

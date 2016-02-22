@@ -184,7 +184,6 @@ public class SavedQueryResource {
     @Context final Response response)
     throws LensException, IOException {
     try {
-      validateSampleResolved(savedQuery);
       long id = savedQueryService.save(sessionid, savedQuery);
       response.setStatus(HttpServletResponse.SC_CREATED);
       response.flush();
@@ -214,7 +213,6 @@ public class SavedQueryResource {
     SavedQuery savedQuery,
     @Context final Response response) throws LensException, IOException {
     try {
-      validateSampleResolved(savedQuery);
       savedQueryService.update(sessionid, id, savedQuery);
       response.setStatus(HttpServletResponse.SC_CREATED);
       response.flush();
@@ -284,24 +282,4 @@ public class SavedQueryResource {
     e.buildLensErrorResponse(errorCollection, null, logSegregationContext.getLogSegragationId());
     throw e;
   }
-
-  /**
-   * Validates the saved query and throws LensException with.
-   * BAD_SYNTAX code if wrong
-   *
-   * @param savedQuery Saved query object
-   * @throws LensException if invalid
-   */
-  private void validateSampleResolved(@NonNull SavedQuery savedQuery) throws LensException {
-    final String sampleResolved  = SavedQueryHelper.getSampleResolvedQuery(savedQuery);
-    try {
-      HQLParser.parseHQL(sampleResolved, new HiveConf());
-    } catch (Exception e) {
-      throw new LensException(
-        new LensErrorInfo(INVALID_XML_ERROR.getValue(), 0, INVALID_XML_ERROR.toString())
-        , e
-        , "Encountered while resolving with sample values { " + sampleResolved + " }");
-    }
-  }
-
 }

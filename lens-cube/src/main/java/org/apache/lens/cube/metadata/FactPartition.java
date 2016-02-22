@@ -178,7 +178,7 @@ public class FactPartition implements Comparable<FactPartition> {
     return TimePartition.of(getPeriod(), getPartSpec());
   }
 
-  public double getAllTableWeights(ImmutableMap<String, Double> tableWeights) {
+  public double getAllTableWeights(Map<String, Double> tableWeights) {
     double weight = 0;
     Map<String, Double> tblWithoutDBWeghts = new HashMap<>();
     for (Map.Entry<String, Double> entry : tableWeights.entrySet()) {

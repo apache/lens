@@ -19,6 +19,7 @@
 package org.apache.lens.lib.query;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
@@ -106,6 +107,9 @@ public class FilePersistentFormatter extends WrappedFileFormatter implements Per
       @Override
       public boolean accept(Path path) {
         if (path.getName().startsWith("_")) {
+          return false;
+        }
+        if(new File(path.toUri()).isDirectory()) {
           return false;
         }
         return true;

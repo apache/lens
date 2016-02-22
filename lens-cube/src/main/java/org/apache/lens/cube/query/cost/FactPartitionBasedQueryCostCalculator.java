@@ -61,7 +61,7 @@ public class FactPartitionBasedQueryCostCalculator implements QueryCostCalculato
         Set<FactPartition> factParts = (Set<FactPartition>) entry.getValue();
         for (FactPartition partition : factParts) {
           double allTableWeights =
-            partition.getAllTableWeights(ImmutableMap.copyOf(queryContext.getTableWeights(driver)));
+            partition.getAllTableWeights(queryContext.getTableWeights(driver));
           if (allTableWeights == 0) {
             allTableWeights = 1;
           }

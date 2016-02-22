@@ -83,5 +83,9 @@
     <value>org.apache.lens.server.auth.FooBarAuthenticationProvider</value>
   </property>
 
+  <property>
+    <name>hive.support.sql11.reserved.keywords</name>
+    <value>false</value>
+  </property>
 
 </configuration>
