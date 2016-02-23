@@ -22,22 +22,21 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
 <configuration>
-  <property>
-    <name>lens.driver.jdbc.estimate.db.user</name>
-    <value>estimateUser</value>
-  </property>
 
   <!-- We have to use a different DB for estimate pool, because we are using an inmemory HSQL db.
   There seem to be some issues regarding sharing of underlying inmemory db with different connection
   pool. Whichever is constructed later is not able to get connections. -->
+
+
   <property>
-    <name>lens.driver.jdbc.estimate.db.uri</name>
-    <value>jdbc:hsqldb:mem:jdbcTestDBEstimate</value>
+    <name>lens.driver.jdbc.connection.properties</name>
+    <value>random_key=random_value</value>
+    <description>Connection properties for jdbc connection.</description>
   </property>
 
   <property>
     <name>lens.driver.jdbc.estimate.connection.properties</name>
-    <value>random_key=random_value</value>
+    <value>random_key=random_value,jdbcUrl=jdbc:hsqldb:mem:jdbcTestDBEstimate,user=estimateUser</value>
     <description>Connection properties for jdbc connection.</description>
   </property>
 

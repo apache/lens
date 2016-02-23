@@ -62,7 +62,7 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   /** The session timeout. */
   private long sessionTimeout;
-
+  private int acquireCount = 0;
   /** The conf. */
   private Configuration conf = createDefaultConf();
 
@@ -219,6 +219,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public synchronized void acquire() {
     super.acquire(true);
+    acquireCount ++;
     // Update thread's class loader with current DBs class loader
     Thread.currentThread().setContextClassLoader(getClassLoader(getCurrentDatabase()));
   }
@@ -230,7 +231,10 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public synchronized void release() {
     lastAccessTime = System.currentTimeMillis();
-    super.release(true);
+    acquireCount --;
+    if (acquireCount == 0) {
+      super.release(true);
+    }
   }
 
   public boolean isActive() {
