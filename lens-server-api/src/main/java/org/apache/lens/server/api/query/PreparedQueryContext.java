@@ -82,7 +82,8 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
   public PreparedQueryContext(String query, String user, Configuration conf, Collection<LensDriver> drivers) {
     this(query, user, conf, drivers, true);
   }
-  public PreparedQueryContext(String query, String user, Configuration conf, Collection<LensDriver> drivers, boolean merge) {
+  public PreparedQueryContext(String query, String user, Configuration conf, Collection<LensDriver> drivers,
+    boolean merge) {
     this(query, user, conf, new LensConf(), drivers, merge);
   }
 

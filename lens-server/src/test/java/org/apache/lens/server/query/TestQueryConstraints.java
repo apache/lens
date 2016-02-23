@@ -64,7 +64,7 @@ import lombok.extern.slf4j.Slf4j;
  * The Class TestQueryService.
  */
 @Slf4j
-@Test(groups = "two-working-drivers", dependsOnGroups = "filter-test")
+//@Test(groups = "two-working-drivers", dependsOnGroups = "filter-test")
 public class TestQueryConstraints extends LensJerseyTest {
   private HiveConf serverConf;
 
