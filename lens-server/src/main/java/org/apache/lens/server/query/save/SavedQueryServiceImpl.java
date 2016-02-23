@@ -23,10 +23,13 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.save.ListResponse;
 import org.apache.lens.api.query.save.SavedQuery;
+import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.LensErrorInfo;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
+import org.apache.lens.server.api.query.save.SavedQueryHelper;
 import org.apache.lens.server.api.query.save.SavedQueryService;
 import org.apache.lens.server.util.UtilityMethods;
 
@@ -36,6 +39,8 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIService;
 
 import lombok.NonNull;
+
+import static org.apache.lens.api.error.LensCommonErrorCode.INVALID_XML_ERROR;
 
 public class SavedQueryServiceImpl extends BaseLensService implements SavedQueryService {
   private SavedQueryDao dao;
@@ -88,6 +93,7 @@ public class SavedQueryServiceImpl extends BaseLensService implements SavedQuery
   public long save(LensSessionHandle handle, SavedQuery savedQuery) throws LensException {
     try {
       acquire(handle);
+      validateSampleResolved(savedQuery);
       return dao.saveQuery(savedQuery);
     } finally {
       release(handle);
@@ -101,6 +107,7 @@ public class SavedQueryServiceImpl extends BaseLensService implements SavedQuery
   public void update(LensSessionHandle handle, long id, SavedQuery savedQuery) throws LensException {
     try {
       acquire(handle);
+      validateSampleResolved(savedQuery);
       dao.updateQuery(id, savedQuery);
     } finally {
       release(handle);
@@ -164,4 +171,23 @@ public class SavedQueryServiceImpl extends BaseLensService implements SavedQuery
     throws LensException {
     //NOOP
   }
+  /**
+   * Validates the saved query and throws LensException with.
+   * BAD_SYNTAX code if wrong
+   *
+   * @param savedQuery Saved query object
+   * @throws LensException if invalid
+   */
+  private void validateSampleResolved(@NonNull SavedQuery savedQuery) throws LensException {
+    final String sampleResolved  = SavedQueryHelper.getSampleResolvedQuery(savedQuery);
+    try {
+      HQLParser.parseHQL(sampleResolved, new HiveConf());
+    } catch (Exception e) {
+      throw new LensException(
+        new LensErrorInfo(INVALID_XML_ERROR.getValue(), 0, INVALID_XML_ERROR.toString())
+        , e
+        , "Encountered while resolving with sample values { " + sampleResolved + " }");
+    }
+  }
+
 }
