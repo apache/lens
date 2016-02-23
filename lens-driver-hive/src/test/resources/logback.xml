@@ -20,13 +20,17 @@
 
 -->
 <configuration>
-  <appender name="out" class="ch.qos.logback.core.ConsoleAppender">
+  <appender name="TEST_LOG_FILE" class="ch.qos.logback.core.FileAppender">
+    <file>target/test.log</file>
     <encoder>
-      <pattern>%d (%t) [%p - %l] %m%n</pattern>
+      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%t] %-5p %c %L - %m%n</pattern>
     </encoder>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
   </appender>
   <root level="INFO">
-    <appender-ref ref="out"/>
+    <appender-ref ref="TEST_LOG_FILE"/>
   </root>
 </configuration>
 
