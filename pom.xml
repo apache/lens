@@ -1656,7 +1656,20 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
+  <dependencies>
+    <dependency>
+      <groupId>org.datanucleus</groupId>
+      <artifactId>datanucleus-api-jdo</artifactId>
+      <version>4.2.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.datanucleus</groupId>
+      <artifactId>datanucleus-rdbms</artifactId>
+      <version>4.1.7</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
   <modules>
     <module>checkstyle</module>
     <module>lens-api</module>
