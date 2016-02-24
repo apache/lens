@@ -21,6 +21,8 @@ package org.apache.lens.lib.query;
 import java.io.IOException;
 import java.util.*;
 
+import org.apache.hadoop.hive.common.type.HiveChar;
+import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.query.InMemoryOutputFormatter;
@@ -146,8 +148,8 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     mapElements.put(1, "one");
     elements.add(1);
     elements.add("one");
-    elements.add("one");
-    elements.add("one");
+    elements.add(new HiveVarchar("one", -1));
+    elements.add(new HiveChar("one", -1));
     elements.add(Arrays.asList(new Byte((byte) 1)));
     elements.add(Arrays.asList(1, "one"));
     elements.add(mapElements);
@@ -159,8 +161,8 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     elements = new ArrayList<Object>();
     elements.add(2);
     elements.add("two");
-    elements.add("two");
-    elements.add("two");
+    elements.add(new HiveVarchar("two", -1));
+    elements.add(new HiveChar("two", -1));
     elements.add(Arrays.asList(new Byte((byte) 1), new Byte((byte) 2)));
     elements.add(Arrays.asList(2, "two"));
     elements.add(mapElements);
@@ -173,8 +175,8 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     elements = new ArrayList<Object>();
     elements.add(null);
     elements.add("three");
-    elements.add("three");
-    elements.add("three");
+    elements.add(new HiveVarchar("three", -1));
+    elements.add(new HiveChar("three", -1));
     elements.add(Arrays.asList(new Byte((byte) 1), new Byte((byte) 2), null));
     elements.add(Arrays.asList(null, "three"));
     elements.add(mapElements);
