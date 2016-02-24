@@ -60,8 +60,9 @@ import com.codahale.metrics.MetricRegistry;
  */
 @PrepareForTest(RewriteUtil.class)
 @PowerMockIgnore({"org.apache.log4j.*", "javax.management.*", "javax.xml.*",
+  "org.apache.lens.server.rewrite.SessionStateProxy",
   "com.sun.org.apache.xerces.internal.jaxp.*", "ch.qos.logback.*", "org.slf4j.*", "org.w3c.dom*", "org.mockito.*"})
-public class TestRewriting extends SessionStateProxy {
+public class TestRewriting {
   /**
    * We need a special {@link IObjectFactory}.
    *
