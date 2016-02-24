@@ -924,6 +924,15 @@ public class TestMetastoreService extends LensJerseyTest {
 
   private XStorageTableDesc createStorageTableDesc(String name, final String[] timePartColNames) {
     XStorageTableDesc xs1 = cubeObjectFactory.createXStorageTableDesc();
+    XProperties props = cubeObjectFactory.createXProperties();
+    XProperty propStartTime = cubeObjectFactory.createXProperty();
+    propStartTime.setName(MetastoreUtil.getStoragetableStartTimesKey());
+    propStartTime.setValue("now -10 days");
+    XProperty propEndTime = cubeObjectFactory.createXProperty();
+    propEndTime.setName(MetastoreUtil.getStoragetableEndTimesKey());
+    propEndTime.setValue("now +5 days");
+    props.getProperty().add(propStartTime);
+    props.getProperty().add(propEndTime);
     xs1.setCollectionDelimiter(",");
     xs1.setEscapeChar("\\");
     xs1.setFieldDelimiter("\t");
@@ -932,7 +941,7 @@ public class TestMetastoreService extends LensJerseyTest {
     xs1.setTableLocation(new Path(new File("target").getAbsolutePath(), name).toString());
     xs1.setExternal(true);
     xs1.setPartCols(new XColumns());
-    xs1.setTableParameters(new XProperties());
+    xs1.setTableParameters(props);
     xs1.setSerdeParameters(new XProperties());
 
     for (String timePartColName : timePartColNames) {
@@ -2031,6 +2040,53 @@ public class TestMetastoreService extends LensJerseyTest {
       // Cleanup
       setCurrentDatabase(prevDb, mediaType);
       dropDatabase(dbName, mediaType);
+    }
+  }
+  @SuppressWarnings("deprecation")
+  @Test(dataProvider = "mediaTypeData")
+  public void testSkipFactStoragePartitions(MediaType mediaType) throws Exception {
+
+    final String table = "testSkipFactStoragePartitions";
+    final String DB = dbPFX + "testSkipFactStoragePartitions_DB" + mediaType.getSubtype();
+    String prevDb = getCurrentDatabase(mediaType);
+    createDatabase(DB, mediaType);
+    setCurrentDatabase(DB, mediaType);
+    createStorage("S1", mediaType);
+    createStorage("S2", mediaType);
+
+    try {
+      final Date partDate = new Date();
+      final XCube cube = createTestCube("testCube");
+      XFactTable f = createFactTable(table);
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "DAILY"));
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "HOURLY"));
+
+      APIResult result = target()
+              .path("metastore")
+              .path("facts").queryParam("sessionid", lensSessionId)
+              .request(mediaType)
+              .post(Entity.entity(
+                   new GenericEntity<JAXBElement<XFactTable>>(cubeObjectFactory.createXFactTable(f)){}, mediaType),
+                      APIResult.class);
+      assertSuccess(result);
+
+      APIResult partAddResult;
+      // skip partitons if it starts before storage start date
+      // Add two partitions one before storage start time and other one after start time
+      // Add partition status will return partial
+      XPartitionList partList = new XPartitionList();
+      partList.getPartition().add(createPartition(table, DateUtils.addHours(partDate, 1)));
+      partList.getPartition().add(createPartition(table, DateUtils.addHours(partDate, -300)));
+      partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
+              .queryParam("sessionid", lensSessionId).request(mediaType)
+              .post(Entity.entity(new GenericEntity<JAXBElement<XPartitionList>>(
+                      cubeObjectFactory.createXPartitionList(partList)) {
+              }, mediaType), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.PARTIAL);
+    } finally {
+      setCurrentDatabase(prevDb, mediaType);
+      dropDatabase(DB, mediaType);
     }
   }
 
