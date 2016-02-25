@@ -85,14 +85,14 @@ public class DatabaseResource {
    * state {@link Status#FAILED}, if create has failed
    */
   @POST
-  @Path("databases")
+  @Path("refresh")
   public APIResult refreshDatabaseResources(String dbName) {
     log.info("Refresh database : ", dbName);
     try {
       getSvc().refreshDatabaseResources(dbName);
       return success();
     } catch (LensException e) {
-      log.error("Error creating database {}", dbName, e);
+      log.error("Error in refreshing database {}", dbName, e);
       return failure(processLensException(e));
     }
   }
