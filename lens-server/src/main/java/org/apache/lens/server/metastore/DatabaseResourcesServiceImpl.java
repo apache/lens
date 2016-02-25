@@ -68,7 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DatabaseResourcesServiceImpl extends AbstractService implements DatabaseResourcesService {
 
   /** The Constant STATS_SVC_NAME. */
-  public static final String NAME = "db_resources";
+  public static final String NAME = "db-resources";
 
   private Map<String, ClassLoader> classLoaderCache;
   private Map<String, List<LensSessionImpl.ResourceEntry>> dbResEntryMap;
