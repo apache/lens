@@ -30,7 +30,6 @@ import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.cost.QueryCostCalculator;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 public class FactPartitionBasedQueryCostCalculator implements QueryCostCalculator {
@@ -61,7 +60,7 @@ public class FactPartitionBasedQueryCostCalculator implements QueryCostCalculato
         Set<FactPartition> factParts = (Set<FactPartition>) entry.getValue();
         for (FactPartition partition : factParts) {
           double allTableWeights =
-            partition.getAllTableWeights(ImmutableMap.copyOf(queryContext.getTableWeights(driver)));
+            partition.getAllTableWeights(queryContext.getTableWeights(driver));
           if (allTableWeights == 0) {
             allTableWeights = 1;
           }

@@ -24,7 +24,6 @@ import java.util.*;
 
 import org.apache.lens.server.api.error.LensException;
 
-import com.google.common.collect.ImmutableMap;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -178,7 +177,7 @@ public class FactPartition implements Comparable<FactPartition> {
     return TimePartition.of(getPeriod(), getPartSpec());
   }
 
-  public double getAllTableWeights(ImmutableMap<String, Double> tableWeights) {
+  public double getAllTableWeights(Map<String, Double> tableWeights) {
     double weight = 0;
     Map<String, Double> tblWithoutDBWeghts = new HashMap<>();
     for (Map.Entry<String, Double> entry : tableWeights.entrySet()) {
