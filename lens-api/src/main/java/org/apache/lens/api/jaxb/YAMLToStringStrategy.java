@@ -323,7 +323,7 @@ public class YAMLToStringStrategy extends JAXBToStringStrategy {
             + fieldName.substring(1)).invoke(value);
           return appendNewLine(appendInternal(locator, stringBuilder, wrappedValue));
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-          log.debug("getter access failed. Going the usual way");
+          log.error("getter access failed. Going the usual way");
         }
       }
       return super.appendInternal(locator, stringBuilder, value);
