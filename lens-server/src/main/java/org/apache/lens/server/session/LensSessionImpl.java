@@ -25,6 +25,7 @@ import java.io.ObjectOutput;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.server.LensServices;
@@ -221,7 +222,9 @@ public class LensSessionImpl extends HiveSessionImpl {
     super.acquire(true);
     acquireCount ++;
     // Update thread's class loader with current DBs class loader
-    Thread.currentThread().setContextClassLoader(getClassLoader(getCurrentDatabase()));
+    ClassLoader classLoader = getClassLoader(getCurrentDatabase());
+    Thread.currentThread().setContextClassLoader(classLoader);
+    SessionState.getSessionConf().setClassLoader(classLoader);
   }
 
   /*
