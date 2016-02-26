@@ -109,9 +109,9 @@ public final class RewriteUtil {
     int childCount = ast.getChildCount();
     if (ast.getToken() != null) {
       if (log.isDebugEnabled() && ast.getChild(0) != null) {
-        log.debug("First child: {} Type:{}", ast.getChild(0), ((ASTNode) ast.getChild(0)).getToken().getType());
+        log.debug("First child: {} Type:{}", ast.getChild(0), ((ASTNode) ast.getChild(0)).getType());
       }
-      if (ast.getToken().getType() == HiveParser.TOK_QUERY
+      if (ast.getType() == HiveParser.TOK_QUERY
         && (isCubeKeywordNode((ASTNode) ast.getChild(0)) || isFromNodeWithCubeTable((ASTNode) ast.getChild(0), conf))) {
         log.debug("Inside cube clause");
         CubeQueryInfo cqi = new CubeQueryInfo();
@@ -129,27 +129,28 @@ public final class RewriteUtil {
             cqi.startPos = getStartPos(originalQuery, cqi.startPos, "select");
           }
           int ci = ast.getChildIndex();
-          if (parent.getToken() == null || parent.getToken().getType() == HiveParser.TOK_EXPLAIN
-            || parent.getToken().getType() == HiveParser.TOK_CREATETABLE) {
+          if (parent.getToken() == null || parent.getType() == HiveParser.TOK_EXPLAIN
+            || parent.getType() == HiveParser.TOK_CREATETABLE) {
             // Not a sub query
             cqi.endPos = originalQuery.length();
-          } else if (parent.getChildCount() > ci + 1) {
-            if (parent.getToken().getType() == HiveParser.TOK_SUBQUERY) {
+          } else if (parent.getChildCount() > ci + 1
+            || (parent.getParent() != null && parent.getType() == parent.getParent().getType())) {
+            if (parent.getType() == HiveParser.TOK_SUBQUERY) {
               // less for the next start and for close parenthesis
               cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");
-            } else if (parent.getToken().getType() == HiveParser.TOK_UNIONALL) {
+            } else if (parent.getType() == HiveParser.TOK_UNIONALL) {
               // one less for the next start and less the size of string 'UNION ALL'
-              ASTNode nextChild = (ASTNode) parent.getChild(ci + 1);
-              if (isCubeKeywordNode((ASTNode) nextChild.getChild(0))) {
-                cqi.endPos = getEndPos(originalQuery, nextChild.getCharPositionInLine() - 1, "UNION ALL");
+              ASTNode nextChild;
+              if (parent.getChildCount() > ci + 1) {
+                nextChild = (ASTNode) parent.getChild(ci + 1);
               } else {
-                // Go back one "union all select[ distinct]"
-                cqi.endPos = getEndPos(originalQuery, nextChild.getChild(1).getChild(1).getCharPositionInLine() - 1,
-                  "distinct");
-                cqi.endPos = getEndPos(originalQuery, cqi.endPos, "select");
-                cqi.endPos = getEndPos(originalQuery, cqi.endPos, "union all");
+                nextChild = (ASTNode) parent.getParent().getChild(parent.getChildIndex()+1);
               }
-
+                // Go back one "union all select[ distinct]"
+              cqi.endPos = getEndPos(originalQuery, nextChild.getChild(1).getChild(1).getCharPositionInLine() - 1,
+                "distinct");
+              cqi.endPos = getEndPos(originalQuery, cqi.endPos, "select");
+              cqi.endPos = getEndPos(originalQuery, cqi.endPos, "union all");
             } else {
               // Not expected to reach here
               log.warn("Unknown query pattern found with AST:{}", ast.dump());
@@ -209,7 +210,7 @@ public final class RewriteUtil {
   }
 
   private static boolean isCubeKeywordNode(ASTNode child) {
-    return child.getToken().getType() == HiveParser.KW_CUBE;
+    return child.getType() == HiveParser.KW_CUBE;
   }
 
   /**
