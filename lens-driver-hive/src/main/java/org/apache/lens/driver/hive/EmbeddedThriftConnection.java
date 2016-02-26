@@ -42,7 +42,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
       state = SessionState.get();
     }
     private void restoreState() {
-      if(state != null) {
+      if (state != null) {
         SessionState.setCurrentSessionState(state);
       }
     }

@@ -103,7 +103,7 @@ public class TestHiveDriver {
     createDriver();
     configuration = new Configuration();
 
-    ss = new SessionState(conf, "testuser"); ;
+    ss = new SessionState(conf, "testuser");
     SessionState.start(ss);
     Hive client = Hive.get(conf);
     Database database = new Database();

@@ -143,14 +143,14 @@ public class HiveQueryPlan extends DriverQueryPlan {
         int indentation = getIndentation(explainOutput.get(i));
         i++;
         for (; i < explainOutput.size(); i++) {
-          if(explainOutput.get(i).trim().startsWith("alias: ")) {
+          if (explainOutput.get(i).trim().startsWith("alias: ")) {
             String tableName = explainOutput.get(i).trim().substring(7);
-            if(!tableName.contains(".") && SessionState.get() != null) {
+            if (!tableName.contains(".") && SessionState.get() != null) {
               tableName = SessionState.get().getCurrentDatabase() + "." + tableName;
             }
             addTableToTablesQueried(tableName, metastore);
           }
-          if(i + 1 < explainOutput.size() && getIndentation(explainOutput.get(i+1)) <= indentation) {
+          if (i + 1 < explainOutput.size() && getIndentation(explainOutput.get(i+1)) <= indentation) {
             break;
           }
         }
@@ -221,7 +221,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
 
   private int getIndentation(String s) {
     for(int i = 0; i < s.length(); i++) {
-      if(s.charAt(i) != ' ') {
+      if (s.charAt(i) != ' ') {
         return i - 1;
       }
     }
