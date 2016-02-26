@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.query.save;
 
+import static org.apache.lens.api.error.LensCommonErrorCode.INVALID_XML_ERROR;
+
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.lens.api.LensSessionHandle;
@@ -39,8 +41,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIService;
 
 import lombok.NonNull;
-
-import static org.apache.lens.api.error.LensCommonErrorCode.INVALID_XML_ERROR;
 
 public class SavedQueryServiceImpl extends BaseLensService implements SavedQueryService {
   private SavedQueryDao dao;

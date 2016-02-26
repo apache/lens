@@ -20,7 +20,6 @@ package org.apache.lens.server.rewrite;
 
 import java.util.*;
 
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.CubeQueryContext;
@@ -40,6 +39,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.mockito.Matchers;
 import org.mockito.Mockito;

@@ -24,7 +24,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
@@ -36,6 +35,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.AbstractService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -256,8 +256,8 @@ public class DatabaseResourceService extends AbstractService {
       }
 
       URLClassLoader newClassLoader = new URLClassLoader(newUrls.toArray(new URL[newUrls.size()]),
-        SessionState.get() != null ? SessionState.getSessionConf().getClassLoader() :
-          DatabaseResourceService.class.getClassLoader());
+        SessionState.get() != null ? SessionState.getSessionConf().getClassLoader()
+          : DatabaseResourceService.class.getClassLoader());
       if (addToCache) {
         classLoaderCache.put(database, newClassLoader);
       }

@@ -18,7 +18,6 @@
  */
 package org.apache.lens.server.query.save;
 
-import static org.apache.lens.api.error.LensCommonErrorCode.INVALID_XML_ERROR;
 import static org.apache.lens.api.query.save.ResourceModifiedResponse.Action.CREATED;
 import static org.apache.lens.api.query.save.ResourceModifiedResponse.Action.DELETED;
 import static org.apache.lens.api.query.save.ResourceModifiedResponse.Action.UPDATED;
@@ -41,9 +40,7 @@ import org.apache.lens.api.query.save.ParameterParserResponse;
 import org.apache.lens.api.query.save.ResourceModifiedResponse;
 import org.apache.lens.api.query.save.SavedQuery;
 import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.api.LensErrorInfo;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.save.*;
@@ -56,7 +53,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
-import lombok.NonNull;
 
 @Path("/queryapi")
 /**

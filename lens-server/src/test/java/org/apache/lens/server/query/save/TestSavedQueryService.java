@@ -31,8 +31,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.*;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.query.save.*;
@@ -43,6 +41,9 @@ import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.save.SavedQueryService;
 import org.apache.lens.server.error.LensExceptionMapper;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
+
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;

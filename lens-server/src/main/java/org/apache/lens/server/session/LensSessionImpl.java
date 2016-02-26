@@ -25,7 +25,6 @@ import java.io.ObjectOutput;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.server.LensServices;
@@ -38,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.HiveSessionImpl;
@@ -220,7 +220,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public synchronized void acquire() {
     super.acquire(true);
-    acquireCount ++;
+    acquireCount++;
     // Update thread's class loader with current DBs class loader
     ClassLoader classLoader = getClassLoader(getCurrentDatabase());
     Thread.currentThread().setContextClassLoader(classLoader);
@@ -234,7 +234,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public synchronized void release() {
     lastAccessTime = System.currentTimeMillis();
-    acquireCount --;
+    acquireCount--;
     if (acquireCount == 0) {
       super.release(true);
     }
