@@ -725,7 +725,8 @@ public final class HQLParser {
             return true;
           }
         } catch (SemanticException e) {
-          e.printStackTrace();
+          log.error("Error trying to find whether {} is aggregate.", getString(node), e);
+          return false;
         }
       }
     }
@@ -745,7 +746,8 @@ public final class HQLParser {
             return true;
           }
         } catch (SemanticException e) {
-          e.printStackTrace();
+          log.error("Error trying to find whether {} is udf node.", getString(node), e);
+          return false;
         }
       }
     }

@@ -21,13 +21,13 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;

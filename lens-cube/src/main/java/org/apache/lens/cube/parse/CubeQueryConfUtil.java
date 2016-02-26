@@ -103,7 +103,7 @@ public final class CubeQueryConfUtil {
   public static final String LIGHTEST_FACT_FIRST = "lens.cube.query.pick.lightest.fact.first";
   public static final boolean DEFAULT_LIGHTEST_FACT_FIRST = false;
   public static final String TIME_RANGE_WRITER_CLASS = "lens.cube.query.time.range.writer.class";
-  public static final Class<? extends TimeRangeWriter> DEFAULT_TIME_RANGE_WRITER = PostFixORTimeRangeWriter.class
+  public static final Class<? extends TimeRangeWriter> DEFAULT_TIME_RANGE_WRITER = ORTimeRangeWriter.class
     .asSubclass(TimeRangeWriter.class);
   public static final String PART_WHERE_CLAUSE_DATE_FORMAT = "lens.cube.query.partition.where.clause.format";
   public static final String ENABLE_FLATTENING_FOR_BRIDGETABLES = "lens.cube.query.enable.flattening.bridge.tables";

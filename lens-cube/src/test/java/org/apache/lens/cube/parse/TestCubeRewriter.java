@@ -1716,7 +1716,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     // Also, we can verify by printing the explain output that partitions are indeed getting identified with
     // the IN clause
 
-    // TODO: Solve for Stack overflow
+
     // Test 1 - check for contained part columns
     String query = "select dim1, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE_IT;
 
