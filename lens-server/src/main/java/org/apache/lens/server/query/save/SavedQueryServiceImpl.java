@@ -18,14 +18,20 @@
  */
 package org.apache.lens.server.query.save;
 
+import static org.apache.lens.api.error.LensCommonErrorCode.INVALID_XML_ERROR;
+
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.save.ListResponse;
 import org.apache.lens.api.query.save.SavedQuery;
+import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.LensErrorInfo;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
+import org.apache.lens.server.api.query.save.SavedQueryHelper;
 import org.apache.lens.server.api.query.save.SavedQueryService;
 import org.apache.lens.server.util.UtilityMethods;
 
@@ -84,48 +90,75 @@ public class SavedQueryServiceImpl extends BaseLensService implements SavedQuery
    * {@inheritDoc}
    */
   @Override
-  public long save(SavedQuery savedQuery) throws LensException {
-    return dao.saveQuery(savedQuery);
+  public long save(LensSessionHandle handle, SavedQuery savedQuery) throws LensException {
+    try {
+      acquire(handle);
+      validateSampleResolved(savedQuery);
+      return dao.saveQuery(savedQuery);
+    } finally {
+      release(handle);
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void update(long id, SavedQuery savedQuery) throws LensException {
-    dao.updateQuery(id, savedQuery);
+  public void update(LensSessionHandle handle, long id, SavedQuery savedQuery) throws LensException {
+    try {
+      acquire(handle);
+      validateSampleResolved(savedQuery);
+      dao.updateQuery(id, savedQuery);
+    } finally {
+      release(handle);
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void delete(long id) throws LensException {
-    dao.deleteSavedQueryByID(id);
+  public void delete(LensSessionHandle handle, long id) throws LensException {
+    try {
+      acquire(handle);
+      dao.deleteSavedQueryByID(id);
+    } finally {
+      release(handle);
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public SavedQuery get(long id) throws LensException {
-    return dao.getSavedQueryByID(id);
+  public SavedQuery get(LensSessionHandle handle, long id) throws LensException {
+    try {
+      acquire(handle);
+      return dao.getSavedQueryByID(id);
+    } finally {
+      release(handle);
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public ListResponse list(
+  public ListResponse list(LensSessionHandle handle,
     MultivaluedMap<String, String> criteria, long start, long count) throws LensException {
-    return dao.getList(criteria, start, count);
+    try {
+      acquire(handle);
+      return dao.getList(criteria, start, count);
+    } finally {
+      release(handle);
+    }
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void grant(long id, String sharingUser, String targetUserPath, String[] privileges)
+  public void grant(LensSessionHandle handle, long id, String sharingUser, String targetUserPath, String[] privileges)
     throws LensException {
     //NOOP
   }
@@ -134,8 +167,27 @@ public class SavedQueryServiceImpl extends BaseLensService implements SavedQuery
    * {@inheritDoc}
    */
   @Override
-  public void revoke(long id, String sharingUser, String targetUserPath, String[] privileges)
+  public void revoke(LensSessionHandle handle, long id, String sharingUser, String targetUserPath, String[] privileges)
     throws LensException {
     //NOOP
   }
+  /**
+   * Validates the saved query and throws LensException with.
+   * BAD_SYNTAX code if wrong
+   *
+   * @param savedQuery Saved query object
+   * @throws LensException if invalid
+   */
+  private void validateSampleResolved(@NonNull SavedQuery savedQuery) throws LensException {
+    final String sampleResolved  = SavedQueryHelper.getSampleResolvedQuery(savedQuery);
+    try {
+      HQLParser.parseHQL(sampleResolved, new HiveConf());
+    } catch (Exception e) {
+      throw new LensException(
+        new LensErrorInfo(INVALID_XML_ERROR.getValue(), 0, INVALID_XML_ERROR.toString())
+        , e
+        , "Encountered while resolving with sample values { " + sampleResolved + " }");
+    }
+  }
+
 }

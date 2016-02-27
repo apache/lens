@@ -20,6 +20,7 @@ package org.apache.lens.server.api.query.save;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.save.ListResponse;
 import org.apache.lens.api.query.save.SavedQuery;
 import org.apache.lens.server.api.error.LensException;
@@ -37,58 +38,67 @@ public interface SavedQueryService {
    * @return id of the created saved query.
    * @throws LensException
    */
-  long save(SavedQuery query) throws LensException;
+  long save(LensSessionHandle handle, SavedQuery query) throws LensException;
 
   /**
    * Updates the specified saved query with the new object.
+   * @param handle session handle of the query
    * @param id     id of the saved query.
    * @param query  Saved query object.
    * @throws LensException
    */
-  void update(long id, SavedQuery query) throws LensException;
+  void update(LensSessionHandle handle, long id, SavedQuery query) throws LensException;
 
   /**
    * Deletes the saved query specified.
-   * @param id id of the saved query.
+   * @param handle session handle of the query
+   * @param id     id of the saved query.
    * @throws LensException
    */
-  void delete(long id) throws LensException;
+  void delete(LensSessionHandle handle, long id) throws LensException;
 
   /**
    * Returns the saved query pointed out by the id.
-   * @param id id of the saved query.
+   * @param handle session handle of the query
+   * @param id     id of the saved query.
    * @return saved query object.
    * @throws LensException
    */
-  SavedQuery get(long id)  throws LensException;
+  SavedQuery get(LensSessionHandle handle, long id)  throws LensException;
 
   /**
    * List the saved query from {start} to {count} matching filter denoted by criteria.
+   * @param handle    session handle of the query
    * @param criteria  Multivalued map representing the criteria.
-   * @param start    Displacement from the first matching record.
+   * @param start     Displacement from the first matching record.
    * @param count     Number of records to fetch.
    * @return list of queries.
    * @throws LensException
    */
-  ListResponse list(MultivaluedMap<String, String> criteria, long start, long count) throws LensException;
+  ListResponse list(LensSessionHandle handle, MultivaluedMap<String, String> criteria, long start,
+                    long count) throws LensException;
 
   /**
    * Grant permissions for users to do actions on the saved query.
+   * @param handle          session handle of the query
    * @param id              id of the query.
    * @param sharingUser     User invoking this action.
    * @param targetUserPath  Target users who have to get affected.
    * @param privileges      Privileges to be granted.
    * @throws LensException
    */
-  void grant(long id, String sharingUser, String targetUserPath, String[] privileges) throws LensException;
+  void grant(LensSessionHandle handle, long id, String sharingUser, String targetUserPath,
+             String[] privileges) throws LensException;
 
   /**
    * Revoke permissions from users to do actions on the saved query.
+   * @param handle          session handle of the query
    * @param id              id of the query.
    * @param sharingUser     User invoking this action.
    * @param targetUserPath  Target users who have to get affected.
    * @param privileges      Privileges to be granted.
    * @throws LensException
    */
-  void revoke(long id, String sharingUser, String targetUserPath, String[] privileges) throws LensException;
+  void revoke(LensSessionHandle handle, long id, String sharingUser, String targetUserPath,
+              String[] privileges) throws LensException;
 }
