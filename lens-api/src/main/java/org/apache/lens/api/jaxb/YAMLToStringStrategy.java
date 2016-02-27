@@ -318,12 +318,13 @@ public class YAMLToStringStrategy extends JAXBToStringStrategy {
         }
       }
       if (nonStaticFields == 1) {
+        Class<?> claz = value.getClass();
+        String getterName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
         try {
-          Object wrappedValue = value.getClass().getDeclaredMethod("get" + fieldName.substring(0, 1).toUpperCase()
-            + fieldName.substring(1)).invoke(value);
+          Object wrappedValue = claz.getDeclaredMethod(getterName).invoke(value);
           return appendNewLine(appendInternal(locator, stringBuilder, wrappedValue));
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-          log.error("getter access failed. Going the usual way");
+          log.debug("getter access failed for {}#{}. Going the usual way", claz.getName(), getterName, e);
         }
       }
       return super.appendInternal(locator, stringBuilder, value);
