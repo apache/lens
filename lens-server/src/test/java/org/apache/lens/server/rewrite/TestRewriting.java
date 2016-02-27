@@ -76,10 +76,6 @@ public class TestRewriting {
 
   private HiveConf hconf = new HiveConf();
 
-  {
-    SessionState.start(hconf);
-  }
-
   static int i = 0;
   // number of successful queries through mock rewriter
   // we use this number to mock failures after successful queries
@@ -195,7 +191,7 @@ public class TestRewriting {
    */
   @Test
   public void testCubeQuery() throws ParseException, LensException, HiveException {
-
+    SessionState.start(hconf);
     List<LensDriver> drivers = new ArrayList<LensDriver>();
     MockDriver driver = new MockDriver();
     LensConf lensConf = new LensConf();
