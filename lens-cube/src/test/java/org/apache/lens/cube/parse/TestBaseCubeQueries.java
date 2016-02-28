@@ -763,6 +763,17 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertTrue(hqlQuery.contains(joinSubString) && hqlQuery.endsWith(endSubString), hqlQuery);
 
     hqlQuery = rewrite("select dim1, dim11 from basecube where " + TWO_DAYS_RANGE
+      + "having msr12 > 2 and roundedmsr2 > 0 and msr2 > 100", conf);
+    expected2 = getExpectedQuery(cubeName,
+      "select basecube.dim1 as dim1, basecube.dim11 as dim11 FROM ", null,
+      " group by basecube.dim1, basecube.dim11 HAVING round(sum(basecube.msr2)/1000) > 0 and sum(basecube.msr2) > 100",
+      getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+    compareContains(expected1, hqlQuery);
+    compareContains(expected2, hqlQuery);
+    assertTrue(hqlQuery.toLowerCase().startsWith(begin), hqlQuery);
+    assertTrue(hqlQuery.contains(joinSubString) && hqlQuery.endsWith(endSubString), hqlQuery);
+
+    hqlQuery = rewrite("select dim1, dim11 from basecube where " + TWO_DAYS_RANGE
       + "having flooredmsr12+roundedmsr2 <= 1000", conf);
     expected1 = getExpectedQuery(cubeName,
       "select basecube.dim1 as dim1, basecube.dim11 as dim11, "

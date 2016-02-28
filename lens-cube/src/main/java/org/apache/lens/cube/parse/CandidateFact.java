@@ -117,9 +117,9 @@ public class CandidateFact implements CandidateTable, QueryAST {
       return;
     }
     ASTNode existingHavingAST = (ASTNode) getHavingAST().getChild(0);
-    ASTNode newHavingAST = new ASTNode(new CommonToken(KW_AND, "KW_AND"));
-    newHavingAST.addChild(ast);
+    ASTNode newHavingAST = new ASTNode(new CommonToken(KW_AND, "AND"));
     newHavingAST.addChild(existingHavingAST);
+    newHavingAST.addChild(ast);
     getHavingAST().setChild(0, newHavingAST);
   }
 
