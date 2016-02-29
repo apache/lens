@@ -206,7 +206,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
         cliService.getHiveConf().setVar(var, cliService.getHiveConf().get(LensConfConstants.SERVER_DOMAIN));
       }
     }
-    String authType = cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION);
+    String authType = getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION);
     // No-op when authType is NOSASL
     if (!authType.equalsIgnoreCase(HiveAuthFactory.AuthTypes.NOSASL.toString())) {
       try {
