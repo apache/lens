@@ -87,11 +87,15 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
     testFields(getCommand());
     testJoinChains(getCommand());
     testUpdateCommand(new File(dimensionSpec.toURI()), getCommand());
-    getCommand().dropDimension("test_dim");
-    getCommand().dropDimension("test_detail");
+    dropDimensions();
     dimensionList = getCommand().showDimensions();
     Assert.assertFalse(dimensionList.contains("test_dim"));
     Assert.assertFalse(dimensionList.contains("test_detail"));
+  }
+
+  public static void dropDimensions() {
+    getCommand().dropDimension("test_dim");
+    getCommand().dropDimension("test_detail");
   }
 
   private void testJoinChains(LensDimensionCommands command) {
