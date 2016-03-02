@@ -209,6 +209,15 @@
       </roles>
     </developer>
     <developer>
+      <id>puneetgupta</id>
+      <email>puneetgupta@apache.org</email>
+      <name>Puneet Gupta</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
       <id>gunther</id>
       <email>gunther@apache.org</email>
       <name>Gunther Hagleitner</name>
