@@ -826,5 +826,12 @@
     <value>20</value>
     <description>Key denoting the default fetch value of saved query list api.</description>
   </property>
-
+  <property>
+    <name>lens.server.max.sessions.per.user</name>
+    <value>10</value>
+    <description>Number of sessions can be allowed for each user.
+      User has to close one of the active sessions to open a new session once limit is reached. Otherwise Server throws
+      an exception by saying that opened session limit has been already reached for user.
+    </description>
+  </property>
 </configuration>

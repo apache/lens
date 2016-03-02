@@ -33,6 +33,7 @@ import org.apache.lens.cli.table.XJoinChainTable;
 import org.apache.lens.client.LensClient;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,13 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
       command.setClient(client);
     }
     return command;
+  }
+
+  @AfterTest
+  public void cleanUp() {
+    if (command != null) {
+      command.getClient().closeConnection();
+    }
   }
 
   /**

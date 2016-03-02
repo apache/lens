@@ -18,11 +18,11 @@
  */
 package org.apache.lens.api.error;
 
-import static javax.ws.rs.core.Response.Status;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.ws.rs.core.Response;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -61,7 +61,9 @@ public class ErrorCollectionFactory {
 
       int errorCode = config.getInt(ERROR_CODE_KEY);
       int httpStatusCodeInt = config.getInt(HTTP_STATUS_CODE_KEY);
-      Status httpStatusCode = Status.fromStatusCode(httpStatusCodeInt);
+
+
+      Response.StatusType httpStatusCode = LensHttpStatus.fromStatusCode(httpStatusCodeInt);
       String errorMsg = config.getString(ERROR_MSG_KEY);
 
       Class payloadClass = null;

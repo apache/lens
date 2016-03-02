@@ -29,6 +29,7 @@ import org.apache.lens.client.LensClient;
 import org.apache.commons.io.FileUtils;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -44,6 +45,12 @@ public class TestLensLogResourceCommands extends LensCliApplicationTest {
     commands.setClient(client);
   }
 
+  @AfterTest
+  public void cleanup() {
+    if (client != null) {
+      client.closeConnection();
+    }
+  }
   @Test
   public void testLogResourceFileDoesNotExist() throws IOException {
     // check for 404 response

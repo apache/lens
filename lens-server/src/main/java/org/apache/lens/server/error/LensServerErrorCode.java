@@ -24,7 +24,8 @@ public enum LensServerErrorCode {
 
   SESSION_ID_NOT_PROVIDED(2001, 0),
   NULL_OR_EMPTY_OR_BLANK_QUERY(2002, 0),
-  UNSUPPORTED_QUERY_SUBMIT_OPERATION(2003, 0);
+  UNSUPPORTED_QUERY_SUBMIT_OPERATION(2003, 0),
+  TOO_MANY_OPEN_SESSIONS(2004, 0);
 
   public LensErrorInfo getLensErrorInfo() {
     return this.errorInfo;

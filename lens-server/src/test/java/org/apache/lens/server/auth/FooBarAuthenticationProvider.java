@@ -31,7 +31,8 @@ public class FooBarAuthenticationProvider implements PasswdAuthenticationProvide
   public static final String MSG = "<username,password>!=<foo@localhost,bar>";
 
   /** The allowed combinations. */
-  private final String[][] allowedCombinations = new String[][]{{"foo", "bar"}, {"anonymous", ""}};
+  private final String[][] allowedCombinations
+    = new String[][]{{"foo", "bar"}, {"anonymous", ""}, {"test", "test"}, {"UITest", "UITest"}};
 
   /*
    * (non-Javadoc)

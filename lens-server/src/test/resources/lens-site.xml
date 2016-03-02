@@ -187,4 +187,9 @@
     <name>lens.server.estimate.timeout.millis</name>
     <value>120000</value>
   </property>
+  <property>
+    <name>lens.server.max.sessions.per.user</name>
+    <value>20</value>
+    <description>Number of sessions can be allowed for each user.</description>
+  </property>
 </configuration>

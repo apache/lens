@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 
@@ -106,6 +107,16 @@ public class TestLensFactCommandsWithMissingWeight extends LensCliApplicationTes
       cubeCommands.setClient(client);
     }
     return cubeCommands;
+  }
+
+  @AfterTest
+  public void cleanUp() {
+    if (command != null) {
+      command.getClient().closeConnection();
+    }
+    if (cubeCommands != null) {
+      cubeCommands.getClient().closeConnection();
+    }
   }
 
   /**

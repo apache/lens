@@ -21,6 +21,7 @@ package org.apache.lens.api.result;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.annotation.*;
 
@@ -59,7 +60,7 @@ public class LensAPIResult<DATA> {
   private LensErrorTO lensErrorTO;
 
   @XmlTransient
-  private Status httpStatusCode;
+  private Response.StatusType httpStatusCode;
 
   public static <DATA> LensAPIResult<DATA> composedOf(final String apiVersion,
       final String id, @NonNull final DATA data) {
@@ -67,20 +68,18 @@ public class LensAPIResult<DATA> {
   }
 
   public static <DATA> LensAPIResult<DATA> composedOf(final String apiVersion,
-      final String id, @NonNull final DATA data, @NonNull final Status httpStatusCode) {
-
+      final String id, @NonNull final DATA data, @NonNull final Response.StatusType httpStatusCode) {
     return new LensAPIResult<>(apiVersion, id, data, null, httpStatusCode);
   }
 
   public static LensAPIResult<NoResultData> composedOf(
       final String apiVersion, final String id, @NonNull final LensErrorTO lensErrorTO,
-      @NonNull final Status httpStatusCode) {
-
+      @NonNull final Response.StatusType httpStatusCode) {
     return new LensAPIResult<>(apiVersion, id, null, lensErrorTO, httpStatusCode);
   }
 
   private LensAPIResult(final String apiVersion, final String id, final DATA data, final LensErrorTO lensErrorTO,
-      @NonNull final Status httpStatusCode) {
+      @NonNull final Response.StatusType httpStatusCode) {
 
     /* The check commented below should be enabled in future, once story of apiVersion is clear. Right now there could
     be REST APIs throwing LensException without initializing apiVersion
@@ -100,7 +99,7 @@ public class LensAPIResult<DATA> {
     return (lensErrorTO != null) && lensErrorTO.areValidStackTracesPresent();
   }
 
-  public Status getHttpStatusCode() {
+  public Response.StatusType getHttpStatusCode() {
     return this.httpStatusCode;
   }
 

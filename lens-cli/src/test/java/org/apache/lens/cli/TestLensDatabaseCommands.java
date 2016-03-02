@@ -45,13 +45,17 @@ public class TestLensDatabaseCommands extends LensCliApplicationTest {
   @Test
   public void testDatabaseCommands() throws URISyntaxException {
     LensClient client = new LensClient();
-    LensDatabaseCommands command = new LensDatabaseCommands();
-    LensCubeCommands cubeCommand = new LensCubeCommands();
-    command.setClient(client);
-    cubeCommand.setClient(client);
-    boolean cascade = true;
-    for(int i = 0; i < 4; i++, cascade = !cascade) {
-      testDrop(command, cubeCommand, cascade);
+    try {
+      LensDatabaseCommands command = new LensDatabaseCommands();
+      LensCubeCommands cubeCommand = new LensCubeCommands();
+      command.setClient(client);
+      cubeCommand.setClient(client);
+      boolean cascade = true;
+      for (int i = 0; i < 4; i++, cascade = !cascade) {
+        testDrop(command, cubeCommand, cascade);
+      }
+    } finally {
+      client.closeConnection();
     }
   }
 

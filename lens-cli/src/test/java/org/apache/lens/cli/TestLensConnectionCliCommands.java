@@ -337,9 +337,13 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
     LensClient client = new LensClient();
     LensConnectionCommands commands = new LensConnectionCommands();
     commands.setClient(client);
-    LensSessionHandle sessionHandle = client.getConnection().getSessionHandle();
-    Assert.assertNotNull(sessionHandle);
-    String output = commands.getSessionHandle();
-    Assert.assertTrue(output.contains(sessionHandle.getPublicId().toString()), "session handle output: " + output);
+    try {
+      LensSessionHandle sessionHandle = client.getConnection().getSessionHandle();
+      Assert.assertNotNull(sessionHandle);
+      String output = commands.getSessionHandle();
+      Assert.assertTrue(output.contains(sessionHandle.getPublicId().toString()), "session handle output: " + output);
+    } finally {
+      commands.quitShell();
+    }
   }
 }
