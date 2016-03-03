@@ -18,6 +18,7 @@
  */
 package org.apache.lens.client;
 
+import java.io.File;
 import java.net.ConnectException;
 import java.util.Iterator;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
 import lombok.Getter;
@@ -326,5 +328,28 @@ public class LensConnection {
     sb.append("sessionHandle=").append(sessionHandle.getPublicId());
     sb.append('}');
     return sb.toString();
+  }
+
+  /**
+   * Adds the resource to current DB.
+   *
+   * @param type         the type
+   * @param resourcePath the resource path
+   * @return the API result
+   */
+  public APIResult addResourceToDB(String type, String resourcePath) {
+    WebTarget target = getMetastoreWebTarget();
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), this.sessionHandle,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), type));
+
+    FileDataBodyPart filePart = new FileDataBodyPart("file", new File(resourcePath));
+    filePart.setContentDisposition(FormDataContentDisposition.name("file").fileName("db_0.jar").build());
+    mp.bodyPart(filePart);
+
+    APIResult result = target.path("databases/jar").request()
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+    return result;
   }
 }

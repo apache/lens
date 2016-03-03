@@ -27,6 +27,8 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
+import lombok.NonNull;
+
 /**
  * The Class LensDatabaseCommands.
  */
@@ -118,5 +120,18 @@ public class LensDatabaseCommands extends LensCRUDCommand {
   @Override
   protected APIResult doDelete(String name, boolean cascade) {
     return getClient().dropDatabase(name, cascade);
+  }
+
+  /**
+   * Adds the jar.
+   *
+   * @param path the path
+   * @return the string
+   */
+  @CliCommand(value = "add dbjar", help = "Add jar resource to the db")
+  public String addDBJar(
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-HDFS> / <path-to-jar-on-local>") @NonNull String path) {
+    APIResult result = getClient().addDBJarResource(path);
+    return result.getMessage();
   }
 }

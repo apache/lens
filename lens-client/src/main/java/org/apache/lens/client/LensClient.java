@@ -612,4 +612,8 @@ public class LensClient {
   public Response getLogs(String logFile) {
     return this.connection.getLogs(logFile);
   }
+
+  public APIResult addDBJarResource(String path) {
+    return this.connection.addResourceToDB("jar", path);
+  }
 }

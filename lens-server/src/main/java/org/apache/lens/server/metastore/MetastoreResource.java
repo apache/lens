@@ -20,6 +20,7 @@ package org.apache.lens.server.metastore;
 
 import static org.apache.lens.api.APIResult.*;
 
+import java.io.*;
 import java.util.List;
 
 import javax.ws.rs.*;
@@ -35,10 +36,14 @@ import org.apache.lens.api.metastore.*;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
+import org.apache.lens.server.util.ScannedPaths;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -1700,4 +1705,62 @@ public class MetastoreResource {
       throw exc;
     }
   }
+
+  /**
+   * Validate jar
+   * <p></p>
+   * <p>
+   * The returned @{link APIResult} will have status SUCCEEDED <em>only if</em> the add operation was successful for all
+   * services running in this Lens server.
+   * </p>
+   *
+   * @param size      size of the jar
+   * @param type      The type of resource. Valid types are 'jar'
+   * @param path      path of the resource. Local or HDFS path
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
+   * {@link Status#PARTIAL}, if add succeeded only for some services. {@link APIResult} with state
+   * {@link Status#FAILED}, if add has failed
+   */
+  @PUT
+  @Path("databases/validateDBJar")
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  public APIResult validateDBResource(@QueryParam("size") String size,
+    @QueryParam("type") String type, @QueryParam("path") String path) {
+
+
+    return new APIResult(Status.SUCCEEDED, "Add resource succeeded");
+  }
+
+
+    /**
+     * Add a resource to the current DB
+     * <p></p>
+     * <p>
+     * The returned @{link APIResult} will have status SUCCEEDED <em>only if</em> the add operation was successful for all
+     * services running in this Lens server.
+     * </p>
+     *
+     * @param sessionid session handle object
+     * @param type      The type of resource. Valid types are 'jar'
+     * @param fileInputStream      stream of the resource. Local or HDFS path
+     * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
+     * {@link Status#PARTIAL}, if add succeeded only for some services. {@link APIResult} with state
+     * {@link Status#FAILED}, if add has failed
+     */
+  @POST
+  @Path("databases/jar")
+  @Consumes({MediaType.MULTIPART_FORM_DATA})
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  public APIResult addDBResource(@FormDataParam("sessionid") LensSessionHandle sessionid,
+    @FormDataParam("type") String type, @FormDataParam("file") InputStream fileInputStream) {
+
+    try {
+      getSvc().addDBJar(sessionid,type,fileInputStream);
+    } catch (LensException e) {
+      e.printStackTrace();
+      return new APIResult(Status.FAILED, "Add resource failed");
+    }
+    return new APIResult(Status.SUCCEEDED, "Add resource succeeded");
+  }
+
 }
