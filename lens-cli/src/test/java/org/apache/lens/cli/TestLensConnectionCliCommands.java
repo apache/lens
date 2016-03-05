@@ -195,7 +195,6 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
     }
   }
 
-
   /**
    * Test jar commands.
    */

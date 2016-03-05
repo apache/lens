@@ -57,7 +57,8 @@ public class BaseLensCommand implements ExecutionProcessor {
   protected DefaultPrettyPrinter pp;
 
   /** The is connection active. */
-  protected static boolean isConnectionActive;
+  protected boolean isConnectionActive;
+
   public static final String DATE_FMT = "yyyy-MM-dd'T'HH:mm:ss:SSS";
 
   private LensClient lensClient = null;
@@ -74,7 +75,7 @@ public class BaseLensCommand implements ExecutionProcessor {
     return DATE_PARSER.get().format(dt);
   }
 
-  static {
+  private void registerShutDownHook() {
     Runtime.getRuntime().addShutdownHook(new Thread() {
       public void run() {
         closeClientConnection();
@@ -85,10 +86,10 @@ public class BaseLensCommand implements ExecutionProcessor {
   /**
    * Close client connection.
    */
-  protected static synchronized void closeClientConnection() {
+  protected synchronized void closeClientConnection() {
     if (isConnectionActive) {
       log.debug("Request for stopping lens cli received");
-      getClientWrapper().getClient().closeConnection();
+      lensClient.closeConnection();
       isConnectionActive = false;
     }
   }
@@ -97,6 +98,7 @@ public class BaseLensCommand implements ExecutionProcessor {
    * Instantiates a new base lens command.
    */
   public BaseLensCommand() {
+    registerShutDownHook();
     mapper = new ObjectMapper();
     mapper.setSerializationInclusion(Inclusion.NON_NULL);
     mapper.setSerializationInclusion(Inclusion.NON_DEFAULT);
@@ -118,13 +120,13 @@ public class BaseLensCommand implements ExecutionProcessor {
   }
 
   public void setClient(LensClient client) {
+    isConnectionActive = true;
     lensClient = client;
   }
 
   public LensClient getClient() {
     if (lensClient == null) {
       setClient(getClientWrapper().getClient());
-      isConnectionActive = true;
     }
     return lensClient;
   }
