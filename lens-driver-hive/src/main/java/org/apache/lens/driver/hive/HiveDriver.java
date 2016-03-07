@@ -650,7 +650,7 @@ public class HiveDriver extends AbstractLensDriver {
 //        StringBuilder errorMessage = new StringBuilder();
 //        for (TaskStatus taskStat : taskStatuses) {
 //          String tstate = taskStat.getTaskState();
-//          if ("FINISHED_STATE".equalsIgnoreCase(tstate)) {
+//          if ("FINISHED".equalsIgnoreCase(tstate)) {
 //            completedTasks++;
 //          }
 //          if ("FAILED_STATE".equalsIgnoreCase(tstate)) {
