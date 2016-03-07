@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -38,14 +38,17 @@ import org.apache.hive.service.rpc.thrift.TCLIService;
 public class EmbeddedThriftConnection implements ThriftConnection {
   public static class EmbeddedThriftCLIServiceClient extends ThriftCLIServiceClient {
     private SessionState state;
+
     private void captureState() {
       state = SessionState.get();
     }
+
     private void restoreState() {
       if (state != null) {
         SessionState.setCurrentSessionState(state);
       }
     }
+
     public EmbeddedThriftCLIServiceClient(TCLIService.Iface cliService) {
       super(cliService);
     }
@@ -53,7 +56,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     public SessionHandle openSession(String username, String password,
       Map<String, String> configuration)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.openSession(username, password, configuration);
       } finally {
@@ -64,7 +67,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     public SessionHandle openSessionWithImpersonation(String username, String password,
       Map<String, String> configuration, String delegationToken)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.openSessionWithImpersonation(username, password, configuration, delegationToken);
       } finally {
@@ -74,7 +77,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public void closeSession(SessionHandle sessionHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         super.closeSession(sessionHandle);
       } finally {
@@ -84,7 +87,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public GetInfoValue getInfo(SessionHandle sessionHandle, GetInfoType infoType)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getInfo(sessionHandle, infoType);
       } finally {
@@ -95,7 +98,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     public OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
       Map<String, String> confOverlay)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.executeStatement(sessionHandle, statement, confOverlay);
       } finally {
@@ -106,7 +109,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     public OperationHandle executeStatementAsync(SessionHandle sessionHandle,
       String statement, Map<String, String> confOverlay)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.executeStatementAsync(sessionHandle, statement, confOverlay);
       } finally {
@@ -116,7 +119,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public OperationHandle getTypeInfo(SessionHandle sessionHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getTypeInfo(sessionHandle);
       } finally {
@@ -126,7 +129,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public OperationHandle getCatalogs(SessionHandle sessionHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getCatalogs(sessionHandle);
       } finally {
@@ -137,7 +140,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     public OperationHandle getSchemas(SessionHandle sessionHandle,
       String catalogName, String schemaName)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getSchemas(sessionHandle, catalogName, schemaName);
       } finally {
@@ -148,7 +151,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     public OperationHandle getTables(SessionHandle sessionHandle,
       String catalogName, String schemaName, String tableName, List<String> tableTypes)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getTables(sessionHandle, catalogName, schemaName, tableName, tableTypes);
       } finally {
@@ -158,7 +161,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public OperationHandle getTableTypes(SessionHandle sessionHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getTableTypes(sessionHandle);
       } finally {
@@ -169,7 +172,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     public OperationHandle getColumns(SessionHandle sessionHandle,
       String catalogName, String schemaName, String tableName, String columnName)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getColumns(sessionHandle, catalogName, schemaName, tableName, columnName);
       } finally {
@@ -180,7 +183,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     public OperationHandle getFunctions(SessionHandle sessionHandle,
       String catalogName, String schemaName, String functionName)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getFunctions(sessionHandle, catalogName, schemaName, functionName);
       } finally {
@@ -190,7 +193,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public OperationStatus getOperationStatus(OperationHandle opHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getOperationStatus(opHandle);
       } finally {
@@ -200,7 +203,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public void cancelOperation(OperationHandle opHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         super.cancelOperation(opHandle);
       } finally {
@@ -210,7 +213,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public void closeOperation(OperationHandle opHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         super.closeOperation(opHandle);
       } finally {
@@ -220,7 +223,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public TableSchema getResultSetMetadata(OperationHandle opHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getResultSetMetadata(opHandle);
       } finally {
@@ -230,7 +233,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public RowSet fetchResults(OperationHandle opHandle)
       throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.fetchResults(opHandle);
       } finally {
@@ -240,7 +243,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
       long maxRows, FetchType fetchType) throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.fetchResults(opHandle, orientation, maxRows, fetchType);
       } finally {
@@ -250,7 +253,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public String getDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
       String owner, String renewer) throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.getDelegationToken(sessionHandle, authFactory, owner, renewer);
       } finally {
@@ -260,7 +263,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public void cancelDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
       String tokenStr) throws HiveSQLException {
-      try{
+      try {
         captureState();
         super.cancelDelegationToken(sessionHandle, authFactory, tokenStr);
       } finally {
@@ -270,7 +273,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     public void renewDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
       String tokenStr) throws HiveSQLException {
-      try{
+      try {
         captureState();
         super.renewDelegationToken(sessionHandle, authFactory, tokenStr);
       } finally {
@@ -280,7 +283,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 
     @Override
     public SessionHandle openSession(String username, String password) throws HiveSQLException {
-      try{
+      try {
         captureState();
         return super.openSession(username, password);
       } finally {

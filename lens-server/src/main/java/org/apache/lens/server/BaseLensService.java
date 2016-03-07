@@ -212,7 +212,8 @@ public abstract class BaseLensService extends CompositeService implements Extern
       try {
         AuthenticationProviderFactory.AuthMethods authMethod = AuthenticationProviderFactory.AuthMethods
           .getValidAuthMethod(authType);
-        PasswdAuthenticationProvider provider = AuthenticationProviderFactory.getAuthenticationProvider(authMethod);
+        PasswdAuthenticationProvider provider = AuthenticationProviderFactory
+          .getAuthenticationProvider(authMethod, getHiveConf());
         provider.Authenticate(userName, password);
       } catch (Exception e) {
         log.error("Auth error: ", e);

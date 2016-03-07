@@ -101,12 +101,16 @@ public class FilePersistentFormatter extends WrappedFileFormatter implements Per
    */
   @Override
   public void addRowsFromPersistedPath(Path persistedDir) throws IOException {
-    FileSystem persistFs = persistedDir.getFileSystem(ctx.getConf());
+    final FileSystem persistFs = persistedDir.getFileSystem(ctx.getConf());
 
     FileStatus[] partFiles = persistFs.listStatus(persistedDir, new PathFilter() {
       @Override
       public boolean accept(Path path) {
-        return !path.getName().startsWith("_") && !new File(path.toUri()).isDirectory();
+        try {
+          return !path.getName().startsWith("_") && !persistFs.isDirectory(path);
+        } catch (IOException e) {
+          return false;
+        }
       }
     });
 
