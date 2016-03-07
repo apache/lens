@@ -728,7 +728,6 @@ public class HiveDriver extends AbstractLensDriver {
     OperationHandle opHandle = hiveHandles.remove(handle);
     if (opHandle != null) {
       log.info("CloseQuery hiveHandle: {}", opHandle);
-      SessionState state = null;
       try {
         getClient().closeOperation(opHandle);
       } catch (HiveSQLException e) {
