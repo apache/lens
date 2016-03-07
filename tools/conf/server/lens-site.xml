@@ -31,4 +31,9 @@
   <name>hive.metastore.warehouse.dir</name>
   <value>/tmp/hive/warehouse</value>
 </property>
+
+<property>
+  <name>datanucleus.schema.autoCreateTables</name>
+  <value>true</value>
+</property>
 </configuration>
