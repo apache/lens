@@ -120,7 +120,7 @@ public class LensJAXBContext extends JAXBContext {
       return ((JAXBElement<T>) UNMARSHALLER.unmarshal(file)).getValue();
     } else {
       // load from classpath
-      InputStream stream = LensJAXBContext.class.getResourceAsStream(filename);
+      InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
       if (stream == null) {
         throw new IOException("File not found:" + filename);
       }

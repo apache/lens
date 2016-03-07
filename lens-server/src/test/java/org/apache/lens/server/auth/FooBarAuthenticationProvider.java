@@ -31,8 +31,9 @@ public class FooBarAuthenticationProvider implements PasswdAuthenticationProvide
   public static final String MSG = "<username,password>!=<foo@localhost,bar>";
 
   /** The allowed combinations. */
-  private final String[] allowedPasswords = new String[]{"anonymous", };
-  private final String[][] allowedCombinations = new String[][]{{"foo", "bar"}, {"anonymous", ""}, };
+
+  private final String[][] allowedCombinations
+    = new String[][]{{"foo", "bar"}, {"anonymous", ""}, {"test", "test"}, {"UITest", "UITest"}};
   /*
    * (non-Javadoc)
    *
@@ -43,11 +44,6 @@ public class FooBarAuthenticationProvider implements PasswdAuthenticationProvide
   public void Authenticate(String username, String password) throws AuthenticationException {
     for (String[] usernamePassword : allowedCombinations) {
       if (username.equals(usernamePassword[0]) && password.equals(usernamePassword[1])) {
-        return;
-      }
-    }
-    for (String allowedPassword: allowedPasswords) {
-      if (password.equals(allowedPassword)) {
         return;
       }
     }

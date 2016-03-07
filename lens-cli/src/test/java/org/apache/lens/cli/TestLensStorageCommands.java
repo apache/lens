@@ -27,6 +27,7 @@ import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 /**
@@ -59,6 +60,13 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
       command.setClient(client);
     }
     return command;
+  }
+
+  @AfterTest
+  public void cleanup() {
+    if (command != null) {
+      command.getClient().closeConnection();
+    }
   }
 
   /**

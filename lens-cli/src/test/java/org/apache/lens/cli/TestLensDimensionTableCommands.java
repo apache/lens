@@ -30,6 +30,7 @@ import org.apache.lens.cli.commands.LensDimensionCommands;
 import org.apache.lens.cli.commands.LensDimensionTableCommands;
 import org.apache.lens.client.LensClient;
 
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,15 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     return dimensionCommand;
   }
 
+  @AfterTest
+  public void cleanUp() {
+    if (command != null) {
+      command.getClient().closeConnection();
+    }
+    if (dimensionCommand != null) {
+      dimensionCommand.getClient().closeConnection();
+    }
+  }
 
   /**
    * Test dim table commands.

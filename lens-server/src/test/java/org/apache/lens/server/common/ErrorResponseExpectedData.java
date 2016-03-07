@@ -30,10 +30,10 @@ import org.apache.lens.api.result.LensErrorTO;
 
 public class ErrorResponseExpectedData {
 
-  private final Response.Status expectedStatus;
+  private final Response.StatusType expectedStatus;
   private final LensErrorTO expectedLensErrorTO;
 
-  public ErrorResponseExpectedData(final Response.Status expectedStatus,
+  public ErrorResponseExpectedData(final Response.StatusType expectedStatus,
       final LensErrorTO expectedLensErrorTO) {
 
     this.expectedStatus = expectedStatus;

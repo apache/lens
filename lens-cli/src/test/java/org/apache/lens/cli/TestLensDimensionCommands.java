@@ -33,6 +33,7 @@ import org.apache.lens.cli.table.XJoinChainTable;
 import org.apache.lens.client.LensClient;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,13 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
       command.setClient(client);
     }
     return command;
+  }
+
+  @AfterTest
+  public void cleanUp() {
+    if (command != null) {
+      command.getClient().closeConnection();
+    }
   }
 
   /**
@@ -87,11 +95,15 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
     testFields(getCommand());
     testJoinChains(getCommand());
     testUpdateCommand(new File(dimensionSpec.toURI()), getCommand());
-    getCommand().dropDimension("test_dim");
-    getCommand().dropDimension("test_detail");
+    dropDimensions();
     dimensionList = getCommand().showDimensions();
     Assert.assertFalse(dimensionList.contains("test_dim"));
     Assert.assertFalse(dimensionList.contains("test_detail"));
+  }
+
+  public static void dropDimensions() {
+    getCommand().dropDimension("test_dim");
+    getCommand().dropDimension("test_detail");
   }
 
   private void testJoinChains(LensDimensionCommands command) {

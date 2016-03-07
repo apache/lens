@@ -121,6 +121,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
+    closeSession(target(), sessionId, mt);
   }
 
   @Test(dataProvider = "mediaTypeData")
@@ -140,6 +141,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
+    closeSession(target(), sessionId, mt);
   }
 
   @Test(dataProvider = "mediaTypeData")
@@ -164,7 +166,9 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
     assertTrue(expectedLensErrorTO1.getMessage().equals(responseLensErrorTO.getMessage())
             || expectedLensErrorTO2.getMessage().equals(responseLensErrorTO.getMessage()),
-      "Message is " + responseLensErrorTO.getMessage());
+        "Message is " + responseLensErrorTO.getMessage());
+    closeSession(target(), sessionId, mt);
+
   }
 
   @Test(dataProvider = "mediaTypeData")
@@ -180,6 +184,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);
+    closeSession(target(), sessionId, mt);
   }
 
   @Test(dataProvider = "mediaTypeData")

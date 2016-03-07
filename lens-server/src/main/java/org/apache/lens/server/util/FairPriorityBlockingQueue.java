@@ -99,7 +99,9 @@ public class FairPriorityBlockingQueue<E> {
 
     conditionalWaitLock.lock();
     try {
-      notEmpty.await();
+      while (priorityBlockingQueue.size() < 1) {
+        notEmpty.await();
+      }
     } finally {
       conditionalWaitLock.unlock();
     }

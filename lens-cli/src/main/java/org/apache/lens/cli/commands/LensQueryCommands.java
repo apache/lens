@@ -335,10 +335,13 @@ public class LensQueryCommands extends BaseLensCommand {
               + formatResultSet(results);
           }
         }
-      } else if (async) {
-        return formatResultSet(getClient().getAsyncResults(queryHandle));
       } else {
-        return formatResultSet(getClient().getSyncResults(queryHandle));
+        if (async) {
+          results = getClient().getAsyncResults(queryHandle);
+        } else {
+          results = getClient().getSyncResults(queryHandle);
+        }
+        return results.getResultSet() == null ? "Resultset not available for the query" : formatResultSet(results);
       }
     } catch (Throwable t) {
       return t.getMessage();

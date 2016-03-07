@@ -89,6 +89,10 @@ public final class LensConfConstants {
    */
   public static final String WS_FEATURE_NAMES = SERVER_PFX + "ws.featurenames";
 
+  public static final String MAX_SESSIONS_PER_USER = SERVER_PFX + "max.sessions.per.user";
+
+  public static final Integer DEFAULT_MAX_SESSIONS_PER_USER = 10;
+
   /**
    * The Constant SERVICE_IMPL_SFX.
    */

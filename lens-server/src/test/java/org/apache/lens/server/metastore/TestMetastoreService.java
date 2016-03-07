@@ -61,6 +61,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 
 import org.glassfish.jersey.test.TestProperties;
+
 import org.testng.Assert;
 import org.testng.annotations.*;
 
