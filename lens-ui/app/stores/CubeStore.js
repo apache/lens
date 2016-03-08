@@ -24,15 +24,17 @@ import { EventEmitter } from 'events';
 
 // private methods
 function receiveCubes (payload) {
-  payload.cubes.elements && payload.cubes.elements.forEach(cube => {
-    if (!cubes[cube]) {
-      cubes[cube] = { name: cube, isLoaded: false };
-    }
-  });
+  payload.cubes && payload.cubes.stringList &&
+    payload.cubes.stringList.elements &&
+    payload.cubes.stringList.elements.forEach(cube => {
+      if (!cubes[cube]) {
+        cubes[cube] = { name: cube, isLoaded: false };
+      }
+    });
 }
 
 function receiveCubeDetails (payload) {
-  let cubeDetails = payload.cubeDetails;
+  let cubeDetails = payload.cubeDetails && payload.cubeDetails.x_cube;
 
   let dimensions = cubeDetails.dim_attributes &&
     cubeDetails.dim_attributes.dim_attribute;
