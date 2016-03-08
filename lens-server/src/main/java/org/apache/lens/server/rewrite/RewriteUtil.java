@@ -137,14 +137,15 @@ public final class RewriteUtil {
               // less for the next start and for close parenthesis
               cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");
             } else if (parent.getType() == HiveParser.TOK_UNIONALL) {
-              // one less for the next start and less the size of string 'UNION ALL'
               ASTNode nextChild;
               if (parent.getChildCount() > ci + 1) {
+                // top level child
                 nextChild = (ASTNode) parent.getChild(ci + 1);
               } else {
+                // middle child, it's left child's right child. 
                 nextChild = (ASTNode) parent.getParent().getChild(parent.getChildIndex()+1);
               }
-                // Go back one "union all select[ distinct]"
+              // Go back one "union all select[ distinct]"
               cqi.endPos = getEndPos(originalQuery, nextChild.getChild(1).getChild(1).getCharPositionInLine() - 1,
                 "distinct");
               cqi.endPos = getEndPos(originalQuery, cqi.endPos, "select");
