@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p/>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -98,8 +98,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_CONNECTION_RETRY_LIMIT, 3);
     remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
     remoteConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_DELAY_SECONDS, "10s");
-    remoteConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_SHUTDOWN_TIMEOUT, "1");
-    remoteConf.setVar(HiveConf.ConfVars.SERVER_READ_SOCKET_TIMEOUT, "60000");
+    remoteConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_SHUTDOWN_TIMEOUT, "1s");
+    remoteConf.setVar(HiveConf.ConfVars.SERVER_READ_SOCKET_TIMEOUT, "60000s");
     remoteConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
     server = new HiveServer2();
     server.init(remoteConf);

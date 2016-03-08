@@ -1071,8 +1071,8 @@ public class TestColumnarSQLRewriter {
     File serdeJarFile = new File(jarDir, "serde.jar");
 
     URL[] serdeUrls = new URL[2];
-    serdeUrls[0] = new URL("file://" + testJarFile.getAbsolutePath());
-    serdeUrls[1] = new URL("file://" + serdeJarFile.getAbsolutePath());
+    serdeUrls[0] = new URL("file:" + testJarFile.getAbsolutePath());
+    serdeUrls[1] = new URL("file:" + serdeJarFile.getAbsolutePath());
 
     URLClassLoader createTableClassLoader = new URLClassLoader(serdeUrls, hconf.getClassLoader());
     ClassLoader loader = new URLClassLoader(serdeUrls, SessionState.getSessionConf().getClassLoader());
