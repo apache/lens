@@ -87,7 +87,7 @@ class TableSchema extends React.Component {
                     return (
                       <tr key={this.state.table.name + '|' + col.name}>
                         <td>{col.name}</td>
-                        <td>{col.type}</td>
+                        <td>{col._type}</td>
                         <td>{col.comment || 'No description available'}</td>
                       </tr>
                     );

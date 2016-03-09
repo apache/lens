@@ -35,7 +35,12 @@ function authenticateUser (details) {
   userDetails = {
     isUserLoggedIn: true,
     email: details.email,
-    secretToken: new XMLSerializer().serializeToString(details.secretToken)
+    // creating the session string which is passed with every request
+    secretToken: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <lensSessionHandle>
+        <publicId>${details.secretToken.lensSessionHandle.publicId}</publicId>
+        <secretId>${details.secretToken.lensSessionHandle.secretId}</secretId>
+      </lensSessionHandle>`
   };
 
   // store the details in localStorage if available

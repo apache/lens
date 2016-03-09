@@ -53,7 +53,7 @@ function constructTable (tableData) {
   });
   let rows = tableData.results
     .map(row => {
-      return (<tr>{row.values.values.map(cell => {
+      return (<tr>{row.values.map(cell => {
         return <td>{(cell && cell.value) || <span style={{color: 'red'}}>NULL</span>}</td>;
       })}</tr>);
     });

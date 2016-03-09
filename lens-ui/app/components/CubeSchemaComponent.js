@@ -33,7 +33,7 @@ function constructMeasureTable (cubeName, measures) {
     return (
       <tr key={cubeName + '|' + measure.name}>
         <td>{ measure.name }</td>
-        <td>{ measure.type }</td>
+        <td>{ measure._type }</td>
         <td>{ measure.default_aggr }</td>
         <td>{ measure.display_string }</td>
       </tr>
@@ -65,7 +65,7 @@ function constructDimensionTable (cubeName, dimensions) {
     return (
       <tr key={cubeName + '|' + dimension.name}>
         <td>{ dimension.name }</td>
-        <td>{ dimension.type }</td>
+        <td>{ dimension._type }</td>
         <td>{ dimension.ref_spec && dimension.ref_spec.chain_ref_column &&
           dimension.ref_spec.chain_ref_column.dest_table }</td>
         <td>{ dimension.ref_spec && dimension.ref_spec.chain_ref_column &&

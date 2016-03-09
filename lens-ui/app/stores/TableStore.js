@@ -30,8 +30,8 @@ function receiveTables (payload) {
     tableCompleteness[database] = true;
   }
 
-  payload.tables.elements &&
-    payload.tables.elements.forEach(table => {
+  payload.tables.stringList && payload.tables.stringList.elements &&
+    payload.tables.stringList.elements.forEach(table => {
       if (!tables[database][table]) {
         tables[database][table] = { name: table, isLoaded: false };
       }
@@ -39,7 +39,9 @@ function receiveTables (payload) {
 }
 
 function receiveTableDetails (payload) {
-  if (payload.tableDetails) {
+  if (payload.tableDetails && payload.tableDetails.x_native_table) {
+    // all table details are wrapped in `x_native_table` key, over-write
+    payload.tableDetails = payload.tableDetails.x_native_table;
     let database = payload.database;
     let name = payload.tableDetails.name;
     let table = assign({}, payload.tableDetails);

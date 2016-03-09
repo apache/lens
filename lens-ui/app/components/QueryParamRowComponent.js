@@ -97,7 +97,7 @@ class QueryParamRow extends React.Component {
           break;
 
         case 'ChangeDefaultTextValue':
-          paramChange = _.assign({}, state, {defaultValue: arg.target.value});
+          paramChange = _.assign({}, state, {defaultValue: [arg.target.value]});
           break;
 
         case 'AddItemInMultiSelect':
@@ -111,7 +111,7 @@ class QueryParamRow extends React.Component {
           val = this.state.paramChange.collectionType === 'SINGLE' ? null : [];
           paramChange = _.assign({}, state, {
             dataType: arg.target.value,
-            defaultValue: val,
+            defaultValue: val
           });
           break;
 
