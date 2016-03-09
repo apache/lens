@@ -152,7 +152,7 @@ public class QueryServiceResource {
    */
   @GET
   @Path("queries")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("queryName") String queryName,
     @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("driver") String driver,
@@ -205,7 +205,7 @@ public class QueryServiceResource {
   @POST
   @Path("queries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
   public LensAPIResult<QuerySubmitResult> query(@FormDataParam("sessionid") LensSessionHandle sessionid,
       @FormDataParam("query") String query, @FormDataParam("operation") String operation,
@@ -267,7 +267,7 @@ public class QueryServiceResource {
    */
   @DELETE
   @Path("queries")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult cancelAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("user") String user,
     @DefaultValue("") @QueryParam("queryName") String queryName, @DefaultValue("") @QueryParam("driver") String driver,
@@ -315,7 +315,7 @@ public class QueryServiceResource {
    */
   @GET
   @Path("preparedqueries")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public List<QueryPrepareHandle> getAllPreparedQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
     @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
@@ -349,7 +349,7 @@ public class QueryServiceResource {
   @POST
   @Path("preparedqueries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
   public LensAPIResult<QuerySubmitResult> prepareQuery(
       @FormDataParam("sessionid") LensSessionHandle sessionid, @FormDataParam("query") String query,
@@ -402,7 +402,7 @@ public class QueryServiceResource {
    */
   @DELETE
   @Path("preparedqueries")
-  @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN })
+  @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
       @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
       @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
@@ -472,7 +472,7 @@ public class QueryServiceResource {
    */
   @GET
   @Path("preparedqueries/{prepareHandle}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public LensPreparedQuery getPreparedQuery(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("prepareHandle") String prepareHandle) {
     checkSessionId(sessionid);
@@ -494,7 +494,7 @@ public class QueryServiceResource {
    */
   @DELETE
   @Path("preparedqueries/{prepareHandle}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult destroyPrepared(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("prepareHandle") String prepareHandle) {
     checkSessionId(sessionid);
@@ -515,7 +515,7 @@ public class QueryServiceResource {
    */
   @GET
   @Path("queries/{queryHandle}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public LensQuery getStatus(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle) {
     checkSessionId(sessionid);
@@ -537,7 +537,7 @@ public class QueryServiceResource {
    */
   @DELETE
   @Path("queries/{queryHandle}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult cancelQuery(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle) {
     checkSessionId(sessionid);
@@ -591,7 +591,7 @@ public class QueryServiceResource {
   @PUT
   @Path("queries/{queryHandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult updateConf(@FormDataParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle, @FormDataParam("conf") LensConf conf) {
     checkSessionId(sessionid);
@@ -620,7 +620,7 @@ public class QueryServiceResource {
   @PUT
   @Path("preparedqueries/{prepareHandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult updatePreparedConf(@FormDataParam("sessionid") LensSessionHandle sessionid,
     @PathParam("prepareHandle") String prepareHandle, @FormDataParam("conf") LensConf conf) {
     checkSessionId(sessionid);
@@ -656,7 +656,7 @@ public class QueryServiceResource {
   @POST
   @Path("preparedqueries/{prepareHandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
   public QuerySubmitResult executePrepared(@FormDataParam("sessionid") LensSessionHandle sessionid,
     @PathParam("prepareHandle") String prepareHandle,
@@ -696,7 +696,7 @@ public class QueryServiceResource {
    */
   @GET
   @Path("queries/{queryHandle}/resultsetmetadata")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public QueryResultSetMetadata getResultSetMetadata(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle) {
     checkSessionId(sessionid);
@@ -718,7 +718,7 @@ public class QueryServiceResource {
    */
   @GET
   @Path("queries/{queryHandle}/resultset")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public QueryResult getResultSet(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle, @QueryParam("fromindex") long startIndex,
     @QueryParam("fetchsize") int fetchSize) {
@@ -759,7 +759,7 @@ public class QueryServiceResource {
    */
   @DELETE
   @Path("queries/{queryHandle}/resultset")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult closeResultSet(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle) {
     checkSessionId(sessionid);

@@ -110,6 +110,28 @@ public class TestSessionResource extends LensJerseyTest {
     return new SessionApp();
   }
 
+  @Test
+  public void testDefaultResponseType() {
+    final WebTarget target = target().path("session");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), "foo"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), "bar"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+      new LensConf(), defaultMT));
+
+    final String handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+      String.class);
+    Assert.assertNotNull(handle);
+    Assert.assertTrue(handle.contains("xml"), "Handle is " + handle);
+    Assert.assertTrue(handle.contains("publicId"), "Handle is " + handle);
+    Assert.assertTrue(handle.contains("secretId"), "Handle is " + handle);
+
+    String result = target.queryParam("sessionid", handle).request().delete(String.class);
+    Assert.assertNotNull(result);
+    Assert.assertTrue(result.contains("xml"), "Result is " + result);
+    Assert.assertTrue(result.contains("succeeded"), "Result is " + result);
+  }
+
   /**
    * Test session.
    */
