@@ -64,6 +64,7 @@ import lombok.NonNull;
  * <p></p>
  * CRUD on saved query
  */
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 public class SavedQueryResource {
 
   final SavedQueryService savedQueryService;
@@ -107,7 +108,6 @@ public class SavedQueryResource {
   @GET
   @Path("/savedqueries")
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public ListResponse getList(
     @QueryParam("sessionid") LensSessionHandle sessionid,
     @Context UriInfo info,
@@ -131,7 +131,6 @@ public class SavedQueryResource {
    */
   @GET
   @Path("/savedqueries/{id}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public SavedQuery getByID(
     @QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("id") long id) throws LensException {
@@ -152,7 +151,6 @@ public class SavedQueryResource {
    */
   @DELETE
   @Path("/savedqueries/{id}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public ResourceModifiedResponse deleteById(
     @QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("id") long id) throws LensException {
@@ -176,8 +174,7 @@ public class SavedQueryResource {
    */
   @POST
   @Path(("/savedqueries"))
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
   public ResourceModifiedResponse create(
     @QueryParam("sessionid") LensSessionHandle sessionid,
     SavedQuery savedQuery,
@@ -206,8 +203,7 @@ public class SavedQueryResource {
    */
   @PUT
   @Path("/savedqueries/{id}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
   public ResourceModifiedResponse update(
     @QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("id") long id,
@@ -233,7 +229,6 @@ public class SavedQueryResource {
    */
   @POST
   @Path("/savedqueries/parameters")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public ParameterParserResponse getParameters(
     @QueryParam("sessionid") LensSessionHandle sessionid,
     @FormDataParam("query") String query) {
@@ -252,7 +247,6 @@ public class SavedQueryResource {
    */
   @POST
   @Path("/savedqueries/{id}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public LensAPIResult<QueryHandle> run(
     @PathParam("id") long id,
     @Context UriInfo info,

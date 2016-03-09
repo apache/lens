@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
  * This provides api for all things metastore.
  */
 @Path("metastore")
-@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 @Slf4j
 public class MetastoreResource {
   public static final ObjectFactory X_CUBE_OBJECT_FACTORY = new ObjectFactory();

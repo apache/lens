@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  * Machine Learning service.
  */
 @Path("/ml")
-@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 @Slf4j
 public class MLServiceResource {
 
@@ -209,7 +209,7 @@ public class MLServiceResource {
    * @throws LensException the lens exception
    */
   @DELETE
-  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   @Path("models/{algorithm}/{modelID}")
   public String deleteModel(@PathParam("algorithm") String algorithm, @PathParam("modelID") String modelID)
     throws LensException {
@@ -373,7 +373,7 @@ public class MLServiceResource {
    */
   @DELETE
   @Path("reports/{algorithm}/{reportID}")
-  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public String deleteTestReport(@PathParam("algorithm") String algorithm, @PathParam("reportID") String reportID)
     throws LensException {
     getMlService().deleteTestReport(algorithm, reportID);
