@@ -21,6 +21,9 @@ import Config from 'config.json';
 import fetch from 'isomorphic-fetch';
 
 function makeReqwest (url, method, data, options = {}) {
+  if (!options.headers) options.headers = {};
+  options.headers['Accept'] = 'application/json';
+
   return fetch(url, {
     method: method,
     body: data,
