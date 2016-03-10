@@ -46,6 +46,12 @@
   </property>
 
   <property>
+    <name>lens.server.database.resource.dir</name>
+    <value>${project.build.directory}/resources/</value>
+    <description>database resource directory</description>
+  </property>
+
+  <property>
     <name>lens.server.persist.location</name>
     <value>target/persist-dir</value>
   </property>

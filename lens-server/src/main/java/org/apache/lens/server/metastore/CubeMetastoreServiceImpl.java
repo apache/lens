@@ -38,6 +38,7 @@ import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.session.LensSessionImpl;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -837,34 +838,46 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       acquire(sessionid);
       String currentDB = SessionState.get().getCurrentDatabase();
 
-      String resTopDir =
-        getHiveConf().get(currentDB, LensConfConstants.DEFAULT_DATABASE_RESOURCE_DIR);
-      log.info("Database specific resources at {}", resTopDir);
+      String baseDir =
+        getHiveConf().get(LensConfConstants.DATABASE_RESOURCE_DIR, LensConfConstants.DEFAULT_DATABASE_RESOURCE_DIR);
 
-      Path resTopDirPath = new Path(resTopDir);
+      String dbDir = baseDir+File.separator+currentDB;
+      log.info("Database specific resources at {}", dbDir);
+
+
+      Path resTopDirPath = new Path(dbDir);
       serverFs = FileSystem.newInstance(resTopDirPath.toUri(), getHiveConf());
       if (!serverFs.exists(resTopDirPath)) {
-        log.warn("Database resource location does not exist - {}. Database jar can't be uploaded", resTopDir);
-        throw new LensException("Database resource location does not exist - {}. Database jar can't be uploaded");
+        log.warn("Database resource location does not exist. Database jar can't be uploaded", dbDir);
+        throw new LensException("Database resource location does not exist. Database jar can't be uploaded");
       }
 
-      Path resJarOrderPath = new Path(resTopDir, currentDB + File.separator + "jar_order");
+      Path resJarOrderPath = new Path(dbDir, "jar_order");
       jarOrderFs = FileSystem.newInstance(resJarOrderPath.toUri(), getHiveConf());
       if (jarOrderFs.exists(resJarOrderPath)) {
-        log.warn("Database jar_order file exist - {}. Database jar can't be uploaded", resTopDir);
-        throw new LensException("Database jar_order file exist - {}. Database jar can't be uploaded");
+        log.warn("Database jar_order file exist - {}. Database jar can't be uploaded", resJarOrderPath);
+        throw new LensException("Database jar_order file exist. Database jar can't be uploaded");
+      }
+
+      String tempFileName = currentDB+"_uploading.jar";
+
+      Path uploadingPath = new Path(dbDir, tempFileName);
+      FileSystem uploadingFs = FileSystem.newInstance(uploadingPath.toUri(), getHiveConf());
+      if (uploadingFs.exists(uploadingPath)) {
+        log.warn("Already uploading a file - {}. This Database jar can't be uploaded. Try later!", uploadingPath);
+        throw new LensException("Database jar file upload in progress . Database jar can't be uploaded. Try later!");
       }
 
       int lastIndex = 0;
 
-      Path dbFolderPath = new Path(resTopDir, currentDB);
+      Path dbFolderPath = new Path(baseDir, currentDB);
       FileStatus[] existingFiles = serverFs.listStatus(dbFolderPath);
       for (FileStatus fs : existingFiles) {
         String fPath = fs.getPath().getName();
         String[] tokens = fPath.split("_");
 
         if (tokens.length > 1) {
-          int fIndex = Integer.parseInt(tokens[1].substring(0, 1));
+          int fIndex = Integer.parseInt(tokens[tokens.length - 1].substring(0, 1));
           if (fIndex > lastIndex)
             lastIndex = fIndex;
         }
@@ -872,10 +885,16 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
 
       int newIndex = lastIndex + 1;
 
-      Path resJarPath = new Path(resTopDir, currentDB + File.separator +currentDB + "_" + newIndex + ".jar");
+
+      Path resJarPath = new Path(baseDir, currentDB + File.separator +tempFileName);
       log.info("new jar name : " + resJarPath.getName());
       fos = serverFs.create(resJarPath);
       IOUtils.copy(is, fos);
+      fos.flush();
+
+      Path renamePath = new Path(baseDir, currentDB + File.separator +currentDB + "_" + newIndex+ ".jar");
+      serverFs.rename(resJarPath,renamePath);
+
 
     } catch (FileNotFoundException e) {
       e.printStackTrace();

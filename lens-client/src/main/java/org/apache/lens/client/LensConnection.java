@@ -38,10 +38,7 @@ import org.apache.lens.api.StringList;
 import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
 import org.apache.lens.client.exceptions.LensClientServerConnectionException;
 
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.*;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
@@ -340,16 +337,31 @@ public class LensConnection {
   public APIResult addResourceToDB(String type, String resourcePath) {
     WebTarget target = getMetastoreWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), this.sessionHandle,
-      MediaType.APPLICATION_XML_TYPE));
+//    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), this.sessionHandle,
+//      MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), type));
 
-    FileDataBodyPart filePart = new FileDataBodyPart("file", new File(resourcePath));
-    filePart.setContentDisposition(FormDataContentDisposition.name("file").fileName("db_0.jar").build());
+    File file = new File(resourcePath);
+    log.debug("uploading file path : " + file.getAbsolutePath() + "|size = " + file.length());
+    final FormDataContentDisposition dispo = FormDataContentDisposition//
+      .name("file")//
+      .fileName("db_0.jar")//
+      .size(file.length())//
+      .build();
+
+    FileDataBodyPart filePart = new FileDataBodyPart("file", file);
+    filePart.setContentDisposition(dispo);
     mp.bodyPart(filePart);
 
-    APIResult result = target.path("databases/jar").request()
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+    MultiPart multiPart = new MultiPart();
+    multiPart.setMediaType(MediaType.MULTIPART_FORM_DATA_TYPE);
+
+
+    APIResult result = target.path("databases/jar").queryParam("sessionid", this.sessionHandle).request()
+      .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
+
+    System.out.println(result.getStatus() + " " + result);
+
     return result;
   }
 }

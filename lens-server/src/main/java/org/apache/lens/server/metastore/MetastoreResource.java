@@ -1751,14 +1751,14 @@ public class MetastoreResource {
   @Path("databases/jar")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult addDBResource(@FormDataParam("sessionid") LensSessionHandle sessionid,
+  public APIResult addDBResource(@QueryParam("sessionid") LensSessionHandle sessionid,
     @FormDataParam("type") String type, @FormDataParam("file") InputStream fileInputStream) {
 
     try {
       getSvc().addDBJar(sessionid,type,fileInputStream);
     } catch (LensException e) {
       e.printStackTrace();
-      return new APIResult(Status.FAILED, "Add resource failed");
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return new APIResult(Status.SUCCEEDED, "Add resource succeeded");
   }
