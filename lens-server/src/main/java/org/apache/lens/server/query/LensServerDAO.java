@@ -82,10 +82,10 @@ public class LensServerDAO {
    */
   public void createFinishedQueriesTable() throws Exception {
     String sql = "CREATE TABLE if not exists finished_queries (handle varchar(255) not null unique,"
-      + "userquery varchar(10000) not null," + "submitter varchar(255) not null," + "starttime bigint, "
-      + "endtime bigint," + "result varchar(255)," + "status varchar(255), " + "metadata varchar(100000), "
-      + "rows int, " + "filesize bigint, " + "errormessage varchar(10000), " + "driverstarttime bigint, "
-      + "driverendtime bigint, " + "drivername varchar(10000), "
+      + "userquery varchar(10000) not null," + "submitter varchar(255) not null," + "priority varchar(255), "
+      + "starttime bigint, " + "endtime bigint," + "result varchar(255)," + "status varchar(255), "
+      + "metadata varchar(100000), " + "rows int, " + "filesize bigint, " + "errormessage varchar(10000), "
+      + "driverstarttime bigint, " + "driverendtime bigint, " + "drivername varchar(10000), "
       + "queryname varchar(255), " + "submissiontime bigint" + ")";
     try {
       QueryRunner runner = new QueryRunner(ds);
@@ -107,17 +107,17 @@ public class LensServerDAO {
     if (alreadyExisting == null) {
       // The expected case
       Connection conn = null;
-      String sql = "insert into finished_queries (handle, userquery,submitter,"
+      String sql = "insert into finished_queries (handle, userquery, submitter, priority, "
         + "starttime,endtime,result,status,metadata,rows,filesize,"
         + "errormessage,driverstarttime,driverendtime, drivername, queryname, submissiontime)"
-        + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       try {
         conn = getConnection();
         QueryRunner runner = new QueryRunner();
-        runner.update(conn, sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getStartTime(),
-          query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(), query.getRows(),
-          query.getFileSize(), query.getErrorMessage(), query.getDriverStartTime(), query.getDriverEndTime(),
-          query.getDriverName(), query.getQueryName(), query.getSubmissionTime());
+        runner.update(conn, sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getPriority(),
+            query.getStartTime(), query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(),
+            query.getRows(), query.getFileSize(), query.getErrorMessage(), query.getDriverStartTime(),
+            query.getDriverEndTime(), query.getDriverName(), query.getQueryName(), query.getSubmissionTime());
         conn.commit();
       } finally {
         DbUtils.closeQuietly(conn);
