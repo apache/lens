@@ -27,4 +27,10 @@
     <description>The base url for the lens server</description>
   </property>
 
+  <property>
+    <name>lens.client.query.poll.interval</name>
+    <value>1000</value>
+    <description>Interval at which query progress will be polled. Interval has to be given in milliseconds</description>
+  </property>
+
 </configuration>
