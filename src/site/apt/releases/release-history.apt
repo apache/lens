@@ -23,6 +23,8 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |Release version|Major features|Release documentation|Release Notes|Download|Incompatibilities|More Info |
 *--+--+---+--+--+--+--+
+|2.5.0-beta| Support for multiple instances of a driver, REST API enhancements, Derived cube validation, Per-queue driver max launched queries constraint, New error codes for Hive and JDBC Driver, Lens CLI improvements, Query result retention policy, UI Enhancements, Code cleanup and refactor, Doc/javadoc improvements, Bug fixes| {{{../versions/2.5.0-beta/index.html} 2.5.x docs}} |{{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12333326&projectId=12315923} 2.5 release notes}} |{{{http://archive.apache.org/dist/lens/2.5-beta/} Download}} |{{{#a2.5.x_from_2.4.x} 2.5.x-incompatibilities}} | - |
+*--+--+---+--+--+--+--+
 |2.4.0-beta| JDK8 support, new web client, Saved Query and Parameterization, Support flattening of columns selected through bridge-tables(many-to-many relationships), column name mapping for columns in underlying storage tables, Enhancements cube.xsd and jdbc driver, Improvements in Error codes, Doc improvements, bug fixes| {{{../versions/2.4.0-beta/index.html} 2.4.x docs}} |{{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12333087} 2.4 release notes}} |{{{http://archive.apache.org/dist/lens/2.4-beta/} Download}} |{{{#a2.4.x_from_2.3.x} 2.4.x-incompatibilities}} | - |
 *--+--+---+--+--+--+--+
 |2.3.0-beta | Per Query Logs, Server side XML validation, File size in query result, File name suggestions in CLI, Phase 1 Query rewriter, Elastic Search driver, Query launching constraints, Update partition api, Lens Service Health check, Doc/javadoc improvements, Code cleanup, bug fixes| {{{../versions/2.3.0-beta/index.html} 2.3.x docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12332350&projectId=12315923} 2.3 release notes}}| {{{http://archive.apache.org/dist/lens/2.3-beta/} Download}} | {{{#a2.3.x_from_2.2.x} 2.3.x-incompatibilities}} | - |
@@ -41,6 +43,25 @@ All Apache Lens releases
   ganglia metrics reporting, the jar needs to be downloaded and used.
 
 * Incompatibilities
+
+** 2.5.x from 2.4.x
+
+  * LENS-817: Metadata class information is no longer persisted in DB due to redundancy. The 'metadataclass' column is
+    removed from finished_queries table.
+
+  * LENS-735: TableReferences can not be used to define reference dim-attributes. Now, reference dim-attribute
+    should be defined as chained column only.
+
+  * LENS-933: Driver query pre-submit hook can throw LensException now.
+
+  * LENS-920: All REST APIs will work with both application/xml and application/json accept headers. All the name="type"
+    specification in cube xsd is changed to name="_type". This makes measure type, dim_attribute type, expression type
+    and column type fields to be specified as "_type". REST API for creating fact and dimtable is changed to pass
+    sessionid as query param instead of multi-form data. Also, org.apache.lens.api.result.QueryCostTo.type is renamed to
+    org.apache.lens.api.result.QueryCostTo.costType.
+
+  * LENS-123: Multiple different instances of same driver class can be loaded. Driver config file location has changed.
+    For e.g. hivedriver-site.xml should be present in $LENS_HOME/server/conf/drivers/hive/hive1 directory.
 
 ** 2.4.x from 2.3.x
 
