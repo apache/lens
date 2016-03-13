@@ -76,7 +76,6 @@ public class QueryContext extends AbstractQueryContext {
    * The priority.
    */
   @Getter
-  @Setter
   private Priority priority;
 
   /**

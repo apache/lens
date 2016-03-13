@@ -38,7 +38,6 @@ import javax.ws.rs.core.*;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.Priority;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
@@ -291,15 +290,15 @@ public class TestQueryService extends LensJerseyTest {
     Response response = target.path(handle.toString() + "001").queryParam("sessionid", lensSessionId).request(mt).get();
     assertEquals(response.getStatus(), 404);
 
-    LensQuery query = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
       .get(LensQuery.class);
 
     // wait till the query finishes
-    QueryStatus stat = query.getStatus();
+    QueryStatus stat = ctx.getStatus();
     while (!stat.finished()) {
       Thread.sleep(1000);
-      query = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt).get(LensQuery.class);
-      stat = query.getStatus();
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt).get(LensQuery.class);
+      stat = ctx.getStatus();
       /*
       Commented due to same issue as: https://issues.apache.org/jira/browse/LENS-683
       switch (stat.getStatus()) {
@@ -313,16 +312,9 @@ public class TestQueryService extends LensJerseyTest {
       }*/
     }
 
-    assertTrue(query.getSubmissionTime() > 0);
-    assertTrue(query.getFinishTime() > 0);
-    assertEquals(query.getStatus().getStatus(), Status.SUCCESSFUL);
-
-    assertEquals(query.getPriority(), Priority.LOW);
-    //Check Query Priority can be read even after query is purged i,e query details are read from DB.
-    if (queryService.allQueries.size() > 0) {
-      Thread.sleep(1000);
-    }
-    assertEquals(query.getPriority(), Priority.LOW);
+    assertTrue(ctx.getSubmissionTime() > 0);
+    assertTrue(ctx.getFinishTime() > 0);
+    assertEquals(ctx.getStatus().getStatus(), Status.SUCCESSFUL);
 
     // Update conf for query
     final FormDataMultiPart confpart = new FormDataMultiPart();
