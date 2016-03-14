@@ -142,7 +142,7 @@ public final class RewriteUtil {
                 // top level child
                 nextChild = (ASTNode) parent.getChild(ci + 1);
               } else {
-                // middle child, it's left child's right child. 
+                // middle child, it's left child's right child.
                 nextChild = (ASTNode) parent.getParent().getChild(parent.getChildIndex()+1);
               }
               // Go back one "union all select[ distinct]"
