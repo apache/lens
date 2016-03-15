@@ -358,15 +358,15 @@ The text of the license is also available at https://glassfish.java.net/nonav/pu
 
 For javax.ws.rs, jaxb-api, jersey-server, jersey-client, jersey-media-multipart, jersey-media-json-jackson,
 jersey-media-moxy, jersey-container-grizzly2-servlet, jersey-container-grizzly2-http, jersey-container-servlet,
-jersey-container-servlet-core, jersey-entity-filtering, jersey-common, grizzly-http-server, grizzly-framework,
-grizzly-http, grizzly-http-servlet, hk2-locator, asm-all-repackaged, cglib, hk2-utils, hk2-api, javax.inject,
-mimepull
+jersey-container-servlet-core, jersey-entity-filtering, jersey-common, jersey-media-jaxb, grizzly-http-server,
+grizzly-framework, grizzly-http, grizzly-http-servlet, hk2-locator, asm-all-repackaged, cglib, hk2-utils, hk2-api,
+javax.inject, mimepull
 
 javax.ws.rs, jaxb-api, jersey-server, jersey-client, jersey-media-multipart, jersey-media-json-jackson,
 jersey-media-moxy, jersey-container-grizzly2-servlet, jersey-container-grizzly2-http, jersey-container-servlet,
-jersey-container-servlet-core, jersey-entity-filtering, jersey-common, grizzly-http-server, grizzly-framework,
-grizzly-http, grizzly-http-servlet, hk2-locator, asm-all-repackaged, cglib, hk2-utils, hk2-api, javax.inject,
-mimepull are dual licensed under COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL)Version 1.1
+jersey-container-servlet-core, jersey-entity-filtering, jersey-common, jersey-media-jaxb, grizzly-http-server,
+grizzly-framework, grizzly-http, grizzly-http-servlet, hk2-locator, asm-all-repackaged, cglib, hk2-utils, hk2-api,
+javax.inject, mimepull are dual licensed under COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL)Version 1.1
 and The GNU Generas Public License (GPL) Version 2, June 1991 with classpath exception.
 Full text if the license is available in file LICENSE-CDDLv1.1-GPLv2_withCPE
 The text of the license is also available at https://glassfish.java.net/public/CDDL+GPL_1_1.html

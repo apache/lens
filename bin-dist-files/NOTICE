@@ -11,8 +11,8 @@ https://glassfish.java.net/javaee5/mail/
 
 This product includes jersey libraries : jersey-server, jersey-client, jersey-media-multipart, jersey-media-json-jackson,
 jersey-media-moxy, jersey-container-grizzly2-servlet, jersey-container-grizzly2-http, jersey-container-servlet,
-jersey-container-servlet-core, jersey-entity-filtering and jersey-common. The details on how to obtain those modules
-are available at https://jersey.java.net/.
+jersey-container-servlet-core, jersey-entity-filtering, jersey-media-jaxb and jersey-common. The details on how to
+obtain those modules are available at https://jersey.java.net/.
 
 This product includes grizzly libraries : grizzly-http-server, grizzly-framework, grizzly-http, grizzly-http-servlet.
 The details on how to obtain those libraries is available at https://grizzly.java.net/.
