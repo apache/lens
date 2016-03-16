@@ -46,12 +46,13 @@ import lombok.extern.slf4j.Slf4j;
 public class ScannedPaths implements Iterable<String> {
   private final Path path;
   private final String type;
+  private boolean recurse;
 
   /* The Chosen Ones */
-  @Getter(lazy = true) private final List<String> finalPaths = getMatchedPaths(path, type);
+  @Getter(lazy = true) private final List<String> finalPaths = getMatchedPaths(path, type, recurse);
 
-  public ScannedPaths(String path, String type) {
-    this(new Path(path), type);
+  public ScannedPaths(Path path, String type) {
+    this(path, type, true);
   }
 
 
@@ -70,7 +71,7 @@ public class ScannedPaths implements Iterable<String> {
    *
    * Updates finalPaths List with matched paths and returns an iterator for matched paths.
    */
-  private List<String> getMatchedPaths(Path pt, String type) {
+  private List<String> getMatchedPaths(Path pt, String type, boolean recurse) {
     List<String> finalPaths = new ArrayList<>();
     InputStream resourceOrderIStream = null;
     FileSystem fs;
@@ -102,8 +103,10 @@ public class ScannedPaths implements Iterable<String> {
               statuses = fs.globStatus(new Path(pt, "*"));
               if (statuses != null) {
                 for (FileStatus st : statuses) {
-                  newMatches = getMatchedPaths(st.getPath(), type);
-                  finalPaths.addAll(newMatches);
+                  if (!st.isDirectory() || recurse) {
+                    newMatches = getMatchedPaths(st.getPath(), type, recurse);
+                    finalPaths.addAll(newMatches);
+                  }
                 }
               }
             }
@@ -120,9 +123,9 @@ public class ScannedPaths implements Iterable<String> {
 
               /** Get matched resources recursively for provided path/pattern **/
               if (resource.startsWith("/") || resource.contains(":/")) {
-                newMatches = getMatchedPaths(new Path(resource), type);
+                newMatches = getMatchedPaths(new Path(resource), type, true);
               } else {
-                newMatches = getMatchedPaths(new Path(pt, resource), type);
+                newMatches = getMatchedPaths(new Path(pt, resource), type, true);
               }
               finalPaths.addAll(newMatches);
             }
@@ -135,7 +138,7 @@ public class ScannedPaths implements Iterable<String> {
         FileStatus[] statuses = fs.globStatus(Path.getPathWithoutSchemeAndAuthority(pt));
         if (statuses != null) {
           for (FileStatus st : statuses) {
-            List<String> newMatches = getMatchedPaths(st.getPath(), type);
+            List<String> newMatches = getMatchedPaths(st.getPath(), type, recurse);
             finalPaths.addAll(newMatches);
           }
         }
