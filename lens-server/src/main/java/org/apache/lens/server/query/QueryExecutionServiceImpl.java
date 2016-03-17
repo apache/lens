@@ -1387,6 +1387,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       ctx.setSelectedDriver(driver);
       QueryCost selectedDriverQueryCost = ctx.getDriverContext().getDriverQueryCost(driver);
       ctx.setSelectedDriverQueryCost(selectedDriverQueryCost);
+      driver.decidePriority(ctx);
       selectGauge.markSuccess();
     } finally {
       parallelCallGauge.markSuccess();
@@ -1782,7 +1783,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
     ctx.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
     rewriteAndSelect(ctx);
-    ctx.getSelectedDriver().decidePriority(ctx);
     return submitQuery(ctx);
   }
 
@@ -2000,7 +2000,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       result.setStatus(queryCtx.getStatus());
       return result;
     }
-
     QueryCompletionListenerImpl listener = new QueryCompletionListenerImpl(handle);
     synchronized (queryCtx) {
       if (!queryCtx.getStatus().finished()) {

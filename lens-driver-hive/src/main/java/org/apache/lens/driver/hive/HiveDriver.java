@@ -800,7 +800,7 @@ public class HiveDriver extends AbstractLensDriver {
   }
 
   @Override
-  public Priority decidePriority(QueryContext ctx) {
+  public Priority decidePriority(AbstractQueryContext ctx) {
     if (whetherCalculatePriority && ctx.getDriverConf(this).get("mapred.job.priority") == null) {
       try {
         // Inside try since non-data fetching queries can also be executed by async method.

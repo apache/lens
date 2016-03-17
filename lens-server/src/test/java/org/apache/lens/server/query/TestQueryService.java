@@ -38,6 +38,7 @@ import javax.ws.rs.core.*;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.Priority;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
@@ -269,7 +270,8 @@ public class TestQueryService extends LensJerseyTest {
     long runningQueries = metricsSvc.getRunningQueries();
     long finishedQueries = metricsSvc.getFinishedQueries();
 
-    QueryHandle handle = executeAndGetHandle(target(), Optional.of(lensSessionId), Optional.of("select ID from "
+    int noOfQueriesBeforeExecution = queryService.allQueries.size();
+    QueryHandle theHandle = executeAndGetHandle(target(), Optional.of(lensSessionId), Optional.of("select ID from "
       + TEST_TABLE), Optional.<LensConf>absent(), mt);
 
     // Get all queries
@@ -281,24 +283,25 @@ public class TestQueryService extends LensJerseyTest {
     List<QueryHandle> allQueries = target.queryParam("sessionid", lensSessionId).request(mt)
       .get(new GenericType<List<QueryHandle>>() {});
     assertTrue(allQueries.size() >= 1);
-    assertTrue(allQueries.contains(handle));
+    assertTrue(allQueries.contains(theHandle));
 
-    String queryXML = target.path(handle.toString()).queryParam("sessionid", lensSessionId)
+    String queryXML = target.path(theHandle.toString()).queryParam("sessionid", lensSessionId)
       .request(MediaType.APPLICATION_XML).get(String.class);
     log.debug("query XML:{}", queryXML);
 
-    Response response = target.path(handle.toString() + "001").queryParam("sessionid", lensSessionId).request(mt).get();
+    Response response =
+        target.path(theHandle.toString() + "001").queryParam("sessionid", lensSessionId).request(mt).get();
     assertEquals(response.getStatus(), 404);
 
-    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+    LensQuery query = target.path(theHandle.toString()).queryParam("sessionid", lensSessionId).request(mt)
       .get(LensQuery.class);
 
     // wait till the query finishes
-    QueryStatus stat = ctx.getStatus();
+    QueryStatus stat = query.getStatus();
     while (!stat.finished()) {
       Thread.sleep(1000);
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt).get(LensQuery.class);
-      stat = ctx.getStatus();
+      query = target.path(theHandle.toString()).queryParam("sessionid", lensSessionId).request(mt).get(LensQuery.class);
+      stat = query.getStatus();
       /*
       Commented due to same issue as: https://issues.apache.org/jira/browse/LENS-683
       switch (stat.getStatus()) {
@@ -312,9 +315,24 @@ public class TestQueryService extends LensJerseyTest {
       }*/
     }
 
-    assertTrue(ctx.getSubmissionTime() > 0);
-    assertTrue(ctx.getFinishTime() > 0);
-    assertEquals(ctx.getStatus().getStatus(), Status.SUCCESSFUL);
+    assertTrue(query.getSubmissionTime() > 0);
+    assertTrue(query.getFinishTime() > 0);
+    assertEquals(query.getStatus().getStatus(), Status.SUCCESSFUL);
+
+    assertEquals(query.getPriority(), Priority.LOW);
+    //Check Query Priority can be read even after query is purged i,e query details are read from DB.
+    boolean isPurged = false;
+    while (!isPurged) {
+      isPurged = true;
+      for (QueryHandle aHandle : queryService.allQueries.keySet()) {
+        if (aHandle.equals(theHandle)) {
+          isPurged = false;  //current query is still not purged
+          Thread.sleep(1000);
+          break;
+        }
+      }
+    }
+    assertEquals(query.getPriority(), Priority.LOW);
 
     // Update conf for query
     final FormDataMultiPart confpart = new FormDataMultiPart();
@@ -324,7 +342,7 @@ public class TestQueryService extends LensJerseyTest {
       mt));
     confpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       mt));
-    APIResult updateConf = target.path(handle.toString()).request(mt)
+    APIResult updateConf = target.path(theHandle.toString()).request(mt)
       .put(Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     assertEquals(updateConf.getStatus(), APIResult.Status.FAILED);
   }
