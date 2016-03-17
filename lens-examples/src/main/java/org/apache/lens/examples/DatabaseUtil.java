@@ -40,7 +40,6 @@ public final class DatabaseUtil {
    * @throws Exception the exception
    */
   public static void initializeDatabaseStorage() throws Exception {
-
     try {
       Class.forName("org.hsqldb.jdbcDriver");
     } catch (ClassNotFoundException e) {
@@ -50,19 +49,25 @@ public final class DatabaseUtil {
 
     con.setAutoCommit(true);
     Statement statement = con.createStatement();
-
-    InputStream file = DatabaseUtil.class.getClassLoader().getResourceAsStream("db-storage-schema.sql");
-    BufferedReader reader = new BufferedReader(new InputStreamReader(file, "UTF-8"));
-    String line;
-    while ((line = reader.readLine()) != null) {
-      if (line.trim().equals("") || line.startsWith("--")) {
-        continue;
+    BufferedReader reader = null;
+    try {
+      InputStream file = DatabaseUtil.class.getClassLoader().getResourceAsStream("db-storage-schema.sql");
+      reader = new BufferedReader(new InputStreamReader(file, "UTF-8"));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        if (line.trim().equals("") || line.startsWith("--")) {
+          continue;
+        }
+        statement.executeUpdate(line);
       }
-      statement.executeUpdate(line);
+    } finally {
+      if (reader != null) {
+        reader.close();
+      }
+      statement.execute("SHUTDOWN");
+      statement.close();
+      con.close();
     }
-    statement.execute("SHUTDOWN");
-    statement.close();
-    con.close();
   }
 
   /**
