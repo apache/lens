@@ -405,17 +405,17 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     try {
       switch (cubeTypes) {
-      case "all":
-        return new StringList(getSvc().getAllCubeNames(sessionid));
-      case "base":
-        return new StringList(getSvc().getAllBaseCubeNames(sessionid));
-      case "derived":
-        return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
-      case "queryable":
-        return new StringList(getSvc().getAllQueryableCubeNames(sessionid));
-      default:
-        throw new BadRequestException("Invalid type " + cubeTypes + " Accepted"
-          + " values are 'all' or 'base' or 'derived' or 'queryable'");
+        case "all":
+          return new StringList(getSvc().getAllCubeNames(sessionid));
+        case "base":
+          return new StringList(getSvc().getAllBaseCubeNames(sessionid));
+        case "derived":
+          return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
+        case "queryable":
+          return new StringList(getSvc().getAllQueryableCubeNames(sessionid));
+        default:
+          throw new BadRequestException("Invalid type " + cubeTypes + " Accepted"
+            + " values are 'all' or 'base' or 'derived' or 'queryable'");
       }
     } catch (LensException e) {
       log.error("Error getting cube names", e);
@@ -1245,7 +1245,7 @@ public class MetastoreResource {
   @POST
   @Path("/dimtables")
   public APIResult createDimensionTable(@QueryParam("sessionid") LensSessionHandle sessionid,
-                                        XDimensionTable dimensionTable) {
+    XDimensionTable dimensionTable) {
     checkSessionId(sessionid);
     try {
       getSvc().createDimensionTable(sessionid, dimensionTable);
@@ -1545,7 +1545,7 @@ public class MetastoreResource {
   @Path("/dimtables/{dimTableName}/storages/{storage}/partition")
   public APIResult updatePartitionOfDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("dimTableName") String dimTableName,
-                                               @PathParam("storage") String storage,
+    @PathParam("storage") String storage,
     XPartition partition) {
     checkSessionId(sessionid);
     checkNonNullArgs("Partition is null", partition);
@@ -1707,46 +1707,20 @@ public class MetastoreResource {
   }
 
   /**
-   * Validate jar
+   * Add a resource to the current DB
    * <p></p>
    * <p>
    * The returned @{link APIResult} will have status SUCCEEDED <em>only if</em> the add operation was successful for all
    * services running in this Lens server.
    * </p>
    *
-   * @param size      size of the jar
+   * @param sessionid session handle object
    * @param type      The type of resource. Valid types are 'jar'
-   * @param path      path of the resource. Local or HDFS path
+   * @param fileInputStream      stream of the resource. Local or HDFS path
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
    * {@link Status#PARTIAL}, if add succeeded only for some services. {@link APIResult} with state
    * {@link Status#FAILED}, if add has failed
    */
-  @PUT
-  @Path("databases/validateDBJar")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult validateDBResource(@QueryParam("size") String size,
-    @QueryParam("type") String type, @QueryParam("path") String path) {
-
-
-    return new APIResult(Status.SUCCEEDED, "Add resource succeeded");
-  }
-
-
-    /**
-     * Add a resource to the current DB
-     * <p></p>
-     * <p>
-     * The returned @{link APIResult} will have status SUCCEEDED <em>only if</em> the add operation was successful for all
-     * services running in this Lens server.
-     * </p>
-     *
-     * @param sessionid session handle object
-     * @param type      The type of resource. Valid types are 'jar'
-     * @param fileInputStream      stream of the resource. Local or HDFS path
-     * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
-     * {@link Status#PARTIAL}, if add succeeded only for some services. {@link APIResult} with state
-     * {@link Status#FAILED}, if add has failed
-     */
   @POST
   @Path("databases/jar")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
@@ -1755,7 +1729,7 @@ public class MetastoreResource {
     @FormDataParam("type") String type, @FormDataParam("file") InputStream fileInputStream) {
 
     try {
-      getSvc().addDBJar(sessionid,type,fileInputStream);
+      getSvc().addDBJar(sessionid, type, fileInputStream);
     } catch (LensException e) {
       e.printStackTrace();
       return new APIResult(Status.FAILED, e.getMessage());

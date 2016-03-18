@@ -266,7 +266,7 @@ public final class LensServerTestUtil {
       // nothing to setup
       return;
     }
-    File resDir = new File(conf.get(LensConfConstants.DATABASE_RESOURCE_DIR));
+    File resDir = new File(conf.get(LensConfConstants.DATABASE_RESOURCE_DIR, "target/resources/"));
     if (!resDir.exists()) {
       resDir.mkdir();
     }

@@ -48,15 +48,6 @@ public class TestDatabaseResourceService {
   private static final String DB1 = DB_PFX + "db1";
   private static final String DB2 = DB_PFX + "db2";
 
-//  //tested using dbResService1
-//  private static final String DB_TEST_JarUploadWhenDbFolderExists = "db1_" + System.currentTimeMillis();
-//  private static final String DB_TEST_JarUploadWithJarOrderFileInDbFolder = "db2_" + System.currentTimeMillis();
-//
-//  //tested using dbResService2
-//  private static final String DB_TEST_JarUploadWithNoJarOrderInDbFolder = "db3_" + System.currentTimeMillis();
-//  private static final String DB_TEST_JarUploadWithNoJarOrderAndCommonJarsInBaseFolder = "db4_" + System.currentTimeMillis();
-//  private static final String DB_TEST_JarUploadWithJarOrderAndCommonJarsInBaseFolder = "db5_" + System.currentTimeMillis();
-//
   private final String[] testDatabases = {DB1, DB2};
 
   private static final String JAR_ORDER_AND_FILES = DB_PFX + "jar_order_files_in_db";
@@ -64,10 +55,6 @@ public class TestDatabaseResourceService {
   private static final String NO_JAR_ORDER_NO_FILES = DB_PFX + "no_jar_order_no_files";
 
   private final String[] testDatabases1 = {JAR_ORDER_AND_FILES, NO_JAR_ORDER_AND_VERSION_FILES,NO_JAR_ORDER_NO_FILES};
-
-//  private final String[] testDatabases1 = {DB_TEST_JarUploadWhenDbFolderExists, DB_TEST_JarUploadWithJarOrderFileInDbFolder};
-//
-//  private final String[] testDatabases2 = {DB_TEST_JarUploadWithNoJarOrderInDbFolder, DB_TEST_JarUploadWithNoJarOrderAndCommonJarsInBaseFolder, DB_TEST_JarUploadWithJarOrderAndCommonJarsInBaseFolder};
 
   private final HiveConf conf = new HiveConf(TestDatabaseResourceService.class);
   private DatabaseResourceService dbResService;

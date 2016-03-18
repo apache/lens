@@ -144,9 +144,8 @@ public class TestDatabaseService extends LensJerseyTest {
     APIResult resultUpd = target().path("metastore").path("databases/jar").
       queryParam("sessionid", lensSessionId).request(mediaType)
       .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
-    System.out.println(resultUpd.getStatus() + " " + resultUpd);
+    log.debug(resultUpd.getStatus() + " " + resultUpd);
     assertEquals(resultUpd.getMessage(), "Database resource location does not exist. Database jar can't be uploaded");
-
 
   }
 
@@ -192,7 +191,7 @@ public class TestDatabaseService extends LensJerseyTest {
     APIResult resultUpd = target().path("metastore").path("databases/jar").
       queryParam("sessionid", lensSessionId).request(mediaType)
       .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
-    System.out.println(resultUpd.getStatus() + " " + resultUpd);
+    log.debug(resultUpd.getStatus() + " " + resultUpd);
     assertEquals(resultUpd.getMessage(), "Database jar_order file exist. Database jar can't be uploaded");
 
     cleanUp(dbFolder);
@@ -229,7 +228,7 @@ public class TestDatabaseService extends LensJerseyTest {
     File dbFolder = new File("target/resources/" + dbName);
     dbFolder.mkdirs();
 
-    File dbFolderJarOrder = new File("target/resources/" + dbName + File.separator + dbName+"_uploading.jar");
+    File dbFolderJarOrder = new File("target/resources/" + dbName + File.separator + dbName + "_uploading.jar");
     dbFolderJarOrder.createNewFile();
 
     FormDataMultiPart mp = getFormData(mediaType);
@@ -240,7 +239,7 @@ public class TestDatabaseService extends LensJerseyTest {
     APIResult resultUpd = target().path("metastore").path("databases/jar").
       queryParam("sessionid", lensSessionId).request(mediaType)
       .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
-    System.out.println(resultUpd.getStatus() + " " + resultUpd);
+    log.debug(resultUpd.getStatus() + " " + resultUpd);
     assertEquals(resultUpd.getMessage(), "Database jar file upload in progress . Database jar can't be uploaded. Try later!");
 
     cleanUp(dbFolder);
@@ -284,7 +283,7 @@ public class TestDatabaseService extends LensJerseyTest {
     APIResult resultUpd = target().path("metastore").path("databases/jar").
       queryParam("sessionid", lensSessionId).request(mediaType)
       .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
-    System.out.println(resultUpd.getStatus() + " " + resultUpd);
+    log.debug(resultUpd.getStatus() + " " + resultUpd);
     assertEquals(resultUpd.getStatus(), APIResult.Status.SUCCEEDED);
 
     cleanUp(dbFolder);
@@ -333,7 +332,7 @@ public class TestDatabaseService extends LensJerseyTest {
     APIResult resultUpd = target().path("metastore").path("databases/jar").
       queryParam("sessionid", lensSessionId).request(mediaType)
       .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
-    System.out.println(resultUpd.getStatus() + " " + resultUpd);
+    log.debug(resultUpd.getStatus() + " " + resultUpd);
     assertEquals(resultUpd.getStatus(), APIResult.Status.SUCCEEDED);
 
     cleanUp(dbFolder);
