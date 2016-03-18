@@ -68,7 +68,7 @@ public class TestDatabaseResourceService {
 
     String prefix = System.getProperty("user.dir");
 
-    conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "/target/resources");
+    conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "target/resources");
     conf1.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix + "/target/resources_without_common_jars");
     conf2.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix + "/target/resources_with_common_jars");
 
