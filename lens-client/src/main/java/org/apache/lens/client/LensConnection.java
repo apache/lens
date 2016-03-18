@@ -337,15 +337,13 @@ public class LensConnection {
   public APIResult addResourceToDB(String type, String resourcePath) {
     WebTarget target = getMetastoreWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
-//    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), this.sessionHandle,
-//      MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), type));
 
     File file = new File(resourcePath);
     log.debug("uploading file path : " + file.getAbsolutePath() + "|size = " + file.length());
     final FormDataContentDisposition dispo = FormDataContentDisposition//
       .name("file")//
-      .fileName("db_0.jar")//
+      .fileName("db_0.jar")// temp dummy name
       .size(file.length())//
       .build();
 
@@ -360,7 +358,7 @@ public class LensConnection {
     APIResult result = target.path("databases/jar").queryParam("sessionid", this.sessionHandle).request()
       .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
 
-    System.out.println(result.getStatus() + " " + result);
+    log.debug(result.getStatus() + " - " + result);
 
     return result;
   }

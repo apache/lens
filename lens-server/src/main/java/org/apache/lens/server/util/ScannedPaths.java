@@ -51,6 +51,10 @@ public class ScannedPaths implements Iterable<String> {
   /* The Chosen Ones */
   @Getter(lazy = true) private final List<String> finalPaths = getMatchedPaths(path, type, recurse);
 
+  public ScannedPaths(String path, String type) {
+    this(new Path(path), type, true);
+  }
+
   public ScannedPaths(Path path, String type) {
     this(path, type, true);
   }

@@ -898,8 +898,10 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
 
     } catch (FileNotFoundException e) {
       e.printStackTrace();
+      throw new LensException(e);
     } catch (IOException e) {
       e.printStackTrace();
+      throw new LensException(e);
     } finally {
       if (fos != null) {
         try {

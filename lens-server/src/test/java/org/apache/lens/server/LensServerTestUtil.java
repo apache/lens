@@ -62,6 +62,7 @@ public final class LensServerTestUtil {
 
   public static final String DB_WITH_JARS = "test_db_static_jars";
   public static final String DB_WITH_JARS_2 = "test_db_static_jars_2";
+
   private LensServerTestUtil() {
 
   }
@@ -93,8 +94,9 @@ public final class LensServerTestUtil {
       mt));
 
     final QueryHandle handle = target.request(mt)
-        .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-            new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+        new GenericType<LensAPIResult<QueryHandle>>() {
+        }).getData();
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
       .get(LensQuery.class);
@@ -105,7 +107,7 @@ public final class LensServerTestUtil {
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
-    final String debugHelpMsg = "Query Handle:"+ctx.getQueryHandleString();
+    final String debugHelpMsg = "Query Handle:" + ctx.getQueryHandleString();
     assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, debugHelpMsg);
     assertTrue(ctx.getSubmissionTime() > 0, debugHelpMsg);
     assertTrue(ctx.getLaunchTime() > 0, debugHelpMsg);
@@ -120,7 +122,7 @@ public final class LensServerTestUtil {
   }
 
   public static void loadData(String tblName, final String testDataFile, WebTarget parent,
-      LensSessionHandle lensSessionId, MediaType mt) throws InterruptedException {
+    LensSessionHandle lensSessionId, MediaType mt) throws InterruptedException {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = parent.path("queryapi/queries");
@@ -129,18 +131,19 @@ public final class LensServerTestUtil {
     String dataLoad = "LOAD DATA LOCAL INPATH '" + testDataFile + "' OVERWRITE INTO TABLE " + tblName;
 
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
-        mt));
+      mt));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), dataLoad));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
-        mt));
+      mt));
 
     final QueryHandle handle = target.request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+      new GenericType<LensAPIResult<QueryHandle>>() {
+      }).getData();
 
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
-        .get(LensQuery.class);
+      .get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.finished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
@@ -150,6 +153,7 @@ public final class LensServerTestUtil {
     }
     assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
+
   /**
    * Load data.
    *
@@ -160,7 +164,7 @@ public final class LensServerTestUtil {
    * @throws InterruptedException the interrupted exception
    */
   public static void loadDataFromClasspath(String tblName, final String testDataFile, WebTarget parent,
-      LensSessionHandle lensSessionId, MediaType mt) throws InterruptedException {
+    LensSessionHandle lensSessionId, MediaType mt) throws InterruptedException {
 
     String absolutePath = LensServerTestUtil.class.getClassLoader().getResource(testDataFile).getPath();
     loadData(tblName, absolutePath, parent, lensSessionId, mt);
@@ -206,7 +210,8 @@ public final class LensServerTestUtil {
       mt));
 
     final QueryHandle handle = target.request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+      new GenericType<LensAPIResult<QueryHandle>>() {
+      }).getData();
 
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
@@ -261,7 +266,7 @@ public final class LensServerTestUtil {
       // nothing to setup
       return;
     }
-    File resDir = new File("target/resources");
+    File resDir = new File(conf.get(LensConfConstants.DATABASE_RESOURCE_DIR));
     if (!resDir.exists()) {
       resDir.mkdir();
     }
@@ -302,4 +307,152 @@ public final class LensServerTestUtil {
       }
     }
   }
+
+
+  /**
+   * Test case when db folder exists & jar_order file present ( Existing flow )
+   *
+   * @throws Exception
+   */
+  public static void createTestDbWithoutCommonJars(String[] dbs, HiveConf conf) throws Exception {
+    File srcJarDir = new File("target/testjars/");
+    if (!srcJarDir.exists()) {
+      // nothing to setup
+      return;
+    }
+    File resDir = new File(conf.get(LensConfConstants.DATABASE_RESOURCE_DIR));
+    if (!resDir.exists()) {
+      resDir.mkdir();
+    }
+
+    setUpDbWithJarOrderAndFiles(dbs[0], resDir, conf);
+
+    setUpDbWithNoJarOrderAndVersionFiles(dbs[1], resDir, conf);
+
+    setUpDbWithNoJarOrderAndNoFiles(dbs[2], resDir, conf);
+  }
+
+
+  public static void createTestDbWithCommonJars(String[] dbs, HiveConf conf) throws Exception {
+    File srcJarDir = new File("target/testjars/");
+    if (!srcJarDir.exists()) {
+      // nothing to setup
+      return;
+    }
+    File resDir = new File(conf.get(LensConfConstants.DATABASE_RESOURCE_DIR));
+    if (!resDir.exists()) {
+      resDir.mkdir();
+    }
+
+    File testJarFile = new File("target/testjars/test.jar");
+
+    // Copy common jars
+    FileUtils.copyFile(testJarFile, new File(resDir, "lens-ship.jar"));
+    FileUtils.copyFile(testJarFile, new File(resDir, "meta.jar"));
+
+
+    setUpDbWithJarOrderAndFiles(dbs[0], resDir, conf);
+
+    setUpDbWithNoJarOrderAndVersionFiles(dbs[1], resDir, conf);
+
+    setUpDbWithNoJarOrderAndNoFiles(dbs[2], resDir, conf);
+  }
+
+  //*********************************************
+  // Setup DB : JAR_ORDER + SOME FILES
+  //*********************************************
+  private static void setUpDbWithJarOrderAndFiles(String db, File resDir, HiveConf conf) throws Exception {
+    Database database0 = new Database();
+    database0.setName(db);
+
+    Hive hive = Hive.get(conf);
+    hive.createDatabase(database0, true);
+
+    File dbDir1 = new File(resDir, db);
+    if (!dbDir1.exists()) {
+      dbDir1.mkdir();
+    }
+
+    File dbDir0 = new File(resDir, db);
+    if (!dbDir0.exists()) {
+      dbDir0.mkdir();
+    }
+
+    String[] jarFilesOrder = {
+      "x_" + db + ".jar",
+      "y_" + db + ".jar",
+      "z_" + db + ".jar",
+    };
+
+    try {
+
+      // We are explicitly specifying jar order
+      FileUtils.writeLines(new File(dbDir0, "jar_order"), Arrays.asList(jarFilesOrder[2], jarFilesOrder[1],
+        jarFilesOrder[0]));
+
+      File testJarFile = new File("target/testjars/test.jar");
+
+      FileUtils.copyFile(testJarFile, new File(dbDir0, jarFilesOrder[0]));
+      FileUtils.copyFile(testJarFile, new File(dbDir0, jarFilesOrder[1]));
+      FileUtils.copyFile(testJarFile, new File(dbDir0, jarFilesOrder[2]));
+    } catch (FileNotFoundException fnf) {
+      log.error("File not found.", fnf);
+    } catch (Exception e) {
+      log.error("File not found.", e);
+    }
+  }
+
+
+  //*********************************************
+  // Setup DB : NO JAR_ORDER + VERSION FILES
+  //*********************************************
+  private static void setUpDbWithNoJarOrderAndVersionFiles(String db, File resDir, HiveConf conf) throws Exception {
+
+    Database database0 = new Database();
+    database0.setName(db);
+
+    Hive hive = Hive.get(conf);
+    hive.createDatabase(database0, true);
+
+    File dbDir1 = new File(resDir, db);
+    if (!dbDir1.exists()) {
+      dbDir1.mkdir();
+    }
+
+    String[] jarOrder = {
+      db + "_3.jar",
+      db + "_2.jar",
+      db + "_1.jar"
+    };
+
+
+    try {
+      File testJarFile = new File("target/testjars/test.jar");
+
+      FileUtils.copyFile(testJarFile, new File(dbDir1, jarOrder[0]));
+      FileUtils.copyFile(testJarFile, new File(dbDir1, jarOrder[1]));
+      FileUtils.copyFile(testJarFile, new File(dbDir1, jarOrder[2]));
+    } catch (FileNotFoundException fnf) {
+      log.error("File not found.", fnf);
+    }
+  }
+
+  //*********************************************
+  // Setup DB : NO JAR_ORDER + NO FILES + NO VERSION FILES
+  //*********************************************
+  private static void setUpDbWithNoJarOrderAndNoFiles(String db, File resDir, HiveConf conf) throws Exception {
+
+    Database database0 = new Database();
+    database0.setName(db);
+
+    Hive hive = Hive.get(conf);
+    hive.createDatabase(database0, true);
+
+    File dbDir1 = new File(resDir, db);
+    if (!dbDir1.exists()) {
+      dbDir1.mkdir();
+    }
+  }
+
+
 }

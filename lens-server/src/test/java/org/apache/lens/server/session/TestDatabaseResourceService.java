@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.session;
 
+import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import java.util.List;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 
@@ -46,27 +48,81 @@ public class TestDatabaseResourceService {
   private static final String DB1 = DB_PFX + "db1";
   private static final String DB2 = DB_PFX + "db2";
 
+//  //tested using dbResService1
+//  private static final String DB_TEST_JarUploadWhenDbFolderExists = "db1_" + System.currentTimeMillis();
+//  private static final String DB_TEST_JarUploadWithJarOrderFileInDbFolder = "db2_" + System.currentTimeMillis();
+//
+//  //tested using dbResService2
+//  private static final String DB_TEST_JarUploadWithNoJarOrderInDbFolder = "db3_" + System.currentTimeMillis();
+//  private static final String DB_TEST_JarUploadWithNoJarOrderAndCommonJarsInBaseFolder = "db4_" + System.currentTimeMillis();
+//  private static final String DB_TEST_JarUploadWithJarOrderAndCommonJarsInBaseFolder = "db5_" + System.currentTimeMillis();
+//
   private final String[] testDatabases = {DB1, DB2};
+
+  private static final String JAR_ORDER_AND_FILES = DB_PFX + "jar_order_files_in_db";
+  private static final String NO_JAR_ORDER_AND_VERSION_FILES = DB_PFX + "no_jar_order_and_version_files";
+  private static final String NO_JAR_ORDER_NO_FILES = DB_PFX + "no_jar_order_no_files";
+
+  private final String[] testDatabases1 = {JAR_ORDER_AND_FILES, NO_JAR_ORDER_AND_VERSION_FILES,NO_JAR_ORDER_NO_FILES};
+
+//  private final String[] testDatabases1 = {DB_TEST_JarUploadWhenDbFolderExists, DB_TEST_JarUploadWithJarOrderFileInDbFolder};
+//
+//  private final String[] testDatabases2 = {DB_TEST_JarUploadWithNoJarOrderInDbFolder, DB_TEST_JarUploadWithNoJarOrderAndCommonJarsInBaseFolder, DB_TEST_JarUploadWithJarOrderAndCommonJarsInBaseFolder};
 
   private final HiveConf conf = new HiveConf(TestDatabaseResourceService.class);
   private DatabaseResourceService dbResService;
 
+  private final HiveConf conf1 = new HiveConf(TestDatabaseResourceService.class);
+  private DatabaseResourceService dbResService1;
+
+  private final HiveConf conf2 = new HiveConf(TestDatabaseResourceService.class);
+  private DatabaseResourceService dbResService2;
+
   @BeforeClass
   public void setup() throws Exception {
+
+    String prefix = "file://"+System.getProperty("user.dir");
+
+    conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix+"/target/resources");
+    conf1.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix+"/target/resources_without_common_jars");
+    conf2.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix+"/target/resources_with_common_jars");
+
     LensServerTestUtil.createTestDatabaseResources(testDatabases, conf);
-    // Start resource service.
-    conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "target/resources");
+    LensServerTestUtil.createTestDbWithoutCommonJars(testDatabases1, conf1);
+    LensServerTestUtil.createTestDbWithCommonJars(testDatabases1, conf2);
+
     dbResService = new DatabaseResourceService(DatabaseResourceService.NAME);
     dbResService.init(conf);
     dbResService.start();
+
+    dbResService1 = new DatabaseResourceService(DatabaseResourceService.NAME);
+    dbResService1.init(conf1);
+    dbResService1.start();
+
+    dbResService2 = new DatabaseResourceService(DatabaseResourceService.NAME);
+    dbResService2.init(conf2);
+    dbResService2.start();
+
+
   }
 
   @AfterClass
   public void tearDown() throws Exception {
-    Hive hive = Hive.get(conf);
+    Hive hive0 = Hive.get(conf);
     for (String db : testDatabases) {
-      hive.dropDatabase(db, true, true);
+      hive0.dropDatabase(db, true, true);
     }
+
+    Hive hive1 = Hive.get(conf1);
+    for (String db : testDatabases1) {
+      hive1.dropDatabase(db, true, true);
+    }
+
+    Hive hive2 = Hive.get(conf2);
+    for (String db : testDatabases1) {
+      hive2.dropDatabase(db, true, true);
+    }
+
   }
 
   @Test
@@ -82,7 +138,7 @@ public class TestDatabaseResourceService {
   private boolean isJarLoaded(ClassLoader loader, String db) throws Exception {
     URLClassLoader db1Loader = (URLClassLoader) loader;
 
-    for (URL url :  db1Loader.getURLs()) {
+    for (URL url : db1Loader.getURLs()) {
       String jarFile = url.getPath();
       if (jarFile.endsWith(db + ".jar")) {
         log.info("Found jar url " + url.toString());
@@ -132,11 +188,144 @@ public class TestDatabaseResourceService {
       Class clz = Class.forName("ClassLoaderTestClass", true, getClass().getClassLoader());
       Assert.fail("Expected class loading to fail");
     } catch (Throwable th) {
-      log.error("Expected error " + th + " msg = "+th.getMessage(), th);
+      log.error("Expected error " + th + " msg = " + th.getMessage(), th);
     }
 
     // Should pass now
     Class clz = Class.forName(TEST_CLASS, true, dbResService.getClassLoader(DB1));
     Assert.assertNotNull(clz);
   }
+
+
+  /**************************************************
+   * Test cases without common jars
+   **************************************************/
+  @Test
+  public void testDbWithoutCommonJarsAndWithJarOrderAndFiles()throws Exception {
+    String db = testDatabases1[0];
+    Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService1.getResourcesForDatabase(db);
+    List<String> actualOrderList = new ArrayList<String>();
+
+    for (LensSessionImpl.ResourceEntry res : actualOrder) {
+      actualOrderList.add(res.getLocation());
+    }
+
+    String[] jarFilesOrder = {
+      "z_" + db + ".jar",
+      "y_" + db + ".jar",
+      "x_" + db + ".jar",
+    };
+
+    // Verify order
+    for (int i = 0; i < jarFilesOrder.length; i++) {
+      Assert.assertTrue(actualOrderList.get(i).contains(jarFilesOrder[i]),
+        actualOrderList.get(i) + " > " + jarFilesOrder[i]);
+    }
+  }
+
+  @Test
+  public void testDbWithoutCommonJarsAndWithNoJarOrderAndVersionFiles()throws Exception {
+    String db = testDatabases1[1];
+    Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService1.getResourcesForDatabase(db);
+    List<String> actualOrderList = new ArrayList<String>();
+
+    for (LensSessionImpl.ResourceEntry res : actualOrder) {
+      actualOrderList.add(res.getLocation());
+    }
+
+    // Should pick the latest one
+    String[] jarFilesOrder = {
+      db + "_3.jar",
+    };
+
+    // Verify order
+    for (int i = 0; i < jarFilesOrder.length; i++) {
+      Assert.assertTrue(actualOrderList.get(i).contains(jarFilesOrder[i]),
+        actualOrderList.get(i) + " > " + jarFilesOrder[i]);
+    }
+  }
+
+  @Test
+  public void testDbWithoutCommonJarsAndNoJarOrderAndNoFiles()throws Exception {
+    String db = testDatabases1[2];
+    Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService1.getResourcesForDatabase(db);
+    Assert.assertNull(actualOrder);
+
+  }
+
+  /**************************************************
+   * Test cases without common jars
+   **************************************************/
+
+  @Test
+  public void testDbWithCommonJarsAndWithJarOrderAndFiles()throws Exception {
+    String db = testDatabases1[0];
+    Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService2.getResourcesForDatabase(db);
+    List<String> actualOrderList = new ArrayList<String>();
+
+    for (LensSessionImpl.ResourceEntry res : actualOrder) {
+      actualOrderList.add(res.getLocation());
+    }
+
+    String[] jarFilesOrder = {
+      "z_" + db + ".jar",
+      "y_" + db + ".jar",
+      "x_" + db + ".jar",
+    };
+
+    // Verify order
+    for (int i = 0; i < jarFilesOrder.length; i++) {
+      Assert.assertTrue(actualOrderList.get(i).contains(jarFilesOrder[i]),
+        actualOrderList.get(i) + " > " + jarFilesOrder[i]);
+    }
+  }
+
+  @Test
+  public void testDbWithCommonJarsAndWithNoJarOrderAndVersionFiles()throws Exception {
+    String db = testDatabases1[1];
+    Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService2.getResourcesForDatabase(db);
+    List<String> actualOrderList = new ArrayList<String>();
+
+    for (LensSessionImpl.ResourceEntry res : actualOrder) {
+      actualOrderList.add(res.getLocation());
+    }
+
+    // Should pick the latest one
+    String[] jarFilesOrder = {
+      db + "_3.jar",
+      "lens-ship.jar",
+      "meta.jar",
+    };
+
+    // Verify order
+    for (int i = 0; i < jarFilesOrder.length; i++) {
+      Assert.assertTrue(actualOrderList.get(i).contains(jarFilesOrder[i]),
+        actualOrderList.get(i) + " > " + jarFilesOrder[i]);
+    }
+  }
+
+  @Test
+  public void testDbWithCommonJarsAndNoJarOrderAndNoFiles()throws Exception {
+    String db = testDatabases1[2];
+    Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService2.getResourcesForDatabase(db);
+    List<String> actualOrderList = new ArrayList<String>();
+
+    for (LensSessionImpl.ResourceEntry res : actualOrder) {
+      actualOrderList.add(res.getLocation());
+    }
+
+    // Should pick the latest one
+    String[] jarFilesOrder = {
+      "lens-ship.jar",
+      "meta.jar",
+    };
+
+    // Verify order
+    for (int i = 0; i < jarFilesOrder.length; i++) {
+      Assert.assertTrue(actualOrderList.get(i).contains(jarFilesOrder[i]),
+        actualOrderList.get(i) + " > " + jarFilesOrder[i]);
+    }
+  }
+
+
 }

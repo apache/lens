@@ -128,8 +128,6 @@ public class DatabaseResourceService extends AbstractService {
       loadMappedResources();
 
 
-
-
     } catch (LensException e) {
       incrCounter(LOAD_RESOURCES_ERRORS);
       log.warn("Failed to load DB resource mapping, resources must be added explicitly to session.");
@@ -212,21 +210,14 @@ public class DatabaseResourceService extends AbstractService {
         if (serverFs.isDirectory(dbDirPath)) {
           String dbName = dbDirPath.getName();
 
-          Path dbJarOrderPath = new Path(baseDir, dbName+ File.separator+"jar_order");
-          if(serverFs.exists(dbJarOrderPath)){
+          Path dbJarOrderPath = new Path(baseDir, dbName + File.separator + "jar_order");
+          if (serverFs.exists(dbJarOrderPath)) {
             // old flow
             mapDbResourceEntries(dbName);
-          }else{
+          } else {
             // new flow
             mapDbSpecificJar(baseDir, dbName);
           }
-
-
-        } else {
-
-          // It has to be a common jar, so load it.
-
-          log.warn("DB resource DIR is not a directory: {}", dbDirPath);
         }
       }
 
@@ -269,9 +260,12 @@ public class DatabaseResourceService extends AbstractService {
         }
       }
 
-      // latest jar
-      Path latestJarPath = new Path(baseDir, dbName + File.separator +dbName + "_" + lastIndex+ ".jar");
-      addResourceEntry(new LensSessionImpl.ResourceEntry("jar", latestJarPath.toUri().toString()), dbName);
+      if(lastIndex > 0){
+        // latest jar
+        Path latestJarPath = new Path(baseDir, dbName + File.separator +dbName + "_" + lastIndex+ ".jar");
+        addResourceEntry(new LensSessionImpl.ResourceEntry("jar", latestJarPath.toUri().toString()), dbName);
+      }
+
 
       // add common jars
       for(LensSessionImpl.ResourceEntry jar : commonResMap){
@@ -279,8 +273,8 @@ public class DatabaseResourceService extends AbstractService {
       }
 
     }catch (Exception io) {
-      log.error("Error getting list of dbs to load resources from", io);
-      throw new Exception(io);
+      log.error("Error getting db specific resource ", io);
+      throw new LensException(io);
     } finally {
       if (serverFs != null) {
         try {
