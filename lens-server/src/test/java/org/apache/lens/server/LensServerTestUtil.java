@@ -422,7 +422,7 @@ public final class LensServerTestUtil {
     String[] jarOrder = {
       db + "_3.jar",
       db + "_2.jar",
-      db + "_1.jar"
+      db + "_1.jar",
     };
 
 

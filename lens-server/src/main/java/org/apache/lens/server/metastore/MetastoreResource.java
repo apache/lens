@@ -36,9 +36,7 @@ import org.apache.lens.api.metastore.*;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
-import org.apache.lens.server.util.ScannedPaths;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -405,17 +403,17 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     try {
       switch (cubeTypes) {
-        case "all":
-          return new StringList(getSvc().getAllCubeNames(sessionid));
-        case "base":
-          return new StringList(getSvc().getAllBaseCubeNames(sessionid));
-        case "derived":
-          return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
-        case "queryable":
-          return new StringList(getSvc().getAllQueryableCubeNames(sessionid));
-        default:
-          throw new BadRequestException("Invalid type " + cubeTypes + " Accepted"
-            + " values are 'all' or 'base' or 'derived' or 'queryable'");
+      case "all":
+        return new StringList(getSvc().getAllCubeNames(sessionid));
+      case "base":
+        return new StringList(getSvc().getAllBaseCubeNames(sessionid));
+      case "derived":
+        return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
+      case "queryable":
+        return new StringList(getSvc().getAllQueryableCubeNames(sessionid));
+      default:
+        throw new BadRequestException("Invalid type " + cubeTypes + " Accepted"
+          + " values are 'all' or 'base' or 'derived' or 'queryable'");
       }
     } catch (LensException e) {
       log.error("Error getting cube names", e);
@@ -1731,7 +1729,7 @@ public class MetastoreResource {
     try {
       getSvc().addDBJar(sessionid, type, fileInputStream);
     } catch (LensException e) {
-      e.printStackTrace();
+      log.error("Error in adding resource to db", e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return new APIResult(Status.SUCCEEDED, "Add resource succeeded");

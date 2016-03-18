@@ -18,7 +18,6 @@
  */
 package org.apache.lens.server.session;
 
-import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -28,7 +27,6 @@ import java.util.List;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 
@@ -54,7 +52,7 @@ public class TestDatabaseResourceService {
   private static final String NO_JAR_ORDER_AND_VERSION_FILES = DB_PFX + "no_jar_order_and_version_files";
   private static final String NO_JAR_ORDER_NO_FILES = DB_PFX + "no_jar_order_no_files";
 
-  private final String[] testDatabases1 = {JAR_ORDER_AND_FILES, NO_JAR_ORDER_AND_VERSION_FILES,NO_JAR_ORDER_NO_FILES};
+  private final String[] testDatabases1 = {JAR_ORDER_AND_FILES, NO_JAR_ORDER_AND_VERSION_FILES, NO_JAR_ORDER_NO_FILES};
 
   private final HiveConf conf = new HiveConf(TestDatabaseResourceService.class);
   private DatabaseResourceService dbResService;
@@ -68,11 +66,11 @@ public class TestDatabaseResourceService {
   @BeforeClass
   public void setup() throws Exception {
 
-    String prefix = "file://"+System.getProperty("user.dir");
+    String prefix = System.getProperty("user.dir");
 
-    conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix+"/target/resources");
-    conf1.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix+"/target/resources_without_common_jars");
-    conf2.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix+"/target/resources_with_common_jars");
+    conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "/target/resources");
+    conf1.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix + "/target/resources_without_common_jars");
+    conf2.set(LensConfConstants.DATABASE_RESOURCE_DIR, prefix + "/target/resources_with_common_jars");
 
     LensServerTestUtil.createTestDatabaseResources(testDatabases, conf);
     LensServerTestUtil.createTestDbWithoutCommonJars(testDatabases1, conf1);
@@ -188,7 +186,7 @@ public class TestDatabaseResourceService {
    * Test cases without common jars
    **************************************************/
   @Test
-  public void testDbWithoutCommonJarsAndWithJarOrderAndFiles()throws Exception {
+  public void testDbWithoutCommonJarsAndWithJarOrderAndFiles() throws Exception {
     String db = testDatabases1[0];
     Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService1.getResourcesForDatabase(db);
     List<String> actualOrderList = new ArrayList<String>();
@@ -211,7 +209,7 @@ public class TestDatabaseResourceService {
   }
 
   @Test
-  public void testDbWithoutCommonJarsAndWithNoJarOrderAndVersionFiles()throws Exception {
+  public void testDbWithoutCommonJarsAndWithNoJarOrderAndVersionFiles() throws Exception {
     String db = testDatabases1[1];
     Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService1.getResourcesForDatabase(db);
     List<String> actualOrderList = new ArrayList<String>();
@@ -233,7 +231,7 @@ public class TestDatabaseResourceService {
   }
 
   @Test
-  public void testDbWithoutCommonJarsAndNoJarOrderAndNoFiles()throws Exception {
+  public void testDbWithoutCommonJarsAndNoJarOrderAndNoFiles() throws Exception {
     String db = testDatabases1[2];
     Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService1.getResourcesForDatabase(db);
     Assert.assertNull(actualOrder);
@@ -245,7 +243,7 @@ public class TestDatabaseResourceService {
    **************************************************/
 
   @Test
-  public void testDbWithCommonJarsAndWithJarOrderAndFiles()throws Exception {
+  public void testDbWithCommonJarsAndWithJarOrderAndFiles() throws Exception {
     String db = testDatabases1[0];
     Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService2.getResourcesForDatabase(db);
     List<String> actualOrderList = new ArrayList<String>();
@@ -268,7 +266,7 @@ public class TestDatabaseResourceService {
   }
 
   @Test
-  public void testDbWithCommonJarsAndWithNoJarOrderAndVersionFiles()throws Exception {
+  public void testDbWithCommonJarsAndWithNoJarOrderAndVersionFiles() throws Exception {
     String db = testDatabases1[1];
     Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService2.getResourcesForDatabase(db);
     List<String> actualOrderList = new ArrayList<String>();
@@ -292,7 +290,7 @@ public class TestDatabaseResourceService {
   }
 
   @Test
-  public void testDbWithCommonJarsAndNoJarOrderAndNoFiles()throws Exception {
+  public void testDbWithCommonJarsAndNoJarOrderAndNoFiles() throws Exception {
     String db = testDatabases1[2];
     Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService2.getResourcesForDatabase(db);
     List<String> actualOrderList = new ArrayList<String>();

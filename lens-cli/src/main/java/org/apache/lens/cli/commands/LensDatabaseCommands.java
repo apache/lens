@@ -130,7 +130,8 @@ public class LensDatabaseCommands extends LensCRUDCommand {
    */
   @CliCommand(value = "add dbjar", help = "Add jar resource to the db")
   public String addDBJar(
-    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-HDFS> / <path-to-jar-on-local>") @NonNull String path) {
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-jar-on-HDFS> / <path-to-jar-on-local>")
+    @NonNull String path) {
     APIResult result = getClient().addDBJarResource(path);
     return result.getMessage();
   }

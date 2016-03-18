@@ -1,16 +1,29 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.lens.server.metastore;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 
-import javax.mail.Folder;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -18,14 +31,12 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.metastore.ObjectFactory;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -39,9 +50,7 @@ import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Created by badrinath.kulkarni on 3/8/16.
- */
+
 @Slf4j
 @Test(groups = "unit-test")
 public class TestDatabaseService extends LensJerseyTest {
@@ -98,12 +107,8 @@ public class TestDatabaseService extends LensJerseyTest {
       FileDataBodyPart filePart = new FileDataBodyPart("file", file);
       filePart.setContentDisposition(dispo);
       mp.bodyPart(filePart);
-
-
     } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-
+      log.error("Error in getting form data", e);
     }
 
     return mp;
@@ -240,7 +245,8 @@ public class TestDatabaseService extends LensJerseyTest {
       queryParam("sessionid", lensSessionId).request(mediaType)
       .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
     log.debug(resultUpd.getStatus() + " " + resultUpd);
-    assertEquals(resultUpd.getMessage(), "Database jar file upload in progress . Database jar can't be uploaded. Try later!");
+    assertEquals(resultUpd.getMessage(), "Database jar file upload in progress . Database jar can't be uploaded."
+      + " Try later!");
 
     cleanUp(dbFolder);
   }
@@ -340,9 +346,9 @@ public class TestDatabaseService extends LensJerseyTest {
 
   private void cleanUp(File f) {
     try {
-      //FileUtils.deleteDirectory(f);
+      FileUtils.deleteDirectory(f);
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error cleaning directory", e);
     }
   }
 

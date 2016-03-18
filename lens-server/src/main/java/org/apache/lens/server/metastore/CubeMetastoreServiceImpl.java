@@ -38,7 +38,6 @@ import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.session.LensSessionImpl;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -841,7 +840,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       String baseDir =
         getHiveConf().get(LensConfConstants.DATABASE_RESOURCE_DIR, LensConfConstants.DEFAULT_DATABASE_RESOURCE_DIR);
 
-      String dbDir = baseDir+File.separator+currentDB;
+      String dbDir = baseDir + File.separator + currentDB;
       log.info("Database specific resources at {}", dbDir);
 
 
@@ -859,7 +858,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
         throw new LensException("Database jar_order file exist. Database jar can't be uploaded");
       }
 
-      String tempFileName = currentDB+"_uploading.jar";
+      String tempFileName = currentDB + "_uploading.jar";
 
       Path uploadingPath = new Path(dbDir, tempFileName);
       FileSystem uploadingFs = FileSystem.newInstance(uploadingPath.toUri(), getHiveConf());
@@ -878,29 +877,30 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
 
         if (tokens.length > 1) {
           int fIndex = Integer.parseInt(tokens[tokens.length - 1].substring(0, 1));
-          if (fIndex > lastIndex)
+          if (fIndex > lastIndex) {
             lastIndex = fIndex;
+          }
         }
       }
 
       int newIndex = lastIndex + 1;
 
 
-      Path resJarPath = new Path(baseDir, currentDB + File.separator +tempFileName);
+      Path resJarPath = new Path(baseDir, currentDB + File.separator + tempFileName);
       log.info("new jar name : " + resJarPath.getName());
       fos = serverFs.create(resJarPath);
       IOUtils.copy(is, fos);
       fos.flush();
 
-      Path renamePath = new Path(baseDir, currentDB + File.separator +currentDB + "_" + newIndex+ ".jar");
-      serverFs.rename(resJarPath,renamePath);
+      Path renamePath = new Path(baseDir, currentDB + File.separator + currentDB + "_" + newIndex + ".jar");
+      serverFs.rename(resJarPath, renamePath);
 
 
     } catch (FileNotFoundException e) {
-      e.printStackTrace();
+      log.error("FileNotFoundException", e);
       throw new LensException(e);
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("IOException", e);
       throw new LensException(e);
     } finally {
       if (fos != null) {

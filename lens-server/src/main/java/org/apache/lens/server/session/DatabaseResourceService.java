@@ -130,7 +130,7 @@ public class DatabaseResourceService extends AbstractService {
 
     } catch (LensException e) {
       incrCounter(LOAD_RESOURCES_ERRORS);
-      log.warn("Failed to load DB resource mapping, resources must be added explicitly to session.");
+      log.error("Failed to load DB resource mapping, resources must be added explicitly to session.", e);
     }
   }
 
@@ -161,6 +161,7 @@ public class DatabaseResourceService extends AbstractService {
 
       Path resDirPath = new Path(resTopDir, dbName);
       serverFs = FileSystem.newInstance(resDirPath.toUri(), getHiveConf());
+      resDirPath = serverFs.resolvePath(resDirPath);
       if (!serverFs.exists(resDirPath)) {
         incrCounter(LOAD_RESOURCES_ERRORS);
         log.warn("Database resource location does not exist - {}. Database jars will not be available", resDirPath);
@@ -198,6 +199,7 @@ public class DatabaseResourceService extends AbstractService {
 
       Path resTopDirPath = new Path(baseDir);
       serverFs = FileSystem.newInstance(resTopDirPath.toUri(), getHiveConf());
+      resTopDirPath = serverFs.resolvePath(resTopDirPath);
       if (!serverFs.exists(resTopDirPath)) {
         incrCounter(LOAD_RESOURCES_ERRORS);
         log.warn("DB base location does not exist.", baseDir);
@@ -216,7 +218,7 @@ public class DatabaseResourceService extends AbstractService {
             mapDbResourceEntries(dbName);
           } else {
             // new flow
-            mapDbSpecificJar(baseDir, dbName);
+            mapDbSpecificJar(resTopDirPath, dbName);
           }
         }
       }
@@ -225,10 +227,9 @@ public class DatabaseResourceService extends AbstractService {
     } catch (IOException io) {
       log.error("Error getting list of dbs to load resources from", io);
       throw new LensException(io);
-    }catch (Exception e){
-      log.error("Exception : ",e);
-    }
-    finally {
+    } catch (Exception e) {
+      log.error("Exception : ", e);
+    } finally {
       if (serverFs != null) {
         try {
           serverFs.close();
@@ -239,9 +240,9 @@ public class DatabaseResourceService extends AbstractService {
     }
   }
 
-  private void mapDbSpecificJar(String baseDir, String dbName) throws Exception{
+  private void mapDbSpecificJar(Path baseDir, String dbName) throws Exception {
     FileSystem serverFs = null;
-    try{
+    try {
       int lastIndex = 0;
 
 
@@ -255,24 +256,25 @@ public class DatabaseResourceService extends AbstractService {
 
         if (tokens.length > 1) {
           int fIndex = Integer.parseInt(tokens[tokens.length - 1].substring(0, 1));
-          if (fIndex > lastIndex)
+          if (fIndex > lastIndex) {
             lastIndex = fIndex;
+          }
         }
       }
 
-      if(lastIndex > 0){
+      if (lastIndex > 0) {
         // latest jar
-        Path latestJarPath = new Path(baseDir, dbName + File.separator +dbName + "_" + lastIndex+ ".jar");
+        Path latestJarPath = new Path(baseDir, dbName + File.separator + dbName + "_" + lastIndex + ".jar");
         addResourceEntry(new LensSessionImpl.ResourceEntry("jar", latestJarPath.toUri().toString()), dbName);
       }
 
 
       // add common jars
-      for(LensSessionImpl.ResourceEntry jar : commonResMap){
-        addResourceEntry(jar,dbName);
+      for (LensSessionImpl.ResourceEntry jar : commonResMap) {
+        addResourceEntry(jar, dbName);
       }
 
-    }catch (Exception io) {
+    } catch (Exception io) {
       log.error("Error getting db specific resource ", io);
       throw new LensException(io);
     } finally {
@@ -286,7 +288,6 @@ public class DatabaseResourceService extends AbstractService {
     }
 
   }
-
 
 
   private void findResourcesInDir(FileSystem serverFs, String database, Path dbDirPath) throws IOException {
@@ -367,7 +368,7 @@ public class DatabaseResourceService extends AbstractService {
    * @return class loader updated as a result of adding any JARs
    */
   protected synchronized ClassLoader loadDBJars(String database, Collection<LensSessionImpl.ResourceEntry> resources,
-                                             boolean addToCache) {
+    boolean addToCache) {
     ClassLoader classLoader = classLoaderCache.get(database);
     if (classLoader == null) {
       // No change since there are no static resources to be added
