@@ -538,7 +538,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       if (ctx.isResultAvailableInDriver()) {
         try {
           driverRS = ctx.getSelectedDriver().fetchResultSet(getCtx());
-        } catch (LensException e) {
+        } catch (Exception e) {
           log.error(
               "Error while getting result ser form driver {}. Driver result set based purging logic will be ignored",
               ctx.getSelectedDriver(), e);
