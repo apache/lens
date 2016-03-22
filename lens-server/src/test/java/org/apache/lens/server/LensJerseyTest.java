@@ -76,7 +76,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   }
 
   private boolean isPortAlreadyFound() {
-    return port != -1;
+    return port != -1 && port != 0;
   }
 
   public void setUp() throws Exception {

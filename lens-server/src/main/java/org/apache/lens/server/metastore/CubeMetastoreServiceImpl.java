@@ -20,6 +20,7 @@ package org.apache.lens.server.metastore;
 
 import static org.apache.lens.server.metastore.JAXBUtils.*;
 
+import java.io.*;
 import java.util.*;
 
 import javax.ws.rs.BadRequestException;
@@ -37,14 +38,17 @@ import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.session.LensSessionImpl;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.CLIService;
 
 import com.google.common.collect.Lists;
@@ -824,6 +828,109 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
+  public void addDBJar(LensSessionHandle sessionid, String type, InputStream is) throws LensException {
+    // Read list of databases in
+    FileSystem serverFs = null;
+    FileSystem jarOrderFs = null;
+    FSDataOutputStream fos = null;
+    try {
+      acquire(sessionid);
+      String currentDB = SessionState.get().getCurrentDatabase();
+
+      String baseDir =
+        getHiveConf().get(LensConfConstants.DATABASE_RESOURCE_DIR, LensConfConstants.DEFAULT_DATABASE_RESOURCE_DIR);
+
+      String dbDir = baseDir + File.separator + currentDB;
+      log.info("Database specific resources at {}", dbDir);
+
+
+      Path resTopDirPath = new Path(dbDir);
+      serverFs = FileSystem.newInstance(resTopDirPath.toUri(), getHiveConf());
+      if (!serverFs.exists(resTopDirPath)) {
+        log.warn("Database resource location does not exist. Database jar can't be uploaded", dbDir);
+        throw new LensException("Database resource location does not exist. Database jar can't be uploaded");
+      }
+
+      Path resJarOrderPath = new Path(dbDir, "jar_order");
+      jarOrderFs = FileSystem.newInstance(resJarOrderPath.toUri(), getHiveConf());
+      if (jarOrderFs.exists(resJarOrderPath)) {
+        log.warn("Database jar_order file exist - {}. Database jar can't be uploaded", resJarOrderPath);
+        throw new LensException("Database jar_order file exist. Database jar can't be uploaded");
+      }
+
+      String tempFileName = currentDB + "_uploading.jar";
+
+      Path uploadingPath = new Path(dbDir, tempFileName);
+      FileSystem uploadingFs = FileSystem.newInstance(uploadingPath.toUri(), getHiveConf());
+      if (uploadingFs.exists(uploadingPath)) {
+        log.warn("Already uploading a file - {}. This Database jar can't be uploaded. Try later!", uploadingPath);
+        throw new LensException("Database jar file upload in progress . Database jar can't be uploaded. Try later!");
+      }
+
+      int lastIndex = 0;
+
+      Path dbFolderPath = new Path(baseDir, currentDB);
+      FileStatus[] existingFiles = serverFs.listStatus(dbFolderPath);
+      for (FileStatus fs : existingFiles) {
+        String fPath = fs.getPath().getName();
+        String[] tokens = fPath.split("_");
+
+        if (tokens.length > 1) {
+          int fIndex = Integer.parseInt(tokens[tokens.length - 1].substring(0, 1));
+          if (fIndex > lastIndex) {
+            lastIndex = fIndex;
+          }
+        }
+      }
+
+      int newIndex = lastIndex + 1;
+
+
+      Path resJarPath = new Path(baseDir, currentDB + File.separator + tempFileName);
+      log.info("new jar name : " + resJarPath.getName());
+      fos = serverFs.create(resJarPath);
+      IOUtils.copy(is, fos);
+      fos.flush();
+
+      Path renamePath = new Path(baseDir, currentDB + File.separator + currentDB + "_" + newIndex + ".jar");
+      serverFs.rename(resJarPath, renamePath);
+
+
+    } catch (FileNotFoundException e) {
+      log.error("FileNotFoundException", e);
+      throw new LensException(e);
+    } catch (IOException e) {
+      log.error("IOException", e);
+      throw new LensException(e);
+    } finally {
+      if (fos != null) {
+        try {
+          fos.close();
+        } catch (IOException e) {
+          log.error("Error closing file system instance fos", e);
+        }
+      }
+
+      if (serverFs != null) {
+        try {
+          serverFs.close();
+        } catch (IOException e) {
+          log.error("Error closing file system instance serverFs", e);
+        }
+      }
+
+      if (jarOrderFs != null) {
+        try {
+          jarOrderFs.close();
+        } catch (IOException e) {
+          log.error("Error closing file system instance jarOrderFs", e);
+        }
+      }
+      release(sessionid);
+    }
+  }
+
+  @Override
   public int addPartitionsToDimStorage(LensSessionHandle sessionid,
     String dimTblName, String storageName, XPartitionList partitions) throws LensException {
     try {
@@ -1466,5 +1573,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       ? new HealthStatus(isHealthy, "Cube metastore service is healthy.")
       : new HealthStatus(isHealthy, details.toString());
   }
+
 
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.lens.client;
 
+import java.io.File;
 import java.net.ConnectException;
 import java.util.Iterator;
 import java.util.List;
@@ -37,10 +38,8 @@ import org.apache.lens.api.StringList;
 import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
 import org.apache.lens.client.exceptions.LensClientServerConnectionException;
 
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.*;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
 import lombok.Getter;
@@ -326,5 +325,41 @@ public class LensConnection {
     sb.append("sessionHandle=").append(sessionHandle.getPublicId());
     sb.append('}');
     return sb.toString();
+  }
+
+  /**
+   * Adds the resource to current DB.
+   *
+   * @param type         the type
+   * @param resourcePath the resource path
+   * @return the API result
+   */
+  public APIResult addResourceToDB(String type, String resourcePath) {
+    WebTarget target = getMetastoreWebTarget();
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), type));
+
+    File file = new File(resourcePath);
+    log.debug("uploading file path : " + file.getAbsolutePath() + "|size = " + file.length());
+    final FormDataContentDisposition dispo = FormDataContentDisposition//
+      .name("file")//
+      .fileName("db_0.jar")// temp dummy name
+      .size(file.length())//
+      .build();
+
+    FileDataBodyPart filePart = new FileDataBodyPart("file", file);
+    filePart.setContentDisposition(dispo);
+    mp.bodyPart(filePart);
+
+    MultiPart multiPart = new MultiPart();
+    multiPart.setMediaType(MediaType.MULTIPART_FORM_DATA_TYPE);
+
+
+    APIResult result = target.path("databases/jar").queryParam("sessionid", this.sessionHandle).request()
+      .post(Entity.entity(mp, multiPart.getMediaType()), APIResult.class);
+
+    log.debug(result.getStatus() + " - " + result);
+
+    return result;
   }
 }
