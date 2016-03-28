@@ -1274,8 +1274,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     };
 
     log.debug("starting estimate pool");
+
     ThreadPoolExecutor estimatePool = new ThreadPoolExecutor(minPoolSize, maxPoolSize, keepAlive, TimeUnit.MILLISECONDS,
-      new LinkedBlockingQueue<Runnable>(), threadFactory);
+      new SynchronousQueue<Runnable>(), threadFactory);
     estimatePool.allowCoreThreadTimeOut(true);
     estimatePool.prestartCoreThread();
     this.estimatePool = estimatePool;
