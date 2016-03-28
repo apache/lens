@@ -507,6 +507,21 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
+  public XCubeSegmentation getCubeSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException {
+    try {
+      acquire(sessionid);
+      CubeMetastoreClient msClient = getClient(sessionid);
+      CubeSegmentation cubeSeg = msClient.getCubeSegmentation(cubeSegName);
+      return JAXBUtils.xsegmentationFromCubeSegmentation(cubeSeg);
+    } catch (HiveException e) {
+      throw new LensException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+
+  @Override
   public void createFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException {
     try {
       acquire(sessionid);
@@ -526,12 +541,44 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
+  public void createCubeSegmentation(LensSessionHandle sessionid, XCubeSegmentation cubeSeg) throws LensException {
+    try {
+      acquire(sessionid);
+      getClient(sessionid).createCubeSegmentation(
+              cubeSeg.getCubeName(),
+              cubeSeg.getName(),
+              JAXBUtils.cubeSegmentsFromXCubeSegments(cubeSeg.getCubeSegements()),
+              cubeSeg.getWeight(),
+              JAXBUtils.mapFromXProperties(cubeSeg.getProperties()));
+      log.info("Created cube segmentation " + cubeSeg.getName());
+    } catch (HiveException e) {
+      throw new LensException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+
+  @Override
   public void updateFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException {
     try {
       acquire(sessionid);
       getClient(sessionid).alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(fact),
         JAXBUtils.storageTableMapFromXStorageTables(fact.getStorageTables()));
       log.info("Updated fact table " + fact.getName());
+    } catch (HiveException e) {
+      throw new LensException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public void updateCubeSegmentation(LensSessionHandle sessionid, XCubeSegmentation cubeSeg) throws LensException {
+    try {
+      acquire(sessionid);
+      getClient(sessionid).alterCubeSegmentation(cubeSeg.getName(), cubeSegmentationFromXCubeSegmentation(cubeSeg));
+      log.info("Updated cube segmentation " + cubeSeg.getName());
     } catch (HiveException e) {
       throw new LensException(e);
     } finally {
@@ -550,6 +597,20 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
     } finally {
       release(sessionid);
     }
+  }
+
+  @Override
+  public void dropCubeSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException {
+    try {
+      acquire(sessionid);
+      getClient(sessionid).dropCubeSegmentation(cubeSegName);
+      log.info("Dropped cube segemntation " + cubeSegName);
+    } catch (HiveException e) {
+      throw new LensException(e);
+    } finally {
+      release(sessionid);
+    }
+
   }
 
   @Override
@@ -572,6 +633,29 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
     } finally {
       release(sessionid);
     }
+  }
+
+  @Override
+  public List<String> getAllCubeSegmentations(LensSessionHandle sessionid, String cubeName) throws LensException {
+    try {
+      acquire(sessionid);
+      CubeMetastoreClient client = getClient(sessionid);
+      CubeInterface seg = client.getCube(cubeName);
+      if (cubeName != null && seg == null) {
+        throw new LensException("Could not get table: " + cubeName + " as a cube");
+      }
+      Collection<CubeSegmentation> segs = client.getAllCubeSegmentations(seg);
+      List<String> segNames = new ArrayList<String>(segs.size());
+      for (CubeSegmentation cs : segs) {
+        segNames.add(cs.getName());
+      }
+      return segNames;
+    } catch (HiveException e) {
+      throw new LensException(e);
+    } finally {
+      release(sessionid);
+    }
+
   }
 
 

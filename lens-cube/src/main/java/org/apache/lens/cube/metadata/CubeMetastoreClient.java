@@ -80,6 +80,9 @@ public class CubeMetastoreClient {
   // map from fact name to fact table
   private final Map<String, CubeFactTable> allFactTables = Maps.newConcurrentMap();
   private volatile boolean allFactTablesPopulated = false;
+  //map from segmentation name to segmentation
+  private final Map<String, CubeSegmentation> allCubeSegmentations = Maps.newConcurrentMap();
+  private volatile boolean allCubeSegmentationPopulated = false;
   // map from storage name to storage
   private final Map<String, Storage> allStorages = Maps.newConcurrentMap();
   private volatile boolean allStoragesPopulated = false;
@@ -715,6 +718,24 @@ public class CubeMetastoreClient {
   }
 
   /**
+   *
+   * @param baseCubeName             The cube name ot which segmentation belong to
+   * @param segmentationName         The segmentation name
+   * @param cubeSegments             Participating cube segements
+   * @param weight                   Weight of segmentation
+   * @param properties               Properties of segmentation
+   * @throws HiveException
+   */
+  public void createCubeSegmentation(String baseCubeName, String segmentationName, Set<CubeSegment> cubeSegments,
+                                     double weight, Map<String, String> properties) throws HiveException {
+    CubeSegmentation cubeSeg =
+            new CubeSegmentation(baseCubeName, segmentationName, cubeSegments, weight, properties);
+    createCubeSegmentation(cubeSeg);
+    // do a get to update cache
+    getCubeSegmentation(segmentationName);
+  }
+
+  /**
    * Create a cube dimension table
    *
    * @param dimName           The dimension name to which the dim-table belongs to
@@ -775,6 +796,12 @@ public class CubeMetastoreClient {
         createOrAlterStorageHiveTable(cTable, entry.getKey(), entry.getValue());
       }
     }
+  }
+
+  public void createCubeSegmentation(CubeSegmentation cubeSeg)
+    throws HiveException {
+    // create virtual cube table in metastore
+    createCubeHiveTable(cubeSeg);
   }
 
   /**
@@ -1402,6 +1429,17 @@ public class CubeMetastoreClient {
     return CubeTableType.FACT.name().equals(tableType);
   }
 
+  public boolean isCubeSegmentation(String segName) throws HiveException {
+    Table tbl = getTable(segName);
+    return isCubeSegmentation(tbl);
+  }
+
+  boolean isCubeSegmentation(Table tbl) {
+    String tableType = tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY);
+    return CubeTableType.SEGMENTATION.name().equals(tableType);
+  }
+
+
   boolean isFactTableForCube(Table tbl, String cube) {
     return isFactTable(tbl) && CubeFactTable.getCubeName(tbl.getTableName(), tbl.getParameters())
       .equalsIgnoreCase(cube.toLowerCase());
@@ -1524,6 +1562,14 @@ public class CubeMetastoreClient {
 
   private CubeFactTable getFactTable(Table tbl) throws HiveException {
     return isFactTable(tbl) ? new CubeFactTable(tbl) : null;
+  }
+
+  public CubeSegmentation getCubeSegmentationTable(String tableName) throws HiveException {
+    return getCubeSegmentationTable(getTable(tableName));
+  }
+
+  private CubeSegmentation getCubeSegmentationTable(Table tbl) throws HiveException {
+    return isCubeSegmentation(tbl) ? new CubeSegmentation(tbl) : null;
   }
 
   /**
@@ -1690,6 +1736,25 @@ public class CubeMetastoreClient {
     return fact;
   }
 
+  public CubeSegmentation getCubeSegmentation(String segName) throws HiveException {
+    segName = segName.trim().toLowerCase();
+    CubeSegmentation seg = allCubeSegmentations.get(segName);
+    if (seg == null) {
+      synchronized (allCubeSegmentations) {
+        if (!allCubeSegmentations.containsKey(segName)) {
+          seg = getCubeSegmentationTable(segName);
+          if (enableCaching && seg != null) {
+            allCubeSegmentations.put(segName, seg);
+          }
+        } else {
+          seg = allCubeSegmentations.get(segName);
+        }
+      }
+    }
+    return seg;
+  }
+
+
   private CubeInterface getCube(Table tbl) throws HiveException {
     String parentCube = tbl.getParameters().get(getParentCubeNameKey(tbl.getTableName()));
     if (parentCube != null) {
@@ -1833,6 +1898,34 @@ public class CubeMetastoreClient {
     }
   }
 
+  /**
+   * Get all cube segmentations in metastore
+   *
+   * @return List of cube segmentation objects
+   * @throws HiveException
+   */
+  public Collection<CubeSegmentation> getAllCubeSegmentations() throws HiveException {
+    if (!allCubeSegmentationPopulated) {
+      List<CubeSegmentation> segs = new ArrayList<>();
+      try {
+        for (String table : getAllHiveTableNames()) {
+          CubeSegmentation seg = getCubeSegmentation(table);
+          if (seg != null) {
+            segs.add(seg);
+          }
+        }
+      } catch (HiveException e) {
+        throw new HiveException("Could not get all fact tables", e);
+      }
+      allFactTablesPopulated = enableCaching;
+      return segs;
+    } else {
+      return allCubeSegmentations.values();
+    }
+  }
+
+
+
   private Collection<String> getAllHiveTableNames() throws HiveException {
     if (!allTablesPopulated) {
       List<String> allTables = getClient().getAllTables();
@@ -1874,6 +1967,28 @@ public class CubeMetastoreClient {
     }
     return cubeFacts;
   }
+
+  public List<CubeSegmentation> getAllCubeSegmentations(CubeInterface cube) throws HiveException {
+    String cubeName = null;
+    if (cube != null) {
+      if (cube instanceof DerivedCube) {
+        cube = ((DerivedCube) cube).getParent();
+      }
+      cubeName = cube.getName();
+    }
+    List<CubeSegmentation> cubeSegs = new ArrayList<>();
+    try {
+      for (CubeSegmentation seg : getAllCubeSegmentations()) {
+        if (cubeName == null || seg.getBaseCube().equalsIgnoreCase(cubeName)) {
+          cubeSegs.add(seg);
+        }
+      }
+    } catch (HiveException e) {
+      throw new HiveException("Could not get all segmentations of " + cube, e);
+    }
+    return cubeSegs;
+  }
+
 
   /**
    * Get all derived cubes of the cube, that have all fields queryable together
@@ -2093,6 +2208,16 @@ public class CubeMetastoreClient {
     }
   }
 
+
+  public void dropCubeSegmentation(String segName) throws HiveException {
+    if (isCubeSegmentation(segName)) {
+      dropHiveTable(segName);
+      allCubeSegmentations.remove(segName.trim().toLowerCase());
+    } else {
+      throw new HiveException(segName + " is not a CubeSegmentation");
+    }
+  }
+
   /**
    * Drop a storage from fact
    *
@@ -2188,6 +2313,26 @@ public class CubeMetastoreClient {
       updateFactCache(factTableName);
     } else {
       throw new HiveException(factTableName + " is not a fact table");
+    }
+  }
+
+  public void alterCubeSegmentation(String segName, CubeSegmentation seg)
+    throws HiveException {
+    Table segTbl = getTable(segName);
+    if (isCubeSegmentation(segTbl)) {
+      if (!(getCubeSegmentation(segName) == seg)) {
+        dropCubeSegmentation(segName);
+        createCubeSegmentation(seg);
+        updateSegmentationCache(segName);
+      }
+    } else {
+      throw new HiveException(segName + " is not a cube segment");
+    }
+  }
+
+  private void updateSegmentationCache(String segmentName) throws HiveException {
+    if (enableCaching) {
+      allCubeSegmentations.put(segmentName.trim().toLowerCase(), getCubeSegmentationTable(refreshTable(segmentName)));
     }
   }
 

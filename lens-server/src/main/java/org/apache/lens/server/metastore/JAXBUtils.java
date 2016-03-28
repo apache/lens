@@ -490,6 +490,34 @@ public final class JAXBUtils {
     return xpList;
   }
 
+  public static Set<XCubeSegment> xCubeSegmentsFromCubeSegments(Set<CubeSegment> segs) {
+    Set<XCubeSegment> xsegs = new HashSet<XCubeSegment>();
+    if (segs != null && !segs.isEmpty()) {
+      for (CubeSegment seg : segs) {
+        XCubeSegment xcubeSeg = XCF.createXCubeSegment();
+        xcubeSeg.setCubeName(seg.getName());
+        xcubeSeg.setSegmentParameters(getXpropertiesFromCubeSegment(seg));
+        xsegs.add(xcubeSeg);
+      }
+    }
+    return xsegs;
+  }
+
+  public static XProperties getXpropertiesFromCubeSegment(CubeSegment  cseg) {
+    XProperties xproperties = XCF.createXProperties();
+    for (String prop : cseg.getProperties().keySet()) {
+      String segPrefix = MetastoreUtil.getSegmentPropertyKey(cseg.getName());
+      if (prop.startsWith(segPrefix)){
+        XProperty xprop = XCF.createXProperty();
+        xprop.setName(prop.replace(segPrefix, ""));
+        xprop.setValue(cseg.getProperties().get(prop));
+        xproperties.getProperty().add(xprop);
+      }
+    }
+    return xproperties;
+  }
+
+
   public static FieldSchema fieldSchemaFromColumn(XColumn c) {
     if (c == null) {
       return null;
@@ -659,6 +687,24 @@ public final class JAXBUtils {
       mapFromXProperties(fact.getProperties()));
   }
 
+  public static CubeSegmentation cubeSegmentationFromXCubeSegmentation(XCubeSegmentation seg) throws LensException {
+
+    Map<String, String> props = new HashMap<>();
+    // Skip properties with keyword internal. These properties are internal to lens
+    // and users are not supposed to see them.
+    for(String prop : mapFromXProperties(seg.getProperties()).keySet()) {
+      if (!(prop.toLowerCase().startsWith(MetastoreConstants.SEGMENTATION_KEY_PFX))) {
+        props.put(prop, mapFromXProperties(seg.getProperties()).get(prop));
+      }
+    }
+    return new CubeSegmentation(seg.getCubeName(),
+            seg.getName(),
+            cubeSegmentsFromXCubeSegments(seg.getCubeSegements()),
+            seg.getWeight(),
+            props);
+  }
+
+
   public static XFactTable factTableFromCubeFactTable(CubeFactTable cFact) {
     XFactTable fact = XCF.createXFactTable();
     fact.setName(cFact.getName());
@@ -671,6 +717,21 @@ public final class JAXBUtils {
     fact.setWeight(cFact.weight());
     fact.setCubeName(cFact.getCubeName());
     return fact;
+  }
+
+  public static XCubeSegmentation xsegmentationFromCubeSegmentation(CubeSegmentation cSeg) {
+    XCubeSegmentation seg = XCF.createXCubeSegmentation();
+    seg.setName(cSeg.getName());
+    seg.setProperties(new XProperties());
+    seg.setCubeSegements(new XCubeSegments());
+    seg.setWeight(cSeg.weight());
+    seg.setCubeName(cSeg.getBaseCube());
+    if (xPropertiesFromMap(cSeg.getProperties()) != null) {
+      seg.getProperties().getProperty().addAll(xPropertiesFromMap(cSeg.getProperties()));
+    }
+    seg.getCubeSegements().getCubeSegment().
+            addAll(xCubeSegmentsFromCubeSegments(cSeg.getCubeSegments()));
+    return seg;
   }
 
   public static StorageTableDesc storageTableDescFromXStorageTableDesc(
@@ -768,6 +829,20 @@ public final class JAXBUtils {
       }
     }
     return storageTableMap;
+  }
+
+  public static Set<CubeSegment> cubeSegmentsFromXCubeSegments(XCubeSegments segs) {
+    Set<CubeSegment> cubeSegs = new HashSet<>();
+    for (XCubeSegment xcube : segs.getCubeSegment()){
+      Map<String, String> segProp = new HashMap<>();
+      if (xcube.getSegmentParameters() != null) {
+        for (XProperty prop : xcube.getSegmentParameters().getProperty()) {
+          segProp.put(prop.getName(), prop.getValue());
+        }
+      }
+      cubeSegs.add(new CubeSegment(xcube.getCubeName(), segProp));
+    }
+    return cubeSegs;
   }
 
   public static Map<String, Date> timePartSpecfromXTimePartSpec(

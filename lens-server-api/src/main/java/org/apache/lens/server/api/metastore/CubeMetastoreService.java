@@ -570,4 +570,53 @@ public interface CubeMetastoreService extends LensService {
 
   void updatePartitions(LensSessionHandle sessionid, String tblName, String storageName,
     XPartitionList partitions) throws LensException;
+
+  /**
+   *
+   * @param sessionid         The session id
+   * @param cubeSeg           The cube segmentation
+   * @throws LensException
+   */
+  void createCubeSegmentation(LensSessionHandle sessionid, XCubeSegmentation cubeSeg) throws LensException;
+
+  /**
+   * Create cube segmentation
+   *
+   * @param sessionid                    The session id
+   * @param segName                      Cube segmentation name
+   * @return {@link XCubeSegmentation}
+   * @throws LensException
+   */
+  XCubeSegmentation getCubeSegmentation(LensSessionHandle sessionid, String segName) throws LensException;
+
+  /**
+   * Get cube segmentation given by name
+   *
+   * @param sessionid        The session id
+   * @param cubeSeg          The cube segmentation
+   * @throws LensException
+   */
+
+  void updateCubeSegmentation(LensSessionHandle sessionid, XCubeSegmentation cubeSeg) throws LensException;
+
+  /**
+   * Update cube segmentation
+   *
+   * @param sessionid      The session id
+   * @param cubeSegName    Cube segmentation name
+   * @throws LensException
+   */
+  void dropCubeSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException;
+
+  /**
+   * Get all cube segmentations belong to Cube
+   *
+   * @param sessionid    The session id
+   * @param cubeName     The cube Name
+   * @return
+   * @throws LensException
+   */
+  List<String> getAllCubeSegmentations(LensSessionHandle sessionid, String cubeName) throws LensException;
+
+
 }

@@ -323,22 +323,6 @@ public class CubeFactTable extends AbstractCubeTable {
     getProperties().put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, Boolean.toString(isAggregated));
   }
 
-  public Date getDateFromProperty(String propKey, boolean relative, boolean start) {
-    String prop = getProperties().get(propKey);
-    try {
-      if (StringUtils.isNotBlank(prop)) {
-        if (relative) {
-          return DateUtil.resolveRelativeDate(prop, now());
-        } else {
-          return DateUtil.resolveAbsoluteDate(prop);
-        }
-      }
-    } catch (LensException e) {
-      log.error("unable to parse {} {} date: {}", relative ? "relative" : "absolute", start ? "start" : "end", prop);
-    }
-    return start ? DateUtil.MIN_DATE : DateUtil.MAX_DATE;
-  }
-
   public Date getAbsoluteStartTime() {
     return getDateFromProperty(MetastoreConstants.FACT_ABSOLUTE_START_TIME, false, true);
   }
@@ -363,7 +347,5 @@ public class CubeFactTable extends AbstractCubeTable {
     return Collections.min(Lists.newArrayList(getRelativeEndTime(), getAbsoluteEndTime()));
   }
 
-  public Date now() {
-    return new Date();
-  }
+
 }
