@@ -26,6 +26,7 @@ import javax.ws.rs.ProcessingException;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
+import org.apache.lens.cli.config.LensCliConfigConstants;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientConfig;
 
@@ -43,7 +44,9 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.Context;
+
 import com.google.common.base.Joiner;
+
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,7 +73,7 @@ public class LensConnectionCommands extends BaseLensCommand {
     if (pair.length != 2) {
       return "Error: Pass parameter as <key>=<value>";
     }
-    if (pair[0].startsWith(LENS_CLI_PREFIX) || pair[0].startsWith(LensClientConfig.CLIENT_PFX)) {
+    if (pair[0].startsWith(LensCliConfigConstants.LENS_CLI_PREFIX) || pair[0].startsWith(LensClientConfig.CLIENT_PFX)) {
       getClient().getConf().set(pair[0], pair[1]);
       return "Client side Set " + pair[0] + "=" + pair[1];
     } else {

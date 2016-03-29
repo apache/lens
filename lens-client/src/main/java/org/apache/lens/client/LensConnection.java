@@ -311,7 +311,7 @@ public class LensConnection {
     return value.getElements();
   }
 
-  LensConnectionParams getLensConnectionParams() {
+  public LensConnectionParams getLensConnectionParams() {
     return this.params;
   }
 

@@ -26,16 +26,18 @@ Lens client configuration
 *--+--+---+--+
 |1|lens.cli.json.pretty|false|Should CLI try to prettify the JSON of an object before priting.|
 *--+--+---+--+
-|2|lens.client.dbname|default|Default lens database|
+|2|lens.cli.query.execute.timeout.millis|10000|This property defines the timeout value when sync or --async false option is used to execute a query. The default value is 10 seconds.|
 *--+--+---+--+
-|3|lens.client.query.poll.interval|10|Interval at which query progress will be polled. Interval has to be given in milliseconds|
+|3|lens.client.dbname|default|Default lens database|
 *--+--+---+--+
-|4|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
+|4|lens.client.query.poll.interval|10000|Interval at which query progress will be polled. Interval has to be given in milliseconds|
 *--+--+---+--+
-|5|lens.client.user.name|anonymous|Lens client user name|
+|5|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
 *--+--+---+--+
-|6|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+|6|lens.client.user.name|anonymous|Lens client user name|
 *--+--+---+--+
-|7|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
+|7|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+*--+--+---+--+
+|8|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
 *--+--+---+--+
 The configuration parameters and their default values
