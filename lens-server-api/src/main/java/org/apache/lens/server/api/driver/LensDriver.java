@@ -215,8 +215,8 @@ public interface LensDriver extends Externalizable {
   /**
    * decide priority based on query's cost. The cost should be already computed by estimate call, but it's
    * not guaranteed to be pre-computed. It's up to the driver to do an on-demand computation of cost.
-   * @see QueryContext#decidePriority(LensDriver, QueryPriorityDecider) that handles this on-demand computation.
+   * @see AbstractQueryContext#decidePriority(LensDriver, QueryPriorityDecider) that handles this on-demand computation.
    * @param queryContext
    */
-  Priority decidePriority(QueryContext queryContext);
+  Priority decidePriority(AbstractQueryContext queryContext);
 }

@@ -28,16 +28,16 @@ let totalRecords = 0;
 let CHANGE_EVENT = 'change';
 
 function receiveSavedQueries (payload) {
-  payload && payload.resoures.forEach(query => {
+  payload && payload.listResponse && payload.listResponse.resoures.forEach(query => {
     savedQueries[query.id] = query;
   });
 
-  totalRecords = payload && payload.totalCount;
+  totalRecords = payload.listResponse && payload.listResponse.totalCount;
 }
 
 function receiveSavedQuery (payload) {
   if (!savedQueries[payload.id]) totalRecords++;
-  savedQueries[payload.id] = payload;
+  savedQueries[payload.id] = payload.savedQuery;
 }
 
 let SavedQueryStore = assign({}, EventEmitter.prototype, {

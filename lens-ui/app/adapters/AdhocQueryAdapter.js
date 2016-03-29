@@ -37,17 +37,17 @@ let urls = {
 let AdhocQueryAdapter = {
   getDatabases (secretToken) {
     let url = baseUrl + urls.getDatabases;
-    return BaseAdapter.get(url, { sessionid: secretToken });
+    return BaseAdapter.get(url + '?sessionid=' + secretToken);
   },
 
   getCubes (secretToken) {
     let url = baseUrl + urls.getCubes;
-    return BaseAdapter.get(url, { sessionid: secretToken });
+    return BaseAdapter.get(url + '?sessionid=' + secretToken);
   },
 
   getCubeDetails (secretToken, cubeName) {
     let url = baseUrl + urls.getCubes + '/' + cubeName;
-    return BaseAdapter.get(url, { sessionid: secretToken });
+    return BaseAdapter.get(url + '?sessionid=' + secretToken);
   },
 
   executeQuery (secretToken, query, queryName) {
@@ -56,66 +56,82 @@ let AdhocQueryAdapter = {
     let formData = new FormData();
     formData.append('sessionid', secretToken);
     formData.append('query', query);
-    formData.append('operation', 'execute');
+    formData.append('operation', 'EXECUTE');
+    formData.append('conf',
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><conf></conf>');
 
     if (queryName) formData.append('queryName', queryName);
 
     return BaseAdapter.post(url, formData, {
-      contentType: 'multipart/form-data'
+      headers: {
+        'Accept': 'application/json'
+      }
     });
   },
 
   saveQuery (secretToken, user, query, options) {
-    let url = baseUrl + urls.saveQuery;
     let queryToBeSaved = {
-      owner: user,
-      name: options.name || '',
-      query: query,
-      description: options.description || '',
-      parameters: options.parameters || []
+      savedQuery: {
+        name: options.name || '',
+        query: query,
+        description: options.description || '',
+        parameters: options.parameters || []
+      }
     };
-
-    return BaseAdapter.post(url, queryToBeSaved);
+    let url = baseUrl + urls.saveQuery + '?sessionid=' + secretToken;
+    return BaseAdapter.post(url, JSON.stringify(queryToBeSaved), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
   },
 
   updateSavedQuery (secretToken, user, query, options, id) {
     let url = baseUrl + urls.saveQuery + '/' + id;
     let queryToBeSaved = {
-      owner: user,
-      name: options.name || '',
-      query: query,
-      description: options.description || '',
-      parameters: options.parameters || []
+      savedQuery: {
+        owner: user,
+        name: options.name || '',
+        query: query,
+        description: options.description || '',
+        parameters: options.parameters || []
+      }
     };
 
-    return BaseAdapter.put(url, queryToBeSaved);
+    return BaseAdapter.put(url, JSON.stringify(queryToBeSaved), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
   },
 
   getQuery (secretToken, handle) {
     let url = baseUrl + urls.query + '/' + handle;
-    return BaseAdapter.get(url, {sessionid: secretToken});
+    return BaseAdapter.get(url + '?sessionid=' + secretToken);
   },
 
   getQueries (secretToken, email, options) {
-    let url = baseUrl + urls.query;
-
     let queryOptions = {};
     queryOptions.sessionid = secretToken;
     queryOptions.user = email;
-
+    var state;
     if (options && options.state) {
-      queryOptions.state = options.state.toUpperCase();
+      state = options.state.toUpperCase();
     }
-
-    return BaseAdapter.get(url, queryOptions)
+    let handlesUrl = baseUrl + urls.query + '?sessionid=' + secretToken + '&user=' +
+      email;
+    if (state) handlesUrl += '&state=' + state;
+    return BaseAdapter.get(handlesUrl)
       .then(function (queryHandles) {
         // FIXME limiting to 10 for now
         // let handles = queryHandles.slice(0, 10);
-        return Promise.all(queryHandles.map((handle) => {
-          return BaseAdapter.get(url + '/' + handle.handleId, {
-            sessionid: secretToken,
-            queryHandle: handle.handleId
-          });
+        return Promise.all(queryHandles.map((q) => {
+          let queryUrl = baseUrl + urls.query + '/' + q.queryHandle.handleId +
+            '?sessionid=' + secretToken + '&queryHandle=' + q.queryHandle.handleId;
+
+          return BaseAdapter.get(queryUrl);
         }));
       });
   },
@@ -142,15 +158,12 @@ let AdhocQueryAdapter = {
 
   getTables (secretToken, database) {
     let url = baseUrl + urls.getTables;
-    return BaseAdapter.get(url, {
-      sessionid: secretToken,
-      dbName: database
-    });
+    return BaseAdapter.get(url + '?sessionid=' + secretToken + '&dbName=' + database);
   },
 
   getTableDetails (secretToken, tableName, database) {
     let url = baseUrl + urls.getTables + '/' + database + '.' + tableName;
-    return BaseAdapter.get(url, { sessionid: secretToken });
+    return BaseAdapter.get(url + '?sessionid=' + secretToken);
   },
 
   cancelQuery (secretToken, handle) {
@@ -167,31 +180,25 @@ let AdhocQueryAdapter = {
 
   getSavedQueryById (secretToken, id) {
     let url = baseUrl + urls.saveQuery + '/' + id;
-    return BaseAdapter.get(url, {sessionid: secretToken});
+    return BaseAdapter.get(url + '?sessionid=' + secretToken);
   },
 
   getInMemoryResults (secretToken, handle) {
     let resultUrl = baseUrl + urls.query + '/' + handle + '/resultset';
-    let results = BaseAdapter.get(resultUrl, {
-      sessionid: secretToken
-    });
+    let results = BaseAdapter.get(resultUrl + '?sessionid=' + secretToken);
 
     let metaUrl = baseUrl + urls.query + '/' + handle + '/resultsetmetadata';
-    let meta = BaseAdapter.get(metaUrl, {
-      sessionid: secretToken
-    });
+    let meta = BaseAdapter.get(metaUrl + '?sessionid=' + secretToken);
 
     return Promise.all([results, meta]);
   },
 
   getSavedQueries (secretToken, user, options = {}) {
     let url = baseUrl + urls.getSavedQueries;
-    return BaseAdapter.get(url, {
-      user: user,
-      sessionid: secretToken,
-      start: options.offset || 0,
-      count: options.pageSize || 10
-    });
+    return BaseAdapter.get(
+      url + '?user=' + user + '&sessionid=' + secretToken + '&start=' +
+      (options.offset || 0) + '&count=' + (options.pageSize || 10)
+    );
   },
 
   getParams (secretToken, query) {
@@ -209,10 +216,10 @@ let AdhocQueryAdapter = {
 
     let formData = new FormData();
     formData.append('sessionid', secretToken);
+    formData.append('conf',
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><conf></conf>');
 
-    return BaseAdapter.post(url, formData, {
-      contentType: 'multipart/form-data'
-    });
+    return BaseAdapter.post(url, formData);
   }
 };
 

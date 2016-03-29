@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
@@ -35,7 +34,6 @@ import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
-import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -63,12 +61,6 @@ public class QueryContext extends AbstractQueryContext {
   @Getter
   @Setter
   private QueryHandle queryHandle;
-
-  /**
-   * The priority.
-   */
-  @Getter
-  private Priority priority;
 
   /**
    * The is persistent.
@@ -324,7 +316,7 @@ public class QueryContext extends AbstractQueryContext {
    * @return the lens query
    */
   public LensQuery toLensQuery() {
-    return new LensQuery(queryHandle, userQuery, super.getSubmittedUser(), priority, isPersistent,
+    return new LensQuery(queryHandle, userQuery, super.getSubmittedUser(), getPriority(), isPersistent,
       getSelectedDriver() != null ? getSelectedDriver().getFullyQualifiedName() : null,
       getSelectedDriverQuery(),
       status,
@@ -335,10 +327,10 @@ public class QueryContext extends AbstractQueryContext {
   public boolean isResultAvailableInDriver() {
     // result is available in driver if driverStatus.isResultSetAvailable() - will be true for fetching inmemory
     // result set.
-    // if result is persisted in driver driverStatus.isResultSetAvailable() will be false
-    // so, for select queries, if result is persisted in driver, we return true sothat the result can be fetched thru
-    // persistent resultset
-    return isDriverPersistent() || driverStatus.isResultSetAvailable();
+    // if result is persisted in driver driverStatus.isResultSetAvailable() will be false but isDriverPersistent will
+    // be true. So, for select queries, if result is persisted in driver, we return true so that the result can be
+    //  fetched thru persistent resultset
+    return driverStatus.isSuccessful() && (isDriverPersistent() || driverStatus.isResultSetAvailable());
   }
 
   /**
@@ -448,21 +440,6 @@ public class QueryContext extends AbstractQueryContext {
 
   public ImmutableSet<WaitingQueriesSelectionPolicy> getSelectedDriverSelectionPolicies() {
     return getSelectedDriver().getWaitingQuerySelectionPolicies();
-  }
-
-  public Priority decidePriority(LensDriver driver, QueryPriorityDecider queryPriorityDecider) throws LensException {
-    // On-demand re-computation of cost, in case it's not alredy set by a previous estimate call.
-    // In driver test cases, estimate doesn't happen. Hence this code path ensures cost is computed and
-    // priority is set based on correct cost.
-    calculateCost(driver);
-    priority = queryPriorityDecider.decidePriority(getDriverQueryCost(driver));
-    return priority;
-  }
-
-  private void calculateCost(LensDriver driver) throws LensException {
-    if (getDriverQueryCost(driver) == null) {
-      setDriverCost(driver, driver.estimate(this));
-    }
   }
 
   public synchronized void registerDriverResult(LensResultSet result) throws LensException {

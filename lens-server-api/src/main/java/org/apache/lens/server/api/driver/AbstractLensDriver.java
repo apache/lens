@@ -21,10 +21,10 @@ package org.apache.lens.server.api.driver;
 import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.hadoop.conf.Configuration;
 
 import lombok.Getter;
@@ -98,9 +98,8 @@ public abstract class AbstractLensDriver implements LensDriver {
   }
 
   @Override
-  public Priority decidePriority(QueryContext queryContext) {
-    // no-op by default
-    return null;
+  public Priority decidePriority(AbstractQueryContext queryContext) {
+    return Priority.NORMAL;
   }
 
   @Override

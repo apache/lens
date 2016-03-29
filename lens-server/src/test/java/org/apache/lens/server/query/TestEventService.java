@@ -540,7 +540,7 @@ public class TestEventService {
 
   private static class DummyAsncEventListener extends AsyncEventListener<QuerySuccess> {
     public DummyAsncEventListener(){
-      super(5, 10); //core pool = 5 and max Pool size =10
+      super(5); //core pool = 5
     }
     @Override
     public void process(QuerySuccess event) {

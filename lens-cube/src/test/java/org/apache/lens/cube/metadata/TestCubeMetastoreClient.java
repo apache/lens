@@ -980,6 +980,53 @@ public class TestCubeMetastoreClient {
     assertFalse(client.latestPartitionExists(cubeFact.getName(), c1, getDatePartitionKey()));
   }
 
+  @Test(priority = 1)
+  public void testCubeSegmentation() throws Exception {
+    String segmentName = "testMetastoreCubeSegmentation";
+
+    Table cubeTbl = client.getHiveTable(CUBE_NAME);
+    assertTrue(client.isCube(cubeTbl));
+
+    Map<String, String> props = new HashMap<String, String>(){{put("foo", "bar"); }};
+    Map<String, String> prop1 = new HashMap<String, String>(){{put("foo1", "bar1"); put("foo11", "bar11"); }};
+    Map<String, String> prop2 = new HashMap<String, String>(){{put("foo2", "bar2"); }};
+    Map<String, String> prop3 = new HashMap<String, String>(){{put("foo3", "bar3"); }};
+    Map<String, String> prop5 = new HashMap<String, String>(){{put("foo5", "bar5"); }};
+
+    CubeSegment seg1 = new CubeSegment("cube1", prop1);
+    CubeSegment seg2 = new CubeSegment("cube2", prop2);
+    CubeSegment seg3 = new CubeSegment("cube3", prop3);
+    CubeSegment seg5 = new CubeSegment("cube5", prop5);
+
+    Set<CubeSegment> cubeSegs = Sets.newHashSet(seg1, seg2, seg3);
+
+    //create cube segmentation
+    client.createCubeSegmentation(CUBE_NAME, segmentName, cubeSegs, 0L, props);
+    assertEquals(client.getCubeSegmentation(segmentName).getCubeSegments().size(), 3);
+
+    //Alter cube segmentation
+    CubeSegmentation segmentation = new CubeSegmentation(Hive.get(conf).getTable(segmentName));
+    segmentation.addCubeSegment(seg5);
+    segmentation.addProperties(new HashMap<String, String>(){{put("new_key", "new_val"); }});
+    segmentation.alterBaseCubeName("segCubeAltered");
+    segmentation.alterWeight(100.0);
+    client.alterCubeSegmentation(segmentName, segmentation);
+
+    assertNotNull(client.getCubeSegmentation(segmentName));
+    assertEquals(client.getCubeSegmentation(segmentName).getCubeSegments().size(), 4);
+    assertEquals(client.getCubeSegmentation(segmentName).getBaseCube(), "segCubeAltered");
+    assertEquals(client.getCubeSegmentation(segmentName).weight(), 100.0);
+
+    //drop cubesegment to segmentation
+    segmentation.dropCubeSegment(seg5);
+    client.alterCubeSegmentation(segmentName, segmentation);
+    assertEquals(client.getCubeSegmentation(segmentName).getCubeSegments().size(), 3);
+
+    //drop segmentation
+    client.dropCubeSegmentation(segmentName);
+    assertFalse(client.tableExists(segmentName));
+  }
+
   private void assertRangeValidityForStorageTable(String storageTable) throws HiveException, LensException {
     Object[][] testCases = new Object[][] {
       {"now - 15 days", "now - 11 days", false},

@@ -130,7 +130,7 @@ class TableTree extends React.Component {
           {table.isLoaded ? table.columns.map(col => {
             return (
               <div className='treeNode' key={table.name + '|' + col.name}>
-                {col.name} ({col.type})
+                {col.name} ({col._type})
               </div>
             );
           }) : <Loader size='4px' margin='2px' />}

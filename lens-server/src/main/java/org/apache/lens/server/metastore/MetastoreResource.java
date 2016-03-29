@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
  * This provides api for all things metastore.
  */
 @Path("metastore")
-@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 @Slf4j
 public class MetastoreResource {
   public static final ObjectFactory X_CUBE_OBJECT_FACTORY = new ObjectFactory();
@@ -142,7 +142,23 @@ public class MetastoreResource {
           getSvc().dropFactTable(sessionid, entityName, cascade);
         }
       }
-    }, DIMENSION {
+    },
+    SEGMENTATION {
+      @Override
+      public List<String> doGetAll(LensSessionHandle sessionid) throws LensException {
+        return getSvc().getAllCubeSegmentations(sessionid, null);
+      }
+
+      @Override
+      public void doDelete(LensSessionHandle sessionid, String entityName, Boolean cascade) throws LensException {
+        if (cascade == null) {
+          getSvc().dropCubeSegmentation(sessionid, entityName);
+        } else {
+          throw new NotImplementedException();
+        }
+      }
+    }
+    , DIMENSION {
       @Override
       public List<String> doGetAll(LensSessionHandle sessionid) throws LensException {
         return getSvc().getAllDimensionNames(sessionid);
@@ -791,6 +807,28 @@ public class MetastoreResource {
   }
 
   /**
+   * Get all cube segmentations that belong to a cube in the metastore
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param cubeName  name of the base cube or derived cube
+   * @return List of {@link XCubeSegmentation} objects
+   */
+  @GET
+  @Path("/cubes/{cubeName}/cubesegmentations")
+  public StringList getAllCubeSegmentationsOfCube(
+    @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("cubeName") String cubeName)
+    throws LensException {
+    checkSessionId(sessionid);
+    try {
+      return new StringList(getSvc().getAllCubeSegmentations(sessionid, cubeName));
+    } catch (LensException exc) {
+      checkTableNotFound(exc, cubeName);
+      throw exc;
+    }
+  }
+
+
+  /**
    * Get all fact tables in the metastore in the current database
    *
    * @param sessionid The sessionid in which user is working
@@ -802,6 +840,22 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     return Entity.FACT.getAll(sessionid);
   }
+
+
+  /**
+   * Get all cube segmentations in the current database
+   *
+   * @param sessionid The sessionid in which user is working
+   * @return StringList consisting of all cube segmentations
+   */
+  @GET
+  @Path("/cubesegmentations")
+  public StringList getAllCubeSegmentations(@QueryParam("sessionid") LensSessionHandle sessionid)
+    throws LensException {
+    checkSessionId(sessionid);
+    return Entity.SEGMENTATION.getAll(sessionid);
+  }
+
 
   /**
    * Delete all fact tables
@@ -817,6 +871,19 @@ public class MetastoreResource {
   public APIResult deleteAllFacts(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("false") @QueryParam("cascade") boolean cascade) {
     return Entity.FACT.deleteAll(sessionid, cascade);
+  }
+
+  /**
+   * Delete all cube segmentations
+   *
+   * @param sessionid The sessionid in which user is working
+   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete. APIResult with state {@link
+   * Status#FAILED} in case of delete failure. APIResult with state {@link Status#PARTIAL} in case of partial delete.
+   */
+  @DELETE
+  @Path("cubesegmentations")
+  public APIResult deleteAllCubeSegmentations(@QueryParam("sessionid") LensSessionHandle sessionid) {
+    return Entity.SEGMENTATION.deleteAll(sessionid, null);
   }
 
   /**
@@ -836,6 +903,28 @@ public class MetastoreResource {
       return X_CUBE_OBJECT_FACTORY.createXFactTable(getSvc().getFactTable(sessionid, factName));
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
+      throw exc;
+    }
+  }
+
+  /**
+   * Get the cube segmentation specified by name
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param cubeSegmentationName  The cube segmentation name
+   * @return JAXB representation of {@link XCubeSegmentation}
+   */
+  @GET
+  @Path("/cubesegmentations/{cubeSegmentationName}")
+  public JAXBElement<XCubeSegmentation> getCubeSegmentation(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("cubeSegmentationName") String cubeSegmentationName)
+    throws LensException {
+    checkSessionId(sessionid);
+    try {
+      return X_CUBE_OBJECT_FACTORY.createXCubeSegmentation(getSvc().
+              getCubeSegmentation(sessionid, cubeSegmentationName));
+    } catch (LensException exc) {
+      checkTableNotFound(exc, cubeSegmentationName);
       throw exc;
     }
   }
@@ -864,6 +953,30 @@ public class MetastoreResource {
   }
 
   /**
+   * Create a new cube segmentation
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param seg      The {@link XCubeSegmentation} representation of the cube segmentation
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if create has failed
+   */
+  @POST
+  @Path("/cubesegmentations")
+  public APIResult createCubeSegmentation(@QueryParam("sessionid") LensSessionHandle sessionid, XCubeSegmentation seg)
+    throws LensException {
+    checkSessionId(sessionid);
+    try {
+      log.info("Create cube segmentation");
+      getSvc().createCubeSegmentation(sessionid, seg);
+    } catch (LensException exc) {
+      log.error("Exception creating cube segmentation:", exc);
+      return failure(processLensException(exc));
+    }
+    return success();
+  }
+
+
+  /**
    * Update fact table definition
    *
    * @param sessionid The sessionid in which user is working
@@ -889,6 +1002,31 @@ public class MetastoreResource {
   }
 
   /**
+   * Update cube segmentation
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param cubeSegmentationName  name of cube segmentation
+   * @param seg      The {@link XCubeSegmentation} representation of the updated fact table definition
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if update has failed
+   */
+  @PUT
+  @Path("/cubesegmentations/{cubeSegmentationName}")
+  public APIResult updateCubeSegmentation(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("cubeSegmentationName") String cubeSegmentationName, XCubeSegmentation seg)
+    throws LensException {
+    checkSessionId(sessionid);
+    try {
+      getSvc().updateCubeSegmentation(sessionid, seg);
+    } catch (LensException exc) {
+      checkTableNotFound(exc, cubeSegmentationName);
+      log.error("Error updating segmentation {}", cubeSegmentationName, exc);
+      return failure(processLensException(exc));
+    }
+    return success();
+  }
+
+  /**
    * Drop the fact table, specified by name
    *
    * @param sessionid The sessionid in which user is working
@@ -904,6 +1042,23 @@ public class MetastoreResource {
     @DefaultValue("false") @QueryParam("cascade") boolean cascade)
     throws LensException {
     return Entity.FACT.delete(sessionid, factName, cascade);
+  }
+
+
+  /**
+   * Drop the cube segmentation, specified by name
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param cubeSegmentationName  The cube segmentation name
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
+   */
+  @DELETE
+  @Path("/cubesegmentations/{cubeSegmentationName}")
+  public APIResult dropCubeSegmentation(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("cubeSegmentationName") String cubeSegmentationName)
+    throws LensException {
+    return Entity.SEGMENTATION.delete(sessionid, cubeSegmentationName, null);
   }
 
   /**

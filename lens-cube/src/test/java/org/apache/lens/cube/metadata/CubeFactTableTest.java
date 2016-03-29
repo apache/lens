@@ -64,6 +64,7 @@ public class CubeFactTableTest {
 
   private CubeFactTable getMockCubeFactTable(Map<String, String> properties) {
     CubeFactTable cubeFactTable = mock(CubeFactTable.class);
+
     when(cubeFactTable.now()).thenReturn(now);
 
     when(cubeFactTable.getProperties()).thenReturn(properties);

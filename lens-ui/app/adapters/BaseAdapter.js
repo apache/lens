@@ -17,45 +17,20 @@
 * under the License.
 */
 
-import reqwest from 'qwest';
-import Promise from 'bluebird';
-
 import Config from 'config.json';
-import XMLAdapter from './XMLAdapter';
+import fetch from 'isomorphic-fetch';
 
 function makeReqwest (url, method, data, options = {}) {
-  let reqwestOptions = { headers: {}, timeout: 200000 }; // a large enough for native tables
-  if (Config.headers) reqwestOptions.headers = Config.headers;
-  reqwestOptions.responseType = !options.contentType ? 'json' : 'document';
+  if (!options.headers) options.headers = {};
+  options.headers['Accept'] = 'application/json';
 
-  if (reqwestOptions.responseType !== 'document') {
-    if (method === 'post' || method === 'put') reqwestOptions.dataType = 'json';
-  } else {
-    delete reqwestOptions.headers['Content-Type'];
-  }
-
-  return new Promise((resolve, reject) => {
-    reqwest[method](url, data, reqwestOptions)
-      .then((response) => {
-        response = reqwestOptions.responseType === 'json' ?
-          response.response :
-          XMLAdapter.stringToXML(response.response);
-
-        resolve(response);
-      }, (error) => {
-        let response = error.responseType !== 'json' ?
-          XMLAdapter.stringToXML(error.response) :
-          error.response;
-
-        if (!response) {
-          response = {
-            status: error.status,
-            statusText: error.statusText
-          };
-        }
-
-        reject(response);
-      }).catch(e => console.error(e));
+  return fetch(url, {
+    method: method,
+    body: data,
+    headers: options.headers
+  }).then(function (response) {
+    if (!response.ok) return response.json().then(e => Promise.reject(e));
+    return response.json();
   });
 }
 

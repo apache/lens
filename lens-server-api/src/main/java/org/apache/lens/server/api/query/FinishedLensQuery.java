@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.lens.api.LensConf;
+import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.driver.LensDriver;
@@ -30,6 +31,7 @@ import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.ImmutableSet;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -168,6 +170,10 @@ public class FinishedLensQuery {
   @Getter
   private LensDriver selectedDriver;
 
+  @Getter
+  @Setter
+  private String priority;
+
   /**
    * Instantiates a new finished lens query.
    */
@@ -199,6 +205,10 @@ public class FinishedLensQuery {
     if (null != ctx.getSelectedDriver()) {
       this.driverName = ctx.getSelectedDriver().getFullyQualifiedName();
     }
+    //Priority can be null in case no driver is fit to execute a query and launch fails.
+    if (null != ctx.getPriority()) {
+      this.priority = ctx.getPriority().toString();
+    }
   }
 
   public QueryContext toQueryContext(Configuration conf, Collection<LensDriver> drivers) {
@@ -220,6 +230,9 @@ public class FinishedLensQuery {
     qctx.getDriverStatus().setDriverFinishTime(getDriverEndTime());
     qctx.setResultSetPath(getResult());
     qctx.setQueryName(getQueryName());
+    if (getPriority() != null) {
+      qctx.setPriority(Priority.valueOf(getPriority()));
+    }
     return qctx;
   }
 

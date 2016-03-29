@@ -25,8 +25,9 @@ import { EventEmitter } from 'events';
 function receiveDatabases (payload) {
   databases = [];
 
-  databases = payload.databases.elements &&
-    payload.databases.elements.slice();
+  databases = payload.databases.stringList &&
+    payload.databases.stringList.elements &&
+    payload.databases.stringList.elements.slice();
 }
 
 let CHANGE_EVENT = 'change';

@@ -95,8 +95,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
   private final LogSegregationContext logSegregationContext;
 
   /** QueryEndNotifier core and max pool size */
-  private static final int CORE_POOL_SIZE = 2;
-  private static final int MAX_POOL_SIZE = 5;
+  private static final int CORE_POOL_SIZE = 5;
 
   /** Instantiates a new query end notifier.
    *
@@ -104,7 +103,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
    * @param hiveConf     the hive conf */
   public QueryEndNotifier(QueryExecutionServiceImpl queryService, HiveConf hiveConf,
     @NonNull final LogSegregationContext logSegregationContext) {
-    super(CORE_POOL_SIZE, MAX_POOL_SIZE);
+    super(CORE_POOL_SIZE);
     this.queryService = queryService;
     HiveConf conf = hiveConf;
     from = conf.get(MAIL_FROM_ADDRESS);

@@ -76,7 +76,7 @@ public class MetastoreUIResource {
    */
   @GET
   @Path("tables")
-  @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
   public String getAllTables(@QueryParam("publicId") UUID publicId) {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
     checkSessionHandle(sessionHandle);
@@ -139,7 +139,7 @@ public class MetastoreUIResource {
    */
   @GET
   @Path("tables/{name}")
-  @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
   public String getDescription(@QueryParam("publicId") UUID publicId, @QueryParam("type") String type,
     @PathParam("name") String name) {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
@@ -211,7 +211,7 @@ public class MetastoreUIResource {
    */
   @GET
   @Path("searchablefields")
-  @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+  @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
   public String getFilterResults(@QueryParam("publicId") UUID publicId, @QueryParam("keyword") String keyword) {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
     checkSessionHandle(sessionHandle);

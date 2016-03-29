@@ -60,44 +60,38 @@ public abstract class AsyncEventListener<T extends LensEvent> implements LensEve
    * Create a single threaded event listener with an unbounded queue, with daemon threads.
    */
   public AsyncEventListener() {
-    this(1, 1);
+    this(1);
   }
 
   /**
    * Create a event listener with poolSize threads with an unbounded queue and daemon threads.
    *
    * @param poolSize the pool size
-   * @param maxPoolSize the max pool size
    */
-  public AsyncEventListener(int poolSize, int maxPoolSize) {
-    this(poolSize, maxPoolSize, -1, 10, true);
+  public AsyncEventListener(int poolSize) {
+    this(poolSize, 60, true);
   }
 
   /**
    * Create an asynchronous event listener which uses a thread poool to process events.
    *
    * @param poolSize       size of the event processing pool
-   * @param maxPoolSize    the max pool size
-   * @param maxQueueSize   max size of the event queue, if this is non positive, then the queue is unbounded
    * @param timeOutSeconds time out in seconds when an idle thread is destroyed
    * @param isDaemon       if the threads used to process should be daemon threads,
    *                       if false, then implementation should call stop()
    *                       to stop the thread pool
    */
-  public AsyncEventListener(int poolSize, int maxPoolSize, int maxQueueSize, long timeOutSeconds,
-      final boolean isDaemon) {
-    if (maxQueueSize <= 0) {
-      eventQueue = new LinkedBlockingQueue<Runnable>();
-    } else {
-      eventQueue = new ArrayBlockingQueue<Runnable>(maxQueueSize);
-    }
+  public AsyncEventListener(int poolSize, long timeOutSeconds, final boolean isDaemon) {
+    eventQueue = new LinkedBlockingQueue<>();
 
     ThreadFactory factory = new BasicThreadFactory.Builder()
       .namingPattern(getName()+"_AsyncThread-%d")
       .daemon(isDaemon)
       .priority(Thread.NORM_PRIORITY)
       .build();
-    processor = new ThreadPoolExecutor(poolSize, maxPoolSize, timeOutSeconds, TimeUnit.SECONDS, eventQueue, factory);
+    // fixed pool with min and max equal to poolSize
+    processor = new ThreadPoolExecutor(poolSize, poolSize, timeOutSeconds, TimeUnit.SECONDS, eventQueue, factory);
+    processor.allowCoreThreadTimeOut(true);
   }
 
   /**

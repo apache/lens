@@ -104,7 +104,7 @@ public class SessionUIResource {
    */
   @POST
   @Consumes({MediaType.MULTIPART_FORM_DATA})
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public LensSessionHandle openSession(@FormDataParam("username") String username,
     @FormDataParam("password") String password,
     @FormDataParam("database") @DefaultValue("") String database,
@@ -132,7 +132,7 @@ public class SessionUIResource {
    */
   @DELETE
   @Path("{publicId}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult closeSession(@PathParam("publicId") UUID publicId) {
     log.info("Closing session with id: {}", publicId);
     LensSessionHandle sessionHandle = getOpenSession(publicId);

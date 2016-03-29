@@ -359,6 +359,20 @@ public class LensMetadataClient {
     return factTables.getElements();
   }
 
+  public List<String> getAllCubeSegmentations(String cubeName) {
+    if (cubeName == null) {
+      return getAllCubeSegmentations();
+    }
+    WebTarget target = getMetastoreWebTarget();
+    StringList cubeSegmentations;
+    cubeSegmentations = target.path("cubes").path(cubeName).path("cubesegmentations")
+            .queryParam("sessionid", this.connection.getSessionHandle())
+            .request(MediaType.APPLICATION_XML)
+            .get(StringList.class);
+    return cubeSegmentations.getElements();
+  }
+
+
   public List<String> getAllFactTables() {
     WebTarget target = getMetastoreWebTarget();
     StringList factTables;
@@ -368,6 +382,17 @@ public class LensMetadataClient {
       .get(StringList.class);
 
     return factTables.getElements();
+  }
+
+  public List<String> getAllCubeSegmentations() {
+    WebTarget target = getMetastoreWebTarget();
+    StringList cubeSegmentations;
+    cubeSegmentations = target.path("cubesegmentations")
+            .queryParam("sessionid", this.connection.getSessionHandle())
+            .request(MediaType.APPLICATION_XML)
+            .get(StringList.class);
+
+    return cubeSegmentations.getElements();
   }
 
 
@@ -381,6 +406,14 @@ public class LensMetadataClient {
   }
 
 
+  public APIResult deleteAllCubeSegmentations() {
+    WebTarget target = getMetastoreWebTarget();
+    return target.path("cubesegmentations")
+            .queryParam("sessionid", this.connection.getSessionHandle())
+            .request(MediaType.APPLICATION_XML)
+            .delete(APIResult.class);
+  }
+
   public XFactTable getFactTable(String factTableName) {
     WebTarget target = getMetastoreWebTarget();
     JAXBElement<XFactTable> table = target.path("facts").path(factTableName)
@@ -389,6 +422,16 @@ public class LensMetadataClient {
       .get(new GenericType<JAXBElement<XFactTable>>() {
       });
     return table.getValue();
+  }
+
+  public XCubeSegmentation getCubeSegmentation(String segName) {
+    WebTarget target = getMetastoreWebTarget();
+    JAXBElement<XCubeSegmentation> seg = target.path("cubesegmentations").path(segName)
+            .queryParam("sessionid", this.connection.getSessionHandle())
+            .request(MediaType.APPLICATION_XML)
+            .get(new GenericType<JAXBElement<XCubeSegmentation>>() {
+            });
+    return seg.getValue();
   }
 
   public APIResult createFactTable(XFactTable f) {
@@ -402,6 +445,23 @@ public class LensMetadataClient {
   public APIResult createFactTable(String factSpec) {
     try {
       return createFactTable(this.<XFactTable>readFromXML(factSpec));
+    } catch (JAXBException | IOException e) {
+      return failureAPIResult(e);
+    }
+  }
+
+  public APIResult createCubeSegmentation(XCubeSegmentation seg) {
+    WebTarget target = getMetastoreWebTarget();
+    return target.path("cubesegmentations")
+            .queryParam("sessionid", this.connection.getSessionHandle())
+            .request(MediaType.APPLICATION_XML)
+            .post(Entity.xml(new GenericEntity<JAXBElement<XCubeSegmentation>>(objFact
+                    .createXCubeSegmentation(seg)){}), APIResult.class);
+  }
+
+  public APIResult createCubeSegmentation(String segSpec) {
+    try {
+      return createCubeSegmentation(this.<XCubeSegmentation>readFromXML(segSpec));
     } catch (JAXBException | IOException e) {
       return failureAPIResult(e);
     }
@@ -423,6 +483,24 @@ public class LensMetadataClient {
     }
   }
 
+  public APIResult updateCubeSegmentation(String segName, XCubeSegmentation seg) {
+    WebTarget target = getMetastoreWebTarget();
+    return target.path("cubesegmentations").path(segName)
+            .queryParam("sessionid", this.connection.getSessionHandle())
+            .request(MediaType.APPLICATION_XML_TYPE)
+            .put(Entity.xml(new GenericEntity<JAXBElement<XCubeSegmentation>>(objFact.
+                    createXCubeSegmentation(seg)){}), APIResult.class);
+  }
+
+  public APIResult updateCubeSegmentation(String segName, String seg) {
+    try {
+      return updateCubeSegmentation(segName, this.<XCubeSegmentation>readFromXML(seg));
+    } catch (JAXBException | IOException e) {
+      return failureAPIResult(e);
+    }
+  }
+
+
   public APIResult dropFactTable(String factName, boolean cascade) {
     WebTarget target = getMetastoreWebTarget();
     return target.path("facts").path(factName)
@@ -434,6 +512,14 @@ public class LensMetadataClient {
 
   public APIResult dropFactTable(String factName) {
     return dropFactTable(factName, false);
+  }
+
+  public APIResult dropCubeSegmentation(String segName) {
+    WebTarget target = getMetastoreWebTarget();
+    return target.path("cubesegmentations").path(segName)
+            .queryParam("sessionid", this.connection.getSessionHandle())
+            .request(MediaType.APPLICATION_XML)
+            .delete(APIResult.class);
   }
 
   public List<String> getAllStoragesOfFactTable(String factName) {

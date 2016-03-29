@@ -16,9 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.lens.cube.metadata;
 
-public enum CubeTableType {
-  CUBE, DIMENSION, FACT, DIM_TABLE, STORAGE, SEGMENTATION
+import java.util.Map;
+
+import lombok.Getter;
+
+public class CubeSegment implements Named {
+  @Getter
+  private String name;
+  @Getter
+  private Map<String, String> properties;
+
+  public CubeSegment(String name,  Map<String, String> properties) {
+    this.name = name;
+    this.properties = properties;
+  }
 }

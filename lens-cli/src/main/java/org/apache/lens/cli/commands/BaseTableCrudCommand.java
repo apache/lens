@@ -16,9 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.cli.commands;
 
-package org.apache.lens.cube.metadata;
+import java.util.List;
 
-public enum CubeTableType {
-  CUBE, DIMENSION, FACT, DIM_TABLE, STORAGE, SEGMENTATION
+import com.google.common.base.Joiner;
+
+
+public abstract class BaseTableCrudCommand<T> extends LensCRUDCommand<T> {
+  public String showAll(String filter) {
+    List<String> all = getAll(filter);
+    if (all == null || all.isEmpty()) {
+      return "No " + getSingleObjectName() + " found" + (filter == null ? "" : " for " + filter);
+    }
+    return Joiner.on("\n").join(all);
+  }
+
+  protected abstract List<String> getAll(String filter);
+
 }

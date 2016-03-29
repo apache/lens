@@ -28,7 +28,9 @@ function _executeQuery (secretToken, query, queryName) {
     .then(queryHandle => {
       AppDispatcher.dispatch({
         actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE,
-        payload: { queryHandle: queryHandle }
+        payload: { queryHandle: queryHandle.lensAPIResult &&
+          queryHandle.lensAPIResult.data &&
+          queryHandle.lensAPIResult.data.handleId }
       });
     }, (error) => {
       // error details contain array of objects {code, message}
@@ -51,11 +53,11 @@ function _saveQuery (secretToken, user, query, options) {
         payload: {
           type: 'Success',
           text: 'Query was successfully saved!',
-          id: response.id
+          id: response.resourceModifiedResponse && response.resourceModifiedResponse.id
         }
       });
     }, error => {
-      error = error.error;
+      error = error.lensAPIResult.error;
       AppDispatcher.dispatch({
         actionType: AdhocQueryConstants.SAVE_QUERY_FAILED,
         payload: {type: 'Error', text: error.code + ': ' + error.message}
@@ -123,7 +125,7 @@ let AdhocQueryActions = {
 
   updateSavedQuery (secretToken, user, query, options, id) {
     AdhocQueryAdapter.getParams(secretToken, query).then(response => {
-      let serverParams = response.parameters
+      let serverParams = response.parameterParserResponse.parameters
         .map(item => item.name)
         .sort();
       let clientParams = options && options.parameters && options.parameters
@@ -138,11 +140,11 @@ let AdhocQueryActions = {
               payload: {
                 type: 'Success',
                 text: 'Query was successfully updated!',
-                id: response.id
+                id: response.resourceModifiedResponse && response.resourceModifiedResponse.id
               }
             });
           }, error => {
-            error = error.error;
+            error = error.lensAPIResult.error;
             AppDispatcher.dispatch({
               actionType: AdhocQueryConstants.SAVE_QUERY_FAILED,
               payload: {type: 'Error', text: error.code + ': ' + error.message}
@@ -152,7 +154,7 @@ let AdhocQueryActions = {
         // get parameters' meta
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_QUERY_PARAMS_META,
-          payload: response.parameters
+          payload: response.parameterParserResponse.parameters
         });
       }
     });
@@ -160,7 +162,7 @@ let AdhocQueryActions = {
 
   saveQuery (secretToken, user, query, options) {
     AdhocQueryAdapter.getParams(secretToken, query).then(response => {
-      let serverParams = response.parameters
+      let serverParams = response.parameterParserResponse.parameters
         .map(item => item.name)
         .sort();
       let clientParams = options && options.parameters && options.parameters
@@ -173,7 +175,7 @@ let AdhocQueryActions = {
         // get parameters' meta
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_QUERY_PARAMS_META,
-          payload: response.parameters
+          payload: response.parameterParserResponse.parameters
         });
       }
     }, error => {
@@ -191,7 +193,7 @@ let AdhocQueryActions = {
   // as we can't run a query with params, it needs to be saved first.
   runQuery (secretToken, query, queryName) {
     AdhocQueryAdapter.getParams(secretToken, query).then(response => {
-      if (!response.parameters.length) {
+      if (!response.parameterParserResponse.parameters) {
         _executeQuery(secretToken, query, queryName);
       } else {
         // ask user to save the query maybe?
@@ -255,7 +257,7 @@ let AdhocQueryActions = {
       .then(function (query) {
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_QUERY,
-          payload: { query: query }
+          payload: { query: query.lensQuery }
         });
       }, function (error) {
         AppDispatcher.dispatch({
@@ -276,10 +278,9 @@ let AdhocQueryActions = {
           // persistent
           payload = { downloadURL: result, type: 'PERSISTENT', handle: handle };
         } else if (Object.prototype.toString.call(result).match('Array')) {
-          // in-memory gives array
           payload = {
-            queryResult: result[0],
-            columns: result[1],
+            queryResult: result[0].inMemoryQueryResult,
+            columns: result[1].queryResultSetMetadata,
             handle: handle,
             type: 'INMEMORY'
           };
@@ -349,14 +350,13 @@ let AdhocQueryActions = {
           payload: { queryHandle: handle }
         });
       }, (error) => {
-        // error response contains an error XML with code, message and
-        // stacktrace
+        error = error.lensAPIResult.error;
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLE_FAILED,
           payload: {
             type: 'Error',
-            text: error.getElementsByTagName('code')[0].textContent + ': ' +
-              error.getElementsByTagName('message')[0].textContent
+            text: error.code + ': ' +
+              error.message
           }
         });
       });

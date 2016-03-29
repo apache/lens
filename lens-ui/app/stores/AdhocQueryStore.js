@@ -34,7 +34,13 @@ var adhocDetails = {
 };
 
 function receiveQueryHandle (payload) {
-  let id = payload.queryHandle.getElementsByTagName('handleId')[0].textContent;
+  if (typeof payload.queryHandle === 'string') {
+    adhocDetails.queryHandle = payload.queryHandle;
+    return;
+  }
+  let id = payload && payload.queryHandle && payload.queryHandle.lensAPIResult &&
+    payload.queryHandle.lensAPIResult.data &&
+    payload.queryHandle.lensAPIResult.data.handleId;
   adhocDetails.queryHandle = id;
 }
 
@@ -43,7 +49,7 @@ function receiveQueries (payload) {
   let queryObjects = {};
 
   queries.forEach((query) => {
-    queryObjects[query.queryHandle.handleId] = query;
+    queryObjects[query.lensQuery.queryHandle.handleId] = query.lensQuery;
   });
 
   adhocDetails.queries = queryObjects;
@@ -60,9 +66,8 @@ function receiveQueryResult (payload) {
 
   if (queryResult.type === 'INMEMORY') {
     let resultRows = payload.queryResult && payload.queryResult.rows &&
-      payload.queryResult.rows.rows || [];
-    let columns = payload.columns && payload.columns.columns &&
-      payload.columns.columns.columns;
+      payload.queryResult.rows || [];
+    let columns = payload.columns && payload.columns.columns;
 
     adhocDetails.queryResults[payload.handle] = {};
     adhocDetails.queryResults[payload.handle].results = resultRows;

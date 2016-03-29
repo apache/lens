@@ -212,4 +212,8 @@ public class DriverQueryStatus implements Serializable {
       || state.equals(DriverQueryState.CANCELED) || state.equals(DriverQueryState.CLOSED);
   }
 
+  public boolean isSuccessful() {
+    return state.equals(DriverQueryState.SUCCESSFUL);
+  }
+
 }

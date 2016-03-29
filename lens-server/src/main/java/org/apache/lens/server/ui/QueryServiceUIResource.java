@@ -114,7 +114,7 @@ public class QueryServiceUIResource {
    */
   @GET
   @Path("queries")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("publicId") UUID publicId,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("user") String user,
     @DefaultValue("") @QueryParam("driver") String driver, @DefaultValue("") @QueryParam("queryName") String queryName,
@@ -141,7 +141,7 @@ public class QueryServiceUIResource {
   @POST
   @Path("queries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON,  MediaType.TEXT_PLAIN})
   public QuerySubmitResult query(@FormDataParam("publicId") UUID publicId, @FormDataParam("query") String query,
     @DefaultValue("") @FormDataParam("queryName") String queryName) {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
@@ -165,7 +165,7 @@ public class QueryServiceUIResource {
    */
   @GET
   @Path("queries/{queryHandle}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public LensQuery getStatus(@QueryParam("publicId") UUID publicId, @PathParam("queryHandle") String queryHandle) {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
     checkSessionHandle(sessionHandle);
@@ -187,7 +187,7 @@ public class QueryServiceUIResource {
    */
   @GET
   @Path("queries/{queryHandle}/resultset")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public ResultRow getResultSet(@QueryParam("publicId") UUID publicId, @PathParam("queryHandle") String queryHandle,
     @QueryParam("pageNumber") int pageNumber, @QueryParam("fetchsize") int fetchSize) {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
@@ -230,7 +230,7 @@ public class QueryServiceUIResource {
    */
   @DELETE
   @Path("queries/{queryHandle}")
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult cancelQuery(@QueryParam("sessionid") UUID publicId, @PathParam("queryHandle") String queryHandle) {
     LensSessionHandle sessionHandle = SessionUIResource.getOpenSession(publicId);
     checkSessionHandle(sessionHandle);
