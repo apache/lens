@@ -105,4 +105,8 @@ cube select product_details.color, store_sales from sales where time_range_in(de
 cube select product_details.color, store_sales from sales where time_range_in(delivery_time, '2015-04-12-00', '2015-04-13-00') and product_details.category='Stationary'
 cube select store_sales from sales where time_range_in(order_time, 'now.second-2 days', 'now.second')
 -- The following query sees that ot part col is not present and falls back on querying on dt part col
-cube select customer_city_name, store_cost from sales where time_range_in(order_time, '2015-04-13-03', '2015-04-13-04') --
+cube select customer_city_name, store_cost from sales where time_range_in(order_time, '2015-04-13-03', '2015-04-13-04')
+-- The following queries are for illustrating flattening of bridge table fields.
+select customer_id, customer_interest, unit_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-00')
+select customer_id, customer_interest, unit_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-00') and customer_interest not in ('Food')
+select customer_id, customer_interest, unit_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-00') and customer_interest in ('Food')

@@ -81,26 +81,33 @@ public class QueryStatus extends ToYAMLString implements Serializable {
 
     /**
      * The queued.
+     * At this point the query is queued by the server and it waiting to be launched. The launch may be controlled by
+     * multiple factors like query throttling, quota, etc
      */
     QUEUED,
 
     /**
      * The launched.
+     * At this point the query is launched for execution.
      */
     LAUNCHED,
 
     /**
      * The running.
+     * At this point the query starts running on chosen driver
      */
     RUNNING,
 
     /**
      * The executed.
+     * At this point execution is finished by driver, but server may still have some more operations pending
+     * like result persistence, if enabled.
      */
     EXECUTED,
 
     /**
      * The successful.
+     * At this point all operations related to the query are finished successfully by driver and server.
      */
     SUCCESSFUL,
 
@@ -116,6 +123,7 @@ public class QueryStatus extends ToYAMLString implements Serializable {
 
     /**
      * The closed.
+     * At this point the query is purged by the server. Persistent result will still be available to the user
      */
     CLOSED
   }

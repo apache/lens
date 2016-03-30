@@ -164,7 +164,7 @@ public class LensRDDClient {
    * @throws LensAPIException the lens exception
    */
   public QueryHandle createLensRDDAsync(String query) throws LensAPIException {
-    return getClient().executeQueryAsynch(query, "").getData();
+    return getClient().executeQueryAsynch(query, "");
   }
 
   /**

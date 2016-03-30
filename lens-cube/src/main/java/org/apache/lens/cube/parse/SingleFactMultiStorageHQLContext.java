@@ -192,14 +192,6 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
     ast.getSelectAST().addChild(selectExprAST);
   }
 
-  private ASTNode getDotAST(String tableAlias, String fieldAlias) {
-    ASTNode child = new ASTNode(new CommonToken(DOT, "."));
-    child.addChild(new ASTNode(new CommonToken(TOK_TABLE_OR_COL, "TOK_TABLE_OR_COL")));
-    child.getChild(0).addChild(new ASTNode(new CommonToken(Identifier, tableAlias)));
-    child.addChild(new ASTNode(new CommonToken(Identifier, fieldAlias)));
-    return child;
-  }
-
   private static ArrayList<HQLContextInterface> getUnionContexts(CandidateFact fact, Map<Dimension, CandidateDim>
     dimsToQuery, CubeQueryContext query, QueryAST ast)
     throws LensException {

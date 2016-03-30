@@ -211,4 +211,22 @@
       be passed for each driver, as the function could be different for each driver.
     </description>
   </property>
+  <property>
+    <name>lens.cube.query.bridge.table.field.array.filter</name>
+    <value>array_contains</value>
+    <description>The array filter function to be used for filter on fields from bridge tables. Would be used
+      only when flattening is enabled and not flattening early. The value can be passed for each query.
+      During typical deployments it would be passed for each driver, as the function could be different for each
+      driver. Signature of the filter getting passed here should be very similar to array_contains. i.e.
+      array_contains(array, value) to return true if array contains value.
+    </description>
+  </property>
+  <property>
+    <name>lens.cube.query.flatten.bridge.tables.early</name>
+    <value>false</value>
+    <description>Flag specifies if fields selected have to be flattened earlier to applying any expression on top
+      of them, For ex: sub_str(bridge_field) is the expression, if the property is set to true, sub_str will be
+      applied on aggregated field. If set to false, aggregate will applied on top of the expression i.e. sub_str.
+    </description>
+  </property>
 </configuration>

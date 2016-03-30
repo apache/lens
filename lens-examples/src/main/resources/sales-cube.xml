@@ -58,6 +58,10 @@
                    display_string="Customer City">
       <chain_ref_column chain_name="customer_city" ref_col="name" />
     </dim_attribute>
+    <dim_attribute name="customer_interest" _type="string" description="Customer's interest"
+                   display_string="Customer Interest">
+      <chain_ref_column chain_name="customer_interests_chain" ref_col="name" />
+    </dim_attribute>
     <dim_attribute name="production_location">
       <hierarchy>
       <dim_attribute name="production_city_name" _type="STRING" description="City name in which the product was produced"
@@ -93,6 +97,26 @@
             <edge>
               <from table="sales" column="customer_id" />
               <to table="customer" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain name="customer_interests_chain">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sales" column="customer_id" />
+              <to table="customer" column="id" />
+            </edge>
+            <edge>
+              <from table="customer" column="id" />
+              <to table="customer_interests" column="customer_id" maps_to_many="true" />
+            </edge>
+            <edge>
+              <from table="customer_interests" column="interest_id" />
+              <to table="interests" column="id" />
             </edge>
           </edges>
         </path>

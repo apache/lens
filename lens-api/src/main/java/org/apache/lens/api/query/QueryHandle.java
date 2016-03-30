@@ -54,7 +54,7 @@ import lombok.*;
  *
  * @see java.lang.Object#hashCode()
  */
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(of = "handleId", callSuper = false)
 public class QueryHandle extends QuerySubmitResult implements Serializable {
 
   /**

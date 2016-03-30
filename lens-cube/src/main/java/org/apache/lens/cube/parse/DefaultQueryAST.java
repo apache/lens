@@ -30,6 +30,7 @@ import lombok.Data;
 public class DefaultQueryAST implements QueryAST {
   private ASTNode selectAST, whereAST, groupByAST, havingAST, joinAST, orderByAST;
   private Integer limitValue;
+  private String fromString;
 
   public String getSelectTree() {
     return HQLParser.getString(selectAST);
@@ -48,7 +49,6 @@ public class DefaultQueryAST implements QueryAST {
     }
     return null;
   }
-
 
   public String getHavingTree() {
     if (havingAST != null) {
@@ -69,6 +69,7 @@ public class DefaultQueryAST implements QueryAST {
     LensException {
     return new DefaultQueryAST(ast.getSelectAST(),
       fact.getStorageWhereClause(storageTable.substring(storageTable.indexOf(".") + 1)),
-      ast.getGroupByAST(), ast.getHavingAST(), ast.getJoinAST(), ast.getOrderByAST(), ast.getLimitValue());
+      ast.getGroupByAST(), ast.getHavingAST(), ast.getJoinAST(), ast.getOrderByAST(), ast.getLimitValue(),
+      ast.getFromString());
   }
 }

@@ -58,7 +58,7 @@ public class LensJdbcStatement implements Statement {
   @Override
   public ResultSet executeQuery(String s) throws SQLException {
     try {
-      statement.execute(s, null);
+      statement.executeQuery(s, true, null);
     } catch (LensAPIException e) {
       log.error("Execution Failed for Statement:{}", s, e);
     }
@@ -115,7 +115,7 @@ public class LensJdbcStatement implements Statement {
       throw new SQLException("Cannot execute statemes on closed statements");
     }
     try {
-      statement.execute(s, true, null);
+      statement.executeQuery(s, true, null);
     } catch (Throwable t) {
       throw new SQLException(t);
     }

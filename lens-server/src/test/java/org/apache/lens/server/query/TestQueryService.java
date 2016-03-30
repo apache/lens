@@ -1361,7 +1361,7 @@ public class TestQueryService extends LensJerseyTest {
         false, true, MediaType.APPLICATION_XML_TYPE);
   }
 
-  private static class DeferredInMemoryResultFormatter extends FileSerdeFormatter {
+  public static class DeferredInMemoryResultFormatter extends FileSerdeFormatter {
     /**
      * Defer init so that this output formatter takes significant time.
      */
@@ -1372,7 +1372,7 @@ public class TestQueryService extends LensJerseyTest {
     }
   }
 
-  private static class DeferredPersistentResultFormatter extends FilePersistentFormatter {
+  public static class DeferredPersistentResultFormatter extends FilePersistentFormatter {
     /**
      * Defer init so that this output formatter takes significant time.
      */

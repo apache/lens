@@ -28,7 +28,10 @@ import javax.ws.rs.core.Response;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.PrettyPrintable;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
+import org.apache.lens.cli.config.LensCliConfigConstants;
 import org.apache.lens.client.LensClient;
+import org.apache.lens.client.LensClient.LensClientResultSetWithStats;
+import org.apache.lens.client.LensClientResultSet;
 import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.client.exceptions.LensBriefErrorException;
 import org.apache.lens.client.model.BriefError;
@@ -107,16 +110,28 @@ public class LensQueryCommands extends BaseLensCommand {
 
     try {
       if (async) {
-        QueryHandle queryHandle = getClient().executeQueryAsynch(sql, queryName).getData();
+        QueryHandle queryHandle = getClient().executeQueryAsynch(sql, queryName);
         return queryHandle.getHandleIdString();
       } else {
-        return formatResultSet(getClient().getResults(sql, queryName));
+        LensClientResultSetWithStats resultWithStats;
+        long timeOutMillis = getClient().getConf().getLong(LensCliConfigConstants.QUERY_EXECUTE_TIMEOUT_MILLIS,
+            LensCliConfigConstants.DEFAULT_QUERY_EXECUTE_TIMEOUT_MILLIS);
+        LensClient.getCliLogger().info("Executing query with timeout of {} milliseconds", timeOutMillis);
+        QueryHandleWithResultSet result = getClient().executeQueryWithTimeout(sql, queryName, timeOutMillis);
+        if (result.getResult() == null) {
+          //Query not finished yet. Wait till it finishes and get result.
+          LensClient.getCliLogger().info("Couldn't complete query execution within timeout. Waiting for completion");
+          resultWithStats = getClient().getSyncResults(result.getQueryHandle());
+        } else {
+          LensClientResultSet clientResultSet = new LensClientResultSet(result.getResultMetadata(), result.getResult());
+          resultWithStats =
+              new LensClientResultSetWithStats(clientResultSet, getClient().getQueryDetails(result.getQueryHandle()));
+        }
+        return formatResultSet(resultWithStats);
       }
     } catch (final LensAPIException e) {
-
       BriefError briefError = new BriefError(e.getLensAPIErrorCode(), e.getLensAPIErrorMessage());
       cliOutput = new IdBriefErrorTemplate(IdBriefErrorTemplateKey.REQUEST_ID, e.getLensAPIRequestId(), briefError);
-
     } catch (final LensBriefErrorException e) {
       cliOutput = e.getIdBriefErrorTemplate();
     }
@@ -436,17 +451,17 @@ public class LensQueryCommands extends BaseLensCommand {
     @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
       specifiedDefaultValue = "true", help = "<async>") boolean async,
     @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName) {
-    if (async) {
-      QueryHandle handle = getClient().executePrepared(QueryPrepareHandle.fromString(phandle), queryName);
-      return handle.getHandleId().toString();
-    } else {
-      try {
-        LensClient.LensClientResultSetWithStats result = getClient().getResultsFromPrepared(
-          QueryPrepareHandle.fromString(phandle), queryName);
+    try {
+      if (async) {
+        QueryHandle handle = getClient().executePrepared(QueryPrepareHandle.fromString(phandle), queryName);
+        return handle.getHandleId().toString();
+      } else {
+        LensClient.LensClientResultSetWithStats result =
+            getClient().getResultsFromPrepared(QueryPrepareHandle.fromString(phandle), queryName);
         return formatResultSet(result);
-      } catch (Throwable t) {
-        return t.getMessage();
       }
+    } catch (Throwable t) {
+      return t.getMessage();
     }
   }
 

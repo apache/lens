@@ -40,27 +40,23 @@ abstract class DimHQLContext extends SimpleHQLContext {
   private final Set<Dimension> queriedDims;
   private String where;
   protected final CubeQueryContext query;
+  private final String astFromString;
 
   public CubeQueryContext getQuery() {
     return query;
   }
   DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery,
     Set<Dimension> queriedDims, QueryAST ast) throws LensException {
-    this(query, dimsToQuery, queriedDims, ast.getSelectTree(), ast.getWhereTree(), ast.getGroupByTree(),
-      ast.getOrderByTree(), ast.getHavingTree(), ast.getLimitValue());
-  }
-  DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery,
-    Set<Dimension> queriedDims, String select, String where,
-    String groupby, String orderby, String having, Integer limit) throws LensException {
-    super(select, groupby, orderby, having, limit);
+    super(ast.getSelectTree(), ast.getGroupByTree(), ast.getOrderByTree(), ast.getHavingTree(), ast.getLimitValue());
     this.query = query;
     this.dimsToQuery = dimsToQuery;
-    this.where = where;
+    this.where = ast.getWhereTree();
     this.queriedDims = queriedDims;
+    this.astFromString = ast.getFromString();
   }
 
   protected void setMissingExpressions() throws LensException {
-    setFrom(getFromString());
+    setFrom(String.format(astFromString, getFromTable()));
     setWhere(joinWithAnd(
       genWhereClauseWithDimPartitions(where), getQuery().getConf().getBoolean(
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
@@ -70,21 +66,6 @@ abstract class DimHQLContext extends SimpleHQLContext {
   protected String getPostSelectionWhereClause() throws LensException {
     return null;
   }
-
-
-
-  protected String getFromString() throws LensException {
-    String fromString = getFromTable();
-    if (query.isAutoJoinResolved()) {
-      fromString =
-        query.getAutoJoinCtx().getFromString(fromString, getQueriedFact(), getQueriedDimSet(), getDimsToQuery(), query);
-    }
-    return fromString;
-  }
-
-  protected abstract Set<Dimension> getQueriedDimSet();
-
-  protected abstract CandidateFact getQueriedFact();
 
   protected abstract String getFromTable() throws LensException;
 

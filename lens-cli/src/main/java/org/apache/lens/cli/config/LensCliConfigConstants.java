@@ -16,27 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
 
-import org.apache.hadoop.hive.ql.parse.ASTNode;
+package org.apache.lens.cli.config;
 
+public class LensCliConfigConstants {
 
-public class DefaultAliasDecider implements AliasDecider {
-  int counter = 0;
-  private static final String ALIAS_PREFIX = "alias";
-
-  final String aliasPrefix;
-  public DefaultAliasDecider(String alias) {
-    aliasPrefix = alias;
+  private LensCliConfigConstants(){
   }
 
-  DefaultAliasDecider() {
-    this(ALIAS_PREFIX);
-  }
-  public String decideAlias(ASTNode node) {
-    if (node == null) {
-      throw new NullPointerException("Node cannot be null");
-    }
-    return aliasPrefix + (counter++);
-  }
+  public static final String LENS_CLI_PREFIX = "lens.cli.";
+
+  public static final String PRINT_PRETTY_JSON = LENS_CLI_PREFIX + "json.pretty";
+
+  public static final boolean DEFAULT_PRINT_PRETTY_JSON = false;
+
+  public static final String QUERY_EXECUTE_TIMEOUT_MILLIS = LENS_CLI_PREFIX  + "query.execute.timeout.millis";
+
+  public static final long DEFAULT_QUERY_EXECUTE_TIMEOUT_MILLIS = 10000; //10 secs
 }

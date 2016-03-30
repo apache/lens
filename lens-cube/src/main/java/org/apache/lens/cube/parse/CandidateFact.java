@@ -23,8 +23,6 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
-import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
-import org.apache.lens.cube.parse.HQLParser.TreeNode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -76,6 +74,8 @@ public class CandidateFact implements CandidateTable, QueryAST {
   @Getter
   @Setter
   private Integer limitValue;
+  @Getter
+  private String fromString;
   private final List<Integer> selectIndices = Lists.newArrayList();
   private final List<Integer> dimFieldIndices = Lists.newArrayList();
   private Collection<String> columns;
@@ -166,7 +166,7 @@ public class CandidateFact implements CandidateTable, QueryAST {
   }
 
   public boolean isExpressionAnswerable(ASTNode node, CubeQueryContext context) throws LensException {
-    return getColumns().containsAll(getColsInExpr(context, context.getCube().getAllFieldNames(), node));
+    return getColumns().containsAll(HQLParser.getColsInExpr(context.getAliasForTableName(context.getCube()), node));
   }
 
   /**
@@ -182,7 +182,7 @@ public class CandidateFact implements CandidateTable, QueryAST {
     int currentChild = 0;
     for (int i = 0; i < cubeql.getSelectAST().getChildCount(); i++) {
       ASTNode selectExpr = (ASTNode) this.selectAST.getChild(currentChild);
-      Set<String> exprCols = getColsInExpr(cubeql, cubeCols, selectExpr);
+      Set<String> exprCols = HQLParser.getColsInExpr(cubeql.getAliasForTableName(cubeql.getCube()), selectExpr);
       if (getColumns().containsAll(exprCols)) {
         selectIndices.add(i);
         if (cubeql.getCube().getDimAttributeNames().containsAll(exprCols)) {
@@ -214,39 +214,6 @@ public class CandidateFact implements CandidateTable, QueryAST {
     // are assumed to be common in multi fact queries.
 
     // push down of having clauses happens just after this call in cubequerycontext
-  }
-
-  private Set<String> getColsInExpr(final CubeQueryContext cubeql, final Set<String> cubeCols,
-    ASTNode expr) throws LensException {
-    final Set<String> cubeColsInExpr = new HashSet<>();
-    HQLParser.bft(expr, new ASTNodeVisitor() {
-      @Override
-      public void visit(TreeNode visited) {
-        ASTNode node = visited.getNode();
-        ASTNode parent = null;
-        if (visited.getParent() != null) {
-          parent = visited.getParent().getNode();
-        }
-
-        if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() != DOT)) {
-          // Take child ident.totext
-          ASTNode ident = (ASTNode) node.getChild(0);
-          String column = ident.getText().toLowerCase();
-          if (cubeCols.contains(column)) {
-            cubeColsInExpr.add(column);
-          }
-        } else if (node.getToken().getType() == DOT) {
-          String alias = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).getText().toLowerCase();
-          ASTNode colIdent = (ASTNode) node.getChild(1);
-          String column = colIdent.getText().toLowerCase();
-          if (cubeql.getAliasForTableName(cubeql.getCube()).equalsIgnoreCase(alias) && cubeCols.contains(column)) {
-            cubeColsInExpr.add(column);
-          }
-        }
-      }
-    });
-
-    return cubeColsInExpr;
   }
 
   @Override
@@ -370,5 +337,15 @@ public class CandidateFact implements CandidateTable, QueryAST {
       }
     }
     return timePartDimensions;
+  }
+
+  public void updateFromString(CubeQueryContext query, Set<Dimension> queryDims,
+    Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
+    fromString = "%s"; // to update the storage alias later
+    if (query.isAutoJoinResolved()) {
+      fromString =
+        query.getAutoJoinCtx().getFromString(fromString, this, queryDims, dimsToQuery,
+          query, this);
+    }
   }
 }

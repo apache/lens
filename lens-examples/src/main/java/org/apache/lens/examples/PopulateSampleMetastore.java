@@ -91,6 +91,8 @@ public class PopulateSampleMetastore {
     createDimTablePartitions("product-local-parts.xml", "product_table", "local");
     createDimTablePartition("city-local-part.xml", "city_table", "local");
     createDimTablePartition("customer-local-part.xml", "customer_table", "local");
+    createDimTablePartition("customer-interests-local-part.xml", "customer_interests_table", "local");
+    createDimTablePartition("interests-local-part.xml", "interests_table", "local");
   }
 
   private void createDimTablePartition(String fileName, String dimTable, String storage)

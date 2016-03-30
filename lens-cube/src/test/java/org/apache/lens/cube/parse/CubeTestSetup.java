@@ -1069,6 +1069,16 @@ public class CubeTestSetup {
         });
       }
     });
+    joinChains.add(new JoinChain("userchain", "user-chain", "user chain") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "userid"));
+            add(new TableReference("userdim", "id"));
+          }
+        });
+      }
+    });
     joinChains.add(new JoinChain("userSports", "user-sports", "user sports") {
       {
         addPath(new ArrayList<TableReference>() {
@@ -1131,7 +1141,14 @@ public class CubeTestSetup {
     Set<ExprColumn> baseExprs = new HashSet<>(exprs);
     baseExprs.add(new ExprColumn(new FieldSchema("substrsprorts", "String", "substr of sports"), "substr sports",
       "substr(sports, 10)"));
-
+    baseExprs.add(new ExprColumn(new FieldSchema("xsports_abbr", "array<string>", ""),
+      "xuser sports", "substr(xsports, 3)"));
+    baseExprs.add(new ExprColumn(new FieldSchema("ysports_abbr", "array<string>", ""),
+      "yuser sports", "substr(ysports, 3)"));
+    baseExprs.add(new ExprColumn(new FieldSchema("sports_abbr", "array<string>", ""),
+      "user sports", "substr(sports, 3)"));
+    baseExprs.add(new ExprColumn(new FieldSchema("sportids_abbr", "array<string>", ""),
+      "user sports", "case when sportids == 1 then 'CKT' when sportids == 2 then 'FTB' else 'NON' end"));
     client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, baseExprs, joinChains, cubeProperties);
 
     Map<String, String> derivedProperties = new HashMap<>();

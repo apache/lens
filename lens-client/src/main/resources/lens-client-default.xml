@@ -56,4 +56,11 @@
     <value>false</value>
     <description>Should CLI try to prettify the JSON of an object before priting.</description>
   </property>
+  <property>
+    <name>lens.cli.query.execute.timeout.millis</name>
+    <value>10000</value>
+    <description>This property defines the timeout value when sync or --async false option
+    is used to execute a query. The default value is 10 seconds.
+    </description>
+  </property>
 </configuration>
