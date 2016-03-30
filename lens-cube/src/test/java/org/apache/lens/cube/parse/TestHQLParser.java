@@ -21,6 +21,10 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -381,5 +385,83 @@ public class TestHQLParser {
     ASTNode tree = HQLParser.parseExpr(input);
     String infixString = HQLParser.getString(tree);
     Assert.assertEquals(infixString, expected);
+  }
+
+  @DataProvider
+  public Object[][] colsInExpr() {
+    return new Object[][] {
+      {" t1.c1", new String[]{}}, // simple selection
+      {" cie.c5", new String[]{"c5"}}, // simple selection
+      {" fun1(cie.c4)", new String[]{"c4"}}, // simple selection
+      {" t1.c1 + cie.c5+ t2.c3", new String[]{"c5"}}, // simple selection
+      {" t1.c1=x and cie.c2=y", new String[]{"c2"}}, //filter expression
+      {"case when t1.c1 then 1 when cie.c3 then 2 when cie.c4 then 3 when t2.c2 then 4 else cie.c6 end",
+        new String[]{"c3", "c4", "c6", }, },  // case when statement
+      {"complexfunc(round(t1.c1), myfunc(t2.c2), myfunc2(cie.c4, cie.c5, t2.c6))", new String[]{"c4", "c5"}},
+    };
+  }
+
+  @Test(dataProvider = "colsInExpr")
+  public void testColsInExpr(String input, String[] expected) throws Exception {
+    String tableAlias = "cie";
+    ASTNode inputAST = HQLParser.parseExpr(input);
+    Set<String> actual = HQLParser.getColsInExpr(tableAlias, inputAST);
+    Set<String> expectedSet = new HashSet<>(Arrays.asList(expected));
+    Assert.assertEquals(actual, expectedSet, "Received " + actual + " for input:" + input);
+  }
+
+  @Test
+  public void testGetDotAST() {
+    Assert.assertEquals(HQLParser.getString(HQLParser.getDotAST("tbl1", "col1")), "( tbl1 . col1 )");
+  }
+
+  @DataProvider
+  public Object[][] primitiveBool() {
+    return new Object[][] {
+      {" t1.c1", false},
+      {" t1.c1 = 24", true},
+      {" t1.c1 >= 24", true},
+      {" t1.c1 <= 24", true},
+      {" t1.c1 <=> 24", true},
+      {" t1.c1 != 24", true},
+      {" t1.c1 < 24", true},
+      {" t1.c1 > 24", true},
+      {" fun1(cie.c4)", false},
+      {" arraycontains(arr1, v1)", false},
+      {" t1.c1=x and cie.c2=y", false},
+      {" t1.col1 in ('x', 'y', 'z')", false},
+    };
+  }
+
+  @Test(dataProvider = "primitiveBool")
+  public void testIsPrimitiveBooleanExpr(String input, boolean expected) throws Exception {
+    ASTNode inputAST = HQLParser.parseExpr(input);
+    boolean actual = HQLParser.isPrimitiveBooleanExpression(inputAST);
+    Assert.assertEquals(actual, expected, "Received " + actual + " for input:" + input + ":" + inputAST.dump());
+  }
+
+  @DataProvider
+  public Object[][] primitiveBoolFunc() {
+    return new Object[][] {
+      {" t1.c1", false},
+      {" t1.c1 = 24", false},
+      {" t1.c1 >= 24", false},
+      {" t1.c1 <= 24", false},
+      {" t1.c1 <=> 24", false},
+      {" t1.c1 != 24", false},
+      {" t1.c1 < 24", false},
+      {" t1.c1 > 24", false},
+      {" fun1(cie.c4)", false},
+      {" arraycontains(arr1, v1)", false},
+      {" t1.c1=x and cie.c2=y", false},
+      {" t1.col1 in ('x', 'y', 'z')", true},
+    };
+  }
+
+  @Test(dataProvider = "primitiveBoolFunc")
+  public void testIsPrimitiveBooleanFunction(String input, boolean expected) throws Exception {
+    ASTNode inputAST = HQLParser.parseExpr(input);
+    boolean actual = HQLParser.isPrimitiveBooleanFunction(inputAST);
+    Assert.assertEquals(actual, expected, "Received " + actual + " for input:" + input);
   }
 }

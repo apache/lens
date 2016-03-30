@@ -70,12 +70,15 @@ public class AutoJoinContext {
   JoinClause minCostClause;
   private final boolean flattenBridgeTables;
   private final String bridgeTableFieldAggr;
+  private final String bridgeTableFieldArrayFilter;
+  private final boolean doFlatteningEarly;
 
   public AutoJoinContext(Map<Aliased<Dimension>, List<JoinPath>> allPaths,
                          Set<Dimension> requiredDimensions,
                          Map<AbstractCubeTable, JoinType> tableJoinTypeMap,
                          AbstractCubeTable autoJoinTarget, String joinTypeCfg, boolean joinsResolved,
-                         boolean flattenBridgeTables, String bridgeTableFieldAggr) {
+                         boolean flattenBridgeTables, String bridgeTableFieldAggr, String bridgeTableFieldArrayFilter,
+                         boolean doFlatteningEarly) {
     this.allPaths = allPaths;
     this.requiredDimensions = requiredDimensions;
     initJoinPathColumns();
@@ -85,6 +88,8 @@ public class AutoJoinContext {
     this.joinsResolved = joinsResolved;
     this.flattenBridgeTables = flattenBridgeTables;
     this.bridgeTableFieldAggr = bridgeTableFieldAggr;
+    this.bridgeTableFieldArrayFilter = bridgeTableFieldArrayFilter;
+    this.doFlatteningEarly = doFlatteningEarly;
     log.debug("All join paths:{}", allPaths);
     log.debug("Join path from columns:{}", joinPathFromColumns);
     log.debug("Join path to columns:{}", joinPathToColumns);
@@ -165,22 +170,23 @@ public class AutoJoinContext {
   }
 
   public String getFromString(String fromTable, CandidateFact fact, Set<Dimension> qdims,
-    Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) throws LensException {
+    Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql, QueryAST ast) throws LensException {
     String fromString = fromTable;
     log.info("All paths dump:{} Queried dims:{}", cubeql.getAutoJoinCtx().getAllPaths(), qdims);
     if (qdims == null || qdims.isEmpty()) {
       return fromString;
     }
     // Compute the merged join clause string for the min cost joinClause
-    String clause = getMergedJoinClause(cubeql, cubeql.getAutoJoinCtx().getJoinClause(fact), dimsToQuery);
+    String clause = getMergedJoinClause(cubeql, fact, ast,
+      cubeql.getAutoJoinCtx().getJoinClause(fact), dimsToQuery);
 
     fromString += clause;
     return fromString;
   }
 
   // Some refactoring needed to account for multiple join paths
-  public String getMergedJoinClause(CubeQueryContext cubeql, JoinClause joinClause,
-                                    Map<Dimension, CandidateDim> dimsToQuery) {
+  public String getMergedJoinClause(CubeQueryContext cubeql, CandidateFact fact, QueryAST ast, JoinClause joinClause,
+                                    Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     Set<String> clauses = new LinkedHashSet<>();
     String joinTypeStr = "";
     JoinType joinType = JoinType.INNER;
@@ -192,12 +198,8 @@ public class AutoJoinContext {
 
     Iterator<JoinTree> iter = joinClause.getJoinTree().dft();
     boolean hasBridgeTable = false;
-    boolean initedBridgeClauses = false;
-    StringBuilder bridgeSelectClause = new StringBuilder();
-    StringBuilder bridgeFromClause = new StringBuilder();
-    StringBuilder bridgeFilterClause = new StringBuilder();
-    StringBuilder bridgeJoinClause = new StringBuilder();
-    StringBuilder bridgeGroupbyClause = new StringBuilder();
+    BridgeTableJoinContext bridgeTableJoinContext = new BridgeTableJoinContext(cubeql, fact, ast, bridgeTableFieldAggr,
+      bridgeTableFieldArrayFilter, doFlatteningEarly);
 
     while (iter.hasNext()) {
       JoinTree cur = iter.next();
@@ -252,90 +254,18 @@ public class AutoJoinContext {
 
       // if a bridge table is present in the path
       if (hasBridgeTable) {
-        // if any relation has bridge table, the clause becomes the following :
-        // join (" select " + joinkey + " aggr over fields from bridge table + from bridgeTable + [where user/storage
-        // filters] + groupby joinkey) on joincond"
-        // Or
-        // " join (select " + joinkey + " aggr over fields from table reached through bridge table + from bridge table
-        // join <next tables> on join condition + [and user/storage filters] + groupby joinkey) on joincond
-        if (!initedBridgeClauses) {
-          // we just found a bridge table in the path we need to initialize the clauses for subquery required for
-          // aggregating fields of bridge table
-          // initiliaze select clause with join key
-          bridgeSelectClause.append(" (select ").append(toAlias).append(".").append(rel.getToColumn()).append(" as ")
-          .append(rel.getToColumn());
-          // group by join key
-          bridgeGroupbyClause.append(" group by ").append(toAlias).append(".").append(rel.getToColumn());
-          // from clause with bridge table
-          bridgeFromClause.append(" from ").append(dimsToQuery.get(rel.getToTable()).getStorageString(toAlias));
-          // we need to initialize filter clause with user filter clause or storage filter if applicable
-          if (StringUtils.isNotBlank(userFilter)) {
-            bridgeFilterClause.append(userFilter);
-          }
-          if (StringUtils.isNotBlank(storageFilter)) {
-            if (StringUtils.isNotBlank(bridgeFilterClause.toString())) {
-              bridgeFilterClause.append(" and ");
-            }
-            bridgeFilterClause.append(storageFilter);
-          }
-          // initialize final join clause
-          bridgeJoinClause.append(" on ").append(fromAlias).append(".")
-            .append(rel.getFromColumn()).append(" = ").append("%s")
-            .append(".").append(rel.getToColumn());
-          initedBridgeClauses = true;
-        } else {
-          // if bridge clauses are already inited, this is a next table getting joined with bridge table
-          // we will append a simple join clause
-          bridgeFromClause.append(" join ");
-          bridgeFromClause.append(dimsToQuery.get(rel.getToTable()).getStorageString(toAlias));
-          bridgeFromClause.append(" on ").append(fromAlias).append(".")
-            .append(rel.getFromColumn()).append(" = ").append(toAlias)
-            .append(".").append(rel.getToColumn());
-
-          if (StringUtils.isNotBlank(userFilter)) {
-            bridgeFromClause.append(" and ").append(userFilter);
-          }
-          if (StringUtils.isNotBlank(storageFilter)) {
-            bridgeFromClause.append(" and ").append(storageFilter);
-          }
-        }
+        bridgeTableJoinContext.updateBridgeClause(rel, fromAlias, toAlias, dimsToQuery.get(rel.getToTable()),
+          userFilter, storageFilter);
         if (cubeql.getTblAliasToColumns().get(toAlias) != null
           && !cubeql.getTblAliasToColumns().get(toAlias).isEmpty()) {
           // there are fields selected from this table after seeing bridge table in path
           // we should make subQuery for this selection
-          clause.append(joinTypeStr).append(" join ");
-          clause.append(bridgeSelectClause.toString());
-          for (String col : cubeql.getTblAliasToColumns().get(toAlias)) {
-            clause.append(",").append(bridgeTableFieldAggr).append("(").append(toAlias)
-              .append(".").append(col)
-              .append(")")
-              .append(" as ").append(col);
-          }
-          String bridgeFrom = bridgeFromClause.toString();
-          clause.append(bridgeFrom);
-          String bridgeFilter = bridgeFilterClause.toString();
-          if (StringUtils.isNotBlank(bridgeFilter)) {
-            if (bridgeFrom.contains(" join ")) {
-              clause.append(" and ");
-            } else {
-              clause.append(" where");
-            }
-            clause.append(bridgeFilter);
-          }
-          clause.append(bridgeGroupbyClause.toString());
-          clause.append(") ").append(toAlias);
-          clause.append(String.format(bridgeJoinClause.toString(), toAlias));
-          clauses.add(clause.toString());
+          clauses.add(bridgeTableJoinContext.generateJoinClause(joinTypeStr, toAlias));
         }
         if (cur.getSubtrees().isEmpty()) {
           // clear bridge flags and builders, as there are no more clauses in this tree.
           hasBridgeTable = false;
-          initedBridgeClauses = false;
-          bridgeSelectClause.setLength(0);
-          bridgeFromClause.setLength(0);
-          bridgeFilterClause.setLength(0);
-          bridgeJoinClause.setLength(0);
-          bridgeGroupbyClause.setLength(0);
+          bridgeTableJoinContext.resetContext();
         }
       } else {
         // Simple join clause is :

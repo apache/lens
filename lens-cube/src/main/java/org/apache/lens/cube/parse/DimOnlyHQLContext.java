@@ -55,14 +55,4 @@ class DimOnlyHQLContext extends DimHQLContext {
       return query.getQBFromString(null, getDimsToQuery());
     }
   }
-
-  @Override
-  protected Set<Dimension> getQueriedDimSet() {
-    return getDimsToQuery().keySet();
-  }
-
-  @Override
-  protected CandidateFact getQueriedFact() {
-    return null;
-  }
 }

@@ -96,6 +96,8 @@ public class SampleMetastore {
     createDimension("city.xml");
     createDimension("customer.xml");
     createDimension("product.xml");
+    createDimension("customer-interests.xml");
+    createDimension("interests.xml");
   }
 
   private void createStorage(String fileName) throws JAXBException, IOException {
@@ -147,6 +149,8 @@ public class SampleMetastore {
     createDimTable("product_table.xml");
     createDimTable("product_db_table.xml");
     createDimTable("customer_table.xml");
+    createDimTable("customer_interests_table.xml");
+    createDimTable("interests_table.xml");
   }
 
   private void createFact(String factSpec) {

@@ -230,7 +230,4 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return null;
   }
 
-  private static boolean isPrimitiveBooleanExpression(ASTNode ast) {
-    return HQLParser.FILTER_OPERATORS.contains(ast.getType());
-  }
 }

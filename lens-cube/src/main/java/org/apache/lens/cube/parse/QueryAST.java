@@ -18,13 +18,13 @@
  */
 package org.apache.lens.cube.parse;
 
-
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 
-
-interface QueryAST {
+public interface QueryAST {
 
   String getSelectTree();
+
+  String getFromString();
 
   String getWhereTree();
 

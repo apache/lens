@@ -22,6 +22,18 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
 <configuration>
-
-
+  <property>
+    <name>lens.client.query.poll.interval</name>
+      <value>4000</value>
+      <description>Interval at which query progress will be polled. Interval has to be given in milliseconds
+      </description>
+  </property>
+  <property>
+    <name>lens.cube.query.enable.flattening.bridge.tables</name>
+    <value>true</value>
+    <description>Flag specifies if fields selected have to be flattened or not, if they are coming from tables with many
+       to many relationship in join. If false, field selection will be simple join and selecting the field. If true, the
+       fields from bridge tables will be aggregated grouped by join key.
+    </description>
+  </property>
 </configuration>

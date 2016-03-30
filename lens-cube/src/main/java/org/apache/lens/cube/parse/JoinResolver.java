@@ -65,7 +65,8 @@ class JoinResolver implements ContextRewriter {
 
     if (!joinResolverDisabled && (!cubeql.getNonChainedDimensions().isEmpty() && cubeql.hasCubeInQuery())
       || ((cubeql.getNonChainedDimensions().size() > 1) && !cubeql.hasCubeInQuery())) {
-      log.warn("Disabling auto join resolver as there are direct dimensions queried");
+      log.warn("Disabling auto join resolver as there are direct dimensions queried {}",
+        cubeql.getNonChainedDimensions());
       joinResolverDisabled = true;
     }
     if (joinResolverDisabled) {
@@ -156,12 +157,16 @@ class JoinResolver implements ContextRewriter {
       CubeQueryConfUtil.DEFAULT_ENABLE_FLATTENING_FOR_BRIDGETABLES);
     String bridgeTableFieldAggr = cubeql.getConf().get(CubeQueryConfUtil.BRIDGE_TABLE_FIELD_AGGREGATOR,
       CubeQueryConfUtil.DEFAULT_BRIDGE_TABLE_FIELD_AGGREGATOR);
+    String bridgeTableFieldArrayFilter = cubeql.getConf().get(CubeQueryConfUtil.BRIDGE_TABLE_FIELD_ARRAY_FILTER,
+      CubeQueryConfUtil.DEFAULT_BRIDGE_TABLE_FIELD_ARRAY_FILTER);
+    boolean doFlatteningEarly = cubeql.getConf().getBoolean(CubeQueryConfUtil.DO_FLATTENING_OF_BRIDGE_TABLE_EARLY,
+      CubeQueryConfUtil.DEFAULT_DO_FLATTENING_OF_BRIDGE_TABLE_EARLY);
     Set<Dimension> requiredDimensions = Sets.newHashSet(cubeql.getDimensions());
     requiredDimensions.removeAll(cubeql.getOptionalDimensions());
     AutoJoinContext joinCtx =
       new AutoJoinContext(multipleJoinPaths, requiredDimensions,
         tableJoinTypeMap, target, cubeql.getConf().get(CubeQueryConfUtil.JOIN_TYPE_KEY), true, flattenBridgeTables,
-        bridgeTableFieldAggr);
+        bridgeTableFieldAggr, bridgeTableFieldArrayFilter, doFlatteningEarly);
     cubeql.setAutoJoinCtx(joinCtx);
   }
 

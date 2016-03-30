@@ -37,10 +37,10 @@ import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.*;
 
+import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.Tree;
 
 import com.google.common.base.Optional;
-
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +58,26 @@ public final class HQLParser {
   public static boolean isTableColumnAST(ASTNode astNode) {
     return !(astNode == null || astNode.getChildren() == null || astNode.getChildCount() != 2) && astNode.getChild(0)
       .getType() == HiveParser.TOK_TABLE_OR_COL && astNode.getChild(1).getType() == HiveParser.Identifier;
+  }
+
+  public static boolean isPrimitiveBooleanExpression(ASTNode ast) {
+    return HQLParser.FILTER_OPERATORS.contains(ast.getType());
+  }
+
+  public static boolean isPrimitiveBooleanFunction(ASTNode ast) {
+    if (ast.getType() == TOK_FUNCTION) {
+      if (ast.getChild(0).getText().equals("in")) {
+        return true;
+      }
+    }
+    return false;
+  }
+  public static ASTNode getDotAST(String tableAlias, String fieldAlias) {
+    ASTNode child = new ASTNode(new CommonToken(DOT, "."));
+    child.addChild(new ASTNode(new CommonToken(TOK_TABLE_OR_COL, "TOK_TABLE_OR_COL")));
+    child.getChild(0).addChild(new ASTNode(new CommonToken(Identifier, tableAlias)));
+    child.addChild(new ASTNode(new CommonToken(Identifier, fieldAlias)));
+    return child;
   }
 
   public interface ASTNodeVisitor {
@@ -147,8 +167,8 @@ public final class HQLParser {
     primitiveTypes.add(TOK_CHAR);
     PRIMITIVE_TYPES = Collections.unmodifiableSet(primitiveTypes);
 
-    FILTER_OPERATORS = Sets.newHashSet(KW_IN, GREATERTHAN, GREATERTHANOREQUALTO, LESSTHAN, LESSTHANOREQUALTO, EQUAL,
-      EQUAL_NS);
+    FILTER_OPERATORS = Sets.newHashSet(GREATERTHAN, GREATERTHANOREQUALTO, LESSTHAN, LESSTHANOREQUALTO, EQUAL,
+      EQUAL_NS, NOTEQUAL);
   }
 
   public static ASTNode parseHQL(String query, HiveConf conf) throws LensException {
@@ -718,6 +738,29 @@ public final class HQLParser {
     }
 
     return colname;
+  }
+
+  public static Set<String> getColsInExpr(final String tableAlias, ASTNode expr) throws LensException {
+    final Set<String> colsInExpr = new HashSet<>();
+    HQLParser.bft(expr, new ASTNodeVisitor() {
+      @Override
+      public void visit(TreeNode visited) {
+        ASTNode node = visited.getNode();
+        ASTNode parent = null;
+        if (visited.getParent() != null) {
+          parent = visited.getParent().getNode();
+        }
+        if (node.getToken().getType() == DOT) {
+          String alias = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).getText().toLowerCase();
+          ASTNode colIdent = (ASTNode) node.getChild(1);
+          String column = colIdent.getText().toLowerCase();
+          if (tableAlias.equalsIgnoreCase(alias)) {
+            colsInExpr.add(column);
+          }
+        }
+      }
+    });
+    return colsInExpr;
   }
 
   public static boolean isAggregateAST(ASTNode node) {

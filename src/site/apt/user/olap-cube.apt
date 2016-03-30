@@ -514,6 +514,14 @@ lens-shell>
 |Football, Cricket, BasketBall|	50|
 *--+--+
 
+ When there is an expression around the bridge table fields, user might be interested in doing field aggregations on
+ top of the expression defined. Also, simple filters on the fields should be applied to the array generated. The feature
+ provides capability for the same.
+
+ For ex:
+ "select user.sport, revenue from sales where user.sport in ('CRICKET')" would convert the filter user.sport in
+ 'CRICKET' to contains check in aggregated user sports.
+
  See configuration params available at {{{./olap-query-conf.html} OLAP query configurations}} and look for config
  related to bridge tables, for turning this on.
 

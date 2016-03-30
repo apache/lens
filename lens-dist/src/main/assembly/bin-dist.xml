@@ -211,6 +211,22 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/customer_interests_local</outputDirectory>
+      <includes>
+        <include>customer-interests-local.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/interests_local</outputDirectory>
+      <includes>
+        <include>interests-local.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
       <outputDirectory>/client/examples/data/city_local</outputDirectory>
       <includes>
         <include>city-local.data</include>

@@ -33,7 +33,6 @@ import org.apache.lens.server.api.error.LensException;
 class SingleFactSingleStorageHQLContext extends DimOnlyHQLContext {
 
   private final CandidateFact fact;
-  private final Set<Dimension> queriedDimSet;
   private String storageAlias;
 
   SingleFactSingleStorageHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery,
@@ -47,7 +46,6 @@ class SingleFactSingleStorageHQLContext extends DimOnlyHQLContext {
     throws LensException {
     super(dimsToQuery, dimsQueried, query, ast);
     this.fact = fact;
-    this.queriedDimSet = dimsQueried;
   }
 
   SingleFactSingleStorageHQLContext(CandidateFact fact, String storageAlias, Map<Dimension, CandidateDim> dimsToQuery,
@@ -71,15 +69,5 @@ class SingleFactSingleStorageHQLContext extends DimOnlyHQLContext {
         return storageAlias;
       }
     }
-  }
-
-  @Override
-  protected CandidateFact getQueriedFact() {
-    return fact;
-  }
-
-  @Override
-  public Set<Dimension> getQueriedDimSet() {
-    return queriedDimSet;
   }
 }

@@ -43,7 +43,7 @@ public class TestQuery {
   private static HiveConf conf = new HiveConf();
   private ASTNode ast;
 
-  private String actualQuery;
+  private String query;
   private String joinQueryPart = null;
 
   private String trimmedQuery = null;
@@ -73,12 +73,12 @@ public class TestQuery {
   }
 
   public TestQuery(String query) {
-    this.actualQuery = query;
+    this.query = query;
   }
 
   public ASTNode getAST() throws LensException {
     if (this.ast == null) {
-      ast = HQLParser.parseHQL(this.actualQuery, conf);
+      ast = HQLParser.parseHQL(this.query, conf);
     }
     return ast;
   }
@@ -86,7 +86,7 @@ public class TestQuery {
   public void processQueryAsString() {
     if (!processed) {
       processed = true;
-      this.trimmedQuery = getTrimmedQuery(actualQuery);
+      this.trimmedQuery = getTrimmedQuery(query);
       this.joinQueryPart = extractJoinStringFromQuery(trimmedQuery);
       /**
        * Get the join query part, pre-join query and post-join query part from the trimmed query.
@@ -218,11 +218,11 @@ public class TestQuery {
     if (this == expected) {
       return true;
     }
-    if (this.actualQuery == null && expected.actualQuery == null) {
+    if (this.query == null && expected.query == null) {
       return true;
-    } else if (this.actualQuery == null) {
+    } else if (this.query == null) {
       return false;
-    } else if (expected.actualQuery == null) {
+    } else if (expected.query == null) {
       return false;
     }
     boolean equals = false;
@@ -246,10 +246,10 @@ public class TestQuery {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(actualQuery, joinQueryPart, trimmedQuery, joinTypeStrings);
+    return Objects.hashCode(query, joinQueryPart, trimmedQuery, joinTypeStrings);
   }
 
   public String toString() {
-    return "Actual Query: " + actualQuery + "\n" + "JoinQueryString: " + joinTypeStrings;
+    return "Query: " + query + "\n" + "JoinQueryString: " + joinTypeStrings;
   }
 }

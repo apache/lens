@@ -72,3 +72,21 @@ INSERT INTO mydb_city_subset (id, name) values (1, 'Bangalore')
 INSERT INTO mydb_city_subset (id, name) values (2, 'Hyderabad')
 INSERT INTO mydb_city_subset (id, name) values (3, 'Austin')
 INSERT INTO mydb_city_subset (id, name) values (4, 'San Fransisco')
+
+DROP TABLE IF EXISTS mydb_customer_interests_table
+CREATE TABLE mydb_customer_interests_table (customer_id integer, interest_id integer)
+
+INSERT INTO mydb_customer_interests_table (customer_id, interest_id) values (1,1)
+INSERT INTO mydb_customer_interests_table (customer_id, interest_id) values (1,2)
+INSERT INTO mydb_customer_interests_table (customer_id, interest_id) values (3,1)
+INSERT INTO mydb_customer_interests_table (customer_id, interest_id) values (4,1)
+INSERT INTO mydb_customer_interests_table (customer_id, interest_id) values (4,1)
+INSERT INTO mydb_customer_interests_table (customer_id, interest_id) values (4,3)
+
+DROP TABLE IF EXISTS mydb_interests_table
+CREATE TABLE mydb_interests_table (id integer, name varchar(255))
+
+INSERT INTO mydb_interests_table (id, name) values (1,'Food')
+INSERT INTO mydb_interests_table (id, name) values (2,'Fashion')
+INSERT INTO mydb_interests_table (id, name) values (3,'Furniture')
+INSERT INTO mydb_interests_table (id, name) values (4,'Electronics')
