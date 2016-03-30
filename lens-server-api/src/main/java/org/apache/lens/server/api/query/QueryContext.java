@@ -33,6 +33,8 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.common.BackOffRetryHandler;
+import org.apache.lens.server.api.common.FailureContext;
 import org.apache.lens.server.api.driver.DriverQueryStatus;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.LensDriver;
@@ -41,6 +43,7 @@ import org.apache.lens.server.api.driver.PartiallyFetchedInMemoryResultSet;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
+import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -186,6 +189,8 @@ public class QueryContext extends AbstractQueryContext {
   @Getter
   private transient boolean isDriverResultRegistered;
 
+  transient FailureContext statusUpdateFailures = new FailureContext();
+
   /**
    * Creates context from query
    *
@@ -279,6 +284,11 @@ public class QueryContext extends AbstractQueryContext {
     return ctx;
   }
 
+  public void initTransientState() {
+    super.initTransientState();
+    statusUpdateFailures = new FailureContext();
+  }
+
   /**
    * Merge conf.
    *
@@ -357,8 +367,37 @@ public class QueryContext extends AbstractQueryContext {
   }
 
   public synchronized void setStatus(final QueryStatus newStatus) throws LensException {
+    validateTransition(newStatus);
     log.info("Updating status of {} from {} to {}", getQueryHandle(), this.status, newStatus);
     this.status = newStatus;
+  }
+
+  /**
+   * Update status from selected driver
+   *
+   * @param statusUpdateRetryHandler The exponential retry handler
+   *
+   * @throws LensException Throws exception if update from driver has failed.
+   */
+  public synchronized void updateDriverStatus(BackOffRetryHandler statusUpdateRetryHandler)
+    throws LensException {
+    if (statusUpdateRetryHandler.canTryOpNow(statusUpdateFailures)) {
+      try {
+        getSelectedDriver().updateStatus(this);
+        statusUpdateFailures.clear();
+      } catch (LensException exc) {
+        if (LensUtil.isSocketException(exc)) {
+          statusUpdateFailures.updateFailure();
+          if (!statusUpdateRetryHandler.hasExhaustedRetries(statusUpdateFailures)) {
+            // retries are not exhausted, so failure is ignored and update will be tried later
+            log.warn("Exception during update status from driver and update will be tried again at {}",
+              statusUpdateRetryHandler.getOperationNextTime(statusUpdateFailures), exc);
+            return;
+          }
+        }
+        throw exc;
+      }
+    }
   }
 
   public String getResultHeader() {
