@@ -95,6 +95,7 @@ public class TestAbstractQueryContext {
     ctxRead.initTransientState();
     ctxRead.setConf(ctx.getConf());
     assertNotNull(ctxRead.getHiveConf());
+    assertNotNull(ctxRead.statusUpdateFailures);
   }
 
   @Test

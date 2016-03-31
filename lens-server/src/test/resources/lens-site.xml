@@ -192,4 +192,10 @@
     <value>20</value>
     <description>Number of sessions can be allowed for each user.</description>
   </property>
+  <property>
+    <name>lens.server.status.update.exponential.wait.millis</name>
+    <value>1000</value>
+    <description>Number of millis that would grow exponentially for next update, incase of transient failures.
+    </description>
+  </property>
 </configuration>

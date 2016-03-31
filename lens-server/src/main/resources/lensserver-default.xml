@@ -834,4 +834,24 @@
       an exception by saying that opened session limit has been already reached for user.
     </description>
   </property>
+  <property>
+    <name>lens.server.status.update.num.retries</name>
+    <value>10</value>
+    <description>The number of retries a status update will tried with exponentital back off, in case of transient
+      issues, upon which query will be marked FAILED.
+    </description>
+  </property>
+  <property>
+    <name>lens.server.status.update.maximum.delay.secs</name>
+    <value>1800</value>
+    <description>The maximum delay in seconds for next status update to happen after any transient failure. This will
+      be used a maximum delay sothat exponential wait times not to grow to bigger value.
+    </description>
+  </property>
+  <property>
+  <name>lens.server.status.update.exponential.wait.millis</name>
+  <value>30000</value>
+  <description>Number of millis that would grow exponentially for next update, incase of transient failures.
+  </description>
+</property>
 </configuration>

@@ -1046,4 +1046,35 @@ public final class LensConfConstants {
    * Default value of  INMEMORY_RESULT_SET_TTL_SECS is 300 secs (5 minutes)
    */
   public static final int DEFAULT_INMEMORY_RESULT_SET_TTL_SECS = 300;
+
+  /**
+   * Number of retries status update will be retried, in case of transient failures
+   */
+  public static final String STATUS_UPDATE_EXPONENTIAL_RETRIES = SERVER_PFX + "status.update.num.retries";
+
+  /**
+   * Default value of STATUS_UPDATE_EXPONENTIAL_RETRIES is 10
+   */
+  public static final int DEFAULT_STATUS_UPDATE_EXPONENTIAL_RETRIES = 10;
+
+  /**
+   * Maximum delay a status update can wait for next update, in case of transient failures
+   */
+  public static final String MAXIMUM_STATUS_UPDATE_DELAY = SERVER_PFX + "status.update.maximum.delay.secs";
+
+  /**
+   * Default value of MAXIMUM_STATUS_UPDATE_DELAY is 1800 secs (30 minutes)
+   */
+  public static final long DEFAULT_MAXIMUM_STATUS_UPDATE_DELAY = 1800;
+
+  /**
+   * Number of seconds that would grow exponentially for next update, incase of transient failures.
+   */
+  public static final String STATUS_UPDATE_EXPONENTIAL_WAIT_FACTOR = SERVER_PFX
+    + "status.update.exponential.wait.millis";
+
+  /**
+   * Default value of DEFAULT_STATUS_UPDATE_EXPONENTIAL_WAIT_FACTOR is 30000 millis (30 seconds)
+   */
+  public static final long DEFAULT_STATUS_UPDATE_EXPONENTIAL_WAIT_FACTOR = 30000;
 }

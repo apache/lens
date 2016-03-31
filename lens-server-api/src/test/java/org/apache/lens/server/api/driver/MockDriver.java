@@ -21,6 +21,8 @@ package org.apache.lens.server.api.driver;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,6 +47,7 @@ import org.apache.hive.service.cli.ColumnDescriptor;
 
 import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ImmutableSet;
+import lombok.Getter;
 
 /**
  * The Class MockDriver.
@@ -148,6 +151,8 @@ public class MockDriver extends AbstractLensDriver {
     return new MockQueryPlan(explainCtx.getUserQuery());
   }
 
+  @Getter
+  private int updateCount = 0;
   /*
    * (non-Javadoc)
    *
@@ -155,6 +160,25 @@ public class MockDriver extends AbstractLensDriver {
    */
   @Override
   public void updateStatus(QueryContext context) throws LensException {
+    updateCount++;
+    if ("simulate status retries".equals(context.getUserQuery())) {
+      try {
+        if (updateCount < 3) {
+          throw new SocketTimeoutException("simulated timeout exception");
+        } else if (updateCount <= 5) {
+          throw new SocketException("simulated socket exception");
+        }
+      } catch (Exception e) {
+        throw new LensException(e);
+      }
+    }
+    if ("simulate status failure".equals(context.getUserQuery())) {
+      try {
+        throw new SocketTimeoutException("simulated timeout exception");
+      } catch (Exception e) {
+        throw new LensException(e);
+      }
+    }
     context.getDriverStatus().setProgress(1.0);
     context.getDriverStatus().setStatusMessage("Done");
     context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
