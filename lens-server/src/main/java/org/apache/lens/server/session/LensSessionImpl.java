@@ -22,6 +22,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -223,6 +224,8 @@ public class LensSessionImpl extends HiveSessionImpl {
     acquireCount++;
     // Update thread's class loader with current DBs class loader
     ClassLoader classLoader = getClassLoader(getCurrentDatabase());
+    log.info("setting classloader to {}", classLoader);
+    log.debug("class loader urls: {}", Arrays.toString(((URLClassLoader) classLoader).getURLs()));
     Thread.currentThread().setContextClassLoader(classLoader);
     SessionState.getSessionConf().setClassLoader(classLoader);
   }
@@ -334,6 +337,7 @@ public class LensSessionImpl extends HiveSessionImpl {
             log.debug("DB resource service gave null class loader for {}", database);
           } else {
             if (areResourcesAdded()) {
+              log.debug("adding resources for {}", database);
               // We need to update DB specific classloader with added resources
               updateSessionDbClassLoader(database);
               classLoader = sessionDbClassLoaders.get(database);
