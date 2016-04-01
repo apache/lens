@@ -137,8 +137,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   /**
    * The accepted queries.
    */
-  private FairPriorityBlockingQueue<QueryContext> queuedQueries
-    = new FairPriorityBlockingQueue<QueryContext>(new QueryContextPriorityComparator());
+  private FairPriorityBlockingQueue<QueryContext> queuedQueries;
 
   /**
    * The launched queries.
@@ -222,6 +221,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   private DriverSelector driverSelector;
 
+  /**
+   *  The query comparator
+   */
+  private QueryComparator queryComparator;
   /**
    * The result sets.
    */
@@ -364,6 +367,18 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       throw new LensException("Couldn't instantiate driver selector class. Class name: "
         + conf.get(DRIVER_SELECTOR_CLASS) + ". Please supply a valid value for "
         + DRIVER_SELECTOR_CLASS);
+    }
+  }
+  private void loadQueryComparator() throws LensException {
+    try {
+      Class<? extends QueryComparator> queryComparatorClass = conf.getClass(QUERY_COMPARATOR_CLASS,
+          QueryPriorityComparator.class, QueryComparator.class);
+      log.info("Using query comparator class: {}", queryComparatorClass.getCanonicalName());
+      queryComparator = queryComparatorClass.newInstance();
+    } catch (Exception e) {
+      throw new LensException("Couldn't instantiate query comparator class. Class name: "
+          + conf.get(QUERY_COMPARATOR_CLASS) + ". Please supply a valid value for "
+          + QUERY_COMPARATOR_CLASS);
     }
   }
 
@@ -1114,10 +1129,20 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     super.init(hiveConf);
     this.conf = hiveConf;
 
+    try {
+      loadQueryComparator();
+    } catch (LensException e) {
+      log.error("Error while loading query comparator class", e);
+      throw new IllegalStateException("Could not load query comparator class", e);
+    }
+
     this.launchedQueries
       = new ThreadSafeEstimatedQueryCollection(new DefaultEstimatedQueryCollection(new DefaultQueryCollection()));
+    this.queuedQueries
+      = new FairPriorityBlockingQueue<QueryContext>(queryComparator);
+
     this.waitingQueries = new ThreadSafeEstimatedQueryCollection(new DefaultEstimatedQueryCollection(
-      new DefaultQueryCollection(new TreeSet<QueryContext>(new QueryContextPriorityComparator()))));
+      new DefaultQueryCollection(new TreeSet<QueryContext>(queryComparator))));
 
     ImmutableSet<QueryLaunchingConstraint> queryConstraints = getImplementations(
       QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY, hiveConf);

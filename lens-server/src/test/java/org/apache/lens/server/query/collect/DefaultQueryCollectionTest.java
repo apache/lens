@@ -27,6 +27,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Set;
 
+import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.query.QueryContext;
 
 import org.testng.annotations.DataProvider;
@@ -84,7 +85,7 @@ public class DefaultQueryCollectionTest {
   }
 
   @Test(dataProvider = "dpQueryCosts")
-  public void testRemoveMethodMustChangeQueryIndices(final double[] queryCosts) {
+  public void testRemoveMethodMustChangeQueryCostIndices(final double[] queryCosts) {
 
     /* Initialization */
     int numberOfQueries = queryCosts.length;
@@ -105,6 +106,37 @@ public class DefaultQueryCollectionTest {
     /* Verification 3: Verifies that query index is decreased after removal of queries which were present before
      them in the queries list */
     assertEquals(collection.getQueryIndex(queuedQuery).intValue(), 2);
+  }
+
+  @Test
+  public void testRemoveMethodMustChangeQueryPriorityIndices() {
+
+    Priority[] priorities = Priority.values();
+
+    /* Initialization */
+    int numberOfQueries = priorities.length;
+    QueryCollection collection = createQueriesTreeSetWithQueryHandleAndPriorityStubbing(priorities, MOCK_HANDLE);
+
+    QueryContext completedQuery = getMockedQueryFromQueries(collection.getQueries(), MOCK_HANDLE, 1);
+    QueryContext queuedQuery = getMockedQueryFromQueries(collection.getQueries(), MOCK_HANDLE, 5);
+
+     /* Verification 1: Verifies that all queries were added into the collection*/
+    assertEquals(collection.getQueriesCount(), numberOfQueries);
+
+    /* Execution */
+    collection.remove(completedQuery);
+
+     /* Verification 2: Verifies that queries were removed from the collection */
+    assertEquals(collection.getQueriesCount(), numberOfQueries - 1);
+
+    /* Verification 3: Verifies that query index is decreased after removal of queries which were present before
+     them in the queries list */
+    assertEquals(collection.getQueryIndex(queuedQuery).intValue(), 4);
+
+    /* Verification 4: Verifies that query index is increasing when query with existing priority added to list */
+    completedQuery.setPriority(Priority.NORMAL);
+    collection.add(completedQuery);
+    assertEquals(collection.getQueryIndex(queuedQuery).intValue(), 5);
   }
 
   @Test
