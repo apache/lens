@@ -107,7 +107,7 @@ public final class RewriteUtil {
     int childCount = ast.getChildCount();
     if (ast.getToken() != null) {
       if (log.isDebugEnabled() && ast.getChild(0) != null) {
-        log.debug("First child: {} Type:{}", ast.getChild(0), ((ASTNode) ast.getChild(0)).getType());
+        log.debug("First child: {} Type:{}", ast.getChild(0), ast.getChild(0).getType());
       }
       if (ast.getType() == HiveParser.TOK_QUERY
         && (isCubeKeywordNode((ASTNode) ast.getChild(0)) || isFromNodeWithCubeTable((ASTNode) ast.getChild(0), conf))) {
@@ -120,11 +120,10 @@ public final class RewriteUtil {
             cqi.startPos = ast.getCharPositionInLine();
           } else {
             ASTNode selectAST = (ASTNode) ast.getChild(1).getChild(1);
-            // Left most child of select AST will have char position just after select / select distinct
-            // Go back one "select[ distinct]"
+            // Left most child of select AST will have char position after select with
+            // no selects in between. search for select backward from there.
             cqi.startPos = getStartPos(originalQuery, HQLParser.leftMostChild(selectAST).getCharPositionInLine(),
-              "distinct");
-            cqi.startPos = getStartPos(originalQuery, cqi.startPos, "select");
+              "select");
           }
           int ci = ast.getChildIndex();
           if (parent.getToken() == null || parent.getType() == HiveParser.TOK_EXPLAIN
@@ -145,10 +144,9 @@ public final class RewriteUtil {
                 // middle child, it's left child's right child.
                 nextChild = (ASTNode) parent.getParent().getChild(parent.getChildIndex()+1);
               }
-              // Go back one "union all select[ distinct]"
-              cqi.endPos = getEndPos(originalQuery, nextChild.getChild(1).getChild(1).getCharPositionInLine() - 1,
-                "distinct");
-              cqi.endPos = getEndPos(originalQuery, cqi.endPos, "select");
+              // Go back one select
+              cqi.endPos = getStartPos(originalQuery, nextChild.getChild(1).getChild(1).getCharPositionInLine() - 1,
+                "select");
               cqi.endPos = getEndPos(originalQuery, cqi.endPos, "union all");
             } else {
               // Not expected to reach here
@@ -161,8 +159,12 @@ public final class RewriteUtil {
             // and one for the close parenthesis if there are no more unionall
             // or one for the string 'UNION ALL' if there are more union all
             log.debug("Child of union all");
-            cqi.endPos = getEndPos(originalQuery, parent.getParent().getChild(1).getCharPositionInLine(), ")",
-              "UNION ALL");
+            cqi.endPos = parent.getParent().getChild(1).getCharPositionInLine();
+            if (cqi.endPos != 0) {
+              cqi.endPos = getEndPos(originalQuery, cqi.endPos, ")", "UNION ALL");
+            } else {
+              cqi.endPos = originalQuery.length();
+            }
           }
         }
         if (log.isDebugEnabled()) {
@@ -221,18 +223,19 @@ public final class RewriteUtil {
    * @return the end pos
    */
   private static int getEndPos(String query, int backTrackIndex, String... backTrackStr) {
-    backTrackIndex = backTrack(query, backTrackIndex, backTrackStr);
+    backTrackIndex = backTrack(query, backTrackIndex, false, backTrackStr);
     while (backTrackIndex > 0 && Character.isSpaceChar(query.charAt(backTrackIndex - 1))) {
       backTrackIndex--;
     }
     return backTrackIndex;
   }
 
-  private static int backTrack(String query, int backTrackIndex, String... backTrackStr) {
+  private static int backTrack(String query, int backTrackIndex, boolean force, String... backTrackStr) {
     if (backTrackStr != null) {
       String q = query.substring(0, backTrackIndex).toLowerCase();
+      String qTrim = q.trim();
       for (String aBackTrackStr : backTrackStr) {
-        if (q.trim().endsWith(aBackTrackStr.toLowerCase())) {
+        if ((force  && qTrim.contains(aBackTrackStr.toLowerCase()))|| qTrim.endsWith(aBackTrackStr.toLowerCase())) {
           backTrackIndex = q.lastIndexOf(aBackTrackStr.toLowerCase());
           break;
         }
@@ -250,7 +253,7 @@ public final class RewriteUtil {
    * @return the end pos
    */
   private static int getStartPos(String query, int backTrackIndex, String... backTrackStr) {
-    backTrackIndex = backTrack(query, backTrackIndex, backTrackStr);
+    backTrackIndex = backTrack(query, backTrackIndex, true, backTrackStr);
     while (backTrackIndex < query.length() && Character.isSpaceChar(query.charAt(backTrackIndex))) {
       backTrackIndex++;
     }

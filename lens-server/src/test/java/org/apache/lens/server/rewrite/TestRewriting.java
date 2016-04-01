@@ -449,6 +449,13 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.get(0).query,
       "select name from cube_table where time_range_in('dt', '2014-06-24-23', '2014-06-25-00')");
 
+    q2 = "SELECT case when a='b' then 'c' else 'd' end some_field from cube_table";
+    cubeQueries = RewriteUtil.findCubePositions(q2 + " union all " + q2, hconf);
+
+    Assert.assertEquals(cubeQueries.size(), 2);
+    Assert.assertEquals(cubeQueries.get(0).query, q2);
+    Assert.assertEquals(cubeQueries.get(1).query, q2);
+
     // failing query for second driver
     MockDriver driver2 = new MockDriver();
     driver2.configure(conf, null, null);
