@@ -91,6 +91,8 @@ public final class LensConfConstants {
 
   public static final String MAX_SESSIONS_PER_USER = SERVER_PFX + "max.sessions.per.user";
 
+  public static final String QUERY_COMPARATOR_CLASS = SERVER_PFX + "query.comparator.class";
+
   public static final Integer DEFAULT_MAX_SESSIONS_PER_USER = 10;
 
   /**

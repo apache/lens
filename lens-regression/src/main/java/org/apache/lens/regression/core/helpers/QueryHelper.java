@@ -21,6 +21,7 @@ package org.apache.lens.regression.core.helpers;
 
 import java.util.List;
 
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBException;
@@ -28,13 +29,11 @@ import javax.xml.bind.JAXBException;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.api.result.QueryCostTO;
 import org.apache.lens.regression.core.constants.QueryURL;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
-import org.apache.lens.regression.core.type.PrepareQueryHandles;
-import org.apache.lens.regression.core.type.QueryHandles;
 import org.apache.lens.regression.util.AssertUtil;
-import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.error.LensException;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -74,10 +73,8 @@ public class QueryHelper extends ServiceManagerHelper {
       formData.add("queryName", queryName);
     }
     Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
-        MediaType.APPLICATION_XML, formData.getForm());
-    String queryHandleString = response.readEntity(String.class);
-    log.info("QueryHandle String:{}", queryHandleString);
-    LensAPIResult result = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
+            MediaType.APPLICATION_XML, formData.getForm());
+    LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>(){});
     return result;
   }
 
@@ -124,9 +121,7 @@ public class QueryHelper extends ServiceManagerHelper {
     }
     Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
-    String queryHandleString = response.readEntity(String.class);
-    log.info("QueryHandle String:{}", queryHandleString);
-    LensAPIResult result = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
+    LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>(){});
     return result;
   }
 
@@ -179,10 +174,9 @@ public class QueryHelper extends ServiceManagerHelper {
         new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
             MediaType.APPLICATION_XML_TYPE));
     Response response = this.exec("post", "/queryapi/queries", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
-        MediaType.APPLICATION_XML, formData.getForm());
-    String queryHandleString = response.readEntity(String.class);
-    log.info("QueryHandle String:{}", queryHandleString);
-    LensAPIResult result = (LensAPIResult) Util.getObject(queryHandleString, LensAPIResult.class);
+            MediaType.APPLICATION_XML, formData.getForm());
+    LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>(){});
+    log.info("QueryHandle String:{}", result);
     return result;
   }
 
@@ -195,7 +189,7 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the query Plan
    */
 
-  public LensAPIResult explainQuery(String queryString, String sessionHandleString, String conf) throws
+  public LensAPIResult<QueryPlan> explainQuery(String queryString, String sessionHandleString, String conf) throws
       JAXBException, InstantiationException, IllegalAccessException, LensException {
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
@@ -205,20 +199,19 @@ public class QueryHelper extends ServiceManagerHelper {
         new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
             MediaType.APPLICATION_XML_TYPE));
     Response response = this.exec("post", "/queryapi/queries", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
-        MediaType.APPLICATION_XML, formData.getForm());
-    String queryPlanString = response.readEntity(String.class);
-    log.info("QueryPlan String:{}", queryPlanString);
-    LensAPIResult result = (LensAPIResult) Util.getObject(queryPlanString, LensAPIResult.class);
+            MediaType.APPLICATION_XML, formData.getForm());
+    LensAPIResult<QueryPlan> result = response.readEntity(new GenericType<LensAPIResult<QueryPlan>>(){});
+    log.info("QueryPlan String:{}", result);
     return result;
   }
 
-  public LensAPIResult explainQuery(String queryString, String sessionHandleString) throws
+  public LensAPIResult<QueryPlan> explainQuery(String queryString, String sessionHandleString) throws
       JAXBException, InstantiationException, IllegalAccessException, LensException {
     return explainQuery(queryString, sessionHandleString,
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
   }
 
-  public LensAPIResult explainQuery(String queryString) throws
+  public LensAPIResult<QueryPlan> explainQuery(String queryString) throws
       JAXBException, InstantiationException, IllegalAccessException, LensException {
     return explainQuery(queryString, sessionHandleString);
   }
@@ -232,7 +225,7 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the Estimate result
    */
 
-  public LensAPIResult estimateQuery(String queryString, String sessionHandleString, String conf) throws
+  public LensAPIResult<QueryCostTO> estimateQuery(String queryString, String sessionHandleString, String conf) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
@@ -241,19 +234,18 @@ public class QueryHelper extends ServiceManagerHelper {
     formData.add("conf", conf);
     Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
-    String queryCostString = response.readEntity(String.class);
-    log.info("QueryCost String:{}", queryCostString);
-    LensAPIResult result = (LensAPIResult) Util.getObject(queryCostString, LensAPIResult.class);
+    LensAPIResult<QueryCostTO> result = response.readEntity(new GenericType<LensAPIResult<QueryCostTO>>(){});
+    log.info("QueryCost String:{}", result);
     return result;
   }
 
-  public LensAPIResult estimateQuery(String queryString, String sessionHandleString) throws
+  public LensAPIResult<QueryCostTO> estimateQuery(String queryString, String sessionHandleString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return estimateQuery(queryString, sessionHandleString,
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
   }
 
-  public LensAPIResult estimateQuery(String queryString) throws
+  public LensAPIResult<QueryCostTO> estimateQuery(String queryString) throws
       InstantiationException, IllegalAccessException, JAXBException, LensException {
     return estimateQuery(queryString, sessionHandleString);
   }
@@ -275,13 +267,12 @@ public class QueryHelper extends ServiceManagerHelper {
     formData.add("query", queryString);
     formData.add("operation", "EXPLAIN_AND_PREPARE");
     formData.add("conf", conf);
-    Response response = this
-        .exec("post", "/queryapi/preparedqueries", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
-            MediaType.APPLICATION_XML, formData.getForm());
-    String queryPlanString = response.readEntity(String.class);
-    log.info("QueryPlan String:{}", queryPlanString);
-    QueryPlan queryPlan = (QueryPlan) Util.getObject(queryPlanString, QueryPlan.class);
-    return queryPlan;
+    Response response = this.exec("post", "/queryapi/preparedqueries", servLens, null, null,
+        MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
+    LensAPIResult<QueryPlan> result = response.readEntity(new GenericType<LensAPIResult<QueryPlan>>() {
+    });
+    log.info("QueryPlan String:{}", result);
+    return result.getData();
   }
 
   public QueryPlan explainAndPrepareQuery(String queryString, String sessionHandleString) throws
@@ -314,11 +305,9 @@ public class QueryHelper extends ServiceManagerHelper {
     Response response = this
         .exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset", servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
-    log.info("Response {}", response);
-    String queryResultString = response.readEntity(String.class);
-    log.info("QueryResult String:{}", queryResultString);
-    QueryResult queryResult = (QueryResult) Util.getObject(queryResultString, QueryResult.class);
-    return queryResult;
+    QueryResult result = response.readEntity(new GenericType<QueryResult>(){});
+    log.info("QueryResult String:{}", result);
+    return result;
   }
 
   public QueryResult getResultSet(QueryHandle queryHandle, String fromIndex, String fetchSize) throws
@@ -343,11 +332,8 @@ public class QueryHelper extends ServiceManagerHelper {
     Response response = this
         .exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/httpresultset", servLens, null, null);
     AssertUtil.assertSucceededResponse(response);
-    log.info("Response {}", response);
-    String queryResultString = response.readEntity(String.class);
-    log.info("QueryResult String:{}", queryResultString);
-    QueryResult queryResult = (QueryResult) Util.getObject(queryResultString, QueryResult.class);
-    return queryResult;
+    QueryResult result = response.readEntity(new GenericType<QueryResult>(){});
+    return result;
   }
 
   /**
@@ -368,11 +354,10 @@ public class QueryHelper extends ServiceManagerHelper {
     formData.add("conf", conf);
     Response response = this.exec("post", "/queryapi/preparedqueries/" + queryHandle.toString(), servLens, null, null,
         MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
-    String queryHandleString = response.readEntity(String.class);
     AssertUtil.assertSucceededResponse(response);
-    log.info("QueryHandle String:{}", queryHandleString);
-    QueryHandle handle = (QueryHandle) Util.getObject(queryHandleString, QueryHandle.class);
-    return handle;
+    QueryHandle result = response.readEntity(new GenericType<QueryHandle>(){});
+    log.info("QueryHandle String:{}", result);
+    return result;
   }
 
   public QueryHandle executePreparedQuery(QueryPrepareHandle queryHandle, String sessionHandleString) throws
@@ -409,12 +394,8 @@ public class QueryHelper extends ServiceManagerHelper {
     }
     Response response = this.exec("post", "/queryapi/preparedqueries/" + queryHandle.toString(), servLens, null, null,
         MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
-    String queryHandleString = response.readEntity(String.class);
-    AssertUtil.assertSucceededResponse(response);
-    log.info("QueryHandle String:{}", queryHandleString);
-    QueryHandleWithResultSet handle = (QueryHandleWithResultSet) Util
-        .getObject(queryHandleString, QueryHandleWithResultSet.class);
-    return handle;
+    QueryHandleWithResultSet result = response.readEntity(new GenericType<QueryHandleWithResultSet>(){});
+    return result;
   }
 
   public QueryHandleWithResultSet executePreparedQueryTimeout(QueryPrepareHandle queryHandle, String timeout,
@@ -455,11 +436,10 @@ public class QueryHelper extends ServiceManagerHelper {
     Response response = this
         .exec("post", "/queryapi/preparedqueries", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
             MediaType.APPLICATION_XML, formData.getForm());
-    String queryHandleString = response.readEntity(String.class);
-    log.info("QueryHandle String:{}", queryHandleString);
     AssertUtil.assertSucceededResponse(response);
-    QueryPrepareHandle queryHandle = (QueryPrepareHandle) Util.getObject(queryHandleString, QueryPrepareHandle.class);
-    return queryHandle;
+    LensAPIResult<QueryPrepareHandle> result = response.readEntity(
+        new GenericType<LensAPIResult<QueryPrepareHandle>>(){});
+    return result.getData();
   }
 
   public QueryPrepareHandle submitPreparedQuery(String queryString, String queryName, String sessionHandleString) throws
@@ -526,10 +506,7 @@ public class QueryHelper extends ServiceManagerHelper {
     }
     Response response = this.sendQuery("get", QueryURL.PREPAREDQUERY_URL, queryList);
     log.info("Response : {}" + response);
-    String responseString = response.readEntity(String.class);
-    log.info("Response String:{}", responseString);
-    PrepareQueryHandles result = (PrepareQueryHandles) Util.getObject(responseString, PrepareQueryHandles.class);
-    List<QueryPrepareHandle> list = result.getQueryHandles();
+    List<QueryPrepareHandle> list = response.readEntity(new GenericType<List<QueryPrepareHandle>>(){});
     return list;
   }
 
@@ -632,7 +609,7 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the query Handle list
    */
   public List<QueryHandle> getQueryHandleList(String queryName, String state, String user, String sessionHandleString,
-      String fromDate, String toDate) throws InstantiationException, IllegalAccessException {
+      String fromDate, String toDate, String driver) throws InstantiationException, IllegalAccessException {
     MapBuilder queryList = new MapBuilder("sessionid", sessionHandleString);
     if (queryName != null) {
       queryList.put("queryName", queryName);
@@ -649,13 +626,21 @@ public class QueryHelper extends ServiceManagerHelper {
     if (toDate != null) {
       queryList.put("toDate", toDate);
     }
+    if (driver != null) {
+      queryList.put("driver", driver);
+    }
     Response response = this.sendQuery("get", QueryURL.QUERY_URL, queryList);
     log.info("Response : {}", response);
-    String responseString = response.readEntity(String.class);
-    QueryHandles result = (QueryHandles) Util.getObject(responseString, QueryHandles.class);
-    List<QueryHandle> list = result.getQueryHandles();
+    List<QueryHandle> list = response.readEntity(new GenericType<List<QueryHandle>>(){});
     return list;
   }
+
+  public List<QueryHandle> getQueryHandleList(String queryName, String state, String user,
+      String sessionHandleString, String fromDate, String toDate) throws InstantiationException,
+          IllegalAccessException {
+    return getQueryHandleList(queryName, state, user, sessionHandleString, fromDate, toDate, null);
+  }
+
 
   public List<QueryHandle> getQueryHandleList(String queryName, String state, String user,
       String sessionHandleString) throws InstantiationException, IllegalAccessException {
@@ -693,13 +678,13 @@ public class QueryHelper extends ServiceManagerHelper {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     Response response = this.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString(), servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
-    String responseString = response.readEntity(String.class);
-    LensQuery lensQuery = (LensQuery) Util.getObject(responseString, LensQuery.class);
+    LensQuery lensQuery = response.readEntity(new GenericType<LensQuery>(){});
+
     while (!lensQuery.getStatus().finished()) {
       log.info("Waiting...");
       Thread.sleep(1000);
       response = this.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString(), servLens, null, query);
-      lensQuery = (LensQuery) Util.getObject(response.readEntity(String.class), LensQuery.class);
+      lensQuery = response.readEntity(new GenericType<LensQuery>(){});
     }
     log.info("QueryStatus message:{}", lensQuery.getStatus().getStatusMessage());
     return lensQuery;
@@ -748,10 +733,20 @@ public class QueryHelper extends ServiceManagerHelper {
     Response response = this.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString(), servLens, null, query);
     log.info("Response : {}", response);
     AssertUtil.assertSucceededResponse(response);
-    LensQuery lensQuery = (LensQuery) Util.getObject(response.readEntity(String.class), LensQuery.class);
+    LensQuery lensQuery = response.readEntity(new GenericType<LensQuery>(){});
     QueryStatus qStatus = lensQuery.getStatus();
-    log.info("Query Status : {}", qStatus);
+    log.info("Query Status for {} : {}", lensQuery.getQueryHandleString(), qStatus);
     return qStatus;
+  }
+
+  public LensQuery getLensQuery(String sessionHandleString, QueryHandle queryHandle) throws
+      JAXBException, InstantiationException, IllegalAccessException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString(), servLens, null, query);
+    log.info("Response : {}", response);
+    AssertUtil.assertSucceededResponse(response);
+    LensQuery lensQuery = response.readEntity(new GenericType<LensQuery>(){});
+    return lensQuery;
   }
 
   public QueryStatus getQueryStatus(QueryHandle queryHandle) throws

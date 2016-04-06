@@ -25,15 +25,19 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.Comparator;
 
+import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-public class QueryContextPriorityComparatorTest {
+public class QueryContextComparatorTest {
 
-  private final Comparator<QueryContext> pqComparator = new QueryContextPriorityComparator();
+  private final Comparator<QueryContext> priorityComparator = new QueryPriorityComparator();
+  private final Comparator<QueryContext> costComparator = new QueryCostComparator();
+
+
 
   @DataProvider
   public Object[][] dpQueryCostCompare() {
@@ -57,8 +61,21 @@ public class QueryContextPriorityComparatorTest {
     when(query2.getSelectedDriverQueryCost()).thenReturn(qcO2);
 
     when(qcO1.compareTo(qcO2)).thenReturn(resultOfQueryCostCompare);
-    assertEquals(pqComparator.compare(query1, query2), expectedResult);
+    assertEquals(costComparator.compare(query1, query2), expectedResult);
   }
+
+  @Test
+  public void testCompareOnQueryPriority() {
+
+    QueryContext query1 = mock(QueryContext.class);
+    when(query1.getPriority()).thenReturn(Priority.HIGH); // Ordinal = 1
+
+    QueryContext query2 = mock(QueryContext.class);
+    when(query2.getPriority()).thenReturn(Priority.LOW); // Ordinal = 3
+
+    assertEquals(priorityComparator.compare(query1, query2), -2);
+  }
+
 
   @DataProvider
   public Object[][] dpSubmitTimeCompare() {
@@ -83,17 +100,22 @@ public class QueryContextPriorityComparatorTest {
       final int expectedResult) {
 
     QueryContext query1 = mock(QueryContext.class);
+    when(query1.getPriority()).thenReturn(Priority.HIGH);
     QueryCost qcO1 = mock(QueryCost.class);
     when(query1.getSelectedDriverQueryCost()).thenReturn(qcO1);
 
     QueryContext query2 = mock(QueryContext.class);
+    when(query2.getPriority()).thenReturn(Priority.HIGH);
     QueryCost qcO2 = mock(QueryCost.class);
     when(query2.getSelectedDriverQueryCost()).thenReturn(qcO2);
 
-    when(qcO1.compareTo(qcO2)).thenReturn(0);
     when(query1.getSubmissionTime()).thenReturn(submitTimeQuery1);
     when(query2.getSubmissionTime()).thenReturn(submitTimeQuery2);
 
-    assertEquals(pqComparator.compare(query1, query2), expectedResult);
+    // Cost and Priority both are same, hence the comparison should happen
+    // on query submission time
+    assertEquals(priorityComparator.compare(query1, query2), expectedResult);
+    assertEquals(costComparator.compare(query1, query2), expectedResult);
+
   }
 }

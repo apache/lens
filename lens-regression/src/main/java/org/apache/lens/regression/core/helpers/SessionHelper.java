@@ -85,10 +85,10 @@ public class SessionHelper extends ServiceManagerHelper {
     Response response = this.exec("delete", "/session", servLens, null, query);
 
     APIResult result = response.readEntity(APIResult.class);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
+    if (result.getStatus() != APIResult.Status.SUCCEEDED) {
       throw new LensException("Status should be SUCCEEDED");
     }
-    if (response.getStatus() == 200) {
+    if (response.getStatus() != Response.Status.OK.getStatusCode()) {
       throw new LensException("Status code should be 200");
     }
     if (result.getMessage() == null) {
@@ -187,4 +187,18 @@ public class SessionHelper extends ServiceManagerHelper {
     removeResourcesJar(path, sessionHandleString);
   }
 
+  public String getSessionParam(String sessionHandleString, String param) throws Exception {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    query.put("key", param);
+    Response response = this.exec("get", "/session/params", servLens, null, query);
+    AssertUtil.assertSucceededResponse(response);
+    String responseString = response.readEntity(String.class);
+    log.info(responseString);
+    HashMap<String, String> map = Util.stringListToMap(responseString);
+    return map.get(param);
+  }
+
+  public String getSessionParam(String param) throws Exception {
+    return getSessionParam(sessionHandleString, param);
+  }
 }
