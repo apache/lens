@@ -19,7 +19,6 @@
 
 package org.apache.lens.regression.core.helpers;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Map;
@@ -33,6 +32,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.regression.core.constants.SessionURL;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
@@ -40,6 +40,8 @@ import org.apache.lens.regression.util.AssertUtil;
 import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.error.LensException;
 
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -56,6 +58,9 @@ public abstract class ServiceManagerHelper {
   private static final String LENS_CLIENT_DIR = "lens.client.dir";
   private static final String LENS_SERVER_HDFS_URL = "lens.server.hdfsurl";
   private static final String LENS_CURRENT_DB = "lens.server.currentDB";
+  private static final String JOB_CONF_URL = "job.conf.url";
+  private static final String START_DATE = "query.start.date";
+
 
   protected static String sessionHandleString;
   protected static WebTarget servLens;
@@ -68,6 +73,9 @@ public abstract class ServiceManagerHelper {
   protected String clientDir;
   protected String serverHdfsUrl;
   protected String currentDB;
+  protected String jobConfUrl;
+  protected String startDate;
+
 
   public ServiceManagerHelper(String envFileName) {
     Properties prop = Util.getPropertiesObj(envFileName);
@@ -79,6 +87,8 @@ public abstract class ServiceManagerHelper {
     this.clientDir = prop.getProperty(LENS_CLIENT_DIR);
     this.serverHdfsUrl = prop.getProperty(LENS_SERVER_HDFS_URL);
     this.currentDB = prop.getProperty(LENS_CURRENT_DB);
+    this.jobConfUrl = prop.getProperty(JOB_CONF_URL);
+    this.startDate = prop.getProperty(START_DATE);
   }
 
   public ServiceManagerHelper() {
@@ -140,6 +150,15 @@ public abstract class ServiceManagerHelper {
     return currentDB;
   }
 
+  public String getJobConfUrl() {
+    return jobConfUrl;
+  }
+
+  public String getStartDate() {
+    return startDate;
+  }
+
+
   public String openSession(String database) throws JAXBException, LensException {
     FormBuilder formData = new FormBuilder();
     formData.add("username", this.getUserName());
@@ -147,6 +166,13 @@ public abstract class ServiceManagerHelper {
     if (database != null) {
       formData.add("database", database);
     }
+
+    LensConf conf = new LensConf();
+    formData.getForm().bodyPart(
+        new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(), conf,
+            MediaType.APPLICATION_XML_TYPE));
+    formData.add("sessionconf", conf.toString(), MediaType.APPLICATION_JSON_TYPE);
+
     Response response = this.exec("post", SessionURL.SESSION_BASE_URL, ServiceManagerHelper.servLens, null, null,
         MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
     AssertUtil.assertSucceededResponse(response);
@@ -198,10 +224,10 @@ public abstract class ServiceManagerHelper {
     String className = this.getClass().getName();
 
     if (outputMediaType == null) {
-      outputMediaType = MediaType.WILDCARD;
+      outputMediaType = MediaType.APPLICATION_XML;
     }
     if (inputMediaType == null) {
-      inputMediaType = MediaType.WILDCARD_TYPE;
+      inputMediaType = MediaType.APPLICATION_XML_TYPE;
     }
 
     builder = service.path(path);
@@ -225,20 +251,10 @@ public abstract class ServiceManagerHelper {
       result = method.invoke(methodObject, build, inputMediaType, responseClass, inputObject);
       return result;
 
-    } catch (NoSuchMethodException e) {
-      return e.getMessage();
-    } catch (InstantiationException e) {
-      return e.getMessage();
-    } catch (IllegalAccessException e) {
-      return e.getMessage();
-    } catch (InvocationTargetException e) {
-      return e.getMessage();
-    } catch (ClassNotFoundException e) {
-      return e.getMessage();
     } catch (Exception e) {
-      return e.getMessage();
+      log.error("Exception in exec", e);
+      return null;
     }
-
   }
 
   public <T> Response exec(String functionName, String path, WebTarget service, FormDataMultiPart headers,
@@ -250,7 +266,7 @@ public abstract class ServiceManagerHelper {
       cl = (Response) exec(functionName, path, service, headers, queryParams, inputMediaType, outputMediaType,
           responseClass, inputObject);
     } catch (Exception e) {
-      System.out.println(e);
+      log.error("Exception in exec", e);
     }
     return cl;
   }
