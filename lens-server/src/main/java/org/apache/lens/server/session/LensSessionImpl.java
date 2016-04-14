@@ -224,8 +224,6 @@ public class LensSessionImpl extends HiveSessionImpl {
     acquireCount++;
     // Update thread's class loader with current DBs class loader
     ClassLoader classLoader = getClassLoader(getCurrentDatabase());
-    log.info("setting classloader to {}", classLoader);
-    log.debug("class loader urls: {}", Arrays.toString(((URLClassLoader) classLoader).getURLs()));
     Thread.currentThread().setContextClassLoader(classLoader);
     SessionState.getSessionConf().setClassLoader(classLoader);
   }

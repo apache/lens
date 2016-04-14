@@ -329,7 +329,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
    */
   public LensSessionImpl getSession(LensSessionHandle sessionHandle) {
     if (sessionHandle == null) {
-      throw new ClientErrorException("Session is null " + sessionHandle, 400);
+      throw new ClientErrorException("Session is null", 400);
     }
 
     try {
