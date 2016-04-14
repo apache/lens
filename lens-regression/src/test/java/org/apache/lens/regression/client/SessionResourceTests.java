@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -74,12 +75,6 @@ public class SessionResourceTests extends BaseTestClass {
   private final String hiveUdfJar = "hiveudftest.jar";
   private final String serverResourcePath = "/tmp/regression/resources";
 
-  private static Map<String, String> defaultParams = new HashMap<String, String>();
-  static {
-    defaultParams.put("lens.query.enable.persistent.resultset", "false");
-    defaultParams.put("lens.query.enable.persistent.resultset.indriver", "false");
-  }
-
   private static String newParamsKey = "datanucleus.autoCreateSchema";
   private static String newParamsValue = "false";
   private static String createSleepFunction = "CREATE TEMPORARY FUNCTION sleep AS 'SampleUdf'";
@@ -115,8 +110,9 @@ public class SessionResourceTests extends BaseTestClass {
     MapBuilder query = new MapBuilder("sessionid", sessionHandle);
     query.put("verbose", "true");
     Response response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
-    String responseString = response.readEntity(String.class);
-    HashMap<String, String> map = Util.stringListToMap(responseString);
+    AssertUtil.assertSucceededResponse(response);
+    StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
+    HashMap<String, String> map = Util.stringListToMap(strList);
     if (map == null){
       return false;
     }
@@ -171,8 +167,11 @@ public class SessionResourceTests extends BaseTestClass {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     query.put("key", "datanucleus.autoCreateSchema");
     response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
-    String responseString = response.readEntity(String.class);
-    HashMap<String, String> map = Util.stringListToMap(responseString);
+    AssertUtil.assertSucceededResponse(response);
+
+    StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
+    HashMap<String, String> map = Util.stringListToMap(strList);
+
     Assert.assertEquals(map.get("datanucleus.autoCreateSchema"),
             newParamsValue, "From Session Params Put");
     Assert.assertEquals(map.size(), 1, "Params List contains more than one param");
@@ -186,8 +185,9 @@ public class SessionResourceTests extends BaseTestClass {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     query.put("key", undefinedParamsKey);
     Response response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
-    String responseString = response.readEntity(String.class);
-    HashMap<String, String> map = Util.stringListToMap(responseString);
+    AssertUtil.assertSucceededResponse(response);
+    StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
+    HashMap<String, String> map = Util.stringListToMap(strList);
     Assert.assertNull(map, "Get should have returned empty params list, but didnt");
   }
 
@@ -211,8 +211,11 @@ public class SessionResourceTests extends BaseTestClass {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     query.put("key", "datanucleus.autoCreateSchema");
     response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
-    String responseString = response.readEntity(String.class);
-    HashMap<String, String> map = Util.stringListToMap(responseString);
+    AssertUtil.assertSucceededResponse(response);
+
+    StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
+    HashMap<String, String> map = Util.stringListToMap(strList);
+
     Assert.assertEquals(map.get("datanucleus.autoCreateSchema"),
             newParamsValue, "From Session Params Put");
     Assert.assertEquals(map.size(), 1, "Params List contains more than one param");
@@ -224,7 +227,6 @@ public class SessionResourceTests extends BaseTestClass {
 
     String path = hdfsJarPath + "/" + hiveUdfJar;
     sHelper.addResourcesJar(path);
-    sHelper.setAndValidateParam(defaultParams);
 
     QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(createSleepFunction).getData();
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
@@ -247,7 +249,6 @@ public class SessionResourceTests extends BaseTestClass {
 
     String path = serverResourcePath + "/" + hiveUdfJar;
     sHelper.addResourcesJar(path);
-    sHelper.setAndValidateParam(defaultParams);
 
     QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(createSleepFunction).getData();
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);

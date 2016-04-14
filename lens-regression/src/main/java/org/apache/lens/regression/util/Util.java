@@ -62,7 +62,6 @@ import lombok.extern.slf4j.Slf4j;
 public class Util {
 
   private static final String PROPERTY_FILE = "lens.properties";
-  private static Properties properties;
   private static String localFilePath = "src/test/resources/";
   private static String localFile;
   private static String backupFile;
@@ -72,17 +71,14 @@ public class Util {
 
   }
 
-  public static synchronized Properties getPropertiesObj(String filename) {
+  public static Properties getPropertiesObj(String filename) {
     try {
-      if (properties == null) {
-        properties = new Properties();
-        log.info("filename: {}", filename);
-        InputStream confStream = Util.class.getResourceAsStream("/" + filename);
-        properties.load(confStream);
-        confStream.close();
-      }
+      Properties properties = new Properties();
+      log.info("filename: {}", filename);
+      InputStream confStream = Util.class.getResourceAsStream("/" + filename);
+      properties.load(confStream);
+      confStream.close();
       return properties;
-
     } catch (IOException e) {
       log.info("Error in getProperies:", e);
     }
@@ -154,8 +150,7 @@ public class Util {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> Object extractObject(String queryString, Class<T> c)
-    throws InstantiationException, IllegalAccessException {
+  public static <T> Object extractObject(String queryString, Class<T> c) throws IllegalAccessException {
     JAXBContext jaxbContext = null;
     Unmarshaller unmarshaller = null;
     StringReader reader = new StringReader(queryString);
@@ -171,8 +166,7 @@ public class Util {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> Object getObject(String queryString, Class<T> c)
-    throws InstantiationException, IllegalAccessException {
+  public static <T> Object getObject(String queryString, Class<T> c) throws IllegalAccessException {
     JAXBContext jaxbContext = null;
     Unmarshaller unmarshaller = null;
     StringReader reader = new StringReader(queryString);
@@ -188,8 +182,8 @@ public class Util {
 
   @SuppressWarnings("unchecked")
   public static <T> String convertObjectToXml(T object, Class<T> clazz, String functionName)
-    throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException,
-    InvocationTargetException {
+    throws SecurityException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
     JAXBElement<T> root = null;
     StringWriter stringWriter = new StringWriter();
     ObjectFactory methodObject = new ObjectFactory();
@@ -312,8 +306,9 @@ public class Util {
   /*
    * function to download or upload a file to a remote server
    */
-  public static void remoteFile(String function, String remotePath, String localPath)
-    throws JSchException, SftpException {
+  public static void remoteFile(String function, String remotePath, String localPath) throws JSchException,
+      SftpException {
+
     String serverUrl = getProperty("lens.remote.host");
     String serverUname = getProperty("lens.remote.username");
     String serverPass = getProperty("lens.remote.password");
@@ -360,7 +355,7 @@ public class Util {
   public static Map<String, String> mapFromXProperties(XProperties xProperties) {
     Map<String, String> properties = new HashMap<String, String>();
     if (xProperties != null && xProperties.getProperty() != null
-      && !xProperties.getProperty().isEmpty()) {
+        && !xProperties.getProperty().isEmpty()) {
       for (XProperty xp : xProperties.getProperty()) {
         properties.put(xp.getName(), xp.getValue());
       }
@@ -412,5 +407,4 @@ public class Util {
       return null;
     }
   }
-
 }

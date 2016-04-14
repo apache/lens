@@ -22,18 +22,24 @@ package org.apache.lens.regression.core.helpers;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBException;
 
-import org.apache.lens.api.APIResult;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.StringList;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
 import org.apache.lens.regression.util.AssertUtil;
 import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.error.LensException;
 
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+
 import lombok.extern.slf4j.Slf4j;
+
 
 @Slf4j
 public class SessionHelper extends ServiceManagerHelper {
@@ -55,46 +61,68 @@ public class SessionHelper extends ServiceManagerHelper {
    * @return the sessionHandle String
    */
 
-  public String openNewSession(String userName, String password, String database) throws JAXBException, LensException {
+  public Response openSessionReturnResponse(String userName, String password, String database, String outputMediaType)
+    throws LensException {
     FormBuilder formData = new FormBuilder();
     formData.add("username", userName);
     formData.add("password", password);
     if (database != null) {
       formData.add("database", database);
     }
+    LensConf conf = new LensConf();
+    formData.getForm().bodyPart(
+        new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(), conf,
+            MediaType.APPLICATION_XML_TYPE));
+    formData.add("sessionconf", conf.toString(), MediaType.APPLICATION_JSON_TYPE);
+
     Response response = this
-        .exec("post", "/session", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML,
+        .exec("post", "/session", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE, outputMediaType,
             formData.getForm());
+    return response;
+  }
+
+  public String openNewSession(String userName, String password, String database, String outputMediaType)
+    throws LensException {
+    Response response = openSessionReturnResponse(userName, password, database, outputMediaType);
     AssertUtil.assertSucceededResponse(response);
     String newSessionHandleString = response.readEntity(String.class);
     log.info("Session Handle String:{}", newSessionHandleString);
     return newSessionHandleString;
   }
 
-  public String openNewSession(String userName, String password) throws JAXBException, LensException {
-    return openNewSession(userName, password, null);
+  public String openNewSession(String userName, String password) throws LensException {
+    return openNewSession(userName, password, null, MediaType.APPLICATION_XML);
+  }
+
+  public String openNewSession(String userName, String password, String database) throws LensException {
+    return openNewSession(userName, password, database, MediaType.APPLICATION_XML);
+  }
+
+  public LensSessionHandle openNewSessionJson(String userName, String password, String database, String outputMediaType)
+    throws LensException {
+
+    Response response = openSessionReturnResponse(userName, password, database, outputMediaType);
+    AssertUtil.assertSucceededResponse(response);
+    LensSessionHandle newSessionHandleString = response.readEntity(new GenericType<LensSessionHandle>(){});
+    log.info("Session Handle String:{}", newSessionHandleString);
+    return newSessionHandleString;
   }
 
   /**
    * Close a Session
-   *
    * @param sessionHandleString
    */
-  public void closeNewSession(String sessionHandleString) throws JAXBException, LensException {
-    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-    Response response = this.exec("delete", "/session", servLens, null, query);
 
-    APIResult result = response.readEntity(APIResult.class);
-    if (result.getStatus() != APIResult.Status.SUCCEEDED) {
-      throw new LensException("Status should be SUCCEEDED");
-    }
-    if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-      throw new LensException("Status code should be 200");
-    }
-    if (result.getMessage() == null) {
-      throw new LensException("Status message is null");
-    }
+  public void closeNewSession(String sessionHandleString, String outputMediaType) throws LensException {
+
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("delete", "/session", servLens, null, query, null, outputMediaType, null);
+    AssertUtil.assertSucceededResponse(response);
     log.info("Closed Session : {}", sessionHandleString);
+  }
+
+  public void closeNewSession(String sessionHandleString) throws LensException {
+    closeNewSession(sessionHandleString, null);
   }
 
   /**
@@ -105,22 +133,22 @@ public class SessionHelper extends ServiceManagerHelper {
    * @param value
    */
   public void setAndValidateParam(String sessionHandleString, String param, String value) throws Exception {
-    boolean success;
+
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
     formData.add("key", param);
     formData.add("value", value);
-    Response response = this
-        .exec("put", "/session/params", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE, null,
-            formData.getForm());
-    AssertUtil.assertSucceeded(response);
+    Response response = this.exec("put", "/session/params", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
+         null, formData.getForm());
+    AssertUtil.assertSucceededResponse(response);
+
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     query.put("key", param);
     response = this.exec("get", "/session/params", servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
-    String responseString = response.readEntity(String.class);
-    log.info(responseString);
-    HashMap<String, String> map = Util.stringListToMap(responseString);
+    StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
+    HashMap<String, String> map = Util.stringListToMap(strList);
+
     if (!map.get(param).equals(value)) {
       throw new LensException("Could not set property");
     }
@@ -147,20 +175,19 @@ public class SessionHelper extends ServiceManagerHelper {
    * @param path
    * @param sessionHandleString
    */
-  public void addResourcesJar(String path, String sessionHandleString) throws JAXBException, LensException {
+  public void addResourcesJar(String path, String sessionHandleString) throws LensException {
     log.info("Adding Resources {}", path);
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
     formData.add("type", "jar");
     formData.add("path", path);
-    Response response = this
-        .exec("put", "/session/resources/add", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE, null,
-            formData.getForm());
+    Response response = this.exec("put", "/session/resources/add", servLens, null, null,
+        MediaType.MULTIPART_FORM_DATA_TYPE, null, formData.getForm());
     log.info("Response : {}", response);
     AssertUtil.assertSucceeded(response);
   }
 
-  public void addResourcesJar(String path) throws JAXBException, LensException {
+  public void addResourcesJar(String path) throws  LensException {
     addResourcesJar(path, sessionHandleString);
   }
 
@@ -170,20 +197,19 @@ public class SessionHelper extends ServiceManagerHelper {
    * @param path
    * @param sessionHandleString
    */
-  public void removeResourcesJar(String path, String sessionHandleString) throws JAXBException, LensException {
+  public void removeResourcesJar(String path, String sessionHandleString) throws LensException {
     log.info("Removing Resources {}", path);
     FormBuilder formData = new FormBuilder();
     formData.add("sessionid", sessionHandleString);
     formData.add("type", "jar");
     formData.add("path", path);
-    Response response = this
-        .exec("put", "/session/resources/delete", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE, null,
-            formData.getForm());
+    Response response = this.exec("put", "/session/resources/delete", servLens, null, null,
+        MediaType.MULTIPART_FORM_DATA_TYPE, null,  formData.getForm());
     log.info("Response : {}", response);
     AssertUtil.assertSucceeded(response);
   }
 
-  public void removeResourcesJar(String path) throws JAXBException, LensException {
+  public void removeResourcesJar(String path) throws LensException {
     removeResourcesJar(path, sessionHandleString);
   }
 
@@ -192,13 +218,13 @@ public class SessionHelper extends ServiceManagerHelper {
     query.put("key", param);
     Response response = this.exec("get", "/session/params", servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
-    String responseString = response.readEntity(String.class);
-    log.info(responseString);
-    HashMap<String, String> map = Util.stringListToMap(responseString);
+    StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
+    HashMap<String, String> map = Util.stringListToMap(strList);
     return map.get(param);
   }
 
   public String getSessionParam(String param) throws Exception {
     return getSessionParam(sessionHandleString, param);
   }
+
 }

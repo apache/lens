@@ -695,3 +695,12 @@ Developer Documentation : How to contribute to Apache Lens?
   There can be feature branches created from <<master>>, if feature is not actively developed in <<master>> branch
   directly. For a feature branch to be created a contirbutor can start discuss thread on dev list for consensus on
   whether it is required.
+
+** How to add a new Driver in Lens?
+  Please refer to {{{https://cwiki.apache.org/confluence/display/LENS/Lens+Driver} this wiki article}}.
+  For examples you can refer to the following review board requests
+  1. {{{https://reviews.apache.org/r/43649/} Druid driver in Lens}}
+  2. {{{ https://reviews.apache.org/r/36434/} Elastic Search Driver}}
+
+** How to add a new Error Code in Lens?
+  Please refer to {{{https://cwiki.apache.org/confluence/display/LENS/How+to+add+new+Error+Code} this wiki article}}

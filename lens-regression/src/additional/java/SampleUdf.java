@@ -21,16 +21,20 @@ import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.io.Text;
 
 public final class SampleUdf extends UDF {
-    public Text evaluate(final Text s, Text sleepTime) throws InterruptedException {
+  public Text evaluate(final Text s, Text sleepTime) throws InterruptedException {
 
-        if(sleepTime!=null){
-            Thread.sleep(Long.parseLong(sleepTime.toString()));
-        }else{
-            Thread.sleep(180000);
-        }
+    Long time = 180*1000L;
 
-        if (s == null) { return null; }
-
-        return new Text(s.toString().toLowerCase());
+    if(sleepTime != null){
+      time = Long.parseLong(sleepTime.toString()) * 1000L;
     }
+
+    System.out.println("Sleep Time : " + time);
+
+    Thread.sleep(time);
+
+    if (s == null) { return null; }
+
+    return new Text(s.toString().toLowerCase());
+  }
 }

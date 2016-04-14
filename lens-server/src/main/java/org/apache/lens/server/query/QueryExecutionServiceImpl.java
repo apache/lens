@@ -1335,6 +1335,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * @throws LensException the lens exception
    */
   private void rewriteAndSelect(final AbstractQueryContext ctx) throws LensException {
+    logSegregationContext.setLogSegragationAndQueryId(ctx.getLogHandle());
     MethodMetricsContext parallelCallGauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), false,
       PARALLEL_CALL_GAUGE);
     try {
