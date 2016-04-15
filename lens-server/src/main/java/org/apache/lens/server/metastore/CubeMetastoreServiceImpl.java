@@ -1328,7 +1328,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       } else {
         log.info("Getting tables from all dbs");
         tables = new ArrayList<>();
-        for (String db : Hive.get(getSession(sessionid).getHiveConf()).getAllDatabases()) {
+        for (String db : getAllDatabases(sessionid)) {
           tables.addAll(getNativeTablesFromDB(sessionid, db, true));
         }
       }

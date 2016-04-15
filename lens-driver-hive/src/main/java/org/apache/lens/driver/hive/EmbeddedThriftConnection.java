@@ -44,7 +44,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     }
 
     private void restoreState() {
-      if (state != null) {
+      if (state != null && !state.equals(SessionState.get())) {
         SessionState.setCurrentSessionState(state);
       }
     }
@@ -186,16 +186,6 @@ public class EmbeddedThriftConnection implements ThriftConnection {
       try {
         captureState();
         return super.getFunctions(sessionHandle, catalogName, schemaName, functionName);
-      } finally {
-        restoreState();
-      }
-    }
-
-    public OperationStatus getOperationStatus(OperationHandle opHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
-        return super.getOperationStatus(opHandle);
       } finally {
         restoreState();
       }
