@@ -27,7 +27,6 @@ import java.util.*;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryResult;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.LensConfConstants;
@@ -134,7 +133,6 @@ public class TestHiveDriver {
   @BeforeMethod
   public void setDB() {
     SessionState.setCurrentSessionState(ss);
-    SessionState.get().setCurrentDatabase(dataBase);
   }
 
   protected QueryContext createContext(final String query, Configuration conf) throws LensException {
@@ -190,15 +188,13 @@ public class TestHiveDriver {
     String dataLoad = "LOAD DATA LOCAL INPATH '" + TEST_DATA_FILE + "' OVERWRITE INTO TABLE " + tableName;
     // Create test table
     QueryContext context1 = createContext(createTable, configuration);
-    QueryContext context2 = createContext("show tables", configuration);
-    QueryContext context3 = createContext(dataLoad, configuration);
     LensResultSet resultSet = driver.execute(context1);
     assertNull(resultSet);
+    QueryContext context2 = createContext("show tables", configuration);
     resultSet = driver.execute(context2);
     assertNotNull(resultSet);
-    QueryResult queryresult = resultSet.toQueryResult();
-    System.out.println(queryresult);
     // Load some data into the table
+    QueryContext context3 = createContext(dataLoad, configuration);
     resultSet = driver.execute(context3);
     assertNull(resultSet);
     assertHandleSize(handleSize);

@@ -43,6 +43,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <argLine>-Xms256m -Xmx512m -XX:PermSize=256m -XX:MaxPermSize=256m</argLine>
           <systemPropertyVariables>
             <hadoop.bin.path>${pom.basedir}/testutils/hadoop</hadoop.bin.path>
           </systemPropertyVariables>
@@ -124,6 +125,22 @@
       <type>test-jar</type>
       <version>${project.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.datanucleus</groupId>
+      <artifactId>datanucleus-api-jdo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.datanucleus</groupId>
+      <artifactId>datanucleus-rdbms</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.datanucleus</groupId>
+      <artifactId>javax.jdo</artifactId>
     </dependency>
   </dependencies>
 

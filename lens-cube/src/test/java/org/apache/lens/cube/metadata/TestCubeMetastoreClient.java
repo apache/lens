@@ -1096,7 +1096,7 @@ public class TestCubeMetastoreClient {
       }
     }
     assertTrue(contains, "column did not get added");
-    assertTrue(msr1Altered, "measure type did not altered");
+    assertTrue(msr1Altered, "measure type did not get altered");
 
     // alter storage table desc
     String c1TableName = getFactOrDimtableStorageTableName(factName, c1);

@@ -18,8 +18,7 @@
  */
 package org.apache.lens.driver.hive;
 
-import static org.apache.lens.server.api.error.LensDriverErrorCode.DRIVER_ERROR;
-import static org.apache.lens.server.api.error.LensDriverErrorCode.SEMANTIC_ERROR;
+import static org.apache.lens.server.api.error.LensDriverErrorCode.*;
 import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import java.io.ByteArrayInputStream;
@@ -59,7 +58,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.QueryDisplay;
 import org.apache.hadoop.hive.ql.QueryDisplay.TaskDisplay;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -75,11 +73,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-//import org.apache.hadoop.hive.ql.TaskStatus;
-//import org.apache.hive.service.cli.thrift.TOperationHandle;
-//import org.apache.hive.service.cli.thrift.TProtocolVersion;
-//import org.apache.hive.service.cli.thrift.TSessionHandle;
 
 /**
  * The Class HiveDriver.
@@ -605,41 +598,41 @@ public class HiveDriver extends AbstractLensDriver {
       OperationStatus opStatus = getClient().getOperationStatus(hiveHandle);
       log.debug("GetStatus on hiveHandle: {} returned state:", hiveHandle, opStatus.getState().name());
       switch (opStatus.getState()) {
-        case CANCELED:
-          context.getDriverStatus().setState(DriverQueryState.CANCELED);
-          context.getDriverStatus().setStatusMessage("Query has been cancelled!");
-          break;
-        case CLOSED:
-          context.getDriverStatus().setState(DriverQueryState.CLOSED);
-          context.getDriverStatus().setStatusMessage("Query has been closed!");
-          break;
-        case ERROR:
-          context.getDriverStatus().setState(DriverQueryState.FAILED);
-          context.getDriverStatus().setStatusMessage("Query execution failed!");
-          context.getDriverStatus().setErrorMessage(
-            "Query failed with errorCode:" + opStatus.getOperationException().getErrorCode() + " with errorMessage: "
-              + opStatus.getOperationException().getMessage());
-          break;
-        case FINISHED:
-          context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
-          context.getDriverStatus().setStatusMessage("Query is successful!");
-          context.getDriverStatus().setResultSetAvailable(hiveHandle.hasResultSet());
-          break;
-        case INITIALIZED:
-          context.getDriverStatus().setState(DriverQueryState.INITIALIZED);
-          context.getDriverStatus().setStatusMessage("Query is initiazed in HiveServer!");
-          break;
-        case RUNNING:
-          context.getDriverStatus().setState(DriverQueryState.RUNNING);
-          context.getDriverStatus().setStatusMessage("Query is running in HiveServer!");
-          break;
-        case PENDING:
-          context.getDriverStatus().setState(DriverQueryState.PENDING);
-          context.getDriverStatus().setStatusMessage("Query is pending in HiveServer");
-          break;
-        case UNKNOWN:
-        default:
-          throw new LensException("Query is in unknown state at HiveServer");
+      case CANCELED:
+        context.getDriverStatus().setState(DriverQueryState.CANCELED);
+        context.getDriverStatus().setStatusMessage("Query has been cancelled!");
+        break;
+      case CLOSED:
+        context.getDriverStatus().setState(DriverQueryState.CLOSED);
+        context.getDriverStatus().setStatusMessage("Query has been closed!");
+        break;
+      case ERROR:
+        context.getDriverStatus().setState(DriverQueryState.FAILED);
+        context.getDriverStatus().setStatusMessage("Query execution failed!");
+        context.getDriverStatus().setErrorMessage(
+          "Query failed with errorCode:" + opStatus.getOperationException().getErrorCode() + " with errorMessage: "
+            + opStatus.getOperationException().getMessage());
+        break;
+      case FINISHED:
+        context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
+        context.getDriverStatus().setStatusMessage("Query is successful!");
+        context.getDriverStatus().setResultSetAvailable(hiveHandle.hasResultSet());
+        break;
+      case INITIALIZED:
+        context.getDriverStatus().setState(DriverQueryState.INITIALIZED);
+        context.getDriverStatus().setStatusMessage("Query is initiazed in HiveServer!");
+        break;
+      case RUNNING:
+        context.getDriverStatus().setState(DriverQueryState.RUNNING);
+        context.getDriverStatus().setStatusMessage("Query is running in HiveServer!");
+        break;
+      case PENDING:
+        context.getDriverStatus().setState(DriverQueryState.PENDING);
+        context.getDriverStatus().setStatusMessage("Query is pending in HiveServer");
+        break;
+      case UNKNOWN:
+      default:
+        throw new LensException("Query is in unknown state at HiveServer");
       }
 
       float progress = 0f;
