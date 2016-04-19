@@ -549,10 +549,16 @@ public final class HQLParser {
       }
 
     } else if (TOK_DIR == rootType) {
-      buf.append(" directory ");
+      StringBuilder sb = new StringBuilder();
+      boolean local = false;
       for (int i = 0; i < root.getChildCount(); i++) {
-        toInfixString((ASTNode) root.getChild(i), buf);
+        if (root.getChild(i).getType() == KW_LOCAL) {
+          local = true;
+        } else {
+          toInfixString((ASTNode) root.getChild(i), sb);
+        }
       }
+      buf.append(local ? " local": "").append(" directory ").append(sb);
     } else if (TOK_TAB == rootType) {
       buf.append(" table ");
       for (int i = 0; i < root.getChildCount(); i++) {
