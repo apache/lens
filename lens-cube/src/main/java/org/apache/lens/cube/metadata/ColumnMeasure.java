@@ -19,6 +19,7 @@
 package org.apache.lens.cube.metadata;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -26,11 +27,11 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 public final class ColumnMeasure extends CubeMeasure {
 
   public ColumnMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit) {
-    this(column, displayString, formatString, aggregate, unit, null, null, null, null, null);
+    this(column, displayString, formatString, aggregate, unit, null, null, null, null, null, null);
   }
 
   public ColumnMeasure(FieldSchema column) {
-    this(column, null, null, null, null, null, null, null, null, null);
+    this(column, null, null, null, null, null, null, null, null, null, null);
   }
 
   public ColumnMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
@@ -39,8 +40,14 @@ public final class ColumnMeasure extends CubeMeasure {
   }
 
   public ColumnMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
-    Date startTime, Date endTime, Double cost, Double min, Double max) {
-    super(column, displayString, formatString, aggregate, unit, startTime, endTime, cost, min, max);
+                       Date startTime, Date endTime, Double cost, Double min, Double max) {
+    this(column, displayString, formatString, aggregate, unit, startTime,
+        endTime, cost, min, max, new HashMap<String, String>());
+  }
+
+  public ColumnMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
+    Date startTime, Date endTime, Double cost, Double min, Double max, Map<String, String> tags) {
+    super(column, displayString, formatString, aggregate, unit, startTime, endTime, cost, min, max, tags);
   }
 
   public ColumnMeasure(String name, Map<String, String> props) {

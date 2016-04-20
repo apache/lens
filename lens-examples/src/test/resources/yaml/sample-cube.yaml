@@ -24,14 +24,29 @@ measures:
     defaultAggr: MAX
     startTime: 2013-12-12T00:00:00
   measure4: type: DOUBLE, defaultAggr: MIN
+  measure5: tags:, category: primary, is_ui_visible: true, type: BIGINT
+  measure6: tags:, category: secondary, is_ui_visible: false, type: BIGINT
 dimAttributes:
   dim1: type: INT
   dim2:
     type: INT
     startTime: 2013-12-01T00:00:00
   dim3: type: INT
+  dim4: tags:, category: primary, is_ui_visible: true, type: BIGINT
 expressions:
   expr_msr5:
+    exprSpec:
+      -
+        expr: measure3 + measure4
+        startTime: 2013-12-12T00:00:00
+      -
+        expr: measure3 + measure4 + 0.01
+        endTime: 2013-12-12T00:00:00
+    type: DOUBLE
+  expr_msr5:
+    tags:
+      category: primary
+      is_ui_visible: true
     exprSpec:
       -
         expr: measure3 + measure4

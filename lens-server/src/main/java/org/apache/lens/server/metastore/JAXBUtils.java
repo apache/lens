@@ -182,7 +182,8 @@ public final class JAXBUtils {
         endDate,
         null,
         xd.getNumDistinctValues(),
-        xd.getValues()
+        xd.getValues(),
+        mapFromXProperties(xd.getTags())
       );
     } else {
       hiveDim = new BaseDimAttribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
@@ -192,7 +193,8 @@ public final class JAXBUtils {
         endDate,
         null,
         xd.getNumDistinctValues(),
-        xd.getValues()
+        xd.getValues(),
+        mapFromXProperties(xd.getTags())
       );
     }
     return hiveDim;
@@ -264,7 +266,14 @@ public final class JAXBUtils {
     xm.setEndTime(getXMLGregorianCalendar(cm.getEndTime()));
     xm.setMin(cm.getMin());
     xm.setMax(cm.getMax());
+    xm.setTags(getXProperties(xPropertiesFromMap(cm.getTags())));
     return xm;
+  }
+
+  public static XProperties getXProperties(List<XProperty> prop) {
+    XProperties properties = XCF.createXProperties();
+    properties.getProperty().addAll(prop);
+    return properties;
   }
 
   /**
@@ -281,6 +290,7 @@ public final class JAXBUtils {
     xe.setDescription(ec.getDescription());
     xe.setDisplayString(ec.getDisplayString());
     xe.getExprSpec().addAll(xExprSpecFromExprColumn(ec.getExpressionSpecs()));
+    xe.setTags(getXProperties(xPropertiesFromMap(ec.getTags())));
     return xe;
   }
 
@@ -314,6 +324,7 @@ public final class JAXBUtils {
     xd.setDisplayString(cd.getDisplayString());
     xd.setStartTime(getXMLGregorianCalendar(cd.getStartTime()));
     xd.setEndTime(getXMLGregorianCalendar(cd.getEndTime()));
+    xd.setTags(getXProperties(xPropertiesFromMap(cd.getTags())));
     if (cd instanceof ReferencedDimAttribute) {
       ReferencedDimAttribute rd = (ReferencedDimAttribute) cd;
       if (!rd.getChainRefColumns().isEmpty()) {
@@ -423,7 +434,8 @@ public final class JAXBUtils {
       endDate,
       null,
       xm.getMin(),
-      xm.getMax()
+      xm.getMax(),
+      mapFromXProperties(xm.getTags())
     );
     return cm;
   }
@@ -454,6 +466,7 @@ public final class JAXBUtils {
     ExprColumn ec = new ExprColumn(new FieldSchema(xe.getName(), xe.getType().toLowerCase(),
       xe.getDescription()),
       xe.getDisplayString(),
+      mapFromXProperties(xe.getTags()),
       exprSpecFromXExprColumn(xe.getExprSpec()));
     return ec;
   }

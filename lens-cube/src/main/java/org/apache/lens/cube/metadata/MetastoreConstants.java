@@ -83,6 +83,7 @@ public final class MetastoreConstants {
   public static final String DESC_SFX = ".description";
   public static final String DISPLAY_SFX = ".displaystring";
   public static final String NUM_DISTINCT_VALUES = ".num.distinct.values";
+  public static final String TAGS_PFX = ".tags.";
 
   // measure constants
   public static final String MEASURE_KEY_PFX = "cube.measure.";

@@ -26,18 +26,44 @@
   </properties>
   <measures>
     <measure name="measure1" _type="BIGINT"/>
-    <measure name="measure2" _type="INT" default_aggr="SUM"/>
+    <measure name="measure2" _type="INT" default_aggr="SUM" />
     <measure name="measure3" _type="FLOAT" default_aggr="MAX" start_time='2013-12-12T00:00:00'/>
     <measure name="measure4" _type="DOUBLE" default_aggr="MIN"/>
+    <measure name="measure5" _type="BIGINT">
+      <tags>
+        <property name="category" value="primary"/>
+        <property name="is_ui_visible" value="true"/>
+      </tags>
+    </measure>
+    <measure name="measure6" _type="BIGINT">
+      <tags>
+        <property name="category" value="secondary"/>
+        <property name="is_ui_visible" value="false"/>
+      </tags>
+    </measure>
   </measures>
   <dim_attributes>
     <dim_attribute name="dim1" _type="INT"/>
     <dim_attribute name="dim2" _type="INT" start_time='2013-12-01T00:00:00'/>
     <dim_attribute name="dim3" _type="INT">
     </dim_attribute>
+    <dim_attribute name="dim4" _type="BIGINT">
+      <tags>
+        <property name="category" value="primary"/>
+        <property name="is_ui_visible" value="true"/>
+      </tags>
+    </dim_attribute>
   </dim_attributes>
   <expressions>
     <expression name="expr_msr5" _type="DOUBLE">
+      <expr_spec expr = "measure3 + measure4" start_time='2013-12-12T00:00:00' />
+      <expr_spec expr = "measure3 + measure4 + 0.01" end_time='2013-12-12T00:00:00'/>
+    </expression>
+    <expression name="expr_msr5" _type="DOUBLE">
+      <tags>
+        <property name="category" value="primary"/>
+        <property name="is_ui_visible" value="true"/>
+      </tags>
       <expr_spec expr = "measure3 + measure4" start_time='2013-12-12T00:00:00' />
       <expr_spec expr = "measure3 + measure4 + 0.01" end_time='2013-12-12T00:00:00'/>
     </expression>

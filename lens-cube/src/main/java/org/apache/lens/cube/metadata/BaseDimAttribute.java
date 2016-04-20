@@ -21,10 +21,7 @@ package org.apache.lens.cube.metadata;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 
@@ -55,8 +52,13 @@ public class BaseDimAttribute extends CubeDimAttribute {
   }
 
   public BaseDimAttribute(FieldSchema column, String displayString, Date startTime, Date endTime, Double cost,
-    Long numOfDistinctValues, List<String> values) {
-    super(column.getName(), column.getComment(), displayString, startTime, endTime, cost);
+                          Long numOfDistinctValues, List<String> values) {
+    this(column, displayString, startTime, endTime, cost, numOfDistinctValues, values, new HashMap<String, String>());
+  }
+
+  public BaseDimAttribute(FieldSchema column, String displayString, Date startTime, Date endTime, Double cost,
+    Long numOfDistinctValues, List<String> values, Map<String, String> tags) {
+    super(column.getName(), column.getComment(), displayString, startTime, endTime, cost, tags);
     this.type = column.getType();
     checkNotNull(type);
     Optional<Long> optionalNumOfDistnctValues = Optional.fromNullable(numOfDistinctValues);

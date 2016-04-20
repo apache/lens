@@ -47,8 +47,14 @@ public class ExprColumn extends CubeColumn {
     this(column, displayString, new ExprSpec(expression, null, null));
   }
 
-  public ExprColumn(FieldSchema column, String displayString, ExprSpec... expressions) throws LensException {
-    super(column.getName(), column.getComment(), displayString, null, null, 0.0);
+  public ExprColumn(FieldSchema column, String displayString,
+                    ExprSpec... expressions) throws LensException {
+    this(column, displayString, new HashMap<String, String>(), expressions);
+  }
+
+  public ExprColumn(FieldSchema column, String displayString, Map<String, String> tags,
+                    ExprSpec... expressions) throws LensException {
+    super(column.getName(), column.getComment(), displayString, null, null, 0.0, tags);
 
     if (expressions == null || expressions.length == 0) {
       throw new IllegalArgumentException("No expressions specified for column " + column.getName());

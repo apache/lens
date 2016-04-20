@@ -37,7 +37,7 @@ public class ExampleSchemaToStringTest extends YAMLToStringStrategyTest {
   public List<ToStringTestData> provideData() throws URISyntaxException, JAXBException, IOException {
     List<ToStringTestData> ret = Lists.newArrayList();
     for (String yamlName : new File(getClass().getResource("/yaml").toURI()).list()) {
-      ret.add(new ToStringTestData(yamlName, unmarshallFromFile("/" + yamlName.replaceAll("yaml$", "xml")),
+      ret.add(new ToStringTestData(yamlName, unmarshallFromFile(yamlName.replaceAll("yaml$", "xml")),
         readYAML("/yaml/" + yamlName)));
     }
     return ret;

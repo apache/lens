@@ -58,12 +58,14 @@ public class ReferencedDimAttribute extends BaseDimAttribute {
 
   public ReferencedDimAttribute(FieldSchema column, String displayString, List<ChainRefCol> chainRefCols,
     Date startTime, Date endTime, Double cost, Long numOfDistinctValues) throws LensException {
-    this(column, displayString, chainRefCols, startTime, endTime, cost, numOfDistinctValues, null);
+    this(column, displayString, chainRefCols, startTime, endTime, cost, numOfDistinctValues,
+        null, new HashMap<String, String>());
   }
 
   public ReferencedDimAttribute(FieldSchema column, String displayString, List<ChainRefCol> chainRefCols,
-    Date startTime, Date endTime, Double cost, Long numOfDistinctValues, List<String> values) throws LensException {
-    super(column, displayString, startTime, endTime, cost, numOfDistinctValues, values);
+    Date startTime, Date endTime, Double cost, Long numOfDistinctValues, List<String> values, Map<String, String> tags)
+    throws LensException {
+    super(column, displayString, startTime, endTime, cost, numOfDistinctValues, values, tags);
     if (chainRefCols.isEmpty()) {
       throw new LensException(LensCubeErrorCode.ERROR_IN_ENTITY_DEFINITION.getLensErrorInfo(), " Ref column: "
         + getName() + " does not have any chain_ref_column defined");

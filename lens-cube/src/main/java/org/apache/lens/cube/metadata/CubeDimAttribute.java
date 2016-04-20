@@ -19,17 +19,23 @@
 package org.apache.lens.cube.metadata;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class CubeDimAttribute extends CubeColumn {
 
   public CubeDimAttribute(String name, String description) {
-    this(name, description, null, null, null, null);
+    this(name, description, null, null, null, null, null);
   }
 
   public CubeDimAttribute(String name, String description, String displayString, Date startTime, Date endTime,
-    Double cost) {
-    super(name, description, displayString, startTime, endTime, cost);
+                          Double cost) {
+    this(name, description, displayString, startTime, endTime, cost, new HashMap<String, String>());
+  }
+
+  public CubeDimAttribute(String name, String description, String displayString, Date startTime, Date endTime,
+    Double cost, Map<String, String> tags) {
+    super(name, description, displayString, startTime, endTime, cost, tags);
   }
 
   public CubeDimAttribute(String name, Map<String, String> props) {
