@@ -43,10 +43,12 @@ import lombok.extern.slf4j.Slf4j;
 public class TestHQLParser {
 
   HiveConf conf = new HiveConf();
+
   {
     conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS, false);
     SessionState.start(conf);
   }
+
   @Test
   public void testGroupByOrderByGetString() throws Exception {
     String query = "SELECT a,b, sum(c) FROM tab GROUP BY a,f(b), d+e ORDER BY a, g(b), e/100";
@@ -243,10 +245,10 @@ public class TestHQLParser {
   public void testAliasShouldBeQuoted() throws Exception {
     Assert.assertEquals(getSelectStrForQuery("select id as identity from sample_dim"), "id as `identity`");
     Assert.assertEquals(getSelectStrForQuery("select id as `column identity` from sample_dim"),
-        "id as `column identity`");
+      "id as `column identity`");
     Assert.assertEquals(getSelectStrForQuery("select id identity from sample_dim"), "id as `identity`");
     Assert.assertEquals(getSelectStrForQuery("select id `column identity` from sample_dim"),
-        "id as `column identity`");
+      "id as `column identity`");
   }
 
   private String getSelectStrForQuery(String query) throws Exception {
@@ -357,7 +359,7 @@ public class TestHQLParser {
 
   @DataProvider
   public Object[][] nAryFlatteningDataProvider() {
-    return new Object[][] {
+    return new Object[][]{
       {"a", "a"},
       {"a or b", "a or b"},
       {"a or b or c or d", "a or b or c or d"},
@@ -378,7 +380,7 @@ public class TestHQLParser {
 
   @DataProvider
   public Object[][] colsInExpr() {
-    return new Object[][] {
+    return new Object[][]{
       {" t1.c1", new String[]{}}, // simple selection
       {" cie.c5", new String[]{"c5"}}, // simple selection
       {" fun1(cie.c4)", new String[]{"c4"}}, // simple selection
@@ -406,7 +408,7 @@ public class TestHQLParser {
 
   @DataProvider
   public Object[][] primitiveBool() {
-    return new Object[][] {
+    return new Object[][]{
       {" t1.c1", false},
       {" t1.c1 = 24", true},
       {" t1.c1 >= 24", true},
@@ -431,7 +433,7 @@ public class TestHQLParser {
 
   @DataProvider
   public Object[][] primitiveBoolFunc() {
-    return new Object[][] {
+    return new Object[][]{
       {" t1.c1", false},
       {" t1.c1 = 24", false},
       {" t1.c1 >= 24", false},
@@ -452,5 +454,20 @@ public class TestHQLParser {
     ASTNode inputAST = HQLParser.parseExpr(input);
     boolean actual = HQLParser.isPrimitiveBooleanFunction(inputAST);
     Assert.assertEquals(actual, expected, "Received " + actual + " for input:" + input);
+  }
+
+  @DataProvider
+  public Object[][] dirDataProvider() {
+    return new Object[][]{
+      {"directory 'a'"},
+      {"local directory 'a'"},
+    };
+  }
+
+  @Test(dataProvider = "dirDataProvider")
+  public void testLocalDirectory(String dirString) throws LensException {
+    String expr = "insert overwrite " + dirString + " select * from table";
+    ASTNode tree = HQLParser.parseHQL(expr, conf);
+    Assert.assertEquals(HQLParser.getString((ASTNode) tree.getChild(1).getChild(0)), dirString);
   }
 }

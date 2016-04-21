@@ -939,8 +939,8 @@ public class TestHiveDriver {
         }
       });
     ctx.setDriverCost(driver, driver.queryCostCalculator.calculateCost(ctx, driver));
-    assertEquals(driver.decidePriority(ctx), Priority.VERY_HIGH);
-    assertEquals(alwaysNormalPriorityDecider.decidePriority(ctx.getDriverQueryCost(driver)), Priority.NORMAL);
+    assertEquals(ctx.decidePriority(driver, driver.queryPriorityDecider), Priority.VERY_HIGH);
+    assertEquals(ctx.decidePriority(driver, alwaysNormalPriorityDecider), Priority.NORMAL);
 
     // test priority without rewriter plan
     ctx = createContext("test priority query", configuration);

@@ -18,7 +18,7 @@
  */
 package org.apache.lens.driver.hive;
 
-import java.io.IOException;
+import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
 
@@ -36,248 +36,174 @@ import org.apache.hive.service.rpc.thrift.TCLIService;
  * The Class EmbeddedThriftConnection.
  */
 public class EmbeddedThriftConnection implements ThriftConnection {
-  public static class EmbeddedThriftCLIServiceClient extends ThriftCLIServiceClient {
-    private SessionState state;
+  public static class SessionStateContext implements Closeable {
+    /**
+     * This is needed because we're using embedded mode. In opening a hive session, a new session state is started
+     * and previous session state is lost, since it's all happening in the same jvm.
+     * For all other session operations (getting status, getting result etc),
+     * they are wrapped in acquire-release block in HiveSessionImpl,
+     * and the release clears session state for the current thread.
+     * Since it's happening in a single thread, the session is cleared for further operations too
+     * and needs to be restored for tests to proceed further.
+     */
+    private SessionState state = SessionState.get();
 
-    private void captureState() {
-      state = SessionState.get();
-    }
-
-    private void restoreState() {
+    @Override
+    public void close() {
       if (state != null && !state.equals(SessionState.get())) {
         SessionState.setCurrentSessionState(state);
       }
     }
+  }
+  //SUSPEND CHECKSTYLE CHECK InnerAssignmentCheck
+  public static class EmbeddedThriftCLIServiceClient extends ThriftCLIServiceClient {
 
     public EmbeddedThriftCLIServiceClient(TCLIService.Iface cliService) {
       super(cliService);
     }
 
     public SessionHandle openSession(String username, String password,
-      Map<String, String> configuration)
-      throws HiveSQLException {
-      try {
-        captureState();
+      Map<String, String> configuration) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.openSession(username, password, configuration);
-      } finally {
-        restoreState();
       }
     }
 
     public SessionHandle openSessionWithImpersonation(String username, String password,
-      Map<String, String> configuration, String delegationToken)
-      throws HiveSQLException {
-      try {
-        captureState();
+      Map<String, String> configuration, String delegationToken) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.openSessionWithImpersonation(username, password, configuration, delegationToken);
-      } finally {
-        restoreState();
       }
     }
 
-    public void closeSession(SessionHandle sessionHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public void closeSession(SessionHandle sessionHandle) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         super.closeSession(sessionHandle);
-      } finally {
-        restoreState();
       }
     }
 
-    public GetInfoValue getInfo(SessionHandle sessionHandle, GetInfoType infoType)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public GetInfoValue getInfo(SessionHandle sessionHandle, GetInfoType infoType) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getInfo(sessionHandle, infoType);
-      } finally {
-        restoreState();
       }
     }
 
     public OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay)
-      throws HiveSQLException {
-      try {
-        captureState();
+      Map<String, String> confOverlay) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.executeStatement(sessionHandle, statement, confOverlay);
-      } finally {
-        restoreState();
       }
     }
 
     public OperationHandle executeStatementAsync(SessionHandle sessionHandle,
-      String statement, Map<String, String> confOverlay)
-      throws HiveSQLException {
-      try {
-        captureState();
+      String statement, Map<String, String> confOverlay) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.executeStatementAsync(sessionHandle, statement, confOverlay);
-      } finally {
-        restoreState();
       }
     }
 
-    public OperationHandle getTypeInfo(SessionHandle sessionHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public OperationHandle getTypeInfo(SessionHandle sessionHandle) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getTypeInfo(sessionHandle);
-      } finally {
-        restoreState();
       }
     }
 
-    public OperationHandle getCatalogs(SessionHandle sessionHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public OperationHandle getCatalogs(SessionHandle sessionHandle) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getCatalogs(sessionHandle);
-      } finally {
-        restoreState();
       }
     }
 
     public OperationHandle getSchemas(SessionHandle sessionHandle,
-      String catalogName, String schemaName)
-      throws HiveSQLException {
-      try {
-        captureState();
+      String catalogName, String schemaName) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getSchemas(sessionHandle, catalogName, schemaName);
-      } finally {
-        restoreState();
       }
     }
 
     public OperationHandle getTables(SessionHandle sessionHandle,
-      String catalogName, String schemaName, String tableName, List<String> tableTypes)
-      throws HiveSQLException {
-      try {
-        captureState();
+      String catalogName, String schemaName, String tableName, List<String> tableTypes) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getTables(sessionHandle, catalogName, schemaName, tableName, tableTypes);
-      } finally {
-        restoreState();
       }
     }
 
-    public OperationHandle getTableTypes(SessionHandle sessionHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public OperationHandle getTableTypes(SessionHandle sessionHandle) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getTableTypes(sessionHandle);
-      } finally {
-        restoreState();
       }
     }
 
     public OperationHandle getColumns(SessionHandle sessionHandle,
-      String catalogName, String schemaName, String tableName, String columnName)
-      throws HiveSQLException {
-      try {
-        captureState();
+      String catalogName, String schemaName, String tableName, String columnName) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getColumns(sessionHandle, catalogName, schemaName, tableName, columnName);
-      } finally {
-        restoreState();
       }
     }
 
     public OperationHandle getFunctions(SessionHandle sessionHandle,
-      String catalogName, String schemaName, String functionName)
-      throws HiveSQLException {
-      try {
-        captureState();
+      String catalogName, String schemaName, String functionName) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getFunctions(sessionHandle, catalogName, schemaName, functionName);
-      } finally {
-        restoreState();
       }
     }
 
-    public void cancelOperation(OperationHandle opHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public void cancelOperation(OperationHandle opHandle) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         super.cancelOperation(opHandle);
-      } finally {
-        restoreState();
       }
     }
 
-    public void closeOperation(OperationHandle opHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public void closeOperation(OperationHandle opHandle) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         super.closeOperation(opHandle);
-      } finally {
-        restoreState();
       }
     }
 
-    public TableSchema getResultSetMetadata(OperationHandle opHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public TableSchema getResultSetMetadata(OperationHandle opHandle) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getResultSetMetadata(opHandle);
-      } finally {
-        restoreState();
       }
     }
 
-    public RowSet fetchResults(OperationHandle opHandle)
-      throws HiveSQLException {
-      try {
-        captureState();
+    public RowSet fetchResults(OperationHandle opHandle) throws HiveSQLException {
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.fetchResults(opHandle);
-      } finally {
-        restoreState();
       }
     }
 
     public RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
       long maxRows, FetchType fetchType) throws HiveSQLException {
-      try {
-        captureState();
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.fetchResults(opHandle, orientation, maxRows, fetchType);
-      } finally {
-        restoreState();
       }
     }
 
     public String getDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
       String owner, String renewer) throws HiveSQLException {
-      try {
-        captureState();
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.getDelegationToken(sessionHandle, authFactory, owner, renewer);
-      } finally {
-        restoreState();
       }
     }
 
     public void cancelDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
       String tokenStr) throws HiveSQLException {
-      try {
-        captureState();
+      try (SessionStateContext ignored = new SessionStateContext()) {
         super.cancelDelegationToken(sessionHandle, authFactory, tokenStr);
-      } finally {
-        restoreState();
       }
     }
 
     public void renewDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
       String tokenStr) throws HiveSQLException {
-      try {
-        captureState();
+      try (SessionStateContext ignored = new SessionStateContext()) {
         super.renewDelegationToken(sessionHandle, authFactory, tokenStr);
-      } finally {
-        restoreState();
       }
     }
 
     @Override
     public SessionHandle openSession(String username, String password) throws HiveSQLException {
-      try {
-        captureState();
+      try (SessionStateContext ignored = new SessionStateContext()) {
         return super.openSession(username, password);
-      } finally {
-        restoreState();
       }
     }
   }
@@ -314,20 +240,15 @@ public class EmbeddedThriftConnection implements ThriftConnection {
    * @see java.io.Closeable#close()
    */
   @Override
-  public void close() throws IOException {
+  public void close() {
     // Does nothing
   }
 
   @Override
   public void init(HiveConf conf, String user) {
-    SessionState state = null;
-    try {
-      state = SessionState.get();
+    try (SessionStateContext ignored = new SessionStateContext()) {
       getService().init(conf);
-    } finally {
-      if (state != null) {
-        SessionState.setCurrentSessionState(state);
-      }
     }
   }
+  //RESUME CHECKSTYLE CHECK InnerAssignmentCheck
 }

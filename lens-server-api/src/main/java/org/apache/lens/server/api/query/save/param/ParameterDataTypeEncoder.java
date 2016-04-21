@@ -84,7 +84,7 @@ public enum ParameterDataTypeEncoder {
     try {
       return ParameterDataTypeEncoder.valueOf(dataType.toString()).encode(rawValue);
     } catch (Throwable e) {
-      throw new ValueEncodeException(dataType, rawValue , e);
+      throw new ValueEncodeException(dataType, rawValue, e);
     }
   }
 

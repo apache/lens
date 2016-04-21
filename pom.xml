@@ -103,6 +103,12 @@
     <antrun.plugin.version>1.8</antrun.plugin.version>
     <cobertura.plugin.version>2.7</cobertura.plugin.version>
 
+    <!-- Tests -->
+    <derby.version>10.11.1.1</derby.version>
+    <datanucleus.api.jdo.version>4.2.1</datanucleus.api.jdo.version>
+    <datanucleus.javax.jdo.version>3.2.0-m3</datanucleus.javax.jdo.version>
+    <datanucleus.rdbms.version>4.1.7</datanucleus.rdbms.version>
+
     <!-- UI -->
     <nodejs.plugin.version>1.0.0</nodejs.plugin.version>
     <nodeVersion>0.10.32</nodeVersion>
@@ -696,6 +702,8 @@
             </goals>
             <phase>package</phase>
             <configuration>
+              <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+              <excludes>**/generated-sources/**</excludes>
               <skip>${skipCheck}</skip>
               <consoleOutput>true</consoleOutput>
               <includeTestSourceDirectory>true</includeTestSourceDirectory>
@@ -1633,25 +1641,25 @@
       <dependency>
         <groupId>org.datanucleus</groupId>
         <artifactId>datanucleus-api-jdo</artifactId>
-        <version>4.2.1</version>
+        <version>${datanucleus.api.jdo.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.datanucleus</groupId>
         <artifactId>datanucleus-rdbms</artifactId>
-        <version>4.1.7</version>
+        <version>${datanucleus.rdbms.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.derby</groupId>
         <artifactId>derby</artifactId>
-        <version>10.11.1.1</version>
+        <version>${derby.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.datanucleus</groupId>
         <artifactId>javax.jdo</artifactId>
-        <version>3.2.0-m3</version>
+        <version>${datanucleus.javax.jdo.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>

@@ -896,9 +896,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * @throws LensException the lens exception
    */
   private void updateStatus(final QueryHandle handle) throws LensException {
-    logSegregationContext.setLogSegragationAndQueryId(handle.getHandleIdString());
     QueryContext ctx = allQueries.get(handle);
     if (ctx != null) {
+      logSegregationContext.setLogSegragationAndQueryId(ctx.getLogHandle());
       synchronized (ctx) {
         QueryStatus before = ctx.getStatus();
         if (!ctx.queued() && !ctx.finished() && !ctx.getDriverStatus().isFinished()) {
