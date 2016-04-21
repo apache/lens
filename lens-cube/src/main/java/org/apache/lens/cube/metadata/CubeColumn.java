@@ -21,11 +21,13 @@ package org.apache.lens.cube.metadata;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
 import com.google.common.base.Optional;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,6 +40,8 @@ public abstract class CubeColumn implements Named {
   private final Double cost;
   private final String description;
   private final String displayString;
+  @Getter
+  private final Map<String, String> tags;
 
   static final ThreadLocal<DateFormat> COLUMN_TIME_FORMAT =
     new ThreadLocal<DateFormat>() {
@@ -49,7 +53,13 @@ public abstract class CubeColumn implements Named {
       }
     };
 
-  public CubeColumn(String name, String description, String displayString, Date startTime, Date endTime, Double cost) {
+  public CubeColumn(String name , String description, String displayString,
+                    Date startTime, Date endTime, Double cost) {
+    this(name, description, displayString, startTime, endTime, cost, new HashMap<String, String>());
+  }
+
+  public CubeColumn(String name, String description, String displayString,
+                    Date startTime, Date endTime, Double cost, Map<String, String> tags) {
     assert (name != null);
     this.name = name.toLowerCase();
     this.startTime = startTime;
@@ -57,6 +67,7 @@ public abstract class CubeColumn implements Named {
     this.cost = cost;
     this.description = description;
     this.displayString = displayString;
+    this.tags = tags;
   }
 
   private Date getDate(String propKey, Map<String, String> props) {
@@ -89,6 +100,25 @@ public abstract class CubeColumn implements Named {
     return null;
   }
 
+  private static synchronized void addTagProperties(String name, Map<String, String> props, Map<String, String> tags) {
+    String colName = MetastoreUtil.getCubeColTagKey(name);
+    if (tags != null) {
+      for (Map.Entry<String, String> entry : tags.entrySet()) {
+        props.put(colName.concat(entry.getKey()), entry.getValue());
+      }
+    }
+  }
+
+  private static Map<String, String> getColumnTags(String propKey, Map<String, String> props) {
+    Map<String, String> tagProp = new HashMap<>();
+    for (String key : props.keySet()) {
+      if (key.startsWith(propKey)) {
+        tagProp.put(key.replace(propKey, ""), props.get(key).replace(propKey, ""));
+      }
+    }
+    return tagProp;
+  }
+
   public CubeColumn(String name, Map<String, String> props) {
     this.name = name;
     this.startTime = getDate(MetastoreUtil.getCubeColStartTimePropertyKey(name), props);
@@ -96,6 +126,7 @@ public abstract class CubeColumn implements Named {
     this.cost = getDouble(MetastoreUtil.getCubeColCostPropertyKey(name), props);
     this.description = props.get(MetastoreUtil.getCubeColDescriptionKey(name));
     this.displayString = props.get(MetastoreUtil.getCubeColDisplayKey(name));
+    this.tags = getColumnTags(MetastoreUtil.getCubeColTagKey(name), props);
   }
 
   public String getName() {
@@ -289,6 +320,9 @@ public abstract class CubeColumn implements Named {
     }
     if (cost != null) {
       props.put(MetastoreUtil.getCubeColCostPropertyKey(getName()), cost.toString());
+    }
+    if (tags != null) {
+      addTagProperties(name, props, tags);
     }
   }
 }

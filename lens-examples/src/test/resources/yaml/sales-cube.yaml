@@ -53,6 +53,12 @@ dimAttributes:
         chainName: customer_city
         refCol: name
     type: string
+  Customer Interest(customer_interest) [Customer's interest]:
+    chainRefColumn:
+      -
+        chainName: customer_interests_chain
+        refCol: name
+    type: string
   production_location:
     hierarchy:
       Production City(production_city_name) [City name in which the product was produced]:
@@ -89,6 +95,12 @@ joinChains:
     paths:
       -
         sales.customer_id=customer.id
+  customer_interests_chain:
+    paths:
+      -
+        sales.customer_id=customer.id
+        customer.id=customer_interests.customer_id(many)
+        customer_interests.interest_id=interests.id
   product_details:
     paths:
       -

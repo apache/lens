@@ -784,6 +784,66 @@ public class TestCubeMetastoreClient {
   }
 
   @Test(priority = 1)
+  public void testColumnTags() throws Exception {
+    String cubename = "cubetags";
+    Map<String, String> tag1 = new HashMap<>();
+    tag1.put("category", "test");
+    Map<String, String> tag2 = new HashMap<>();
+    tag2.put("is_ui_visible", "true");
+    Set<CubeMeasure> cubeMeasures = new HashSet<>();
+    cubeMeasures.add(new ColumnMeasure(
+        new FieldSchema("msr1", "int", "measure1 with tag"), null, null, null, null, null, null, null, 0.0,
+        9999.0, tag1));
+    cubeMeasures.add(new ColumnMeasure(
+        new FieldSchema("msr2", "int", "measure2 with tag"),
+        "measure2 with tag", null, null, null, NOW, null, null, 0.0, 999999.0, tag2));
+
+    Set<CubeDimAttribute> cubeDimensions = new HashSet<>();
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim1", "id", "ref dim"), "dim with tag",
+        null, null, null, null, null, tag1));
+
+    ExprSpec expr1 = new ExprSpec();
+    expr1.setExpr("avg(msr1 + msr2)");
+    ExprSpec expr2 = new ExprSpec();
+    expr2.setExpr("avg(msr2 + msr1)");
+
+    Set<ExprColumn> cubeExpressions = new HashSet<>();
+    cubeExpressions.add(new ExprColumn(new FieldSchema("expr_measure", "double", "expression measure"),
+        "expr with tag", tag2, expr1, expr2));
+
+    client.createCube(cubename,
+        cubeMeasures, cubeDimensions, cubeExpressions, null, null);
+    Table cubeTbl = client.getHiveTable(cubename);
+    assertTrue(client.isCube(cubeTbl));
+    Cube cube2 = new Cube(cubeTbl);
+
+    // measures with tag
+    assertNotNull(cube2.getMeasureByName("msr1"));
+    assertTrue(cube2.getMeasureByName("msr1").getTags().keySet().contains("category"));
+    assertTrue(cube2.getMeasureByName("msr1").getTags().values().contains("test"));
+
+    assertNotNull(cube2.getMeasureByName("msr2"));
+    assertTrue(cube2.getMeasureByName("msr2").getTags().keySet().contains("is_ui_visible"));
+    assertTrue(cube2.getMeasureByName("msr2").getTags().values().contains("true"));
+
+    // dim with tag
+    assertNotNull(cube2.getDimAttributeByName("dim1"));
+    assertTrue(cube2.getDimAttributeByName("dim1").getTags().keySet().contains("category"));
+    assertTrue(cube2.getDimAttributeByName("dim1").getTags().values().contains("test"));
+
+    // expr with tag
+    assertNotNull(cube2.getExpressionByName("expr_measure"));
+    assertTrue(cube2.getExpressionByName("expr_measure").getTags().keySet().contains("is_ui_visible"));
+    assertTrue(cube2.getExpressionByName("expr_measure").getTags().values().contains("true"));
+
+    // check  properties
+    cube2.getProperties().get("cube.col.msr2.tags.is_ui_visible").equals("cube.col.msr2.tags.true");
+    cube2.getProperties().get("cube.col.dim1.tags.category").equals("cube.col.dim1.tags.test");
+
+    client.dropCube(cubename);
+  }
+
+  @Test(priority = 1)
   public void testAlterCube() throws Exception {
     String cubeName = "alter_test_cube";
     client.createCube(cubeName, cubeMeasures, cubeDimensions);

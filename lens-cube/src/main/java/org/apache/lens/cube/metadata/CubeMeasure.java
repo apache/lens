@@ -20,6 +20,7 @@
 package org.apache.lens.cube.metadata;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -33,8 +34,14 @@ public abstract class CubeMeasure extends CubeColumn {
   private final Double max;
 
   protected CubeMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
-    Date startTime, Date endTime, Double cost, Double min, Double max) {
-    super(column.getName(), column.getComment(), displayString, startTime, endTime, cost);
+                        Date startTime, Date endTime, Double cost, Double min, Double max) {
+    this(column, displayString, formatString, aggregate, unit,
+        startTime, endTime, cost, min, max, new HashMap<String, String>());
+  }
+
+  protected CubeMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
+    Date startTime, Date endTime, Double cost, Double min, Double max, Map<String, String> tags) {
+    super(column.getName(), column.getComment(), displayString, startTime, endTime, cost, tags);
     this.column = column;
     assert (column != null);
     assert (column.getName() != null);

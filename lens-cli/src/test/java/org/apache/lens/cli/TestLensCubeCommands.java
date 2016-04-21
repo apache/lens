@@ -137,7 +137,8 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
   private void testFields(LensCubeCommands command) {
     String fields = command.showQueryableFields("sample_cube", true);
     for (String field : Arrays
-      .asList("dim1", "dim2", "dim3", "dimdetail", "measure1", "measure2", "measure3", "measure4", "expr_msr5")) {
+      .asList("dim1", "dim2", "dim3", "dimdetail", "dim4", "measure1", "measure2", "measure3", "measure4",
+          "measure5", "measure6", "expr_msr5")) {
       assertTrue(fields.contains(field), fields + " do not contain " + field);
     }
     assertTrue(fields.contains("measure3 + measure4 + 0.01"));

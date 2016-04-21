@@ -174,6 +174,10 @@ public class MetastoreUtil {
     return getColumnKeyPrefix(colName) + DISPLAY_SFX;
   }
 
+  public static String getCubeColTagKey(String colName) {
+    return getColumnKeyPrefix(colName) + TAGS_PFX;
+  }
+
   public static String getExprColumnKey(String colName) {
     return getColumnKeyPrefix(colName) + EXPR_SFX;
   }
