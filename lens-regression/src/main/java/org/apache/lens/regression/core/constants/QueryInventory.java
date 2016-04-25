@@ -76,6 +76,6 @@ public class QueryInventory {
   public static final String NO_CUBE_KEYWORD_QUERY = "select sample_dim_chain.name, measure4 from sample_cube where "
       + "time_range_in(dt, '2014-06-24-23', '2014-06-25-00')";
 
-  public static final String QUOTE_QUERY = "cube select id,name from sample_dim2 where name != 'first\'s'";
+  public static final String QUOTE_QUERY = "cube select id,name from sample_dim2 where name != 'first\\'s'";
 
 }

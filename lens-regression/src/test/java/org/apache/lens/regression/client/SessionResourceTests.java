@@ -107,8 +107,7 @@ public class SessionResourceTests extends BaseTestClass {
   }
 
   public boolean checkSessionParamMap(String sessionHandle)  throws Exception {
-    MapBuilder query = new MapBuilder("sessionid", sessionHandle);
-    query.put("verbose", "true");
+    MapBuilder query = new MapBuilder("sessionid", sessionHandle, "verbose", "true");
     Response response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
     AssertUtil.assertSucceededResponse(response);
     StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
@@ -120,14 +119,14 @@ public class SessionResourceTests extends BaseTestClass {
   }
 
 
-  @Test(enabled = true)
+  @Test
   public void testSessionGet() throws Exception {
     Response response = lens.exec("get", "/session", servLens, null, null);
     AssertUtil.assertSucceededResponse(response);
   }
 
 
-  @Test(enabled = true)
+  @Test
   public void testSessionPostDelete() throws Exception {
 
     Map<String, String> resource = new HashMap<String, String>();
@@ -146,13 +145,13 @@ public class SessionResourceTests extends BaseTestClass {
     Assert.assertFalse(checkSessionParamMap(sessionHandle), "Session is Still Open");
   }
 
-  @Test(enabled = true)
+  @Test
   public void testSessionParamsGetVerbose()  throws Exception {
     Assert.assertTrue(checkSessionParamMap(sessionHandleString), "Returned Empty Params list");
   }
 
 
-  @Test(enabled = true)
+  @Test
   public void testSessionParamsGetNPut()  throws Exception {
 
     Map<String, String> resource = new HashMap<String, String>();
@@ -164,8 +163,8 @@ public class SessionResourceTests extends BaseTestClass {
     Response response = lens.sendForm("put", SessionURL.SESSION_PARAMS_URL, formData);
     AssertUtil.assertSucceeded(response);
 
-    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-    query.put("key", "datanucleus.autoCreateSchema");
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString, "key", "datanucleus.autoCreateSchema");
+
     response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
     AssertUtil.assertSucceededResponse(response);
 
@@ -173,17 +172,16 @@ public class SessionResourceTests extends BaseTestClass {
     HashMap<String, String> map = Util.stringListToMap(strList);
 
     Assert.assertEquals(map.get("datanucleus.autoCreateSchema"),
-            newParamsValue, "From Session Params Put");
+        newParamsValue, "From Session Params Put");
     Assert.assertEquals(map.size(), 1, "Params List contains more than one param");
   }
 
   //Negative Test Case
-  @Test(enabled = true)
+  @Test
   public void testSessionGetUndefinedParams()  throws Exception {
 
     String undefinedParamsKey = "test123";
-    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-    query.put("key", undefinedParamsKey);
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString, "key", undefinedParamsKey);
     Response response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
     AssertUtil.assertSucceededResponse(response);
     StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
@@ -195,7 +193,7 @@ public class SessionResourceTests extends BaseTestClass {
  * Testing if Session is restored after server restart
  */
 
-  @Test(enabled = true)
+  @Test
   public void testSessionRestore() throws Exception {
     Map<String, String> resource = new HashMap<String, String>();
     resource.put("sessionid", sessionHandleString);
@@ -208,8 +206,7 @@ public class SessionResourceTests extends BaseTestClass {
 
     lens.restart();
 
-    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-    query.put("key", "datanucleus.autoCreateSchema");
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString, "key", "datanucleus.autoCreateSchema");
     response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
     AssertUtil.assertSucceededResponse(response);
 
@@ -217,12 +214,12 @@ public class SessionResourceTests extends BaseTestClass {
     HashMap<String, String> map = Util.stringListToMap(strList);
 
     Assert.assertEquals(map.get("datanucleus.autoCreateSchema"),
-            newParamsValue, "From Session Params Put");
+        newParamsValue, "From Session Params Put");
     Assert.assertEquals(map.size(), 1, "Params List contains more than one param");
   }
 
 
-  @Test(enabled = true)
+  @Test
   public void testSessionHDFSResourcePutNDelete()  throws Exception {
 
     String path = hdfsJarPath + "/" + hiveUdfJar;
@@ -232,7 +229,7 @@ public class SessionResourceTests extends BaseTestClass {
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
     Assert.assertEquals(lensQuery.getStatus().getStatusMessage().trim(),
-            "Query is successful!", "Query did not succeed");
+        "Query is successful!", "Query did not succeed");
 
     sHelper.removeResourcesJar(path);
 
@@ -240,11 +237,11 @@ public class SessionResourceTests extends BaseTestClass {
     lensQuery = qHelper.waitForCompletion(queryHandle);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.FAILED);
     Assert.assertNotEquals(lensQuery.getStatus().getStatusMessage().trim(),
-            "Query is successful!", "Query Should have Failed but it Passed");
+        "Query is successful!", "Query Should have Failed but it Passed");
   }
 
 
-  @Test(enabled = true)
+  @Test
   public void testSessionLocalResourcePutNDelete()  throws Exception {
 
     String path = serverResourcePath + "/" + hiveUdfJar;
@@ -254,7 +251,7 @@ public class SessionResourceTests extends BaseTestClass {
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
     Assert.assertEquals(lensQuery.getStatus().getStatusMessage().trim(),
-            "Query is successful!", "Query did not succeed");
+        "Query is successful!", "Query did not succeed");
 
     sHelper.removeResourcesJar(path);
 
@@ -262,11 +259,11 @@ public class SessionResourceTests extends BaseTestClass {
     lensQuery = qHelper.waitForCompletion(queryHandle);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.FAILED);
     Assert.assertNotEquals(lensQuery.getStatus().getStatusMessage().trim(),
-            "Query is successful!", "Query Should have Failed but it Passed");
+        "Query is successful!", "Query Should have Failed but it Passed");
 
   }
 
-  @Test(enabled = true)
+  @Test
   public void testListResources()  throws Exception {
 
     String path = serverResourcePath + "/" + hiveUdfJar;
@@ -285,7 +282,7 @@ public class SessionResourceTests extends BaseTestClass {
   }
 
 
-  @Test(enabled = true)
+  @Test
   public void testSessionGone()  throws Exception {
     String newSession = sHelper.openNewSession("test", "test");
     sHelper.closeNewSession(newSession);
@@ -298,7 +295,7 @@ public class SessionResourceTests extends BaseTestClass {
 
     //Setting DB with closed session Handle
     response = lens.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
-            null, query, MediaType.APPLICATION_XML_TYPE, null, lens.getCurrentDB());
+        null, query, MediaType.APPLICATION_XML_TYPE, null, lens.getCurrentDB());
     AssertUtil.assertGoneResponse(response);
 
     //Explain Query with closed session Handle
@@ -308,7 +305,7 @@ public class SessionResourceTests extends BaseTestClass {
     formData.add("operation", "EXPLAIN");
     formData.add("conf", "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
     response = lens.exec("post", "/queryapi/queries", servLens, null, null,
-            MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
+        MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
     AssertUtil.assertGoneResponse(response);
 
     //Execute Query with closed session Handle
@@ -318,12 +315,12 @@ public class SessionResourceTests extends BaseTestClass {
     formData.add("operation", "EXECUTE");
     formData.add("conf", "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
     response = lens.exec("post", "/queryapi/queries", servLens, null, null,
-            MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
+        MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
     AssertUtil.assertGoneResponse(response);
 
   }
 
-  @Test(enabled = true)
+  @Test
   public void testOpenSessionWithDB()  throws Exception {
 
     String newDb = "opensessionwithdb";
@@ -335,7 +332,7 @@ public class SessionResourceTests extends BaseTestClass {
     mHelper.dropDatabase(newDb);
   }
 
-  @Test(enabled = true)
+  @Test
   public void testOpenSessionDefault()  throws Exception {
 
     String newSession = sHelper.openNewSession("test", "test");
@@ -345,7 +342,7 @@ public class SessionResourceTests extends BaseTestClass {
   }
 
 
-  @Test(enabled = true)
+  @Test
   public void testOpenSessionDBDoesnotExist()  throws Exception {
 
     FormBuilder formData = new FormBuilder();
@@ -354,12 +351,12 @@ public class SessionResourceTests extends BaseTestClass {
     formData.add("database", "dbdoesnotexist");
 
     Response response = mHelper.exec("post", "/session", servLens, null, null,
-            MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
+        MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
     AssertUtil.assertFailedResponse(response);
 
   }
 
-  @Test(enabled = true)
+  @Test
   public void testDBCeption()  throws Exception {
 
     String newDb = "opensessionwithdb";
