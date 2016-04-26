@@ -31,8 +31,8 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.serde2.thrift.Type;
 import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.hive.service.cli.Type;
 import org.apache.hive.service.cli.TypeDescriptor;
 
 import org.testng.annotations.BeforeTest;

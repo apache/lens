@@ -1070,6 +1070,10 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-metastore</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-llap-server</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>

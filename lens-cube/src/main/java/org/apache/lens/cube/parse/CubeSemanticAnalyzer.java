@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.parse.*;
 
 import lombok.Getter;
@@ -39,7 +40,7 @@ public class CubeSemanticAnalyzer extends SemanticAnalyzer {
   private QB cubeQB;
 
   public CubeSemanticAnalyzer(Configuration queryConf, HiveConf hiveConf) throws SemanticException {
-    super(hiveConf);
+    super(new QueryState(hiveConf));
     this.queryConf = queryConf;
     this.hiveConf = hiveConf;
     setupRules();

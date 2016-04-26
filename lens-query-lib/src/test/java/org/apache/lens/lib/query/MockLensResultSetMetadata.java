@@ -18,14 +18,15 @@
  */
 package org.apache.lens.lib.query;
 
-import java.util.ArrayList;
+
 import java.util.List;
 
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.hive.service.cli.TypeDescriptor;
 
+import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -40,26 +41,26 @@ public class MockLensResultSetMetadata extends LensResultSetMetadata {
   }
 
   public static LensResultSetMetadata createMockedResultSet() {
-    List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>();
-    columns.add(new ColumnDescriptor(new FieldSchema("firstcol", "int", ""), 0));
-    columns.add(new ColumnDescriptor(new FieldSchema("format(secondcol,2)", "string", ""), 1));
-    columns.add(new ColumnDescriptor(new FieldSchema("thirdcol", "varchar(20)", ""), 2));
-    columns.add(new ColumnDescriptor(new FieldSchema("fourthcol", "char(15)", ""), 3));
-    columns.add(new ColumnDescriptor(new FieldSchema("fifthcol", "array<tinyint>", ""), 4));
-    columns.add(new ColumnDescriptor(new FieldSchema("sixthcol", "struct<a:int,b:varchar(10)>", ""), 5));
-    columns.add(new ColumnDescriptor(new FieldSchema("seventhcol", "map<int,char(10)>", ""), 6));
-    return new MockLensResultSetMetadata(columns);
+    return new MockLensResultSetMetadata(Lists.newArrayList(
+      new ColumnDescriptor("firstcol", "", new TypeDescriptor("int"), 0),
+      new ColumnDescriptor("format(secondcol,2)", "", new TypeDescriptor("string"), 1),
+      new ColumnDescriptor("thirdcol", "", new TypeDescriptor("varchar(20)"), 2),
+      new ColumnDescriptor("fourthcol", "", new TypeDescriptor("char(15)"), 3),
+      new ColumnDescriptor("fifthcol", "", new TypeDescriptor("array<tinyint>"), 4),
+      new ColumnDescriptor("sixthcol", "", new TypeDescriptor("struct<a:int,b:varchar(10)>"), 5),
+      new ColumnDescriptor("seventhcol", "", new TypeDescriptor("map<int,char(10)>"), 5)
+    ));
   }
 
   public static LensResultSetMetadata createMockedResultSetWithoutComma() {
-    List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>();
-    columns.add(new ColumnDescriptor(new FieldSchema("firstcol", "int", ""), 0));
-    columns.add(new ColumnDescriptor(new FieldSchema("secondcol", "string", ""), 1));
-    columns.add(new ColumnDescriptor(new FieldSchema("thirdcol", "varchar(20)", ""), 2));
-    columns.add(new ColumnDescriptor(new FieldSchema("fourthcol", "char(15)", ""), 3));
-    columns.add(new ColumnDescriptor(new FieldSchema("fifthcol", "array<tinyint>", ""), 4));
-    columns.add(new ColumnDescriptor(new FieldSchema("sixthcol", "struct<a:int,b:varchar(10)>", ""), 5));
-    columns.add(new ColumnDescriptor(new FieldSchema("seventhcol", "map<int,char(10)>", ""), 6));
-    return new MockLensResultSetMetadata(columns);
+    return new MockLensResultSetMetadata(Lists.newArrayList(
+      new ColumnDescriptor("firstcol", "", new TypeDescriptor("int"), 0),
+      new ColumnDescriptor("secondcol", "", new TypeDescriptor("string"), 1),
+      new ColumnDescriptor("thirdcol", "", new TypeDescriptor("varchar(20)"), 2),
+      new ColumnDescriptor("fourthcol", "", new TypeDescriptor("char(15)"), 3),
+      new ColumnDescriptor("fifthcol", "", new TypeDescriptor("array<tinyint>"), 4),
+      new ColumnDescriptor("sixthcol", "", new TypeDescriptor("struct<a:int,b:varchar(10)>"), 5),
+      new ColumnDescriptor("seventhcol", "", new TypeDescriptor("map<int,char(10)>"), 6)
+    ));
   }
 }
