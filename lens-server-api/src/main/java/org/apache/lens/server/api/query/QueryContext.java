@@ -307,18 +307,6 @@ public class QueryContext extends AbstractQueryContext {
     return conf;
   }
 
-  /**
-   * Update conf.
-   *
-   * @param confoverlay the conf to set
-   */
-  public void updateConf(Map<String, String> confoverlay) {
-    lensConf.getProperties().putAll(confoverlay);
-    for (Map.Entry<String, String> prop : confoverlay.entrySet()) {
-      this.conf.set(prop.getKey(), prop.getValue());
-    }
-  }
-
   public String getResultSetParentDir() {
     return conf.get(LensConfConstants.RESULT_SET_PARENT_DIR, LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT);
   }

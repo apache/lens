@@ -36,7 +36,6 @@ import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.query.DriverSelectorQueryContext.DriverQueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
-import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
@@ -479,15 +478,15 @@ public abstract class AbstractQueryContext implements Serializable {
     hiveConf = null;
   }
 
-  public Priority decidePriority(LensDriver driver, QueryPriorityDecider queryPriorityDecider) throws LensException {
-    // On-demand re-computation of cost, in case it's not alredy set by a previous estimate call.
-    // In driver test cases, estimate doesn't happen. Hence this code path ensures cost is computed and
-    // priority is set based on correct cost.
-    if (getDriverQueryCost(driver) == null) {
-      setDriverCost(driver, driver.estimate(this));
+  /**
+   * Update conf.
+   *
+   * @param confoverlay the conf to set
+   */
+  public void updateConf(Map<String, String> confoverlay) {
+    lensConf.getProperties().putAll(confoverlay);
+    for (Map.Entry<String, String> prop : confoverlay.entrySet()) {
+      this.conf.set(prop.getKey(), prop.getValue());
     }
-    priority = queryPriorityDecider.decidePriority(getDriverQueryCost(driver));
-    return priority;
   }
-
 }
