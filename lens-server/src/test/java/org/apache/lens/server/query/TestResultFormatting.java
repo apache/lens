@@ -216,7 +216,7 @@ public class TestResultFormatting extends LensJerseyTest {
     while (!stat.finished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt).get(LensQuery.class);
       stat = ctx.getStatus();
-      Thread.sleep(1000);
+      Thread.sleep(100);
     }
 
     assertEquals(ctx.getStatus().getStatus(), status);
@@ -254,6 +254,9 @@ public class TestResultFormatting extends LensJerseyTest {
       assertTrue(ctx.getDriverFinishTime() > 0);
       assertTrue(ctx.getFinishTime() > 0);
       assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
+      assertFalse(ctx.getStatus().isResultSetAvailable());
+      assertEquals(ctx.getStatus().getStatusMessage(), ResultFormatter.ERROR_MESSAGE);
+      assertEquals(ctx.getStatus().getErrorMessage(), "Class NonexistentSerde.class not found");
     }
   }
 

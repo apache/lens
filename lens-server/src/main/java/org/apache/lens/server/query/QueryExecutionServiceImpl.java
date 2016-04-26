@@ -42,7 +42,6 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServerConf;
@@ -62,6 +61,7 @@ import org.apache.lens.server.api.query.*;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.QueryCost;
+import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.query.collect.*;
@@ -702,17 +702,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
                   removalFromLaunchedQueriesLock.unlock();
                 }
               }
-            } catch (LensException e) {
-
-              log.error("Error launching query: {}", query.getQueryHandle(), e);
-              String reason = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-              setFailedStatus(query, "Launching query failed", reason, e.buildLensErrorTO(this.errorCollection));
-              continue;
-
             } catch (Exception e) {
               log.error("Error launching query: {}", query.getQueryHandle(), e);
-              String reason = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-              setFailedStatus(query, "Launching query failed", reason, null);
+              setFailedStatus(query, "Launching query failed", e);
               continue;
             } finally {
               release(query.getLensSessionIdentifier());
@@ -828,18 +820,17 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    *
    * @param ctx       the ctx
    * @param statusMsg the status msg
-   * @param reason    the reason
+   * @param e    the LensException
    * @throws LensException the lens exception
    */
-  void setFailedStatus(QueryContext ctx, String statusMsg, String reason, final LensErrorTO lensErrorTO)
-    throws LensException {
+  void setFailedStatus(QueryContext ctx, String statusMsg, Exception e) throws LensException {
 
     QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(0.0f, null, FAILED, statusMsg, false, null, reason, lensErrorTO));
+    ctx.setStatus(new QueryStatus(0.0f, null, FAILED, statusMsg, false, null, LensUtil.getCauseMessage(e),
+      e instanceof LensException ? ((LensException)e).buildLensErrorTO(this.errorCollection) : null));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
-
   /**
    * Sets the cancelled status.
    *
@@ -906,7 +897,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             ctx.updateDriverStatus(statusUpdateRetryHandler);
           } catch (LensException exc) {
             // Status update from driver failed
-            setFailedStatus(ctx, "Status update failed", exc.getMessage(), exc.buildLensErrorTO(this.errorCollection));
+            setFailedStatus(ctx, "Status update failed", exc);
             log.error("Status update failed for {}", handle, exc);
             return;
           }
