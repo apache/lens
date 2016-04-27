@@ -129,7 +129,7 @@
   <property>
     <!-- run every second -->
     <name>lens.server.querypurger.sleep.interval</name>
-    <value>1000</value>
+    <value>100</value>
   </property>
 
   <property>

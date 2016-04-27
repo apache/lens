@@ -255,7 +255,9 @@ public class TestResultFormatting extends LensJerseyTest {
       assertTrue(ctx.getFinishTime() > 0);
       assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
       assertFalse(ctx.getStatus().isResultSetAvailable());
-      assertEquals(ctx.getStatus().getStatusMessage(), ResultFormatter.ERROR_MESSAGE);
+      // status message could be null if the query is purged
+      assertTrue(ctx.getStatus().getStatusMessage()== null
+        || ctx.getStatus().getStatusMessage().equals(ResultFormatter.ERROR_MESSAGE));
       assertEquals(ctx.getStatus().getErrorMessage(), "Class NonexistentSerde.class not found");
     }
   }
