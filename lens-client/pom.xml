@@ -27,6 +27,10 @@
     <version>2.6.0-beta-SNAPSHOT</version>
   </parent>
 
+  <properties>
+    <mvn.classpath.file>${pom.basedir}/target/classpath</mvn.classpath.file>
+  </properties>
+
   <artifactId>lens-client</artifactId>
   <packaging>jar</packaging>
   <name>Lens client</name>
@@ -142,5 +146,45 @@
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
+    <dependency>
+      <groupId>net.sf.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+    </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>build-classpath</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>build-classpath</goal>
+            </goals>
+            <configuration>
+              <outputFile>${mvn.classpath.file}</outputFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- to use hadoop in the testutils -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <hadoop.bin.path>${pom.basedir}/../lens-driver-hive/testutils/hadoop</hadoop.bin.path>
+          </systemPropertyVariables>
+          <environmentVariables>
+            <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
+          </environmentVariables>
+          <argLine>-Xms256m -Xmx512m -XX:PermSize=256m -XX:MaxPermSize=256m</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>

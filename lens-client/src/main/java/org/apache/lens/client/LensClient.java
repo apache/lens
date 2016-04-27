@@ -18,9 +18,12 @@
  */
 package org.apache.lens.client;
 
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
@@ -31,9 +34,13 @@ import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.client.exceptions.LensBriefErrorException;
+import org.apache.lens.client.exceptions.LensClientIOException;
 import org.apache.lens.client.model.BriefError;
 import org.apache.lens.client.model.IdBriefErrorTemplate;
 import org.apache.lens.client.model.IdBriefErrorTemplateKey;
+import org.apache.lens.client.resultset.CsvResultSet;
+import org.apache.lens.client.resultset.ResultSet;
+import org.apache.lens.client.resultset.ZippedCsvResultSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +70,14 @@ public class LensClient {
 
   @Getter
   private PathValidator pathValidator;
+
+  public static final String QUERY_RESULT_SPLIT_INTO_MULTIPLE = "lens.query.result.split.multiple";
+
+  public static final String QUERY_OUTPUT_WRITE_HEADER_ENABLED = "lens.query.output.write.header";
+
+  public static final String QUERY_OUTPUT_ENCODING = "lens.query.output.charset.encoding";
+
+  public static final char DEFAULT_RESULTSET_DELIMITER = ',';
 
   public static Logger getCliLogger() {
     return LoggerFactory.getLogger(CLILOGGER);
@@ -210,6 +225,50 @@ public class LensClient {
 
   public Response getHttpResults(QueryHandle q) {
     return statement.getHttpResultSet(statement.getQuery(q));
+  }
+
+  /**
+   * Gets the ResultSet for the query represented by queryHandle.
+   *
+   * @param queryHandle : query hanlde
+   * @return
+   * @throws LensClientIOException
+   */
+  public ResultSet getHttpResultSet(QueryHandle queryHandle) throws LensClientIOException {
+    Map<String, String> paramsMap = this.connection.getConnectionParamsAsMap();
+    String isSplitFileEnabled = paramsMap.get(QUERY_RESULT_SPLIT_INTO_MULTIPLE);
+    String isHeaderEnabled = paramsMap.get(QUERY_OUTPUT_WRITE_HEADER_ENABLED);
+    String encoding = paramsMap.get(QUERY_OUTPUT_ENCODING);
+    return getHttpResultSet(queryHandle, Charset.forName(encoding), Boolean.parseBoolean(isHeaderEnabled),
+      DEFAULT_RESULTSET_DELIMITER, Boolean.parseBoolean(isSplitFileEnabled));
+  }
+
+  /**
+   * Gets the ResultSet for the query represented by queryHandle.
+   *
+   * @param queryHandle : query handle.
+   * @param encoding  : resultset encoding.
+   * @param isHeaderPresent : whether the resultset has header row included.
+   * @param delimiter : delimiter used to seperate columns of resultset.
+   * @param isResultZipped : whether the resultset is zipped.
+   * @return
+   * @throws LensClientIOException
+   */
+  public ResultSet getHttpResultSet(QueryHandle queryHandle, Charset encoding, boolean isHeaderPresent, char delimiter,
+    boolean isResultZipped) throws LensClientIOException {
+    InputStream resultStream = null;
+    try {
+      Response response = statement.getHttpResultSet(statement.getQuery(queryHandle));
+      resultStream = response.readEntity(InputStream.class);
+    } catch (Exception e) {
+      throw new LensClientIOException("Error while getting resultset", e);
+    }
+
+    if (isResultZipped) {
+      return new ZippedCsvResultSet(resultStream, encoding, isHeaderPresent, delimiter);
+    } else {
+      return new CsvResultSet(resultStream, encoding, isHeaderPresent, delimiter);
+    }
   }
 
   public LensStatement getLensStatement(QueryHandle query) {
