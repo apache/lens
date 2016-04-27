@@ -216,8 +216,7 @@ public class SessionHelper extends ServiceManagerHelper {
   }
 
   public String getSessionParam(String sessionHandleString, String param) throws Exception {
-    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-    query.put("key", param);
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString, "key", param);
     Response response = this.exec("get", SessionURL.SESSION_PARAMS_URL, servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
     StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));

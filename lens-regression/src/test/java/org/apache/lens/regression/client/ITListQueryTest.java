@@ -77,7 +77,7 @@ public class ITListQueryTest extends BaseTestClass {
     lens.closeSession();
   }
 
-  @DataProvider(name = "DP")
+  @DataProvider(name = "query-provider")
   public Object[][] getData() throws Exception {
 
     String[] queries = new String[]{QueryInventory.HIVE_CUBE_QUERY, QueryInventory.HIVE_DIM_QUERY,
@@ -93,7 +93,7 @@ public class ITListQueryTest extends BaseTestClass {
   }
 
 
-  @Test(enabled = true, dataProvider = "DP")
+  @Test(enabled = true, dataProvider = "query-provider")
   public void getQueryByQueryNameAllQuery(String queryString) throws Exception {
 
     String queryName = "queryNameFirst";
@@ -151,35 +151,26 @@ public class ITListQueryTest extends BaseTestClass {
   public void listQueryByTimeRange() throws Exception {
 
     //Running First Query
-
     String startTime = String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of 1st Query : " + startTime);
-    Thread.sleep(20000);
-
     QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.QUERY).getData();
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
-
     String endTime = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 1st Query : " + endTime);
 
-    Thread.sleep(20000);
+    Thread.sleep(1000);
 
     //Running Second Query
-
     String startTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of 2nd Query : " + startTime1);
-    Thread.sleep(20000);
-
     QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.QUERY).getData();
     lensQuery = qHelper.waitForCompletion(queryHandle1);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
-
     String endTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 2nd Query : " + endTime1);
 
     List<QueryHandle> list = qHelper.getQueryHandleList(null, null, null, sessionHandleString, startTime, endTime);
-
     Assert.assertTrue(list.contains(queryHandle), "QueryList by TimeRange is not correct");
     Assert.assertFalse(list.contains(queryHandle1), "QueryList by TimeRange is not correct");
 
@@ -239,7 +230,6 @@ public class ITListQueryTest extends BaseTestClass {
 
     String startTime = String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of 1st Query : " + startTime);
-    Thread.sleep(60000);
 
     QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.QUERY, queryName).getData();
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
@@ -467,28 +457,26 @@ public class ITListQueryTest extends BaseTestClass {
     String diffSession2 = sHelper.openNewSession(user2, pwd2, lens.getCurrentDB());
 
     String startTime1 = String.valueOf(System.currentTimeMillis());
-    Thread.sleep(10000);
     QueryHandle q1 = (QueryHandle) qHelper.executeQuery(QueryInventory.QUERY, queryName1).getData();
     LensQuery lensQuery = qHelper.waitForCompletion(q1);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
     String endTime1 = String.valueOf(System.currentTimeMillis());
 
-    Thread.sleep(10000);
+    Thread.sleep(1000);
 
     String startTime2 = String.valueOf(System.currentTimeMillis());
-    Thread.sleep(10000);
     QueryHandle q2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName2, diffSession1).getData();
     String endTime2 = String.valueOf(System.currentTimeMillis());
 
-    Thread.sleep(10000);
+    Thread.sleep(1000);
 
     String startTime3 = String.valueOf(System.currentTimeMillis());
-    Thread.sleep(10000);
+    Thread.sleep(1000);
     QueryHandle q3 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName3, diffSession2).getData();
     qHelper.killQueryByQueryHandle(q3);
     String endTime3 = String.valueOf(System.currentTimeMillis());
 
-    Thread.sleep(10000);
+    Thread.sleep(1000);
 
     List<QueryHandle> list1 = qHelper.getQueryHandleList(queryName2, "RUNNING", user1, sessionHandleString, startTime2,
         endTime2);

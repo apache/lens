@@ -128,8 +128,7 @@ public class KillQueryTests extends BaseTestClass {
     Assert.assertEquals(queryStatus2.getStatus(), QueryStatus.Status.RUNNING, "Query is Not Running");
     Assert.assertEquals(queryStatus3.getStatus(), QueryStatus.Status.RUNNING, "Query is Not Running");
 
-    logger.info("Going to kill in 20 sec");
-    Thread.sleep(20000);
+    Thread.sleep(1000);
 
     qHelper.killQuery(null, null, lens.getUserName());
     Thread.sleep(2000);
@@ -302,24 +301,17 @@ public class KillQueryTests extends BaseTestClass {
 
     String startTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of 1st Query : " + startTime1);
-    Thread.sleep(20000);
-
+    Thread.sleep(1000);
     QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
-    logger.info("1st QUERY HANDLE : " + queryHandle1);
-
     String endTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 1st Query : " + endTime1);
 
-    //Sleeping for 1 min
-    Thread.sleep(20000);
+    Thread.sleep(1000);
 
     String startTime2 = String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of 2nd Query : " + startTime2);
-    Thread.sleep(20000);
-
+    Thread.sleep(1000);
     QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
-    logger.info("2nd QUERY HANDLE : " + queryHandle2);
-
     String endTime2 = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 2nd Query : " + endTime2);
 
@@ -352,7 +344,7 @@ public class KillQueryTests extends BaseTestClass {
 
     String startTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of 1st Query : " + startTime1);
-    Thread.sleep(20000);
+    Thread.sleep(1000);
 
     QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName1).getData();
     logger.info("1st QUERY HANDLE : " + queryHandle1);
