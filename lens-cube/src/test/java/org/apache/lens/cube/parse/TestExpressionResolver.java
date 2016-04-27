@@ -145,8 +145,18 @@ public class TestExpressionResolver extends TestQueryRewrite {
       getExpectedQuery("tc", "select substr(tc.dim1, 3) as `subdim1`, avg(tc.msr1 + tc.msr2) FROM ", null,
         " and subdim1 != 'XYZ' group by substr(tc.dim1, 3)", getWhereForHourly2days("tc", "C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
-
   }
+
+  @Test
+  public void testCubeQueryExpressionWithAliasAsColumnName() throws Exception {
+    String hqlQuery = rewrite("select dim1 as d1, roundedmsr2 as msr2 from testCube" + " where " + TWO_DAYS_RANGE,
+      conf);
+    String expected =
+      getExpectedQuery(cubeName, "select testcube.dim1 as `d1`, round(sum(testcube.msr2)/1000) as `msr2` FROM ", null,
+        " group by testcube.dim1", getWhereForDailyAndHourly2days(cubeName, "c1_summary1"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
   @Test
   public void testExpressionInGroupbyToSelect() throws Exception {
     // expression with groupby
@@ -158,8 +168,8 @@ public class TestExpressionResolver extends TestQueryRewrite {
         + " avg(testCube.msr1 + testCube.msr2) FROM ", null, " and substr(testCube.dim1, 3) != 'XYZ'"
           + " group by testCube.dim1 != 'x' AND testCube.dim2 != 10", getWhereForHourly2days("C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
-
   }
+
   @Test
   public void testExpressionInSelectToGroupby() throws Exception {
     String hqlQuery =

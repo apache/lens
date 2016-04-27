@@ -948,6 +948,8 @@ public class CubeTestSetup {
       null));
     cubeMeasures2.add(new ColumnMeasure(new FieldSchema("msr14", "bigint", "fourth measure"), "Measure4", null,
       "COUNT", null));
+    cubeMeasures2.add(new ColumnMeasure(new FieldSchema("directMsr", "bigint", "fifth measure"), "Direct Measure",
+      null, "SUM", null));
 
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("dim11", "string", "basedim")));
     cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("dim12", "int", "ref dim"), "Dim2 refer",
@@ -1149,6 +1151,8 @@ public class CubeTestSetup {
       "user sports", "substr(sports, 3)"));
     baseExprs.add(new ExprColumn(new FieldSchema("sportids_abbr", "array<string>", ""),
       "user sports", "case when sportids == 1 then 'CKT' when sportids == 2 then 'FTB' else 'NON' end"));
+    baseExprs.add(new ExprColumn(new FieldSchema("directMsrExpr", "bigint", ""),
+      "Direct Measure", new ExprSpec("directMsr + 0", null, null), new ExprSpec("msr13 + msr14", null, null)));
     client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, baseExprs, joinChains, cubeProperties);
 
     Map<String, String> derivedProperties = new HashMap<>();
@@ -1167,6 +1171,7 @@ public class CubeTestSetup {
     measures.add("msr12");
     measures.add("msr13");
     measures.add("msr14");
+    measures.add("directmsr");
     dimensions = new HashSet<>();
     dimensions.add("cityid");
     dimensions.add("stateid");
