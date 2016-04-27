@@ -21,6 +21,9 @@ package org.apache.lens.regression.core.type;
 
 import java.util.HashMap;
 
+import org.apache.lens.server.api.util.LensUtil;
+
+
 public class MapBuilder {
   private HashMap<String, String> map;
 
@@ -42,6 +45,10 @@ public class MapBuilder {
     for (int i = 0; i < keys.length; i++) {
       map.put(keys[i], values[i]);
     }
+  }
+
+  public MapBuilder(String... args) {
+    map = LensUtil.getHashMap(args);
   }
 
   public void put(String key, String value) {

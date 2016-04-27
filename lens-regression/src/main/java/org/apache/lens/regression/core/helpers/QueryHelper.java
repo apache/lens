@@ -67,10 +67,14 @@ public class QueryHelper extends ServiceManagerHelper {
     formData.add("sessionid", sessionHandleString);
     formData.add("query", queryString);
     formData.add("operation", "EXECUTE");
-    formData.add("conf", conf);
     if (queryName != null) {
       formData.add("queryName", queryName);
     }
+    if (conf == null) {
+      conf = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />";
+    }
+    formData.add("conf", conf);
+
     Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         outputMediaType, formData.getForm());
     LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>(){});

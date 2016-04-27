@@ -238,7 +238,7 @@ class ExpressionResolver implements ContextRewriter {
 
     void resolveColumns(CubeQueryContext cubeql) throws LensException {
       // finds all columns and table aliases in the expression
-      ColumnResolver.getColsForTree(cubeql, finalAST, this);
+      ColumnResolver.getColsForTree(cubeql, finalAST, this, false);
     }
 
     Date getStartTime() {

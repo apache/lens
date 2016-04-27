@@ -811,24 +811,33 @@ public class HiveDriver extends AbstractLensDriver {
 
   @Override
   public Priority decidePriority(AbstractQueryContext ctx) {
-    if (whetherCalculatePriority) {
-      if (ctx.getDriverConf(this).get("mapred.job.priority") == null) {
-        try {
-          // Inside try since non-data fetching queries can also be executed by async method.
-          Priority priority = ctx.decidePriority(this, queryPriorityDecider);
-          String priorityStr = priority.toString();
-          ctx.getDriverConf(this).set("mapred.job.priority", priorityStr);
-          log.info("set priority to {}", priority);
-          return priority;
-        } catch (Exception e) {
-          // not failing query launch when setting priority fails
-          // priority will be set to usually NORMAL - the default in underlying system.
-          log.error("could not set priority for lens session id:{} User query: {}", ctx.getLensSessionIdentifier(),
-            ctx.getUserQuery(), e);
-          return null;
+    return decidePriority(ctx, queryPriorityDecider);
+  }
+
+  Priority decidePriority(AbstractQueryContext ctx, QueryPriorityDecider queryPriorityDecider) {
+    if (whetherCalculatePriority && ctx.getPriority() == null) {
+      try {
+        // On-demand re-computation of cost, in case it's not alredy set by a previous estimate call.
+        // In driver test cases, estimate doesn't happen. Hence this code path ensures cost is computed and
+        // priority is set based on correct cost.
+        if (ctx.getDriverQueryCost(this) == null) {
+          ctx.setDriverCost(this, this.estimate(ctx));
         }
-      } else {
-        return Priority.valueOf(ctx.getDriverConf(this).get("mapred.job.priority").toUpperCase());
+        // Inside try since non-data fetching queries can also be executed by async method.
+        Priority priority = queryPriorityDecider.decidePriority(ctx.getDriverQueryCost(this));
+        String priorityStr = priority.toString();
+        ctx.getDriverConf(this).set("mapred.job.priority", priorityStr);
+        Map<String, String> confUpdate = new HashMap<>();
+        confUpdate.put("mapred.job.priority", priorityStr);
+        ctx.updateConf(confUpdate);
+        log.info("set priority to {}", priority);
+        return priority;
+      } catch (Exception e) {
+        // not failing query launch when setting priority fails
+        // priority will be set to usually NORMAL - the default in underlying system.
+        log.error("could not set priority for lens session id:{} User query: {}", ctx.getLensSessionIdentifier(),
+          ctx.getUserQuery(), e);
+        return null;
       }
     }
     return null;

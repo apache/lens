@@ -72,6 +72,10 @@ public class TestCubeMetastoreClient {
   private static Set<String> dimensions;
   private static Set<CubeMeasure> cubeMeasures;
   private static Set<CubeDimAttribute> cubeDimensions;
+  private static Set<String> moreMeasures = Sets.newHashSet();
+  private static Set<String> moreDimensions = Sets.newHashSet();
+  private static Set<CubeMeasure> moreCubeMeasures = Sets.newHashSet();
+  private static Set<CubeDimAttribute> moreCubeDimensions = Sets.newHashSet();
   private static Set<UpdatePeriod> hourlyAndDaily = Sets.newHashSet(HOURLY, DAILY);
   private static final String CUBE_NAME = "testMetastoreCube";
   private static final String CUBE_NAME_WITH_PROPS = "testMetastoreCubeWithProps";
@@ -340,16 +344,20 @@ public class TestCubeMetastoreClient {
     });
     cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("zipcityname", "string", "zip city name"),
       "Zip city name", "cityFromZip", "name", null, null, null));
-    cubeMeasures.addAll(dummyMeasure);
-    cubeDimensions.addAll(dummyDimAttributes);
+    moreCubeMeasures.addAll(cubeMeasures);
+    moreCubeMeasures.addAll(dummyMeasure);
+    moreCubeDimensions.addAll(cubeDimensions);
+    moreCubeDimensions.addAll(dummyDimAttributes);
     cube = new Cube(cubeName, cubeMeasures, cubeDimensions, cubeExpressions, joinChains, emptyHashMap, 0.0);
     measures = Sets.newHashSet("msr1", "msr2", "msr3");
+    moreMeasures.addAll(measures);
     for(CubeMeasure measure: dummyMeasure) {
-      measures.add(measure.getName());
+      moreMeasures.add(measure.getName());
     }
     dimensions = Sets.newHashSet("dim1", "dim2", "dim3");
+    moreDimensions.addAll(dimensions);
     for(CubeDimAttribute dimAttribute: dummyDimAttributes) {
-      dimensions.add(dimAttribute.getName());
+      moreDimensions.add(dimAttribute.getName());
     }
     derivedCube = new DerivedCube(derivedCubeName, measures, dimensions, cube);
 
@@ -781,6 +789,63 @@ public class TestCubeMetastoreClient {
     assertNull(dcube2.getDimAttributeByName("location"));
     assertNotNull(dcube2.getDimAttributeByName("dim1"));
     assertTrue(dcube2.allFieldsQueriable());
+  }
+
+  @Test(priority = 1)
+  public void testCubeWithMoreMeasures() throws Exception {
+    String cubeName = "cubeWithMoreMeasures";
+    Cube cube = new Cube(cubeName, moreCubeMeasures, moreCubeDimensions, cubeExpressions, joinChains, emptyHashMap,
+      0.0);
+    client.createCube(cubeName, moreCubeMeasures, moreCubeDimensions, cubeExpressions, joinChains, emptyHashMap);
+    assertTrue(client.tableExists(cubeName));
+    Table cubeTbl = client.getHiveTable(cubeName);
+    assertTrue(client.isCube(cubeTbl));
+    Cube cube2 = new Cube(cubeTbl);
+    assertTrue(cube.equals(cube2));
+    assertFalse(cube2.isDerivedCube());
+    assertTrue(cube2.getTimedDimensions().isEmpty());
+    assertEquals(moreCubeMeasures.size(), cube2.getMeasureNames().size());
+    // +8 is for hierarchical dimension
+    assertEquals(moreCubeDimensions.size() + 8, cube2.getDimAttributeNames().size());
+    assertEquals(moreCubeMeasures.size(), cube2.getMeasures().size());
+    assertEquals(cubeExpressions.size(), cube2.getExpressions().size());
+    assertEquals(cubeExpressions.size(), cube2.getExpressionNames().size());
+    assertEquals(moreCubeDimensions.size(), cube2.getDimAttributes().size());
+    assertEquals(moreCubeDimensions.size() + 8 + moreCubeMeasures.size() + cubeExpressions.size(), cube2
+      .getAllFieldNames().size());
+    assertNotNull(cube2.getMeasureByName("msr4"));
+    assertNotNull(cube2.getMeasureByName("dummy_msr1"));
+    assertNotNull(cube2.getMeasureByName("dummy_msr4000"));
+    assertNotNull(cube2.getDimAttributeByName("location"));
+    assertNotNull(cube2.getDimAttributeByName("dummy_dim1"));
+    assertNotNull(cube2.getDimAttributeByName("dummy_dim4000"));
+    assertTrue(cube2.allFieldsQueriable());
+
+    String derivedCubeName = "derivedWithMoreMeasures";
+    DerivedCube derivedCube = new DerivedCube(derivedCubeName, moreMeasures, moreDimensions, cube);
+    client.createDerivedCube(cubeName, derivedCubeName, moreMeasures, moreDimensions, emptyHashMap, 0L);
+    assertTrue(client.tableExists(derivedCubeName));
+    Table derivedTbl = client.getHiveTable(derivedCubeName);
+    assertTrue(client.isCube(derivedTbl));
+    DerivedCube dcube2 = new DerivedCube(derivedTbl, cube);
+    assertTrue(derivedCube.equals(dcube2));
+    assertTrue(dcube2.isDerivedCube());
+    assertTrue(dcube2.getTimedDimensions().isEmpty());
+    assertEquals(moreMeasures.size(), dcube2.getMeasureNames().size());
+    assertEquals(moreDimensions.size(), dcube2.getDimAttributeNames().size());
+    assertEquals(moreMeasures.size(), dcube2.getMeasures().size());
+    assertEquals(moreDimensions.size(), dcube2.getDimAttributes().size());
+    assertNotNull(dcube2.getMeasureByName("msr3"));
+    assertNull(dcube2.getMeasureByName("msr4"));
+    assertNotNull(dcube2.getMeasureByName("dummy_msr1"));
+    assertNotNull(dcube2.getMeasureByName("dummy_msr4000"));
+    assertNull(dcube2.getDimAttributeByName("location"));
+    assertNotNull(dcube2.getDimAttributeByName("dummy_dim1"));
+    assertNotNull(dcube2.getDimAttributeByName("dummy_dim4000"));
+    assertNotNull(dcube2.getDimAttributeByName("dim1"));
+    assertTrue(dcube2.allFieldsQueriable());
+    client.dropCube(derivedCubeName);
+    client.dropCube(cubeName);
   }
 
   @Test(priority = 1)

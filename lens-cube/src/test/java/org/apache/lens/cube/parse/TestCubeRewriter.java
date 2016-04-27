@@ -553,13 +553,15 @@ public class TestCubeRewriter extends TestQueryRewrite {
     String whereCond = "zipcode = 'a' and cityid = 'b' and (" + TWO_DAYS_RANGE_SPLIT_OVER_UPDATE_PERIODS + ")";
     String hqlQuery = rewrite("select zipcode, count(msr4), sum(msr15) from testCube where " + whereCond, conf);
     System.out.println(hqlQuery);
-    String possibleStart1 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq1.msr4 msr4, mq2.msr15 msr15 FROM ";
-    String possibleStart2 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq2.msr4 msr4, mq1.msr15 msr15 FROM ";
+    String possibleStart1 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq1.expr2 `count( msr4 )`,"
+      + " mq2.expr3 `sum( msr15 )` FROM ";
+    String possibleStart2 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq2.expr2 `count( msr4 )`,"
+      + " mq1.expr3 `sum( msr15 )` FROM ";
 
     assertTrue(hqlQuery.startsWith(possibleStart1) || hqlQuery.startsWith(possibleStart2));
-    compareContains(rewrite("select zipcode as `zipcode`, sum(msr15) as `msr15` from testcube where " + whereCond,
+    compareContains(rewrite("select zipcode as `zipcode`, sum(msr15) as `expr3` from testcube where " + whereCond,
       conf), hqlQuery);
-    compareContains(rewrite("select zipcode as `zipcode`, count(msr4) as `msr4` from testcube where " + whereCond,
+    compareContains(rewrite("select zipcode as `zipcode`, count(msr4) as `expr2` from testcube where " + whereCond,
       conf), hqlQuery);
     assertTrue(hqlQuery.endsWith("on mq1.zipcode <=> mq2.zipcode"));
     // No time_range_in should be remaining

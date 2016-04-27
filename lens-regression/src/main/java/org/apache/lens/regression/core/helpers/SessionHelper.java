@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
+import org.apache.lens.regression.core.constants.SessionURL;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
 import org.apache.lens.regression.util.AssertUtil;
@@ -116,7 +117,8 @@ public class SessionHelper extends ServiceManagerHelper {
   public void closeNewSession(String sessionHandleString, String outputMediaType) throws LensException {
 
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-    Response response = this.exec("delete", "/session", servLens, null, query, null, outputMediaType, null);
+    Response response = this.exec("delete", SessionURL.SESSION_BASE_URL, servLens, null, query, null,
+        outputMediaType, null);
     AssertUtil.assertSucceededResponse(response);
     log.info("Closed Session : {}", sessionHandleString);
   }
@@ -138,13 +140,13 @@ public class SessionHelper extends ServiceManagerHelper {
     formData.add("sessionid", sessionHandleString);
     formData.add("key", param);
     formData.add("value", value);
-    Response response = this.exec("put", "/session/params", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
-         null, formData.getForm());
+    Response response = this.exec("put", SessionURL.SESSION_PARAMS_URL, servLens, null, null,
+        MediaType.MULTIPART_FORM_DATA_TYPE, null, formData.getForm());
     AssertUtil.assertSucceededResponse(response);
 
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     query.put("key", param);
-    response = this.exec("get", "/session/params", servLens, null, query);
+    response = this.exec("get", SessionURL.SESSION_PARAMS_URL, servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
     StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
     HashMap<String, String> map = Util.stringListToMap(strList);
@@ -181,7 +183,7 @@ public class SessionHelper extends ServiceManagerHelper {
     formData.add("sessionid", sessionHandleString);
     formData.add("type", "jar");
     formData.add("path", path);
-    Response response = this.exec("put", "/session/resources/add", servLens, null, null,
+    Response response = this.exec("put", SessionURL.SESSION_ADD_RESOURCE_URL, servLens, null, null,
         MediaType.MULTIPART_FORM_DATA_TYPE, null, formData.getForm());
     log.info("Response : {}", response);
     AssertUtil.assertSucceeded(response);
@@ -203,7 +205,7 @@ public class SessionHelper extends ServiceManagerHelper {
     formData.add("sessionid", sessionHandleString);
     formData.add("type", "jar");
     formData.add("path", path);
-    Response response = this.exec("put", "/session/resources/delete", servLens, null, null,
+    Response response = this.exec("put", SessionURL.SESSION_REMOVE_RESOURCE_URL, servLens, null, null,
         MediaType.MULTIPART_FORM_DATA_TYPE, null,  formData.getForm());
     log.info("Response : {}", response);
     AssertUtil.assertSucceeded(response);
@@ -216,7 +218,7 @@ public class SessionHelper extends ServiceManagerHelper {
   public String getSessionParam(String sessionHandleString, String param) throws Exception {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     query.put("key", param);
-    Response response = this.exec("get", "/session/params", servLens, null, query);
+    Response response = this.exec("get", SessionURL.SESSION_PARAMS_URL, servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
     StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
     HashMap<String, String> map = Util.stringListToMap(strList);
