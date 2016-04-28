@@ -60,8 +60,8 @@ public class QueryInventory {
     + "time_range_in(delivery_time,'2015-04-12','2015-04-14')";
 
   public static final String WRONG_HIVE_DIM_QUERY = "cube select NO_ID from sample_dim2 where name != 'first'";
-  public static final String WRONG_HIVE_CUBE_QUERY="cube select sample_dim_chain.name, measure4 from sample_cube where "
-    + "time_range_in(dt, '2014-07-01-00', '2014-07-25-05')";
+  public static final String NO_PARTITION_HIVE_CUBE_QUERY="cube select sample_dim_chain.name, measure4 from sample_cube"
+    + " where time_range_in(dt, '2014-07-01-00', '2014-07-25-05')";
 
   public static final String WRONG_SYNTAX_QUERY="cube select id,name from sample_dim2 name != 'first'";
 

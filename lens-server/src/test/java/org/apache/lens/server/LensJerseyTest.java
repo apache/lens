@@ -40,6 +40,7 @@ import org.apache.lens.driver.hive.TestRemoteHiveDriver;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.LensMetricsUtil;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
@@ -213,20 +214,26 @@ public abstract class LensJerseyTest extends JerseyTest {
    */
   public void restartLensServer() {
     HiveConf h = getServerConf();
-    restartLensServer(h);
+    restartLensServer(h, false);
   }
 
   /**
    * Restart lens server.
    *
    * @param conf the conf
+   * @param pauseQuerySubmitter whether to pause query submitter while starting lens server
    */
-  public void restartLensServer(HiveConf conf) {
+  public void restartLensServer(HiveConf conf, boolean pauseQuerySubmitter) {
     LensServices.get().stop();
     LensMetricsUtil.clearRegistry();
     System.out.println("Lens services stopped!");
     LensServices.setInstance(new LensServices(LensServices.LENS_SERVICES_NAME, this.logSegregationContext));
     LensServices.get().init(conf);
+    if (pauseQuerySubmitter) {
+      QueryExecutionServiceImpl queryService = LensServices.get().getService(QueryExecutionService.NAME);
+      queryService.pauseQuerySubmitter(true);
+      System.out.println("Paused Query Submitter");
+    }
     LensServices.get().start();
     System.out.println("Lens services restarted!");
   }

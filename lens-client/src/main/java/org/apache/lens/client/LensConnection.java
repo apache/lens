@@ -19,8 +19,10 @@
 package org.apache.lens.client;
 
 import java.net.ConnectException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.ProcessingException;
@@ -309,6 +311,19 @@ public class LensConnection {
     StringList value = target.path("params").queryParam("sessionid", this.sessionHandle).queryParam("key", key)
       .request().get(StringList.class);
     return value.getElements();
+  }
+
+  public Map<String, String> getConnectionParamsAsMap() {
+    List<String> params = getConnectionParams();
+    Map<String, String> paramsMap = new HashMap<String, String>(params.size());
+    String[] paramKeyAndValue;
+    for (String param : params) {
+      paramKeyAndValue = param.split("=");
+      if (paramKeyAndValue.length == 2) {
+        paramsMap.put(paramKeyAndValue[0], paramKeyAndValue[1]);
+      }
+    }
+    return paramsMap;
   }
 
   public LensConnectionParams getLensConnectionParams() {

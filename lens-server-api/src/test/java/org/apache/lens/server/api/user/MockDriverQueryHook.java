@@ -18,15 +18,37 @@
  */
 package org.apache.lens.server.api.user;
 
-import org.apache.lens.server.api.driver.DriverQueryHook;
-import org.apache.lens.server.api.query.AbstractQueryContext;
+import java.util.HashMap;
 
-public class MockDriverQueryHook implements DriverQueryHook {
-  public static final String KEY = "TEST_KEY";
-  public static final String VALUE = "TEST_VALUE";
+import org.apache.lens.server.api.driver.NoOpDriverQueryHook;
+import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.QueryContext;
+
+public class MockDriverQueryHook extends NoOpDriverQueryHook {
+  public static final String KEY_PRE_LAUNCH = "TEST_KEY_PRE_LAUNCH";
+  public static final String VALUE_PRE_LAUNCH = "TEST_VALUE_PRE_LAUNCH";
+
+  public static final String KEY_POST_SELECT = "TEST_KEY_POST_SELECT";
+  public static final String VALUE_POST_SELECT = "TEST_VALUE_POST_SELECT";
+  public static final String UNSAVED_KEY_POST_SELECT = "TEST_UNSAVED__KEY_POST_SELECT";
+  public static final String UNSAVED_VALUE_POST_SELECT = "TEST_UNSAVED_VALUE_POST_SELECT";
 
   @Override
-  public void preLaunch(AbstractQueryContext ctx) {
-    ctx.getSelectedDriverConf().set(KEY, VALUE);
+  public void preLaunch(QueryContext ctx) {
+    super.preLaunch(ctx);
+    ctx.getSelectedDriverConf().set(KEY_PRE_LAUNCH, VALUE_PRE_LAUNCH);
+  }
+
+  @Override
+  public void postDriverSelection(AbstractQueryContext ctx) throws LensException {
+    super.postDriverSelection(ctx);
+
+    //Updated both in driver config and LensConf(which gets persisted)
+    ctx.getSelectedDriverConf().set(KEY_POST_SELECT, VALUE_POST_SELECT);
+    ctx.updateConf(new HashMap<String, String>(1){{put(KEY_POST_SELECT, VALUE_POST_SELECT); }});
+
+    //Updated only in driver conf.
+    ctx.getSelectedDriverConf().set(UNSAVED_KEY_POST_SELECT, UNSAVED_VALUE_POST_SELECT);
   }
 }

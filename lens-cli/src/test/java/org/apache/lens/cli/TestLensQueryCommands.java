@@ -175,10 +175,10 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     int chkCount = 0;
     while (!qCom.getAllQueries("SUCCESSFUL", null, "all", null, -1, Long.MAX_VALUE).contains(
         "Total number of queries: " + (noOfSuccQueriesSoFar + 1))) {
-      Thread.sleep(2000);
+      Thread.sleep(100);
       chkCount++;
-      if (chkCount > 30) {
-        fail("Unable to get successful status for query even after 30 checks");
+      if (chkCount > 100) {
+        fail("Unable to get successful status for query even after 100 checks");
       }
     }
     if (closeConn) {
@@ -215,7 +215,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String handle = qCom.executePreparedQuery(qh, true, "testPrepQuery2");
     log.debug("Perpared query handle is   " + handle);
     while (!qCom.getClient().getQueryStatus(handle).finished()) {
-      Thread.sleep(5000);
+      Thread.sleep(100);
     }
     String status = qCom.getStatus(handle);
     log.debug("Prepared Query Status is  " + status);
@@ -225,8 +225,8 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     result = qCom.getQueryResults(handle, null, true);
     log.debug("Prepared Query Result is  " + result);
     assertTrue(result.contains("1\tfirst"));
-    //Wait for query to purge. Purger runs every second
-    Thread.sleep(3000);
+    //Wait for query to purge. Purger runs every 100 millis
+    Thread.sleep(300);
     //Fetch again. Should not get resultset
     result = qCom.getQueryResults(handle, null, true);
     log.debug("Prepared Query Result is  " + result);
@@ -335,7 +335,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
         String details = qCom.getDetails(null);
         assertTrue(details.contains("Driver Query:"));
       }
-      Thread.sleep(1000);
+      Thread.sleep(100);
       queryStatus = qCom.getClient().getQueryStatus(qh);
     }
 
@@ -521,7 +521,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String query = "cube select id,name from test_dim";
     String qh = qCom.executeQuery(query, true, "testQuery");
     while (!qCom.getClient().getQueryStatus(qh).finished()) {
-      Thread.sleep(5000);
+      Thread.sleep(100);
     }
     assertTrue(qCom.getStatus(qh).contains("Status: SUCCESSFUL"));
 

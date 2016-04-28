@@ -40,7 +40,6 @@ import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
-import org.apache.lens.server.api.user.MockDriverQueryHook;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
@@ -86,7 +85,6 @@ public class TestJdbcDriver {
     baseConf.set(JDBC_USER, "SA");
     baseConf.set(JDBC_PASSWORD, "");
     baseConf.set(JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
-    baseConf.setClass(JDBC_QUERY_HOOK_CLASS, MockDriverQueryHook.class, DriverQueryHook.class);
     hConf = new HiveConf(baseConf, this.getClass());
 
     driver = new JDBCDriver();
@@ -746,7 +744,6 @@ public class TestJdbcDriver {
 
   private void executeAsync(QueryContext ctx) throws LensException {
     driver.executeAsync(ctx);
-    assertEquals(ctx.getSelectedDriverConf().get(MockDriverQueryHook.KEY), MockDriverQueryHook.VALUE);
   }
 
   /**

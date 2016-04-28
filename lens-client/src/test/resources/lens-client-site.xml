@@ -30,4 +30,15 @@
         <value>org.apache.lens.client.RequestTestFilter</value>
         <description>Implementation class for Request Filter</description>
     </property>
+    <property>
+        <name>lens.server.base.url</name>
+        <value>http://localhost:10056/lensapi</value>
+        <description>The base url for the lens server</description>
+    </property>
+
+    <property>
+        <name>lens.client.query.poll.interval</name>
+        <value>1000</value>
+        <description>Interval at which query progress will be polled. Interval has to be given in milliseconds</description>
+    </property>
 </configuration>

@@ -491,7 +491,6 @@ public class TestHiveDriver {
    */
   protected void validateExecuteAsync(QueryContext ctx, DriverQueryState finalState, boolean isPersistent,
     boolean formatNulls) throws Exception {
-    assertEquals(ctx.getSelectedDriverConf().get(MockDriverQueryHook.KEY), MockDriverQueryHook.VALUE);
     validateExecuteAsync(ctx, finalState, isPersistent, formatNulls, driver);
   }
 

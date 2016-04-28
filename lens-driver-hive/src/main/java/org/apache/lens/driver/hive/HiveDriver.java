@@ -555,7 +555,6 @@ public class HiveDriver extends AbstractLensDriver {
       Configuration qdconf = ctx.getDriverConf(this);
       qdconf.set("mapred.job.name", ctx.getQueryHandle().toString());
       decidePriority(ctx);
-      queryHook.preLaunch(ctx);
       SessionHandle sessionHandle = getSession(ctx);
       OperationHandle op = getClient().executeStatementAsync(sessionHandle, ctx.getSelectedDriverQuery(),
         qdconf.getValByRegex(".*"));
@@ -1379,5 +1378,10 @@ public class HiveDriver extends AbstractLensDriver {
    */
   public boolean hasLensSession(LensSessionHandle session) {
     return lensToHiveSession.containsKey(session.getPublicId().toString());
+  }
+
+  @Override
+  public DriverQueryHook getQueryHook() {
+    return queryHook;
   }
 }

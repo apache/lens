@@ -16,28 +16,42 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- *
- */
-package org.apache.lens.server.api.driver;
 
-import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.lens.server.api.query.QueryContext;
+package org.apache.lens.client.resultset;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+
+import org.apache.lens.client.exceptions.LensClientIOException;
+
+import au.com.bytecode.opencsv.CSVReader;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class NoOpDriverQueryHook implements DriverQueryHook {
-  @Override
-  public void preLaunch(QueryContext ctx) {
-    log.debug("Pre launch for {}, user query: {}, driver {}, driver query: {}", ctx.getSubmittedUser(),
-      ctx.getUserQuery(), ctx.getSelectedDriver().getFullyQualifiedName(), ctx.getSelectedDriverQuery());
+public class CsvResultSetReader implements ResultSetReader {
+
+  CSVReader reader;
+  String[] nextLine;
+
+  CsvResultSetReader(InputStream is, Charset encoding, char delimiter) {
+    reader = new CSVReader(new InputStreamReader(is, encoding), delimiter);
   }
 
   @Override
-  public void postDriverSelection(AbstractQueryContext ctx) throws LensException {
-    log.debug("Post driver selection for {}, user query: {}, driver {}, driver query: {}", ctx.getSubmittedUser(),
-      ctx.getUserQuery(), ctx.getSelectedDriver().getFullyQualifiedName(), ctx.getSelectedDriverQuery());
+  public String[] getRow() {
+    return nextLine;
+  }
+
+  @Override
+  public boolean next() throws LensClientIOException {
+    try {
+      nextLine = reader.readNext();
+    } catch (IOException e) {
+      log.error("Error while reading result set row", e);
+      throw new LensClientIOException("Error while reading result set row", e);
+    }
+    return nextLine != null;
   }
 }
