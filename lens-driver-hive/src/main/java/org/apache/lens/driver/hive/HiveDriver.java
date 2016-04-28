@@ -343,7 +343,7 @@ public class HiveDriver extends AbstractLensDriver {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.server.api.driver.LensDriver#configure(org.apache.hadoop.conf.Configuration)
+   * @see org.apache.lens.server.api.driver.LensDriver#configure(org.apache.hadoop.conf.ø)
    */
   @Override
   public void configure(Configuration conf, String driverType, String driverName) throws LensException {
@@ -691,7 +691,7 @@ public class HiveDriver extends AbstractLensDriver {
     try {
       for (Object[] o : getClient().fetchResults(opHandle, FetchOrientation.FETCH_NEXT, -1, FetchType.LOG)) {
         for (Object logLine : o) {
-          log.info("Update from hive: {}", logLine);
+          log.info("Update from hive: " + String.valueOf(logLine));
         }
       }
     } catch (HiveSQLException e) {

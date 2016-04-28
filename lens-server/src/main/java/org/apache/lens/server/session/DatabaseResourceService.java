@@ -256,8 +256,7 @@ public class DatabaseResourceService extends AbstractService {
       }
 
       URLClassLoader newClassLoader = new URLClassLoader(newUrls.toArray(new URL[newUrls.size()]),
-        SessionState.get() != null ? SessionState.getSessionConf().getClassLoader()
-          : DatabaseResourceService.class.getClassLoader());
+        DatabaseResourceService.class.getClassLoader());
       if (addToCache) {
         classLoaderCache.put(database, newClassLoader);
       }

@@ -340,8 +340,8 @@ public class LensSessionImpl extends HiveSessionImpl {
               classLoader = sessionDbClassLoaders.get(database);
             }
           }
-
           return classLoader == null ? getSessionState().getConf().getClassLoader() : classLoader;
+
         } catch (LensException e) {
           log.error("Error getting classloader for database {} for session {} "
             + " defaulting to session state class loader", database, getSessionHandle().getSessionId(), e);

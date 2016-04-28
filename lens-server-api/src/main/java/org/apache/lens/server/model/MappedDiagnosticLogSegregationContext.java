@@ -50,4 +50,11 @@ public class MappedDiagnosticLogSegregationContext implements LogSegregationCont
   public void setQueryId(String id) {
     MDC.put(QUERY_LOG_ID, id);
   }
+
+  public static void put(String key, String value) {
+    MDC.put(key, value);
+  }
+  public static void remove(String key) {
+    MDC.remove(key);
+  }
 }
