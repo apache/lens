@@ -47,6 +47,8 @@ public abstract class AbstractLensDriver implements LensDriver {
   @Getter
   private String fullyQualifiedName = null;
 
+  private DriverQueryHook noOpDriverQueryHook = new NoOpDriverQueryHook();
+
   @Override
   public void configure(Configuration conf, String driverType, String driverName) throws LensException {
     if (StringUtils.isBlank(driverType) || StringUtils.isBlank(driverName)) {
@@ -100,6 +102,11 @@ public abstract class AbstractLensDriver implements LensDriver {
   @Override
   public Priority decidePriority(AbstractQueryContext queryContext) {
     return Priority.NORMAL;
+  }
+
+  @Override
+  public DriverQueryHook getQueryHook() {
+    return noOpDriverQueryHook;
   }
 
   @Override

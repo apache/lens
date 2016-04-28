@@ -658,8 +658,12 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     @Override
     public void run() {
       log.info("Starting QuerySubmitter thread");
-      while (!pausedForTest && !stopped && !querySubmitter.isInterrupted()) {
+      while (!stopped && !querySubmitter.isInterrupted()) {
         try {
+          if (pausedForTest) {
+            Thread.sleep(100);
+            continue;
+          }
           QueryContext query = queuedQueries.take();
           synchronized (query) {
 
@@ -725,6 +729,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     private void launchQuery(final QueryContext query) throws LensException {
 
       checkEstimatedQueriesState(query);
+      query.getSelectedDriver().getQueryHook().preLaunch(query);
       QueryStatus oldStatus = query.getStatus();
       QueryStatus newStatus = new QueryStatus(query.getStatus().getProgress(), null,
         QueryStatus.Status.LAUNCHED, "Query is launched on driver", false, null, null, null);
@@ -757,13 +762,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     }
   }
 
-  // used in tests
 
   /**
    * Pause query submitter.
+   * note : used in tests only
    */
-  public void pauseQuerySubmitter() {
-    querySubmitterRunnable.pausedForTest = true;
+  public void pauseQuerySubmitter(boolean pause) {
+    querySubmitterRunnable.pausedForTest = pause;
   }
 
   /**
@@ -1422,6 +1427,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       ctx.setSelectedDriverQueryCost(selectedDriverQueryCost);
       Priority priority = driver.decidePriority(ctx);
       ctx.setPriority(priority == null ? Priority.NORMAL : priority);
+      driver.getQueryHook().postDriverSelection(ctx);
       selectGauge.markSuccess();
     } finally {
       parallelCallGauge.markSuccess();
@@ -1927,11 +1933,11 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
   /**
    * Gets the query context.
-   *
+   * note: this method is made public to expose it to test cases
    * @param queryHandle the query handle
    * @return the query context
    */
-  QueryContext getQueryContext(QueryHandle queryHandle) {
+  public QueryContext getQueryContext(QueryHandle queryHandle) {
     return allQueries.get(queryHandle);
   }
 

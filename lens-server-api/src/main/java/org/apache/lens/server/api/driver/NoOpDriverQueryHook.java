@@ -21,15 +21,23 @@
  */
 package org.apache.lens.server.api.driver;
 
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.QueryContext;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NoOpDriverQueryHook implements DriverQueryHook {
   @Override
-  public void preLaunch(AbstractQueryContext ctx) {
-    log.info("Pre launch for {}, user query: {}, driver query: {}", ctx.getSubmittedUser(), ctx.getUserQuery(),
-      ctx.getSelectedDriverQuery());
+  public void preLaunch(QueryContext ctx) {
+    log.debug("Pre launch for {}, user query: {}, driver {}, driver query: {}", ctx.getSubmittedUser(),
+      ctx.getUserQuery(), ctx.getSelectedDriver().getFullyQualifiedName(), ctx.getSelectedDriverQuery());
+  }
+
+  @Override
+  public void postDriverSelection(AbstractQueryContext ctx) throws LensException {
+    log.debug("Post driver selection for {}, user query: {}, driver {}, driver query: {}", ctx.getSubmittedUser(),
+      ctx.getUserQuery(), ctx.getSelectedDriver().getFullyQualifiedName(), ctx.getSelectedDriverQuery());
   }
 }

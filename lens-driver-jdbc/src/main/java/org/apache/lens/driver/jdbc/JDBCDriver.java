@@ -935,7 +935,6 @@ public class JDBCDriver extends AbstractLensDriver {
     String rewrittenQuery = rewriteQuery(context);
     JdbcQueryContext jdbcCtx = new JdbcQueryContext(context, logSegregationContext);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
-    queryHook.preLaunch(context);
     try {
       Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx, logSegregationContext));
       jdbcCtx.setResultFuture(future);
@@ -1144,5 +1143,10 @@ public class JDBCDriver extends AbstractLensDriver {
   @Override
   public void writeExternal(ObjectOutput arg0) throws IOException {
     // TODO Auto-generated method stub
+  }
+
+  @Override
+  public DriverQueryHook getQueryHook() {
+    return queryHook;
   }
 }

@@ -28,13 +28,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.DriverQueryHook;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.user.MockDriverQueryHook;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -136,7 +134,6 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     conf.addResource("drivers/hive/hive1/hivedriver-site.xml");
     driver = new HiveDriver();
     conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
-    conf.setClass(HiveDriver.HIVE_QUERY_HOOK_CLASS, MockDriverQueryHook.class, DriverQueryHook.class);
     driver.configure(conf, "hive", "hive1");
     drivers = Lists.<LensDriver>newArrayList(driver);
     System.out.println("TestRemoteHiveDriver created");

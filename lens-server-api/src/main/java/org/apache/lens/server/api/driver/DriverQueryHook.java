@@ -23,30 +23,39 @@ package org.apache.lens.server.api.driver;
 
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.QueryContext;
 
 /**
- * Drivers can choose to initialize a DriverQueryHook object in their
- * initialization and use that wherever they want.
+ * Drivers should initialize a DriverQueryHook object in their  initialization and expose it
+ * via {@link LensDriver#getQueryHook}. Lens Server will invoke the driver hook at relevant points during
+ * query execution. By default each driver exposes a {@link NoOpDriverQueryHook} which does nothing when invoked.
  *
- * The only use case I see right now is to provide a hook just before query is
- * launched on the driver.
+ * The only use case I see right now is to provide a hook just after driver has been selected for a query and
+ * before query is launched on the driver. One example usage for hive driver would be to add dynamic configuration or
+ * stall execution of a query by looking at the final translated query itself (based on table involved, filters
+ * involved, etc in the query).
  *
- * This interface is meant to unify drivers' needs of having hooks. Each driver
- * can use the methods in their own way. Each driver can pose its own restrictions
- * or guidelines on methods for its hooks.
- * e.g. some driver may choose to not allow any hooks
- * another driver may allow hooks but for restricted usage
- * Some drivers may want their hooks to be initialized with some constructor params
- * Currently, Hivedriver and Jdbcdriver only require their hook implementations to have a default constructor
+ * This interface is expected to evolve for some time as more needs for hook are discovered
  *
- * This interface is expected to evolve for some time as more needs of hooks are discovered
- *
+
  */
 public interface DriverQueryHook {
   /**
-   * Should be Called before launch on the driver
+   * Called just before launching the query on the selected driver.
    * @param ctx
    * @throws LensException
    */
-  void preLaunch(AbstractQueryContext ctx) throws LensException;
+  void preLaunch(QueryContext ctx) throws LensException;
+
+  /**
+   * Called just after driver has been selected to execute a query.
+   *
+   * Note: Note if this method updates any configuration, same should be reflected in QueryContext
+   * via {@link AbstractQueryContext#updateConf(Map)} to ensure the modified configration is persisted and is available
+   * on server restarts and other bookkeeping needs.
+   *
+   * @param ctx
+   * @throws LensException
+   */
+  void postDriverSelection(AbstractQueryContext ctx) throws LensException;
 }

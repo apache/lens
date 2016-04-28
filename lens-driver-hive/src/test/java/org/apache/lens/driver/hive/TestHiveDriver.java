@@ -39,7 +39,6 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.priority.CostRangePriorityDecider;
 import org.apache.lens.server.api.query.priority.CostToPriorityRangeConf;
-import org.apache.lens.server.api.user.MockDriverQueryHook;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
@@ -121,7 +120,6 @@ public class TestHiveDriver {
     conf = new HiveConf();
     conf.addResource("drivers/hive/hive1/hivedriver-site.xml");
     conf.setClass(HiveDriver.HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, ThriftConnection.class);
-    conf.setClass(HiveDriver.HIVE_QUERY_HOOK_CLASS, MockDriverQueryHook.class, DriverQueryHook.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
     conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
     driver = new HiveDriver();
@@ -484,7 +482,6 @@ public class TestHiveDriver {
    */
   protected void validateExecuteAsync(QueryContext ctx, DriverQueryState finalState, boolean isPersistent,
     boolean formatNulls) throws Exception {
-    assertEquals(ctx.getSelectedDriverConf().get(MockDriverQueryHook.KEY), MockDriverQueryHook.VALUE);
     validateExecuteAsync(ctx, finalState, isPersistent, formatNulls, driver);
   }
 

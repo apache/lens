@@ -82,4 +82,11 @@
     <value>hive/hive1</value>
   </property>
 
+  <property>
+    <name>lens.driver.hive.query.hook.class</name>
+    <value>org.apache.lens.server.api.user.MockDriverQueryHook</value>
+    <description>The query hook class for hive driver.
+    </description>
+  </property>
+
 </configuration>

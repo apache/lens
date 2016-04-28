@@ -23,6 +23,7 @@ import static javax.ws.rs.core.Response.Status.*;
 import static org.apache.lens.server.LensServerTestUtil.DB_WITH_JARS;
 import static org.apache.lens.server.LensServerTestUtil.DB_WITH_JARS_2;
 import static org.apache.lens.server.api.LensServerAPITestUtil.getLensConf;
+import static org.apache.lens.server.api.user.MockDriverQueryHook.*;
 import static org.apache.lens.server.common.RestAPITestUtil.*;
 
 import static org.testng.Assert.*;
@@ -668,6 +669,8 @@ public class TestQueryService extends LensJerseyTest {
       new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
 
     assertNotNull(handle);
+    QueryContext ctx = queryService.getUpdatedQueryContext(lensSessionId, handle);
+    assertEquals(ctx.getSelectedDriverConf().get(KEY_POST_SELECT), VALUE_POST_SELECT);
 
     // Get query
     LensQuery lensQuery = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
@@ -696,12 +699,14 @@ public class TestQueryService extends LensJerseyTest {
       }*/
       Thread.sleep(1000);
     }
+    assertEquals(ctx.getSelectedDriverConf().get(KEY_PRE_LAUNCH), VALUE_PRE_LAUNCH);
     assertTrue(lensQuery.getSubmissionTime() > 0);
     assertTrue(lensQuery.getLaunchTime() > 0);
     assertTrue(lensQuery.getDriverStartTime() > 0);
     assertTrue(lensQuery.getDriverFinishTime() > 0);
     assertTrue(lensQuery.getFinishTime() > 0);
-    QueryContext ctx = queryService.getUpdatedQueryContext(lensSessionId, lensQuery.getQueryHandle());
+    ctx = queryService.getUpdatedQueryContext(lensSessionId, lensQuery.getQueryHandle());
+
     assertNotNull(ctx.getPhase1RewrittenQuery());
     assertEquals(ctx.getPhase1RewrittenQuery(), ctx.getUserQuery()); //Since there is no rewriter in this test
     assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
