@@ -704,8 +704,6 @@
             </goals>
             <phase>package</phase>
             <configuration>
-              <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
-              <excludes>**/generated-sources/**</excludes>
               <skip>${skipCheck}</skip>
               <consoleOutput>true</consoleOutput>
               <includeTestSourceDirectory>true</includeTestSourceDirectory>
@@ -1675,6 +1673,7 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
   <modules>
     <module>checkstyle</module>
     <module>lens-api</module>

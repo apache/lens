@@ -343,7 +343,7 @@ public class HiveDriver extends AbstractLensDriver {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.server.api.driver.LensDriver#configure(org.apache.hadoop.conf.ø)
+   * @see org.apache.lens.server.api.driver.LensDriver#configure(org.apache.hadoop.conf.Configuration)
    */
   @Override
   public void configure(Configuration conf, String driverType, String driverName) throws LensException {

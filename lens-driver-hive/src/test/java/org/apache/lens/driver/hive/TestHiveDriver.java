@@ -94,8 +94,8 @@ public class TestHiveDriver {
    *
    * @throws Exception the exception
    */
-  @BeforeClass
-  protected void beforeTest() throws Exception {
+  @BeforeTest
+  public void beforeTest() throws Exception {
     // Check if hadoop property set
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
     assertNotNull(System.getProperty("hadoop.bin.path"));
