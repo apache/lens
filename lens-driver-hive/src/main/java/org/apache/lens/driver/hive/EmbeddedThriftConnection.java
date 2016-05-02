@@ -36,7 +36,7 @@ import org.apache.hive.service.rpc.thrift.TCLIService;
  * The Class EmbeddedThriftConnection.
  */
 public class EmbeddedThriftConnection implements ThriftConnection {
-  public static class SessionStateContext implements Closeable {
+  public static class SessionStateContext implements AutoCloseable {
     /**
      * This is needed because we're using embedded mode. In opening a hive session, a new session state is started
      * and previous session state is lost, since it's all happening in the same jvm.
