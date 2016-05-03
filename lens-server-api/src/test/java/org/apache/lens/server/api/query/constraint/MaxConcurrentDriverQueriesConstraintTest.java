@@ -46,9 +46,10 @@ public class MaxConcurrentDriverQueriesConstraintTest {
   QueryLaunchingConstraint constraint = factory.create(getConfiguration(
     "driver.max.concurrent.launched.queries", 10
   ));
+
   QueryLaunchingConstraint perQueueConstraint = factory.create(getConfiguration(
     "driver.max.concurrent.launched.queries", 4,
-    "driver.max.concurrent.launched.queries.per.queue", "q1=2,q2=3"
+    "driver.max.concurrent.launched.queries.per.queue", "*=1,q1=2,q2=3"
   ));
 
   QueryLaunchingConstraint perPriorityConstraint = factory.create(getConfiguration(
@@ -73,12 +74,14 @@ public class MaxConcurrentDriverQueriesConstraintTest {
       {queues("q1", "q1"), "q2", true},
       {queues("q1", "q1"), "q3", true},
       {queues("q1", "q1", "q1"), "q2", true}, // hypothetical
-      {queues("q1", "q1", "q2"), "q1", false},
+      {queues("q1", "q1", "q2"), "q1", false}, //q1 limit breached
       {queues("q1", "q2", "q2"), "q1", true},
       {queues("q1", "q2", "q2"), "q2", true},
-      {queues("q1", "q2", "q1", "q2"), "q2", false},
-      {queues("q1", "q2", "q1", "q2"), "q1", false},
-      {queues("q1", "q2", "q1", "q2"), "q3", false},
+      {queues("q1", "q2", "q1", "q2"), "q2", false}, // driver.max.concurrent.launched.queries breached
+      {queues("q1", "q2", "q1", "q2"), "q1", false}, // driver.max.concurrent.launched.queries breached
+      {queues("q1", "q2", "q1", "q2"), "q3", false}, // driver.max.concurrent.launched.queries breached
+      {queues("q1", "q2", "q2"), "q3", true},
+      {queues("q1", "q2", "q3"), "q3", false}, //default max concurrent queries per queue limit breached
     };
   }
 

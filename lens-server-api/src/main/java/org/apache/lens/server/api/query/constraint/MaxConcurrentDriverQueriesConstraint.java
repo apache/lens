@@ -36,6 +36,7 @@ public class MaxConcurrentDriverQueriesConstraint implements QueryLaunchingConst
   private final int maxConcurrentQueries;
   private final Map<String, Integer> maxConcurrentQueriesPerQueue;
   private final Map<Priority, Integer> maxConcurrentQueriesPerPriority;
+  private final Integer defaultMaxConcurrentQueriesPerQueueLimit;
 
   @Override
   public boolean allowsLaunchOf(
@@ -57,7 +58,11 @@ public class MaxConcurrentDriverQueriesConstraint implements QueryLaunchingConst
     String queue = candidateQuery.getQueue();
     Integer limit = maxConcurrentQueriesPerQueue.get(queue);
     if (limit == null) {
-      return true;
+      if (defaultMaxConcurrentQueriesPerQueueLimit != null) { //Check if any default limit is enabled for all queues
+        limit = defaultMaxConcurrentQueriesPerQueueLimit;
+      } else {
+        return true;
+      }
     }
     int launchedOnQueue = 0;
     for (QueryContext context : launchedQueries.getQueries(candidateQuery.getSelectedDriver())) {
