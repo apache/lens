@@ -205,9 +205,9 @@ Lens server configuration
 *--+--+---+--+
 |88|lens.server.statistics.warehouse.dir|file:///tmp/lens/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
 *--+--+---+--+
-|89|lens.server.status.update.delay.secs.maximum|1800|The maximum delay in seconds for next status update to happen after any transient failure. This will be used a maximum delay sothat exponential wait times not to grow to bigger value.|
+|89|lens.server.status.update.exponential.wait.millis|30000|Number of millis that would grow exponentially for next update, incase of transient failures.|
 *--+--+---+--+
-|90|lens.server.status.update.exponential.wait.millis|30000|Number of millis that would grow exponentially for next update, incase of transient failures.|
+|90|lens.server.status.update.maximum.delay.secs|1800|The maximum delay in seconds for next status update to happen after any transient failure. This will be used a maximum delay sothat exponential wait times not to grow to bigger value.|
 *--+--+---+--+
 |91|lens.server.status.update.num.retries|10|The number of retries a status update will tried with exponentital back off, in case of transient issues, upon which query will be marked FAILED.|
 *--+--+---+--+

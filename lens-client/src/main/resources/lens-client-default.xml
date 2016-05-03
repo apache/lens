@@ -52,6 +52,18 @@
     <description>Interval at which query progress will be polled. Interval has to be given in milliseconds</description>
   </property>
   <property>
+    <name>lens.client.connection.timeout.millis</name>
+    <value>60000</value>
+    <description>This is the maximum amount of time a client is blocked for making the initial connection. The Default
+    value for this property is 60 seconds.</description>
+  </property>
+  <property>
+    <name>lens.client.read.timeout.millis</name>
+    <value>300000</value>
+    <description>This is the maximum amount of time a client read operation is blocked waiting for data. The default
+    value of this property is 5 mins.</description>
+  </property>
+  <property>
     <name>lens.cli.json.pretty</name>
     <value>false</value>
     <description>Should CLI try to prettify the JSON of an object before priting.</description>

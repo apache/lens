@@ -28,16 +28,20 @@ Lens client configuration
 *--+--+---+--+
 |2|lens.cli.query.execute.timeout.millis|10000|This property defines the timeout value when sync or --async false option is used to execute a query. The default value is 10 seconds.|
 *--+--+---+--+
-|3|lens.client.dbname|default|Default lens database|
+|3|lens.client.connection.timeout.millis|60000|This is the maximum amount of time a client is blocked for making the initial connection. The Default value for this property is 60 seconds.|
 *--+--+---+--+
-|4|lens.client.query.poll.interval|10000|Interval at which query progress will be polled. Interval has to be given in milliseconds|
+|4|lens.client.dbname|default|Default lens database|
 *--+--+---+--+
-|5|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
+|5|lens.client.query.poll.interval|10000|Interval at which query progress will be polled. Interval has to be given in milliseconds|
 *--+--+---+--+
-|6|lens.client.user.name|anonymous|Lens client user name|
+|6|lens.client.read.timeout.millis|300000|This is the maximum amount of time a client read operation is blocked waiting for data. The default value of this property is 5 mins.|
 *--+--+---+--+
-|7|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+|7|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
 *--+--+---+--+
-|8|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
+|8|lens.client.user.name|anonymous|Lens client user name|
+*--+--+---+--+
+|9|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+*--+--+---+--+
+|10|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
 *--+--+---+--+
 The configuration parameters and their default values
