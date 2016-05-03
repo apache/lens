@@ -24,13 +24,6 @@
 <configuration>
 
   <property>
-     
-    <name>lens.server.drivers</name>
-     
-    <value>org.apache.lens.server.api.driver.MockDriver</value>
-  </property>
-
-  <property>
     <name>hive.metastore.warehouse.dir</name>
     <value>${project.build.directory}/hive/warehouse</value>
   </property>

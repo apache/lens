@@ -18,7 +18,6 @@
  */
 package org.apache.lens.driver.hive;
 
-import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
 

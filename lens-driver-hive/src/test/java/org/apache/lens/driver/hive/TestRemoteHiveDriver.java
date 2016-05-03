@@ -294,8 +294,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     newDriver.configure(driverConf, "hive", "hive1");
     driverInput.close();
 
-    ctx1 = readContext(ctx1bytes, newDriver, queryConf);
-    ctx2 = readContext(ctx2bytes, newDriver, queryConf);
+    ctx1 = readContext(ctx1bytes, newDriver);
+    ctx2 = readContext(ctx2bytes, newDriver);
 
     Assert.assertEquals(2, newDriver.getHiveHandleSize());
 
@@ -338,14 +338,14 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
    * @throws IOException            Signals that an I/O exception has occurred.
    * @throws ClassNotFoundException the class not found exception
    */
-  private QueryContext readContext(byte[] bytes, LensDriver driver, Configuration conf) throws IOException,
+  private QueryContext readContext(byte[] bytes, LensDriver driver) throws IOException,
     ClassNotFoundException {
     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
     ObjectInputStream in = new ObjectInputStream(bais);
     QueryContext ctx;
     try {
       ctx = (QueryContext) in.readObject();
-      ctx.setConf(conf);
+      ctx.setConf(queryConf);
       boolean driverAvailable = in.readBoolean();
       if (driverAvailable) {
         String driverQualifiedName = in.readUTF();
