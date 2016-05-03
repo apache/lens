@@ -18,6 +18,7 @@
  */
 package org.apache.lens.client;
 
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import javax.ws.rs.client.Client;
@@ -228,16 +229,20 @@ public class LensStatement {
     return mp;
   }
 
+  public void waitForQueryToComplete(QueryHandle handle) {
+    waitForQueryToComplete(handle, true);
+  }
+
   /**
    * Wait for query to complete.
    *
    * @param handle the handle
    */
-  public void waitForQueryToComplete(QueryHandle handle) {
+  void waitForQueryToComplete(QueryHandle handle, boolean retryOnTimeout) {
     LensClient.getCliLogger().info("Query handle: {}", handle);
-    LensQuery queryDetails = getQuery(handle);
+    LensQuery queryDetails = retryOnTimeout ? getQueryWithRetryOnTimeout(handle) : getQuery(handle);
     while (queryDetails.getStatus().queued()) {
-      queryDetails = getQuery(handle);
+      queryDetails = retryOnTimeout ? getQueryWithRetryOnTimeout(handle) : getQuery(handle);
       LensClient.getCliLogger().debug("Query {} status: {}", handle, queryDetails.getStatus());
       try {
         Thread.sleep(connection.getLensConnectionParams().getQueryPollInterval());
@@ -253,7 +258,7 @@ public class LensStatement {
     }
     while (!queryDetails.getStatus().finished()
       && !(queryDetails.getStatus().getStatus().equals(Status.CLOSED))) {
-      queryDetails = getQuery(handle);
+      queryDetails = retryOnTimeout ? getQueryWithRetryOnTimeout(handle) : getQuery(handle);
       LensClient.getCliLogger().info("Query Status:{} ", queryDetails.getStatus());
       try {
         Thread.sleep(connection.getLensConnectionParams().getQueryPollInterval());
@@ -299,7 +304,33 @@ public class LensStatement {
         .get(LensQuery.class);
     } catch (Exception e) {
       log.error("Failed to get query status, cause:", e);
-      throw new IllegalStateException("Failed to get query status, cause:" + e.getMessage());
+      throw new IllegalStateException("Failed to get query status, cause:" + e.getMessage(), e);
+    }
+  }
+
+  LensQuery getQueryWithRetryOnTimeout(QueryHandle handle) {
+    while (true) {
+      try {
+        return getQuery(handle);
+      } catch (Exception e) {
+        if (isExceptionDueToSocketTimeout(e)) {
+          log.warn("Could not get query status. Encountered socket timeout. Retrying...");
+          continue;
+        } else {
+          throw e;
+        }
+      }
+    }
+  }
+
+  static boolean isExceptionDueToSocketTimeout(Throwable err) {
+    if (err == null) {
+      return false;
+    }
+    if (err instanceof SocketTimeoutException) {
+      return true;
+    } else {
+      return isExceptionDueToSocketTimeout(err.getCause());
     }
   }
 

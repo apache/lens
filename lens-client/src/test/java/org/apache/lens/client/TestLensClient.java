@@ -18,6 +18,9 @@
  */
 package org.apache.lens.client;
 
+import static org.apache.lens.client.LensStatement.isExceptionDueToSocketTimeout;
+import static org.apache.lens.server.MockQueryExecutionServiceImpl.ENABLE_SLEEP_FOR_GET_QUERY_OP;
+
 import static org.testng.Assert.*;
 
 import java.io.File;
@@ -29,11 +32,15 @@ import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryHandleWithResultSet;
+import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.client.exceptions.LensClientIOException;
 import org.apache.lens.client.resultset.ResultSet;
 import org.apache.lens.server.LensAllApplicationJerseyTest;
-import org.apache.lens.server.api.LensConfConstants;
+
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -43,25 +50,29 @@ import lombok.extern.slf4j.Slf4j;
 @Test(groups = "unit-test")
 @Slf4j
 public class TestLensClient extends LensAllApplicationJerseyTest {
-  private static final String TEST_DB = TestLensClient.class.getSimpleName();
 
-  @Override
-  protected int getTestPort() {
-    return 10056;
-  }
+  private LensClient client;
+
+  private static final String TEST_DB = TestLensClient.class.getSimpleName();
 
   @Override
   protected URI getBaseUri() {
     return UriBuilder.fromUri("http://localhost/").port(getTestPort()).path("/lensapi").build();
   }
 
-  private LensClient client;
+  @Override
+  public HiveConf getServerConf() {
+    HiveConf conf =  super.getServerConf();
+    //Use MockQueryExecutionServiceImpl as QueryExecutionService for client tests
+    conf.set("lens.server.query.service.impl", "org.apache.lens.server.MockQueryExecutionServiceImpl");
+    return conf;
+  }
 
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
 
-    client = new LensClient();
+    client = new LensClient(createLensClientConfigWithServerUrl());
     client.createDatabase(TEST_DB, true);
     assertTrue(client.setDatabase(TEST_DB));
 
@@ -121,6 +132,8 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
 
     result = client.closeConnection();
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    super.tearDown();
   }
 
   /**
@@ -128,11 +141,10 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
    */
   @Test
   public void testClient() throws Exception {
-    LensClientConfig lensClientConfig = new LensClientConfig();
+    LensClientConfig lensClientConfig = createLensClientConfigWithServerUrl();
     lensClientConfig.setLensDatabase(TEST_DB);
     Assert.assertEquals(lensClientConfig.getLensDatabase(), TEST_DB);
 
-    lensClientConfig.set(LensConfConstants.SERVER_BASE_URL, "http://localhost:" + getTestPort() + "/lensapi");
     LensClient client = new LensClient(lensClientConfig);
     Assert.assertEquals(client.getCurrentDatabae(), TEST_DB,
       "current database");
@@ -231,5 +243,68 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
 
   private void compare(String[] actualArr, String[] expectedArr) {
     assertTrue(Arrays.equals(actualArr, expectedArr));
+  }
+
+  @Test
+  public void testTimeout() throws LensAPIException {
+    LensClientConfig config = createLensClientConfigWithServerUrl();
+
+    //Timeout Expected
+    config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, 200);
+    LensClient lensClient = new LensClient(config);
+    assertTrue(lensClient.setDatabase(TEST_DB));
+    try {
+      lensClient.executeQueryWithTimeout("cube select id,name from test_dim", "test1", 100000);
+      fail("Read Timeout was expected");
+    } catch (Exception e) {
+      if (!(isExceptionDueToSocketTimeout(e))) {
+        log.error("Unexpected Exception", e);
+        fail("SocketTimeoutException was excepted as part of Read Timeout");
+      } else {
+        log.debug("Expected Exception", e);
+      }
+    }
+    lensClient.closeConnection();
+
+    //No Timeout Expected
+    lensClient = new LensClient(config);
+    assertTrue(lensClient.setDatabase(TEST_DB));
+    config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, LensClientConfig.DEFAULT_READ_TIMEOUT_MILLIS);
+    QueryHandleWithResultSet result = lensClient.executeQueryWithTimeout("cube select id,name from test_dim", "test2",
+      100000);
+    assertTrue(result.getStatus().successful());
+    lensClient.closeConnection();
+  }
+
+  @Test
+  public void testWaitForQueryToCompleteWithAndWithoutRetryOnTimeOut() throws LensAPIException {
+    LensClientConfig config = createLensClientConfigWithServerUrl();
+    config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, 3000);
+    LensClient lensClient = new LensClient(config);
+    assertTrue(lensClient.setDatabase(TEST_DB));
+    lensClient.setConnectionParam(ENABLE_SLEEP_FOR_GET_QUERY_OP, "true");
+
+    //Test waitForQueryToComplete without retry on timeout
+    QueryHandle handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");
+    try {
+      lensClient.getStatement().waitForQueryToComplete(handle, false);
+      fail("SocketTimeoutException was expected");
+    } catch (Exception e) {
+      if (!isExceptionDueToSocketTimeout(e)) {
+        fail("SocketTimeoutException was excepted as part of Read Timeout");
+      }
+    }
+
+    //Test waitForQueryToComplete with Retry on timeout
+    handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");
+    lensClient.getStatement().waitForQueryToComplete(handle);
+    LensQuery query = lensClient.getQueryDetails(handle);
+    assertTrue(query.getStatus().successful());
+  }
+
+  private LensClientConfig createLensClientConfigWithServerUrl() {
+    LensClientConfig config = new LensClientConfig();
+    config.set("lens.server.base.url", "http://localhost:" + getTestPort() + "/lensapi");
+    return config;
   }
 }
