@@ -105,11 +105,7 @@ public class FilePersistentFormatter extends WrappedFileFormatter implements Per
     FileStatus[] partFiles = persistFs.listStatus(persistedDir, new PathFilter() {
       @Override
       public boolean accept(Path path) {
-        try {
-          return !path.getName().startsWith("_") && !persistFs.isDirectory(path);
-        } catch (IOException e) {
-          return false;
-        }
+        return !path.getName().startsWith("_") && !path.getName().startsWith(".");
       }
     });
 
