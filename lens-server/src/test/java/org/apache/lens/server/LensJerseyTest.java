@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.ws.rs.client.Entity;
@@ -127,8 +128,20 @@ public abstract class LensJerseyTest extends JerseyTest {
     config.register(LensJAXBContextResolver.class);
   }
 
-  public HiveConf getServerConf() {
-    return LensServerConf.getHiveConf();
+  public final HiveConf getServerConf() {
+    HiveConf serverConf = LensServerConf.getHiveConf();
+    Map<String, String> overWrites = getServerConfOverWrites();
+    if(overWrites != null) {
+      serverConf = new HiveConf(serverConf);
+      for (Map.Entry<String, String> overWrite : overWrites.entrySet()) {
+        serverConf.set(overWrite.getKey(), overWrite.getValue());
+      }
+    }
+    return serverConf;
+  }
+
+  public Map<String, String> getServerConfOverWrites() {
+    return null;
   }
 
   /**

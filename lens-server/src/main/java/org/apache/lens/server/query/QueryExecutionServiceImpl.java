@@ -346,6 +346,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       QueryEnded.class);
     getEventService().addListenerForType(
       new QueryEndNotifier(this, getCliService().getHiveConf(), this.logSegregationContext), QueryEnded.class);
+    getEventService().addListenerForType(new SessionActivityMarker(), QueryQueued.class);
+    getEventService().addListenerForType(new SessionInactivityMarker(), QueryEnded.class);
     log.info("Registered query result formatter");
   }
 
@@ -520,6 +522,23 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     @Override
     public void onEvent(StatusChange event) throws LensException {
       STATUS_LOG.info(event.toString());
+    }
+  }
+
+  private class SessionActivityMarker implements LensEventListener<QueryQueued> {
+
+    @Override
+    public void onEvent(QueryQueued event) throws LensException {
+      QueryContext ctx = allQueries.get(event.getQueryHandle());
+      LensSessionImpl session = getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier()));
+      session.activateOperation();
+    }
+  }
+  private class SessionInactivityMarker implements LensEventListener<QueryEnded> {
+
+    @Override
+    public void onEvent(QueryEnded event) throws LensException {
+      getSession(SESSION_MAP.get(event.getQueryContext().getLensSessionIdentifier())).deactivateOperation();
     }
   }
 

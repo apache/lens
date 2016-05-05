@@ -67,6 +67,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   /** The conf. */
   private Configuration conf = createDefaultConf();
 
+  private AtomicInteger activeOperations = new AtomicInteger(0);
   /**
    * Keep track of DB static resources which failed to be added to this session
    */
@@ -81,6 +82,7 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   @Setter(AccessLevel.PROTECTED)
   private DatabaseResourceService dbResService;
+  private boolean markForClose;
 
 
   /**
@@ -233,7 +235,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    * @see org.apache.hive.service.cli.session.HiveSessionImpl#release()
    */
   public synchronized void release() {
-    lastAccessTime = System.currentTimeMillis();
+    setActive();
     acquireCount--;
     if (acquireCount == 0) {
       super.release(true);
@@ -241,8 +243,15 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   public boolean isActive() {
-    long inactiveAge = System.currentTimeMillis() - lastAccessTime;
-    return inactiveAge < sessionTimeout;
+    if (markForClose) {
+      return activeOperationsPresent();
+    } else {
+      return System.currentTimeMillis() - lastAccessTime < sessionTimeout;
+    }
+  }
+
+  public void setActive() {
+    setLastAccessTime(System.currentTimeMillis());
   }
 
   /**
@@ -420,6 +429,21 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public ClassLoader getClassLoader() {
     return getClassLoader(getCurrentDatabase());
+  }
+
+  public void activateOperation() {
+    activeOperations.incrementAndGet();
+  }
+  public void deactivateOperation() {
+    activeOperations.decrementAndGet();
+  }
+
+  public boolean activeOperationsPresent() {
+    return activeOperations.get() > 0;
+  }
+
+  public void markForClose() {
+    this.markForClose = true;
   }
 
   /**

@@ -18,68 +18,49 @@
  */
 package org.apache.lens.server.query;
 
-import static org.apache.lens.server.api.LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY;
-
 import static org.testng.Assert.*;
 
-import java.util.*;
+import java.util.Map;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensJerseyTest;
-import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.LensServerAPITestUtil;
-import org.apache.lens.server.api.driver.DriverSelector;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.common.RestAPITestUtil;
 import org.apache.lens.server.common.TestResourceFile;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.glassfish.jersey.test.TestProperties;
-
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.beust.jcommander.internal.Lists;
-
 import com.google.common.base.Optional;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Class TestQueryService.
  */
 @Slf4j
-@Test(groups = "two-working-drivers", dependsOnGroups = "filter-test")
-public class TestQueryConstraints extends LensJerseyTest {
+@Test(groups = "unit-test")
+public class TestQueryIndependenceFromSession extends LensJerseyTest {
   private HiveConf serverConf;
-
-  public static class RoundRobinSelector implements DriverSelector {
-    int counter = 0;
-
-    @Override
-    public LensDriver select(AbstractQueryContext ctx, Configuration conf) {
-      final Collection<LensDriver> drivers = ctx.getDriverContext().getDriversWithValidQueryCost();
-      LensDriver driver = drivers.toArray(new LensDriver[drivers.size()])[counter];
-      counter = (counter + 1) % 2;
-      return driver;
-    }
-  }
 
   /** The query service. */
   QueryExecutionServiceImpl queryService;
@@ -99,19 +80,22 @@ public class TestQueryConstraints extends LensJerseyTest {
   public void setUp() throws Exception {
     super.setUp();
     queryService = LensServices.get().getService(QueryExecutionService.NAME);
-    metricsSvc = LensServices.get().getService(MetricsService.NAME);
-    Map<String, String> sessionConf = new HashMap<>();
-    sessionConf.put("test.session.key", "svalue");
-    lensSessionId = queryService.openSession("foo@localhost", "bar", sessionConf); // @localhost should be removed
-    // automatically
+    lensSessionId = getSession();
     createTable(TEST_TABLE);
     loadData(TEST_TABLE, TestResourceFile.TEST_DATA2_FILE.getValue());
   }
 
   @Override
   public Map<String, String> getServerConfOverWrites() {
-    return LensUtil.getHashMap(LensConfConstants.DRIVER_TYPES_AND_CLASSES, "mockHive:" + HiveDriver.class.getName(),
-      LensConfConstants.DRIVER_SELECTOR_CLASS, RoundRobinSelector.class.getName());
+    return LensUtil.getHashMap("lens.server.total.query.cost.ceiling.per.user", "1");
+  }
+
+  private LensSessionHandle getSession() throws LensException {
+    return queryService.openSession("foo", "bar", null);
+  }
+
+  private void closeSession(LensSessionHandle session) throws LensException {
+    queryService.closeSession(session);
   }
 
   /*
@@ -178,36 +162,28 @@ public class TestQueryConstraints extends LensJerseyTest {
   }
 
   @Test(dataProvider = "mediaTypeData")
-  public void testThrottling(MediaType mt) throws InterruptedException {
-    List<QueryHandle> handles = Lists.newArrayList();
-    for (int j = 0; j < 5; j++) {
-      for (int i = 0; i < 10; i++) {
-        handles.add(launchQuery(mt));
-        assertValidity();
-      }
-      // No harm in sleeping, the queries will anyway take time.
-      Thread.sleep(1000);
-    }
-    for (QueryHandle handle : handles) {
-      RestAPITestUtil.waitForQueryToFinish(target(), lensSessionId, handle, mt);
-      assertValidity();
-    }
-    for (QueryHandle handle : handles) {
-      RestAPITestUtil.getLensQueryResultAsString(target(), lensSessionId, handle, mt);
-      assertValidity();
-    }
-  }
-
-  private void assertValidity() {
-    QueryExecutionServiceImpl.QueryCount count = queryService.getQueryCountSnapshot();
-    assertTrue(count.running <= 4, System.currentTimeMillis() + " " + count.running + " running queries: "
-      + queryService.getLaunchedQueries());
-  }
-
-  private QueryHandle launchQuery(MediaType mt) {
-    return RestAPITestUtil.executeAndGetHandle(target(), Optional.of(lensSessionId),
-      Optional.of("select ID from " + TEST_TABLE),
-      Optional.of(LensServerAPITestUtil.getLensConf(QUERY_METRIC_UNIQUE_ID_CONF_KEY, UUID.randomUUID())), mt);
+  public void testQueryAliveOnSessionClose(MediaType mt) throws LensException, InterruptedException {
+    LensSessionHandle sesssionHandle = getSession();
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    conf.addProperty(LensConfConstants.QUERY_OUTPUT_FORMATTER,
+      TestQueryService.DeferredPersistentResultFormatter.class.getName());
+    conf.addProperty("deferPersistenceByMillis", 5000); // defer persistence for 5 secs
+    QueryHandle queryHandle1 = RestAPITestUtil.executeAndGetHandle(target(),
+      Optional.of(sesssionHandle), Optional.of("select * from " + TEST_TABLE), Optional.of(conf), mt);
+    QueryHandle queryHandle2 = RestAPITestUtil.executeAndGetHandle(target(),
+      Optional.of(sesssionHandle), Optional.of("select * from " + TEST_TABLE), Optional.of(conf), mt);
+    assertEquals(queryService.getQueryContext(queryHandle2).getStatus().getStatus(), QueryStatus.Status.QUEUED);
+    closeSession(sesssionHandle);
+    // Session not 'truly' closed
+    assertNotNull(queryService.getSession(sesssionHandle));
+    assertTrue(queryService.getSession(sesssionHandle).isActive());
+    LensQuery lensQuery = RestAPITestUtil.waitForQueryToFinish(target(), lensSessionId, queryHandle2,
+      QueryStatus.Status.SUCCESSFUL, mt);
+    // Now, session is not active anymore
+    assertFalse(queryService.getSession(sesssionHandle).isActive());
+    System.out.println(lensQuery);
   }
 
   @AfterMethod

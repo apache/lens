@@ -290,11 +290,16 @@ public abstract class BaseLensService extends CompositeService implements Extern
    */
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     try {
-      String userName = getSession(sessionHandle).getLoggedInUser();
-      cliService.closeSession(getHiveSessionHandle(sessionHandle));
-      String publicId = sessionHandle.getPublicId().toString();
-      SESSION_MAP.remove(publicId);
-      decrementSessionCountForUser(sessionHandle, userName);
+      LensSessionImpl session = getSession(sessionHandle);
+      if (!session.activeOperationsPresent()) {
+        String userName = session.getLoggedInUser();
+        cliService.closeSession(getHiveSessionHandle(sessionHandle));
+        String publicId = sessionHandle.getPublicId().toString();
+        SESSION_MAP.remove(publicId);
+        decrementSessionCountForUser(sessionHandle, userName);
+      } else {
+        session.markForClose();
+      }
     } catch (Exception e) {
       throw new LensException(e);
     }
