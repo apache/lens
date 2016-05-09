@@ -372,7 +372,7 @@ public final class HQLParser {
       || KW_FALSE == rootType || KW_FORMATTED == rootType || KW_EXTENDED == rootType || KW_DEPENDENCY == rootType) {
       // StringLiterals should not be lower cased.
       if (StringLiteral == rootType) {
-        buf.append(' ').append(rootText).append(' ');
+        buf.append(rootText);
       } else if (KW_TRUE == rootType) {
         buf.append(" true ");
       } else if (KW_FALSE == rootType) {
@@ -380,12 +380,9 @@ public final class HQLParser {
       } else if (Identifier == rootType && TOK_SELEXPR == root.getParent().getType()) {
         // back quote column alias in all cases. This is required since some alias values can match DB keywords
         // (example : year as alias) and in such case queries can fail on certain DBs if the alias in not back quoted
-        buf.append(" as `").append(rootText).append("` ");
-      } else if (Identifier == rootType && TOK_FUNCTIONSTAR == root.getParent().getType()) {
-        // count(*) or count(someTab.*): Don't append space after the identifier
-        buf.append(" ").append(rootText == null ? "" : rootText.toLowerCase());
+        buf.append(" as `").append(rootText).append("`");
       } else {
-        buf.append(" ").append(rootText == null ? "" : rootText.toLowerCase()).append(" ");
+        buf.append(rootText == null ? "" : rootText.toLowerCase());
       }
 
     } else if (TOK_ALLCOLREF == rootType) {
@@ -395,14 +392,14 @@ public final class HQLParser {
         }
         buf.append(".");
       }
-      buf.append(" * ");
+      buf.append("*");
     } else if (TOK_FUNCTIONSTAR == rootType) {
       if (root.getChildCount() > 0) {
         for (int i = 0; i < root.getChildCount(); i++) {
           toInfixString((ASTNode) root.getChild(i), buf);
         }
       }
-      buf.append("(*) ");
+      buf.append("(*)");
     } else if (UNARY_OPERATORS.contains(rootType)) {
       if (KW_NOT == rootType) {
         // Check if this is actually NOT IN
@@ -410,7 +407,7 @@ public final class HQLParser {
           buf.append(" not ");
         }
       } else if (TILDE == rootType) {
-        buf.append(" ~ ");
+        buf.append(" ~");
       }
 
       for (int i = 0; i < root.getChildCount(); i++) {
@@ -429,7 +426,7 @@ public final class HQLParser {
       if (MINUS == rootType && root.getChildCount() == 1) {
         // If minus has only one child, then it's a unary operator.
         // Add Operator name first
-        buf.append(' ').append(rootText.toLowerCase()).append(' ');
+        buf.append(rootText.toLowerCase());
         // Operand
         toInfixString((ASTNode) root.getChild(0), buf);
       } else {
@@ -508,7 +505,7 @@ public final class HQLParser {
       // Distinct is a different case.
       String fname = root.getChild(0).getText();
 
-      buf.append(fname.toLowerCase()).append("( distinct ");
+      buf.append(fname.toLowerCase()).append("(distinct ");
 
       // Arguments to distinct separated by comma
       for (int i = 1; i < root.getChildCount(); i++) {
@@ -528,9 +525,8 @@ public final class HQLParser {
           colStr = colStr.substring(1, colStr.length() - 1);
         }
         buf.append(colStr);
-        buf.append(" ");
       }
-      buf.append(" ").append(rootType == TOK_TABSORTCOLNAMEDESC ? "desc" : "asc").append(" ");
+      buf.append(rootType == TOK_TABSORTCOLNAMEDESC ? " desc" : " asc");
     } else if (TOK_SELECT == rootType || TOK_ORDERBY == rootType || TOK_GROUPBY == rootType) {
       for (int i = 0; i < root.getChildCount(); i++) {
         toInfixString((ASTNode) root.getChild(i), buf);
@@ -582,7 +578,7 @@ public final class HQLParser {
   private static void functionString(ASTNode root, StringBuilder buf) {
     // special handling for CASE udf
     if (findNodeByPath(root, KW_CASE) != null) {
-      buf.append(" case ");
+      buf.append("case ");
       toInfixString((ASTNode) root.getChild(1), buf);
       // each of the conditions
       ArrayList<Node> caseChildren = root.getChildren();
@@ -603,12 +599,12 @@ public final class HQLParser {
         toInfixString((ASTNode) caseChildren.get(nchildren - 1), buf);
       }
 
-      buf.append(" end ");
+      buf.append(" end");
 
     } else if (findNodeByPath(root, KW_WHEN) != null) {
       // 2nd form of case statement
 
-      buf.append(" case ");
+      buf.append("case ");
       // each of the conditions
       ArrayList<Node> caseChildren = root.getChildren();
       int from = 1;
@@ -628,17 +624,17 @@ public final class HQLParser {
         toInfixString((ASTNode) caseChildren.get(nchildren - 1), buf);
       }
 
-      buf.append(" end ");
+      buf.append(" end");
 
     } else if (findNodeByPath(root, TOK_ISNULL) != null) {
       // IS NULL operator
       toInfixString((ASTNode) root.getChild(1), buf);
-      buf.append(" is null ");
+      buf.append(" is null");
 
     } else if (findNodeByPath(root, TOK_ISNOTNULL) != null) {
       // IS NOT NULL operator
       toInfixString((ASTNode) root.getChild(1), buf);
-      buf.append(" is not null ");
+      buf.append(" is not null");
 
     } else if (root.getChild(0).getType() == Identifier
       && ((ASTNode) root.getChild(0)).getToken().getText().equalsIgnoreCase("between")) {
@@ -723,7 +719,7 @@ public final class HQLParser {
   public static String getString(ASTNode tree) {
     StringBuilder buf = new StringBuilder();
     toInfixString(tree, buf);
-    return buf.toString().trim().replaceAll("\\s+", " ");
+    return buf.toString().trim();
   }
 
   public static String getColName(ASTNode node) {
