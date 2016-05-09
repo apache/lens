@@ -47,17 +47,17 @@ Lens server deployment
 * Restart and recovery
 
   Lens server should not have problems with Hive Metastore server, Hive Server2 or Hadoop restarts. Lens server can
-   persist its state before going and recover from previous state upon restart.
+   persist its state before going down and recover from previous state upon restart.
 
   * Recoverability
 
-  ** To enable lens server with recoverability, i.e. to allow users access queries before restart, lens server should be
-   started with lens.server.restart.enabled set to true. Admin can set this to false if no recoverability is required.
+    * To enable lens server with recoverability, i.e. to allow users access queries after restart, lens server should be
+   started with lens.server.state.persistence.enabled set to true. Admin can set this to false if no recoverability is
+   required.
 
   * Restarting
 
-  ** To start the lens server a fresh lens.server.recover.onrestart should be disabled. If it is true, the server will
-   load its persisted state before restart.
+    * If lens server recoverability is enabled, the server will load its persisted state on restart.
 
 * Server modes
 
