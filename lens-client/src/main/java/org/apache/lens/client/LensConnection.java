@@ -55,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
  * Top level client connection class which is used to connect to a lens server.
  */
 @Slf4j
-public class LensConnection {
+public class LensConnection implements AutoCloseable {
 
   /** The params. */
   private final LensConnectionParams params;
@@ -211,7 +211,7 @@ public class LensConnection {
    *
    * @return the API result
    */
-  public APIResult close() {
+  public void close() {
     WebTarget target = getSessionWebTarget();
 
     APIResult result = target.queryParam("sessionid", this.sessionHandle).request().delete(APIResult.class);
@@ -219,7 +219,6 @@ public class LensConnection {
       throw new IllegalStateException("Unable to close lens connection " + "with params " + params);
     }
     log.debug("Lens connection closed.");
-    return result;
   }
 
   /**

@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
-public class LensClient {
+public class LensClient implements AutoCloseable {
   public static final String CLILOGGER =  "cliLogger";
   private static final String DEFAULT_PASSWORD = "";
   @Getter
@@ -719,4 +719,8 @@ public class LensClient {
     return mc.dropCubeSegmentation(segName);
   }
 
+  @Override
+  public void close() {
+    closeConnection();
+  }
 }
