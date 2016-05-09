@@ -553,10 +553,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
     String whereCond = "zipcode = 'a' and cityid = 'b' and (" + TWO_DAYS_RANGE_SPLIT_OVER_UPDATE_PERIODS + ")";
     String hqlQuery = rewrite("select zipcode, count(msr4), sum(msr15) from testCube where " + whereCond, conf);
     System.out.println(hqlQuery);
-    String possibleStart1 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq1.expr2 `count( msr4 )`,"
-      + " mq2.expr3 `sum( msr15 )` FROM ";
-    String possibleStart2 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq2.expr2 `count( msr4 )`,"
-      + " mq1.expr3 `sum( msr15 )` FROM ";
+    String possibleStart1 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq1.expr2 `count(msr4)`,"
+      + " mq2.expr3 `sum(msr15)` FROM ";
+    String possibleStart2 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq2.expr2 `count(msr4)`,"
+      + " mq1.expr3 `sum(msr15)` FROM ";
 
     assertTrue(hqlQuery.startsWith(possibleStart1) || hqlQuery.startsWith(possibleStart2));
     compareContains(rewrite("select zipcode as `zipcode`, sum(msr15) as `expr3` from testcube where " + whereCond,
@@ -1015,13 +1015,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
   public void testSelectExprPromotionToGroupByWithSpacesInDimensionAliasAndWithAsKeywordBwColAndAlias()
     throws ParseException, LensException, HiveException {
 
-    String inputQuery = "select name as `Alias With Spaces`, SUM(msr2) as `TestMeasure` from testCube join citydim"
+    String inputQuery = "select name as `Alias With  Spaces`, SUM(msr2) as `TestMeasure` from testCube join citydim"
       + " on testCube.cityid = citydim.id where " + LAST_HOUR_TIME_RANGE;
 
-    String expectedRewrittenQuery = "SELECT ( citydim . name ) as `Alias With Spaces` , sum(( testcube . msr2 )) "
+    String expectedRewrittenQuery = "SELECT (citydim.name) as `Alias With  Spaces`, sum((testcube.msr2)) "
       + "as `TestMeasure` FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
-      + "ON (( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) = '"
-      + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "' ))) GROUP BY ( citydim . name )";
+      + "ON ((testcube.cityid) = (citydim.id)) WHERE ((((testcube.dt) = '"
+      + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "'))) GROUP BY (citydim.name)";
 
     String actualRewrittenQuery = rewrite(inputQuery, getConfWithStorages("C2"));
 
@@ -1032,13 +1032,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
   public void testSelectExprPromotionToGroupByWithSpacesInDimensionAliasAndWithoutAsKeywordBwColAndAlias()
     throws ParseException, LensException, HiveException {
 
-    String inputQuery = "select name `Alias With Spaces`, SUM(msr2) as `TestMeasure` from testCube join citydim"
+    String inputQuery = "select name `Alias With  Spaces`, SUM(msr2) as `TestMeasure` from testCube join citydim"
       + " on testCube.cityid = citydim.id where " + LAST_HOUR_TIME_RANGE;
 
-    String expectedRewrittenQuery = "SELECT ( citydim . name ) as `Alias With Spaces` , sum(( testcube . msr2 )) "
+    String expectedRewrittenQuery = "SELECT (citydim.name) as `Alias With  Spaces`, sum((testcube.msr2)) "
       + "as `TestMeasure` FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
-      + "ON (( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) = '"
-      + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "' ))) GROUP BY ( citydim . name )";
+      + "ON ((testcube.cityid) = (citydim.id)) WHERE ((((testcube.dt) = '"
+      + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "'))) GROUP BY (citydim.name)";
 
     String actualRewrittenQuery = rewrite(inputQuery, getConfWithStorages("C2"));
 
