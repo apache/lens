@@ -211,7 +211,7 @@ public class LensConnection implements AutoCloseable {
    *
    * @return the API result
    */
-  public void close() {
+  public APIResult closeConnection() {
     WebTarget target = getSessionWebTarget();
 
     APIResult result = target.queryParam("sessionid", this.sessionHandle).request().delete(APIResult.class);
@@ -219,6 +219,12 @@ public class LensConnection implements AutoCloseable {
       throw new IllegalStateException("Unable to close lens connection " + "with params " + params);
     }
     log.debug("Lens connection closed.");
+    return result;
+  }
+
+  @Override
+  public void close() throws Exception {
+    closeConnection();
   }
 
   /**

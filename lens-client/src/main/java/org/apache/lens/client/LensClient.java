@@ -405,7 +405,7 @@ public class LensClient implements AutoCloseable {
 
   public APIResult closeConnection() {
     log.debug("Closing lens connection: {}", new LensConnectionParams(conf));
-    return this.connection.close();
+    return this.connection.closeConnection();
   }
 
   public APIResult addJarResource(String path) {
