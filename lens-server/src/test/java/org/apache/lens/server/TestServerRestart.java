@@ -379,7 +379,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     log.info("Previous query status: {}", stat.getStatusMessage());
 
     // After hive server restart, first few queries fail with Invalid Operation Handle followed by
-    // Invalid Session Handle. Idle behaviour is to fail with Invalid Session Handle immediately.
+    // Invalid Session Handle. Ideal behaviour is to fail with Invalid Session Handle immediately.
     // Jira Ticket raised for debugging: https://issues.apache.org/jira/browse/LENS-707
 
     final String query = "select COUNT(ID) from test_hive_server_restart";

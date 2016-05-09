@@ -25,10 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -61,17 +58,18 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.TaskStatus;
+import org.apache.hadoop.hive.ql.QueryDisplay.TaskDisplay;
+import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
-import org.apache.hive.service.cli.thrift.TOperationHandle;
-import org.apache.hive.service.cli.thrift.TProtocolVersion;
-import org.apache.hive.service.cli.thrift.TSessionHandle;
+import org.apache.hive.service.rpc.thrift.TOperationHandle;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TSessionHandle;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -326,10 +324,10 @@ public class HiveDriver extends AbstractLensDriver {
    */
   public HiveDriver() throws LensException {
     this.sessionLock = new ReentrantLock();
-    lensToHiveSession = new HashMap<String, SessionHandle>();
-    opHandleToSession = new ConcurrentHashMap<OperationHandle, SessionHandle>();
-    orphanedHiveSessions = new ConcurrentLinkedQueue<SessionHandle>();
-    resourcesAddedForSession = new HashMap<SessionHandle, Boolean>();
+    lensToHiveSession = new HashMap<>();
+    opHandleToSession = new ConcurrentHashMap<>();
+    orphanedHiveSessions = new ConcurrentLinkedQueue<>();
+    resourcesAddedForSession = new HashMap<>();
     connectionExpiryThread.setDaemon(true);
     connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
     connectionExpiryThread.start();
@@ -515,15 +513,13 @@ public class HiveDriver extends AbstractLensDriver {
       Configuration qdconf = ctx.getDriverConf(this);
       qdconf.set("mapred.job.name", ctx.getQueryHandle().toString());
       SessionHandle sessionHandle = getSession(ctx);
-      op = getClient().executeStatement(sessionHandle, ctx.getSelectedDriverQuery(),
-        qdconf.getValByRegex(".*"));
+      op = getClient().executeStatement(sessionHandle, ctx.getSelectedDriverQuery(), qdconf.getValByRegex(".*"));
       log.info("The hive operation handle: {}", op);
       ctx.setDriverOpHandle(op.toString());
       hiveHandles.put(ctx.getQueryHandle(), op);
       opHandleToSession.put(op, sessionHandle);
       updateStatus(ctx);
       OperationStatus status = getClient().getOperationStatus(op);
-
       if (status.getState() == OperationState.ERROR) {
         throw new LensException("Unknown error while running query " + ctx.getUserQuery());
       }
@@ -597,9 +593,9 @@ public class HiveDriver extends AbstractLensDriver {
     try {
       // Get operation status from hive server
       log.debug("GetStatus hiveHandle: {}", hiveHandle);
+      fetchLogs(hiveHandle);
       OperationStatus opStatus = getClient().getOperationStatus(hiveHandle);
       log.debug("GetStatus on hiveHandle: {} returned state:", hiveHandle, opStatus.getState().name());
-
       switch (opStatus.getState()) {
       case CANCELED:
         context.getDriverStatus().setState(DriverQueryState.CANCELED);
@@ -643,17 +639,18 @@ public class HiveDriver extends AbstractLensDriver {
       String errorMsg = null;
       if (StringUtils.isNotBlank(jsonTaskStatus)) {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
-        List<TaskStatus> taskStatuses = mapper.readValue(in, new TypeReference<List<TaskStatus>>() {
+        List<TaskDisplay> taskStatuses = mapper.readValue(in, new TypeReference<List<TaskDisplay>>() {
         });
         int completedTasks = 0;
         StringBuilder errorMessage = new StringBuilder();
-        for (TaskStatus taskStat : taskStatuses) {
-          String tstate = taskStat.getTaskState();
-          if ("FINISHED_STATE".equalsIgnoreCase(tstate)) {
+        for (TaskDisplay taskStat : taskStatuses) {
+          Task.TaskState tstate = taskStat.taskState;
+          if (tstate == Task.TaskState.FINISHED) {
             completedTasks++;
           }
-          if ("FAILED_STATE".equalsIgnoreCase(tstate)) {
+          if (taskStat.getErrorMsg() != null) {
             appendTaskIds(errorMessage, taskStat);
             errorMessage.append(" has failed! ");
           }
@@ -689,15 +686,27 @@ public class HiveDriver extends AbstractLensDriver {
     }
   }
 
+  private void fetchLogs(OperationHandle opHandle) throws LensException {
+    try {
+      for (Object[] o : getClient().fetchResults(opHandle, FetchOrientation.FETCH_NEXT, -1, FetchType.LOG)) {
+        for (Object logLine : o) {
+          log.info("Update from hive: " + String.valueOf(logLine));
+        }
+      }
+    } catch (HiveSQLException e) {
+      log.error("Error fetching hive operation logs for {}", opHandle, e);
+    }
+  }
+
   /**
    * Append task ids.
    *
    * @param message  the message
    * @param taskStat the task stat
    */
-  private void appendTaskIds(StringBuilder message, TaskStatus taskStat) {
+  private void appendTaskIds(StringBuilder message, TaskDisplay taskStat) {
     message.append(taskStat.getTaskId()).append("(");
-    message.append(taskStat.getType()).append("):");
+    message.append(taskStat.getTaskType()).append("):");
     if (taskStat.getExternalHandle() != null) {
       message.append(taskStat.getExternalHandle()).append(":");
     }
@@ -728,6 +737,7 @@ public class HiveDriver extends AbstractLensDriver {
     if (opHandle != null) {
       log.info("CloseQuery hiveHandle: {}", opHandle);
       try {
+        fetchLogs(opHandle);
         getClient().closeOperation(opHandle);
       } catch (HiveSQLException e) {
         checkInvalidOperation(handle, e);

@@ -60,15 +60,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TestLensQueryCommands extends LensCliApplicationTest {
 
-  /** The explain plan. */
-  private static String explainPlan = "TOK_QUERY\n" + "   TOK_FROM\n" + "      TOK_TABREF\n" + "         TOK_TABNAME\n"
-    + "            local_dim_table\n" + "         test_dim\n" + "   TOK_INSERT\n" + "      TOK_DESTINATION\n"
-    + "         TOK_DIR\n" + "            TOK_TMP_FILE\n" + "      TOK_SELECT\n" + "         TOK_SELEXPR\n"
-    + "            .\n" + "               TOK_TABLE_OR_COL\n" + "                  test_dim\n"
-    + "               id\n" + "         TOK_SELEXPR\n" + "            .\n" + "               TOK_TABLE_OR_COL\n"
-    + "                  test_dim\n" + "               name\n" + "      TOK_WHERE\n" + "         =\n"
-    + "            .\n" + "               TOK_TABLE_OR_COL\n" + "                  test_dim\n"
-    + "               dt\n" + "            'latest'";
   private File resDir;
 
   @BeforeClass
@@ -241,7 +232,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     assertEquals(result, "No prepared queries");
 
     final String qh2 = qCom.explainAndPrepare(sql, "testPrepQuery3");
-    assertTrue(qh2.contains(explainPlan));
+    assertExplainOutput(qh2);
     String handles = qCom.getAllPreparedQueries("testPrepQuery3", "all", -1, Long.MAX_VALUE);
     assertFalse(handles.contains("No prepared queries"), handles);
 
@@ -282,7 +273,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String result = qCom.explainQuery(sql, null);
 
     log.debug(result);
-    assertTrue(result.contains(explainPlan));
+    assertExplainOutput(result);
 
     closeClientConnection(qCom);
   }
@@ -406,10 +397,8 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   }
 
   /**
-   * Sets the up.
-   *
-   * @param client the new up
-   * @throws Exception the exception
+   * Sets up query command instances and adds partitions to a table.
+   * @throws Exception
    */
   @BeforeClass
   public void setup() throws Exception {
@@ -577,4 +566,13 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     client.closeConnection();
   }
+
+  private void assertExplainOutput(String result) {
+    assertTrue(result.contains("Stage-0 is a root stage"));
+    assertTrue(result.contains("Partition Description"));
+    assertTrue(result.contains("dt latest"));
+    assertTrue(result.contains("Processor Tree"));
+    assertTrue(result.contains("TableScan"));
+  }
+
 }

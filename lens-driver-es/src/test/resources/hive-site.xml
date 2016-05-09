@@ -23,15 +23,6 @@
 
 <configuration>
 
-  <!-- This configuration is for HiveServer in tests -->
-
-  <property>
-     
-    <name>hive.metastore.local</name>
-     
-    <value>true</value>
-  </property>
-
   <property>
     <name>hive.metastore.warehouse.dir</name>
     <value>${project.build.directory}/hive/warehouse</value>
@@ -43,13 +34,9 @@
   </property>
 
   <property>
-    <name>mapreduce.framework.name</name>
-    <value>local</value>
-  </property>
-
-  <property>
-    <name>mapred.job.tracker</name>
-    <value>local</value>
+    <name>hive.querylog.location</name>
+    <value>${project.build.directory}/query_logs</value>
+    <description>Location of the structured hive logs</description>
   </property>
 
   <property>
@@ -61,26 +48,6 @@
   <property>
     <name>datanucleus.schema.autoCreateTables</name>
     <value>true</value>
-  </property>
-
-  <property>
-    <name>hive.lock.manager</name>
-    <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
-  </property>
-
-  <property>
-    <name>hive.server2.async.exec.threads</name>
-    <value>5</value>
-  </property>
-
-  <property>
-    <name>hive.server2.query.log.dir</name>
-    <value>target/query_logs</value>
-  </property>
-
-  <property>
-    <name>hive.support.sql11.reserved.keywords</name>
-    <value>false</value>
   </property>
 
 </configuration>

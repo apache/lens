@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.lens.api.query.QueryResultSetMetadata;
 import org.apache.lens.api.query.ResultColumn;
 
+import org.apache.hadoop.hive.serde2.thrift.Type;
 import org.apache.hadoop.hive.serde2.typeinfo.CharTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.VarcharTypeInfo;
@@ -68,7 +69,8 @@ public abstract class LensResultSetMetadata {
         throws IOException {
         ObjectCodec oc = jsonParser.getCodec();
         JsonNode node = oc.readTree(jsonParser);
-        org.apache.hive.service.cli.Type t = org.apache.hive.service.cli.Type.getType(node.get("type").asText());
+
+        Type t = Type.getType(node.get("type").asText());
         return new ColumnDescriptor(node.get("name").asText(), node.get("comment").asText(), new TypeDescriptor(t),
           node.get("position").asInt());
       }

@@ -225,13 +225,16 @@ public class TestQuery {
     } else if (expected.query == null) {
       return false;
     }
-    boolean equals = false;
+    return stringEquals(expected) || astEquals(expected);
+  }
+
+  private boolean astEquals(TestQuery expected) {
     try {
-      equals = equalsAST(this.getAST(), expected.getAST());
+      return equalsAST(this.getAST(), expected.getAST());
     } catch (LensException e) {
       log.error("AST not valid", e);
+      return false;
     }
-    return equals || stringEquals(expected);
   }
 
   private boolean stringEquals(TestQuery expected) {

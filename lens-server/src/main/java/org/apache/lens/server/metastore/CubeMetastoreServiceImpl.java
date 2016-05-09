@@ -21,6 +21,7 @@ package org.apache.lens.server.metastore;
 import static org.apache.lens.server.metastore.JAXBUtils.*;
 
 import java.util.*;
+import java.util.Date;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -1326,9 +1327,8 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
         tables = getNativeTablesFromDB(sessionid, dbName, false);
       } else {
         log.info("Getting tables from all dbs");
-        List<String> alldbs = getAllDatabases(sessionid);
-        tables = new ArrayList<String>();
-        for (String db : alldbs) {
+        tables = new ArrayList<>();
+        for (String db : getAllDatabases(sessionid)) {
           tables.addAll(getNativeTablesFromDB(sessionid, db, true));
         }
       }

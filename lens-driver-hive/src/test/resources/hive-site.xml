@@ -36,6 +36,11 @@
   </property>
 
   <property>
+    <name>hive.exec.scratchdir</name>
+    <value>${project.build.directory}/hive/scratch</value>
+  </property>
+
+  <property>
     <name>mapreduce.framework.name</name>
     <value>local</value>
   </property>
@@ -54,6 +59,11 @@
   <property>
     <name>hive.server2.query.log.dir</name>
     <value>target/query_logs</value>
+  </property>
+
+  <property>
+    <name>datanucleus.schema.autoCreateTables</name>
+    <value>true</value>
   </property>
 
 </configuration>

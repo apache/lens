@@ -1187,7 +1187,7 @@ public class TestCubeMetastoreClient {
 
     CubeFactTable factTable = new CubeFactTable(Hive.get(conf).getTable(factName));
     factTable.alterColumn(new FieldSchema("testFactColAdd", "int", "test add column"));
-    factTable.alterColumn(new FieldSchema("msr3", "int", "test alter column"));
+    factTable.alterColumn(new FieldSchema("msr1", "float", "test alter column"));
     factTable.alterWeight(100L);
     Map<String, String> newProp = getHashMap("new.prop", "val");
     factTable.addProperties(newProp);
@@ -1210,13 +1210,18 @@ public class TestCubeMetastoreClient {
     assertTrue(altered.getUpdatePeriods().get(c2).contains(HOURLY));
     assertTrue(altered.getCubeName().equalsIgnoreCase(CUBE_NAME.toLowerCase()));
     boolean contains = false;
+    boolean msr1Altered = false;
     for (FieldSchema column : altered.getColumns()) {
       if (column.getName().equals("testfactcoladd") && column.getType().equals("int")) {
         contains = true;
         break;
       }
+      if (column.getName().equals("msr1") && column.getType().equals("float")) {
+        msr1Altered = true;
+      }
     }
-    assertTrue(contains);
+    assertTrue(contains, "column did not get added");
+    assertTrue(msr1Altered, "measure type did not get altered");
 
     // alter storage table desc
     String c1TableName = getFactOrDimtableStorageTableName(factName, c1);
@@ -2530,7 +2535,7 @@ public class TestCubeMetastoreClient {
     client.createCubeDimensionTable(zipDim.getName(), dimTblName, dimColumns, 100L, dumpPeriods, null, storageTables);
 
     CubeDimensionTable dimTable = client.getDimensionTable(dimTblName);
-    dimTable.alterColumn(new FieldSchema("testAddDim", "string", "test add column"));
+    dimTable.alterColumn(new FieldSchema("testAddDim", "int", "test add column"));
 
     List<CubeDimensionTable> tbls = client.getAllDimensionTables(zipDim);
     boolean found = false;
@@ -2549,7 +2554,7 @@ public class TestCubeMetastoreClient {
     List<FieldSchema> columns = altered.getColumns();
     boolean contains = false;
     for (FieldSchema column : columns) {
-      if (column.getName().equals("testadddim") && column.getType().equals("string")) {
+      if (column.getName().equals("testadddim") && column.getType().equals("int")) {
         contains = true;
         break;
       }
@@ -2557,13 +2562,13 @@ public class TestCubeMetastoreClient {
     assertTrue(contains);
 
     // Test alter column
-    dimTable.alterColumn(new FieldSchema("testAddDim", "int", "change type"));
+    dimTable.alterColumn(new FieldSchema("testAddDim", "float", "change type"));
     client.alterCubeDimensionTable(dimTblName, dimTable, storageTables);
 
     altered = new CubeDimensionTable(Hive.get(conf).getTable(dimTblName));
     boolean typeChanged = false;
     for (FieldSchema column : altered.getColumns()) {
-      if (column.getName().equals("testadddim") && column.getType().equals("int")) {
+      if (column.getName().equals("testadddim") && column.getType().equals("float")) {
         typeChanged = true;
         break;
       }
@@ -2586,7 +2591,7 @@ public class TestCubeMetastoreClient {
     assertEquals(alteredC1Table.getInputFormatClass(), SequenceFileInputFormat.class);
     boolean storageTblColAltered = false;
     for (FieldSchema column : alteredC1Table.getAllCols()) {
-      if (column.getName().equals("testadddim") && column.getType().equals("int")) {
+      if (column.getName().equals("testadddim") && column.getType().equals("float")) {
         storageTblColAltered = true;
         break;
       }

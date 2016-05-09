@@ -56,7 +56,7 @@ public class TestFactPartitionBasedQueryCostCalculator {
     when(driver.getConf()).thenReturn(new Configuration());
     queryContext = mock(AbstractQueryContext.class);
 
-    ImmutableMap<String, Double> tableWeights = mock(ImmutableMap.class);
+    ImmutableMap<String, Double> tableWeights = new ImmutableMap.Builder<String, Double>().build();
 
     FactPartition fp1 = mockFactPartition(DAILY, tableWeights, 0.7);
     FactPartition fp2 = mockFactPartition(HOURLY, tableWeights, 0.8);

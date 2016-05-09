@@ -37,9 +37,10 @@ public class RemoteThriftConnection implements ThriftConnection {
   private boolean connected;
 
   /** The hs2 client. */
-  private CLIServiceClient hs2Client;
+  private RetryingThriftCLIServiceClient.CLIServiceClientWrapper hs2Client;
 
   private HiveConf conf;
+
   /**
    * Instantiates a new remote thrift connection.
    */
@@ -86,8 +87,8 @@ public class RemoteThriftConnection implements ThriftConnection {
   @Override
   public void close() {
     connected = false;
-    if (hs2Client instanceof RetryingThriftCLIServiceClient.CLIServiceClientWrapper) {
-      ((RetryingThriftCLIServiceClient.CLIServiceClientWrapper) hs2Client).closeTransport();
+    if (hs2Client != null) {
+      hs2Client.closeTransport();
     }
   }
 }

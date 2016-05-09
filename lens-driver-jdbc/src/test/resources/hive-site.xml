@@ -36,9 +36,24 @@
   </property>
 
   <property>
+    <name>hive.exec.scratchdir</name>
+    <value>${project.build.directory}/hive/scratch</value>
+  </property>
+
+  <property>
     <name>javax.jdo.option.ConnectionURL</name>
     <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
     <description>JDBC connect string for a JDBC metastore</description>
+  </property>
+
+  <property>
+    <name>datanucleus.schema.autoCreateTables</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>hive.support.sql11.reserved.keywords</name>
+    <value>false</value>
   </property>
 
 </configuration>

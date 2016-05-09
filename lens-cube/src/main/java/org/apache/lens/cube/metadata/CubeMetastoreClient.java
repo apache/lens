@@ -39,7 +39,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
-import org.apache.hadoop.hive.ql.io.HiveFileFormatUtils;
+import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
@@ -225,10 +225,7 @@ public class CubeMetastoreClient {
               partition.getTPartition().getSd().getSerdeInfo().getParameters());
             latestPart.setLocation(partition.getLocation());
             latestPart.setInputFormatClass(partition.getInputFormatClass());
-            latestPart.setOutputFormatClass(partition.getOutputFormatClass());
-            // the following is a fix because hive has a bug: https://issues.apache.org/jira/browse/HIVE-11278.
-            latestPart.getTPartition().getSd().setOutputFormat(
-              HiveFileFormatUtils.getOutputFormatSubstitute(partition.getOutputFormatClass(), false).getName());
+            latestPart.setOutputFormatClass(partition.getOutputFormatClass().asSubclass(HiveOutputFormat.class));
             latestPart.getTPartition().getSd().getSerdeInfo()
               .setSerializationLib(partition.getTPartition().getSd().getSerdeInfo().getSerializationLib());
             latestParts.add(latestPart);
@@ -2061,7 +2058,7 @@ public class CubeMetastoreClient {
     }
     hiveTable.getTTable().getParameters().putAll(cubeTable.getProperties());
     try {
-      getClient().alterTable(table, hiveTable);
+      getClient().alterTable(table, hiveTable, null);
     } catch (InvalidOperationException e) {
       throw new HiveException(e);
     }
@@ -2074,7 +2071,7 @@ public class CubeMetastoreClient {
 
   public void alterHiveTable(String table, Table hiveTable) throws HiveException {
     try {
-      getClient().alterTable(table, hiveTable);
+      getClient().alterTable(table, hiveTable, null);
     } catch (InvalidOperationException e) {
       throw new HiveException(e);
     }

@@ -31,6 +31,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -42,6 +43,12 @@ import lombok.extern.slf4j.Slf4j;
 public class TestHQLParser {
 
   HiveConf conf = new HiveConf();
+
+  {
+    conf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS, false);
+    SessionState.start(conf);
+  }
+
   @Test
   public void testGroupByOrderByGetString() throws Exception {
     String query = "SELECT a,b, sum(c) FROM tab GROUP BY a,f(b), d+e ORDER BY a, g(b), e/100";
@@ -216,35 +223,19 @@ public class TestHQLParser {
 
   @Test
   public void testOrderbyBrackets() throws Exception {
-    String query = "SELECT id from citytable order by ((citytable.id) asc)";
+    String query = "SELECT id from citytable order by (citytable.id) asc";
     // String hql = rewrite(driver, query);
     ASTNode tree = HQLParser.parseHQL(query, conf);
     ASTNode orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
     String reconstructed = HQLParser.getString(orderByTree);
     System.out.println("RECONSTRUCTED0:" + reconstructed);
-    // Assert.assertEquals("(( citytable  .  id ) asc )", reconstructed);
-    HQLParser.parseHQL("SELECT citytable.id FROM citytable ORDER BY " + reconstructed, conf);
-
-    String query2 = "SELECT id from citytable order by (citytable.id asc)";
-    tree = HQLParser.parseHQL(query2, conf);
-    orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
-    reconstructed = HQLParser.getString(orderByTree);
-    System.out.println("RECONSTRUCTED1:" + reconstructed);
-    HQLParser.parseHQL("SELECT citytable.id FROM citytable ORDER BY " + reconstructed, conf);
-
+    Assert.assertEquals(reconstructed, "citytable.id asc");
     String query3 = "SELECT id, name from citytable order by citytable.id asc, citytable.name desc";
     tree = HQLParser.parseHQL(query3, conf);
     orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
     reconstructed = HQLParser.getString(orderByTree);
     System.out.println("RECONSTRUCTED2:" + reconstructed);
-    HQLParser.parseHQL("SELECT id, name FROM citytable ORDER BY " + reconstructed, conf);
-
-    String query4 = "SELECT id from citytable order by citytable.id";
-    tree = HQLParser.parseHQL(query4, conf);
-    orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
-    reconstructed = HQLParser.getString(orderByTree);
-    System.out.println("RECONSTRUCTED3:" + reconstructed);
-    HQLParser.parseHQL("SELECT citytable.id FROM citytable ORDER BY " + reconstructed, conf);
+    Assert.assertEquals(reconstructed, "citytable.id asc, citytable.name desc");
   }
 
   @Test
@@ -273,10 +264,10 @@ public class TestHQLParser {
   public void testAliasShouldBeQuoted() throws Exception {
     Assert.assertEquals(getSelectStrForQuery("select id as identity from sample_dim"), "id as `identity`");
     Assert.assertEquals(getSelectStrForQuery("select id as `column identity` from sample_dim"),
-        "id as `column identity`");
+      "id as `column identity`");
     Assert.assertEquals(getSelectStrForQuery("select id identity from sample_dim"), "id as `identity`");
     Assert.assertEquals(getSelectStrForQuery("select id `column identity` from sample_dim"),
-        "id as `column identity`");
+      "id as `column identity`");
   }
 
   private String getSelectStrForQuery(String query) throws Exception {
@@ -387,7 +378,7 @@ public class TestHQLParser {
 
   @DataProvider
   public Object[][] nAryFlatteningDataProvider() {
-    return new Object[][] {
+    return new Object[][]{
       {"a", "a"},
       {"a or b", "a or b"},
       {"a or b or c or d", "a or b or c or d"},
@@ -408,7 +399,7 @@ public class TestHQLParser {
 
   @DataProvider
   public Object[][] colsInExpr() {
-    return new Object[][] {
+    return new Object[][]{
       {" t1.c1", new String[]{}}, // simple selection
       {" cie.c5", new String[]{"c5"}}, // simple selection
       {" fun1(cie.c4)", new String[]{"c4"}}, // simple selection
@@ -436,7 +427,7 @@ public class TestHQLParser {
 
   @DataProvider
   public Object[][] primitiveBool() {
-    return new Object[][] {
+    return new Object[][]{
       {" t1.c1", false},
       {" t1.c1 = 24", true},
       {" t1.c1 >= 24", true},
@@ -461,7 +452,7 @@ public class TestHQLParser {
 
   @DataProvider
   public Object[][] primitiveBoolFunc() {
-    return new Object[][] {
+    return new Object[][]{
       {" t1.c1", false},
       {" t1.c1 = 24", false},
       {" t1.c1 >= 24", false},
@@ -482,5 +473,20 @@ public class TestHQLParser {
     ASTNode inputAST = HQLParser.parseExpr(input);
     boolean actual = HQLParser.isPrimitiveBooleanFunction(inputAST);
     Assert.assertEquals(actual, expected, "Received " + actual + " for input:" + input);
+  }
+
+  @DataProvider
+  public Object[][] dirDataProvider() {
+    return new Object[][]{
+      {"directory 'a'"},
+      {"local directory 'a'"},
+    };
+  }
+
+  @Test(dataProvider = "dirDataProvider")
+  public void testLocalDirectory(String dirString) throws LensException {
+    String expr = "insert overwrite " + dirString + " select * from table";
+    ASTNode tree = HQLParser.parseHQL(expr, conf);
+    Assert.assertEquals(HQLParser.getString((ASTNode) tree.getChild(1).getChild(0)), dirString);
   }
 }

@@ -137,7 +137,8 @@ public class TestColumnarSQLRewriter {
     conf.addResource("jdbcdriver-default.xml");
     conf.addResource("drivers/jdbc/jdbc1/jdbcdriver-site.xml");
     qtest.init(conf);
-
+    hconf.addResource(conf);
+    SessionState.start(hconf);
     List<FieldSchema> factColumns = new ArrayList<>();
     factColumns.add(new FieldSchema("item_key", "int", ""));
     factColumns.add(new FieldSchema("branch_key", "int", ""));
@@ -203,8 +204,6 @@ public class TestColumnarSQLRewriter {
   // Testing multiple queries in one instance
   public void testNoRewrite() throws LensException {
 
-    SessionState.start(hconf);
-
     String query = "select count(distinct id) from location_dim";
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select count( distinct  id ) from location_dim ";
@@ -243,8 +242,6 @@ public class TestColumnarSQLRewriter {
       + "on fact.other_location_key = other_location_dim.location_key where time_dim.time_key "
       + "between '2013-01-01' and '2013-01-31' and location_dim_a.location_key = 'some-loc' "
       + "group by fact.time_key, location_dim_a.location_key, other_location_dim.location_key";
-
-    SessionState.start(hconf);
     qtest.rewrite(query, conf, hconf);
     String expected = "sales_fact___fact.time_key in  (  select time_dim .time_key from time_dim "
       + "where (time_dim.time_key) between '2013-01-01' and '2013-01-31' ) and "
@@ -270,9 +267,6 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
-
     String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "inner join (select time_key, day_of_week, day from time_dim) time_dim___time_dim "
       + "on (( sales_fact___fact . time_key ) = "
@@ -302,9 +296,6 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
-
     String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "[(( location_dim___location_dim . location_name ) =  "
       + "'test123' ), , , ( time_dim___time_dim . time_key ) between  '2013-01-01'  and  '2013-01-31' "
@@ -333,8 +324,6 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
 
     String rwq = qtest.rewrite(query, conf, hconf);
     String actual = qtest.aggColumn.toString();
@@ -365,9 +354,6 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
-
     String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "sales_fact___fact.time_key,sales_fact___fact.location_key,sales_fact___fact.item_key,";
     String actual = qtest.factKeys.toString();
@@ -393,9 +379,6 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' " + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
-
     String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "sales_fact___fact.time_key in  (  select time_dim .time_key from time_dim where "
       + "( time_dim. time_key ) between  '2013-01-01'  and  '2013-01-31'  ) and sales_fact___fact.location_key in  "
@@ -429,9 +412,6 @@ public class TestColumnarSQLRewriter {
         + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
         + "order by dollars_sold  ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
 
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
@@ -499,9 +479,6 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-03-01' and '2013-03-05' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ),  case  when (sum(alias2) =  0 ) then  0.0  "
@@ -567,9 +544,6 @@ public class TestColumnarSQLRewriter {
     String query = "SELECT  distinct ( location_dim . id ) FROM location_dim "
       + "location_dim join time_dim time_dim on location_dim.time_id = time_dim.id "
       + "WHERE ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  LIMIT 10 ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select  distinct ( location_dim___location_dim . id ) "
       + "from location_dim location_dim___location_dim  "
@@ -593,9 +567,6 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' " + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ), sum(alias1) as `dollars_sold` , "
@@ -646,9 +617,6 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' " + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
         + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ), "
@@ -696,9 +664,6 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between date_add('2013-01-01', 1) and date_sub('2013-01-31',3) "
         + "and item_dim.item_name = 'item_1'  group by fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "item_dim.item_key " + "order by dollars_sold";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select max(alias1) from  (select sales_fact___fact.time_key, sales_fact___fact.location_key, "
         + "sales_fact___fact.item_key,max(( sales_fact___fact . dollars_sold )) as alias1 from sales_fact "
@@ -732,9 +697,6 @@ public class TestColumnarSQLRewriter {
     String query = "SELECT  count(location_dim.name) FROM location_dim "
         + "location_dim join time_dim time_dim on location_dim.time_id = time_dim.id "
         + "WHERE ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  LIMIT 10 ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select sum(alias1) from  (select location_dim___location_dim.time_id,"
         + "count(( location_dim___location_dim . name )) as alias1 from location_dim location_dim___location_dim "
@@ -756,9 +718,6 @@ public class TestColumnarSQLRewriter {
         + "inner join db.location_dim ld on fact.location_key = ld.location_key " + "and ld.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ),  case  when (sum(alias2) =  0 ) "
@@ -795,9 +754,6 @@ public class TestColumnarSQLRewriter {
         + "INNER JOIN dim3 dim3 ON f.dim3_id = dim3.id " + "INNER JOIN dim4 dim4 ON  dim2.id_2 = dim4.id_2 "
         + "WHERE ((dim1 . date) = '2014-11-25 00:00:00') "
         + "GROUP BY (dim1 . date),  (dim2 . name), (dim3 . name) , (dim4 . name) ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( dim1___dim1 . date ) as `date` , sum(alias1) as `msr1` , ( dim2___dim2 . name ) "
         + "as `dim2_name` , "
@@ -827,9 +783,6 @@ public class TestColumnarSQLRewriter {
         + "INNER JOIN dim2 dim2 ON f.dim2_id = dim2.id  and f.m3 > 3000 "
         + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
         + "GROUP BY (dim1 . date),  (dim2 . name)";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( dim1___dim1 . date ) as `date` , sum(alias1) as `msr1` , ( dim2___dim2 . name ) "
         + "as `dim2_name`  from  (select fact___f.dim1_id, fact___f.m2, fact___f.dim2_id, fact___f.m3, fact___f.m4, "
@@ -855,9 +808,6 @@ public class TestColumnarSQLRewriter {
         + "INNER JOIN dim2 dim2 ON f.dim2_id = dim2.id  and f.m3 > 3000 "
         + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
         + "GROUP BY (dim1 . date),  (dim2 . name) ORDER BY dim1_date";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
 
     String expected = "select ( dim1___dim1 . date ) as `dim1_date` , sum(alias1) as `msr1` , "
@@ -885,9 +835,6 @@ public class TestColumnarSQLRewriter {
         + "INNER JOIN dim2 dim2 ON f.dim2_id = dim2.id  and f.dim3_id = dim2.id "
         + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
         + "GROUP BY (dim1 . date),  (dim2 . name) ORDER BY dim1_date";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( dim1___dim1 . date ) as `dim1_date` , sum(alias1) as `msr1` , "
         + "( dim2___dim2 . name ) as `dim2_name`  from  (select fact___f.dim1_id, fact___f.m2, fact___f.dim2_id,"
@@ -918,9 +865,6 @@ public class TestColumnarSQLRewriter {
             + "where time_dim.time_key between '2013-01-01' and '2013-01-31' " + "and item_dim.item_name = 'item_1' "
             + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
             + "order by dollars_sold desc ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ),  "
@@ -969,9 +913,6 @@ public class TestColumnarSQLRewriter {
             + "and ld.location_name = 'test123' where time_dim.time_key between '2013-01-01' and '2013-01-31' "
             + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
             + "order by dollars_sold desc";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ), ((sum(alias1) +  0 ) + (sum(alias2) +  0 )) as `expr1` , "
@@ -1017,9 +958,6 @@ public class TestColumnarSQLRewriter {
             + "ld.location_name = 'test123' where time_dim.time_key between '2013-01-01' and "
             + "'2013-01-31' group by fact.time_key,time_dim.day_of_week,time_dim.day  "
             + "order by dollars_sold desc";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ), "
             + "( time_dim___time_dim . day ), ((sum(( sales_fact__db_sales_fact_fact . item_count )) +  0 ) + "
@@ -1059,9 +997,6 @@ public class TestColumnarSQLRewriter {
             + " and ld.location_name in ('test\\'123') "
             + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
             + "order by dollars_sold desc";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ),"
             + " ( time_dim___time_dim . day ), ((sum(alias1) +  0 ) + (sum(alias2) +  0 )) as `expr1` , "
@@ -1106,9 +1041,6 @@ public class TestColumnarSQLRewriter {
             + "where time_dim.time_key between '2013-01-01' and '2013-01-31'"
             + "group by fact.time_key "
             + "having sum(fact.dollar_sold) > 100 ";
-
-    SessionState.start(hconf);
-
     String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact__db_sales_fact_fact . time_key ) as `time_key` , "
             + "( time_dim___time_dim . day_of_week ), sum(alias1) as `total_item_sold`  from "
@@ -1143,8 +1075,8 @@ public class TestColumnarSQLRewriter {
     serdeUrls[1] = new URL("file:" + serdeJarFile.getAbsolutePath());
 
     URLClassLoader createTableClassLoader = new URLClassLoader(serdeUrls, hconf.getClassLoader());
-    hconf.setClassLoader(createTableClassLoader);
-    SessionState.start(hconf);
+    ClassLoader loader = new URLClassLoader(serdeUrls, SessionState.getSessionConf().getClassLoader());
+    SessionState.getSessionConf().setClassLoader(loader);
 
     // Create test table
     Database database = new Database();
@@ -1238,7 +1170,6 @@ public class TestColumnarSQLRewriter {
    */
   @Test
   public void testReplaceColumnMapping() throws Exception {
-    SessionState.start(hconf);
     String testDB = "testrcm";
 
     // Create test table

@@ -36,7 +36,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
-import org.apache.hadoop.hive.ql.io.HiveFileFormatUtils;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
@@ -953,9 +952,6 @@ public final class JAXBUtils {
       Class<? extends HiveOutputFormat> outputFormatClass =
         Class.forName(xp.getOutputFormat()).asSubclass(HiveOutputFormat.class);
       partition.setOutputFormatClass(outputFormatClass);
-      // Again a hack, for the issue described in HIVE-11278
-      partition.getTPartition().getSd().setOutputFormat(
-        HiveFileFormatUtils.getOutputFormatSubstitute(outputFormatClass, false).getName());
     }
     partition.getParameters().put(MetastoreConstants.PARTITION_UPDATE_PERIOD, xp.getUpdatePeriod().name());
     partition.getTPartition().getSd().getSerdeInfo().setSerializationLib(xp.getSerdeClassname());

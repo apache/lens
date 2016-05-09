@@ -112,7 +112,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
   public boolean hasNext() throws LensException {
     if (fetchedRowsItr == null || !fetchedRowsItr.hasNext()) {
       try {
-        rowSet = client.fetchResults(opHandle, orientation, fetchSize);
+        rowSet = client.fetchResults(opHandle, orientation, fetchSize, FetchType.QUERY_OUTPUT);
         orientation = FetchOrientation.FETCH_NEXT;
         noMoreResults = rowSet.numRows() == 0;
         if (noMoreResults) {

@@ -1923,7 +1923,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       // Do some changes to test update
       cf.alterWeight(20.0);
-      cf.alterColumn(new FieldSchema("c2", "int", "changed to int"));
+      cf.alterColumn(new FieldSchema("c2", "double", "changed to double"));
 
       XFactTable update = JAXBUtils.factTableFromCubeFactTable(cf);
       XStorageTableElement s1Tbl = createStorageTblElement("S1", table, "HOURLY");
@@ -1953,7 +1953,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       boolean foundC2 = false;
       for (FieldSchema fs : cf.getColumns()) {
-        if (fs.getName().equalsIgnoreCase("c2") && fs.getType().equalsIgnoreCase("int")) {
+        if (fs.getName().equalsIgnoreCase("c2") && fs.getType().equalsIgnoreCase("double")) {
           foundC2 = true;
           break;
         }

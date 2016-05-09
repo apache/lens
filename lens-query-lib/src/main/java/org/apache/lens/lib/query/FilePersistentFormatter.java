@@ -99,16 +99,13 @@ public class FilePersistentFormatter extends WrappedFileFormatter implements Per
    * @see org.apache.lens.server.api.query.PersistedOutputFormatter#addRowsFromPersistedPath(org.apache.hadoop.fs.Path)
    */
   @Override
-  public void addRowsFromPersistedPath(Path persistedDir) throws IOException {
-    FileSystem persistFs = persistedDir.getFileSystem(ctx.getConf());
+  public void addRowsFromPersistedPath(final Path persistedDir) throws IOException {
+    final FileSystem persistFs = persistedDir.getFileSystem(ctx.getConf());
 
     FileStatus[] partFiles = persistFs.listStatus(persistedDir, new PathFilter() {
       @Override
       public boolean accept(Path path) {
-        if (path.getName().startsWith("_")) {
-          return false;
-        }
-        return true;
+        return !path.getName().startsWith("_") && !path.getName().startsWith(".");
       }
     });
 

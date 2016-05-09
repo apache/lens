@@ -204,7 +204,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     QB qb = new QB(null, null, false);
 
-    if (!c1.doPhase1(ast, qb, c1.initPhase1Ctx())) {
+    if (!c1.doPhase1(ast, qb, c1.initPhase1Ctx(), null)) {
       return;
     }
 

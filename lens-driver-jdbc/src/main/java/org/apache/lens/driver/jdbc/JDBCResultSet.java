@@ -32,9 +32,9 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.serde2.thrift.Type;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.hive.service.cli.Type;
 import org.apache.hive.service.cli.TypeDescriptor;
 import org.apache.hive.service.cli.TypeQualifiers;
 
@@ -164,7 +164,9 @@ public class JDBCResultSet extends InMemoryResultSet {
       List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>(fieldSchemas.size());
 
       for (int i = 0; i < fieldSchemas.size(); i++) {
-        columns.add(new ColumnDescriptor(fieldSchemas.get(i).toFieldSchema(), i + 1));
+        FieldSchema schema = fieldSchemas.get(i).toFieldSchema();
+        columns.add(ColumnDescriptor.newPrimitiveColumnDescriptor(schema.getName(), schema.getComment(),
+          Type.getType(schema.getType()), i + 1));
       }
       return columns;
     }

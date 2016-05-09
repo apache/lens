@@ -38,22 +38,16 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.query.QueryExecutionService;
-import org.apache.lens.server.api.session.SessionClosed;
-import org.apache.lens.server.api.session.SessionExpired;
-import org.apache.lens.server.api.session.SessionOpened;
-import org.apache.lens.server.api.session.SessionRestored;
-import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.api.session.*;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 
 import org.apache.commons.lang3.StringUtils;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.conf.SystemVariables;
 import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
-
 import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
@@ -61,7 +55,6 @@ import org.apache.hive.service.cli.OperationHandle;
 import com.google.common.collect.Maps;
 import lombok.AccessLevel;
 import lombok.Getter;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -182,17 +175,17 @@ public class HiveSessionService extends BaseLensService implements SessionServic
    * @return the session param
    */
   private String getSessionParam(Configuration sessionConf, SessionState ss, String varname) {
-    if (varname.indexOf(SetProcessor.HIVEVAR_PREFIX) == 0) {
-      String var = varname.substring(SetProcessor.HIVEVAR_PREFIX.length());
+    if (varname.indexOf(SystemVariables.HIVEVAR_PREFIX) == 0) {
+      String var = varname.substring(SystemVariables.HIVEVAR_PREFIX.length());
       if (ss.getHiveVariables().get(var) != null) {
-        return SetProcessor.HIVEVAR_PREFIX + var + "=" + ss.getHiveVariables().get(var);
+        return SystemVariables.HIVEVAR_PREFIX + var + "=" + ss.getHiveVariables().get(var);
       } else {
         throw new NotFoundException(varname + " is undefined as a hive variable");
       }
     } else {
       String var;
-      if (varname.indexOf(SetProcessor.HIVECONF_PREFIX) == 0) {
-        var = varname.substring(SetProcessor.HIVECONF_PREFIX.length());
+      if (varname.indexOf(SystemVariables.HIVECONF_PREFIX) == 0) {
+        var = varname.substring(SystemVariables.HIVECONF_PREFIX.length());
       } else {
         var = varname;
       }
@@ -275,7 +268,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
         SortedMap<String, String> sortedMap = new TreeMap<String, String>();
         sortedMap.put("silent", (ss.getIsSilent() ? "on" : "off"));
         for (String s : ss.getHiveVariables().keySet()) {
-          sortedMap.put(SetProcessor.HIVEVAR_PREFIX + s, ss.getHiveVariables().get(s));
+          sortedMap.put(SystemVariables.HIVEVAR_PREFIX + s, ss.getHiveVariables().get(s));
         }
         for (Map.Entry<String, String> entry : getSession(sessionid).getSessionConf()) {
           sortedMap.put(entry.getKey(), entry.getValue());
@@ -313,8 +306,8 @@ public class HiveSessionService extends BaseLensService implements SessionServic
       // set in session conf
       for(Map.Entry<String, String> entry: config.entrySet()) {
         String var = entry.getKey();
-        if (var.indexOf(SetProcessor.HIVECONF_PREFIX) == 0) {
-          var = var.substring(SetProcessor.HIVECONF_PREFIX.length());
+        if (var.indexOf(SystemVariables.HIVECONF_PREFIX) == 0) {
+          var = var.substring(SystemVariables.HIVECONF_PREFIX.length());
         }
         getSession(sessionid).getSessionConf().set(var, entry.getValue());
         if (addToSession) {

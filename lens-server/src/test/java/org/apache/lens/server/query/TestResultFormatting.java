@@ -219,7 +219,7 @@ public class TestResultFormatting extends LensJerseyTest {
       Thread.sleep(100);
     }
 
-    assertEquals(ctx.getStatus().getStatus(), status);
+    assertEquals(ctx.getStatus().getStatus(), status, String.valueOf(ctx));
 
     if (status.equals(QueryStatus.Status.SUCCESSFUL)) {
       QueryContext qctx = queryService.getQueryContext(handle);

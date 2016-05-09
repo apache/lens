@@ -36,6 +36,11 @@
   </property>
 
   <property>
+    <name>hive.exec.scratchdir</name>
+    <value>${project.build.directory}/hive/scratch</value>
+  </property>
+
+  <property>
     <name>hive.querylog.location</name>
     <value>${project.build.directory}/query_logs</value>
     <description>Location of the structured hive logs</description>
@@ -45,6 +50,11 @@
     <name>javax.jdo.option.ConnectionURL</name>
     <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
     <description>JDBC connect string for a JDBC metastore</description>
+  </property>
+
+  <property>
+    <name>datanucleus.schema.autoCreateTables</name>
+    <value>true</value>
   </property>
 
 </configuration>

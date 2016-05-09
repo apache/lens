@@ -228,7 +228,7 @@ public class RestAPITestUtil {
   public static LensQuery waitForQueryToFinish(final WebTarget target, final LensSessionHandle lensSessionHandle,
     final QueryHandle handle, QueryStatus.Status status, MediaType mt) throws InterruptedException {
     LensQuery lensQuery = waitForQueryToFinish(target, lensSessionHandle, handle, mt);
-    assertEquals(lensQuery.getStatus().getStatus(), status);
+    assertEquals(lensQuery.getStatus().getStatus(), status, String.valueOf(lensQuery));
     return lensQuery;
   }
 

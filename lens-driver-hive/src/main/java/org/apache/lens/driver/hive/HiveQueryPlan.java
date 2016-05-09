@@ -30,6 +30,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -139,7 +140,20 @@ public class HiveQueryPlan extends DriverQueryPlan {
         }
         break;
       case TABLE_SCAN:
-        // no op
+        int indentation = getIndentation(explainOutput.get(i));
+        i++;
+        for (; i < explainOutput.size(); i++) {
+          if (explainOutput.get(i).trim().startsWith("alias: ")) {
+            String tableName = explainOutput.get(i).trim().substring(7);
+            if (!tableName.contains(".") && SessionState.get() != null) {
+              tableName = SessionState.get().getCurrentDatabase() + "." + tableName;
+            }
+            addTableToTablesQueried(tableName, metastore);
+          }
+          if (i + 1 < explainOutput.size() && getIndentation(explainOutput.get(i+1)) <= indentation) {
+            break;
+          }
+        }
         break;
       case PARTITION:
         String partConditionStr = null;
@@ -162,22 +176,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
           if (explainOutput.get(i).trim().startsWith("name:")) {
             String table = explainOutput.get(i).trim().substring("name:".length()).trim();
             // update tables queried and weights
-            if (!tablesQueried.contains(table)) {
-              Table tbl = metastore.getTable(table, false);
-              if (tbl == null) {
-                // table not found, possible case if query is create table
-                log.info("Table {} not found while extracting plan details", table);
-                continue;
-              }
-              tablesQueried.add(table);
-              String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
-
-              Double weight = 1d;
-              if (costStr != null) {
-                weight = Double.parseDouble(costStr);
-              }
-              tableWeights.put(table, weight);
-            }
+            addTableToTablesQueried(table, metastore);
 
             if (partConditionStr != null) {
               Set<String> tablePartitions = (Set<String>) partitions.get(table);
@@ -199,6 +198,34 @@ public class HiveQueryPlan extends DriverQueryPlan {
         break;
       }
     }
+  }
+
+  private void addTableToTablesQueried(String table, Hive metastore) throws HiveException {
+    if (!tablesQueried.contains(table)) {
+      Table tbl = metastore.getTable(table, false);
+      if (tbl == null) {
+        // table not found, possible case if query is create table
+        log.info("Table {} not found while extracting plan details", table);
+        return;
+      }
+      tablesQueried.add(table);
+      String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
+
+      Double weight = 1d;
+      if (costStr != null) {
+        weight = Double.parseDouble(costStr);
+      }
+      tableWeights.put(table, weight);
+    }
+  }
+
+  private int getIndentation(String s) {
+    for(int i = 0; i < s.length(); i++) {
+      if (s.charAt(i) != ' ') {
+        return i - 1;
+      }
+    }
+    return s.length();
   }
 
   /**
@@ -227,7 +254,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
       return ParserState.GROUPBY_EXPRS;
     } else if (tr.startsWith("keys:") && state == ParserState.GROUPBY_EXPRS) {
       return ParserState.GROUPBY_KEYS;
-    } else if (tr.equals("Path -> Partition:")) {
+    } else if (tr.equals("Path -> Partition:") || tr.equals("Partition Description:")) {
       return ParserState.PARTITION_LIST;
     } else if (tr.equals("Partition") && state == ParserState.PARTITION_LIST) {
       return ParserState.PARTITION;

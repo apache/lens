@@ -682,7 +682,7 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   }
 
   public void setLimitValue(Integer value) {
-    qb.getParseInfo().setDestLimit(getClause(), value);
+    qb.getParseInfo().setDestLimit(getClause(), 0, value);
   }
 
   private String getStorageStringWithAlias(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, String alias) {
@@ -1144,12 +1144,11 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   }
 
   public String getInsertClause() {
-    String insertString = "";
     ASTNode destTree = qb.getParseInfo().getDestForClause(clauseName);
     if (destTree != null && ((ASTNode) (destTree.getChild(0))).getToken().getType() != TOK_TMP_FILE) {
-      insertString = "INSERT OVERWRITE" + HQLParser.getString(qb.getParseInfo().getDestForClause(clauseName));
+      return "INSERT OVERWRITE" + HQLParser.getString(destTree);
     }
-    return insertString;
+    return "";
   }
 
   public void addExprToAlias(ASTNode expr, ASTNode alias) {

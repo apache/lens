@@ -545,17 +545,16 @@ public final class HQLParser {
       }
 
     } else if (TOK_DIR == rootType) {
-      buf.append(" directory ");
+      StringBuilder sb = new StringBuilder();
+      boolean local = false;
       for (int i = 0; i < root.getChildCount(); i++) {
-        toInfixString((ASTNode) root.getChild(i), buf);
+        if (root.getChild(i).getType() == KW_LOCAL) {
+          local = true;
+        } else {
+          toInfixString((ASTNode) root.getChild(i), sb);
+        }
       }
-
-    } else if (TOK_LOCAL_DIR == rootType) {
-      buf.append(" local directory ");
-      for (int i = 0; i < root.getChildCount(); i++) {
-        toInfixString((ASTNode) root.getChild(i), buf);
-      }
-
+      buf.append(local ? " local": "").append(" directory ").append(sb);
     } else if (TOK_TAB == rootType) {
       buf.append(" table ");
       for (int i = 0; i < root.getChildCount(); i++) {
@@ -766,8 +765,13 @@ public final class HQLParser {
       assert (node.getChildCount() != 0);
       if (node.getChild(0).getType() == HiveParser.Identifier) {
         String functionName = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
-        if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
-          return true;
+        try {
+          if (FunctionRegistry.getGenericUDAFResolver(functionName) != null) {
+            return true;
+          }
+        } catch (SemanticException e) {
+          log.error("Error trying to find whether {} is aggregate.", getString(node), e);
+          return false;
         }
       }
     }
@@ -782,8 +786,13 @@ public final class HQLParser {
       assert (node.getChildCount() != 0);
       if (node.getChild(0).getType() == HiveParser.Identifier) {
         String functionName = BaseSemanticAnalyzer.unescapeIdentifier(node.getChild(0).getText());
-        if (FunctionRegistry.getGenericUDAFResolver(functionName) == null) {
-          return true;
+        try {
+          if (FunctionRegistry.getGenericUDAFResolver(functionName) == null) {
+            return true;
+          }
+        } catch (SemanticException e) {
+          log.error("Error trying to find whether {} is udf node.", getString(node), e);
+          return false;
         }
       }
     }
