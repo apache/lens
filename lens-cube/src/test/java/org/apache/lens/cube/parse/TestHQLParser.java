@@ -229,13 +229,13 @@ public class TestHQLParser {
     ASTNode orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
     String reconstructed = HQLParser.getString(orderByTree);
     System.out.println("RECONSTRUCTED0:" + reconstructed);
-    Assert.assertEquals(reconstructed, "citytable . id asc");
+    Assert.assertEquals(reconstructed, "citytable.id asc");
     String query3 = "SELECT id, name from citytable order by citytable.id asc, citytable.name desc";
     tree = HQLParser.parseHQL(query3, conf);
     orderByTree = HQLParser.findNodeByPath(tree, TOK_INSERT, HiveParser.TOK_ORDERBY);
     reconstructed = HQLParser.getString(orderByTree);
     System.out.println("RECONSTRUCTED2:" + reconstructed);
-    Assert.assertEquals(reconstructed, "citytable . id asc , citytable . name desc");
+    Assert.assertEquals(reconstructed, "citytable.id asc, citytable.name desc");
   }
 
   @Test
