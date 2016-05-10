@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
@@ -66,8 +67,8 @@ public class LensSessionImpl extends HiveSessionImpl {
   private int acquireCount = 0;
   /** The conf. */
   private Configuration conf = createDefaultConf();
-
-  private AtomicInteger activeOperations = new AtomicInteger(0);
+  @Getter
+  private final List<QueryHandle> activeQueries = new ArrayList<>();
   /**
    * Keep track of DB static resources which failed to be added to this session
    */
@@ -431,17 +432,6 @@ public class LensSessionImpl extends HiveSessionImpl {
     return getClassLoader(getCurrentDatabase());
   }
 
-  public void activateOperation() {
-    activeOperations.incrementAndGet();
-  }
-  public void deactivateOperation() {
-    activeOperations.decrementAndGet();
-  }
-
-  public boolean activeOperationsPresent() {
-    return activeOperations.get() > 0;
-  }
-
   public void markForClose() {
     this.markForClose = true;
   }
@@ -613,5 +603,20 @@ public class LensSessionImpl extends HiveSessionImpl {
       }
       lastAccessTime = in.readLong();
     }
+  }
+
+  public void addToActiveQueries(QueryHandle queryHandle) {
+    synchronized (this.activeQueries) {
+      activeQueries.add(queryHandle);
+    }
+  }
+
+  public void removeFromActiveQueries(QueryHandle queryHandle) {
+    synchronized (this.activeQueries) {
+      activeQueries.remove(queryHandle);
+    }
+  }
+  public boolean activeOperationsPresent() {
+    return !activeQueries.isEmpty();
   }
 }

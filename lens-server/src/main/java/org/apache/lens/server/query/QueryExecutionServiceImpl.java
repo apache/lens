@@ -346,8 +346,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       QueryEnded.class);
     getEventService().addListenerForType(
       new QueryEndNotifier(this, getCliService().getHiveConf(), this.logSegregationContext), QueryEnded.class);
-    getEventService().addListenerForType(new SessionActivityMarker(), QueryQueued.class);
-    getEventService().addListenerForType(new SessionInactivityMarker(), QueryEnded.class);
     log.info("Registered query result formatter");
   }
 
@@ -522,23 +520,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     @Override
     public void onEvent(StatusChange event) throws LensException {
       STATUS_LOG.info(event.toString());
-    }
-  }
-
-  private class SessionActivityMarker implements LensEventListener<QueryQueued> {
-
-    @Override
-    public void onEvent(QueryQueued event) throws LensException {
-      QueryContext ctx = allQueries.get(event.getQueryHandle());
-      LensSessionImpl session = getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier()));
-      session.activateOperation();
-    }
-  }
-  private class SessionInactivityMarker implements LensEventListener<QueryEnded> {
-
-    @Override
-    public void onEvent(QueryEnded event) throws LensException {
-      getSession(SESSION_MAP.get(event.getQueryContext().getLensSessionIdentifier())).deactivateOperation();
     }
   }
 
@@ -895,6 +876,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     }
     finishedQueries.add(new FinishedQuery(ctx));
     ctx.clearTransientStateAfterLaunch();
+    getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).removeFromActiveQueries(ctx.getQueryHandle());
   }
 
   void setSuccessState(QueryContext ctx) throws LensException {
@@ -1853,6 +1835,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     queuedQueries.add(ctx);
     log.debug("Added to Queued Queries:{}", ctx.getQueryHandleString());
     allQueries.put(ctx.getQueryHandle(), ctx);
+    getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).addToActiveQueries(ctx.getQueryHandle());
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
     log.info("Returning handle {}", ctx.getQueryHandle().getHandleId());
     return ctx.getQueryHandle();
@@ -2580,6 +2563,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           ctx.setDriverQuery(ctx.getSelectedDriver(), ctx.getSelectedDriverQuery());
         }
         allQueries.put(ctx.getQueryHandle(), ctx);
+        getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).addToActiveQueries(ctx.getQueryHandle());
       }
 
       // populate the query queues
