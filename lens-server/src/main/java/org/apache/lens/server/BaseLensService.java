@@ -18,6 +18,9 @@
  */
 package org.apache.lens.server;
 
+import static org.apache.lens.server.error.LensServerErrorCode.SESSION_CLOSED;
+import static org.apache.lens.server.error.LensServerErrorCode.SESSION_ID_NOT_PROVIDED;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +30,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
@@ -336,13 +340,13 @@ public abstract class BaseLensService extends CompositeService implements Extern
     if (sessionHandle == null) {
       throw new ClientErrorException("Session is null", 400);
     }
-
     try {
       return ((LensSessionImpl) getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
       log.warn("Session {} not found", sessionHandle.getPublicId(), exc);
       // throw resource gone exception (410)
-      throw new ClientErrorException("Session " + sessionHandle.getPublicId() + " is invalid " + sessionHandle, 410);
+      throw new ClientErrorException("Session " + sessionHandle.getPublicId() + " is invalid " + sessionHandle,
+        Response.Status.GONE, exc);
     }
   }
 
@@ -542,5 +546,14 @@ public abstract class BaseLensService extends CompositeService implements Extern
       pathValidator = new PathValidator(conf);
     }
     return pathValidator.removePrefixBeforeURI(path);
+  }
+
+  public void validateSession(LensSessionHandle handle) throws LensException {
+    if (handle == null) {
+      throw new LensException(SESSION_ID_NOT_PROVIDED.getLensErrorInfo());
+    }
+    if (!getSession(handle).isActive()) {
+      throw new LensException(SESSION_CLOSED.getLensErrorInfo(), handle);
+    }
   }
 }

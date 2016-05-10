@@ -169,7 +169,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   /**
    * The all queries.
    */
-  protected ConcurrentMap<QueryHandle, QueryContext> allQueries = new ConcurrentHashMap<QueryHandle, QueryContext>();
+  protected final ConcurrentMap<QueryHandle, QueryContext> allQueries = new ConcurrentHashMap<>();
 
   /**
    * The conf.
@@ -876,7 +876,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     }
     finishedQueries.add(new FinishedQuery(ctx));
     ctx.clearTransientStateAfterLaunch();
-    getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).removeFromActiveQueries(ctx.getQueryHandle());
+    if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
+      getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).removeFromActiveQueries(ctx.getQueryHandle());
+    }
   }
 
   void setSuccessState(QueryContext ctx) throws LensException {
@@ -1257,11 +1259,14 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   public synchronized void start() {
     // recover query configurations from session
     synchronized (allQueries) {
+      // populate the query queues
+      final List<QueryContext> allRestoredQueuedQueries = new LinkedList<QueryContext>();
       for (QueryContext ctx : allQueries.values()) {
         try {
           if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
             // try setting configuration if the query session is still not closed
             ctx.setConf(getLensConf(getSessionHandle(ctx.getLensSessionIdentifier()), ctx.getLensConf()));
+            getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).addToActiveQueries(ctx.getQueryHandle());
           } else {
             ctx.setConf(getLensConf(ctx.getLensConf()));
           }
@@ -1273,7 +1278,32 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         } catch (LensException e) {
           log.error("Could not set query conf ", e);
         }
+        switch (ctx.getStatus().getStatus()) {
+        case NEW:
+        case QUEUED:
+          allRestoredQueuedQueries.add(ctx);
+          break;
+        case LAUNCHED:
+        case RUNNING:
+        case EXECUTED:
+          try {
+            launchedQueries.add(ctx);
+          } catch (final Exception e) {
+            log.error("Query not restored:QueryContext:{}", ctx, e);
+          }
+          break;
+        case SUCCESSFUL:
+        case FAILED:
+        case CANCELED:
+          updateFinishedQuery(ctx, null);
+          break;
+        case CLOSED:
+          allQueries.remove(ctx.getQueryHandle());
+          log.info("Removed closed query from all Queries:"+ctx.getQueryHandle());
+        }
       }
+      queuedQueries.addAll(allRestoredQueuedQueries);
+      log.info("Recovered {} queries", allQueries.size());
     }
     super.start();
     querySubmitter.start();
@@ -2563,38 +2593,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           ctx.setDriverQuery(ctx.getSelectedDriver(), ctx.getSelectedDriverQuery());
         }
         allQueries.put(ctx.getQueryHandle(), ctx);
-        getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).addToActiveQueries(ctx.getQueryHandle());
       }
-
-      // populate the query queues
-      final List<QueryContext> allRestoredQueuedQueries = new LinkedList<QueryContext>();
-      for (QueryContext ctx : allQueries.values()) {
-        switch (ctx.getStatus().getStatus()) {
-        case NEW:
-        case QUEUED:
-          allRestoredQueuedQueries.add(ctx);
-          break;
-        case LAUNCHED:
-        case RUNNING:
-        case EXECUTED:
-          try {
-            launchedQueries.add(ctx);
-          } catch (final Exception e) {
-            log.error("Query not restored:QueryContext:{}", ctx, e);
-          }
-          break;
-        case SUCCESSFUL:
-        case FAILED:
-        case CANCELED:
-          updateFinishedQuery(ctx, null);
-          break;
-        case CLOSED:
-          allQueries.remove(ctx.getQueryHandle());
-          log.info("Removed closed query from all Queries:"+ctx.getQueryHandle());
-        }
-      }
-      queuedQueries.addAll(allRestoredQueuedQueries);
-      log.info("Recovered {} queries", allQueries.size());
     }
   }
 

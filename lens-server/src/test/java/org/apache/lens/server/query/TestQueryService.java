@@ -1793,11 +1793,6 @@ public class TestQueryService extends LensJerseyTest {
     waitForQueryToFinish(target(), sessionHandle, qHandle, Status.SUCCESSFUL, mt);
   }
 
-  @Test(dataProvider = "mediaTypeData")
-  public void testQueryLifeAfterSessionClose() {
-
-  }
-
   @AfterMethod
   private void waitForPurge() throws InterruptedException {
     waitForPurge(0, queryService.finishedQueries);

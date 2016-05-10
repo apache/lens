@@ -246,7 +246,7 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   public boolean isActive() {
     if (markForClose) {
-      return activeOperationsPresent();
+      return activeOperationsPresent() && System.currentTimeMillis() - lastAccessTime < sessionTimeout;
     } else {
       return System.currentTimeMillis() - lastAccessTime < sessionTimeout;
     }
