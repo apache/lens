@@ -39,6 +39,7 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
+import org.apache.lens.client.exceptions.LensClientException;
 import org.apache.lens.client.exceptions.LensClientServerConnectionException;
 
 import org.glassfish.jersey.client.ClientProperties;
@@ -66,6 +67,7 @@ public class LensConnection implements AutoCloseable {
   /** The session handle. */
   @Getter
   private LensSessionHandle sessionHandle;
+  private boolean closed = false;
 
   /**
    * Construct a connection to lens server specified by connection parameters.
@@ -207,25 +209,49 @@ public class LensConnection implements AutoCloseable {
   }
 
   /**
-   * Close.
-   *
-   * @return the API result
+   * Close the connection.
    */
-  public APIResult closeConnection() {
-    WebTarget target = getSessionWebTarget();
-
-    APIResult result = target.queryParam("sessionid", this.sessionHandle).request().delete(APIResult.class);
-    if (result.getStatus() != APIResult.Status.SUCCEEDED) {
-      throw new IllegalStateException("Unable to close lens connection " + "with params " + params);
-    }
-    log.debug("Lens connection closed.");
-    return result;
-  }
-
   @Override
-  public void close() throws Exception {
-    closeConnection();
+  public void close() {
+    if (closed) {
+      log.warn("Session already closed. Ignoring the attempt to close again.");
+      return;
+    }
+    WebTarget target = getSessionWebTarget();
+    Response response = null;
+    int retries = 10;
+    ProcessingException processingException = null;
+    while(response == null && retries-- > 0) {
+      try {
+        response = target.queryParam("sessionid", this.sessionHandle).request().delete();
+        processingException = null;
+      } catch (ProcessingException e) {
+        log.error("Error closing session ", e);
+        processingException = e;
+      }
+    }
+    if (processingException != null) {
+      throw processingException;
+    }
+    if (response == null) {
+      throw new LensClientException("Null response from server while closing connection.");
+    }
+    switch(response.getStatus()){
+    case 410:
+      log.warn("Session is already gone. Ignoring the attempt to close again.");
+      break;
+    case 200:
+      APIResult apiResult = response.readEntity(APIResult.class);
+      if (apiResult.getStatus() != APIResult.Status.SUCCEEDED) {
+        throw new LensClientException("Error closing lens connection: " + apiResult.getMessage());
+      }
+      break;
+    default:
+      throw new LensClientException("Couldn't close session, error code: " + response.getStatus());
+    }
+    closed = true;
   }
+
 
   /**
    * Adds the resource to connection.

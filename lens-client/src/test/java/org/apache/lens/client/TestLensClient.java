@@ -130,8 +130,9 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
     result = client.dropDatabase(TEST_DB, true);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-    result = client.closeConnection();
-    assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    client.close();
+    // Multiple close should be fine, no exceptions.
+    client.close();
 
     super.tearDown();
   }
