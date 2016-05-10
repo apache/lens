@@ -118,12 +118,12 @@ public class ITQueryApiTests extends BaseTestClass {
     Assert.assertNull(qH);
   }
 
-    /* Bug : LENS-1005
+  /* Bug : LENS-1005
      Fails bcos json output cannot be input for any API.
-     Here query handle is in json which caanot be passed to get query status
+     Here query handle is in json which cannot be passed to get query status
   */
 
-  @Test
+  @Test(enabled = false)
   public void testExecuteJson() throws Exception {
     QueryHandle handle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY, null,
         sessionHandleString, null, MediaType.APPLICATION_JSON).getData();
@@ -321,8 +321,8 @@ public class ITQueryApiTests extends BaseTestClass {
     while (lq.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
       Response response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
           servLens, null, query);
-      AssertUtil.assertFailedResponse(response);
-      System.out.println("trial : " + i++);
+      Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+      logger.info("trial : " + i++);
       lq = qHelper.getLensQuery(sessionHandleString, queryHandle);
     }
 

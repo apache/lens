@@ -299,13 +299,20 @@ public class QueryHelper extends ServiceManagerHelper {
    * @return the query Result
    */
 
-  public QueryResult getResultSet(QueryHandle queryHandle, String fromIndex, String fetchSize,
+  public Response getResultSetResponse(QueryHandle queryHandle, String fromIndex, String fetchSize,
       String sessionHandleString) throws  LensException {
 
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString, "fromindex", fromIndex,
         "fetchsize", fetchSize);
     Response response = this.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset", servLens,
         null, query, MediaType.APPLICATION_XML_TYPE, MediaType.APPLICATION_XML, null);
+    return response;
+  }
+
+  public QueryResult getResultSet(QueryHandle queryHandle, String fromIndex, String fetchSize,
+      String sessionHandleString) throws  LensException {
+
+    Response response = getResultSetResponse(queryHandle, fromIndex, fetchSize, sessionHandleString);
     AssertUtil.assertSucceededResponse(response);
     QueryResult result = response.readEntity(new GenericType<QueryResult>(){});
     return result;

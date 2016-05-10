@@ -19,6 +19,7 @@
 
 package org.apache.lens.regression.core.constants;
 
+import org.apache.lens.driver.jdbc.JDBCDriverConfConstants;
 import org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory;
 
 public class DriverConfig {
@@ -33,6 +34,8 @@ public class DriverConfig {
       MAX_CONCURRENT_QUERIES_PER_PRIORITY_KEY;
   public static final String QUEUE_MAX_CONCURRENT = MaxConcurrentDriverQueriesConstraintFactory.
       MAX_CONCURRENT_QUERIES_PER_QUEUE_KEY;
+  public static final String JDBC_POOL_SIZE = JDBCDriverConfConstants.ConnectionPoolProperties.
+      JDBC_POOL_MAX_SIZE.getConfigKey();
 
 }
 

@@ -62,10 +62,9 @@ import lombok.extern.slf4j.Slf4j;
 public class Util {
 
   private static final String PROPERTY_FILE = "lens.properties";
-  private static String localFilePath = "src/test/resources/";
+  private static String localFilePath = "lens-regression/target/";
   private static String localFile;
   private static String backupFile;
-  private static String remoteFile;
 
   private Util() {
 
@@ -232,22 +231,16 @@ public class Util {
   }
 
   public static void changeConfig(HashMap<String, String> map, String remotePath) throws Exception {
-    String fileName;
-    remoteFile = remotePath;
 
-    Path p = Paths.get(remoteFile);
-
-    fileName = p.getFileName().toString();
+    Path p = Paths.get(remotePath);
+    String fileName = p.getFileName().toString();
     backupFile = localFilePath + "backup-" + fileName;
     localFile = localFilePath + fileName;
-    log.info("Copying " + remoteFile + " to " + localFile);
-    remoteFile("get", remoteFile, localFile);
-    File locfile = new File(localFile);
-    File remfile = new File(backupFile);
-    Files.copy(locfile.toPath(), remfile.toPath(), REPLACE_EXISTING);
+    log.info("Copying " + remotePath + " to " + localFile);
+    remoteFile("get", remotePath, localFile);
+    Files.copy(new File(localFile).toPath(), new File(backupFile).toPath(), REPLACE_EXISTING);
 
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+    DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
     Document doc = docBuilder.parse(new FileInputStream(localFile));
     doc.normalize();
 
@@ -256,8 +249,7 @@ public class Util {
     Element rootElement = (Element) root;
     NodeList property = rootElement.getElementsByTagName("property");
 
-    for (int i = 0; i < property.getLength(); i++)   //Deleting redundant properties from the document
-    {
+    for (int i = 0; i < property.getLength(); i++) {  //Deleting redundant properties from the document
       Node prop = property.item(i);
       Element propElement = (Element) prop;
       Node propChild = propElement.getElementsByTagName("name").item(0);
@@ -267,7 +259,6 @@ public class Util {
         rootElement.removeChild(prop);
         i--;
       }
-
     }
 
     Iterator<Entry<String, String>> ab = map.entrySet().iterator();
@@ -289,7 +280,7 @@ public class Util {
       newNodeElement.appendChild(newValue);
     }
     prettyPrint(doc);
-    remoteFile("put", remoteFile, localFile);
+    remoteFile("put", remotePath, localFile);
   }
 
   /*
@@ -340,16 +331,10 @@ public class Util {
   }
 
   public static void changeConfig(String remotePath) throws JSchException, SftpException {
-    String fileName;
-    remoteFile = remotePath;
-
-    Path p = Paths.get(remoteFile);
-
-    fileName = p.getFileName().toString();
+    String fileName = Paths.get(remotePath).getFileName().toString();
     backupFile = localFilePath + "backup-" + fileName;
-
-    log.info("Copying " + backupFile + " to " + remoteFile);
-    remoteFile("put", remoteFile, backupFile);
+    log.info("Copying " + backupFile + " to " + remotePath);
+    remoteFile("put", remotePath, backupFile);
   }
 
   public static Map<String, String> mapFromXProperties(XProperties xProperties) {
