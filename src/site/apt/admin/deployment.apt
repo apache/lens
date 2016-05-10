@@ -36,28 +36,30 @@ Lens server deployment
 
 * Dependencies and their versions
 
+Lens Versions before 2.6 depend on hive 0.13.x and hadoop 2.x. From Lens 2.6 onwards, it depends on hive 2.1+.
+
    * Requires java 1.7+.
 
-   * Requires Hadoop 2.x+. Tested upto hadoop 2.4.
+   * Requires Hadoop 2.x+. Tested upto hadoop 2.6.
 
-   * Requires Hive metastore 0.13+
+   * Requires Hive metastore of a compatible version.
 
-   * Requires Hive server2 0.13+
+   * Requires Hive server2 of a compatible version.
 
 * Restart and recovery
 
   Lens server should not have problems with Hive Metastore server, Hive Server2 or Hadoop restarts. Lens server can
-   persist its state before going and recover from previous state upon restart.
+   persist its state before going down and recover from previous state upon restart.
 
   * Recoverability
 
-  ** To enable lens server with recoverability, i.e. to allow users access queries before restart, lens server should be
-   started with lens.server.restart.enabled set to true. Admin can set this to false if no recoverability is required.
+    * To enable lens server with recoverability, i.e. to allow users access queries after restart, lens server should be
+   started with lens.server.state.persistence.enabled set to true. Admin can set this to false if no recoverability is
+   required.
 
   * Restarting
 
-  ** To start the lens server a fresh lens.server.recover.onrestart should be disabled. If it is true, the server will
-   load its persisted state before restart.
+    * If lens server recoverability is enabled, the server will load its persisted state on restart.
 
 * Server modes
 

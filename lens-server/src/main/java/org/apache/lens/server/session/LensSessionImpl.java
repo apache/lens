@@ -228,6 +228,7 @@ public class LensSessionImpl extends HiveSessionImpl {
     ClassLoader classLoader = getClassLoader(getCurrentDatabase());
     Thread.currentThread().setContextClassLoader(classLoader);
     SessionState.getSessionConf().setClassLoader(classLoader);
+    setActive();
   }
 
   /*

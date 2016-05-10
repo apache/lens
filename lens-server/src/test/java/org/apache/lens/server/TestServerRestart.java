@@ -50,6 +50,7 @@ import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.Service;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -88,11 +89,18 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     super.setUp();
   }
 
+  @Override
+  public HiveConf getServerConf() {
+    HiveConf conf = super.getServerConf();
+    conf.set("lens.server.state.persistence.interval.millis", "1000");
+    return conf;
+  }
+
   /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
-   */
+     * (non-Javadoc)
+     *
+     * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+     */
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();

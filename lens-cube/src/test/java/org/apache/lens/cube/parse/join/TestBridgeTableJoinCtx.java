@@ -45,11 +45,11 @@ public class TestBridgeTableJoinCtx {
   public Object[][] filterReplace() {
     return new Object[][] {
       {"t1.c1 in ('XyZ', 'abc', 'PQR', 'lKg')",
-       "myfilter(( t1 . c1 ), 'XyZ' ) or myfilter(( t1 . c1 ), 'abc' )"
-         + " or myfilter(( t1 . c1 ), 'PQR' ) or myfilter(( t1 . c1 ), 'lKg' )", },
-      {"t1.c1 = ('XyZ')", "myfilter(( t1 . c1 ), 'XyZ' )"},
-      {"t1.c1 != ('XyZ')", "not myfilter(( t1 . c1 ), 'XyZ' )"},
-      {"t1.c1 != x", "not myfilter(( t1 . c1 ), x )"},
+       "myfilter((t1.c1), 'XyZ') or myfilter((t1.c1), 'abc')"
+         + " or myfilter((t1.c1), 'PQR') or myfilter((t1.c1), 'lKg')", },
+      {"t1.c1 = ('XyZ')", "myfilter((t1.c1), 'XyZ')"},
+      {"t1.c1 != ('XyZ')", "not myfilter((t1.c1), 'XyZ')"},
+      {"t1.c1 != x", "not myfilter((t1.c1), x)"},
     };
   }
 
@@ -86,37 +86,37 @@ public class TestBridgeTableJoinCtx {
     ASTNode orderBy = HQLParser.findNodeByPath(queryAST, TOK_INSERT, HiveParser.TOK_ORDERBY);
 
     List<String> expectedBridgeExprs = new ArrayList<>();
-    expectedBridgeExprs.add(aggregator + "(( bt . c3 )) as balias0");
-    expectedBridgeExprs.add(aggregator + "(f2(( bt . c4 ))) as balias1");
-    expectedBridgeExprs.add(aggregator + "(f2(( bt . c3 ))) as balias2");
-    expectedBridgeExprs.add(aggregator + "((( bt . c1 ) + ( bt . c2 ))) as balias3");
+    expectedBridgeExprs.add(aggregator + "((bt.c3)) as balias0");
+    expectedBridgeExprs.add(aggregator + "(f2((bt.c4))) as balias1");
+    expectedBridgeExprs.add(aggregator + "(f2((bt.c3))) as balias2");
+    expectedBridgeExprs.add(aggregator + "(((bt.c1) + (bt.c2))) as balias3");
 
     selectCtx.processSelectAST(select);
     String modifiedSelect = HQLParser.getString(select);
-    assertEquals(modifiedSelect, "( t1 . c1 ), ( t2 . c2 ), ( bt . balias0 ), f1(( t1 . c2 )), ( bt . balias1 ),"
-      + " ( bt . balias2 ), ( bt . balias3 )");
+    assertEquals(modifiedSelect, "(t1.c1), (t2.c2), (bt.balias0), f1((t1.c2)), (bt.balias1),"
+      + " (bt.balias2), (bt.balias3)");
     assertEquals(selectCtx.getSelectedBridgeExprs(), expectedBridgeExprs);
 
     selectCtx.processWhereAST(where, null, 0);
     String modifiedWhere = HQLParser.getString(where);
-    assertEquals(modifiedWhere, "((( t1 . c1 ) = x ) and test_filter(( bt . balias0 ), y ) and test_filter(( bt . "
-      + "balias4 ), 5 ) and (( t2 . c2 ) = 4 ) and test_filter(( bt . balias5 ), 6 ))");
-    expectedBridgeExprs.add(aggregator + "(( bt . c6 )) as balias4");
-    expectedBridgeExprs.add(aggregator + "(rand(( bt . c7 ))) as balias5");
+    assertEquals(modifiedWhere, "(((t1.c1) = x) and test_filter((bt.balias0), y) and test_filter((bt.balias4), 5)"
+      + " and ((t2.c2) = 4) and test_filter((bt.balias5), 6))");
+    expectedBridgeExprs.add(aggregator + "((bt.c6)) as balias4");
+    expectedBridgeExprs.add(aggregator + "(rand((bt.c7))) as balias5");
     assertEquals(selectCtx.getSelectedBridgeExprs(), expectedBridgeExprs);
 
     selectCtx.processGroupbyAST(groupBy);
     String modifiedGroupby = HQLParser.getString(groupBy);
-    assertEquals(modifiedGroupby, "( t1 . c1 ), ( bt . balias0 ), ( bt . balias6 ), ( bt . balias1 )");
-    expectedBridgeExprs.add(aggregator + "(( bt . c8 )) as balias6");
+    assertEquals(modifiedGroupby, "(t1.c1), (bt.balias0), (bt.balias6), (bt.balias1)");
+    expectedBridgeExprs.add(aggregator + "((bt.c8)) as balias6");
     assertEquals(selectCtx.getSelectedBridgeExprs(), expectedBridgeExprs);
 
     selectCtx.processOrderbyAST(orderBy);
     String modifiedOrderby = HQLParser.getString(orderBy);
-    assertEquals(modifiedOrderby, "t2 . c2 asc , bt . balias0 asc , bt . balias2 asc , bt . balias7 asc ,"
-      + " bt . balias8 desc");
-    expectedBridgeExprs.add(aggregator + "(( bt . c9 )) as balias7");
-    expectedBridgeExprs.add(aggregator + "(( bt . c4 )) as balias8");
+    assertEquals(modifiedOrderby, "t2.c2 asc, bt.balias0 asc, bt.balias2 asc, bt.balias7 asc,"
+      + " bt.balias8 desc");
+    expectedBridgeExprs.add(aggregator + "((bt.c9)) as balias7");
+    expectedBridgeExprs.add(aggregator + "((bt.c4)) as balias8");
     assertEquals(selectCtx.getSelectedBridgeExprs(), expectedBridgeExprs);
   }
 }

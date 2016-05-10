@@ -209,19 +209,18 @@
   </property>
 
   <property>
-    <name>lens.server.restart.enabled</name>
+    <name>lens.server.state.persistence.enabled</name>
     <value>true</value>
-    <description>If flag is enabled, all the services will be persisted to persistent
-      location passed.
+    <description>If flag is enabled, state of all the services will be persisted periodically to a location
+      specified by lens.server.persist.location and on server restart all the services will be started
+      from last saved state.
     </description>
   </property>
 
   <property>
-    <name>lens.server.recover.onrestart</name>
-    <value>true</value>
-    <description>If the flag is enabled, all the services will be started from last
-      saved state, if disabled all the services will start afresh
-    </description>
+    <name>lens.server.state.persistence.interval.millis</name>
+    <value>300000</value>
+    <description>Lens server state persistence time interval in milliseconds</description>
   </property>
 
   <property>
@@ -358,11 +357,6 @@
       {{{http://commons.apache.org/proper/commons-dbcp/configuration.html}dbcp configuration}} \
       {{{http://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases}validationquery for different databases}} \
     </description>
-  </property>
-  <property>
-    <name>lens.server.snapshot.interval</name>
-    <value>300000</value>
-    <description>Snapshot interval time in miliseconds for saving lens server state.</description>
   </property>
 
   <property>

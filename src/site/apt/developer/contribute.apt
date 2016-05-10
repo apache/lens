@@ -138,7 +138,7 @@ Developer Documentation : How to contribute to Apache Lens?
 
    git checkout <release-tag>
 
-   mvn clean package -DskipTests -Phadoop-2,dist
+   mvn clean package -DskipTests -Pdist,deb
 
 +---+
 

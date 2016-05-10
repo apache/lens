@@ -53,35 +53,34 @@ public class TestExpressionContext extends TestQueryRewrite {
     CubeQueryContext nestedExprQL = rewriteCtx("select nestedexpr from testCube where " + TWO_DAYS_RANGE, conf);
     Assert.assertNotNull(nestedExprQL.getExprCtx());
     Set<String> expectedExpressions = Sets.newHashSet(
-      "avg(( testcube . roundedmsr2 ))",
-      "avg(( testcube . equalsums ))",
-      "case when (( testcube . substrexpr ) = 'xyz' ) then avg(( testcube . msr5 ))"
-        + " when (( testcube . substrexpr ) = 'abc' ) then (avg(( testcube . msr4 )) / 100 ) end",
-      "avg(round((( testcube . msr2 ) / 1000 )))",
-      "avg((( testcube . msr3 ) + ( testcube . msr4 )))",
-      "avg(((( testcube . msr3 ) + ( testcube . msr2 )) / 100 ))",
-      "case when (substr(( testcube . dim1 ), 3 ) = 'xyz' ) then avg(( testcube . msr5 ))"
-        + " when (substr(( testcube . dim1 ), 3 ) = 'abc' ) then (avg(( testcube . msr4 )) / 100 ) end",
-      "case when (substr(ascii(( dim2chain . name )), 3 ) = 'xyz' ) then"
-        + " avg(( testcube . msr5 )) when (substr(ascii(( dim2chain . name )), 3 ) = 'abc' ) then"
-        + " (avg(( testcube . msr4 )) / 100 ) end",
-      "case when (substr(( testcube . dim1 ), 3 ) = 'xyz' ) then avg((( testcube . msr2 )"
-        + " + ( testcube . msr3 ))) when (substr(( testcube . dim1 ), 3 ) = 'abc' ) then"
-        + " (avg(( testcube . msr4 )) / 100 ) end",
-      "case when (substr(ascii(( dim2chain . name )), 3 ) = 'xyz' ) then"
-        + " avg((( testcube . msr2 ) + ( testcube . msr3 ))) when (substr(ascii(( dim2chain . name )), 3 ) = 'abc' )"
-        + " then (avg(( testcube . msr4 )) / 100 ) end",
-      "case when (( testcube . substrexpr ) = 'xyz' ) then avg((( testcube . msr2 )"
-        + " + ( testcube . msr3 ))) when (( testcube . substrexpr ) = 'abc' ) then (avg(( testcube . msr4 )) / 100 )"
+      "avg((testcube.roundedmsr2))",
+      "avg((testcube.equalsums))",
+      "case  when ((testcube.substrexpr) = 'xyz') then avg((testcube.msr5))"
+        + " when ((testcube.substrexpr) = 'abc') then (avg((testcube.msr4)) / 100) end",
+      "avg(round(((testcube.msr2) / 1000)))",
+      "avg(((testcube.msr3) + (testcube.msr4)))",
+      "avg((((testcube.msr3) + (testcube.msr2)) / 100))",
+      "case  when (substr((testcube.dim1), 3) = 'xyz') then avg((testcube.msr5))"
+        + " when (substr((testcube.dim1), 3) = 'abc') then (avg((testcube.msr4)) / 100) end",
+      "case  when (substr(ascii((dim2chain.name)), 3) = 'xyz') then"
+        + " avg((testcube.msr5)) when (substr(ascii((dim2chain.name)), 3) = 'abc') then"
+        + " (avg((testcube.msr4)) / 100) end",
+      "case  when (substr((testcube.dim1), 3) = 'xyz') then avg(((testcube.msr2)"
+        + " + (testcube.msr3))) when (substr((testcube.dim1), 3) = 'abc') then"
+        + " (avg((testcube.msr4)) / 100) end",
+      "case  when (substr(ascii((dim2chain.name)), 3) = 'xyz') then"
+        + " avg(((testcube.msr2) + (testcube.msr3))) when (substr(ascii((dim2chain.name)), 3) = 'abc')"
+        + " then (avg((testcube.msr4)) / 100) end",
+      "case  when ((testcube.substrexpr) = 'xyz') then avg(((testcube.msr2)"
+        + " + (testcube.msr3))) when ((testcube.substrexpr) = 'abc') then (avg((testcube.msr4)) / 100)"
         + " end",
-      "case when (substr(( testcube . dim1 ), 3 ) = 'xyz' ) then avg((( testcube . msr2 )"
-        + " + ( testcube . msr3 ))) when (substr(( testcube . dim1 ), 3 ) = 'abc' ) then"
-        + " (avg(( testcube . msr4 )) / 100 ) end",
-      "case when (substr(ascii(( dim2chain . name )), 3 ) = 'xyz' ) then"
-        + " avg((( testcube . msr2 ) + ( testcube . msr3 ))) when (substr(ascii(( dim2chain . name )), 3 ) = 'abc' )"
-        + " then (avg(( testcube . msr4 )) / 100 ) end"
+      "case  when (substr((testcube.dim1), 3) = 'xyz') then avg(((testcube.msr2)"
+        + " + (testcube.msr3))) when (substr((testcube.dim1), 3) = 'abc') then"
+        + " (avg((testcube.msr4)) / 100) end",
+      "case  when (substr(ascii((dim2chain.name)), 3) = 'xyz') then"
+        + " avg(((testcube.msr2) + (testcube.msr3))) when (substr(ascii((dim2chain.name)), 3) = 'abc')"
+        + " then (avg((testcube.msr4)) / 100) end"
     );
-
     Set<String> actualExpressions = new HashSet<>();
     for (ExprSpecContext esc : nestedExprQL.getExprCtx().getExpressionContext("nestedexpr", "testcube").getAllExprs()) {
       actualExpressions.add(HQLParser.getString(esc.getFinalAST()));
@@ -95,13 +94,12 @@ public class TestExpressionContext extends TestQueryRewrite {
       conf);
     Assert.assertNotNull(nestedExprQL.getExprCtx());
     Set<String> expectedExpressions = Sets.newHashSet(
-      "avg(( testcube . roundedmsr2 ))",
-      "avg(( testcube . equalsums ))",
-      "avg(round((( testcube . msr2 ) / 1000 )))",
-      "avg((( testcube . msr3 ) + ( testcube . msr4 )))",
-      "avg(((( testcube . msr3 ) + ( testcube . msr2 )) / 100 ))"
+      "avg((testcube.roundedmsr2))",
+      "avg((testcube.equalsums))",
+      "avg(round(((testcube.msr2) / 1000)))",
+      "avg(((testcube.msr3) + (testcube.msr4)))",
+      "avg((((testcube.msr3) + (testcube.msr2)) / 100))"
     );
-
     Set<String> actualExpressions = new HashSet<>();
     for (ExprSpecContext esc : nestedExprQL.getExprCtx()
       .getExpressionContext("nestedexprwithtimes", "testcube").getAllExprs()) {

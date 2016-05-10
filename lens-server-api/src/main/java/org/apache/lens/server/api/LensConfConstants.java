@@ -141,14 +141,14 @@ public final class LensConfConstants {
   public static final String DEFAULT_SERVER_BASE_URL = "http://0.0.0.0:9999/lensapi";
 
   /**
-   * The Constant SERVER_RESTART_ENABLED.
+   * The Constant SERVER_STATE_PERSISTENCE_ENABLED.
    */
-  public static final String SERVER_RESTART_ENABLED = SERVER_PFX + "restart.enabled";
+  public static final String SERVER_STATE_PERSISTENCE_ENABLED = SERVER_PFX + "state.persistence.enabled";
 
   /**
-   * The Constant DEFAULT_SERVER_RESTART_ENABLED.
+   * The Constant DEFAULT_SERVER_STATE_PERSISTENCE_ENABLED.
    */
-  public static final boolean DEFAULT_SERVER_RESTART_ENABLED = true;
+  public static final boolean DEFAULT_SERVER_STATE_PERSISTENCE_ENABLED = true;
 
   /**
    * The Constant SERVER_STATE_PERSIST_LOCATION.
@@ -159,16 +159,6 @@ public final class LensConfConstants {
    * The Constant DEFAULT_SERVER_STATE_PERSIST_LOCATION.
    */
   public static final String DEFAULT_SERVER_STATE_PERSIST_LOCATION = "file:///tmp/lensserver";
-
-  /**
-   * The Constant SERVER_RECOVER_ON_RESTART.
-   */
-  public static final String SERVER_RECOVER_ON_RESTART = SERVER_PFX + "recover.onrestart";
-
-  /**
-   * The Constant DEFAULT_SERVER_RECOVER_ON_RESTART.
-   */
-  public static final boolean DEFAULT_SERVER_RECOVER_ON_RESTART = true;
 
   /**
    * The Constant SESSION_TIMEOUT_SECONDS.
@@ -221,14 +211,15 @@ public final class LensConfConstants {
   public static final boolean DEFAULT_SERVER_UI_ENABLE_CACHING = true;
 
   /**
-   * The Constant SERVER_SNAPSHOT_INTERVAL.
+   * The Constant SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS.
    */
-  public static final String SERVER_SNAPSHOT_INTERVAL = SERVER_PFX + "snapshot.interval";
+  public static final String SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS =
+    SERVER_PFX + "state.persistence.interval.millis";
 
   /**
-   * The Constant DEFAULT_SERVER_SNAPSHOT_INTERVAL.
+   * The Constant DEFAULT_SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS.
    */
-  public static final long DEFAULT_SERVER_SNAPSHOT_INTERVAL = 5 * 60 * 1000;
+  public static final long DEFAULT_SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS = 5 * 60 * 1000;
 
   // Email related configurations
   /**

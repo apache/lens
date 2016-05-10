@@ -27,6 +27,7 @@ Installing and Running Lens
 
   Download a release of Apache Lens from {{{/releases/download.html}here}}.
   Lens depends on Hive forked from Apache Hive. Download a release of hive from {{{https://github.com/InMobi/hive/releases}https://github.com/InMobi/hive/releases}}.
+  Lens < 2.6 works with hive 0.13.x releases, Lens >= 2.6 works with hive 2.1+ releases.
 
 ** Installing Lens
 
@@ -67,7 +68,7 @@ Installing and Running Lens
 +---+
 
   cd hive-hive-release-<version>-inm
-  mvn clean package -DskipTests -Phadoop-2,dist
+  mvn clean package -DskipTests -Pdist,deb
 
 +---+
 
