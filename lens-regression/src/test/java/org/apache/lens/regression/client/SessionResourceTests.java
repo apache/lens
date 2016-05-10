@@ -143,14 +143,10 @@ public class SessionResourceTests extends BaseTestClass {
   //Negative Test Case
   @Test
   public void testSessionGetUndefinedParams() throws Exception {
-
     String undefinedParamsKey = "test123";
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString, "key", undefinedParamsKey);
     Response response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
-    AssertUtil.assertSucceededResponse(response);
-    StringList strList = response.readEntity(new GenericType<StringList>(StringList.class));
-    HashMap<String, String> map = Util.stringListToMap(strList);
-    Assert.assertNull(map, "Get should have returned empty params list, but didnt");
+    Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
   }
 
 /*
