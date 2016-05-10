@@ -336,6 +336,7 @@ done
 
 # prepend conf dir to classpath
 if [ -n "$opt_conf" ]; then
+  export LENS_CONF=$opt_conf
   LENSCPPATH="$opt_conf:$LENSCPPATH"
 fi
 
