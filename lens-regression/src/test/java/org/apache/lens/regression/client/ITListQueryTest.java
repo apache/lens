@@ -465,13 +465,15 @@ public class ITListQueryTest extends BaseTestClass {
     Thread.sleep(1000);
 
     String startTime2 = String.valueOf(System.currentTimeMillis());
+    Thread.sleep(2000);
     QueryHandle q2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName2, diffSession1).getData();
+    Thread.sleep(2000);
     String endTime2 = String.valueOf(System.currentTimeMillis());
 
     Thread.sleep(1000);
 
     String startTime3 = String.valueOf(System.currentTimeMillis());
-    Thread.sleep(1000);
+    Thread.sleep(2000);
     QueryHandle q3 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName3, diffSession2).getData();
     qHelper.killQueryByQueryHandle(q3);
     String endTime3 = String.valueOf(System.currentTimeMillis());

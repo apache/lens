@@ -50,14 +50,15 @@ public class LensServerHelper extends ServiceManagerHelper {
     int counter = 0;
     Util.runRemoteCommand("bash /usr/local/lens/server/bin/lens-ctl stop");
     Util.runRemoteCommand("bash /usr/local/lens/server/bin/lens-ctl start");
+
     Response response = this.exec("get", "", servLens, null, null, MediaType.TEXT_PLAIN_TYPE, MediaType.TEXT_PLAIN);
     while (response == null && counter < 40) {
-      Thread.sleep(5000);
       log.info("Waiting for Lens server to come up ");
+      Thread.sleep(1000);
       response = this.exec("get", "", servLens, null, null, MediaType.TEXT_PLAIN_TYPE, MediaType.TEXT_PLAIN);
-      log.info("Response:{}", response);
       counter++;
     }
+
     AssertUtil.assertSucceededResponse(response);
   }
 }

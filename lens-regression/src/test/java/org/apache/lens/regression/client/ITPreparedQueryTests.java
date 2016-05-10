@@ -375,16 +375,8 @@ public class ITPreparedQueryTests extends BaseTestClass {
 
     //TODO : Destroy by user is not working, Commented the fail part, Uncomment it when fixed
 
-    String user2 = "diff", pass = "diff";
-    String session1 = sHelper.openNewSession(user2, pass);
-
-    FormBuilder formData=new FormBuilder();
-    formData.add("sessionid", session1);
-    formData.add("type", "jar");
-    formData.add("path", "file:///usr/local/lens/webapp/lens-server/WEB-INF/lib/lens-query-lib-1.2.5.jar");
-
-    Response response=lens.sendForm("put", "/session/resources/add", formData);
-    AssertUtil.assertSucceededResponse(response);
+    String user = "diff", pass = "diff";
+    String session1 = sHelper.openNewSession(user, pass, lens.getCurrentDB());
 
     QueryPrepareHandle queryPrepareHandle1 = qHelper.submitPreparedQuery(QueryInventory.QUERY);
     Assert.assertNotEquals(queryPrepareHandle1, null, "Query Execute Failed marker");
@@ -394,19 +386,19 @@ public class ITPreparedQueryTests extends BaseTestClass {
     Assert.assertNotEquals(queryPrepareHandle2, null, "Query Execute Failed");
     logger.info("PREPARE QUERY HANDLE : " + queryPrepareHandle2);
 
-    response = qHelper.getPreparedQuery(queryPrepareHandle1);
-    AssertUtil.assertSucceededResponse(response);
+    Response response = qHelper.getPreparedQuery(queryPrepareHandle1);
+    Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
-    AssertUtil.assertSucceededResponse(response);
+    Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
     qHelper.destroyPreparedQuery(null, lens.getUserName());
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
     AssertUtil.assertFailedResponse(response);
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
-    //AssertUtil.assertSucceededResponse(response);
+//    Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-    qHelper.destroyPreparedQuery(null, user2);
+    qHelper.destroyPreparedQuery(null, user);
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
     AssertUtil.assertFailedResponse(response);

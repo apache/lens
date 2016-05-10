@@ -303,6 +303,7 @@ public class KillQueryTests extends BaseTestClass {
     logger.info("Start Time of 1st Query : " + startTime1);
     Thread.sleep(1000);
     QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    Thread.sleep(1000);
     String endTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 1st Query : " + endTime1);
 
@@ -312,6 +313,7 @@ public class KillQueryTests extends BaseTestClass {
     logger.info("Start Time of 2nd Query : " + startTime2);
     Thread.sleep(1000);
     QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    Thread.sleep(1000);
     String endTime2 = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 2nd Query : " + endTime2);
 
@@ -347,7 +349,7 @@ public class KillQueryTests extends BaseTestClass {
     Thread.sleep(1000);
 
     QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName1).getData();
-    logger.info("1st QUERY HANDLE : " + queryHandle1);
+    Thread.sleep(1000);
 
     String endTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 1st Query : " + endTime1);

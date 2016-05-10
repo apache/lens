@@ -119,7 +119,7 @@ public class SessionHelper extends ServiceManagerHelper {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     Response response = this.exec("delete", SessionURL.SESSION_BASE_URL, servLens, null, query, null,
         outputMediaType, null);
-    AssertUtil.assertSucceededResponse(response);
+    AssertUtil.assertSucceeded(response);
     log.info("Closed Session : {}", sessionHandleString);
   }
 
