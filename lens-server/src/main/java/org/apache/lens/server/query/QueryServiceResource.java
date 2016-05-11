@@ -23,6 +23,7 @@ import static org.apache.lens.server.error.LensServerErrorCode.SESSION_ID_NOT_PR
 
 import java.util.List;
 
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -41,6 +42,7 @@ import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.cost.QueryCostTOBuilder;
 import org.apache.lens.server.error.UnSupportedQuerySubmitOpException;
 import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.session.ValidSession;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -207,7 +209,7 @@ public class QueryServiceResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
-  public LensAPIResult<QuerySubmitResult> query(@FormDataParam("sessionid") LensSessionHandle sessionid,
+  public LensAPIResult<QuerySubmitResult> query(@FormDataParam("sessionid") @ValidSession LensSessionHandle sessionid,
       @FormDataParam("query") String query, @FormDataParam("operation") String operation,
       @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
       @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
