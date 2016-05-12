@@ -191,7 +191,11 @@ public class QueryServiceResource {
    *                      {@link org.apache.lens.api.query.SubmitOp#EXECUTE} and
    *                      {@link org.apache.lens.api.query.SubmitOp#EXECUTE_WITH_TIMEOUT}
    * @param conf          The configuration for the query
-   * @param timeoutmillis The timeout for the query, honored only in case of value {@link
+   * @param timeoutmillis The timeout for the query. If the query does not finish within the specified
+   *                      timeout, it is automatically cancelled unless user specified otherwise
+   *                      by setting configuration lens.query.cancel.on.timeout = false.
+   *                      <br>
+   *                      Note: The timeout parameter is honored only in case of {@link
    *                      org.apache.lens.api.query.SubmitOp#EXECUTE_WITH_TIMEOUT} operation
    * @param queryName     human readable query name set by user (optional parameter)
 

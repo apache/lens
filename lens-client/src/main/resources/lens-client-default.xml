@@ -75,4 +75,11 @@
     is used to execute a query. The default value is 10 seconds.
     </description>
   </property>
+  <property>
+    <name>lens.query.cancel.on.timeout</name>
+    <value>false</value>
+    <description>Specifies whether to attempt cancellation of a query whose execution takes longer than the timeout
+      value specified while submitting the query for execution.
+    </description>
+  </property>
 </configuration>
