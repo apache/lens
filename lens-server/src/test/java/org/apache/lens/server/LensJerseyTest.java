@@ -225,7 +225,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   /**
    * Restart lens server.
    */
-  public void restartLensServer() {
+  protected void restartLensServer() {
     HiveConf h = getServerConf();
     restartLensServer(h, false);
   }

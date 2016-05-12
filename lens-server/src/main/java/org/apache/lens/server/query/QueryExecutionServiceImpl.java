@@ -884,6 +884,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     ctx.clearTransientStateAfterLaunch();
     if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
       getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).removeFromActiveQueries(ctx.getQueryHandle());
+    } else {
+      log.info("Couldn't update finished query in session.");
     }
   }
 
@@ -1298,6 +1300,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             launchedQueries.add(ctx);
           } catch (final Exception e) {
             log.error("Query not restored:QueryContext:{}", ctx, e);
+          }
+          if (ctx.getStatus().getStatus() == EXECUTED) {
+            try {
+              getEventService().notifyEvent(newStatusChangeEvent(ctx, null, ctx.getStatus().getStatus()));
+            } catch (LensException e) {
+              log.error("Couldn't notify event for query executed for {}", ctx, e);
+            }
           }
           break;
         case SUCCESSFUL:
@@ -3090,7 +3099,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       .selectQueries(finishedQuery, this.waitingQueries);
 
     if (eligibleWaitingQueries.isEmpty()) {
-      log.debug("No queries eligible to move out of waiting state.");
+      log.info("No queries eligible to move out of waiting state.");
       return;
     }
 

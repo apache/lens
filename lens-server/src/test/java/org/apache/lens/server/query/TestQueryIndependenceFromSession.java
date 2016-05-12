@@ -60,13 +60,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Test(groups = "unit-test")
 public class TestQueryIndependenceFromSession extends LensJerseyTest {
-  private HiveConf serverConf;
-
   /** The query service. */
   QueryExecutionServiceImpl queryService;
-
-  /** The metrics svc. */
-  MetricsService metricsSvc;
 
   /** The lens session id. */
   LensSessionHandle lensSessionId;
@@ -122,11 +117,18 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
     super.tearDown();
   }
 
+  @Override
+  protected void restartLensServer() {
+    queryService = null;
+    super.restartLensServer();
+    queryService = LensServices.get().getService(QueryExecutionService.NAME);
+  }
+
   /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#configure()
-   */
+     * (non-Javadoc)
+     *
+     * @see org.glassfish.jersey.test.JerseyTest#configure()
+     */
   @Override
   protected Application configure() {
     enable(TestProperties.LOG_TRAFFIC);
@@ -171,14 +173,18 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
   @DataProvider
   public Object[][] restartDataProvider() {
     return new Object[][]{
-      {true, },
-      {false, },
+      {true, true},
+      {true, false},
+      {false, true},
+      {false, false},
     };
   }
 
   @Test(dataProvider = "restartDataProvider")
-  public void testQueryAliveOnSessionClose(boolean restart) throws LensException, InterruptedException {
+  public void testQueryAliveOnSessionClose(boolean restartBeforeFinish, boolean restartAfterFinish)
+    throws LensException, InterruptedException {
     MediaType mt = MediaType.APPLICATION_XML_TYPE;
+    restartLensServer();
     LensSessionHandle sesssionHandle = getSession();
     QueryHandle queryHandle1 = RestAPITestUtil.executeAndGetHandle(target(),
       Optional.of(sesssionHandle), Optional.of("select * from " + TEST_TABLE), Optional.of(conf), mt);
@@ -188,13 +194,18 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
     closeSession(sesssionHandle);
     // Session not 'truly' closed
     assertNotNull(queryService.getSession(sesssionHandle));
-    if (restart) {
+    if (restartBeforeFinish) {
       restartLensServer();
     }
     assertNotNull(queryService.getSession(sesssionHandle));
     assertTrue(queryService.getSession(sesssionHandle).isActive());
     LensQuery lensQuery = RestAPITestUtil.waitForQueryToFinish(target(), lensSessionId, queryHandle2,
       QueryStatus.Status.SUCCESSFUL, mt);
+    RestAPITestUtil.waitForQueryToFinish(target(), lensSessionId, queryHandle1,
+      QueryStatus.Status.SUCCESSFUL, mt);
+    if (restartAfterFinish) {
+      restartLensServer();
+    }
     // Now, session is not active anymore
     assertFalse(queryService.getSession(sesssionHandle).isActive());
     // It should not be possible to submit queries now
@@ -205,13 +216,8 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
     assertEquals(apiResult.getErrorCode(), LensServerErrorCode.SESSION_CLOSED.getLensErrorInfo().getErrorCode());
   }
 
-  @Test(dataProvider = "mediaTypeData")
-  public void testQueryAliveOnSessionCloseAndRestart() {
-
-  }
-
-  @AfterMethod
-  private void waitForPurge() throws InterruptedException {
-    waitForPurge(0, queryService.finishedQueries);
-  }
+//  @AfterMethod
+//  private void waitForPurge() throws InterruptedException {
+//    waitForPurge(0, queryService.finishedQueries);
+//  }
 }

@@ -604,12 +604,16 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   public void addToActiveQueries(QueryHandle queryHandle) {
+    log.info("Adding {} as an active query for session {}", queryHandle, this);
+    System.out.println("Adding " + queryHandle + " as an active query for session " + this);
     synchronized (this.activeQueries) {
       activeQueries.add(queryHandle);
     }
   }
 
   public void removeFromActiveQueries(QueryHandle queryHandle) {
+    log.info("Removing {} from active queries for session {}", queryHandle, this);
+    System.out.println("Removing " + queryHandle + " from active queries for session " + this);
     synchronized (this.activeQueries) {
       activeQueries.remove(queryHandle);
     }
