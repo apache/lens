@@ -21,6 +21,8 @@ package org.apache.lens.server.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
@@ -34,11 +36,16 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
  * The Class UtilityMethods.
  */
+@Slf4j
 public final class UtilityMethods {
   private UtilityMethods() {
 
@@ -185,6 +192,25 @@ public final class UtilityMethods {
     while ((n = is.read(buffer)) > -1) {
       os.write(buffer, 0, n);
       os.flush();
+    }
+  }
+
+  /**
+   * Generates a md5 hash of a writable object.
+   *
+   * @param writable
+   * @return hash of a writable object
+   */
+  public static byte[] generateHashOfWritable(Writable writable) {
+    try {
+      MessageDigest md = MessageDigest.getInstance("MD5");
+      byte [] lensConfBytes = WritableUtils.toByteArray(writable);
+      md.update(lensConfBytes);
+      byte [] digest = md.digest();
+      return digest;
+    } catch (NoSuchAlgorithmException e) {
+      log.warn("MD5: No such method error " + writable);
+      return null;
     }
   }
 }
