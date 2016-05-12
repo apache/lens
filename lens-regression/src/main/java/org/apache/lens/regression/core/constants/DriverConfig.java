@@ -36,6 +36,5 @@ public class DriverConfig {
       MAX_CONCURRENT_QUERIES_PER_QUEUE_KEY;
   public static final String JDBC_POOL_SIZE = JDBCDriverConfConstants.ConnectionPoolProperties.
       JDBC_POOL_MAX_SIZE.getConfigKey();
-
 }
 
