@@ -310,19 +310,6 @@ public final class HQLParser {
     return null;
   }
 
-  public static ASTNode copyAST(ASTNode original) {
-
-    ASTNode copy = new ASTNode(original); // Leverage constructor
-
-    if (original.getChildren() != null) {
-      for (Object o : original.getChildren()) {
-        ASTNode childCopy = copyAST((ASTNode) o);
-        copy.addChild(childCopy);
-      }
-    }
-    return copy;
-  }
-
   /**
    * Breadth first traversal of AST
    *

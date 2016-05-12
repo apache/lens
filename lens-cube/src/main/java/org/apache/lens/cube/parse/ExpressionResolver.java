@@ -36,10 +36,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -136,8 +133,8 @@ class ExpressionResolver implements ContextRewriter {
       for (String col : exprCols) {
         Set<ExprSpecContext> replacedExpressions = new LinkedHashSet<ExprSpecContext>();
         for (ExprSpec es : baseTable.getExpressionByName(col).getExpressionSpecs()) {
-          ASTNode finalAST = HQLParser.copyAST(baseEsc.getFinalAST());
-          replaceColumnInAST(finalAST, col, es.getASTNode());
+          ASTNode finalAST = MetastoreUtil.copyAST(baseEsc.getFinalAST());
+          replaceColumnInAST(finalAST, col, es.copyASTNode());
           ExprSpecContext replacedESC = new ExprSpecContext(baseEsc, es, finalAST, cubeql);
           nestedExpressions.add(replacedESC);
           replacedExpressions.add(replacedESC);
@@ -201,19 +198,19 @@ class ExpressionResolver implements ContextRewriter {
   }
 
   static class ExprSpecContext implements TrackQueriedColumns {
+    private Set<ExprSpec> exprSpecs = new LinkedHashSet<>();
     @Getter
-    private Set<ExprSpec> exprSpecs = new LinkedHashSet<ExprSpec>();
-    @Getter
+    @Setter
     private ASTNode finalAST;
     @Getter
-    private Set<Dimension> exprDims = new HashSet<Dimension>();
+    private Set<Dimension> exprDims = new HashSet<>();
     // for each expression store alias to columns queried
     @Getter
-    private Map<String, Set<String>> tblAliasToColumns = new HashMap<String, Set<String>>();
+    private Map<String, Set<String>> tblAliasToColumns = new HashMap<>();
 
     ExprSpecContext(ExprSpec exprSpec, CubeQueryContext cubeql) throws LensException {
       // replaces table names in expression with aliases in the query
-      finalAST = replaceAlias(exprSpec.getASTNode(), cubeql);
+      finalAST = replaceAlias(exprSpec.copyASTNode(), cubeql);
       exprSpecs.add(exprSpec);
     }
     public ExprSpecContext(ExprSpecContext nested, ExprSpec current, ASTNode node,
@@ -225,7 +222,7 @@ class ExpressionResolver implements ContextRewriter {
     public void replaceAliasInAST(CubeQueryContext cubeql)
       throws LensException {
       AliasReplacer.extractTabAliasForCol(cubeql, this);
-      AliasReplacer.replaceAliases(finalAST, 0, cubeql.getColToTableAlias());
+      finalAST = AliasReplacer.replaceAliases(finalAST, 0, cubeql.getColToTableAlias());
     }
     public void addColumnsQueried(String alias, String column) {
       Set<String> cols = tblAliasToColumns.get(alias.toLowerCase());
@@ -242,7 +239,7 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     Date getStartTime() {
-      Set<Date> startTimes = new HashSet<Date>();
+      Set<Date> startTimes = new HashSet<>();
       for (ExprSpec es : exprSpecs) {
         if (es.getStartTime() != null) {
           startTimes.add(es.getStartTime());
@@ -255,7 +252,7 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     Date getEndTime() {
-      Set<Date> endTimes = new HashSet<Date>();
+      Set<Date> endTimes = new HashSet<>();
       for (ExprSpec es : exprSpecs) {
         if (es.getEndTime() != null) {
           endTimes.add(es.getEndTime());
@@ -721,7 +718,7 @@ class ExpressionResolver implements ContextRewriter {
   }
 
   private static ASTNode replaceAlias(final ASTNode expr, final CubeQueryContext cubeql) throws LensException {
-    ASTNode finalAST = HQLParser.copyAST(expr);
+    ASTNode finalAST = MetastoreUtil.copyAST(expr);
     HQLParser.bft(finalAST, new ASTNodeVisitor() {
       @Override
       public void visit(TreeNode visited) {
@@ -764,7 +761,7 @@ class ExpressionResolver implements ContextRewriter {
             ASTNode ident = (ASTNode) current.getChild(0);
             String column = ident.getText().toLowerCase();
             if (toReplace.equals(column)) {
-              node.setChild(i, HQLParser.copyAST(columnAST));
+              node.setChild(i, MetastoreUtil.copyAST(columnAST));
             }
           } else if (current.getToken().getType() == DOT) {
             // This is for the case where column name is prefixed by table name
@@ -777,7 +774,7 @@ class ExpressionResolver implements ContextRewriter {
             String column = colIdent.getText().toLowerCase();
 
             if (toReplace.equals(column)) {
-              node.setChild(i, HQLParser.copyAST(columnAST));
+              node.setChild(i, MetastoreUtil.copyAST(columnAST));
             }
           }
         }

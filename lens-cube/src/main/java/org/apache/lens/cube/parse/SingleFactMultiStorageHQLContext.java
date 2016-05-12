@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.lib.Node;
@@ -63,7 +64,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
   }
 
   private void processSelectAST() {
-    ASTNode originalSelectAST = copyAST(ast.getSelectAST());
+    ASTNode originalSelectAST = MetastoreUtil.copyAST(ast.getSelectAST());
     ast.setSelectAST(new ASTNode(originalSelectAST.getToken()));
     ASTNode outerSelectAST = processExpression(originalSelectAST);
     setSelect(getString(outerSelectAST));
@@ -122,7 +123,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
         return innerToOuterASTs.get(new HashableASTNode(astNode));
       }
-      ASTNode innerSelectASTWithoutAlias = copyAST(astNode);
+      ASTNode innerSelectASTWithoutAlias = MetastoreUtil.copyAST(astNode);
       ASTNode innerSelectExprAST = new ASTNode(new CommonToken(HiveParser.TOK_SELEXPR));
       innerSelectExprAST.addChild(innerSelectASTWithoutAlias);
       String alias = aliasDecider.decideAlias(astNode);
@@ -140,7 +141,7 @@ public class SingleFactMultiStorageHQLContext extends UnionHQLContext {
       if (innerToOuterASTs.containsKey(new HashableASTNode(astNode))) {
         return innerToOuterASTs.get(new HashableASTNode(astNode));
       }
-      ASTNode innerSelectASTWithoutAlias = copyAST(astNode);
+      ASTNode innerSelectASTWithoutAlias = MetastoreUtil.copyAST(astNode);
       ASTNode innerSelectExprAST = new ASTNode(new CommonToken(HiveParser.TOK_SELEXPR));
       innerSelectExprAST.addChild(innerSelectASTWithoutAlias);
       String alias = aliasDecider.decideAlias(astNode);

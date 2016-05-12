@@ -27,6 +27,7 @@ import java.util.Iterator;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.CubeMeasure;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -123,9 +124,9 @@ class AggregateResolver implements ContextRewriter {
     return HQLParser.getString(clause);
   }
 
-  private void transform(CubeQueryContext cubeql, ASTNode parent, ASTNode node, int nodePos) throws LensException {
+  private ASTNode transform(CubeQueryContext cubeql, ASTNode parent, ASTNode node, int nodePos) throws LensException {
     if (node == null) {
-      return;
+      return node;
     }
     int nodeType = node.getToken().getType();
 
@@ -145,6 +146,8 @@ class AggregateResolver implements ContextRewriter {
               expr = HQLParser.getString(wrapped);
             }
             cubeql.addAggregateExpr(expr.trim());
+          } else {
+            return wrapped;
           }
         }
       } else {
@@ -154,6 +157,7 @@ class AggregateResolver implements ContextRewriter {
         }
       }
     }
+    return node;
   }
 
   // Wrap an aggregate function around the node if its a measure, leave it
@@ -179,8 +183,9 @@ class AggregateResolver implements ContextRewriter {
     if (cubeql.isCubeMeasure(msrname)) {
       if (cubeql.getQueriedExprs().contains(colname)) {
         String alias = cubeql.getAliasForTableName(cubeql.getCube().getName());
-        for (ASTNode exprNode : cubeql.getExprCtx().getExpressionContext(colname, alias).getAllASTNodes()) {
-          transform(cubeql, null, exprNode, 0);
+        for (ExprSpecContext esc : cubeql.getExprCtx().getExpressionContext(colname, alias).getAllExprs()) {
+          ASTNode transformedNode = transform(cubeql, null, esc.getFinalAST(), 0);
+          esc.setFinalAST(transformedNode);
         }
         return node;
       } else {
@@ -190,7 +195,7 @@ class AggregateResolver implements ContextRewriter {
         if (StringUtils.isBlank(aggregateFn)) {
           throw new LensException(LensCubeErrorCode.NO_DEFAULT_AGGREGATE.getLensErrorInfo(), colname);
         }
-        ASTNode fnroot = new ASTNode(new CommonToken(HiveParser.TOK_FUNCTION));
+        ASTNode fnroot = new ASTNode(new CommonToken(HiveParser.TOK_FUNCTION, "TOK_FUNCTION"));
         ASTNode fnIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, aggregateFn));
         fnroot.addChild(fnIdentNode);
         fnroot.addChild(node);
