@@ -373,4 +373,22 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     Assert.assertEquals(getLensExceptionErrorMessageInRewrite("select nonexist.name, msr2 from testCube where "
         + TWO_DAYS_RANGE, conf), "Neither cube nor dimensions accessed in the query");
   }
+
+  @Test
+  public void testCubeQueryMultiChainRefCol() throws Exception {
+    Configuration tConf = new Configuration(conf);
+    tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
+    String hqlQuery = rewrite("select cubeCountryCapital, msr12 from basecube where " + TWO_DAYS_RANGE,
+      tConf);
+    String joinExpr = " join " + getDbName()
+      + "c1_citytable citydim on basecube.cityid = citydim.id and (citydim.dt = 'latest') "
+      + " join " + getDbName() + "c1_statetable statedim on citydim.stateid = statedim.id and (statedim.dt = 'latest')"
+      + " join " + getDbName() + "c1_countrytable cubecitystatecountry on statedim.countryid ="
+      + " cubecitystatecountry.id";
+    String expected =
+      getExpectedQuery("basecube", "select cubecitystatecountry.capital, sum(basecube.msr12) FROM ",
+        joinExpr, null, " group by cubecitystatecountry.capital ", null,
+        getWhereForHourly2days("basecube", "C1_testfact2_raw_base"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
 }

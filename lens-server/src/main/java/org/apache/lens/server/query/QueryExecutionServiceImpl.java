@@ -179,6 +179,11 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   Configuration conf;
 
   /**
+   * Checks if repeated query is allowed
+   */
+  private boolean isDuplicateQueryAllowed;
+
+  /**
    * The query submitter runnable.
    */
   private QuerySubmitter querySubmitterRunnable;
@@ -880,6 +885,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         }
       }
     }
+    // Remove from active queries
+    if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
+      getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).removeFromActiveQueries(ctx.getQueryHandle());
+    }
     finishedQueries.add(new FinishedQuery(ctx));
     ctx.clearTransientStateAfterLaunch();
     if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
@@ -1137,7 +1146,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   public synchronized void init(HiveConf hiveConf) {
     super.init(hiveConf);
     this.conf = hiveConf;
-
+    this.isDuplicateQueryAllowed = conf.getBoolean(LensConfConstants.SERVER_DUPLICATE_QUERY_ALLOWED,
+        LensConfConstants.DEFAULT_SERVER_DUPLICATE_QUERY_ALLOWED);
     try {
       loadQueryComparator();
     } catch (LensException e) {
@@ -1267,15 +1277,16 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * @see org.apache.hive.service.CompositeService#start()
    */
   public synchronized void start() {
-    // recover query configurations from session
     synchronized (allQueries) {
       // populate the query queues
       final List<QueryContext> allRestoredQueuedQueries = new LinkedList<QueryContext>();
       for (QueryContext ctx : allQueries.values()) {
+        // recover query configurations from session
         try {
           if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
             // try setting configuration if the query session is still not closed
             ctx.setConf(getLensConf(getSessionHandle(ctx.getLensSessionIdentifier()), ctx.getLensConf()));
+            // Add queryHandle to active queries
             getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).addToActiveQueries(ctx.getQueryHandle());
           } else {
             ctx.setConf(getLensConf(ctx.getLensConf()));
@@ -1288,6 +1299,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         } catch (LensException e) {
           log.error("Could not set query conf ", e);
         }
+        // Add queries to the queue.
         switch (ctx.getStatus().getStatus()) {
         case NEW:
         case QUEUED:
@@ -1316,7 +1328,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           break;
         case CLOSED:
           allQueries.remove(ctx.getQueryHandle());
-          log.info("Removed closed query from all Queries:"+ctx.getQueryHandle());
+          if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
+            getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).removeFromActiveQueries(ctx.getQueryHandle());
+          }
+          log.info("Removed closed query from all Queries:" + ctx.getQueryHandle());
         }
       }
       queuedQueries.addAll(allRestoredQueuedQueries);
@@ -1841,12 +1856,48 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       acquire(sessionHandle);
       Configuration qconf = getLensConf(sessionHandle, conf);
       accept(query, qconf, SubmitOp.EXECUTE);
+      if (!isDuplicateQueryAllowed) {
+        QueryHandle previousHandle = checkForDuplicateQuery(query, sessionHandle, qconf, queryName);
+        if (previousHandle != null) {
+          log.info("Query:{} Session:{} User:{} duplicate query found", query, sessionHandle, getSession(sessionHandle)
+              .getLoggedInUser());
+          return previousHandle;
+        }
+      }
       QueryContext ctx = createContext(query, getSession(sessionHandle).getLoggedInUser(), conf, qconf, 0);
+      // Should be set only once
+      ctx.setQueryConfHash(UtilityMethods.generateHashOfWritable(qconf));
       ctx.setQueryName(queryName);
       return executeAsyncInternal(sessionHandle, ctx);
     } finally {
       release(sessionHandle);
     }
+  }
+
+  /**
+   * Returns the query handle if the same query is already launched by the user
+   * in the same session.
+   *
+   * @param query
+   * @param sessionHandle
+   * @param conf
+   * @param queryName
+   * @return
+   */
+  private QueryHandle checkForDuplicateQuery(String query, LensSessionHandle sessionHandle, Configuration conf,
+      String queryName) {
+    // Get all active queries of this session.
+    List<QueryHandle> activeQueries = getSession(sessionHandle).getActiveQueries();
+    synchronized (activeQueries) {
+      for (QueryHandle handle : activeQueries) {
+        QueryContext context = allQueries.get(handle);
+        if (queryName.equals(context.getQueryName()) && query.equals(context.getUserQuery())
+            && Arrays.equals(UtilityMethods.generateHashOfWritable(conf), context.getQueryConfHash())) {
+          return handle;
+        }
+      }
+    }
+    return null;
   }
 
   /**
@@ -1905,6 +1956,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     queuedQueries.add(ctx);
     log.debug("Added to Queued Queries:{}", ctx.getQueryHandleString());
     allQueries.put(ctx.getQueryHandle(), ctx);
+    // Add to session's active query list
     getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).addToActiveQueries(ctx.getQueryHandle());
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
     log.info("Returning handle {}", ctx.getQueryHandle().getHandleId());

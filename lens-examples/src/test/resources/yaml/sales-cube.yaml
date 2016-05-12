@@ -52,6 +52,9 @@ dimAttributes:
       -
         chainName: customer_city
         refCol: name
+      -
+        chainName: customer_details
+        refCol: customer_city_name
     type: string
   Customer Interest(customer_interest) [Customer's interest]:
     chainRefColumn:

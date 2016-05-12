@@ -189,6 +189,10 @@ public class QueryContext extends AbstractQueryContext {
   @Getter
   private transient boolean isDriverResultRegistered;
 
+  @Getter
+  @Setter
+  private byte[] queryConfHash;
+
   transient FailureContext statusUpdateFailures = new FailureContext();
 
   /**

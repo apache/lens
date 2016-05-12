@@ -843,6 +843,14 @@
     </description>
   </property>
   <property>
+    <name>lens.server.duplicate.query.allowed</name>
+    <value>false</value>
+    <description>If this is false and same query is submitted by a user in the same session
+      and with the same configuration while earlier query is not completed then
+      lens server will return the handle of the previous query
+    </description>
+  </property>
+  <property>
   <name>lens.server.status.update.exponential.wait.millis</name>
   <value>30000</value>
   <description>Number of millis that would grow exponentially for next update, incase of transient failures.

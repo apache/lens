@@ -983,6 +983,11 @@ public class CubeTestSetup {
       "state country", "cubestatecountry", "name", null, null, null));
     cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("citycountry", "string", ""),
       "city country", "cubecitystatecountry", "name", null, null, null));
+    List<ChainRefCol> refCols = new ArrayList<>();
+    refCols.add(new ChainRefCol("cubeState", "countrycapital"));
+    refCols.add(new ChainRefCol("cubeCityStateCountry", "capital"));
+    cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("cubeCountryCapital", "String", "ref dim"),
+      "Country capital", refCols, null, null, null, null));
 
     Map<String, String> cubeProperties = new HashMap<>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(BASE_CUBE_NAME),
@@ -2582,8 +2587,8 @@ public class CubeTestSetup {
         });
       }
     };
-    Dimension countryDim = new Dimension(dimName, dimAttrs, null, joinchains, dimProps, 0L);
-    client.createDimension(countryDim);
+    Dimension stateDim = new Dimension(dimName, dimAttrs, null, joinchains, dimProps, 0L);
+    client.createDimension(stateDim);
 
     String dimTblName = "statetable";
     List<FieldSchema> dimColumns = new ArrayList<FieldSchema>();

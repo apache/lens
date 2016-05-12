@@ -42,6 +42,8 @@ Lens client configuration
 *--+--+---+--+
 |9|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
 *--+--+---+--+
-|10|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
+|10|lens.query.cancel.on.timeout|false|Specifies whether to attempt cancellation of a query whose execution takes longer than the timeout value specified while submitting the query for execution.|
+*--+--+---+--+
+|11|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
 *--+--+---+--+
 The configuration parameters and their default values
