@@ -164,9 +164,9 @@ class AliasReplacer implements ContextRewriter {
     }
   }
 
-  static void replaceAliases(ASTNode node, int nodePos, Map<String, String> colToTableAlias) {
+  static ASTNode replaceAliases(ASTNode node, int nodePos, Map<String, String> colToTableAlias) {
     if (node == null) {
-      return;
+      return node;
     }
 
     int nodeType = node.getToken().getType();
@@ -175,7 +175,7 @@ class AliasReplacer implements ContextRewriter {
       String newAlias = colToTableAlias.get(colName.toLowerCase());
 
       if (StringUtils.isBlank(newAlias)) {
-        return;
+        return node;
       }
 
       if (nodeType == HiveParser.DOT) {
@@ -194,12 +194,14 @@ class AliasReplacer implements ContextRewriter {
         dot.addChild(tabRefNode);
 
         ASTNode colIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, colName));
-
         dot.addChild(colIdentNode);
 
         ASTNode parent = (ASTNode) node.getParent();
-
-        parent.setChild(nodePos, dot);
+        if (parent != null) {
+          parent.setChild(nodePos, dot);
+        } else {
+          return dot;
+        }
       }
     } else {
       // recurse down
@@ -208,6 +210,7 @@ class AliasReplacer implements ContextRewriter {
         replaceAliases(child, i, colToTableAlias);
       }
     }
+    return node;
   }
 
   static void updateAliasMap(ASTNode root, CubeQueryContext cubeql) {

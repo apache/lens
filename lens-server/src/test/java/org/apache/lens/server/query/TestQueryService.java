@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.query;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_XML_TYPE;
 import static javax.ws.rs.core.Response.Status.*;
 
 import static org.apache.lens.server.LensServerTestUtil.DB_WITH_JARS;
@@ -1257,7 +1258,7 @@ public class TestQueryService extends LensJerseyTest {
   @Test(dataProvider = "mediaTypeData")
   public void testExecuteWithTimeoutQuery(MediaType mt) throws IOException, InterruptedException {
     final WebTarget target = target().path("queryapi/queries");
-
+    //1. Validate Persistent result
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       mt));
@@ -1275,6 +1276,7 @@ public class TestQueryService extends LensJerseyTest {
     assertNotNull(result.getResult());
     validatePersistentResult((PersistentQueryResult) result.getResult(), result.getQueryHandle(), true, false);
 
+    //2. Validate InMemory result
     final FormDataMultiPart mp2 = new FormDataMultiPart();
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
@@ -1289,6 +1291,27 @@ public class TestQueryService extends LensJerseyTest {
       mt));
 
     validateInmemoryResultForTimeoutQuery(target, mp2, mt);
+  }
+
+  @Test
+  public void testAutoCancelOnTimeOut() throws Exception {
+    queryService.pauseQuerySubmitter(true);
+    //First query will not be queued. @see QueryExecutionServiceImpl.QuerySubmitter.run
+    queryService.executeAsync(lensSessionId, "select 1 from "+TEST_TABLE, new LensConf(), "dummyQuery");
+
+    //Second query after pause will be queued
+    QueryHandleWithResultSet result = queryService.execute(lensSessionId, "select ID, IDSTR from "+ TEST_TABLE, 100,
+      new LensConf(),  "testQuery");
+    assertNotNull(result.getQueryHandle());
+    assertTrue(result.getStatus().queued());
+    int checkCtr = 0;
+    boolean cancelled = false;
+    while (!cancelled && checkCtr++ < 100) { //Max 10 secs wait
+      Thread.sleep(100); //wait for query to get auto cancelled
+      cancelled = queryService.getUpdatedQueryContext(lensSessionId, result.getQueryHandle()).getStatus().cancelled();
+    }
+    assertTrue(cancelled); //auto cancelled beyond timeout
+    queryService.pauseQuerySubmitter(false);
   }
 
   private void validateInmemoryResultForTimeoutQuery(WebTarget target, FormDataMultiPart mp, MediaType mt) {
@@ -1338,7 +1361,7 @@ public class TestQueryService extends LensJerseyTest {
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
-        MediaType.APPLICATION_XML_TYPE));
+        APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
         + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute_with_timeout"));
@@ -1346,14 +1369,15 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(), timeOutMillis + ""));
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
+    conf.addProperty(LensConfConstants.CANCEL_QUERY_ON_TIMEOUT, "false");
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     conf.addProperty(LensConfConstants.PREFETCH_INMEMORY_RESULTSET, "true");
     conf.addProperty(LensConfConstants.PREFETCH_INMEMORY_RESULTSET_ROWS, preFetchRows);
     conf.addProperty(LensConfConstants.QUERY_OUTPUT_FORMATTER, DeferredInMemoryResultFormatter.class.getName());
     conf.addProperty("deferPersistenceByMillis", deferPersistenceByMillis); // property used for test only
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
-        MediaType.APPLICATION_XML_TYPE));
-    QueryHandleWithResultSet result =target.request(MediaType.APPLICATION_XML_TYPE)
+        APPLICATION_XML_TYPE));
+    QueryHandleWithResultSet result =target.request(APPLICATION_XML_TYPE)
             .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
                 new GenericType<LensAPIResult<QueryHandleWithResultSet>>() {}).getData();
     QueryHandle handle = result.getQueryHandle();
@@ -1374,11 +1398,11 @@ public class TestQueryService extends LensJerseyTest {
       assertNull(result.getResult()); // Query execution not finished yet
     }
 
-    waitForQueryToFinish(target(), lensSessionId, handle, Status.SUCCESSFUL, MediaType.APPLICATION_XML_TYPE);
+    waitForQueryToFinish(target(), lensSessionId, handle, Status.SUCCESSFUL, APPLICATION_XML_TYPE);
 
     // Test Persistent Result
     validatePersistedResult(handle, target(), lensSessionId, new String[][] { { "ID", "INT" }, { "IDSTR", "STRING" } },
-        false, true, MediaType.APPLICATION_XML_TYPE);
+        false, true, APPLICATION_XML_TYPE);
   }
 
   public static class DeferredInMemoryResultFormatter extends FileSerdeFormatter {

@@ -234,6 +234,14 @@
     </description>
   </property>
 
+  <property>
+    <name>lens.query.cancel.on.timeout</name>
+    <value>true</value>
+    <description>Specifies whether to attempt cancellation of a query whose execution takes longer than the timeout
+    value specified while submitting the query for execution. The default value is true.
+    </description>
+  </property>
+
   <!--  properties for session -->
   <property>
     <name>lens.session.aux.jars</name>

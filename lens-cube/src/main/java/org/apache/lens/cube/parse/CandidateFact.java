@@ -150,13 +150,13 @@ public class CandidateFact implements CandidateTable, QueryAST {
 
   // copy ASTs from CubeQueryContext
   public void copyASTs(CubeQueryContext cubeql) throws LensException {
-    setSelectAST(HQLParser.copyAST(cubeql.getSelectAST()));
-    setWhereAST(HQLParser.copyAST(cubeql.getWhereAST()));
+    setSelectAST(MetastoreUtil.copyAST(cubeql.getSelectAST()));
+    setWhereAST(MetastoreUtil.copyAST(cubeql.getWhereAST()));
     if (cubeql.getJoinAST() != null) {
-      setJoinAST(HQLParser.copyAST(cubeql.getJoinAST()));
+      setJoinAST(MetastoreUtil.copyAST(cubeql.getJoinAST()));
     }
     if (cubeql.getGroupByAST() != null) {
-      setGroupByAST(HQLParser.copyAST(cubeql.getGroupByAST()));
+      setGroupByAST(MetastoreUtil.copyAST(cubeql.getGroupByAST()));
     }
   }
 

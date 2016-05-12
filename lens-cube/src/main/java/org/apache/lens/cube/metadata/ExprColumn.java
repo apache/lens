@@ -36,8 +36,8 @@ public class ExprColumn extends CubeColumn {
   public static final char EXPRESSION_DELIMITER = '|';
   public static final char EXPRESSION_SPEC_DELIMITER = ':';
   private static final String EXPRESSION_ENCODED = "true";
-  private final Set<ExprSpec> expressionSet = new LinkedHashSet<ExprSpec>();
-  private List<ASTNode> astNodeList = new ArrayList<ASTNode>();
+  private final Set<ExprSpec> expressionSet = new LinkedHashSet<>();
+  private List<ASTNode> astNodeList = new ArrayList<>();
   private final String type;
   private boolean hasHashCode = false;
   private int hashCode;
@@ -98,17 +98,17 @@ public class ExprColumn extends CubeColumn {
         String decodedExpr =
           isExpressionBase64Encoded ? new String(Base64.decodeBase64(exprSpecStrs[0]), "UTF-8") : exprSpecStrs[0];
         ExprSpec exprSpec = new ExprSpec();
-        exprSpec.setExpr(decodedExpr);
+        exprSpec.expr = decodedExpr;
         if (exprSpecStrs.length > 1) {
           // start time and end time serialized
           if (StringUtils.isNotBlank(exprSpecStrs[1])) {
             // start time available
-            exprSpec.setStartTime(getDate(exprSpecStrs[1]));
+            exprSpec.startTime = getDate(exprSpecStrs[1]);
           }
           if (exprSpecStrs.length > 2) {
             if (StringUtils.isNotBlank(exprSpecStrs[2])) {
               // end time available
-              exprSpec.setEndTime(getDate(exprSpecStrs[2]));
+              exprSpec.endTime = getDate(exprSpecStrs[2]);
             }
           }
         }
@@ -126,14 +126,11 @@ public class ExprColumn extends CubeColumn {
   @ToString(exclude = {"astNode", "hasHashCode", "hashCode"})
   public static class ExprSpec {
     @Getter
-    @Setter
     @NonNull
     private String expr;
     @Getter
-    @Setter
     private Date startTime;
     @Getter
-    @Setter
     private Date endTime;
 
     private transient ASTNode astNode;
@@ -145,18 +142,25 @@ public class ExprColumn extends CubeColumn {
       this.startTime = startTime;
       this.endTime = endTime;
       // validation
-      getASTNode();
+      initASTNode();
     }
 
-    public synchronized ASTNode getASTNode() throws LensException {
+    private synchronized void initASTNode() throws LensException {
       if (astNode == null) {
         if (StringUtils.isNotBlank(expr)) {
           astNode = MetastoreUtil.parseExpr(getExpr());
         }
       }
+    }
+
+    private ASTNode getASTNode() throws LensException {
+      initASTNode();
       return astNode;
     }
 
+    public ASTNode copyASTNode() throws LensException {
+      return MetastoreUtil.copyAST(getASTNode());
+    }
     @Override
     public int hashCode() {
       if (!hasHashCode) {
@@ -340,7 +344,7 @@ public class ExprColumn extends CubeColumn {
     synchronized (expressionSet) {
       if (astNodeList.isEmpty()) {
         for (ExprSpec expr : expressionSet) {
-          astNodeList.add(expr.getASTNode());
+          astNodeList.add(expr.copyASTNode());
         }
       }
     }
