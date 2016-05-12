@@ -245,11 +245,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   public boolean isActive() {
-    if (markForClose) {
-      return activeOperationsPresent() && System.currentTimeMillis() - lastAccessTime < sessionTimeout;
-    } else {
-      return System.currentTimeMillis() - lastAccessTime < sessionTimeout;
-    }
+    return System.currentTimeMillis() - lastAccessTime < sessionTimeout && (!markForClose || activeOperationsPresent());
   }
 
   public void setActive() {
@@ -434,6 +430,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   public void markForClose() {
+    log.info("Marking session {} for close. Operations on this session will be rejected", this);
     this.markForClose = true;
   }
 
@@ -617,7 +614,10 @@ public class LensSessionImpl extends HiveSessionImpl {
       activeQueries.remove(queryHandle);
     }
   }
+
   public boolean activeOperationsPresent() {
-    return !activeQueries.isEmpty();
+    synchronized (this.activeQueries) {
+      return !activeQueries.isEmpty();
+    }
   }
 }

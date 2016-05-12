@@ -41,8 +41,6 @@ import org.apache.lens.client.resultset.ResultSet;
 import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.api.util.LensUtil;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-
 import org.testng.Assert;
 import org.testng.annotations.*;
 

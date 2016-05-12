@@ -131,7 +131,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   public HiveConf getServerConf() {
     HiveConf serverConf = LensServerConf.getHiveConf();
     Map<String, String> overWrites = getServerConfOverWrites();
-    if(overWrites != null) {
+    if (overWrites != null) {
       serverConf = new HiveConf(serverConf);
       for (Map.Entry<String, String> overWrite : overWrites.entrySet()) {
         serverConf.set(overWrite.getKey(), overWrite.getValue());

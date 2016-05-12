@@ -24,12 +24,14 @@ import java.util.Map;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerTestUtil;
@@ -42,14 +44,12 @@ import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.common.RestAPITestUtil;
 import org.apache.lens.server.common.TestResourceFile;
+import org.apache.lens.server.error.LensServerErrorCode;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.glassfish.jersey.test.TestProperties;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import com.google.common.base.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +70,7 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
 
   /** The lens session id. */
   LensSessionHandle lensSessionId;
+  private LensConf conf;
 
   /*
    * (non-Javadoc)
@@ -83,6 +84,12 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
     lensSessionId = getSession();
     createTable(TEST_TABLE);
     loadData(TEST_TABLE, TestResourceFile.TEST_DATA2_FILE.getValue());
+    conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    conf.addProperty(LensConfConstants.QUERY_OUTPUT_FORMATTER,
+      TestQueryService.DeferredPersistentResultFormatter.class.getName());
+    conf.addProperty("deferPersistenceByMillis", 5000); // defer persistence for 5 secs
   }
 
   @Override
@@ -161,15 +168,18 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
     LensServerTestUtil.dropTable(tblName, target(), lensSessionId, defaultMT);
   }
 
-  @Test(dataProvider = "mediaTypeData")
-  public void testQueryAliveOnSessionClose(MediaType mt) throws LensException, InterruptedException {
+  @DataProvider
+  public Object[][] restartDataProvider() {
+    return new Object[][]{
+      {true, },
+      {false, },
+    };
+  }
+
+  @Test(dataProvider = "restartDataProvider")
+  public void testQueryAliveOnSessionClose(boolean restart) throws LensException, InterruptedException {
+    MediaType mt = MediaType.APPLICATION_XML_TYPE;
     LensSessionHandle sesssionHandle = getSession();
-    LensConf conf = new LensConf();
-    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
-    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
-    conf.addProperty(LensConfConstants.QUERY_OUTPUT_FORMATTER,
-      TestQueryService.DeferredPersistentResultFormatter.class.getName());
-    conf.addProperty("deferPersistenceByMillis", 5000); // defer persistence for 5 secs
     QueryHandle queryHandle1 = RestAPITestUtil.executeAndGetHandle(target(),
       Optional.of(sesssionHandle), Optional.of("select * from " + TEST_TABLE), Optional.of(conf), mt);
     QueryHandle queryHandle2 = RestAPITestUtil.executeAndGetHandle(target(),
@@ -178,12 +188,26 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
     closeSession(sesssionHandle);
     // Session not 'truly' closed
     assertNotNull(queryService.getSession(sesssionHandle));
+    if (restart) {
+      restartLensServer();
+    }
+    assertNotNull(queryService.getSession(sesssionHandle));
     assertTrue(queryService.getSession(sesssionHandle).isActive());
     LensQuery lensQuery = RestAPITestUtil.waitForQueryToFinish(target(), lensSessionId, queryHandle2,
       QueryStatus.Status.SUCCESSFUL, mt);
     // Now, session is not active anymore
     assertFalse(queryService.getSession(sesssionHandle).isActive());
-    System.out.println(lensQuery);
+    // It should not be possible to submit queries now
+    Response response = RestAPITestUtil.postQuery(target(), Optional.of(sesssionHandle),
+      Optional.of("select * from " + TEST_TABLE), Optional.of("execute"), Optional.of(conf), mt);
+    assertEquals(response.getStatus(), 410);
+    LensAPIResult apiResult = response.readEntity(LensAPIResult.class);
+    assertEquals(apiResult.getErrorCode(), LensServerErrorCode.SESSION_CLOSED.getLensErrorInfo().getErrorCode());
+  }
+
+  @Test(dataProvider = "mediaTypeData")
+  public void testQueryAliveOnSessionCloseAndRestart() {
+
   }
 
   @AfterMethod

@@ -37,10 +37,10 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.LensService;
+import org.apache.lens.server.api.SessionValidator;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventService;
-import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.error.LensServerErrorCode;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
@@ -66,7 +66,8 @@ import lombok.extern.slf4j.Slf4j;
  * The Class LensService.
  */
 @Slf4j
-public abstract class BaseLensService extends CompositeService implements Externalizable, LensService {
+public abstract class BaseLensService extends CompositeService implements Externalizable, LensService,
+  SessionValidator {
 
   /** The cli service. */
   private final CLIService cliService;
@@ -511,12 +512,6 @@ public abstract class BaseLensService extends CompositeService implements Extern
   public void writeExternal(ObjectOutput out) throws IOException {
   }
 
-  /**
-   * Returns the health status of the service.
-   *
-   * @return
-   */
-  public abstract HealthStatus getHealthStatus();
 
   /**
    * Method that uses PathValidator to get appropriate path.
@@ -548,6 +543,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
     return pathValidator.removePrefixBeforeURI(path);
   }
 
+  @Override
   public void validateSession(LensSessionHandle handle) throws LensException {
     if (handle == null) {
       throw new LensException(SESSION_ID_NOT_PROVIDED.getLensErrorInfo());
