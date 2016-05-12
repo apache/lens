@@ -67,7 +67,7 @@ import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.common.ErrorResponseExpectedData;
 import org.apache.lens.server.common.TestDataUtils;
 import org.apache.lens.server.common.TestResourceFile;
-import org.apache.lens.server.error.LensExceptionMapper;
+import org.apache.lens.server.error.GenericExceptionMapper;
 import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.LensSessionImpl;
 
@@ -110,7 +110,7 @@ public class TestQueryService extends LensJerseyTest {
     @Override
     public Set<Class<?>> getClasses() {
       final Set<Class<?>> classes = super.getClasses();
-      classes.add(LensExceptionMapper.class);
+      classes.add(GenericExceptionMapper.class);
       classes.add(LensJAXBContextResolver.class);
       return classes;
     }

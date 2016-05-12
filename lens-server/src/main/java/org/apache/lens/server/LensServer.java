@@ -28,7 +28,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.error.LensExceptionMapper;
+import org.apache.lens.server.error.GenericExceptionMapper;
 import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
@@ -112,7 +112,7 @@ public class LensServer {
 
     ResourceConfig app = ResourceConfig.forApplicationClass(LensApplication.class);
     app.register(new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".request"), true));
-    app.register(LensExceptionMapper.class);
+    app.register(GenericExceptionMapper.class);
     app.register(LensJAXBValidationExceptionMapper.class);
     app.register(LensJAXBContextResolver.class);
     app.setApplicationName("AllApps");

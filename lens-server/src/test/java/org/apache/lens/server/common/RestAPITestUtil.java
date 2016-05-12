@@ -77,7 +77,10 @@ public class RestAPITestUtil {
     final Optional<String> query, MediaType mt) {
     return postQuery(target, sessionId, query, Optional.of("estimate"), Optional.<LensConf>absent(), mt);
   }
-
+  public static Response explain(final WebTarget target, final Optional<LensSessionHandle> sessionId,
+                                  final Optional<String> query, MediaType mt) {
+    return postQuery(target, sessionId, query, Optional.of("explain"), Optional.<LensConf>absent(), mt);
+  }
   public static Response execute(final WebTarget target, final Optional<LensSessionHandle> sessionId,
     final Optional<String> query, MediaType mt) {
     return execute(target, sessionId, query, Optional.<LensConf>absent(), mt);
