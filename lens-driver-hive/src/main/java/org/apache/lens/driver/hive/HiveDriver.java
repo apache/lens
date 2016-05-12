@@ -1048,6 +1048,9 @@ public class HiveDriver extends AbstractLensDriver {
       this.timeoutMillis = timeoutMillis;
       this.listener = listener;
       this.pollInterval = timeoutMillis / 10;
+      if (pollInterval < 5000) {
+        pollInterval = 5000; //minimum poll interval is 5 secs
+      }
     }
 
     /*

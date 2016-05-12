@@ -212,7 +212,7 @@ public class LensConnection implements AutoCloseable {
    * Close the connection.
    */
   @Override
-  public void close() {
+  public synchronized void close() {
     if (closed) {
       log.warn("Session already closed. Ignoring the attempt to close again.");
       return;
@@ -226,6 +226,7 @@ public class LensConnection implements AutoCloseable {
         response = target.queryParam("sessionid", this.sessionHandle).request().delete();
         processingException = null;
       } catch (ProcessingException e) {
+        // HTTP connection error
         log.error("Error closing session ", e);
         processingException = e;
       }
@@ -234,6 +235,7 @@ public class LensConnection implements AutoCloseable {
       throw processingException;
     }
     if (response == null) {
+      // Should never come here, just fool-proofing
       throw new LensClientException("Null response from server while closing connection.");
     }
     switch(response.getStatus()){

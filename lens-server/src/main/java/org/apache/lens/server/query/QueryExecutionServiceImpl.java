@@ -77,6 +77,7 @@ import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -255,6 +256,11 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * Thread pool used for running query estimates in parallel
    */
   private ExecutorService estimatePool;
+
+  /**
+   * The pool used for cancelling timed out queries.
+   */
+  private ExecutorService queryCancellationPool;
 
   private final LogSegregationContext logSegregationContext;
 
@@ -1245,6 +1251,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       queryResultPurger.stop();
     }
 
+    queryCancellationPool.shutdown();
+
     log.info("Query execution service stopped");
   }
 
@@ -1281,6 +1289,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     prepareQueryPurger.start();
 
     startEstimatePool();
+    startQueryCancellationPool();
 
     if (conf.getBoolean(RESULTSET_PURGE_ENABLED, DEFAULT_RESULTSET_PURGE_ENABLED)) {
       queryResultPurger = new QueryResultPurger();
@@ -1317,6 +1326,28 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     estimatePool.allowCoreThreadTimeOut(true);
     estimatePool.prestartCoreThread();
     this.estimatePool = estimatePool;
+  }
+
+  private void startQueryCancellationPool() {
+    ThreadFactory factory = new BasicThreadFactory.Builder()
+      .namingPattern("query-cancellation-pool-Thread-%d")
+      .priority(Thread.NORM_PRIORITY)
+      .build();
+    //Using fixed values for pool . corePoolSize = maximumPoolSize = 3  and keepAliveTime = 60 secs
+    queryCancellationPool = new ThreadPoolExecutor(3, 3, 60, TimeUnit.SECONDS, new LinkedBlockingQueue(), factory);
+  }
+
+  @AllArgsConstructor
+  private class CancelQueryTask implements Runnable {
+    private QueryHandle handle;
+    @Override
+    public void run() {
+      try {
+        cancelQuery(handle);
+      } catch (Exception e) {
+        log.error("Error while cancelling query {}", handle, e);
+      }
+    }
   }
 
   private static final String REWRITE_GAUGE = "CUBE_REWRITE";
@@ -2028,12 +2059,19 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     long timeOutTime = System.currentTimeMillis() + timeoutMillis;
     QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
 
-    while (isQueued(sessionHandle, handle)) {
+    boolean isQueued = true;
+    while (isQueued && System.currentTimeMillis() < timeOutTime) {
       try {
         Thread.sleep(10);
+        isQueued = isQueued(sessionHandle, handle);
       } catch (InterruptedException e) {
         log.error("Encountered Interrupted exception.", e);
       }
+    }
+    if (isQueued) { //query is still queued even after waiting for timeoutMillis
+      result.setStatus(ctx.getStatus());
+      addQueryToCancellationPool(ctx, conf, timeoutMillis); //cancel the timed-out Query
+      return result;
     }
 
     QueryContext queryCtx = getUpdatedQueryContext(sessionHandle, handle);
@@ -2041,13 +2079,15 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       result.setStatus(queryCtx.getStatus());
       return result;
     }
+
     QueryCompletionListenerImpl listener = new QueryCompletionListenerImpl(handle);
-    synchronized (queryCtx) {
-      if (!queryCtx.getStatus().finished()) {
-        queryCtx.getSelectedDriver().registerForCompletionNotification(handle, timeoutMillis, listener);
+    long waitTime = timeOutTime - System.currentTimeMillis();
+    if (waitTime > 0 && !queryCtx.getStatus().finished()) {
+      synchronized (queryCtx) {
+        queryCtx.getSelectedDriver().registerForCompletionNotification(handle, waitTime, listener);
         try {
           synchronized (listener) {
-            listener.wait(timeoutMillis);
+            listener.wait(waitTime);
           }
         } catch (InterruptedException e) {
           log.info("Waiting thread interrupted");
@@ -2055,11 +2095,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       }
     }
 
+
+
     // At this stage (since the listener waits only for driver completion and not server that may include result
     // formatting and persistence) the query status can be RUNNING or EXECUTED or FAILED or SUCCESSFUL
     LensResultSet resultSet = null;
     queryCtx = getUpdatedQueryContext(sessionHandle, handle, true); // If the query is already purged queryCtx = null
-    if (queryCtx != null && listener.querySuccessful && queryCtx.getStatus().isResultSetAvailable()) {
+    if (queryCtx != null && queryCtx.getStatus().isResultSetAvailable()) {
       resultSet = queryCtx.getSelectedDriver().fetchResultSet(queryCtx);
       if (resultSet instanceof PartiallyFetchedInMemoryResultSet) {
         PartiallyFetchedInMemoryResultSet partialnMemoryResult = (PartiallyFetchedInMemoryResultSet) resultSet;
@@ -2095,7 +2137,25 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     result.setResult(null);
     result.setResultMetadata(null);
     result.setStatus(queryCtx.getStatus());
+
+    if (!queryCtx.finished()) {
+      addQueryToCancellationPool(queryCtx, conf, timeoutMillis); //cancel the timed-out Query
+    }
+
     return result;
+  }
+
+  /**
+   * This method is used to add a timed out query to cancellation pool.
+   * The query gets cancelled asynchronously
+   * Note : lens.query.cancel.on.timeout should be true for cancellation
+   */
+  private void addQueryToCancellationPool(QueryContext queryCtx, Configuration config, long timeoutMillis) {
+    if (config.getBoolean(CANCEL_QUERY_ON_TIMEOUT, DEFAULT_CANCEL_QUERY_ON_TIMEOUT)) {
+      log.info("Query {} will be cancelled as it could not be completed within the specified timeout interval {}",
+        queryCtx.getQueryHandle(), timeoutMillis);
+      queryCancellationPool.submit(new CancelQueryTask(queryCtx.getQueryHandle()));
+    }
   }
 
   private boolean isQueued(final LensSessionHandle sessionHandle, final QueryHandle handle)
@@ -2239,26 +2299,38 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     try {
       log.info("CancelQuery: session:{} query:{}", sessionHandle, queryHandle);
       acquire(sessionHandle);
-      QueryContext ctx = getUpdatedQueryContext(sessionHandle, queryHandle);
-
-      synchronized (ctx) {
-
-        if (ctx.finished()) {
-          return false;
-        }
-
-        if (ctx.launched() || ctx.running()) {
-          boolean ret = ctx.getSelectedDriver().cancelQuery(queryHandle);
-          if (!ret) {
-            return false;
-          }
-        }
-
-        setCancelledStatus(ctx, "Query is cancelled");
-        return true;
-      }
+      return cancelQuery(queryHandle);
     } finally {
       release(sessionHandle);
+    }
+  }
+
+  private boolean cancelQuery(@NonNull QueryHandle queryHandle) throws LensException {
+    QueryContext ctx =  allQueries.get(queryHandle);
+    if (ctx == null) {
+      log.info("Could not cancel query {} as it has been purged already", queryHandle);
+      return false;
+    }
+
+    synchronized (ctx) {
+
+      updateStatus(queryHandle);
+
+      if (ctx.finished()) {
+        log.info("Could not cancel query {} as it has finished execution already", queryHandle);
+        return false;
+      }
+
+      if (ctx.launched() || ctx.running()) {
+        if (!ctx.getSelectedDriver().cancelQuery(queryHandle)) {
+          log.info("Could not cancel query {}", queryHandle);
+          return false;
+        }
+      }
+
+      log.info("Query {} cancelled successfully", queryHandle);
+      setCancelledStatus(ctx, "Query is cancelled");
+      return true;
     }
   }
 
@@ -2680,6 +2752,12 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       isHealthy = false;
       details.append("QueryResultPurger is dead.");
     }
+
+    if (queryCancellationPool.isShutdown() || queryCancellationPool.isTerminated()) {
+      isHealthy = false;
+      details.append("Query Cancellation Pool is dead.");
+    }
+
 
     if (!isHealthy) {
       log.error(details.toString());

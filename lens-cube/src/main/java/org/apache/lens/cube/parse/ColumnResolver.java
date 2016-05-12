@@ -95,7 +95,7 @@ class ColumnResolver implements ContextRewriter {
           parent = visited.getParent().getNode();
         }
 
-        if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() != DOT)) {
+        if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent == null || parent.getToken().getType() != DOT)) {
           // Take child ident.totext
           ASTNode ident = (ASTNode) node.getChild(0);
           String column = ident.getText().toLowerCase();
@@ -123,7 +123,7 @@ class ColumnResolver implements ContextRewriter {
   // find columns in where tree
   // if where expression is timerange function, then time range columns are
   // added
-  // only if timerange clause shouldn't be replaced with its correspodning
+  // only if timerange clause shouldn't be replaced with its corresponding
   // partition column
   private void getColsForWhereTree(final CubeQueryContext cubeql) throws LensException {
     if (cubeql.getWhereAST() == null) {

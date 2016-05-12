@@ -205,6 +205,14 @@ public class QueryStatus extends ToYAMLString implements Serializable {
     return status.equals(Status.FAILED);
   }
 
+  public boolean cancelled() {
+    return status.equals(Status.CANCELED);
+  }
+
+  public boolean executed() {
+    return status.equals(Status.EXECUTED);
+  }
+
 
   /**
    * Checks if is valid transition.
