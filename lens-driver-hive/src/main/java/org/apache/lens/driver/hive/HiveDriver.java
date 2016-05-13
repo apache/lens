@@ -115,7 +115,7 @@ public class HiveDriver extends AbstractLensDriver {
 
   /** The hive handles. */
   @Getter
-  private Map<QueryHandle, OperationHandle> hiveHandles = new ConcurrentHashMap<QueryHandle, OperationHandle>();
+  private final Map<QueryHandle, OperationHandle> hiveHandles = new ConcurrentHashMap<QueryHandle, OperationHandle>();
 
   /** The orphaned hive sessions. */
   private ConcurrentLinkedQueue<SessionHandle> orphanedHiveSessions;

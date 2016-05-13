@@ -72,23 +72,22 @@ public class LensSessionImpl extends HiveSessionImpl {
    * List of queries which are submitted in this session.
    */
   @Getter
-  private final List<QueryHandle> activeQueries = new ArrayList<QueryHandle>();
+  private final List<QueryHandle> activeQueries = new ArrayList<>();
 
   /**
    * Keep track of DB static resources which failed to be added to this session
    */
-  private final Map<String, List<ResourceEntry>> failedDBResources = new HashMap<String, List<ResourceEntry>>();
+  private final Map<String, List<ResourceEntry>> failedDBResources = new HashMap<>();
 
 
   /**
    * Cache of database specific class loaders for this session
    * This is updated lazily on add/remove resource calls and switch database calls.
    */
-  private final Map<String, ClassLoader> sessionDbClassLoaders = new HashMap<String, ClassLoader>();
+  private final Map<String, ClassLoader> sessionDbClassLoaders = new HashMap<>();
 
   @Setter(AccessLevel.PROTECTED)
   private DatabaseResourceService dbResService;
-  private boolean markForClose;
 
 
   /**
@@ -122,9 +121,7 @@ public class LensSessionImpl extends HiveSessionImpl {
       conf.addResource("lenssession-default.xml");
       conf.addResource("lens-site.xml");
       sessionDefaultConfig = new Configuration(false);
-      Iterator<Map.Entry<String, String>> confItr = conf.iterator();
-      while (confItr.hasNext()) {
-        Map.Entry<String, String> prop = confItr.next();
+      for (Map.Entry<String, String> prop : conf) {
         if (!prop.getKey().startsWith(LensConfConstants.SERVER_PFX)) {
           sessionDefaultConfig.set(prop.getKey(), prop.getValue());
         }
@@ -250,7 +247,8 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   public boolean isActive() {
-    return System.currentTimeMillis() - lastAccessTime < sessionTimeout && (!markForClose || activeOperationsPresent());
+    return System.currentTimeMillis() - lastAccessTime < sessionTimeout
+      && (!persistInfo.markedForClose|| activeOperationsPresent());
   }
 
   public void setActive() {
@@ -399,13 +397,13 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   /**
    * Return resources which are added statically to the database
-   * @return
+   * @return db resources
    */
   public Collection<ResourceEntry> getDBResources(String database) {
     synchronized (failedDBResources) {
       List<ResourceEntry> failed = failedDBResources.get(database);
       if (failed == null && getDbResService().getResourcesForDatabase(database) != null) {
-        failed = new ArrayList<ResourceEntry>(getDbResService().getResourcesForDatabase(database));
+        failed = new ArrayList<>(getDbResService().getResourcesForDatabase(database));
         failedDBResources.put(database, failed);
       }
       return failed;
@@ -417,7 +415,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    * Get session's resources which have to be added for the given database
    */
   public Collection<ResourceEntry> getPendingSessionResourcesForDatabase(String database) {
-    List<ResourceEntry> pendingResources = new ArrayList<ResourceEntry>();
+    List<ResourceEntry> pendingResources = new ArrayList<>();
     for (ResourceEntry res : persistInfo.getResources()) {
       if (!res.isAddedToDatabase(database)) {
         pendingResources.add(res);
@@ -427,8 +425,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   /**
-   * Get effective class loader for this session
-   * @return
+   * @return effective class loader for this session
    */
   public ClassLoader getClassLoader() {
     return getClassLoader(getCurrentDatabase());
@@ -436,7 +433,7 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   public void markForClose() {
     log.info("Marking session {} for close. Operations on this session will be rejected", this);
-    this.markForClose = true;
+    persistInfo.markedForClose = true;
   }
 
   /**
@@ -456,7 +453,7 @@ public class LensSessionImpl extends HiveSessionImpl {
     transient AtomicInteger restoreCount = new AtomicInteger();
 
     /** Set of databases for which this resource has been added */
-    final transient Set<String> databases = new HashSet<String>();
+    final transient Set<String> databases = new HashSet<>();
 
     /**
      * Instantiates a new resource entry.
@@ -488,8 +485,7 @@ public class LensSessionImpl extends HiveSessionImpl {
     }
 
     /**
-     * Returns the value of restoreCount for the resource
-     * @return
+     * @return the value of restoreCount for the resource
      */
     public int getRestoreCount() {
       return restoreCount.get();
@@ -527,10 +523,10 @@ public class LensSessionImpl extends HiveSessionImpl {
   public static class LensSessionPersistInfo implements Externalizable {
 
     /** The resources. */
-    private List<ResourceEntry> resources = new ArrayList<ResourceEntry>();
+    private List<ResourceEntry> resources = new ArrayList<>();
 
     /** The config. */
-    private Map<String, String> config = new HashMap<String, String>();
+    private Map<String, String> config = new HashMap<>();
 
     /** The session handle. */
     private LensSessionHandle sessionHandle;
@@ -546,6 +542,9 @@ public class LensSessionImpl extends HiveSessionImpl {
 
     /** The last access time. */
     private long lastAccessTime;
+
+    /** Whether it's marked for close */
+    private boolean markedForClose;
 
     public void setSessionConf(Map<String, String> sessionConf) {
       UtilityMethods.mergeMaps(config, sessionConf, true);
@@ -575,6 +574,7 @@ public class LensSessionImpl extends HiveSessionImpl {
         out.writeUTF(config.get(key));
       }
       out.writeLong(lastAccessTime);
+      out.writeBoolean(markedForClose);
     }
 
     /*
@@ -605,6 +605,7 @@ public class LensSessionImpl extends HiveSessionImpl {
         config.put(key, val);
       }
       lastAccessTime = in.readLong();
+      markedForClose = in.readBoolean();
     }
   }
 

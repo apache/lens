@@ -891,11 +891,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     }
     finishedQueries.add(new FinishedQuery(ctx));
     ctx.clearTransientStateAfterLaunch();
-    if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
-      getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).removeFromActiveQueries(ctx.getQueryHandle());
-    } else {
-      log.info("Couldn't update finished query in session.");
-    }
   }
 
   void setSuccessState(QueryContext ctx) throws LensException {
@@ -2906,8 +2901,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
-    // Call driver session close in case some one closes sessions directly on query service
-    closeDriverSessions(sessionHandle);
+    if (!SESSION_MAP.containsKey(sessionHandle.getPublicId().toString())) {
+      // Call driver session close in case some one closes sessions directly on query service
+      closeDriverSessions(sessionHandle);
+    }
   }
 
   // Used in test code

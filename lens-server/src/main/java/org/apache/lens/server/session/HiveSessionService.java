@@ -384,6 +384,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
         session.getLensSessionPersistInfo().setConfig(persistInfo.getConfig());
         session.getLensSessionPersistInfo().setResources(persistInfo.getResources());
         session.setCurrentDatabase(persistInfo.getDatabase());
+        session.getLensSessionPersistInfo().setMarkedForClose(persistInfo.isMarkedForClose());
 
         // Add resources for restored sessions
         for (LensSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
@@ -407,7 +408,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
         throw new RuntimeException(e);
       }
     }
-    log.info("Session service restoed " + restorableSessions.size() + " sessions");
+    log.info("Session service restored " + restorableSessions.size() + " sessions");
   }
 
   private int getSessionExpiryInterval() {
@@ -489,10 +490,12 @@ public class HiveSessionService extends BaseLensService implements SessionServic
    */
   private void closeInternal(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
-    // Inform query service
-    BaseLensService svc = LensServices.get().getService(QueryExecutionService.NAME);
-    if (svc instanceof QueryExecutionServiceImpl) {
-      ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
+    if (!SESSION_MAP.containsKey(sessionHandle.getPublicId().toString())) {
+      // Inform query service
+      BaseLensService svc = LensServices.get().getService(QueryExecutionService.NAME);
+      if (svc instanceof QueryExecutionServiceImpl) {
+        ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
+      }
     }
   }
 

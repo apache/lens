@@ -1453,7 +1453,8 @@ public class TestQueryService extends LensJerseyTest {
     }
   }
   /**
-   * Data provider for test case {@link #testExecuteWithTimeoutAndPreFetechAndServerPersistence()}
+   * Data provider for test case
+   * {@link #testExecuteWithTimeoutAndPreFetechAndServerPersistence(long, int, boolean, long)}
    * @return
    */
   @DataProvider
@@ -1471,7 +1472,7 @@ public class TestQueryService extends LensJerseyTest {
    * @param timeOutMillis : wait time for execute with timeout api
    * @param preFetchRows : number of rows to pre-fetch in case of InMemoryResultSet
    * @param isStreamingResultAvailable : whether the execute call is expected to return InMemoryQueryResult
-   * @param ttlMillis : The time window for which pre-fetched InMemoryResultSet will be available for sure.
+
    * @param deferPersistenceByMillis : The time in millis by which Result formatter will be deferred by.
    * @throws IOException
    * @throws InterruptedException
