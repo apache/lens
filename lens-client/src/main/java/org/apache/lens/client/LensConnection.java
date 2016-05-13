@@ -22,7 +22,6 @@ import static org.apache.lens.client.LensClientConfig.*;
 
 import java.net.ConnectException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -121,9 +120,8 @@ public class LensConnection implements AutoCloseable {
   public Client buildClient() {
     ClientBuilder cb = ClientBuilder.newBuilder().register(MultiPartFeature.class).register(MoxyJsonFeature.class)
       .register(MoxyJsonConfigurationContextResolver.class);
-    Iterator<Class<?>> itr = params.getRequestFilters().iterator();
-    while (itr.hasNext()) {
-      cb.register(itr.next());
+    for (Class<?> aClass : params.getRequestFilters()) {
+      cb.register(aClass);
     }
     Client client = cb.build();
 
@@ -202,9 +200,8 @@ public class LensConnection implements AutoCloseable {
    */
   public APIResult attachDatabaseToSession() {
     WebTarget target = getMetastoreWebTarget();
-    APIResult result = target.path("databases").path("current").queryParam("sessionid", this.sessionHandle)
+    return target.path("databases").path("current").queryParam("sessionid", this.sessionHandle)
       .request(MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()), APIResult.class);
-    return result;
 
   }
 
@@ -218,22 +215,7 @@ public class LensConnection implements AutoCloseable {
       return;
     }
     WebTarget target = getSessionWebTarget();
-    Response response = null;
-    int retries = 10;
-    ProcessingException processingException = null;
-    while(response == null && retries-- > 0) {
-      try {
-        response = target.queryParam("sessionid", this.sessionHandle).request().delete();
-        processingException = null;
-      } catch (ProcessingException e) {
-        // HTTP connection error
-        log.error("Error closing session ", e);
-        processingException = e;
-      }
-    }
-    if (processingException != null) {
-      throw processingException;
-    }
+    Response response = target.queryParam("sessionid", this.sessionHandle).request().delete();
     if (response == null) {
       // Should never come here, just fool-proofing
       throw new LensClientException("Null response from server while closing connection.");
@@ -269,9 +251,8 @@ public class LensConnection implements AutoCloseable {
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), type));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(), resourcePath));
-    APIResult result = target.path("resources/add").request()
+    return target.path("resources/add").request()
       .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
-    return result;
   }
 
   /**
@@ -288,9 +269,8 @@ public class LensConnection implements AutoCloseable {
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), type));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(), resourcePath));
-    APIResult result = target.path("resources/delete").request()
+    return target.path("resources/delete").request()
       .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
-    return result;
   }
 
   /**
@@ -313,8 +293,7 @@ public class LensConnection implements AutoCloseable {
    */
   public Response getLogs(String logFile) {
     WebTarget target = getLogWebTarget();
-    Response result = target.path(logFile).request(MediaType.APPLICATION_OCTET_STREAM).get();
-    return result;
+    return target.path(logFile).request(MediaType.APPLICATION_OCTET_STREAM).get();
   }
 
   /**
@@ -332,9 +311,8 @@ public class LensConnection implements AutoCloseable {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("key").build(), key));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("value").build(), value));
     log.debug("Setting connection params {}={}", key, value);
-    APIResult result = target.path("params").request()
+    return target.path("params").request()
       .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
-    return result;
   }
 
   public List<String> getConnectionParams() {
@@ -359,7 +337,7 @@ public class LensConnection implements AutoCloseable {
 
   public Map<String, String> getConnectionParamsAsMap() {
     List<String> params = getConnectionParams();
-    Map<String, String> paramsMap = new HashMap<String, String>(params.size());
+    Map<String, String> paramsMap = new HashMap<>(params.size());
     String[] paramKeyAndValue;
     for (String param : params) {
       paramKeyAndValue = param.split("=");
@@ -381,9 +359,6 @@ public class LensConnection implements AutoCloseable {
    */
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("LensConnection{");
-    sb.append("sessionHandle=").append(sessionHandle.getPublicId());
-    sb.append('}');
-    return sb.toString();
+    return "LensConnection{" + "sessionHandle=" + sessionHandle.getPublicId() + '}';
   }
 }
