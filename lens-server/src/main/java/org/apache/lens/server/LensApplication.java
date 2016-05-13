@@ -74,6 +74,7 @@ public class LensApplication extends Application {
 
     log.debug("LensRequestContextInitFilter added...");
     classes.add(LensRequestContextInitFilter.class);
+
     return classes;
   }
 
