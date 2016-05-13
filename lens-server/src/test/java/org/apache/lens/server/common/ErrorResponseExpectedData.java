@@ -54,5 +54,4 @@ public class ErrorResponseExpectedData {
     /* Assert receipt of valid stacktraces */
     assertTrue(lensAPIResult.areValidStackTracesPresent(), "Received Lens Response:" + lensAPIResult);
   }
-
 }

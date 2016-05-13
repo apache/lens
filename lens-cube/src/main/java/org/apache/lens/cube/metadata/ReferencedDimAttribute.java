@@ -42,6 +42,11 @@ public class ReferencedDimAttribute extends BaseDimAttribute {
   public static class ChainRefCol {
     private final String chainName;
     private final String refColumn;
+
+    public ChainRefCol(String chainName, String refColumn) {
+      this.chainName = chainName.toLowerCase();
+      this.refColumn = refColumn.toLowerCase();
+    }
   }
 
   public ReferencedDimAttribute(FieldSchema column, String displayString, String chainName, String refColumn,
@@ -52,7 +57,7 @@ public class ReferencedDimAttribute extends BaseDimAttribute {
   public ReferencedDimAttribute(FieldSchema column, String displayString, String chainName, String refColumn,
     Date startTime, Date endTime, Double cost, Long numOfDistinctValues) throws LensException {
     this(column, displayString,
-      Collections.singletonList(new ChainRefCol(chainName.toLowerCase(), refColumn.toLowerCase())), startTime, endTime,
+      Collections.singletonList(new ChainRefCol(chainName, refColumn)), startTime, endTime,
       cost, numOfDistinctValues);
   }
 
