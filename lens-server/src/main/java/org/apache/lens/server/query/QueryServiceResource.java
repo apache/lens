@@ -66,14 +66,8 @@ public class QueryServiceResource {
    *
    * @param sessionHandle the session handle
    */
-  private void checkSessionId(final LensSessionHandle sessionHandle) {
-    try {
+  private void checkSessionId(final LensSessionHandle sessionHandle) throws LensException {
       validateSessionId(sessionHandle);
-    } catch (LensException e) {
-      LensErrorTO to = e.buildLensErrorTO(errorCollection);
-      throw new ClientErrorException(to.getMessage(),
-        errorCollection.getLensError(e.getErrorCode()).getHttpStatusCode().getStatusCode());
-    }
   }
 
   private void validateSessionId(final LensSessionHandle sessionHandle) throws LensException {
@@ -154,16 +148,13 @@ public class QueryServiceResource {
   public List<QueryHandle> getAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("queryName") String queryName,
     @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("driver") String driver,
-    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate)
+    throws LensException {
     checkSessionId(sessionid);
-    try {
-      if (toDate == -1L) {
-        toDate = Long.MAX_VALUE;
-      }
-      return queryServer.getAllQueries(sessionid, state, user, driver, queryName, fromDate, toDate);
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
+    if (toDate == -1L) {
+      toDate = Long.MAX_VALUE;
     }
+    return queryServer.getAllQueries(sessionid, state, user, driver, queryName, fromDate, toDate);
   }
 
   /** The submit clue. */
@@ -269,7 +260,8 @@ public class QueryServiceResource {
   public APIResult cancelAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("user") String user,
     @DefaultValue("") @QueryParam("queryName") String queryName, @DefaultValue("") @QueryParam("driver") String driver,
-    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate)
+    throws LensException {
     checkSessionId(sessionid);
     int numCancelled = 0;
     List<QueryHandle> handles = null;
@@ -316,16 +308,13 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public List<QueryPrepareHandle> getAllPreparedQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
-    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate)
+    throws LensException {
     checkSessionId(sessionid);
-    try {
-      if (toDate == -1L) {
-        toDate = Long.MAX_VALUE;
-      }
-      return queryServer.getAllPreparedQueries(sessionid, user, queryName, fromDate, toDate);
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
+    if (toDate == -1L) {
+      toDate = Long.MAX_VALUE;
     }
+    return queryServer.getAllPreparedQueries(sessionid, user, queryName, fromDate, toDate);
   }
 
   /**
@@ -399,7 +388,7 @@ public class QueryServiceResource {
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
       @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
       @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
-      @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+      @DefaultValue("-1") @QueryParam("toDate") long toDate) throws LensException {
     checkSessionId(sessionid);
     int numDestroyed = 0;
     boolean failed = false;
@@ -467,13 +456,9 @@ public class QueryServiceResource {
   @Path("preparedqueries/{prepareHandle}")
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public LensPreparedQuery getPreparedQuery(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("prepareHandle") String prepareHandle) {
+    @PathParam("prepareHandle") String prepareHandle) throws LensException {
     checkSessionId(sessionid);
-    try {
-      return queryServer.getPreparedQuery(sessionid, getPrepareHandle(prepareHandle));
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
-    }
+    return queryServer.getPreparedQuery(sessionid, getPrepareHandle(prepareHandle));
   }
 
   /**
@@ -489,7 +474,7 @@ public class QueryServiceResource {
   @Path("preparedqueries/{prepareHandle}")
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult destroyPrepared(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("prepareHandle") String prepareHandle) {
+    @PathParam("prepareHandle") String prepareHandle) throws LensException {
     checkSessionId(sessionid);
     boolean ret = destroyPrepared(sessionid, getPrepareHandle(prepareHandle));
     if (ret) {
@@ -510,13 +495,9 @@ public class QueryServiceResource {
   @Path("queries/{queryHandle}")
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public LensQuery getStatus(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("queryHandle") String queryHandle) {
+    @PathParam("queryHandle") String queryHandle) throws LensException {
     checkSessionId(sessionid);
-    try {
-      return queryServer.getQuery(sessionid, getQueryHandle(queryHandle));
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
-    }
+    return queryServer.getQuery(sessionid, getQueryHandle(queryHandle));
   }
 
   /**
@@ -532,7 +513,7 @@ public class QueryServiceResource {
   @Path("queries/{queryHandle}")
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult cancelQuery(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("queryHandle") String queryHandle) {
+    @PathParam("queryHandle") String queryHandle) throws LensException {
     checkSessionId(sessionid);
     boolean ret = cancelQuery(sessionid, getQueryHandle(queryHandle));
     if (ret) {
@@ -586,17 +567,13 @@ public class QueryServiceResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult updateConf(@FormDataParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("queryHandle") String queryHandle, @FormDataParam("conf") LensConf conf) {
+    @PathParam("queryHandle") String queryHandle, @FormDataParam("conf") LensConf conf) throws LensException {
     checkSessionId(sessionid);
-    try {
-      boolean ret = queryServer.updateQueryConf(sessionid, getQueryHandle(queryHandle), conf);
-      if (ret) {
-        return new APIResult(Status.SUCCEEDED, "Update on the query conf for " + queryHandle + " is successful");
-      } else {
-        return new APIResult(Status.FAILED, "Update on the query conf for " + queryHandle + " failed");
-      }
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
+    boolean ret = queryServer.updateQueryConf(sessionid, getQueryHandle(queryHandle), conf);
+    if (ret) {
+      return new APIResult(Status.SUCCEEDED, "Update on the query conf for " + queryHandle + " is successful");
+    } else {
+      return new APIResult(Status.FAILED, "Update on the query conf for " + queryHandle + " failed");
     }
   }
 
@@ -615,17 +592,13 @@ public class QueryServiceResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult updatePreparedConf(@FormDataParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("prepareHandle") String prepareHandle, @FormDataParam("conf") LensConf conf) {
+    @PathParam("prepareHandle") String prepareHandle, @FormDataParam("conf") LensConf conf) throws LensException {
     checkSessionId(sessionid);
-    try {
-      boolean ret = queryServer.updateQueryConf(sessionid, getPrepareHandle(prepareHandle), conf);
-      if (ret) {
-        return new APIResult(Status.SUCCEEDED, "Update on the query conf for " + prepareHandle + " is successful");
-      } else {
-        return new APIResult(Status.FAILED, "Update on the query conf for " + prepareHandle + " failed");
-      }
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
+    boolean ret = queryServer.updateQueryConf(sessionid, getPrepareHandle(prepareHandle), conf);
+    if (ret) {
+      return new APIResult(Status.SUCCEEDED, "Update on the query conf for " + prepareHandle + " is successful");
+    } else {
+      return new APIResult(Status.FAILED, "Update on the query conf for " + prepareHandle + " failed");
     }
   }
 
@@ -655,28 +628,24 @@ public class QueryServiceResource {
     @PathParam("prepareHandle") String prepareHandle,
     @DefaultValue("EXECUTE") @FormDataParam("operation") String operation, @FormDataParam("conf") LensConf conf,
     @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
-    @DefaultValue("") @FormDataParam("queryName") String queryName) {
+    @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
     checkSessionId(sessionid);
+    SubmitOp sop = null;
     try {
-      SubmitOp sop = null;
-      try {
-        sop = SubmitOp.valueOf(operation.toUpperCase());
-      } catch (IllegalArgumentException e) {
-        log.warn("illegal argument for submit operation: " + operation, e);
-      }
-      if (sop == null) {
-        throw new BadRequestException("Invalid operation type: " + operation + submitPreparedClue);
-      }
-      switch (sop) {
-      case EXECUTE:
-        return queryServer.executePrepareAsync(sessionid, getPrepareHandle(prepareHandle), conf, queryName);
-      case EXECUTE_WITH_TIMEOUT:
-        return queryServer.executePrepare(sessionid, getPrepareHandle(prepareHandle), timeoutmillis, conf, queryName);
-      default:
-        throw new BadRequestException("Invalid operation type: " + operation + submitPreparedClue);
-      }
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
+      sop = SubmitOp.valueOf(operation.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      log.warn("illegal argument for submit operation: " + operation, e);
+    }
+    if (sop == null) {
+      throw new BadRequestException("Invalid operation type: " + operation + submitPreparedClue);
+    }
+    switch (sop) {
+    case EXECUTE:
+      return queryServer.executePrepareAsync(sessionid, getPrepareHandle(prepareHandle), conf, queryName);
+    case EXECUTE_WITH_TIMEOUT:
+      return queryServer.executePrepare(sessionid, getPrepareHandle(prepareHandle), timeoutmillis, conf, queryName);
+    default:
+      throw new BadRequestException("Invalid operation type: " + operation + submitPreparedClue);
     }
   }
 
@@ -691,13 +660,9 @@ public class QueryServiceResource {
   @Path("queries/{queryHandle}/resultsetmetadata")
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public QueryResultSetMetadata getResultSetMetadata(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("queryHandle") String queryHandle) {
+    @PathParam("queryHandle") String queryHandle) throws LensException {
     checkSessionId(sessionid);
-    try {
-      return queryServer.getResultSetMetadata(sessionid, getQueryHandle(queryHandle));
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
-    }
+    return queryServer.getResultSetMetadata(sessionid, getQueryHandle(queryHandle));
   }
 
   /**
@@ -714,13 +679,9 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public QueryResult getResultSet(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle, @QueryParam("fromindex") long startIndex,
-    @QueryParam("fetchsize") int fetchSize) {
+    @QueryParam("fetchsize") int fetchSize) throws LensException {
     checkSessionId(sessionid);
-    try {
-      return queryServer.fetchResultSet(sessionid, getQueryHandle(queryHandle), startIndex, fetchSize);
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
-    }
+    return queryServer.fetchResultSet(sessionid, getQueryHandle(queryHandle), startIndex, fetchSize);
   }
 
   /**
@@ -754,16 +715,11 @@ public class QueryServiceResource {
   @Path("queries/{queryHandle}/resultset")
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public APIResult closeResultSet(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("queryHandle") String queryHandle) {
+    @PathParam("queryHandle") String queryHandle) throws LensException {
     checkSessionId(sessionid);
-    try {
-      queryServer.closeResultSet(sessionid, getQueryHandle(queryHandle));
-      return new APIResult(Status.SUCCEEDED,
-        "Close on the result set for query " + queryHandle + " is successful");
-
-    } catch (LensException e) {
-      throw new WebApplicationException(e);
-    }
+    queryServer.closeResultSet(sessionid, getQueryHandle(queryHandle));
+    return new APIResult(Status.SUCCEEDED,
+      "Close on the result set for query " + queryHandle + " is successful");
   }
 
 }
