@@ -22,17 +22,17 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 public interface QueryAST {
 
-  String getSelectTree();
+  String getSelectString();
 
   String getFromString();
 
-  String getWhereTree();
+  String getWhereString();
 
-  String getHavingTree();
+  String getHavingString();
 
-  String getOrderByTree();
+  String getOrderByString();
 
-  String getGroupByTree();
+  String getGroupByString();
 
   Integer getLimitValue();
 

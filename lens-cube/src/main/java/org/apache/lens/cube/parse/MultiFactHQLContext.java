@@ -72,7 +72,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
   }
 
   private String getOrderbyString() {
-    return query.getOrderByTree();
+    return query.getOrderByString();
   }
 
   private String getHavingString() {
@@ -84,7 +84,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
   }
 
   private String getWhereString() {
-    return query.getWhereTree();
+    return query.getWhereString();
   }
 
   public String toHQL() throws LensException {

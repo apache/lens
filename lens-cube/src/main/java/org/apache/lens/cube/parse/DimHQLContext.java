@@ -47,10 +47,11 @@ abstract class DimHQLContext extends SimpleHQLContext {
   }
   DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery,
     Set<Dimension> queriedDims, QueryAST ast) throws LensException {
-    super(ast.getSelectTree(), ast.getGroupByTree(), ast.getOrderByTree(), ast.getHavingTree(), ast.getLimitValue());
+    super(ast.getSelectString(), ast.getGroupByString(), ast.getOrderByString(),
+        ast.getHavingString(), ast.getLimitValue());
     this.query = query;
     this.dimsToQuery = dimsToQuery;
-    this.where = ast.getWhereTree();
+    this.where = ast.getWhereString();
     this.queriedDims = queriedDims;
     this.astFromString = ast.getFromString();
   }
