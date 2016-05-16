@@ -99,7 +99,7 @@ public class AutoJoinContext {
     return autoJoinTarget;
   }
 
-  private JoinClause getJoinClause(CandidateFact fact) {
+  public JoinClause getJoinClause(CandidateFact fact) {
     if (fact == null || !factClauses.containsKey(fact)) {
       return minCostClause;
     }

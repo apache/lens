@@ -31,26 +31,21 @@ public class DefaultQueryAST implements QueryAST {
   private ASTNode selectAST, whereAST, groupByAST, havingAST, joinAST, orderByAST;
   private Integer limitValue;
   private String fromString;
+  private String whereString;
 
-  public String getSelectTree() {
+
+  public String getSelectString() {
     return HQLParser.getString(selectAST);
   }
 
-  public String getWhereTree() {
-    if (whereAST != null) {
-      return HQLParser.getString(whereAST);
-    }
-    return null;
-  }
-
-  public String getGroupByTree() {
+  public String getGroupByString() {
     if (groupByAST != null) {
       return HQLParser.getString(groupByAST);
     }
     return null;
   }
 
-  public String getHavingTree() {
+  public String getHavingString() {
     if (havingAST != null) {
       return HQLParser.getString(havingAST);
     }
@@ -58,7 +53,7 @@ public class DefaultQueryAST implements QueryAST {
   }
 
   @Override
-  public String getOrderByTree() {
+  public String getOrderByString() {
     if (orderByAST != null) {
       return HQLParser.getString(orderByAST);
     }
@@ -68,8 +63,9 @@ public class DefaultQueryAST implements QueryAST {
   public static DefaultQueryAST fromCandidateFact(CandidateFact fact, String storageTable, QueryAST ast) throws
     LensException {
     return new DefaultQueryAST(ast.getSelectAST(),
-      fact.getStorageWhereClause(storageTable.substring(storageTable.indexOf(".") + 1)),
+      null,
       ast.getGroupByAST(), ast.getHavingAST(), ast.getJoinAST(), ast.getOrderByAST(), ast.getLimitValue(),
-      ast.getFromString());
+      ast.getFromString(),
+      fact.getStorageWhereString(storageTable.substring(storageTable.indexOf(".") + 1)));
   }
 }

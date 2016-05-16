@@ -82,6 +82,8 @@ public class CandidateFact implements CandidateTable, QueryAST {
   @Getter
   private final Map<String, ASTNode> storgeWhereClauseMap = new HashMap<>();
   @Getter
+  private final Map<String, String> storgeWhereStringMap = new HashMap<>();
+  @Getter
   private final Map<TimeRange, Map<String, LinkedHashSet<FactPartition>>> rangeToStoragePartMap = new HashMap<>();
   @Getter
   private final Map<TimeRange, Map<String, String>> rangeToStorageWhereMap = new HashMap<>();
@@ -163,6 +165,9 @@ public class CandidateFact implements CandidateTable, QueryAST {
 
   public ASTNode getStorageWhereClause(String storageTable) {
     return storgeWhereClauseMap.get(storageTable);
+  }
+  public String getStorageWhereString(String storageTable) {
+    return storgeWhereStringMap.get(storageTable);
   }
 
   public boolean isExpressionAnswerable(ASTNode node, CubeQueryContext context) throws LensException {
@@ -274,18 +279,18 @@ public class CandidateFact implements CandidateTable, QueryAST {
     return result;
   }
 
-  public String getSelectTree() {
+  public String getSelectString() {
     return HQLParser.getString(selectAST);
   }
 
-  public String getWhereTree() {
+  public String getWhereString() {
     if (whereAST != null) {
       return HQLParser.getString(whereAST);
     }
     return null;
   }
 
-  public String getHavingTree() {
+  public String getHavingString() {
     if (havingAST != null) {
       return HQLParser.getString(havingAST);
     }
@@ -293,7 +298,7 @@ public class CandidateFact implements CandidateTable, QueryAST {
   }
 
   @Override
-  public String getOrderByTree() {
+  public String getOrderByString() {
     if (orderByAST != null) {
       return HQLParser.getString(orderByAST);
     }
@@ -314,7 +319,7 @@ public class CandidateFact implements CandidateTable, QueryAST {
     return dimFieldIndices;
   }
 
-  public String getGroupByTree() {
+  public String getGroupByString() {
     if (groupByAST != null) {
       return HQLParser.getString(groupByAST);
     }
