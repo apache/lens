@@ -22,6 +22,5 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.api.error.LensException;
 
 public interface SessionValidator {
-  //TODO: Pull out method definitions from individual services
   void validateSession(LensSessionHandle handle) throws LensException;
 }

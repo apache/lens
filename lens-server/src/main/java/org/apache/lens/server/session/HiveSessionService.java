@@ -490,13 +490,6 @@ public class HiveSessionService extends BaseLensService implements SessionServic
    */
   private void closeInternal(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
-    if (!SESSION_MAP.containsKey(sessionHandle.getPublicId().toString())) {
-      // Inform query service
-      BaseLensService svc = LensServices.get().getService(QueryExecutionService.NAME);
-      if (svc instanceof QueryExecutionServiceImpl) {
-        ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
-      }
-    }
   }
 
   /**

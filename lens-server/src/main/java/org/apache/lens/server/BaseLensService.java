@@ -41,7 +41,9 @@ import org.apache.lens.server.api.SessionValidator;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.error.LensServerErrorCode;
+import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
@@ -299,11 +301,17 @@ public abstract class BaseLensService extends CompositeService implements Extern
       if (session.activeOperationsPresent()) {
         session.markForClose();
       } else {
-        String userName = session.getLoggedInUser();
         cliService.closeSession(getHiveSessionHandle(sessionHandle));
         String publicId = sessionHandle.getPublicId().toString();
         SESSION_MAP.remove(publicId);
-        decrementSessionCountForUser(sessionHandle, userName);
+      }
+      decrementSessionCountForUser(sessionHandle, session.getLoggedInUser());
+      if (!SESSION_MAP.containsKey(sessionHandle.getPublicId().toString())) {
+        // Inform query service
+        BaseLensService svc = LensServices.get().getService(QueryExecutionService.NAME);
+        if (svc instanceof QueryExecutionServiceImpl) {
+          ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
+        }
       }
     } catch (Exception e) {
       throw new LensException(e);
@@ -553,3 +561,4 @@ public abstract class BaseLensService extends CompositeService implements Extern
     }
   }
 }
+

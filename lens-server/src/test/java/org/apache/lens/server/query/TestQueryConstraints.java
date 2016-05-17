@@ -45,7 +45,6 @@ import org.apache.lens.server.common.RestAPITestUtil;
 import org.apache.lens.server.common.TestResourceFile;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.glassfish.jersey.test.TestProperties;
 
@@ -66,7 +65,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Test(groups = "two-working-drivers", dependsOnGroups = "filter-test")
 public class TestQueryConstraints extends LensJerseyTest {
-  private HiveConf serverConf;
 
   public static class RoundRobinSelector implements DriverSelector {
     int counter = 0;

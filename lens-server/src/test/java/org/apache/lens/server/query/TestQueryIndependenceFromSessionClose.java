@@ -54,8 +54,8 @@ import lombok.extern.slf4j.Slf4j;
  * The Class TestQueryService.
  */
 @Slf4j
-@Test
-public class TestQueryIndependenceFromSession extends LensJerseyTest {
+@Test(groups = "post-restart", dependsOnGroups = "restart-test")
+public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
@@ -90,6 +90,7 @@ public class TestQueryIndependenceFromSession extends LensJerseyTest {
   }
 
   private LensSessionHandle getSession() throws LensException {
+    queryService = LensServices.get().getService(QueryExecutionService.NAME);
     return queryService.openSession("foo", "bar", null);
   }
 

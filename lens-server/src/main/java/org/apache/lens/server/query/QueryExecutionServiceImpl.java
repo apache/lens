@@ -2894,19 +2894,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.LensService#closeSession(org.apache.lens.api.LensSessionHandle)
-   */
-  public void closeSession(LensSessionHandle sessionHandle) throws LensException {
-    super.closeSession(sessionHandle);
-    if (!SESSION_MAP.containsKey(sessionHandle.getPublicId().toString())) {
-      // Call driver session close in case some one closes sessions directly on query service
-      closeDriverSessions(sessionHandle);
-    }
-  }
-
   // Used in test code
   Collection<LensDriver> getDrivers() {
     return drivers.values();
