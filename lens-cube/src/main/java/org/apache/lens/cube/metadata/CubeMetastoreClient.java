@@ -2383,27 +2383,58 @@ public class CubeMetastoreClient {
     return storageTimes;
   }
 
+  /*
+   * Storage table is not a candidate for range (t0, tn) :
+   * if start_time is after tn; or end date is before t0.
+   */
   public boolean isStorageTableCandidateForRange(String storageTableName, Date fromDate, Date toDate) throws
+    HiveException, LensException {
+    List<Date> storageEndDates = getStorageTimes(storageTableName, MetastoreUtil.getStoragetableEndTimesKey());
+    for(Date endDate : storageEndDates) {
+      // endDate is exclusive
+      if (endDate.before(fromDate) || endDate.equals(fromDate)) {
+        log.debug("from date {} is after validity end time: {}, hence discarding {}",
+          fromDate, endDate, storageTableName);
+        return false;
+      }
+    }
+
+    List<Date> storageStartDates = getStorageTimes(storageTableName, MetastoreUtil.getStoragetableStartTimesKey());
+    for(Date startDate : storageStartDates) {
+      // toDate is exclusive on the range
+      if (startDate.after(toDate) || startDate.equals(toDate)) {
+        log.debug("to date {} is before validity start time: {}, hence discarding {}",
+          toDate, startDate, storageTableName);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Check if partition is valid wrt start and end dates
+  public boolean isStorageTablePartitionACandidate(String storageTableName, Date partDate) throws
     HiveException, LensException {
     List<Date> storageStartDates = getStorageTimes(storageTableName, MetastoreUtil.getStoragetableStartTimesKey());
     for(Date startDate : storageStartDates) {
-      if (fromDate.before(startDate)) {
-        log.info("from date {} is before validity start time: {}, hence discarding {}",
-                fromDate, startDate, storageTableName);
+      if (partDate.before(startDate)) {
+        log.info("part date {} is before validity start time: {}, hence discarding {}",
+          partDate, startDate, storageTableName);
         return false;
       }
     }
 
     List<Date> storageEndDates = getStorageTimes(storageTableName, MetastoreUtil.getStoragetableEndTimesKey());
     for(Date endDate : storageEndDates) {
-      if (toDate.after(endDate)) {
-        log.info("to date {} is after validity end time: {}, hence discarding {}",
-                toDate, endDate, storageTableName);
+      // end date should be exclusive
+      if (partDate.after(endDate) || partDate.equals(endDate)) {
+        log.info("part date {} is after validity end time: {}, hence discarding {}",
+          partDate, endDate, storageTableName);
         return false;
       }
     }
     return true;
   }
+
   public boolean isStorageTableCandidateForRange(String storageTableName, String fromDate, String toDate) throws
     HiveException, LensException {
     Date now = new Date();
