@@ -2396,7 +2396,7 @@ public class CubeMetastoreClient {
 
     List<Date> storageEndDates = getStorageTimes(storageTableName, MetastoreUtil.getStoragetableEndTimesKey());
     for(Date endDate : storageEndDates) {
-      if (toDate.after(endDate)) {
+      if (toDate.after(endDate) || toDate.equals(endDate)) {
         log.info("to date {} is after validity end time: {}, hence discarding {}",
                 toDate, endDate, storageTableName);
         return false;
