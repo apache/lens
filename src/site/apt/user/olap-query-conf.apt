@@ -78,4 +78,6 @@ OLAP query configuration
 *--+--+---+--+
 |25|lens.cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
 *--+--+---+--+
+|26|lens.cube.query.rewrite.dim.filter.to.fact.filter|false|Falg specifies if dimension filter has to be rewritten as fact filter. for eg. where dim.name in ('x', 'y')  will become where fact.dimid in (select dim.id from dim where dim.name in ('x','y'))|
+*--+--+---+--+
 The configuration parameters and their default values

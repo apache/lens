@@ -115,4 +115,6 @@ public final class CubeQueryConfUtil {
   public static final boolean DEFAULT_DO_FLATTENING_OF_BRIDGE_TABLE_EARLY = false;
   public static final String BRIDGE_TABLE_FIELD_ARRAY_FILTER = "lens.cube.query.bridge.table.field.array.filter";
   public static final String DEFAULT_BRIDGE_TABLE_FIELD_ARRAY_FILTER = "array_contains";
+  public static final String REWRITE_DIM_FILTER_TO_FACT_FILTER = "lens.cube.query.rewrite.dim.filter.to.fact.filter";
+  public static final boolean DEFAULT_REWRITE_DIM_FILTER_TO_FACT_FILTER = false;
 }

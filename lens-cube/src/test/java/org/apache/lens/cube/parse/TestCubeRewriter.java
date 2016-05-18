@@ -752,6 +752,111 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
+  public void testConvertDimFilterToFactFilterForSingleFact() throws Exception {
+    Configuration conf = getConf();
+    conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
+    conf.set(DRIVER_SUPPORTED_STORAGES, "C3");
+    conf.setBoolean(DISABLE_AUTO_JOINS, false);
+    conf.setBoolean(REWRITE_DIM_FILTER_TO_FACT_FILTER, true);
+
+    // filter with =
+    String hql = rewrite(
+        "select cubecountry.name, msr2 from" + " testCube" + " where cubecountry.region = 'asia' and "
+            + TWO_DAYS_RANGE, conf);
+    String filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
+        + "cubecountry where ((cubecountry.region) = 'asia') and (cubecountry.dt = 'latest') )";
+    //assertTrue(hql.contains(filterSubquery));
+
+    // filter with or
+    hql = rewrite(
+        "select cubecountry.name, msr2 from" + " testCube" + " where (cubecountry.region = 'asia' "
+            + "or cubecountry.region = 'europe') and " + TWO_DAYS_RANGE , conf);
+    filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
+        + "cubecountry where (((cubecountry.region) = 'asia') or ((cubecountry.region) = 'europe')) "
+        + "and (cubecountry.dt = 'latest') )";
+    //assertTrue(hql.contains(filterSubquery));
+
+    //filter with in
+    hql = rewrite(
+        "select cubecountry.name, msr2 from" + " testCube" + " where cubecountry.region in ('asia','europe') "
+            + "and " + TWO_DAYS_RANGE , conf);
+    filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
+        + "cubecountry where (cubecountry.region) in ('asia' , 'europe') and (cubecountry.dt = 'latest') )";
+    //assertTrue(hql.contains(filterSubquery));
+
+    //filter with not in
+    hql = rewrite(
+        "select cubecountry.name, msr2 from" + " testCube" + " where cubecountry.region not in ('asia','europe') "
+            + "and " + TWO_DAYS_RANGE , conf);
+    filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
+        + "cubecountry where (cubecountry.region) not  in ('asia' , 'europe') and (cubecountry.dt = 'latest') )";
+    //assertTrue(hql.contains(filterSubquery));
+
+    //filter with !=
+    hql = rewrite(
+        "select cubecountry.name, msr2 from" + " testCube" + " where cubecountry.region != 'asia' "
+            + "and " + TWO_DAYS_RANGE , conf);
+    filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
+        + "cubecountry where ((cubecountry.region) != 'asia') and (cubecountry.dt = 'latest') )";
+    //assertTrue(hql.contains(filterSubquery));
+
+    //filter with cube alias
+    hql = rewrite(
+        "select cubecountry.name, msr2 from" + " testCube as t" + " where cubecountry.region = 'asia' "
+            + "and zipcode = 'x' and " + TWO_DAYS_RANGE , conf);
+    filterSubquery = "t.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
+        + "cubecountry where ((cubecountry.region) = 'asia') and (cubecountry.dt = 'latest') )";
+    //assertTrue(hql.contains(filterSubquery));
+  }
+
+  @Test
+  public void testConvertDimFilterToFactFilterForMultiFact() throws Exception {
+    Configuration conf = getConf();
+    conf.set(getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
+    conf.set(getValidUpdatePeriodsKey("testfact", "C1"), "DAILY,HOURLY");
+    conf.set(getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
+    conf.set(getValidUpdatePeriodsKey("testfact", "C2"), "MONTHLY,DAILY");
+    conf.setBoolean(DISABLE_AUTO_JOINS, false);
+    conf.setBoolean(REWRITE_DIM_FILTER_TO_FACT_FILTER, true);
+    ArrayList<String> storages = Lists.newArrayList("c1_testfact", "c2_testfact");
+    try {
+      getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(HOURLY, DAILY));
+      getStorageToUpdatePeriodMap().put("c2_testfact", Lists.newArrayList(MONTHLY));
+
+      // Union query
+      String hqlQuery;
+      StoragePartitionProvider provider = new StoragePartitionProvider() {
+        @Override
+        public Map<String, String> providePartitionsForStorage(String storage) {
+          return getWhereForMonthlyDailyAndHourly2monthsUnionQuery(storage);
+        }
+      };
+      try {
+        rewrite("select cityid as `City ID`, msr8, msr7 as `Third measure` "
+            + "from testCube where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+        fail("Union feature is disabled, should have failed");
+      } catch (LensException e) {
+        assertEquals(e.getErrorCode(), LensCubeErrorCode.STORAGE_UNION_DISABLED.getLensErrorInfo().getErrorCode());
+      }
+      conf.setBoolean(CubeQueryConfUtil.ENABLE_STORAGES_UNION, true);
+
+      hqlQuery = rewrite("select asciicity as `City Name`, msr8, msr7 as `Third measure` "
+          + "from testCube where asciicity = 'c' and cityname = 'a' and zipcode = 'b' and "
+          + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+
+      String filter1 = "testcube.cityid in ( select id from TestQueryRewrite.c1_citytable cubecity "
+          + "where (ascii((cubecity.name)) = 'c') and (cubecity.dt = 'latest') )";
+      String filter2 = "testcube.cityid in ( select id from TestQueryRewrite.c1_citytable cubecity "
+          + "where ((cubecity.name) = 'a') and (cubecity.dt = 'latest') )";
+
+      assertTrue(hqlQuery.contains(filter1));
+      assertTrue(hqlQuery.contains(filter2));
+
+    } finally {
+      getStorageToUpdatePeriodMap().clear();
+    }
+  }
+  @Test
   public void testCubeGroupbyWithConstantProjected() throws Exception {
     // check constants
     Configuration conf = getConf();

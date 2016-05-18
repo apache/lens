@@ -164,7 +164,7 @@ class GroupbyResolver implements ContextRewriter {
       selectExprs.add(s.trim());
     }
     List<String> groupByExprs = new ArrayList<String>();
-    if (cubeql.getGroupByTree() != null) {
+    if (cubeql.getGroupByString() != null) {
       String[] gby = getExpressions(cubeql.getGroupByAST(), cubeql).toArray(new String[]{});
       for (String g : gby) {
         groupByExprs.add(g.trim());
