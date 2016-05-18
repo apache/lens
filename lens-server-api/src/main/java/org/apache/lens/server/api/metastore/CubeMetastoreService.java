@@ -574,49 +574,49 @@ public interface CubeMetastoreService extends LensService {
   /**
    *
    * @param sessionid         The session id
-   * @param cubeSeg           The cube segmentation
+   * @param cubeSeg           The  segmentation
    * @throws LensException
    */
-  void createCubeSegmentation(LensSessionHandle sessionid, XCubeSegmentation cubeSeg) throws LensException;
+  void createSegmentation(LensSessionHandle sessionid, XSegmentation cubeSeg) throws LensException;
 
   /**
-   * Create cube segmentation
+   * Create segmentation
    *
    * @param sessionid                    The session id
-   * @param segName                      Cube segmentation name
-   * @return {@link XCubeSegmentation}
+   * @param segName                      Ssegmentation name
+   * @return {@link XSegmentation}
    * @throws LensException
    */
-  XCubeSegmentation getCubeSegmentation(LensSessionHandle sessionid, String segName) throws LensException;
+  XSegmentation getSegmentation(LensSessionHandle sessionid, String segName) throws LensException;
 
   /**
-   * Get cube segmentation given by name
+   * Get segmentation given by name
    *
    * @param sessionid        The session id
-   * @param cubeSeg          The cube segmentation
+   * @param cubeSeg          The segmentation
    * @throws LensException
    */
 
-  void updateCubeSegmentation(LensSessionHandle sessionid, XCubeSegmentation cubeSeg) throws LensException;
+  void updateSegmentation(LensSessionHandle sessionid, XSegmentation cubeSeg) throws LensException;
 
   /**
-   * Update cube segmentation
+   * Update segmentation
    *
    * @param sessionid      The session id
-   * @param cubeSegName    Cube segmentation name
+   * @param cubeSegName    Segmentation name
    * @throws LensException
    */
-  void dropCubeSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException;
+  void dropSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException;
 
   /**
-   * Get all cube segmentations belong to Cube
+   * Get all segmentations belong to Cube
    *
    * @param sessionid    The session id
    * @param cubeName     The cube Name
    * @return
    * @throws LensException
    */
-  List<String> getAllCubeSegmentations(LensSessionHandle sessionid, String cubeName) throws LensException;
+  List<String> getAllSegmentations(LensSessionHandle sessionid, String cubeName) throws LensException;
 
 
 }

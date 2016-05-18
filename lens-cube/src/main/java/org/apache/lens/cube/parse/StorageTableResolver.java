@@ -668,9 +668,13 @@ class StorageTableResolver implements ContextRewriter {
             // Add non existing partitions for all cases of whether we populate all non existing or not.
             missingPartitions.add(part);
             if (!failOnPartialData) {
+              Set<String> st = getStorageTablesWithoutPartCheck(part, storageTbls);
+              if (st.isEmpty()) {
+                log.info("No eligible storage tables");
+                return false;
+              }
               partitions.add(part);
-              // add all storage tables as the answering tables
-              part.getStorageTables().addAll(storageTbls);
+              part.getStorageTables().addAll(st);
             }
           } else {
             log.info("No finer granual partitions exist for {}", part);
@@ -687,10 +691,26 @@ class StorageTableResolver implements ContextRewriter {
         updatePeriods, addNonExistingParts, failOnPartialData, skipStorageCauses, missingPartitions);
   }
 
+  private Set<String> getStorageTablesWithoutPartCheck(FactPartition part,
+    Set<String> storageTableNames) throws LensException, HiveException {
+    Set<String> validStorageTbls = new HashSet<>();
+    for (String storageTableName : storageTableNames) {
+      // skip all storage tables for which are not eligible for this partition
+      if (client.isStorageTablePartitionACandidate(storageTableName, part.getPartSpec())) {
+        validStorageTbls.add(storageTableName);
+      } else {
+        log.info("Skipping {} as it is not valid for part {}", storageTableName, part.getPartSpec());
+      }
+    }
+    return validStorageTbls;
+  }
+
   private void updateFactPartitionStorageTablesFrom(CubeFactTable fact,
     FactPartition part, Set<String> storageTableNames) throws LensException, HiveException, ParseException {
     for (String storageTableName : storageTableNames) {
-      if (client.factPartitionExists(fact, part, storageTableName)) {
+      // skip all storage tables for which are not eligible for this partition
+      if (client.isStorageTablePartitionACandidate(storageTableName, part.getPartSpec())
+        && (client.factPartitionExists(fact, part, storageTableName))) {
         part.getStorageTables().add(storageTableName);
         part.setFound(true);
       }

@@ -359,17 +359,17 @@ public class LensMetadataClient {
     return factTables.getElements();
   }
 
-  public List<String> getAllCubeSegmentations(String cubeName) {
+  public List<String> getAllSegmentations(String cubeName) {
     if (cubeName == null) {
-      return getAllCubeSegmentations();
+      return getAllSegmentations();
     }
     WebTarget target = getMetastoreWebTarget();
-    StringList cubeSegmentations;
-    cubeSegmentations = target.path("cubes").path(cubeName).path("cubesegmentations")
+    StringList segmentations;
+    segmentations = target.path("cubes").path(cubeName).path("segmentations")
             .queryParam("sessionid", this.connection.getSessionHandle())
             .request(MediaType.APPLICATION_XML)
             .get(StringList.class);
-    return cubeSegmentations.getElements();
+    return segmentations.getElements();
   }
 
 
@@ -384,15 +384,15 @@ public class LensMetadataClient {
     return factTables.getElements();
   }
 
-  public List<String> getAllCubeSegmentations() {
+  public List<String> getAllSegmentations() {
     WebTarget target = getMetastoreWebTarget();
-    StringList cubeSegmentations;
-    cubeSegmentations = target.path("cubesegmentations")
+    StringList segmentations;
+    segmentations = target.path("segmentations")
             .queryParam("sessionid", this.connection.getSessionHandle())
             .request(MediaType.APPLICATION_XML)
             .get(StringList.class);
 
-    return cubeSegmentations.getElements();
+    return segmentations.getElements();
   }
 
 
@@ -406,9 +406,9 @@ public class LensMetadataClient {
   }
 
 
-  public APIResult deleteAllCubeSegmentations() {
+  public APIResult deleteAllSegmentations() {
     WebTarget target = getMetastoreWebTarget();
-    return target.path("cubesegmentations")
+    return target.path("segmentations")
             .queryParam("sessionid", this.connection.getSessionHandle())
             .request(MediaType.APPLICATION_XML)
             .delete(APIResult.class);
@@ -424,12 +424,12 @@ public class LensMetadataClient {
     return table.getValue();
   }
 
-  public XCubeSegmentation getCubeSegmentation(String segName) {
+  public XSegmentation getSegmentation(String segName) {
     WebTarget target = getMetastoreWebTarget();
-    JAXBElement<XCubeSegmentation> seg = target.path("cubesegmentations").path(segName)
+    JAXBElement<XSegmentation> seg = target.path("segmentations").path(segName)
             .queryParam("sessionid", this.connection.getSessionHandle())
             .request(MediaType.APPLICATION_XML)
-            .get(new GenericType<JAXBElement<XCubeSegmentation>>() {
+            .get(new GenericType<JAXBElement<XSegmentation>>() {
             });
     return seg.getValue();
   }
@@ -450,18 +450,18 @@ public class LensMetadataClient {
     }
   }
 
-  public APIResult createCubeSegmentation(XCubeSegmentation seg) {
+  public APIResult createSegmentation(XSegmentation seg) {
     WebTarget target = getMetastoreWebTarget();
-    return target.path("cubesegmentations")
+    return target.path("segmentations")
             .queryParam("sessionid", this.connection.getSessionHandle())
             .request(MediaType.APPLICATION_XML)
-            .post(Entity.xml(new GenericEntity<JAXBElement<XCubeSegmentation>>(objFact
-                    .createXCubeSegmentation(seg)){}), APIResult.class);
+            .post(Entity.xml(new GenericEntity<JAXBElement<XSegmentation>>(objFact
+                    .createXSegmentation(seg)){}), APIResult.class);
   }
 
-  public APIResult createCubeSegmentation(String segSpec) {
+  public APIResult createSegmentation(String segSpec) {
     try {
-      return createCubeSegmentation(this.<XCubeSegmentation>readFromXML(segSpec));
+      return createSegmentation(this.<XSegmentation>readFromXML(segSpec));
     } catch (JAXBException | IOException e) {
       return failureAPIResult(e);
     }
@@ -483,18 +483,18 @@ public class LensMetadataClient {
     }
   }
 
-  public APIResult updateCubeSegmentation(String segName, XCubeSegmentation seg) {
+  public APIResult updateSegmentation(String segName, XSegmentation seg) {
     WebTarget target = getMetastoreWebTarget();
-    return target.path("cubesegmentations").path(segName)
+    return target.path("segmentations").path(segName)
             .queryParam("sessionid", this.connection.getSessionHandle())
             .request(MediaType.APPLICATION_XML_TYPE)
-            .put(Entity.xml(new GenericEntity<JAXBElement<XCubeSegmentation>>(objFact.
-                    createXCubeSegmentation(seg)){}), APIResult.class);
+            .put(Entity.xml(new GenericEntity<JAXBElement<XSegmentation>>(objFact.
+                    createXSegmentation(seg)){}), APIResult.class);
   }
 
-  public APIResult updateCubeSegmentation(String segName, String seg) {
+  public APIResult updateSegmentation(String segName, String seg) {
     try {
-      return updateCubeSegmentation(segName, this.<XCubeSegmentation>readFromXML(seg));
+      return updateSegmentation(segName, this.<XSegmentation>readFromXML(seg));
     } catch (JAXBException | IOException e) {
       return failureAPIResult(e);
     }
@@ -514,9 +514,9 @@ public class LensMetadataClient {
     return dropFactTable(factName, false);
   }
 
-  public APIResult dropCubeSegmentation(String segName) {
+  public APIResult dropSegmentation(String segName) {
     WebTarget target = getMetastoreWebTarget();
-    return target.path("cubesegmentations").path(segName)
+    return target.path("segmentations").path(segName)
             .queryParam("sessionid", this.connection.getSessionHandle())
             .request(MediaType.APPLICATION_XML)
             .delete(APIResult.class);
