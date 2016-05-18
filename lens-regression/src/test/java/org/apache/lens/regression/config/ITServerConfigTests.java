@@ -202,28 +202,21 @@ public class ITServerConfigTests extends BaseTestClass {
   @Test(enabled = true)
   public void negativeTestSnapshotInterval() throws Exception {
 
-    String sessionHandle = null;
-    try {
-      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS,
-          "50000");
-      Util.changeConfig(map, confFilePath);
-      lens.restart();
+    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS,
+        "50000");
+    Util.changeConfig(map, confFilePath);
+    lens.restart();
 
-      sessionHandle = sHelper.openNewSession("user", "pass");
-      sHelper.setAndValidateParam(sessionHandle, LensConfConstants.SESSION_CLUSTER_USER, "test");
+    String sessionHandle = sHelper.openNewSession("user", "pass");
+    sHelper.setAndValidateParam(sessionHandle, LensConfConstants.SESSION_CLUSTER_USER, "test");
 
-      Util.runRemoteCommand(lensKillCmd);
-      lens.restart();
+    //killing so that lens is not stopped gracefully.
+    Util.runRemoteCommand(lensKillCmd);
+    lens.restart();
 
-      MapBuilder query = new MapBuilder("sessionid", sessionHandle, "key", LensConfConstants.SESSION_CLUSTER_USER);
-      Response response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
-      Assert.assertEquals(response.getStatus(), Response.Status.GONE.getStatusCode(), "Snapshot interval test failed");
-
-    } finally {
-      if (sessionHandle != null) {
-        sHelper.closeNewSession(sessionHandle);
-      }
-    }
+    MapBuilder query = new MapBuilder("sessionid", sessionHandle, "key", LensConfConstants.SESSION_CLUSTER_USER);
+    Response response = lens.sendQuery("get", SessionURL.SESSION_PARAMS_URL, query);
+    Assert.assertEquals(response.getStatus(), Response.Status.GONE.getStatusCode(), "Snapshot interval test failed");
   }
 
 

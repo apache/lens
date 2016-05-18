@@ -132,7 +132,7 @@ public class ITStreamingTests extends BaseTestClass {
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
 
     QueryHandleWithResultSet qhr = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(
-        QueryInventory.getSleepQuery("10"), "1000").getData();
+        QueryInventory.getSleepQuery("10"), "100").getData();
     InMemoryQueryResult inmemoryResult = (InMemoryQueryResult) qhr.getResult();
     Assert.assertNull(inmemoryResult);
 
@@ -162,5 +162,6 @@ public class ITStreamingTests extends BaseTestClass {
     PersistentQueryResult result = (PersistentQueryResult) qhr.getResult();
     Assert.assertNotNull(result);
     Assert.assertEquals(result.getNumRows().intValue(), 8);
+
   }
 }
