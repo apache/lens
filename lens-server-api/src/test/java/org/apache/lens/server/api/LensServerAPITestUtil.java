@@ -29,13 +29,16 @@ public class LensServerAPITestUtil {
 
   public static Configuration getConfiguration(Object... args) {
     Configuration conf = new Configuration(false);
+    return getConfigurationWithParams(conf, args);
+  }
+
+  public static Configuration getConfigurationWithParams(Configuration conf, Object... args) {
     assert (args.length % 2 == 0);
     for (int i = 0; i < args.length; i += 2) {
       conf.set(args[i].toString(), args[i + 1].toString());
     }
     return conf;
   }
-
   public static LensConf getLensConf(Object... args) {
     assert (args.length % 2 == 0);
     LensConf conf = new LensConf();

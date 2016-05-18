@@ -22,13 +22,13 @@ import java.util.Map;
 
 import lombok.Getter;
 
-public class CubeSegment implements Named {
+public class Segment implements Named {
   @Getter
   private String name;
   @Getter
   private Map<String, String> properties;
 
-  public CubeSegment(String name,  Map<String, String> properties) {
+  public Segment(String name, Map<String, String> properties) {
     this.name = name;
     this.properties = properties;
   }

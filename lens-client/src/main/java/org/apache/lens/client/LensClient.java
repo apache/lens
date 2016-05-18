@@ -695,28 +695,28 @@ public class LensClient {
     return this.connection.getLogs(logFile);
   }
 
-  public XCubeSegmentation getCubeSegmentation(String segName) {
-    return mc.getCubeSegmentation(segName);
+  public XSegmentation getSegmentation(String segName) {
+    return mc.getSegmentation(segName);
   }
 
-  public List<String> getAllCubeSegmentations() {
-    return mc.getAllCubeSegmentations();
+  public List<String> getAllSegmentations() {
+    return mc.getAllSegmentations();
   }
 
-  public List<String> getAllCubeSegmentations(String filter) {
-    return mc.getAllCubeSegmentations(filter);
+  public List<String> getAllSegmentations(String filter) {
+    return mc.getAllSegmentations(filter);
   }
 
-  public APIResult createCubeSegmentation(String segSpec) {
-    return mc.createCubeSegmentation(segSpec);
+  public APIResult createSegmentation(String segSpec) {
+    return mc.createSegmentation(segSpec);
   }
 
-  public APIResult updateCubeSegmentation(String segName, String segSpec) {
-    return mc.updateCubeSegmentation(segName, segSpec);
+  public APIResult updateSegmentation(String segName, String segSpec) {
+    return mc.updateSegmentation(segName, segSpec);
   }
 
-  public APIResult dropCubeSegmentation(String segName) {
-    return mc.dropCubeSegmentation(segName);
+  public APIResult dropSegmentation(String segName) {
+    return mc.dropSegmentation(segName);
   }
 
 }

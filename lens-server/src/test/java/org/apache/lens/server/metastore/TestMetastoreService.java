@@ -1633,12 +1633,12 @@ public class TestMetastoreService extends LensJerseyTest {
     }
   }
 
-  private XCubeSegmentation createCubeSegmentation(String segName) {
-    return createCubeSegmentation(segName, "testCube");
+  private XSegmentation createSegmentation(String segName) {
+    return createSegmentation(segName, "testCube");
   }
 
-  private XCubeSegmentation createCubeSegmentation(String segName, String cubeName) {
-    XCubeSegmentation seg = cubeObjectFactory.createXCubeSegmentation();
+  private XSegmentation createSegmentation(String segName, String cubeName) {
+    XSegmentation seg = cubeObjectFactory.createXSegmentation();
 
     //Create Xproperties
     XProperties props1 = cubeObjectFactory.createXProperties();
@@ -1653,24 +1653,24 @@ public class TestMetastoreService extends LensJerseyTest {
     prop2.setValue("prop_val2");
     props2.getProperty().add(prop2);
 
-    // Create XcubeSegments
-    XCubeSegments cubes =  new XCubeSegments();
-    XCubeSegment c1 = cubeObjectFactory.createXCubeSegment();
+    // Create XSegments
+    XSegments cubes =  new XSegments();
+    XSegment c1 = cubeObjectFactory.createXSegment();
     c1.setCubeName("cube1");
     c1.setSegmentParameters(props1);
 
-    XCubeSegment c2 = cubeObjectFactory.createXCubeSegment();
+    XSegment c2 = cubeObjectFactory.createXSegment();
     c2.setCubeName("cube2");
     c2.setSegmentParameters(props2);
 
-    cubes.getCubeSegment().add(c1);
-    cubes.getCubeSegment().add(c2);
+    cubes.getSegment().add(c1);
+    cubes.getSegment().add(c2);
 
     seg.setProperties(new XProperties());
     seg.setName(segName);
     seg.setWeight(10.0);
     seg.setCubeName(cubeName);
-    seg.setCubeSegements(cubes);
+    seg.setSegements(cubes);
     Map<String, String> properties = LensUtil.getHashMap("foo", "bar");
     seg.getProperties().getProperty().addAll(JAXBUtils.xPropertiesFromMap(properties));
 
@@ -1678,44 +1678,44 @@ public class TestMetastoreService extends LensJerseyTest {
   }
 
   @Test(dataProvider = "mediaTypeData")
-  public void testCreateAndAlterCubeSegmentation(MediaType mediaType) throws Exception {
-    final String segname = "testCreateCubeSegmentation";
-    final String DB = dbPFX + "testCreateCubeSegmentation_DB" + mediaType.getSubtype();
+  public void testCreateAndAlterSegmentation(MediaType mediaType) throws Exception {
+    final String segname = "testCreateSegmentation";
+    final String DB = dbPFX + "testCreateSegmentation_DB" + mediaType.getSubtype();
     String prevDb = getCurrentDatabase(mediaType);
     createDatabase(DB, mediaType);
     setCurrentDatabase(DB, mediaType);
 
     try {
-      XCubeSegmentation seg = createCubeSegmentation(segname);
+      XSegmentation seg = createSegmentation(segname);
 
       APIResult result = target()
               .path("metastore")
-              .path("cubesegmentations").queryParam("sessionid", lensSessionId)
+              .path("segmentations").queryParam("sessionid", lensSessionId)
               .request(mediaType)
               .post(Entity.entity(
-                              new GenericEntity<JAXBElement<XCubeSegmentation>>(
-                                      cubeObjectFactory.createXCubeSegmentation(seg)){}, mediaType),
+                              new GenericEntity<JAXBElement<XSegmentation>>(
+                                      cubeObjectFactory.createXSegmentation(seg)){}, mediaType),
                       APIResult.class);
       assertSuccess(result);
 
-      // Get all cube segmentations, this should contain the cube segmentation created earlier
-      StringList segNames = target().path("metastore/cubesegmentations")
+      // Get all segmentations, this should contain the segmentation created earlier
+      StringList segNames = target().path("metastore/segmentations")
               .queryParam("sessionid", lensSessionId).request(mediaType).get(StringList.class);
       assertTrue(segNames.getElements().contains(segname.toLowerCase()));
 
-      // Get the created cubesegmentation
-      JAXBElement<XCubeSegmentation> gotCubeSegmentation = target().path("metastore/cubesegmentations")
+      // Get the created segmentation
+      JAXBElement<XSegmentation> gotSegmentation = target().path("metastore/segmentations")
               .path(segname)
               .queryParam("sessionid", lensSessionId).request(mediaType)
-              .get(new GenericType<JAXBElement<XCubeSegmentation>>() {});
-      XCubeSegmentation gotSeg = gotCubeSegmentation.getValue();
+              .get(new GenericType<JAXBElement<XSegmentation>>() {});
+      XSegmentation gotSeg = gotSegmentation.getValue();
       assertTrue(gotSeg.getName().equalsIgnoreCase(segname));
       assertEquals(gotSeg.getWeight(), 10.0);
-      CubeSegmentation cs = JAXBUtils.cubeSegmentationFromXCubeSegmentation(seg);
+      Segmentation cs = JAXBUtils.segmentationFromXSegmentation(seg);
 
-      // Check for cube segemnts
+      // Check for segemnts
       boolean foundCube1 = false;
-      for (CubeSegment cube : cs.getCubeSegments()) {
+      for (Segment cube : cs.getSegments()) {
         if (cube.getName().equalsIgnoreCase("cube1")
             && cube.getProperties().get("prop_key1").equals("prop_val1")) {
           foundCube1 = true;
@@ -1725,40 +1725,40 @@ public class TestMetastoreService extends LensJerseyTest {
       assertTrue(foundCube1);
       assertEquals(cs.getProperties().get("foo"), "bar");
 
-      // update cube segmentation
-      XCubeSegmentation update = JAXBUtils.xsegmentationFromCubeSegmentation(cs);
-      XCubeSegments cubes =  new XCubeSegments();
-      XCubeSegment c1 = cubeObjectFactory.createXCubeSegment();
+      // update segmentation
+      XSegmentation update = JAXBUtils.xsegmentationFromSegmentation(cs);
+      XSegments cubes =  new XSegments();
+      XSegment c1 = cubeObjectFactory.createXSegment();
       c1.setCubeName("cube11");
-      XCubeSegment c2 = cubeObjectFactory.createXCubeSegment();
+      XSegment c2 = cubeObjectFactory.createXSegment();
       c2.setCubeName("cube22");
-      cubes.getCubeSegment().add(c1);
-      cubes.getCubeSegment().add(c2);
+      cubes.getSegment().add(c1);
+      cubes.getSegment().add(c2);
 
       update.setWeight(20.0);
-      update.setCubeSegements(cubes);
+      update.setSegements(cubes);
 
-      result = target().path("metastore").path("cubesegmentations").path(segname)
+      result = target().path("metastore").path("segmentations").path(segname)
               .queryParam("sessionid", lensSessionId).request(mediaType)
-              .put(Entity.entity(new GenericEntity<JAXBElement<XCubeSegmentation>>(
-                cubeObjectFactory.createXCubeSegmentation(update)){}, mediaType),
+              .put(Entity.entity(new GenericEntity<JAXBElement<XSegmentation>>(
+                cubeObjectFactory.createXSegmentation(update)){}, mediaType),
               APIResult.class);
       assertSuccess(result);
 
       // Get the updated table
-      JAXBElement<XCubeSegmentation>  gotUpdatedCubeSeg = target().path("metastore/cubesegmentations").path(segname)
+      JAXBElement<XSegmentation>  gotUpdatedSeg = target().path("metastore/segmentations").path(segname)
               .queryParam("sessionid", lensSessionId).request(mediaType)
-              .get(new GenericType<JAXBElement<XCubeSegmentation>>() {});
-      XCubeSegmentation gotUpSeg = gotUpdatedCubeSeg.getValue();
-      CubeSegmentation usg = JAXBUtils.cubeSegmentationFromXCubeSegmentation(gotUpSeg);
+              .get(new GenericType<JAXBElement<XSegmentation>>() {});
+      XSegmentation gotUpSeg = gotUpdatedSeg.getValue();
+      Segmentation usg = JAXBUtils.segmentationFromXSegmentation(gotUpSeg);
 
-      assertEquals(usg.getCubeSegments().size(), 2);
-      for (CubeSegment segmnt : usg.getCubeSegments()) {
+      assertEquals(usg.getSegments().size(), 2);
+      for (Segment segmnt : usg.getSegments()) {
         assertTrue(segmnt.getName().equals("cube11") || segmnt.getName().equals("cube22"));
       }
 
-      // Finally, drop the cube segmentation
-      result = target().path("metastore").path("cubesegmentations").path(segname)
+      // Finally, drop the segmentation
+      result = target().path("metastore").path("segmentations").path(segname)
               .queryParam("sessionid", lensSessionId).request(mediaType)
               .delete(APIResult.class);
 
@@ -1766,7 +1766,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       // Drop again, this time it should give a 404
       try {
-        target().path("metastore").path("cubesegmentations").path(segname)
+        target().path("metastore").path("segmentations").path(segname)
                 .queryParam("cascade", "true")
                 .queryParam("sessionid", lensSessionId).request(mediaType)
                 .delete(APIResult.class);

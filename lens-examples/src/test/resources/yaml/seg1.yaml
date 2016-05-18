@@ -15,7 +15,7 @@
 # limitations under the License.
 properties:
   cube.segmentation.relative.start.time: now -10days
-cubeSegements:
+segements:
   -
     segmentParameters:
       lens.metastore.cube.column.mapping: foo=bar

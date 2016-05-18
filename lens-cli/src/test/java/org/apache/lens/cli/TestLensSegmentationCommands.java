@@ -27,7 +27,7 @@ import java.net.URL;
 import javax.ws.rs.NotFoundException;
 
 import org.apache.lens.cli.commands.LensCubeCommands;
-import org.apache.lens.cli.commands.annotations.LensCubeSegmentationCommands;
+import org.apache.lens.cli.commands.annotations.LensSegmentationCommands;
 import org.apache.lens.client.LensClient;
 
 import org.testng.annotations.Test;
@@ -35,9 +35,9 @@ import org.testng.annotations.Test;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TestLensCubeSegmentationCommands extends LensCliApplicationTest {
+public class TestLensSegmentationCommands extends LensCliApplicationTest {
 
-  private static LensCubeSegmentationCommands command = null;
+  private static LensSegmentationCommands command = null;
   private static LensCubeCommands cubeCommands = null;
 
   private void createSampleCube() throws URISyntaxException {
@@ -49,10 +49,10 @@ public class TestLensCubeSegmentationCommands extends LensCliApplicationTest {
     assertTrue(cubeList.contains("sample_cube"), cubeList);
   }
 
-  private static LensCubeSegmentationCommands getCommand() {
+  private static LensSegmentationCommands getCommand() {
     if (command == null) {
       LensClient client = new LensClient();
-      command = new LensCubeSegmentationCommands();
+      command = new LensSegmentationCommands();
       command.setClient(client);
     }
     return command;
@@ -68,30 +68,30 @@ public class TestLensCubeSegmentationCommands extends LensCliApplicationTest {
   }
 
   public static void testCreateSegmentation() throws IOException {
-    LensCubeSegmentationCommands command = getCommand();
-    String segList = command.showCubeSegmentations(null);
-    assertEquals(command.showCubeSegmentations("sample_cube"), "No cubesegmentation found for sample_cube");
-    assertEquals(segList, "No cubesegmentation found");
-    URL segSpec = TestLensCubeSegmentationCommands.class.getClassLoader().getResource("seg1.xml");
+    LensSegmentationCommands command = getCommand();
+    String segList = command.showSegmentations(null);
+    assertEquals(command.showSegmentations("sample_cube"), "No segmentation found for sample_cube");
+    assertEquals(segList, "No segmentation found");
+    URL segSpec = TestLensSegmentationCommands.class.getClassLoader().getResource("seg1.xml");
     try {
-      command.createCubeSegmentation(new File(segSpec.toURI()));
+      command.createSegmentation(new File(segSpec.toURI()));
     } catch (Exception e) {
-      fail("Unable to create cubesegmentation" + e.getMessage());
+      fail("Unable to create segmentation" + e.getMessage());
     }
-    segList = command.showCubeSegmentations(null);
-    assertEquals(command.showCubeSegmentations("sample_cube"), segList);
+    segList = command.showSegmentations(null);
+    assertEquals(command.showSegmentations("sample_cube"), segList);
     try {
-      assertEquals(command.showCubeSegmentations("blah"), segList);
+      assertEquals(command.showSegmentations("blah"), segList);
       fail();
     } catch (NotFoundException e) {
-      log.info("blah is not a cubesegmentation", e);
+      log.info("blah is not a segmentation", e);
     }
   }
 
   public static void testUpdateSegmentation() {
     try {
-      LensCubeSegmentationCommands command = getCommand();
-      URL segSpec = TestLensCubeSegmentationCommands.class.getClassLoader().getResource("seg1.xml");
+      LensSegmentationCommands command = getCommand();
+      URL segSpec = TestLensSegmentationCommands.class.getClassLoader().getResource("seg1.xml");
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(segSpec.getFile()));
       String s;
@@ -109,15 +109,15 @@ public class TestLensCubeSegmentationCommands extends LensCliApplicationTest {
       writer.write(xmlContent);
       writer.close();
 
-      String desc = command.describeCubeSegmentation("seg1");
+      String desc = command.describeSegmentation("seg1");
       log.debug(desc);
       String propString = "seg1.prop: s1";
       String propString1 = "seg1.prop1: s2";
 
       assertTrue(desc.contains(propString));
 
-      command.updateCubeSegmentation("seg1", new File("target/seg2.xml"));
-      desc = command.describeCubeSegmentation("seg1");
+      command.updateSegmentation("seg1", new File("target/seg2.xml"));
+      desc = command.describeSegmentation("seg1");
       log.debug(desc);
       assertTrue(desc.contains(propString), "The sample property value is not set");
       assertTrue(desc.contains(propString1), "The sample property value is not set");
@@ -125,19 +125,19 @@ public class TestLensCubeSegmentationCommands extends LensCliApplicationTest {
       newFile.delete();
 
     } catch (Throwable t) {
-      log.error("Updating of the cubesegmentation failed with ", t);
-      fail("Updating of the cubesegmentation failed with " + t.getMessage());
+      log.error("Updating of the segmentation failed with ", t);
+      fail("Updating of the segmentation failed with " + t.getMessage());
     }
 
   }
 
   public static void testDropSegmentation() {
-    LensCubeSegmentationCommands command = getCommand();
-    String segList = command.showCubeSegmentations(null);
+    LensSegmentationCommands command = getCommand();
+    String segList = command.showSegmentations(null);
     assertEquals("seg1", segList, "seg1 segmentation should be found");
-    command.dropCubeSegmentation("seg1");
-    segList = command.showCubeSegmentations(null);
-    assertEquals(segList, "No cubesegmentation found");
+    command.dropSegmentation("seg1");
+    segList = command.showSegmentations(null);
+    assertEquals(segList, "No segmentation found");
   }
 
   private void dropSampleCube() {
@@ -145,7 +145,7 @@ public class TestLensCubeSegmentationCommands extends LensCliApplicationTest {
   }
 
   @Test
-  public void testCubeSegmentationCommands() throws IOException, URISyntaxException {
+  public void testSegmentationCommands() throws IOException, URISyntaxException {
     createSampleCube();
     testCreateSegmentation();
     testUpdateSegmentation();
