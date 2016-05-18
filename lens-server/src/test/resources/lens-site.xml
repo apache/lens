@@ -198,4 +198,9 @@
     <description>Number of millis that would grow exponentially for next update, incase of transient failures.
     </description>
   </property>
+  <property>
+    <name>lens.server.duplicate.query.allowed</name>
+    <value>true</value>
+  </property>
+
 </configuration>

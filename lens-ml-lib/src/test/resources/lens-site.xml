@@ -152,11 +152,14 @@
     <value>local</value>
   </property>
 
-
   <property>
     <name>lens.server.mocknonlens.service.impl</name>
     <value>org.apache.lens.server.MockNonLensService</value>
     <description>Implementation class for session service</description>
   </property>
 
+  <property>
+    <name>lens.server.duplicate.query.allowed</name>
+    <value>true</value>
+  </property>
 </configuration>
