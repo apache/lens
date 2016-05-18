@@ -508,12 +508,12 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
-  public XCubeSegmentation getCubeSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException {
+  public XSegmentation getSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException {
     try {
       acquire(sessionid);
       CubeMetastoreClient msClient = getClient(sessionid);
-      CubeSegmentation cubeSeg = msClient.getCubeSegmentation(cubeSegName);
-      return JAXBUtils.xsegmentationFromCubeSegmentation(cubeSeg);
+      Segmentation cubeSeg = msClient.getSegmentation(cubeSegName);
+      return JAXBUtils.xsegmentationFromSegmentation(cubeSeg);
     } catch (HiveException e) {
       throw new LensException(e);
     } finally {
@@ -542,16 +542,16 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
-  public void createCubeSegmentation(LensSessionHandle sessionid, XCubeSegmentation cubeSeg) throws LensException {
+  public void createSegmentation(LensSessionHandle sessionid, XSegmentation cubeSeg) throws LensException {
     try {
       acquire(sessionid);
-      getClient(sessionid).createCubeSegmentation(
+      getClient(sessionid).createSegmentation(
               cubeSeg.getCubeName(),
               cubeSeg.getName(),
-              JAXBUtils.cubeSegmentsFromXCubeSegments(cubeSeg.getCubeSegements()),
+              JAXBUtils.segmentsFromXSegments(cubeSeg.getSegements()),
               cubeSeg.getWeight(),
               JAXBUtils.mapFromXProperties(cubeSeg.getProperties()));
-      log.info("Created cube segmentation " + cubeSeg.getName());
+      log.info("Created segmentation " + cubeSeg.getName());
     } catch (HiveException e) {
       throw new LensException(e);
     } finally {
@@ -575,11 +575,11 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
-  public void updateCubeSegmentation(LensSessionHandle sessionid, XCubeSegmentation cubeSeg) throws LensException {
+  public void updateSegmentation(LensSessionHandle sessionid, XSegmentation cubeSeg) throws LensException {
     try {
       acquire(sessionid);
-      getClient(sessionid).alterCubeSegmentation(cubeSeg.getName(), cubeSegmentationFromXCubeSegmentation(cubeSeg));
-      log.info("Updated cube segmentation " + cubeSeg.getName());
+      getClient(sessionid).alterSegmentation(cubeSeg.getName(), segmentationFromXSegmentation(cubeSeg));
+      log.info("Updated segmentation " + cubeSeg.getName());
     } catch (HiveException e) {
       throw new LensException(e);
     } finally {
@@ -601,11 +601,11 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
-  public void dropCubeSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException {
+  public void dropSegmentation(LensSessionHandle sessionid, String cubeSegName) throws LensException {
     try {
       acquire(sessionid);
-      getClient(sessionid).dropCubeSegmentation(cubeSegName);
-      log.info("Dropped cube segemntation " + cubeSegName);
+      getClient(sessionid).dropSegmentation(cubeSegName);
+      log.info("Dropped segemntation " + cubeSegName);
     } catch (HiveException e) {
       throw new LensException(e);
     } finally {
@@ -637,7 +637,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
-  public List<String> getAllCubeSegmentations(LensSessionHandle sessionid, String cubeName) throws LensException {
+  public List<String> getAllSegmentations(LensSessionHandle sessionid, String cubeName) throws LensException {
     try {
       acquire(sessionid);
       CubeMetastoreClient client = getClient(sessionid);
@@ -645,9 +645,9 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       if (cubeName != null && seg == null) {
         throw new LensException("Could not get table: " + cubeName + " as a cube");
       }
-      Collection<CubeSegmentation> segs = client.getAllCubeSegmentations(seg);
+      Collection<Segmentation> segs = client.getAllSegmentations(seg);
       List<String> segNames = new ArrayList<String>(segs.size());
-      for (CubeSegmentation cs : segs) {
+      for (Segmentation cs : segs) {
         segNames.add(cs.getName());
       }
       return segNames;

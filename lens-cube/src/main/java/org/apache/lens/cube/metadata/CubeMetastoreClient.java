@@ -81,8 +81,8 @@ public class CubeMetastoreClient {
   private final Map<String, CubeFactTable> allFactTables = Maps.newConcurrentMap();
   private volatile boolean allFactTablesPopulated = false;
   //map from segmentation name to segmentation
-  private final Map<String, CubeSegmentation> allCubeSegmentations = Maps.newConcurrentMap();
-  private volatile boolean allCubeSegmentationPopulated = false;
+  private final Map<String, Segmentation> allSegmentations = Maps.newConcurrentMap();
+  private volatile boolean allSegmentationPopulated = false;
   // map from storage name to storage
   private final Map<String, Storage> allStorages = Maps.newConcurrentMap();
   private volatile boolean allStoragesPopulated = false;
@@ -718,18 +718,18 @@ public class CubeMetastoreClient {
    *
    * @param baseCubeName             The cube name ot which segmentation belong to
    * @param segmentationName         The segmentation name
-   * @param cubeSegments             Participating cube segements
+   * @param segments             Participating cube segements
    * @param weight                   Weight of segmentation
    * @param properties               Properties of segmentation
    * @throws HiveException
    */
-  public void createCubeSegmentation(String baseCubeName, String segmentationName, Set<CubeSegment> cubeSegments,
+  public void createSegmentation(String baseCubeName, String segmentationName, Set<Segment> segments,
                                      double weight, Map<String, String> properties) throws HiveException {
-    CubeSegmentation cubeSeg =
-            new CubeSegmentation(baseCubeName, segmentationName, cubeSegments, weight, properties);
-    createCubeSegmentation(cubeSeg);
+    Segmentation cubeSeg =
+            new Segmentation(baseCubeName, segmentationName, segments, weight, properties);
+    createSegmentation(cubeSeg);
     // do a get to update cache
-    getCubeSegmentation(segmentationName);
+    getSegmentation(segmentationName);
   }
 
   /**
@@ -795,7 +795,7 @@ public class CubeMetastoreClient {
     }
   }
 
-  public void createCubeSegmentation(CubeSegmentation cubeSeg)
+  public void createSegmentation(Segmentation cubeSeg)
     throws HiveException {
     // create virtual cube table in metastore
     createCubeHiveTable(cubeSeg);
@@ -1428,12 +1428,12 @@ public class CubeMetastoreClient {
     return CubeTableType.FACT.name().equals(tableType);
   }
 
-  public boolean isCubeSegmentation(String segName) throws HiveException {
+  public boolean isSegmentation(String segName) throws HiveException {
     Table tbl = getTable(segName);
-    return isCubeSegmentation(tbl);
+    return isSegmentation(tbl);
   }
 
-  boolean isCubeSegmentation(Table tbl) {
+  boolean isSegmentation(Table tbl) {
     String tableType = tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY);
     return CubeTableType.SEGMENTATION.name().equals(tableType);
   }
@@ -1563,12 +1563,12 @@ public class CubeMetastoreClient {
     return isFactTable(tbl) ? new CubeFactTable(tbl) : null;
   }
 
-  public CubeSegmentation getCubeSegmentationTable(String tableName) throws HiveException {
-    return getCubeSegmentationTable(getTable(tableName));
+  public Segmentation getSegmentationTable(String tableName) throws HiveException {
+    return getSegmentationTable(getTable(tableName));
   }
 
-  private CubeSegmentation getCubeSegmentationTable(Table tbl) throws HiveException {
-    return isCubeSegmentation(tbl) ? new CubeSegmentation(tbl) : null;
+  private Segmentation getSegmentationTable(Table tbl) throws HiveException {
+    return isSegmentation(tbl) ? new Segmentation(tbl) : null;
   }
 
   /**
@@ -1735,18 +1735,18 @@ public class CubeMetastoreClient {
     return fact;
   }
 
-  public CubeSegmentation getCubeSegmentation(String segName) throws HiveException {
+  public Segmentation getSegmentation(String segName) throws HiveException {
     segName = segName.trim().toLowerCase();
-    CubeSegmentation seg = allCubeSegmentations.get(segName);
+    Segmentation seg = allSegmentations.get(segName);
     if (seg == null) {
-      synchronized (allCubeSegmentations) {
-        if (!allCubeSegmentations.containsKey(segName)) {
-          seg = getCubeSegmentationTable(segName);
+      synchronized (allSegmentations) {
+        if (!allSegmentations.containsKey(segName)) {
+          seg = getSegmentationTable(segName);
           if (enableCaching && seg != null) {
-            allCubeSegmentations.put(segName, seg);
+            allSegmentations.put(segName, seg);
           }
         } else {
-          seg = allCubeSegmentations.get(segName);
+          seg = allSegmentations.get(segName);
         }
       }
     }
@@ -1898,17 +1898,17 @@ public class CubeMetastoreClient {
   }
 
   /**
-   * Get all cube segmentations in metastore
+   * Get all segmentations in metastore
    *
-   * @return List of cube segmentation objects
+   * @return List of segmentation objects
    * @throws HiveException
    */
-  public Collection<CubeSegmentation> getAllCubeSegmentations() throws HiveException {
-    if (!allCubeSegmentationPopulated) {
-      List<CubeSegmentation> segs = new ArrayList<>();
+  public Collection<Segmentation> getAllSegmentations() throws HiveException {
+    if (!allSegmentationPopulated) {
+      List<Segmentation> segs = new ArrayList<>();
       try {
         for (String table : getAllHiveTableNames()) {
-          CubeSegmentation seg = getCubeSegmentation(table);
+          Segmentation seg = getSegmentation(table);
           if (seg != null) {
             segs.add(seg);
           }
@@ -1919,7 +1919,7 @@ public class CubeMetastoreClient {
       allFactTablesPopulated = enableCaching;
       return segs;
     } else {
-      return allCubeSegmentations.values();
+      return allSegmentations.values();
     }
   }
 
@@ -1967,7 +1967,7 @@ public class CubeMetastoreClient {
     return cubeFacts;
   }
 
-  public List<CubeSegmentation> getAllCubeSegmentations(CubeInterface cube) throws HiveException {
+  public List<Segmentation> getAllSegmentations(CubeInterface cube) throws HiveException {
     String cubeName = null;
     if (cube != null) {
       if (cube instanceof DerivedCube) {
@@ -1975,9 +1975,9 @@ public class CubeMetastoreClient {
       }
       cubeName = cube.getName();
     }
-    List<CubeSegmentation> cubeSegs = new ArrayList<>();
+    List<Segmentation> cubeSegs = new ArrayList<>();
     try {
-      for (CubeSegmentation seg : getAllCubeSegmentations()) {
+      for (Segmentation seg : getAllSegmentations()) {
         if (cubeName == null || seg.getBaseCube().equalsIgnoreCase(cubeName)) {
           cubeSegs.add(seg);
         }
@@ -2208,12 +2208,12 @@ public class CubeMetastoreClient {
   }
 
 
-  public void dropCubeSegmentation(String segName) throws HiveException {
-    if (isCubeSegmentation(segName)) {
+  public void dropSegmentation(String segName) throws HiveException {
+    if (isSegmentation(segName)) {
       dropHiveTable(segName);
-      allCubeSegmentations.remove(segName.trim().toLowerCase());
+      allSegmentations.remove(segName.trim().toLowerCase());
     } else {
-      throw new HiveException(segName + " is not a CubeSegmentation");
+      throw new HiveException(segName + " is not a Segmentation");
     }
   }
 
@@ -2315,23 +2315,23 @@ public class CubeMetastoreClient {
     }
   }
 
-  public void alterCubeSegmentation(String segName, CubeSegmentation seg)
+  public void alterSegmentation(String segName, Segmentation seg)
     throws HiveException {
     Table segTbl = getTable(segName);
-    if (isCubeSegmentation(segTbl)) {
-      if (!(getCubeSegmentation(segName) == seg)) {
-        dropCubeSegmentation(segName);
-        createCubeSegmentation(seg);
+    if (isSegmentation(segTbl)) {
+      if (!(getSegmentation(segName) == seg)) {
+        dropSegmentation(segName);
+        createSegmentation(seg);
         updateSegmentationCache(segName);
       }
     } else {
-      throw new HiveException(segName + " is not a cube segment");
+      throw new HiveException(segName + " is not a segment");
     }
   }
 
   private void updateSegmentationCache(String segmentName) throws HiveException {
     if (enableCaching) {
-      allCubeSegmentations.put(segmentName.trim().toLowerCase(), getCubeSegmentationTable(refreshTable(segmentName)));
+      allSegmentations.put(segmentName.trim().toLowerCase(), getSegmentationTable(refreshTable(segmentName)));
     }
   }
 

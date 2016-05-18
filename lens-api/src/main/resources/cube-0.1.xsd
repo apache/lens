@@ -1020,10 +1020,10 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="x_cube_segment">
+  <xs:complexType name="x_segment">
     <xs:annotation>
       <xs:documentation>
-        cube segment belong to the segmentation
+        Segment belong to the segmentation
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -1031,8 +1031,8 @@
         <xs:annotation>
           <xs:documentation>
             Segment properties.
-            The following properties can be specified at a cube segment level :
-            1. lens.metastore.cube.column.mapping : The column mapping for columns of cube segment if they are
+            The following properties can be specified at a segment level :
+            1. lens.metastore.cube.column.mapping : The column mapping for columns of segment if they are
             different in underlying cube. The value is speciified with comma separated map entries specified with
             key-values separated by equalto. Example value: id=id1,name=name1
           </xs:documentation>
@@ -1042,14 +1042,14 @@
     <xs:attribute name="cube_name"  type="xs:string" use="required"/>
   </xs:complexType>
 
-  <xs:complexType name="x_cube_segments">
+  <xs:complexType name="x_segments">
     <xs:annotation>
       <xs:documentation>
-        Segments in segmentation. There can be two or more such cube segments.
+        Segments in segmentation. There can be two or more such segments.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="cube_segment" minOccurs="2" maxOccurs="unbounded" type="x_cube_segment"/>
+      <xs:element name="segment" minOccurs="2" maxOccurs="unbounded" type="x_segment"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -1271,56 +1271,56 @@
     </xs:attribute>
   </xs:complexType>
 
-  <xs:element name="x_cube_segmentation" type="x_cube_segmentation"/>
+  <xs:element name="x_segmentation" type="x_segmentation"/>
 
-  <xs:complexType name="x_cube_segmentation">
+  <xs:complexType name="x_segmentation">
     <xs:annotation>
       <xs:documentation>
-        Cube segmentation is associated to a base cube and consists of two or more cube segments. All
-        cube segments together make cube segmentation complete.
+        Segmentation is associated to a base cube and consists of two or more segments. All
+        segments together make segmentation complete.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:element type="x_properties" name="properties" maxOccurs="1" minOccurs="0">
         <xs:annotation>
           <xs:documentation>
-            Properties that can be set for cubesegmentation are
-            1. cube.segmentation.absolute.start.time: start time of the cube segmentation.
-            For queries that ask for time before this, this cubesegmentation is not a candidate. Time format
+            Properties that can be set for segmentation are
+            1. cube.segmentation.absolute.start.time: start time of the segmentation.
+            For queries that ask for time before this, this segmentation is not a candidate. Time format
             can be specified in yyyy[-mm[-dd[-hh[:MM[:ss[,SSS]]]]]] format.
-            2. cube.segmentation.relative.start.time: Here you can specify cubesegmentations's relative validity
-            relative to current time. Useful if you want to specify e.g. this cubesegmentation is valid
+            2. cube.segmentation.relative.start.time: Here you can specify segmentations's relative validity
+            relative to current time. Useful if you want to specify e.g. this segmentation is valid
             for today - 90 days. Can be specified as just a time difference e.g. "-90 days".
             Or can be specified in relative syntax.
             e.g. now.year or now.day - 6 hour etc.
-            3. cube.segmentation.absolute.end.time: If you're deprecating a cubesegmentation, put the final date till
-            which the data of the cubesegmentation will be valid here. Format same as absolute start time.
-            4. cube.segmentation.relative.end.time: You can specify the end date for cubesegmentation
-            relative to current date e.g. cubesegmentationas is valid for next 90 days starting from today.
+            3. cube.segmentation.absolute.end.time: If you're deprecating a segmentation, put the final date till
+            which the data of the segmentation will be valid here. Format same as absolute start time.
+            4. cube.segmentation.relative.end.time: You can specify the end date for segmentation
+            relative to current date e.g. segmentationas is valid for next 90 days starting from today.
             This can be specified as just a time difference e.g. "+90 days".
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="cube_segements" type="x_cube_segments" maxOccurs="1" minOccurs="0"/>
+      <xs:element name="segements" type="x_segments" maxOccurs="1" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          Name of cube segmentation
+          Name of Segmentation
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="cube_name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>
-          The base or parent cube to which the cube segmentation is associated.
+          The base or parent cube to which the segmentation is associated.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="weight" use="required" >
       <xs:annotation>
         <xs:documentation>
-          The weight of the cube segmentation. LENS will use this attribute to decide the lightest table to
+          The weight of the segmentation. LENS will use this attribute to decide the lightest table to
           query when there are more than one eligible tables.
         </xs:documentation>
       </xs:annotation>
