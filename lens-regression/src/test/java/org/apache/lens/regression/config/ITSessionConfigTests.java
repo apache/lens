@@ -76,6 +76,8 @@ public class ITSessionConfigTests extends BaseTestClass{
 
   @AfterMethod(alwaysRun=true)
   public void restoreConfig() throws JSchException, IOException, JAXBException, LensException{
+    qHelper.killQuery(null, "QUEUED", "all");
+    qHelper.killQuery(null, "RUNNING", "all");
     sHelper.closeSession();
   }
 

@@ -45,12 +45,30 @@
     </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
+      <artifactId>lens-server</artifactId>
+      <version>${project.version}</version>
+      <classifier>classes</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-server</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lens</groupId>
       <artifactId>lens-server-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
       <artifactId>lens-driver-jdbc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-driver-hive</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
