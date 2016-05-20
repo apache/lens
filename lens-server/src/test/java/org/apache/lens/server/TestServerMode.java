@@ -53,8 +53,6 @@ import org.testng.annotations.Test;
 @Test(alwaysRun = true, groups = "filter-test", dependsOnGroups = "restart-test")
 public class TestServerMode extends LensAllApplicationJerseyTest {
 
-  private LensSessionHandle lensSessionHandle;
-
   /*
    * (non-Javadoc)
    *
@@ -66,18 +64,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     LensServerTestUtil.createTable("test_table", target(), RestAPITestUtil.openFooBarSession(target(), defaultMT),
       defaultMT);
   }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
-   */
-  @AfterTest
-  public void tearDown() throws Exception {
-    RestAPITestUtil.closeSession(target(), lensSessionHandle, defaultMT);
-    super.tearDown();
-  }
-
+  
   /**
    * Test read only mode.
    *

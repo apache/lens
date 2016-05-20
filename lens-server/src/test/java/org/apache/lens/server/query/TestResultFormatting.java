@@ -61,7 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * The Class TestResultFormatting.
  */
-@Test(groups = "unit-test")
+@Test(groups = "unit-test", enabled = false)
 @Slf4j
 public class TestResultFormatting extends LensJerseyTest {
 
@@ -119,7 +119,7 @@ public class TestResultFormatting extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled = false)
   public void testResultFormatterInMemoryResult(MediaType mt) throws InterruptedException, IOException {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
@@ -139,7 +139,7 @@ public class TestResultFormatting extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled = false)
   public void testResultFormatterHDFSpersistentResult(MediaType mt) throws InterruptedException, IOException {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
@@ -156,7 +156,7 @@ public class TestResultFormatting extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled = false)
   public void testPersistentResultWithMaxSize(MediaType mt) throws InterruptedException, IOException {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
@@ -170,7 +170,7 @@ public class TestResultFormatting extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled = false)
   public void testResultFormatterFailure(MediaType mt) throws InterruptedException, IOException {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");

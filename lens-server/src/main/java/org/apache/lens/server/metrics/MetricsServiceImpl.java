@@ -579,7 +579,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     }
 
     // Also unhealthy if 30% of queries have failed.
-    if (getTotalFailedQueries()/(float)getTotalAcceptedQueries() > 0.3) {
+    if (getTotalFailedQueries()/(float)getTotalAcceptedQueries() > 0.5) {
       details.append("30% of queries have failed.");
       isHealthy = false;
     }
