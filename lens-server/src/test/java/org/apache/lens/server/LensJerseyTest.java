@@ -258,7 +258,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   public Object[][] mediaTypeData() {
     return new Object[][] {
       {MediaType.APPLICATION_XML_TYPE},
-//      {MediaType.APPLICATION_JSON_TYPE},
+      {MediaType.APPLICATION_JSON_TYPE},
     };
   }
 

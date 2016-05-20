@@ -72,7 +72,7 @@ import org.testng.annotations.Test;
 /**
  * The Class TestSessionResource.
  */
-@Test(groups = "unit-test", enabled=false)
+@Test(groups = "unit-test")
 public class TestSessionResource extends LensJerseyTest {
 
 
@@ -121,7 +121,7 @@ public class TestSessionResource extends LensJerseyTest {
     };
   }
 
-  @Test(enabled=false)
+  @Test
   public void testDefaultResponseType() {
     final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -146,7 +146,7 @@ public class TestSessionResource extends LensJerseyTest {
   /**
    * Test session.
    */
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testSession(MediaType mt) {
     final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -255,7 +255,7 @@ public class TestSessionResource extends LensJerseyTest {
   /**
    * Test resource.
    */
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testResource(MediaType mt) {
     final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -314,7 +314,7 @@ public class TestSessionResource extends LensJerseyTest {
    *
    * @throws org.apache.lens.server.api.error.LensException the lens exception
    */
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testAuxJars(MediaType mt) throws LensException, IOException, LenServerTestException {
     final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -364,7 +364,7 @@ public class TestSessionResource extends LensJerseyTest {
   /**
    * Test wrong auth.
    */
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testWrongAuth(MediaType mt) {
     final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -378,7 +378,7 @@ public class TestSessionResource extends LensJerseyTest {
     Assert.assertEquals(handle.getStatus(), 401);
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testServerMustRestartOnManualDeletionOfAddedResources(MediaType mt)
     throws IOException, LensException, LenServerTestException {
 
@@ -435,7 +435,7 @@ public class TestSessionResource extends LensJerseyTest {
     }
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testOpenSessionWithDatabase(MediaType mt) throws Exception {
     // TEST1 - Check if call with database parameter sets current database
     // Create the test DB
@@ -486,7 +486,7 @@ public class TestSessionResource extends LensJerseyTest {
   /**
    * Test acquire and release behaviour for closed sessions
    */
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testAcquireReleaseClosedSession(MediaType mt) throws Exception {
     HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
 
@@ -526,7 +526,7 @@ public class TestSessionResource extends LensJerseyTest {
     return mp;
   }
 
-  @Test(enabled=false)
+  @Test
   public void testMaxSessionsPerUser() throws Exception {
     HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
     HiveConf conf = LensServerConf.getHiveConf();
@@ -560,7 +560,7 @@ public class TestSessionResource extends LensJerseyTest {
     }
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testSessionLimit(MediaType mt) {
     HiveConf conf = LensServerConf.getHiveConf();
     Integer maxSessionsLimitPerUser = conf.getInt(LensConfConstants.MAX_SESSIONS_PER_USER,
@@ -594,7 +594,7 @@ public class TestSessionResource extends LensJerseyTest {
     }
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testSessionEvents(MediaType mt) {
     final WebTarget target = target().path("session");
     FormDataMultiPart mp = getMultiFormData("foo", "bar", mt);

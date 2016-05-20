@@ -68,7 +68,7 @@ import org.testng.annotations.Test;
 import com.google.common.base.Optional;
 import lombok.NonNull;
 
-@Test(groups = "unit-test", enabled=false)
+@Test(groups = "unit-test")
 public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
   private static final String MOCK_QUERY = "mock-query";
@@ -97,7 +97,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       MoxyJsonConfigurationContextResolver.class, MoxyJsonFeature.class);
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testErrorResponseWhenSessionIdIsAbsent(MediaType mt) {
 
     Response response = estimate(target(), Optional.<LensSessionHandle>absent(), Optional.of(MOCK_QUERY), mt);
@@ -110,7 +110,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     expectedData.verify(response);
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testErrorResponseWhenQueryIsAbsent(MediaType mt) {
 
     LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf(), mt);
@@ -126,7 +126,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     closeSession(target(), sessionId, mt);
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testErrorResponseWhenInvalidOperationIsSubmitted(MediaType mt) {
 
     LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf(), mt);
@@ -146,7 +146,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     closeSession(target(), sessionId, mt);
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testErrorResponseWhenLensMultiCauseExceptionOccurs(MediaType mt) {
 
     LensSessionHandle sessionId = openSession(target(), "foo", "bar", mt);
@@ -173,7 +173,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testErrorResponseWithSyntaxErrorInQuery(MediaType mt) {
 
     LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf(), mt);
@@ -189,7 +189,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     closeSession(target(), sessionId, mt);
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testQueryColumnWithBothStartDateAndEndDate(MediaType mt) throws DatatypeConfigurationException {
 
     /* This test will have a col which has both start date and end date set */
@@ -208,7 +208,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       Optional.of(endDateThirtyJan2015), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix, mt);
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testQueryColumnWithOnlyStartDate(MediaType mt) throws DatatypeConfigurationException {
 
     /* This test will have a col which has only start date set */
@@ -226,7 +226,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       Optional.<DateTime>absent(), queryFromOneJan2014, queryTillThreeJan2014, expectedErrMsgSuffix, mt);
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testQueryColumnWithOnlyEndDate(MediaType mt) throws DatatypeConfigurationException {
 
     /* This test will have a col which has only end date set */
@@ -304,7 +304,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testExplainRuntimeException(MediaType mt) throws InterruptedException {
     LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf(), mt);
     try {
@@ -326,7 +326,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testExplainWebappException(MediaType mt) throws InterruptedException {
     LensSessionHandle sessionId = openSession(target(), "foo", "bar", new LensConf(), mt);
     try {

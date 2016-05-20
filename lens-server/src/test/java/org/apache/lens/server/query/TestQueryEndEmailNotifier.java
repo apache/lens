@@ -63,7 +63,7 @@ import com.google.common.base.Optional;
 /**
  * The query completion email notifier
  */
-@Test(groups = "unit-test", enabled=false)
+@Test(groups = "unit-test")
 public class TestQueryEndEmailNotifier extends LensJerseyTest {
 
   private static final int NUM_ITERS = 30;
@@ -196,7 +196,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testLaunchFailure(MediaType mt) throws InterruptedException {
     // launch failure
     final Response response = execute(target(), Optional.of(lensSessionId), Optional.of("select fail from non_exist"),
@@ -206,7 +206,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     assertKeywordsContains(getMessage(), handle, "Launching query failed", "Reason");
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testFormattingFailure(MediaType mt) throws InterruptedException {
     // formatting failure
     LensConf conf = getLensConf(
@@ -217,7 +217,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     assertKeywordsContains(getMessage(), handle, "Result formatting failed!", "Reason");
   }
 
-  @Test(dataProvider = "mediaTypeData", enabled=false)
+  @Test(dataProvider = "mediaTypeData")
   public void testExecutionFailure(MediaType mt) throws InterruptedException {
     // execution failure
     LensConf conf = getLensConf(
@@ -243,7 +243,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     };
   }
 
-  @Test(dataProvider = "success-tests", enabled=false)
+  @Test(dataProvider = "success-tests")
   public void testSuccessfulQuery(Boolean lensPersistence, Boolean driverPersistence, MediaType mt)
     throws InterruptedException, LensException {
     // successful query

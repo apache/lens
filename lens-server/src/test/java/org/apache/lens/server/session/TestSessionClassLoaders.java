@@ -86,7 +86,7 @@ public class TestSessionClassLoaders {
    * Check that DB specific classlaoders are available
    * @throws Exception
    */
-  @Test(enabled=false)
+  @Test
   public void testSessionClassLoader() throws Exception {
     LensSessionHandle sessionHandle = sessionService.openSession("foo", "bar", new HashMap<String, String>());
     LensSessionImpl session = sessionService.getSession(sessionHandle);
@@ -148,7 +148,7 @@ public class TestSessionClassLoaders {
    * Check that any added resources to the session are available after database is switched
    * @throws Exception
    */
-  @Test(enabled=false)
+  @Test
   public void testClassLoaderMergeAfterAddResources() throws Exception {
     LensSessionHandle sessionHandle = sessionService.openSession("foo", "bar", new HashMap<String, String>());
     LensSessionImpl session = sessionService.getSession(sessionHandle);
