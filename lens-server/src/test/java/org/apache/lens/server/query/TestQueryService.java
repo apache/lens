@@ -93,7 +93,7 @@ import lombok.extern.slf4j.Slf4j;
  * The Class TestQueryService.
  */
 @Slf4j
-@Test(groups = "unit-test")
+@Test(groups = "unit-test", enabled=false)
 public class TestQueryService extends LensJerseyTest {
 
   /** The query service. */
@@ -200,7 +200,7 @@ public class TestQueryService extends LensJerseyTest {
   /**
    * Test get random query. should return 400
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testGetRandomQuery(MediaType mt) {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -208,7 +208,7 @@ public class TestQueryService extends LensJerseyTest {
     assertEquals(rs.getStatus(), 400);
   }
 
-  @Test
+  @Test(enabled=false)
   public void testLoadingMultipleDrivers() {
     Collection<LensDriver> drivers = queryService.getDrivers();
     assertEquals(drivers.size(), 4);
@@ -225,7 +225,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testRewriteFailureInExecute(MediaType mt) throws InterruptedException {
     final WebTarget target = target().path("queryapi/queries");
     LensConf conf = new LensConf();
@@ -244,7 +244,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testLaunchFail(MediaType mt) throws InterruptedException {
     LensQuery lensQuery = executeAndWaitForQueryToFinish(target(), lensSessionId, "select fail from non_exist",
       Optional.<LensConf>absent(), Optional.of(Status.FAILED), mt);
@@ -255,7 +255,7 @@ public class TestQueryService extends LensJerseyTest {
     assertTrue(lensQuery.getFinishTime() > 0);
   }
 
-  @Test
+  @Test(enabled=false)
   public void testPriorityOnMockQuery() throws Exception {
     String query = "select mock, fail from " + TEST_TABLE;
     QueryContext ctx = queryService.createContext(query, null, new LensConf(), new Configuration(), 5000L);
@@ -278,7 +278,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testQueriesAPI(MediaType mt) throws InterruptedException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
@@ -371,7 +371,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testExplainQuery(MediaType mt) throws InterruptedException {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -417,7 +417,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws UnsupportedEncodingException
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testExplainFailure(MediaType mt) throws InterruptedException, UnsupportedEncodingException {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -458,7 +458,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws IOException          Signals that an I/O exception has occurred.
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testHiveSemanticFailure(MediaType mt) throws InterruptedException, IOException {
     final WebTarget target = target().path("queryapi/queries");
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -494,7 +494,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testPrepareQuery(MediaType mt) throws InterruptedException {
     final WebTarget target = target().path("queryapi/preparedqueries");
 
@@ -574,7 +574,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testExplainAndPrepareQuery(MediaType mt) throws InterruptedException {
     final WebTarget target = target().path("queryapi/preparedqueries");
 
@@ -650,7 +650,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testExecuteAsync(MediaType mt) throws InterruptedException, IOException, LensException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
@@ -1005,7 +1005,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testExecuteAsyncInMemoryResult(MediaType mt) throws InterruptedException, IOException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
@@ -1042,7 +1042,7 @@ public class TestQueryService extends LensJerseyTest {
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
-  @Test
+  @Test(enabled=false)
   public void testTTLForInMemoryResult() throws InterruptedException, IOException, LensException {
     long inMemoryresultsetTTLMillisBackup = queryService.getInMemoryResultsetTTLMillis();
     queryService.setInMemoryResultsetTTLMillis(5000); // 5 secs
@@ -1100,7 +1100,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testExecuteAsyncTempTable(MediaType mt) throws InterruptedException, IOException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
@@ -1255,7 +1255,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws IOException          Signals that an I/O exception has occurred.
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testExecuteWithTimeoutQuery(MediaType mt) throws IOException, InterruptedException {
     final WebTarget target = target().path("queryapi/queries");
     //1. Validate Persistent result
@@ -1293,7 +1293,7 @@ public class TestQueryService extends LensJerseyTest {
     validateInmemoryResultForTimeoutQuery(target, mp2, mt);
   }
 
-  @Test
+  @Test(enabled=false)
   public void testAutoCancelOnTimeOut() throws Exception {
     queryService.pauseQuerySubmitter(true);
     //First query will not be queued. @see QueryExecutionServiceImpl.QuerySubmitter.run
@@ -1354,7 +1354,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws IOException
    * @throws InterruptedException
    */
-  @Test(dataProvider = "executeWithTimeoutAndPreFetechAndServerPersistenceDP")
+  @Test(dataProvider = "executeWithTimeoutAndPreFetechAndServerPersistenceDP", enabled=false)
   public void testExecuteWithTimeoutAndPreFetechAndServerPersistence(long timeOutMillis, int preFetchRows,
       boolean isStreamingResultAvailable, long deferPersistenceByMillis) throws Exception {
     final WebTarget target = target().path("queryapi/queries");
@@ -1445,7 +1445,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws IOException          Signals that an I/O exception has occurred.
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testExecuteWithTimeoutFailingQuery(MediaType mt) throws IOException, InterruptedException {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -1468,7 +1468,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws LensException the lens exception
    */
-  @Test
+  @Test(enabled=false)
   public void testDefaultConfig() throws LensException {
     LensConf queryConf = new LensConf();
     queryConf.addProperty("test.query.conf", "qvalue");
@@ -1551,7 +1551,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testEstimateNativeQuery(MediaType mt) throws InterruptedException {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -1577,7 +1577,7 @@ public class TestQueryService extends LensJerseyTest {
    * Check if DB static jars get passed to Hive driver
    * @throws Exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testHiveDriverGetsDBJars(MediaType mt) throws Exception {
     // Set DB to a db with static jars
     HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
@@ -1648,7 +1648,7 @@ public class TestQueryService extends LensJerseyTest {
     }
   }
 
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testRewriteFailure(MediaType mt) {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -1675,7 +1675,7 @@ public class TestQueryService extends LensJerseyTest {
     expectedData.verify(response);
   }
 
-  @Test
+  @Test(enabled=false)
   public void testDriverEstimateSkippingForRewritefailure() throws LensException {
     Configuration conf = queryService.getLensConf(lensSessionId, new LensConf());
     QueryContext ctx = new QueryContext("cube select ID from nonexist", "user", new LensConf(), conf,
@@ -1696,7 +1696,7 @@ public class TestQueryService extends LensJerseyTest {
     }
   }
 
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testNonSelectQueriesWithPersistResult(MediaType mt) throws InterruptedException {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
@@ -1710,7 +1710,7 @@ public class TestQueryService extends LensJerseyTest {
     LensServerTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf, mt);
   }
 
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testEstimateGauges(MediaType mt) {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -1749,7 +1749,7 @@ public class TestQueryService extends LensJerseyTest {
       reg.getGauges().keySet().toString());
   }
 
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testQueryRejection(MediaType mt) throws InterruptedException, IOException {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -1772,7 +1772,7 @@ public class TestQueryService extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testQueryPurger(MediaType mt) throws InterruptedException, IOException {
     waitForPurge();
     LensConf conf = getLensConf(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
@@ -1802,7 +1802,7 @@ public class TestQueryService extends LensJerseyTest {
    *
    * @throws Exception
    */
-  @Test(dataProvider = "mediaTypeData")
+  @Test(dataProvider = "mediaTypeData", enabled=false)
   public void testSessionClose(MediaType mt) throws Exception {
     // Query with group by, will run long enough to close the session before finish
     String query = "select ID, IDSTR, count(*) from " + TEST_TABLE + " group by ID, IDSTR";

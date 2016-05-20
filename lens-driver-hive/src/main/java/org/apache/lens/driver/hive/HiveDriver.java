@@ -970,11 +970,12 @@ public class HiveDriver extends AbstractLensDriver {
       if (lensSession == null) {
         throw new IllegalStateException("Current session state does not have a Lens session id");
       }
-
       SessionHandle hiveSession;
       if (!lensToHiveSession.containsKey(sessionDbKey)) {
         try {
-          hiveSession = getClient().openSession(ctx.getClusterUser(), "");
+          Map<String, String> conf = new HashMap<>();
+          conf.put(HiveConf.ConfVars.HIVE_SERVER2_CLOSE_SESSION_ON_DISCONNECT.varname, "false");
+          hiveSession = getClient().openSession(ctx.getClusterUser(), "", conf);
           lensToHiveSession.put(sessionDbKey, hiveSession);
           log.info("New hive session for user: {} , lens session: {} , hive session handle: {} , driver : {}",
             ctx.getClusterUser(), sessionDbKey, hiveSession.getHandleIdentifier(), getFullyQualifiedName());
