@@ -65,6 +65,16 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
       defaultMT);
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+   */
+  @AfterTest
+  public void tearDown() throws Exception {
+    super.tearDown();
+  }
+
   /**
    * Test read only mode.
    *
