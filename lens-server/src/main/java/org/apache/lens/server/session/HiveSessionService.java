@@ -91,29 +91,6 @@ public class HiveSessionService extends BaseLensService implements SessionServic
     super(NAME, cliService);
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public int addResourceToAllServices(LensSessionHandle sessionid, String type, String path) {
-    int numAdded = 0;
-    boolean error = false;
-    for (BaseLensService service : LensServices.get().getLensServices()) {
-      try {
-        service.addResource(sessionid, type, path);
-        numAdded++;
-      } catch (LensException e) {
-        log.error("Failed to add resource type:" + type + " path:" + path + " in service:" + service, e);
-        error = true;
-        break;
-      }
-    }
-    if (!error) {
-      getSession(sessionid).addResource(type, path);
-    }
-    return numAdded;
-  }
-
   @Override
   public List<String> listAllResources(LensSessionHandle sessionHandle, String type) {
     if (!isValidResouceType(type)) {
@@ -138,17 +115,32 @@ public class HiveSessionService extends BaseLensService implements SessionServic
    */
   @Override
   public void addResource(LensSessionHandle sessionid, String type, String path) {
-    String command = "add " + type.toLowerCase() + " " + path;
     try {
       acquire(sessionid);
-      closeCliServiceOp(getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null));
-    } catch (HiveSQLException e) {
+      SessionState ss = getSession(sessionid).getSessionState();
+      String finalLocation = ss.add_resource(SessionState.ResourceType.valueOf(type.toUpperCase()), path);
+      getSession(sessionid).addResource(type, path, finalLocation);
+    } catch (RuntimeException e) {
+      log.error("Failed to add resource type:" + type + " path:" + path + " in session", e);
       throw new WebApplicationException(e);
     } finally {
       release(sessionid);
     }
   }
 
+  private void addResourceUponRestart(LensSessionHandle sessionid, ResourceEntry resourceEntry) {
+    try {
+      acquire(sessionid);
+      SessionState ss = getSession(sessionid).getSessionState();
+      resourceEntry.location = ss.add_resource(SessionState.ResourceType.valueOf(resourceEntry.getType()),
+        resourceEntry.getUri());
+      if (resourceEntry.location == null) {
+        throw new NullPointerException("Resource's final location cannot be null");
+      }
+    } finally {
+      release(sessionid);
+    }
+  }
   /**
    * {@inheritDoc}
    */
@@ -241,7 +233,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
     if (auxJars != null) {
       for (String jar : auxJars) {
         log.info("Adding aux jar:" + jar);
-        addResourceToAllServices(sessionid, "jar", jar);
+        addResource(sessionid, "jar", jar);
       }
     }
     return sessionid;
@@ -388,7 +380,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
         // Add resources for restored sessions
         for (LensSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
           try {
-            addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation());
+            addResourceUponRestart(sessionHandle, resourceEntry);
           } catch (Exception e) {
             log.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry, e);
           }
