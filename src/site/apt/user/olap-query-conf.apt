@@ -68,7 +68,7 @@ OLAP query configuration
 *--+--+---+--+
 |20|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|21|lens.cube.query.rewrite.dim.filter.to.fact.filter|false|Falg specifies if dimension filter has to be rewritten as fact filter. for eg. where dim.name in ('x', 'y') will become where fact.dimid in (select dim.id from dim where dim.name in ('x','y'))|
+|21|lens.cube.query.rewrite.dim.filter.to.fact.filter|false|Flag specifies if dimension filter has to be rewritten as fact filter. for eg. where dim.name in ('x', 'y') will become where fact.dimid in (select dim.id from dim where dim.name in ('x','y'))|
 *--+--+---+--+
 |22|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
 *--+--+---+--+

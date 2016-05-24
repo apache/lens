@@ -232,7 +232,7 @@
   <property>
     <name>lens.cube.query.rewrite.dim.filter.to.fact.filter</name>
     <value>false</value>
-    <description>Falg specifies if dimension filter has to be rewritten as fact filter. for eg.
+    <description>Flag specifies if dimension filter has to be rewritten as fact filter. for eg.
       where dim.name in ('x', 'y')
       will become
       where fact.dimid in (select dim.id from dim where dim.name in ('x','y'))
