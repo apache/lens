@@ -154,6 +154,11 @@ public class HiveDriver extends AbstractLensDriver {
   // package-local. Test case can change.
   boolean whetherCalculatePriority;
   private DriverQueryHook queryHook;
+  private static final Map<String, String> SESSION_CONF = new HashMap<String, String>() {
+    {
+      put(HiveConf.ConfVars.HIVE_SERVER2_CLOSE_SESSION_ON_DISCONNECT.varname, "false");
+    }
+  };
 
   @Getter
   protected ImmutableSet<QueryLaunchingConstraint> queryConstraints;
@@ -974,7 +979,7 @@ public class HiveDriver extends AbstractLensDriver {
       SessionHandle hiveSession;
       if (!lensToHiveSession.containsKey(sessionDbKey)) {
         try {
-          hiveSession = getClient().openSession(ctx.getClusterUser(), "");
+          hiveSession = getClient().openSession(ctx.getClusterUser(), "", SESSION_CONF);
           lensToHiveSession.put(sessionDbKey, hiveSession);
           log.info("New hive session for user: {} , lens session: {} , hive session handle: {} , driver : {}",
             ctx.getClusterUser(), sessionDbKey, hiveSession.getHandleIdentifier(), getFullyQualifiedName());
