@@ -68,14 +68,16 @@ OLAP query configuration
 *--+--+---+--+
 |20|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|21|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
+|21|lens.cube.query.rewrite.dim.filter.to.fact.filter|false|Flag specifies if dimension filter has to be rewritten as fact filter. for eg. where dim.name in ('x', 'y') will become where fact.dimid in (select dim.id from dim where dim.name in ('x','y'))|
 *--+--+---+--+
-|22|lens.cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
+|22|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
 *--+--+---+--+
-|23|lens.cube.query.valid.dim.storgaetables| |List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid|
+|23|lens.cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
 *--+--+---+--+
-|24|lens.cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods| |List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid|
+|24|lens.cube.query.valid.dim.storgaetables| |List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid|
 *--+--+---+--+
-|25|lens.cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
+|25|lens.cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods| |List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid|
+*--+--+---+--+
+|26|lens.cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
 *--+--+---+--+
 The configuration parameters and their default values

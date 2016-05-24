@@ -82,10 +82,7 @@ public class MetastoreResource {
   }
 
   private static LensException processLensException(LensException exc) {
-    if (exc != null) {
-      exc.buildLensErrorTO(LensServices.get().getErrorCollection());
-    }
-    return exc;
+    return LensServices.processLensException(exc);
   }
 
   public enum Entity {

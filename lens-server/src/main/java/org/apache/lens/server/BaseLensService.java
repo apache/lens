@@ -302,8 +302,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
         session.markForClose();
       } else {
         cliService.closeSession(getHiveSessionHandle(sessionHandle));
-        String publicId = sessionHandle.getPublicId().toString();
-        SESSION_MAP.remove(publicId);
+        SESSION_MAP.remove(sessionHandle.getPublicId().toString());
       }
       decrementSessionCountForUser(sessionHandle, session.getLoggedInUser());
       if (!SESSION_MAP.containsKey(sessionHandle.getPublicId().toString())) {
@@ -313,7 +312,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
           ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
         }
       }
-    } catch (Exception e) {
+    } catch (HiveSQLException e) {
       throw new LensException(e);
     }
   }

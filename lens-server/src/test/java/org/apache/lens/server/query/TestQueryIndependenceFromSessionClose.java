@@ -68,7 +68,7 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
    *
    * @see org.glassfish.jersey.test.JerseyTest#setUp()
    */
-  @BeforeTest
+  @BeforeClass
   public void setUp() throws Exception {
     super.setUp();
     queryService = LensServices.get().getService(QueryExecutionService.NAME);
@@ -103,7 +103,7 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
      *
      * @see org.glassfish.jersey.test.JerseyTest#tearDown()
      */
-  @AfterTest
+  @AfterClass
   public void tearDown() throws Exception {
     dropTable(TEST_TABLE);
     queryService.closeSession(lensSessionId);
@@ -135,7 +135,7 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
   }
 
   /** The test table. */
-  public static final String TEST_TABLE = "TEST_TABLE";
+  public static final String TEST_TABLE = "TEST_TABLE_INDEPENDENCE";
 
   /**
    * Creates the table.
