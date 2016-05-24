@@ -33,13 +33,10 @@ import javax.ws.rs.WebApplicationException;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.BaseLensService;
-import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
-import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.session.*;
-import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 
 import org.apache.commons.lang3.StringUtils;

@@ -52,7 +52,6 @@ import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.Service;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
