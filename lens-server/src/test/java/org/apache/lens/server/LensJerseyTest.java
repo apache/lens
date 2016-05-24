@@ -128,7 +128,7 @@ public abstract class LensJerseyTest extends JerseyTest {
     config.register(LensJAXBContextResolver.class);
   }
 
-  public HiveConf getServerConf() {
+  public final HiveConf getServerConf() {
     HiveConf serverConf = LensServerConf.getHiveConf();
     Map<String, String> overWrites = getServerConfOverWrites();
     if (overWrites != null) {

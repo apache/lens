@@ -97,7 +97,6 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     HiveConf.setVar(remoteConf, HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_SHUTDOWN_TIMEOUT, "1s");
     HiveConf.setVar(remoteConf, HiveConf.ConfVars.SERVER_READ_SOCKET_TIMEOUT, "60000s");
     remoteConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
-    HiveConf.setBoolVar(remoteConf, HiveConf.ConfVars.HIVE_SERVER2_CLOSE_SESSION_ON_DISCONNECT, false);
     server = new HiveServer2();
     hiveConf = new HiveConf();
     hiveConf.addResource(remoteConf);

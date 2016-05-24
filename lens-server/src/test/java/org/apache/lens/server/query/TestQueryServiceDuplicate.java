@@ -40,6 +40,7 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryExecutionService;
+import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.query.TestQueryService.QueryServiceTestApp;
 
@@ -80,17 +81,15 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
   }
 
   @Override
-  public HiveConf getServerConf() {
-    serverConf = new HiveConf(super.getServerConf());
-    serverConf.setBoolean(LensConfConstants.SERVER_DUPLICATE_QUERY_ALLOWED, false);
-    return serverConf;
+  public Map<String, String> getServerConfOverWrites() {
+    return LensUtil.getHashMap(LensConfConstants.SERVER_DUPLICATE_QUERY_ALLOWED, String.valueOf(false));
   }
 
   /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
-   */
+     * (non-Javadoc)
+     *
+     * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+     */
   @AfterTest
   public void tearDown() throws Exception {
     dropTable(TEST_TABLE);

@@ -39,10 +39,12 @@ import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.query.TestQueryService;
@@ -90,17 +92,15 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
   }
 
   @Override
-  public HiveConf getServerConf() {
-    HiveConf conf = super.getServerConf();
-    conf.set("lens.server.state.persistence.interval.millis", "1000");
-    return conf;
+  public Map<String, String> getServerConfOverWrites() {
+    return LensUtil.getHashMap(LensConfConstants.SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS, "1000");
   }
 
   /*
-     * (non-Javadoc)
-     *
-     * @see org.glassfish.jersey.test.JerseyTest#tearDown()
-     */
+       * (non-Javadoc)
+       *
+       * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+       */
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
