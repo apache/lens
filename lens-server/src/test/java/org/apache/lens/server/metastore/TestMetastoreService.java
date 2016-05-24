@@ -55,6 +55,7 @@ import org.apache.lens.server.api.util.LensUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -81,7 +82,7 @@ public class TestMetastoreService extends LensJerseyTest {
     assertEquals(result.getStatus(), Status.SUCCEEDED, String.valueOf(result));
   }
 
-  @BeforeMethod
+  @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
     cubeObjectFactory = new ObjectFactory();
@@ -90,7 +91,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
   }
 
-  @AfterMethod
+  @AfterTest
   public void tearDown() throws Exception {
     metastoreService.closeSession(lensSessionId);
     super.tearDown();
@@ -2663,6 +2664,7 @@ public class TestMetastoreService extends LensJerseyTest {
     setCurrentDatabase(DB, mediaType);
 
     try {
+      SessionState.start(new HiveConf());
       // create hive table
       String tableName = "test_simple_table";
       SessionState.get().setCurrentDatabase(DB);
@@ -2774,6 +2776,7 @@ public class TestMetastoreService extends LensJerseyTest {
     } finally {
       dropDatabase(DB, mediaType);
       setCurrentDatabase(prevDb, mediaType);
+      SessionState.detachSession();
     }
   }
 
