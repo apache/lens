@@ -183,7 +183,7 @@ public class DatabaseResourceService extends AbstractService {
   }
 
   private void addResourceEntry(LensSessionImpl.ResourceEntry entry, String dbName) {
-    log.info("Adding resource entry {} for {}", entry.getLocation(), dbName);
+    log.info("Adding resource entry {} for {}", entry.getUri(), dbName);
     synchronized (dbResEntryMap) {
       List<LensSessionImpl.ResourceEntry> dbEntryList = dbResEntryMap.get(dbName);
       if (dbEntryList == null) {
@@ -219,11 +219,12 @@ public class DatabaseResourceService extends AbstractService {
    * Add a resource to the specified database. Update class loader of the database if required.
    * @param database database name
    * @param resources resources which need to be added to the database
-   * @param addToCache if set to true, update class loader of the database in the class loader cache
+   * @param useUri if set to true, use URI from resourceEntry to load in classLoader and update class loader of the
+   *               database in the class loader cache
    * @return class loader updated as a result of adding any JARs
    */
-  protected synchronized ClassLoader loadDBJars(String database, Collection<LensSessionImpl.ResourceEntry> resources,
-                                             boolean addToCache) {
+  private synchronized ClassLoader loadDBJars(String database, Collection<LensSessionImpl.ResourceEntry> resources,
+                                             boolean useUri) {
     ClassLoader classLoader = classLoaderCache.get(database);
     if (classLoader == null) {
       // No change since there are no static resources to be added
@@ -247,16 +248,20 @@ public class DatabaseResourceService extends AbstractService {
 
       for (LensSessionImpl.ResourceEntry res : resources) {
         try {
-          newUrls.add(new URL(res.getLocation()));
+          if (useUri) {
+            newUrls.add(new URL(res.getUri()));
+          } else {
+            newUrls.add(new URL(res.getLocation()));
+          }
         } catch (MalformedURLException e) {
           incrCounter(LOAD_RESOURCES_ERRORS);
-          log.error("Invalid URL {} adding to db {}", res.getLocation(), database, e);
+          log.error("Invalid URL {} with location: {} adding to db {}", res.getUri(), res.getLocation(), database, e);
         }
       }
 
       URLClassLoader newClassLoader = new URLClassLoader(newUrls.toArray(new URL[newUrls.size()]),
         DatabaseResourceService.class.getClassLoader());
-      if (addToCache) {
+      if (useUri) {
         classLoaderCache.put(database, newClassLoader);
       }
 

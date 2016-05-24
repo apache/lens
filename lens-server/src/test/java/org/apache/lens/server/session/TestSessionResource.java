@@ -302,7 +302,7 @@ public class TestSessionResource extends LensJerseyTest {
     StringList listResourcesAfterDeletion = resourcetarget.path("list").queryParam("sessionid", handle)
       .request(mt).get(StringList.class);
     Assert.assertTrue(listResourcesAfterDeletion.getElements() == null
-      || listResourcesAfterDeletion.getElements().isEmpty());
+      || listResourcesAfterDeletion.getElements().isEmpty(), " Found :" + listResourcesAfterDeletion.getElements());
 
     // close session
     result = target.queryParam("sessionid", handle).request(mt).delete(APIResult.class);

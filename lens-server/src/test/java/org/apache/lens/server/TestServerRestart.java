@@ -296,7 +296,6 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     Assert.assertTrue(sessionService.getHealthStatus().isHealthy());
 
     sessionService.addResource(lensSessionId, "FILE", dataFile.toURI().toString());
-    queryService.getSession(lensSessionId).addResource("FILE", dataFile.toURI().toString());
     log.info("@@ Added resource {}", dataFile.toURI());
 
     // Create a test table
@@ -470,7 +469,8 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     LensSessionImpl session = sessionService.getSession(restartTestSession);
     assertEquals(session.getLensSessionPersistInfo().getResources().size(), 1);
     LensSessionImpl.ResourceEntry resourceEntry = session.getLensSessionPersistInfo().getResources().get(0);
-    assertEquals(resourceEntry.getType(), "file");
+    assertEquals(resourceEntry.getType(), "FILE");
+    Assert.assertTrue(resourceEntry.getUri().contains("target/test-classes/lens-site.xml"));
     Assert.assertTrue(resourceEntry.getLocation().contains("target/test-classes/lens-site.xml"));
 
     // close session
