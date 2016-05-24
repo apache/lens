@@ -276,11 +276,6 @@ public abstract class LensJerseyTest extends JerseyTest {
   }
 
   public static Entity getEntityForString(String o, MediaType mt) {
-    if (mt.equals(MediaType.APPLICATION_JSON_TYPE)) {
-      return Entity.json(o);
-    } else if (mt.equals(MediaType.APPLICATION_XML_TYPE)) {
-      return Entity.xml(o);
-    }
     return Entity.entity(o, mt);
   }
 }
