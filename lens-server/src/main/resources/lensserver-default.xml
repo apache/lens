@@ -526,6 +526,15 @@
   </property>
 
   <property>
+    <name>hive.server2.logging.operation.enabled</name>
+    <value>false</value>
+    <description>Disable the operation logging, since there are no execution operation happening in lens session.
+      Keeping it true might conflict with Hive Server if both are running on the same machine causing disappearance
+      of the operation log directory.
+    </description>
+  </property>
+
+  <property>
     <name>hive.server2.authentication</name>
     <value>NONE</value>
     <description>
