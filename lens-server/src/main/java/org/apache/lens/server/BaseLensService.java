@@ -313,11 +313,10 @@ public abstract class BaseLensService extends CompositeService implements Extern
           ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
         }
       }
-      String userName = getSession(sessionHandle).getLoggedInUser();
       cliService.closeSession(getHiveSessionHandle(sessionHandle));
       String publicId = sessionHandle.getPublicId().toString();
       SESSION_MAP.remove(publicId);
-      decrementSessionCountForUser(sessionHandle, userName);
+      decrementSessionCountForUser(sessionHandle, session.getLoggedInUser());
     } catch (HiveSQLException e) {
       throw new LensException(e);
     }
