@@ -28,6 +28,7 @@ import java.util.concurrent.*;
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.ErrorCollectionFactory;
 import org.apache.lens.server.api.ServiceProvider;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
@@ -138,6 +139,13 @@ public class LensServices extends CompositeService implements ServiceProvider {
    */
   private long getCounter(String counter) {
     return getMetricService().getCounter(LensServices.class, counter);
+  }
+
+  public static LensException processLensException(LensException exc) {
+    if (exc != null) {
+      exc.buildLensErrorTO(get().getErrorCollection());
+    }
+    return exc;
   }
 
   /**

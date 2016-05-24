@@ -229,4 +229,13 @@
       applied on aggregated field. If set to false, aggregate will applied on top of the expression i.e. sub_str.
     </description>
   </property>
+  <property>
+    <name>lens.cube.query.rewrite.dim.filter.to.fact.filter</name>
+    <value>false</value>
+    <description>Flag specifies if dimension filter has to be rewritten as fact filter. for eg.
+      where dim.name in ('x', 'y')
+      will become
+      where fact.dimid in (select dim.id from dim where dim.name in ('x','y'))
+    </description>
+  </property>
 </configuration>

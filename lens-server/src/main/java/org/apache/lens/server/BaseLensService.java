@@ -295,7 +295,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
       String publicId = sessionHandle.getPublicId().toString();
       SESSION_MAP.remove(publicId);
       decrementSessionCountForUser(sessionHandle, userName);
-    } catch (Exception e) {
+    } catch (HiveSQLException e) {
       throw new LensException(e);
     }
   }
