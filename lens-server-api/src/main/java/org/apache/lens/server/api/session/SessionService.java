@@ -108,17 +108,6 @@ public interface SessionService {
   void setSessionParameter(LensSessionHandle sessionHandle, String key, String value);
 
   /**
-   * Adds the resource to all services.
-   *
-   * @param sessionHandle the sessionid
-   * @param type          the type
-   * @param path          the path
-   * @return the number of services that the resource has been added to
-   */
-
-  int addResourceToAllServices(LensSessionHandle sessionHandle, String type, String path);
-
-  /**
    * Lists resources from the session service
    *
    * @param sessionHandle the sessionid

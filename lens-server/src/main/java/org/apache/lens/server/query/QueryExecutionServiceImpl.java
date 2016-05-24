@@ -2963,7 +2963,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       if (resources != null && !resources.isEmpty()) {
         for (ResourceEntry resource : resources) {
           log.info("{} Restoring resource {} for session {}", hiveDriver, resource, lensSession);
-          String command = "add " + resource.getType().toLowerCase() + " " + resource.getLocation();
+          String command = "add " + resource.getType().toLowerCase() + " " + resource.getUri();
           try {
             // Execute add resource query in blocking mode
             hiveDriver.execute(createResourceQuery(command, sessionHandle, hiveDriver));
@@ -3060,7 +3060,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         addSingleResourceToHive(hiveDriver, res, sessionHandle);
       } catch (LensException exc) {
         failedResources.add(res);
-        log.error("Error adding resources for session {} resources: {}", sessionHandle, res.getLocation(), exc);
+        log.error("Error adding resources for session {} resources: {}", sessionHandle, res.getUri(), exc);
       }
     }
     return failedResources;
@@ -3069,7 +3069,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   private void addSingleResourceToHive(HiveDriver driver, ResourceEntry res,
     LensSessionHandle sessionHandle) throws LensException {
     String sessionIdentifier = sessionHandle.getPublicId().toString();
-    String uri = res.getLocation();
+    String uri = res.getUri();
     // Hive doesn't and URIs starting with file:/ correctly, so we have to change it to file:///
     // See: org.apache.hadoop.hive.ql.exec.Utilities.addToClassPath
     uri = removePrefixBeforeURI(uri);

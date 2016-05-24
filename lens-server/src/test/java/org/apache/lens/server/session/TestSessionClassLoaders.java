@@ -160,7 +160,6 @@ public class TestSessionClassLoaders {
 
     session.setCurrentDatabase("default");
     sessionService.addResource(sessionHandle, "jar", sessionJarLocation);
-    session.addResource("jar", sessionJarLocation);
     session.setCurrentDatabase("default");
 
     boolean loadedSessionClass = false;

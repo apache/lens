@@ -109,7 +109,7 @@ public class TestDatabaseResourceService {
     List<String> actualOrderList = new ArrayList<String>();
 
     for (LensSessionImpl.ResourceEntry res : actualOrder) {
-      actualOrderList.add(res.getLocation());
+      actualOrderList.add(res.getUri());
     }
 
     String[] expectedOrderArr = {

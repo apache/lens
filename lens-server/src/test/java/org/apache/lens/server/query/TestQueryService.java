@@ -1297,7 +1297,7 @@ public class TestQueryService extends LensJerseyTest {
   public void testAutoCancelOnTimeOut() throws Exception {
     queryService.pauseQuerySubmitter(true);
     //First query will not be queued. @see QueryExecutionServiceImpl.QuerySubmitter.run
-    queryService.executeAsync(lensSessionId, "select 1 from "+TEST_TABLE, new LensConf(), "dummyQuery");
+    queryService.executeAsync(lensSessionId, "select 1 from " + TEST_TABLE, new LensConf(), "dummyQuery");
 
     //Second query after pause will be queued
     QueryHandleWithResultSet result = queryService.execute(lensSessionId, "select ID, IDSTR from "+ TEST_TABLE, 100,
@@ -1331,7 +1331,7 @@ public class TestQueryService extends LensJerseyTest {
     }
   }
   /**
-   * Data provider for test case {@link #testExecuteWithTimeoutAndPreFetechAndServerPersistence()}
+   * Data provider for test case {@link testExecuteWithTimeoutAndPreFetchAndServerPersistence}
    * @return
    */
   @DataProvider
@@ -1349,13 +1349,12 @@ public class TestQueryService extends LensJerseyTest {
    * @param timeOutMillis : wait time for execute with timeout api
    * @param preFetchRows : number of rows to pre-fetch in case of InMemoryResultSet
    * @param isStreamingResultAvailable : whether the execute call is expected to return InMemoryQueryResult
-   * @param ttlMillis : The time window for which pre-fetched InMemoryResultSet will be available for sure.
    * @param deferPersistenceByMillis : The time in millis by which Result formatter will be deferred by.
    * @throws IOException
    * @throws InterruptedException
    */
   @Test(dataProvider = "executeWithTimeoutAndPreFetechAndServerPersistenceDP")
-  public void testExecuteWithTimeoutAndPreFetechAndServerPersistence(long timeOutMillis, int preFetchRows,
+  public void testExecuteWithTimeoutAndPreFetchAndServerPersistence(long timeOutMillis, int preFetchRows,
       boolean isStreamingResultAvailable, long deferPersistenceByMillis) throws Exception {
     final WebTarget target = target().path("queryapi/queries");
 
@@ -1588,7 +1587,7 @@ public class TestQueryService extends LensJerseyTest {
 
     // Add a jar in the session
     File testJarFile = new File("target/testjars/test2.jar");
-    sessionService.addResourceToAllServices(sessionHandle, "jar", "file://" + testJarFile.getAbsolutePath());
+    sessionService.addResource(sessionHandle, "jar", "file://" + testJarFile.getAbsolutePath());
 
     log.info("@@@ Opened session " + sessionHandle.getPublicId() + " with database " + DB_WITH_JARS);
     LensSessionImpl session = sessionService.getSession(sessionHandle);
