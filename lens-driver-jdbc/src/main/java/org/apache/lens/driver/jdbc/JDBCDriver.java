@@ -94,6 +94,7 @@ public class JDBCDriver extends AbstractLensDriver {
   private ExecutorService asyncQueryPool;
 
   /** The query context map. */
+  @Getter
   private ConcurrentHashMap<QueryHandle, JdbcQueryContext> queryContextMap;
 
   /** The conf. */
@@ -458,7 +459,7 @@ public class JDBCDriver extends AbstractLensDriver {
     final int maxPoolSize = parseInt(this.conf.get(JDBC_POOL_MAX_SIZE.getConfigKey()));
     final int maxConcurrentQueries
       = parseInt(this.conf.get(MaxConcurrentDriverQueriesConstraintFactory.MAX_CONCURRENT_QUERIES_KEY));
-    checkState(maxPoolSize == maxConcurrentQueries, "maxPoolSize:" + maxPoolSize + " maxConcurrentQueries:"
+    checkState(maxPoolSize >= maxConcurrentQueries, "maxPoolSize:" + maxPoolSize + " maxConcurrentQueries:"
       + maxConcurrentQueries);
 
     queryContextMap = new ConcurrentHashMap<>();
