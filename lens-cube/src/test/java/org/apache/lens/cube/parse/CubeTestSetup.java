@@ -651,6 +651,8 @@ public class CubeTestSetup {
       "concat(cubecity.name, \":\", cubestate.name)"));
     exprs.add(new ExprColumn(new FieldSchema("cityStateName", "String", "city state"), "City State",
       "concat('CityState:', cubecity.statename)"));
+    exprs.add(new ExprColumn(new FieldSchema("isIndia", "String", "is indian city/state"), "Is Indian City/state",
+      "cubecity.name == 'DELHI' OR cubestate.name == 'KARNATAKA' OR cubestate.name == 'MAHARASHTRA'"));
     exprs.add(new ExprColumn(new FieldSchema("cubeStateName", "String", "statename from cubestate"), "CubeState Name",
       "substr(cubestate.name, 5)"));
     exprs.add(new ExprColumn(new FieldSchema("substrdim2big1", "String", "substr of dim2big1"), "dim2big1 substr",
