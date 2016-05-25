@@ -2752,6 +2752,14 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       for (QueryContext ctx : allQueries.values()) {
         synchronized (ctx) {
           out.writeObject(ctx);
+          if (ctx.getStatus().launched() && ctx.getSelectedDriver() instanceof HiveDriver) {
+            HiveDriver driver = (HiveDriver) ctx.getSelectedDriver();
+            if (driver.getHiveHandles().get(ctx.getQueryHandle()) == null) {
+              log.error("Query is launched on hive driver, but hive handle not present");
+            } else {
+              log.info("Query is in launched state, and hive handle is also present");
+            }
+          }
           boolean isDriverAvailable = (ctx.getSelectedDriver() != null);
           out.writeBoolean(isDriverAvailable);
           if (isDriverAvailable) {

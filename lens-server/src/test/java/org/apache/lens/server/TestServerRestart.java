@@ -226,7 +226,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
           stat = ctx.getStatus();
           Thread.sleep(1000);
         }
-        assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Expected to be successful " + handle);
+        assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Expected to be successful " + ctx);
         PersistentQueryResult resultset = target.path(handle.toString()).path("resultset")
           .queryParam("sessionid", lensSessionId).request(defaultMT).get(PersistentQueryResult.class);
         List<String> rows = TestQueryService.readResultSet(resultset, handle, true);
