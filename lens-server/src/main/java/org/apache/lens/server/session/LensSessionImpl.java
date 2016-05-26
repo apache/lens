@@ -241,7 +241,7 @@ public class LensSessionImpl extends HiveSessionImpl {
   public synchronized void release() {
     setActive();
     acquireCount--;
-    if (acquireCount == 0) {
+    if (true || acquireCount == 0) {
       super.release(true);
     }
   }
