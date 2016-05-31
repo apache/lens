@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.driver.cube;
+package org.apache.lens.server.api.driver;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,10 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.driver.MinQueryCostSelector;
-import org.apache.lens.server.api.driver.MockDriver;
-import org.apache.lens.server.api.driver.MockFailDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.MockQueryContext;
 
@@ -43,14 +39,6 @@ public class TestMinCostSelector {
 
   private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
     Map<LensDriver, String> driverQueries) throws LensException {
-    MockQueryContext ctx = new MockQueryContext(query, lensConf, conf, driverQueries.keySet());
-    ctx.setDriverQueries(driverQueries);
-    ctx.estimateCostForDrivers();
-    return ctx;
-  }
-
-  private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
-    List<LensDriver> drivers, Map<LensDriver, String> driverQueries) throws LensException {
     MockQueryContext ctx = new MockQueryContext(query, lensConf, conf, driverQueries.keySet());
     ctx.setDriverQueries(driverQueries);
     ctx.estimateCostForDrivers();
@@ -109,7 +97,7 @@ public class TestMinCostSelector {
     drivers.add(d1);
     drivers.add(fd1);
     driverQueries.put(d1, query);
-    ctx = createMockContext(query, conf, qconf, drivers, driverQueries);
+    ctx = createMockContext(query, conf, qconf, driverQueries);
     selected = selector.select(ctx, conf);
     Assert.assertEquals(d1, selected);
   }
