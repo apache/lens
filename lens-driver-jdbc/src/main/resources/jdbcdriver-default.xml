@@ -228,7 +228,8 @@
 
   <property>
     <name>lens.driver.jdbc.query.launching.constraint.factories</name>
-    <value>org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory</value>
+    <value>org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory,
+      org.apache.lens.driver.jdbc.MaxJDBCConnectionCheckConstraintFactory</value>
     <description>Factories used to instantiate constraints enforced on queries by driver. A query will be launched
       only if all constraints pass. Every Factory should be an implementation of
       org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of

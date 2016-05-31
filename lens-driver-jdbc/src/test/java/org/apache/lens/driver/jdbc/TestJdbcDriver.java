@@ -411,6 +411,43 @@ public class TestJdbcDriver {
     }
   }
 
+  @Test
+  public void testJDBCMaxConnectionConstraintCheck() throws Exception {
+    close();
+    // Create table execute_test
+    createTable("max_connection_test");
+    // Insert some data into table
+    insertData("max_connection_test");
+
+    MaxJDBCConnectionCheckConstraintFactory factory = new MaxJDBCConnectionCheckConstraintFactory();
+    MaxJDBCConnectionCheckConstraint constraint = factory.create(driver.getConf());
+
+    // check constraint in driver
+    assertTrue(driver.getQueryConstraints().toString().contains("MaxJDBCConnectionCheckConstraint"));
+
+    String query;
+    QueryContext context = createQueryContext("SELECT * FROM max_connection_test");
+
+    for (int i = 1; i <= JDBC_POOL_MAX_SIZE.getDefaultValue(); i++) {
+      query = "SELECT " + i + " FROM max_connection_test";
+      context = createQueryContext(query);
+      driver.executeAsync(context);
+    }
+
+    //pool max size is same as number of query context hold on driver
+    assertEquals(driver.getQueryContextMap().size(), JDBC_POOL_MAX_SIZE.getDefaultValue());
+
+    //new query shouldn't be allowed
+    QueryContext newcontext = createQueryContext("SELECT 123 FROM max_connection_test");
+    assertFalse(constraint.allowsLaunchOf(newcontext, null));
+
+    //close one query and launch the previous query again
+    driver.closeQuery(context.getQueryHandle());
+    assertTrue(constraint.allowsLaunchOf(newcontext, null));
+    close();
+  }
+
+
   /**
    * Data provider for test case {@link #testExecuteWithPreFetch()}
    * @return

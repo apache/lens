@@ -85,7 +85,7 @@ public final class LensUtil {
 
     for (String factoryName : factoryNames) {
       if (StringUtils.isNotBlank(factoryName)) {
-        final T implementation = getImplementation(factoryName, conf);
+        final T implementation = getImplementation(factoryName.trim(), conf);
         implSet.add(implementation);
       }
     }
