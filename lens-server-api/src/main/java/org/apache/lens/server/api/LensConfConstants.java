@@ -52,6 +52,11 @@ public final class LensConfConstants {
   public static final String METASTORE_PFX = "lens.metastore.";
 
   /**
+   * The Constant DRIVER_PFX.
+   */
+  public static final String DRIVER_PFX = "lens.driver.";
+
+  /**
    * The Constant DRIVER_TYPES_AND_CLASSES
    */
   public static final String DRIVER_TYPES_AND_CLASSES = SERVER_PFX + "drivers";
@@ -960,6 +965,16 @@ public final class LensConfConstants {
    * This is the base directory where all drivers are available under lens-server's Conf directory.
    */
   public static final String DRIVERS_BASE_DIR = "drivers";
+
+  /**
+   * The driver weight property
+   */
+  public static final String DRIVER_WEIGHT = DRIVER_PFX + "weight";
+
+  /**
+   * Default driver weight
+   */
+  public static final int DEFAULT_DRIVER_WEIGHT = 1;
 
   /**
    * Name of the property that holds the path of "conf" directory of server

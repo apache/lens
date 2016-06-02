@@ -123,15 +123,15 @@ start() {
   fi
 
   if [ "$HIVE_HOME" != "" ]; then
-    echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into lens classpath"
-    LENSCPPATH=${LENSCPPATH}:`ls ${HIVE_HOME}/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/*jar into lens classpath"
+    LENSCPPATH=${LENSCPPATH}:`ls ${HIVE_HOME}/lib/*jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
   else
     echo "HIVE_HOME is not set. Set HIVE_HOME and try again"
     exit 1
   fi
 
   # Add HIVE_HOME to HADOOP_CLASS_PATH
-  HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${HIVE_HOME}/lib/*"
+  HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${HIVE_HOME}/lib/*jar"
   export HADOOP_CLASSPATH
 
   mkdir -p $LENS_LOG_DIR

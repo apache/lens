@@ -78,7 +78,8 @@ Jdbc driver configuration
 *--+--+---+--+
 |27|lens.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
 *--+--+---+--+
-|28|lens.driver.jdbc.query.launching.constraint.factories|org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory|Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
+|28|lens.driver.jdbc.query.launching.constraint.factories|org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory,
+      org.apache.lens.driver.jdbc.MaxJDBCConnectionCheckConstraintFactory|Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
 *--+--+---+--+
 |29|lens.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
 *--+--+---+--+
