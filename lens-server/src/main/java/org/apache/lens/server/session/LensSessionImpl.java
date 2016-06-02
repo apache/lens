@@ -65,7 +65,22 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   /** The session timeout. */
   private long sessionTimeout;
-  private int acquireCount = 0;
+  private static class IntegerThreadLocal extends ThreadLocal<Integer> {
+    @Override
+    protected Integer initialValue() {
+      return 0;
+    }
+    public Integer incrementAndGet() {
+      set(get() + 1);
+      return get();
+    }
+    public Integer decrementAndGet() {
+      set(get() - 1);
+      return get();
+    }
+  }
+  private IntegerThreadLocal acquireCount = new IntegerThreadLocal();
+
   /** The conf. */
   private Configuration conf = createDefaultConf();
 
@@ -228,7 +243,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public synchronized void acquire() {
     super.acquire(true);
-    acquireCount++;
+    acquireCount.incrementAndGet();
     // Update thread's class loader with current DBs class loader
     ClassLoader classLoader = getClassLoader(getCurrentDatabase());
     Thread.currentThread().setContextClassLoader(classLoader);
@@ -242,8 +257,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public synchronized void release() {
     lastAccessTime = System.currentTimeMillis();
-    acquireCount--;
-    if (acquireCount == 0) {
+    if (acquireCount.decrementAndGet() == 0) {
       super.release(true);
     }
   }
