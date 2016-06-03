@@ -91,8 +91,10 @@
   <property>
     <name>lens.driver.jdbc.get.connection.timeout</name>
     <value>10000</value>
-    <description>Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket
-    </description>
+    <description>The number of milliseconds a client calling getConnection() will wait for a Connection to be
+      checked-in or acquired when the pool is exhausted. Zero means wait indefinitely. Setting any positive value
+      will cause the getConnection () call to time-out and break with an SQLException after the specified number
+      of milliseconds. The default value of this property is 10 secs.</description>
   </property>
 
   <!-- Estimate query connection pool settings -->
