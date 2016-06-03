@@ -28,11 +28,11 @@
   </property>
   <property>
     <name>lens.driver.jdbc.db.uri</name>
-    <value>jdbc:hsqldb:./target/db-storage.db;MODE=MYSQL</value>
+    <value>jdbc:hsqldb:mem:jdbcTestDB;MODE=MYSQL</value>
   </property>
   <property>
     <name>lens.driver.jdbc.db.user</name>
-    <value>SA</value>
+    <value>sa</value>
   </property>
   <property>
     <name>lens.cube.query.driver.supported.storages</name>
