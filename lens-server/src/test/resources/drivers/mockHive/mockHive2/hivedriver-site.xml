@@ -30,13 +30,6 @@
   </property>
 
   <property>
-     
-    <name>hive.metastore.local</name>
-     
-    <value>true</value>
-  </property>
-
-  <property>
     <name>hive.metastore.warehouse.dir</name>
     <value>${project.build.directory}/hive/warehouse</value>
   </property>
