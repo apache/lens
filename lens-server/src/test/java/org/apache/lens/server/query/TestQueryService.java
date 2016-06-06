@@ -77,6 +77,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.io.IOUtils;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -1532,8 +1533,7 @@ public class TestQueryService extends LensJerseyTest {
     assertNull(conf.get("lens.server.persist.location"));
 
     // Test server config. Hive configs overriden should be set
-    assertFalse(Boolean.parseBoolean(queryService.getHiveConf().get("hive.server2.log.redirection.enabled")));
-    assertEquals(queryService.getHiveConf().get("hive.server2.query.log.dir"), "target/query-logs");
+    assertFalse(queryService.getHiveConf().getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_LOGGING_OPERATION_ENABLED));
 
     final String query = "select ID from " + TEST_TABLE;
     QueryContext ctx = new QueryContext(query, null, queryConf, conf, queryService.getDrivers());

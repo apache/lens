@@ -1233,10 +1233,21 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   public void prepareStopping() {
     super.prepareStopping();
-    querySubmitter.interrupt();
-    statusPoller.interrupt();
-    queryPurger.interrupt();
-    prepareQueryPurger.interrupt();
+    Thread[] threadsToStop = new Thread[] {querySubmitter, statusPoller, queryPurger, prepareQueryPurger};
+    // Nudge each thread to stop itself
+    for (Thread thread: threadsToStop) {
+      log.debug("Interrupting {}", thread.getName());
+      thread.interrupt();
+    }
+    // All threads should exit cleanly at this point.
+    for (Thread thread: threadsToStop) {
+      try {
+        log.debug("Waiting for {}", thread.getName());
+        thread.join();
+      } catch (InterruptedException e) {
+        log.error("Error waiting for thread: {}", thread.getName(), e);
+      }
+    }
   }
 
   /*
@@ -1248,15 +1259,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     super.stop();
 
     waitingQueriesSelectionSvc.shutdown();
-
-    for (Thread th : new Thread[]{querySubmitter, statusPoller, queryPurger, prepareQueryPurger}) {
-      try {
-        log.debug("Waiting for {}", th.getName());
-        th.join();
-      } catch (InterruptedException e) {
-        log.error("Error waiting for thread: {}", th.getName(), e);
-      }
-    }
 
     estimatePool.shutdownNow();
 
@@ -2766,14 +2768,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       for (QueryContext ctx : allQueries.values()) {
         synchronized (ctx) {
           out.writeObject(ctx);
-          if (ctx.getStatus().launched() && ctx.getSelectedDriver() instanceof HiveDriver) {
-            HiveDriver driver = (HiveDriver) ctx.getSelectedDriver();
-            if (driver.getHiveHandles().get(ctx.getQueryHandle()) == null) {
-              log.error("Query is launched on hive driver, but hive handle not present");
-            } else {
-              log.info("Query is in launched state, and hive handle is also present");
-            }
-          }
           boolean isDriverAvailable = (ctx.getSelectedDriver() != null);
           out.writeBoolean(isDriverAvailable);
           if (isDriverAvailable) {
