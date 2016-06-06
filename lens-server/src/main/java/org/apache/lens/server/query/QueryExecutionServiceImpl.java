@@ -1040,29 +1040,32 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             finished = iter.next();
             if (finished.canBePurged()) {
               try {
-                FinishedLensQuery finishedQuery = new FinishedLensQuery(finished.getCtx());
-                if (finished.ctx.getStatus().getStatus() == SUCCESSFUL) {
-                  if (finished.ctx.getStatus().isResultSetAvailable()) {
-                    try {
-                      LensResultSet set = finished.getResultset();
-                      if (set != null && PersistentResultSet.class.isAssignableFrom(set.getClass())) {
-                        LensResultSetMetadata metadata = set.getMetadata();
-                        String outputPath = set.getOutputPath();
-                        Long fileSize = ((PersistentResultSet) set).getFileSize();
-                        Integer rows = set.size();
-                        finishedQuery.setResult(outputPath);
-                        finishedQuery.setMetadata(metadata.toJson());
-                        finishedQuery.setRows(rows);
-                        finishedQuery.setFileSize(fileSize);
+                FinishedLensQuery alreadyExisting = lensServerDao.getQuery(finished.getQueryHandleString());
+                if (alreadyExisting == null) {
+                  FinishedLensQuery finishedQuery = new FinishedLensQuery(finished.getCtx());
+                  if (finished.ctx.getStatus().getStatus() == SUCCESSFUL) {
+                    if (finished.ctx.getStatus().isResultSetAvailable()) {
+                      try {
+                        LensResultSet set = finished.getResultset();
+                        if (set != null && PersistentResultSet.class.isAssignableFrom(set.getClass())) {
+                          LensResultSetMetadata metadata = set.getMetadata();
+                          String outputPath = set.getOutputPath();
+                          Long fileSize = ((PersistentResultSet) set).getFileSize();
+                          Integer rows = set.size();
+                          finishedQuery.setResult(outputPath);
+                          finishedQuery.setMetadata(metadata.toJson());
+                          finishedQuery.setRows(rows);
+                          finishedQuery.setFileSize(fileSize);
+                        }
+                      } catch (Exception e) {
+                        log.error("Couldn't obtain result set info for the query: {}. Going ahead with purge",
+                          finished.getQueryHandle(), e);
                       }
-                    } catch (Exception e) {
-                      log.error("Couldn't obtain result set info for the query: {}. Going ahead with purge",
-                        finished.getQueryHandle(), e);
                     }
                   }
+                  lensServerDao.insertFinishedQuery(finishedQuery);
+                  log.info("Saved query {} to DB", finishedQuery.getHandle());
                 }
-                lensServerDao.insertFinishedQuery(finishedQuery);
-                log.info("Saved query {} to DB", finishedQuery.getHandle());
                 iter.remove();
               } catch (Exception e) {
                 log.warn("Exception while purging query {}", finished.getQueryHandle(), e);

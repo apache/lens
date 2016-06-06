@@ -23,6 +23,8 @@ import static org.apache.lens.server.LensServerTestUtil.loadData;
 import static org.apache.lens.server.api.user.MockDriverQueryHook.*;
 import static org.apache.lens.server.common.RestAPITestUtil.execute;
 
+import static org.apache.lens.server.common.RestAPITestUtil.getLensQueryResult;
+import static org.apache.lens.server.common.RestAPITestUtil.waitForQueryToFinish;
 import static org.testng.Assert.*;
 
 import java.io.*;
@@ -45,6 +47,7 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.api.util.LensUtil;
+import org.apache.lens.server.common.RestAPITestUtil;
 import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.query.TestQueryService;
@@ -216,19 +219,8 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     for (QueryHandle handle : launchedQueries) {
       log.info("Polling query {}", handle);
       try {
-        LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(defaultMT)
-          .get(LensQuery.class);
-        QueryStatus stat = ctx.getStatus();
-        while (!stat.finished()) {
-          log.info("Polling query {} Status:{}", handle, stat);
-          ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(defaultMT)
-            .get(LensQuery.class);
-          stat = ctx.getStatus();
-          Thread.sleep(1000);
-        }
-        assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Expected to be successful " + ctx);
-        PersistentQueryResult resultset = target.path(handle.toString()).path("resultset")
-          .queryParam("sessionid", lensSessionId).request(defaultMT).get(PersistentQueryResult.class);
+        waitForQueryToFinish(target(), lensSessionId, handle, QueryStatus.Status.SUCCESSFUL, defaultMT);
+        PersistentQueryResult resultset = getLensQueryResult(target(), lensSessionId, handle, defaultMT);
         List<String> rows = TestQueryService.readResultSet(resultset, handle, true);
         assertEquals(rows.size(), 1);
         assertEquals(rows.get(0), "" + NROWS);

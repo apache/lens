@@ -83,6 +83,7 @@ public abstract class LensJerseyTest extends JerseyTest {
 
   public void setUp() throws Exception {
     log.info("setUp in class: {}", this.getClass().getCanonicalName());
+    System.setProperty("hive.log.dir", "target/hive/logs/");
     super.setUp();
   }
   public void tearDown() throws Exception {
@@ -153,6 +154,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   public void startAll() throws Exception {
     log.info("Before suite");
     System.setProperty("lens.log.dir", "target/");
+    System.setProperty("hive.log.dir", "target/hive/logs/");
     System.setProperty(LensConfConstants.CONFIG_LOCATION, "target/test-classes/");
     TestRemoteHiveDriver.createHS2Service();
     System.out.println("Remote hive server started!");

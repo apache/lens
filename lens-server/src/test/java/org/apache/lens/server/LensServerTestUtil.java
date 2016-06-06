@@ -106,7 +106,7 @@ public final class LensServerTestUtil {
       Thread.sleep(1000);
     }
     final String debugHelpMsg = "Query Handle:"+ctx.getQueryHandleString();
-    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, debugHelpMsg);
+    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, ctx.getStatus().toString());
     assertTrue(ctx.getSubmissionTime() > 0, debugHelpMsg);
     assertTrue(ctx.getLaunchTime() > 0, debugHelpMsg);
     assertTrue(ctx.getDriverStartTime() > 0, debugHelpMsg);
