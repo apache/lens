@@ -54,12 +54,7 @@
     <name>lens.query.result.parent.dir</name>
     <value>target/lens-results</value>
   </property>
-
-  <property>
-    <name>hive.server2.query.log.dir</name>
-    <value>target/query-logs</value>
-  </property>
-
+  
   <property>
     <name>hive.server2.authentication</name>
     <value>CUSTOM</value>

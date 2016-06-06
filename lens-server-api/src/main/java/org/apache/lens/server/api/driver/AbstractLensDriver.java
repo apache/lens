@@ -65,11 +65,7 @@ public abstract class AbstractLensDriver implements LensDriver {
   @Override
   public LensResultSet fetchResultSet(QueryContext ctx) throws LensException {
     log.info("FetchResultSet: {}", ctx.getQueryHandle());
-    synchronized (ctx) {
-      if (!ctx.isDriverResultRegistered()) {
-        ctx.registerDriverResult(createResultSet(ctx));
-      }
-    }
+    ctx.registerDriverResult(createResultSet(ctx)); // registerDriverResult makes sure registration happens ony once
     return ctx.getDriverResult();
   }
 

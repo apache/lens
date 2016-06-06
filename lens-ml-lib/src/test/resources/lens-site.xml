@@ -50,11 +50,6 @@
   </property>
 
   <property>
-    <name>hive.server2.query.log.dir</name>
-    <value>target/query-logs</value>
-  </property>
-
-  <property>
     <name>hive.server2.authentication</name>
     <value>CUSTOM</value>
   </property>

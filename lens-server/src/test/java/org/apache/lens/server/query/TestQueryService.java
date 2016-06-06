@@ -30,6 +30,7 @@ import static org.apache.lens.server.common.RestAPITestUtil.*;
 import static org.testng.Assert.*;
 
 import java.io.*;
+import java.sql.*;
 import java.util.*;
 
 import javax.ws.rs.NotFoundException;
@@ -128,12 +129,34 @@ public class TestQueryService extends LensJerseyTest {
     metricsSvc = LensServices.get().getService(MetricsService.NAME);
     Map<String, String> sessionconf = new HashMap<>();
     sessionconf.put("test.session.key", "svalue");
-    lensSessionId = queryService.openSession("foo@localhost", "bar", sessionconf); // @localhost should be removed
-    // automatically
+    // @localhost should be removed automatically
+    lensSessionId = queryService.openSession("foo@localhost", "bar", sessionconf);
+
+    //Create Hive table and load data
     createTable(TEST_TABLE);
     loadData(TEST_TABLE, TestResourceFile.TEST_DATA2_FILE.getValue());
+
+    //Create HSQLDB table and load data
+    createHSQLTableAndLoadData();
   }
 
+  private void createHSQLTableAndLoadData() throws SQLException {
+    Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:jdbcTestDB;MODE=MYSQL", "sa", "");
+    String createTableCmd = "create table " + TEST_JDBC_TABLE + " (ID integer, IDSTR varchar(10))";
+    String loadTableCmd = "Insert into " + TEST_JDBC_TABLE + " values "
+      + "(1, 'one'), (NULL, 'two'), (3, NULL), (NULL, NULL), (5, '')";
+    Statement statement = conn.createStatement();
+    int result = statement.executeUpdate(createTableCmd);
+    System.out.print(result);
+    conn.commit();
+    result = statement.executeUpdate(loadTableCmd);
+    System.out.print(result);
+    statement.close();
+    conn.commit();
+    conn.close();
+  }
+
+  /*
   /*
    * (non-Javadoc)
    *
@@ -165,6 +188,8 @@ public class TestQueryService extends LensJerseyTest {
 
   /** The test table. */
   public static final String TEST_TABLE = "TEST_TABLE";
+
+  public static final String TEST_JDBC_TABLE = "TEST_JDBC_TABLE";
 
   /**
    * Creates the table.
@@ -1336,12 +1361,24 @@ public class TestQueryService extends LensJerseyTest {
    */
   @DataProvider
   public Object[][] executeWithTimeoutAndPreFetechAndServerPersistenceDP() {
-    //Columns: timeOutMillis, preFetchRows, isStreamingResultAvailable, deferPersistenceByMillis
+    String query5RowsHive = "select ID, IDSTR from " + TEST_TABLE;
+    String query0RowsHive = "select ID, IDSTR from " + TEST_TABLE + " where ID=99";
+
+    String query5RowsJdbc = "select ID, IDSTR from " + TEST_JDBC_TABLE;
+    String query0RowsJdbc = "select ID, IDSTR from " + TEST_JDBC_TABLE + " where ID=99";
+
+    //Columns: timeOutMillis, preFetchRows, isStreamingResultAvailable, deferPersistenceByMillis,query,rows in result
     return new Object[][] {
-      {30000, 5, true, 0}, //result has 5 rows & all 5 rows are requested to be pre-fetched
-      {30000, 10, true, 6000}, //result has 5 rows & 10 rows are requested to be pre-fetched.
-      {30000, 2, false, 4000}, //result has 5 rows & 2 rows are requested to be pre-fetched. Will not stream
-      {10, 5, false, 0}, //result has 5 rows & 5 rows requested. Timeout is less (10ms). Will not stream
+      {30000, 5, true, 0, query5RowsHive, 5}, //All 5 rows are requested to be pre-fetched
+      {30000, 10, true, 6000, query5RowsHive, 5}, //10 rows are requested to be pre-fetched.
+      {30000, 2, false, 4000, query5RowsHive, 5}, //2 rows are requested to be pre-fetched. Will not stream
+      {10, 5, false, 0, query5RowsHive, 5}, //5 rows requested. Timeout is less (10ms). Will not stream
+      {30000, 5, true, 0, query0RowsHive, 0}, //Result has no rows
+      {30000, 5, true, 0, query5RowsJdbc, 5}, //All 5 rows are requested to be pre-fetched
+      {30000, 10, true, 6000, query5RowsJdbc, 5}, //10 rows are requested to be pre-fetched.
+      {30000, 2, false, 4000, query5RowsJdbc, 5}, //2 rows are requested to be pre-fetched. Will not stream
+      {10, 5, false, 0, query5RowsJdbc, 5}, //5 rows requested. Timeout is less (10ms). Will not stream
+      {30000, 5, true, 0, query0RowsJdbc, 0}, //Result has no rows
     };
   }
 
@@ -1355,14 +1392,14 @@ public class TestQueryService extends LensJerseyTest {
    */
   @Test(dataProvider = "executeWithTimeoutAndPreFetechAndServerPersistenceDP")
   public void testExecuteWithTimeoutAndPreFetchAndServerPersistence(long timeOutMillis, int preFetchRows,
-      boolean isStreamingResultAvailable, long deferPersistenceByMillis) throws Exception {
+      boolean isStreamingResultAvailable, long deferPersistenceByMillis, String query, int rowsInResult)
+    throws Exception {
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
         APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-        + TEST_TABLE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), query));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute_with_timeout"));
     // Set a timeout value enough for tests
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(), timeOutMillis + ""));
@@ -1390,11 +1427,15 @@ public class TestQueryService extends LensJerseyTest {
           "Check if timeoutmillis need to be increased based on query status " + result.getStatus());
       assertEquals(result.getResultMetadata().getColumns().size(), 2);
       assertNotNull(result.getResult());
-      validateInmemoryResult((InMemoryQueryResult) result.getResult());
-    } else if (timeOutMillis > 20000) { // timeout is sufficient for query to finish
-      assertTrue(result.getResult() instanceof PersistentQueryResult);
+      if (rowsInResult > 0) {
+        validateInmemoryResult((InMemoryQueryResult) result.getResult());
+      } else {
+        assertEquals(((InMemoryQueryResult) result.getResult()).getRows().size(), 0);
+      }
     } else {
-      assertNull(result.getResult()); // Query execution not finished yet
+      // IF timeout is sufficient for query to finish , we should receive PersistentQueryResult
+      // Else we will get null result
+      assertTrue(result.getResult()==null || result.getResult() instanceof PersistentQueryResult);
     }
 
     waitForQueryToFinish(target(), lensSessionId, handle, Status.SUCCESSFUL, APPLICATION_XML_TYPE);

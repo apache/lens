@@ -70,7 +70,7 @@ Jdbc driver configuration
 *--+--+---+--+
 |23|lens.driver.jdbc.fetch.size|1000|Fetch size for JDBC result set|
 *--+--+---+--+
-|24|lens.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
+|24|lens.driver.jdbc.get.connection.timeout|10000|The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted. Zero means wait indefinitely. Setting any positive value will cause the getConnection () call to time-out and break with an SQLException after the specified number of milliseconds. The default value of this property is 10 secs.|
 *--+--+---+--+
 |25|lens.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
 *--+--+---+--+

@@ -75,6 +75,12 @@ public class PartiallyFetchedInMemoryResultSet extends InMemoryResultSet {
   private boolean preFetchedRowsConsumed;
 
   /**
+   * This is the metadata that is returned by underlying resultset. We cache it to make sure its available even
+   * after the underlying resultset has been closed.
+   */
+  private LensResultSetMetadata cachedResultSetMetadata;
+
+  /**
    * Constructor
    * @param inMemoryRS : Underlying in-memory result set
    * @param reqPreFetchSize : requested number of rows to be pre-fetched and cached.
@@ -85,6 +91,7 @@ public class PartiallyFetchedInMemoryResultSet extends InMemoryResultSet {
     if (reqPreFetchSize <= 0) {
       throw new IllegalArgumentException("Invalid pre fetch size " + reqPreFetchSize);
     }
+    cachedResultSetMetadata = inMemoryRS.getMetadata();
     preFetchRows(reqPreFetchSize);
     log.info("Pre-Fetched {} rows of result and isComplteleyFetched = {} and doNotPurgeUntilTimeMillis ={}",
         numOfPreFetchedRows, isComplteleyFetched);
@@ -151,7 +158,7 @@ public class PartiallyFetchedInMemoryResultSet extends InMemoryResultSet {
 
   @Override
   public LensResultSetMetadata getMetadata() throws LensException {
-    return inMemoryRS.getMetadata();
+    return cachedResultSetMetadata;
   }
 
   @Override
