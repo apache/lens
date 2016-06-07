@@ -54,6 +54,8 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.test.TestProperties;
 
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +71,16 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
 
   /** The lens session id. */
   LensSessionHandle lensSessionId;
+
+  @BeforeTest
+  public void setUp() throws Exception {
+    super.setUp();
+  }
+
+  @AfterTest
+  public void tearDown() throws Exception {
+    super.tearDown();
+  }
 
   @Override
   public Map<String, String> getServerConfOverWrites() {
