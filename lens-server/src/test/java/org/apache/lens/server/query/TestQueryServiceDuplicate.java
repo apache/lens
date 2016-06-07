@@ -44,8 +44,6 @@ import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.query.TestQueryService.QueryServiceTestApp;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
@@ -56,8 +54,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +61,6 @@ import lombok.extern.slf4j.Slf4j;
 @Test(groups = "duplicate-query", dependsOnGroups = "two-working-drivers")
 @Slf4j
 public class TestQueryServiceDuplicate extends LensJerseyTest {
-  private HiveConf serverConf;
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
@@ -75,31 +70,9 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
   /** The lens session id. */
   LensSessionHandle lensSessionId;
 
-  @BeforeTest
-  public void setUp() throws Exception {
-    super.setUp();
-  }
-
   @Override
   public Map<String, String> getServerConfOverWrites() {
     return LensUtil.getHashMap(LensConfConstants.SERVER_DUPLICATE_QUERY_ALLOWED, String.valueOf(false));
-  }
-
-  /*
-     * (non-Javadoc)
-     *
-     * @see org.glassfish.jersey.test.JerseyTest#tearDown()
-     */
-  @AfterTest
-  public void tearDown() throws Exception {
-    dropTable(TEST_TABLE);
-    queryService.closeSession(lensSessionId);
-    for (LensDriver driver : queryService.getDrivers()) {
-      if (driver instanceof HiveDriver) {
-        assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
-      }
-    }
-    super.tearDown();
   }
 
   @Override
@@ -285,6 +258,14 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
       assertNotEquals(handle7, handle8);
       target.path(handle7.toString()).queryParam("sessionid", lensSessionId).request(mt).delete(APIResult.class);
       target.path(handle8.toString()).queryParam("sessionid", lensSessionId1).request(mt).delete(APIResult.class);
+      // cleanup
+      dropTable(TEST_TABLE);
+      queryService.closeSession(lensSessionId);
+      for (LensDriver driver : queryService.getDrivers()) {
+        if (driver instanceof HiveDriver) {
+          assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
+        }
+      }
     } finally {
       queryService.pauseQuerySubmitter(false);
     }

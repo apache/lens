@@ -63,7 +63,7 @@ import com.google.common.base.Optional;
 /**
  * The query completion email notifier
  */
-@Test(groups = "unit-test")
+@Test(groups = "unit-test", threadPoolSize = 20)
 public class TestQueryEndEmailNotifier extends LensJerseyTest {
 
   private static final int NUM_ITERS = 30;

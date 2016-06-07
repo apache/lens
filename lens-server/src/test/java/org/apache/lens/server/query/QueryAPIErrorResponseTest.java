@@ -68,7 +68,7 @@ import org.testng.annotations.Test;
 import com.google.common.base.Optional;
 import lombok.NonNull;
 
-@Test(groups = "unit-test")
+@Test(groups = "unit-test", threadPoolSize = 10)
 public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
   private static final String MOCK_QUERY = "mock-query";
