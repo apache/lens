@@ -270,16 +270,9 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
       assertNotEquals(handle7, handle8);
       target.path(handle7.toString()).queryParam("sessionid", lensSessionId).request(mt).delete(APIResult.class);
       target.path(handle8.toString()).queryParam("sessionid", lensSessionId1).request(mt).delete(APIResult.class);
-      // cleanup
-      dropTable(TEST_TABLE);
-      queryService.closeSession(lensSessionId);
-      for (LensDriver driver : queryService.getDrivers()) {
-        if (driver instanceof HiveDriver) {
-          assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
-        }
-      }
     } finally {
       queryService.pauseQuerySubmitter(false);
+      // cleanup
       dropTable(TEST_TABLE);
       queryService.closeSession(lensSessionId);
       for (LensDriver driver : queryService.getDrivers()) {

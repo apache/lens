@@ -95,7 +95,7 @@ import lombok.extern.slf4j.Slf4j;
  * The Class TestQueryService.
  */
 @Slf4j
-@Test(groups = "unit-test", threadPoolSize = 20)
+@Test(groups = "unit-test")
 public class TestQueryService extends LensJerseyTest {
 
   /** The query service. */
