@@ -19,7 +19,10 @@
 package org.apache.lens.server.session;
 
 
+import static org.testng.Assert.*;
+
 import java.io.File;
+import java.net.URI;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 
@@ -27,13 +30,15 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.exec.UDFClassLoader;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hive.service.cli.CLIService;
+import org.apache.hive.service.cli.HiveSQLException;
 
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -79,6 +84,7 @@ public class TestSessionClassLoaders {
   public void tearDown() throws Exception {
     Hive hive = Hive.get(conf);
     hive.dropDatabase(DB1, true, true);
+    sessionService.stop();
   }
 
 
@@ -99,7 +105,7 @@ public class TestSessionClassLoaders {
       Class clz = Class.forName(TestDatabaseResourceService.TEST_CLASS, true,
         Thread.currentThread().getContextClassLoader());
       // Expected to fail
-      Assert.fail("Should not reach here as default db doesn't have jar loaded");
+      fail("Should not reach here as default db doesn't have jar loaded");
     } catch (ClassNotFoundException cnf) {
       // Pass
     } finally {
@@ -112,7 +118,7 @@ public class TestSessionClassLoaders {
       sessionService.acquire(sessionHandle);
       Class clz = session.getCubeMetastoreClient().getConf().getClassByName(TestDatabaseResourceService.TEST_CLASS);
       // Expected to fail
-      Assert.fail("Should not reach here as default db doesn't have jar loaded");
+      fail("Should not reach here as default db doesn't have jar loaded");
     } catch (ClassNotFoundException cnf) {
       // Pass
     } finally {
@@ -127,17 +133,17 @@ public class TestSessionClassLoaders {
       sessionService.acquire(sessionHandle);
 
       ClassLoader thClassLoader = Thread.currentThread().getContextClassLoader();
-      Assert.assertTrue(thClassLoader == session.getClassLoader(DB1));
+      assertTrue(thClassLoader == session.getClassLoader(DB1));
 
       Class clz = Class.forName(TestDatabaseResourceService.TEST_CLASS, true, thClassLoader);
-      Assert.assertNotNull(clz);
+      assertNotNull(clz);
       // test cube metastore client's configuration's classloader
       clz = null;
       clz = session.getCubeMetastoreClient().getConf().getClassByName(TestDatabaseResourceService.TEST_CLASS);
-      Assert.assertNotNull(clz);
+      assertNotNull(clz);
     } catch (ClassNotFoundException cnf) {
       log.error(cnf.getMessage(), cnf);
-      Assert.fail("Should not have thrown class not found exception: " + cnf.getMessage());
+      fail("Should not have thrown class not found exception: " + cnf.getMessage());
     } finally {
       sessionService.release(sessionHandle);
     }
@@ -169,7 +175,7 @@ public class TestSessionClassLoaders {
       sessionService.acquire(sessionHandle);
 
       ClassLoader dbClassLoader = session.getClassLoader("default");
-      Assert.assertTrue(Thread.currentThread().getContextClassLoader() == dbClassLoader);
+      assertTrue(Thread.currentThread().getContextClassLoader() == dbClassLoader);
 
       // testClass2 should be loaded since test2.jar is added to the session
       Class testClass2 = dbClassLoader.loadClass("ClassLoaderTestClass2");
@@ -181,8 +187,8 @@ public class TestSessionClassLoaders {
       loadedDBClass = true;
     } catch (ClassNotFoundException cnf) {
       log.error(cnf.getMessage(), cnf);
-      Assert.assertTrue(loadedSessionClass);
-      Assert.assertFalse(loadedDBClass);
+      assertTrue(loadedSessionClass);
+      assertFalse(loadedDBClass);
     } finally {
       sessionService.release(sessionHandle);
     }
@@ -204,8 +210,8 @@ public class TestSessionClassLoaders {
       loadedDBClass = true;
     } catch (ClassNotFoundException cnf) {
       log.error(cnf.getMessage(), cnf);
-      Assert.assertTrue(loadedSessionClass);
-      Assert.assertFalse(loadedDBClass);
+      assertTrue(loadedSessionClass);
+      assertFalse(loadedDBClass);
     } finally {
       sessionService.release(sessionHandle);
     }
@@ -217,7 +223,7 @@ public class TestSessionClassLoaders {
     try {
       sessionService.acquire(sessionHandle);
       // testClass2 should be loaded since test2.jar is added to the session
-      URLClassLoader urlClassLoader = (URLClassLoader) Thread.currentThread().getContextClassLoader();
+      URLClassLoader urlClassLoader = (SessionClassLoader) Thread.currentThread().getContextClassLoader();
       Class testClass2 = Class.forName("ClassLoaderTestClass2", true, Thread.currentThread().getContextClassLoader());
       // class inside 'test.jar' should also load since its added to DB1
       loadedSessionClass = true;
@@ -226,8 +232,8 @@ public class TestSessionClassLoaders {
     } finally {
       sessionService.release(sessionHandle);
     }
-    Assert.assertTrue(loadedSessionClass);
-    Assert.assertTrue(loadedDBClass);
+    assertTrue(loadedSessionClass);
+    assertTrue(loadedDBClass);
 
     log.info("@@@ TEST 2 - cube client");
     loadedSessionClass = false;
@@ -243,8 +249,8 @@ public class TestSessionClassLoaders {
     } finally {
       sessionService.release(sessionHandle);
     }
-    Assert.assertTrue(loadedSessionClass);
-    Assert.assertTrue(loadedDBClass);
+    assertTrue(loadedSessionClass);
+    assertTrue(loadedDBClass);
 
     // Switch back to default DB, again the test2.jar should be available, test.jar should not be available
     log.info("@@@ TEST 3");
@@ -260,8 +266,8 @@ public class TestSessionClassLoaders {
       Class clz = Class.forName("ClassLoaderTestClass", true, Thread.currentThread().getContextClassLoader());
       loadedDBClass = true;
     } catch (ClassNotFoundException cnf) {
-      Assert.assertTrue(loadedSessionClass);
-      Assert.assertFalse(loadedDBClass);
+      assertTrue(loadedSessionClass);
+      assertFalse(loadedDBClass);
     } finally {
       sessionService.release(sessionHandle);
     }
@@ -282,8 +288,8 @@ public class TestSessionClassLoaders {
       loadedDBClass = true;
     } catch (ClassNotFoundException cnf) {
       log.error(cnf.getMessage(), cnf);
-      Assert.assertTrue(loadedSessionClass);
-      Assert.assertFalse(loadedDBClass);
+      assertTrue(loadedSessionClass);
+      assertFalse(loadedDBClass);
     } finally {
       sessionService.release(sessionHandle);
     }
@@ -291,4 +297,136 @@ public class TestSessionClassLoaders {
     sessionService.closeSession(sessionHandle);
   }
 
+  private void assertDBClassNotLoading(ClassLoader classLoader) {
+    try {
+      classLoader.loadClass("DatabaseJarSerde");
+      fail("Shouldn't be able to load DatabaseJarSerde.class");
+    } catch (ClassNotFoundException e) {
+      log.debug("no issues");
+    }
+  }
+
+  private void assertDBClassLoading(ClassLoader classLoader) throws ClassNotFoundException {
+    classLoader.loadClass("DatabaseJarSerde");
+  }
+
+  @Test
+  public void testClassloaderClose() throws LensException, HiveSQLException, ClassNotFoundException {
+    String parentResource = "org/apache/hadoop/conf/Configuration.class";
+    String db1Resource = "DatabaseJarSerde.class";
+    LensSessionHandle sessionHandle1 = sessionService.openSession("foo", "bar", new HashMap<String, String>());
+    LensSessionImpl session1 = sessionService.getSession(sessionHandle1);
+    session1.setDbResService(sessionService.getDatabaseResourceService());
+    session1.setCurrentDatabase(DB1);
+    LensSessionHandle sessionHandle2 = sessionService.openSession("foo", "bar", new HashMap<String, String>());
+    LensSessionImpl session2 = sessionService.getSession(sessionHandle2);
+    session2.setDbResService(sessionService.getDatabaseResourceService());
+    session2.setCurrentDatabase(DB1);
+    SessionClassLoader session1ClassLoader1 = (SessionClassLoader) session1.getClassLoader();
+    SessionClassLoader classLoader2 = (SessionClassLoader) session2.getClassLoader();
+    // classloader logically same, but instance different
+    assertEquals(session1ClassLoader1, classLoader2);
+    assertFalse(session1ClassLoader1 == classLoader2);
+    assertEquals(session1ClassLoader1.getParent(), classLoader2.getParent());
+    assertDBClassLoading(session1ClassLoader1);
+    session1.setCurrentDatabase("default");
+    // Default has no parent class loader, so
+    UDFClassLoader session1ClassLoader2 = (UDFClassLoader) session1.getClassLoader();
+    assertNotEquals(session1ClassLoader2, session1ClassLoader1); // obviously, since even types are different
+    assertNotEquals(session1ClassLoader1.getParent(), session1ClassLoader2.getParent());
+    assertFalse(session1ClassLoader1.isClosed());
+    assertFalse(session1ClassLoader2.isClosed());
+    assertDBClassNotLoading(session1ClassLoader2);
+    sessionService.closeSession(sessionHandle1);
+    // both classloaders got closed, but parent classloader not closed.
+    assertTrue(session1ClassLoader1.isClosed());
+    assertTrue(session1ClassLoader2.isClosed());
+    assertFalse(((UncloseableClassLoader) session1ClassLoader1.getParent()).isClosed());
+    assertNotNull(session1ClassLoader2.getResource(parentResource));
+    // session 1 classloader still able to load db1 jar resources
+    assertNotNull(session1ClassLoader1.getResource(db1Resource));
+    // didn't affect classloaders of another session.
+    assertNotNull(classLoader2.getResource(parentResource));
+    sessionService.closeSession(sessionHandle2);
+    assertTrue(classLoader2.isClosed());
+    LensSessionHandle sessionHandle3 = sessionService.openSession("foo", "bar", new HashMap<String, String>());
+    LensSessionImpl session3 = sessionService.getSession(sessionHandle3);
+    session3.setDbResService(sessionService.getDatabaseResourceService());
+    session3.setCurrentDatabase("default");
+    UDFClassLoader session3ClassLoader1 = (UDFClassLoader) session3.getClassLoader();
+    assertFalse(session3ClassLoader1.isClosed());
+    assertDBClassNotLoading(session3ClassLoader1);
+    session3.setCurrentDatabase(DB1);
+    SessionClassLoader session3ClassLoader2 = (SessionClassLoader) session3.getClassLoader();
+    assertFalse(session3ClassLoader2.isClosed());
+    assertDBClassLoading(session3ClassLoader2);
+    // session classloader is different in case of different sessions.
+    assertNotEquals(session3ClassLoader1, session1ClassLoader2);
+    // both are instances of UDFClassLoader, with same number of urls
+    assertEquals(session3ClassLoader1.getClass(), session1ClassLoader2.getClass());
+    assertEquals(session1ClassLoader2.getURLs().length, session3ClassLoader1.getURLs().length);
+    // without adding any jars, classloaders for different sessions using same database have same
+    // parent and no extra urls added
+    assertEquals(session3ClassLoader2.getParent(), session1ClassLoader1.getParent());
+    assertEquals(session3ClassLoader2.getURLs().length, session1ClassLoader1.getURLs().length);
+
+    session3.setCurrentDatabase("dummy1");
+    UDFClassLoader session3ClassLoader3 = (UDFClassLoader) session3.getClassLoader();
+    session3.setCurrentDatabase("dummy2");
+    UDFClassLoader session3ClassLoader4 = (UDFClassLoader) session3.getClassLoader();
+    assertDBClassNotLoading(session3ClassLoader3);
+    assertDBClassNotLoading(session3ClassLoader4);
+    assertEquals(session3ClassLoader3, session3ClassLoader4);
+    sessionService.closeSession(sessionHandle3);
+    assertTrue(session3ClassLoader1.isClosed());
+    assertTrue(session3ClassLoader2.isClosed());
+    assertTrue(session3ClassLoader3.isClosed());
+    assertTrue(session3ClassLoader4.isClosed());
+  }
+
+  private void assertExtraClassNotLoading(ClassLoader classLoader) {
+    try {
+      classLoader.loadClass("ClassLoaderTestClass2");
+      // Class may be already loaded due to cache.
+      assertNull(classLoader.getResource("ClassLoaderTestClass2.class"));
+    } catch (ClassNotFoundException e) {
+      log.debug("no issues");
+    }
+  }
+
+  private void assertExtraClassLoading(ClassLoader classLoader) throws ClassNotFoundException {
+    classLoader.loadClass("ClassLoaderTestClass2");
+    assertNotNull("ClassLoaderTestClass2.class");
+  }
+
+  @Test
+  public void testSessionClassLoaderCloseWhenExtraJars() throws Exception {
+    URI resource = new File("target/testjars/test2.jar").toURI();
+    LensSessionHandle sessionHandle1 = sessionService.openSession("foo", "bar", new HashMap<String, String>());
+    LensSessionImpl session1 = sessionService.getSession(sessionHandle1);
+    session1.setDbResService(sessionService.getDatabaseResourceService());
+    session1.setCurrentDatabase(DB1);
+    sessionService.addResource(sessionHandle1, "jar", resource.toString());
+    SessionClassLoader loader1 = (SessionClassLoader) session1.getClassLoader();
+    assertExtraClassLoading(loader1);
+    assertExtraClassNotLoading(loader1.getParent());
+    assertEquals(loader1.getURLs()[0].toURI(), resource);
+    // change db to a db which doesn't have db jars. and add resources there.
+
+    session1.setCurrentDatabase("default");
+    // Extra jar is still there.
+    assertExtraClassLoading(session1.getClassLoader());
+    UDFClassLoader loader2 = (UDFClassLoader) session1.getClassLoader();
+
+    // Close and assert on all class loaders.
+    session1.setCurrentDatabase(DB1);
+    assertEquals(session1.getClassLoader(), loader1);
+    sessionService.closeSession(sessionHandle1);
+    assertTrue(loader1.isClosed());
+    assertTrue(loader2.isClosed());
+    assertExtraClassNotLoading(loader1);
+    assertExtraClassNotLoading(loader2);
+    assertFalse(((UncloseableClassLoader) loader1.getParent()).isClosed());
+    assertExtraClassNotLoading(loader1.getParent());
+  }
 }
