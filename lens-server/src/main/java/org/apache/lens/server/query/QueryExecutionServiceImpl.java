@@ -1335,6 +1335,14 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           } catch (final Exception e) {
             log.error("Query not restored:QueryContext:{}", ctx, e);
           }
+          // If EXECUTED, try to nudge result formatting forward
+          if (ctx.getStatus().getStatus() == EXECUTED) {
+            try {
+              getEventService().notifyEvent(newStatusChangeEvent(ctx, null, ctx.getStatus().getStatus()));
+            } catch (LensException e) {
+              log.error("Couldn't notify event for query executed for {}", ctx, e);
+            }
+          }
           break;
         case SUCCESSFUL:
         case FAILED:
@@ -1895,7 +1903,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    *
    * @param query
    * @param sessionHandle
-   * @param qconf
+   * @param conf
    * @param queryName
    * @return
    */
