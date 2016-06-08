@@ -1223,6 +1223,22 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     }
   }
 
+  private void awaitTermination(ExecutorService service) {
+    try {
+      service.awaitTermination(1, TimeUnit.MINUTES);
+    } catch (InterruptedException e) {
+      log.info("Couldn't finish executor service within 1 minute: {}", service);
+    }
+  }
+
+  private void awaitTermination(QueryResultPurger service) {
+    try {
+      service.awaitTermination(1, TimeUnit.MINUTES);
+    } catch (InterruptedException e) {
+      log.info("Couldn't finish query result purger within 1 minute: {}", service);
+    }
+  }
+
   /*
    * (non-Javadoc)
    *
@@ -1230,10 +1246,39 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   public void prepareStopping() {
     super.prepareStopping();
-    querySubmitter.interrupt();
-    statusPoller.interrupt();
-    queryPurger.interrupt();
-    prepareQueryPurger.interrupt();
+    Thread[] threadsToStop = new Thread[]{querySubmitter, statusPoller, queryPurger, prepareQueryPurger};
+    // Nudge the threads to stop
+    for (Thread th : threadsToStop) {
+      th.interrupt();
+    }
+
+    // Nudge executor pools to stop
+
+    // Hard shutdown, since it doesn't matter whether waiting queries were selected, all will be
+    // selected in the next restart
+    waitingQueriesSelectionSvc.shutdownNow();
+    // Soft shutdown, Wait for current estimate tasks
+    estimatePool.shutdown();
+    // Soft shutdown for result purger too. Purging shouldn't take much time.
+    if (null != queryResultPurger) {
+      queryResultPurger.shutdown();
+    }
+    // Soft shutdown right now, will await termination in this method itself, since cancellation pool
+    // should be terminated before query state gets persisted.
+    queryCancellationPool.shutdown();
+
+    // Join the threads.
+    for (Thread th : threadsToStop) {
+      try {
+        log.debug("Waiting for {}", th.getName());
+        th.join();
+      } catch (InterruptedException e) {
+        log.error("Error waiting for thread: {}", th.getName(), e);
+      }
+    }
+    // Needs to be done before queries' states are persisted, hence doing here. Await of other
+    // executor services can be done after persistence, hence they are done in #stop
+    awaitTermination(queryCancellationPool);
   }
 
   /*
@@ -1243,26 +1288,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   public synchronized void stop() {
     super.stop();
-
-    waitingQueriesSelectionSvc.shutdown();
-
-    for (Thread th : new Thread[]{querySubmitter, statusPoller, queryPurger, prepareQueryPurger}) {
-      try {
-        log.debug("Waiting for {}", th.getName());
-        th.join();
-      } catch (InterruptedException e) {
-        log.error("Error waiting for thread: {}", th.getName(), e);
-      }
-    }
-
-    estimatePool.shutdownNow();
-
-    if (null != queryResultPurger) {
-      queryResultPurger.stop();
-    }
-
-    queryCancellationPool.shutdown();
-
+    awaitTermination(waitingQueriesSelectionSvc);
+    awaitTermination(estimatePool);
+    awaitTermination(queryResultPurger);
     log.info("Query execution service stopped");
   }
 
