@@ -1336,6 +1336,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           } catch (final Exception e) {
             log.error("Query not restored:QueryContext:{}", ctx, e);
           }
+          // If EXECUTED, try to nudge result formatting forward
           if (ctx.getStatus().getStatus() == EXECUTED) {
             try {
               getEventService().notifyEvent(newStatusChangeEvent(ctx, null, ctx.getStatus().getStatus()));

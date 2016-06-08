@@ -20,6 +20,7 @@ package org.apache.lens.server;
 
 import static org.apache.lens.server.api.LensServerAPITestUtil.getLensConf;
 import static org.apache.lens.server.common.RestAPITestUtil.executeAndWaitForQueryToFinish;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -27,17 +28,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
-import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.io.FileUtils;

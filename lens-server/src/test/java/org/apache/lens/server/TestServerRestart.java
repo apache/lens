@@ -21,8 +21,8 @@ package org.apache.lens.server;
 import static org.apache.lens.server.LensServerTestUtil.createTable;
 import static org.apache.lens.server.LensServerTestUtil.loadData;
 import static org.apache.lens.server.api.user.MockDriverQueryHook.*;
-
 import static org.apache.lens.server.common.RestAPITestUtil.*;
+
 import static org.testng.Assert.*;
 
 import java.io.*;
@@ -51,7 +51,6 @@ import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.Service;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;

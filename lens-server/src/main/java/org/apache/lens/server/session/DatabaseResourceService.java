@@ -21,7 +21,6 @@ package org.apache.lens.server.session;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 
 import org.apache.lens.server.LensServices;
@@ -34,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -45,9 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DatabaseResourceService extends AbstractService {
   public static final String NAME = "database-resources";
-  private Map<String, ClassLoader> classLoaderCache;
-  private Map<String, List<LensSessionImpl.ResourceEntry>> dbResEntryMap;
-
+  private Map<String, UncloseableClassLoader> classLoaderCache = new HashMap<>();
+  private final Map<String, List<LensSessionImpl.ResourceEntry>> dbResEntryMap = new HashMap<>();
   /**
    * The metrics service.
    */
@@ -73,16 +70,8 @@ public class DatabaseResourceService extends AbstractService {
   }
 
   @Override
-  public synchronized void init(HiveConf hiveConf) {
-    super.init(hiveConf);
-    classLoaderCache = new HashMap<>();
-    dbResEntryMap = new HashMap<>();
-  }
-
-  @Override
   public synchronized void start() {
     super.start();
-
     try {
       log.info("Starting loading DB specific resources");
       loadDbResourceEntries();
@@ -197,90 +186,34 @@ public class DatabaseResourceService extends AbstractService {
   /**
    * Load DB specific resources
    */
-  public void loadResources() {
+  private void loadResources() {
     for (String db : dbResEntryMap.keySet()) {
-      try {
-        createClassLoader(db);
-        loadDBJars(db, dbResEntryMap.get(db), true);
-        log.info("Loaded resources for db {} resources: {}", db, dbResEntryMap.get(db));
-      } catch (LensException exc) {
-        incrCounter(LOAD_RESOURCES_ERRORS);
-        log.warn("Failed to load resources for db {}", db, exc);
-        classLoaderCache.remove(db);
-      }
+      loadDBJars(db, dbResEntryMap.get(db));
+      log.info("Loaded resources for db {} resources: {}", db, dbResEntryMap.get(db));
     }
-  }
-
-  protected void createClassLoader(String database) throws LensException {
-    classLoaderCache.put(database, this.getClass().getClassLoader());
   }
 
   /**
    * Add a resource to the specified database. Update class loader of the database if required.
    * @param database database name
    * @param resources resources which need to be added to the database
-   * @param useUri if set to true, use URI from resourceEntry to load in classLoader and update class loader of the
-   *               database in the class loader cache
-   * @return class loader updated as a result of adding any JARs
    */
-  private synchronized ClassLoader loadDBJars(String database, Collection<LensSessionImpl.ResourceEntry> resources,
-                                             boolean useUri) {
-    ClassLoader classLoader = classLoaderCache.get(database);
-    if (classLoader == null) {
-      // No change since there are no static resources to be added
-      return null;
-    }
-
-    if (resources == null || resources.isEmpty()) {
-      // Return DB class loader directly since no resources have to be merged.
-      return classLoader;
-    }
-
-    // Get URLs of the class loader
-    if (classLoader instanceof URLClassLoader) {
-      URLClassLoader urlLoader = (URLClassLoader) classLoader;
-      URL[] preUrls = urlLoader.getURLs();
-
-      // Add to set to remove duplicate additions
-      Set<URL> newUrls = new LinkedHashSet<>();
-      // New class loader = URLs of DB jars + argument jars
-      Collections.addAll(newUrls, preUrls);
-
+  private synchronized void loadDBJars(String database, Collection<LensSessionImpl.ResourceEntry> resources) {
+    URL[] urls = new URL[0];
+    if (resources != null) {
+      urls = new URL[resources.size()];
+      int i = 0;
       for (LensSessionImpl.ResourceEntry res : resources) {
         try {
-          if (useUri) {
-            newUrls.add(new URL(res.getUri()));
-          } else {
-            newUrls.add(new URL(res.getLocation()));
-          }
+          urls[i++] = new URL(res.getUri());
         } catch (MalformedURLException e) {
           incrCounter(LOAD_RESOURCES_ERRORS);
           log.error("Invalid URL {} with location: {} adding to db {}", res.getUri(), res.getLocation(), database, e);
         }
       }
-
-      URLClassLoader newClassLoader = new URLClassLoader(newUrls.toArray(new URL[newUrls.size()]),
-        DatabaseResourceService.class.getClassLoader());
-      if (useUri) {
-        classLoaderCache.put(database, newClassLoader);
-      }
-
-      return newClassLoader;
-    } else {
-      log.warn("Only URL class loader supported");
-      return Thread.currentThread().getContextClassLoader();
     }
-  }
-
-  /**
-   * Add a resource to the specified database, return class loader with resources added.
-   * This call does not update the class loader cache
-   * @param database database name
-   * @param resources resources which need to be added to the database
-   * @return class loader updated as a result of adding any JARs
-   */
-  protected ClassLoader loadDBJars(String database, Collection<LensSessionImpl.ResourceEntry> resources) {
-    return loadDBJars(database, resources, false);
+    classLoaderCache.put(database,
+      new UncloseableClassLoader(urls, getClass().getClassLoader()));
   }
 
 
@@ -288,9 +221,8 @@ public class DatabaseResourceService extends AbstractService {
    * Get class loader of a database added with database specific jars
    * @param database database
    * @return class loader from cache of classloaders for each db
-   * @throws LensException
    */
-  protected ClassLoader getClassLoader(String database) throws LensException {
+  protected ClassLoader getClassLoader(String database) {
     return classLoaderCache.get(database);
   }
 
