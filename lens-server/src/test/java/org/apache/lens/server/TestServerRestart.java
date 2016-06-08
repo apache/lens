@@ -43,6 +43,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.query.TestQueryService;
@@ -67,7 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * The Class TestServerRestart.
  */
-//@Test(alwaysRun = true, groups = "restart-test", dependsOnGroups = "unit-test")
+@Test(alwaysRun = true, groups = "restart-test", dependsOnGroups = "unit-test")
 @Slf4j
 public class TestServerRestart extends LensAllApplicationJerseyTest {
 
@@ -90,17 +91,10 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
   }
 
   @Override
-  public HiveConf getServerConf() {
-    HiveConf conf = super.getServerConf();
-    conf.set("lens.server.state.persistence.interval.millis", "1000");
-    return conf;
+  public Map<String, String> getServerConfOverWrites() {
+    return LensUtil.getHashMap("lens.server.state.persistence.interval.millis", "1000");
   }
 
-  /*
-     * (non-Javadoc)
-     *
-     * @see org.glassfish.jersey.test.JerseyTest#tearDown()
-     */
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
@@ -209,7 +203,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
         assertEquals(rows.size(), 1);
         assertEquals(rows.get(0), "" + NROWS);
         log.info("Completed {}", handle);
-      } catch (Exception | Error exc) {
+      } catch (Exception exc) {
         log.error("Failed query {}", handle, exc);
         Assert.fail(exc.getMessage());
       }
@@ -322,7 +316,6 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
 
     // Poll for first query, we should not get any exception
     ctx = waitForQueryToFinish(target(), lensSessionId, handle, defaultMT);
-    final WebTarget target = target().path("queryapi/queries");
 
     Assert.assertTrue(ctx.getStatus().finished());
     log.info("Previous query status: {}", ctx.getStatus().getStatusMessage());
