@@ -64,7 +64,6 @@ import lombok.extern.slf4j.Slf4j;
 @Test(groups = "duplicate-query", dependsOnGroups = "two-working-drivers")
 @Slf4j
 public class TestQueryServiceDuplicate extends LensJerseyTest {
-  private HiveConf serverConf;
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
@@ -81,25 +80,13 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
 
   @Override
   public HiveConf getServerConf() {
-    serverConf = new HiveConf(super.getServerConf());
+    HiveConf serverConf = new HiveConf(super.getServerConf());
     serverConf.setBoolean(LensConfConstants.SERVER_DUPLICATE_QUERY_ALLOWED, false);
     return serverConf;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
-   */
   @AfterTest
   public void tearDown() throws Exception {
-    dropTable(TEST_TABLE);
-    queryService.closeSession(lensSessionId);
-    for (LensDriver driver : queryService.getDrivers()) {
-      if (driver instanceof HiveDriver) {
-        assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
-      }
-    }
     super.tearDown();
   }
 
@@ -170,9 +157,9 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
     // automatically
     createTable(TEST_TABLE);
     loadData(TEST_TABLE, TestResourceFile.TEST_DATA2_FILE.getValue());
+    final WebTarget target = target().path("queryapi/queries");
+    queryService.pauseQuerySubmitter(true);
     try {
-      final WebTarget target = target().path("queryapi/queries");
-      queryService.pauseQuerySubmitter(true);
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId, mt));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
@@ -288,6 +275,13 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
       target.path(handle8.toString()).queryParam("sessionid", lensSessionId1).request(mt).delete(APIResult.class);
     } finally {
       queryService.pauseQuerySubmitter(false);
+      dropTable(TEST_TABLE);
+      queryService.closeSession(lensSessionId);
+      for (LensDriver driver : queryService.getDrivers()) {
+        if (driver instanceof HiveDriver) {
+          assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
+        }
+      }
     }
   }
 }
