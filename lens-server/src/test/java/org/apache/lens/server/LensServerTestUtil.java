@@ -18,9 +18,6 @@
  */
 package org.apache.lens.server;
 
-import static org.apache.lens.server.api.LensServerAPITestUtil.getLensConf;
-import static org.apache.lens.server.common.RestAPITestUtil.executeAndWaitForQueryToFinish;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -28,13 +25,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
+import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.io.FileUtils;
@@ -47,7 +48,10 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
-import com.google.common.base.Optional;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -74,13 +78,35 @@ public final class LensServerTestUtil {
   public static void createTable(String tblName, WebTarget parent, LensSessionHandle lensSessionId, String schemaStr,
     MediaType mt)
     throws InterruptedException {
-    // Launch create table query and wait till the query finishes
-    LensQuery ctx = executeAndWaitForQueryToFinish(parent, lensSessionId,
-      "CREATE TABLE IF NOT EXISTS " + tblName + schemaStr,
-      Optional.of(getLensConf(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false")),
-      Optional.of(QueryStatus.Status.SUCCESSFUL), mt);
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    final WebTarget target = parent.path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    String createTable = "CREATE TABLE IF NOT EXISTS " + tblName + schemaStr;
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      mt));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), createTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+      mt));
+
+    final QueryHandle handle = target.request(mt)
+        .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+            new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+    // wait till the query finishes
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+      .get(LensQuery.class);
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.finished()) {
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+        .get(LensQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
     final String debugHelpMsg = "Query Handle:"+ctx.getQueryHandleString();
-    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, ctx.getStatus().toString());
+    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, debugHelpMsg);
     assertTrue(ctx.getSubmissionTime() > 0, debugHelpMsg);
     assertTrue(ctx.getLaunchTime() > 0, debugHelpMsg);
     assertTrue(ctx.getDriverStartTime() > 0, debugHelpMsg);
@@ -95,10 +121,34 @@ public final class LensServerTestUtil {
 
   public static void loadData(String tblName, final String testDataFile, WebTarget parent,
       LensSessionHandle lensSessionId, MediaType mt) throws InterruptedException {
-    executeAndWaitForQueryToFinish(parent, lensSessionId,
-      "LOAD DATA LOCAL INPATH '" + testDataFile + "' OVERWRITE INTO TABLE " + tblName,
-      Optional.of(getLensConf(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false")),
-      Optional.of(QueryStatus.Status.SUCCESSFUL), mt);
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    final WebTarget target = parent.path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    String dataLoad = "LOAD DATA LOCAL INPATH '" + testDataFile + "' OVERWRITE INTO TABLE " + tblName;
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+        mt));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), dataLoad));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+        mt));
+
+    final QueryHandle handle = target.request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+
+    // wait till the query finishes
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+        .get(LensQuery.class);
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.finished()) {
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+        .get(LensQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
+    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
   /**
    * Load data.
@@ -143,8 +193,32 @@ public final class LensServerTestUtil {
    */
   public static void dropTableWithConf(String tblName, WebTarget parent, LensSessionHandle lensSessionId,
     LensConf conf, MediaType mt) throws InterruptedException {
-    executeAndWaitForQueryToFinish(parent, lensSessionId, "DROP TABLE IF EXISTS " + tblName, Optional.of(conf),
-      Optional.of(QueryStatus.Status.SUCCESSFUL), mt);
+    final WebTarget target = parent.path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    String createTable = "DROP TABLE IF EXISTS " + tblName;
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      mt));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), createTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+      mt));
+
+    final QueryHandle handle = target.request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+
+    // wait till the query finishes
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+      .get(LensQuery.class);
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.finished()) {
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
+        .get(LensQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
+    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
   /**
