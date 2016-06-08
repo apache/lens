@@ -74,7 +74,7 @@ public class TestQueryResultPurger {
     QueryResultPurger queryResultPurger = new QueryResultPurger();
     queryResultPurger.init(conf);
     Thread.sleep(2000); // sleep for 2 seconds, enough to run query purger
-    queryResultPurger.stop();
+    queryResultPurger.shutdown();
     verify(conf.get(LensConfConstants.RESULT_SET_PARENT_DIR), 1);
     verify(conf.get(LensConfConstants.RESULT_SET_PARENT_DIR) + "/" + conf.get(LensConfConstants.QUERY_HDFS_OUTPUT_PATH),
       0);

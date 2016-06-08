@@ -145,9 +145,9 @@ public class QueryResultPurger implements Runnable {
   /**
    * Stops query result purger
    */
-  public void stop() {
+  public void shutdown() {
     if (null != queryResultPurgerExecutor) {
-      queryResultPurgerExecutor.shutdownNow();
+      queryResultPurgerExecutor.shutdown();
       log.info("Stopped query result purger.");
     }
   }
@@ -173,5 +173,11 @@ public class QueryResultPurger implements Runnable {
       }
     }
     return metricsService;
+  }
+
+  public void awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+    if (null != queryResultPurgerExecutor) {
+      queryResultPurgerExecutor.awaitTermination(timeout, unit);
+    }
   }
 }

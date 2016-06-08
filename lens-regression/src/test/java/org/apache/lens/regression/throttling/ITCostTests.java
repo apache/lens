@@ -217,7 +217,7 @@ public class ITCostTests extends BaseTestClass {
   @Test(enabled = true, groups= "user-cost-ceiling")
   public void testCostCeilingWithProrityMaxConcurrent() throws Exception {
 
-    String query = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_5"), "10");
+    String query = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_5"), "5");
     HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "5",
         DriverConfig.PRIORITY_MAX_CONCURRENT, "HIGH=3");
 
@@ -263,7 +263,7 @@ public class ITCostTests extends BaseTestClass {
   @Test(enabled = true, groups= "user-cost-ceiling")
   public void multipleUserConcurrentPriorityThrottling() throws Exception {
 
-    String query = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_5"), "10");
+    String query = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_5"), "5");
     long timeToWait= 7 * SECONDS_IN_A_MINUTE; //in seconds
     int sleepTime = 5; //in seconds
     HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "5",
@@ -289,10 +289,8 @@ public class ITCostTests extends BaseTestClass {
       List<QueryHandle> running = null, queued = null;
       for (int t = 0; t < timeToWait; t = t + sleepTime) {
 
-        running = qHelper.getQueryHandleList(null, "RUNNING", "all", sessionHandleString, null, null,
-            hiveDriver);
-        queued = qHelper.getQueryHandleList(null, "QUEUED", "all", sessionHandleString, null, null,
-            hiveDriver);
+        running = qHelper.getQueryHandleList(null, "RUNNING", "all", sessionHandleString, null, null, hiveDriver);
+        queued = qHelper.getQueryHandleList(null, "QUEUED", "all", sessionHandleString, null, null, hiveDriver);
         logger.info("Running query count : " + running.size() + "\t Queued query count : " + queued.size());
 
         if (running.isEmpty() && queued.isEmpty()) {

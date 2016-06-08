@@ -154,9 +154,9 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
     // automatically
     createTable(TEST_TABLE);
     loadData(TEST_TABLE, TestResourceFile.TEST_DATA2_FILE.getValue());
+    final WebTarget target = target().path("queryapi/queries");
+    queryService.pauseQuerySubmitter(true);
     try {
-      final WebTarget target = target().path("queryapi/queries");
-      queryService.pauseQuerySubmitter(true);
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId, mt));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
@@ -280,6 +280,13 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
       }
     } finally {
       queryService.pauseQuerySubmitter(false);
+      dropTable(TEST_TABLE);
+      queryService.closeSession(lensSessionId);
+      for (LensDriver driver : queryService.getDrivers()) {
+        if (driver instanceof HiveDriver) {
+          assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
+        }
+      }
     }
   }
 }

@@ -136,6 +136,18 @@
                 </executions>
             </plugin>
 
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${surefire.plugin.version}</version>
+          <configuration>
+            <failIfNoTests>false</failIfNoTests>
+            <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+          </configuration>
+        </plugin>
+
+
         </plugins>
   </build>
 
