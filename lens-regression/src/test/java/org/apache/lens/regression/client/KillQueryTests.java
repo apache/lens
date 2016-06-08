@@ -31,7 +31,6 @@ import org.apache.lens.api.query.*;
 import org.apache.lens.regression.core.constants.QueryInventory;
 import org.apache.lens.regression.core.helpers.*;
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
-import org.apache.lens.regression.util.HadoopUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.log4j.Logger;
@@ -64,10 +63,11 @@ public class KillQueryTests extends BaseTestClass {
     logger.info("Creating a new Session");
     sessionHandleString = lens.openSession(lens.getCurrentDB());
 
-    HadoopUtil.uploadJars(localJarPath + "/" + hiveUdfJar, hdfsJarPath);
+    //TODO : Enable when udf registration per driver is fixed
+/*    HadoopUtil.uploadJars(localJarPath + "/" + hiveUdfJar, hdfsJarPath);
     logger.info("Adding jar for making query to run for longer period of time");
     sHelper.addResourcesJar(hdfsJarPath + "/" + hiveUdfJar);
-    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_FUNCTION).getData();
+    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_FUNCTION).getData();*/
   }
 
   @BeforeMethod(alwaysRun = true)

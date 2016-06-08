@@ -62,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Util {
 
   private static final String PROPERTY_FILE = "lens.properties";
-  private static String localFilePath = "lens-regression/target/";
+  private static String localFilePath = "target/";
   private static String localFile;
   private static String backupFile;
 
