@@ -19,6 +19,7 @@
 package org.apache.lens.lib.query;
 
 import java.io.*;
+import java.net.URI;
 
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
@@ -94,7 +95,7 @@ public abstract class AbstractFileFormatter extends AbstractOutputFormatter impl
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
     out.writeUTF(metadata.toJson());
-    out.writeUTF(finalPath.toString());
+    out.writeObject(finalPath == null ? null : finalPath.toUri());
     out.writeObject(numRows); // writeObject and readObject have handling for null objects
     out.writeObject(fileSize);
   }
@@ -102,7 +103,8 @@ public abstract class AbstractFileFormatter extends AbstractOutputFormatter impl
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     metadata = LensResultSetMetadata.fromJson(in.readUTF());
-    finalPath = new Path(in.readUTF());
+    URI uri = (URI) in.readObject();
+    finalPath = uri == null ? null : new Path(uri);
     numRows = (Integer)in.readObject();
     fileSize = (Long)in.readObject();
   }
