@@ -16,26 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.error;
+package org.apache.lens.server.api;
 
-import org.apache.lens.server.api.LensErrorInfo;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.server.api.error.LensException;
 
-public enum LensServerErrorCode {
-
-  SESSION_ID_NOT_PROVIDED(2001, 0),
-  NULL_OR_EMPTY_OR_BLANK_QUERY(2002, 0),
-  UNSUPPORTED_QUERY_SUBMIT_OPERATION(2003, 0),
-  TOO_MANY_OPEN_SESSIONS(2004, 0),
-  SESSION_CLOSED(2005, 0);
-
-  public LensErrorInfo getLensErrorInfo() {
-    return this.errorInfo;
-  }
-
-  LensServerErrorCode(final int code, final int weight) {
-    this.errorInfo = new LensErrorInfo(code, weight, name());
-  }
-
-  private final LensErrorInfo errorInfo;
-
+public interface SessionValidator {
+  void validateSession(LensSessionHandle handle) throws LensException;
 }

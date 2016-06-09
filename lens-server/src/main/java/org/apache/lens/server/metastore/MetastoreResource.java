@@ -32,6 +32,7 @@ import org.apache.lens.api.DateTime;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.metastore.*;
+import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
@@ -57,10 +58,13 @@ public class MetastoreResource {
   public static CubeMetastoreService getSvc() {
     return LensServices.get().getService(CubeMetastoreService.NAME);
   }
-
   private static void checkSessionId(LensSessionHandle sessionHandle) {
-    if (sessionHandle == null) {
-      throw new BadRequestException("Invalid session handle");
+    try {
+      getSvc().validateSession(sessionHandle);
+    } catch (LensException e) {
+      LensErrorTO to = e.buildLensErrorTO(LensServices.get().getErrorCollection());
+      throw new ClientErrorException(to.getMessage(),
+        LensServices.get().getErrorCollection().getLensError(e.getErrorCode()).getHttpStatusCode().getStatusCode());
     }
   }
 

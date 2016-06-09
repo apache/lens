@@ -25,13 +25,15 @@ import javax.ws.rs.core.Response;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.*;
+import org.apache.lens.server.api.LensService;
+import org.apache.lens.server.api.SessionValidator;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 /**
  * The Interface QueryExecutionService.
  */
-public interface QueryExecutionService {
+public interface QueryExecutionService extends LensService, SessionValidator {
 
   /**
    * The Constant NAME.

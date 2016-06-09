@@ -39,8 +39,7 @@ import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.client.exceptions.LensClientIOException;
 import org.apache.lens.client.resultset.ResultSet;
 import org.apache.lens.server.LensAllApplicationJerseyTest;
-
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.lens.server.api.util.LensUtil;
 
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -61,11 +60,9 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
   }
 
   @Override
-  public HiveConf getServerConf() {
-    HiveConf conf =  super.getServerConf();
-    //Use MockQueryExecutionServiceImpl as QueryExecutionService for client tests
-    conf.set("lens.server.query.service.impl", "org.apache.lens.server.MockQueryExecutionServiceImpl");
-    return conf;
+  public Map<String, String> getServerConfOverWrites() {
+    return LensUtil.getHashMap("lens.server.query.service.impl",
+      "org.apache.lens.server.MockQueryExecutionServiceImpl");
   }
 
   @BeforeTest

@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.server.api.LensService;
+import org.apache.lens.server.api.SessionValidator;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -31,7 +32,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 /**
  * Server api for OLAP Cube Metastore.
  */
-public interface CubeMetastoreService extends LensService {
+public interface CubeMetastoreService extends LensService, SessionValidator {
 
   /** The constant NAME */
   String NAME = "metastore";

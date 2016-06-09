@@ -85,7 +85,6 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   /** The conf. */
   private Configuration conf = createDefaultConf();
-
   /**
    * List of queries which are submitted in this session.
    */
@@ -255,6 +254,7 @@ public class LensSessionImpl extends HiveSessionImpl {
     ClassLoader classLoader = getClassLoader(getCurrentDatabase());
     Thread.currentThread().setContextClassLoader(classLoader);
     SessionState.getSessionConf().setClassLoader(classLoader);
+    setActive();
   }
 
   /*
@@ -263,6 +263,7 @@ public class LensSessionImpl extends HiveSessionImpl {
    * @see org.apache.hive.service.cli.session.HiveSessionImpl#release()
    */
   public synchronized void release() {
+    setActive();
     this.release(true);
   }
   @Override
@@ -274,8 +275,12 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   public boolean isActive() {
-    long inactiveAge = System.currentTimeMillis() - lastAccessTime;
-    return inactiveAge < sessionTimeout;
+    return System.currentTimeMillis() - lastAccessTime < sessionTimeout
+      && (!persistInfo.markedForClose|| activeOperationsPresent());
+  }
+
+  public void setActive() {
+    setLastAccessTime(System.currentTimeMillis());
   }
 
   /**
@@ -466,7 +471,7 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   /**
    * Return resources which are added statically to the database
-   * @return DatabaseResources
+   * @return db resources
    */
   public Collection<ResourceEntry> getDBResources(String database) {
     synchronized (failedDBResources) {
@@ -494,11 +499,15 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   /**
-   * Get effective class loader for this session
-   * @return current classloader
+   * @return effective class loader for this session
    */
   public ClassLoader getClassLoader() {
     return getClassLoader(getCurrentDatabase());
+  }
+
+  public void markForClose() {
+    log.info("Marking session {} for close. Operations on this session will be rejected", this);
+    persistInfo.markedForClose = true;
   }
 
   /**
@@ -558,8 +567,7 @@ public class LensSessionImpl extends HiveSessionImpl {
     }
 
     /**
-     * Returns the value of restoreCount for the resource
-     * @return restore count
+     * @return the value of restoreCount for the resource
      */
     public int getRestoreCount() {
       return restoreCount.get();
@@ -617,6 +625,9 @@ public class LensSessionImpl extends HiveSessionImpl {
     /** The last access time. */
     private long lastAccessTime;
 
+    /** Whether it's marked for close */
+    private boolean markedForClose;
+
     public void setSessionConf(Map<String, String> sessionConf) {
       UtilityMethods.mergeMaps(config, sessionConf, true);
     }
@@ -645,6 +656,7 @@ public class LensSessionImpl extends HiveSessionImpl {
         out.writeUTF(config.get(key));
       }
       out.writeLong(lastAccessTime);
+      out.writeBoolean(markedForClose);
     }
 
     /*
@@ -675,18 +687,27 @@ public class LensSessionImpl extends HiveSessionImpl {
         config.put(key, val);
       }
       lastAccessTime = in.readLong();
+      markedForClose = in.readBoolean();
     }
   }
 
   public void addToActiveQueries(QueryHandle queryHandle) {
+    log.info("Adding {} to active queries for session {}", queryHandle, this);
     synchronized (this.activeQueries) {
-      this.activeQueries.add(queryHandle);
+      activeQueries.add(queryHandle);
     }
   }
 
   public void removeFromActiveQueries(QueryHandle queryHandle) {
+    log.info("Removing {} from active queries for session {}", queryHandle, this);
     synchronized (this.activeQueries) {
-      this.activeQueries.remove(queryHandle);
+      activeQueries.remove(queryHandle);
+    }
+  }
+
+  public boolean activeOperationsPresent() {
+    synchronized (this.activeQueries) {
+      return !activeQueries.isEmpty();
     }
   }
 }

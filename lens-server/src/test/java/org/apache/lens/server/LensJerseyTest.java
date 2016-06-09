@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.ws.rs.client.Entity;
@@ -127,8 +128,20 @@ public abstract class LensJerseyTest extends JerseyTest {
     config.register(LensJAXBContextResolver.class);
   }
 
-  public HiveConf getServerConf() {
-    return LensServerConf.getHiveConf();
+  public final HiveConf getServerConf() {
+    HiveConf serverConf = LensServerConf.getHiveConf();
+    Map<String, String> overWrites = getServerConfOverWrites();
+    if (overWrites != null) {
+      serverConf = new HiveConf(serverConf);
+      for (Map.Entry<String, String> overWrite : overWrites.entrySet()) {
+        serverConf.set(overWrite.getKey(), overWrite.getValue());
+      }
+    }
+    return serverConf;
+  }
+
+  public Map<String, String> getServerConfOverWrites() {
+    return null;
   }
 
   /**
@@ -212,7 +225,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   /**
    * Restart lens server.
    */
-  public void restartLensServer() {
+  protected void restartLensServer() {
     HiveConf h = getServerConf();
     restartLensServer(h, false);
   }
@@ -263,11 +276,6 @@ public abstract class LensJerseyTest extends JerseyTest {
   }
 
   public static Entity getEntityForString(String o, MediaType mt) {
-    if (mt.equals(MediaType.APPLICATION_JSON_TYPE)) {
-      return Entity.json(o);
-    } else if (mt.equals(MediaType.APPLICATION_XML_TYPE)) {
-      return Entity.xml(o);
-    }
     return Entity.entity(o, mt);
   }
 }

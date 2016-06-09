@@ -19,7 +19,6 @@
 package org.apache.lens.server.query;
 
 import static org.apache.lens.server.error.LensServerErrorCode.NULL_OR_EMPTY_OR_BLANK_QUERY;
-import static org.apache.lens.server.error.LensServerErrorCode.SESSION_ID_NOT_PROVIDED;
 
 import java.util.List;
 
@@ -67,15 +66,15 @@ public class QueryServiceResource {
    * @param sessionHandle the session handle
    */
   private void checkSessionId(final LensSessionHandle sessionHandle) {
-    if (sessionHandle == null) {
+    try {
+      validateSessionId(sessionHandle);
+    } catch (LensException e) {
       throw new BadRequestException("Invalid session handle");
     }
   }
 
   private void validateSessionId(final LensSessionHandle sessionHandle) throws LensException {
-    if (sessionHandle == null) {
-      throw new LensException(SESSION_ID_NOT_PROVIDED.getLensErrorInfo());
-    }
+    queryServer.validateSession(sessionHandle);
   }
 
   private SubmitOp checkAndGetQuerySubmitOperation(final String operation) throws UnSupportedQuerySubmitOpException {

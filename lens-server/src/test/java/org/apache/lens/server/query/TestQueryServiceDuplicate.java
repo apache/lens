@@ -40,10 +40,9 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryExecutionService;
+import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.query.TestQueryService.QueryServiceTestApp;
-
-import org.apache.hadoop.hive.conf.HiveConf;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -78,16 +77,14 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
     super.setUp();
   }
 
-  @Override
-  public HiveConf getServerConf() {
-    HiveConf serverConf = new HiveConf(super.getServerConf());
-    serverConf.setBoolean(LensConfConstants.SERVER_DUPLICATE_QUERY_ALLOWED, false);
-    return serverConf;
-  }
-
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
+  }
+
+  @Override
+  public Map<String, String> getServerConfOverWrites() {
+    return LensUtil.getHashMap(LensConfConstants.SERVER_DUPLICATE_QUERY_ALLOWED, String.valueOf(false));
   }
 
   @Override
@@ -275,6 +272,7 @@ public class TestQueryServiceDuplicate extends LensJerseyTest {
       target.path(handle8.toString()).queryParam("sessionid", lensSessionId1).request(mt).delete(APIResult.class);
     } finally {
       queryService.pauseQuerySubmitter(false);
+      // cleanup
       dropTable(TEST_TABLE);
       queryService.closeSession(lensSessionId);
       for (LensDriver driver : queryService.getDrivers()) {

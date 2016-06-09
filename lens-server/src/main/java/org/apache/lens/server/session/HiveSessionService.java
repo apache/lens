@@ -33,13 +33,10 @@ import javax.ws.rs.WebApplicationException;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.BaseLensService;
-import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
-import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.session.*;
-import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 
 import org.apache.commons.lang3.StringUtils;
@@ -376,6 +373,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
         session.getLensSessionPersistInfo().setConfig(persistInfo.getConfig());
         session.getLensSessionPersistInfo().setResources(persistInfo.getResources());
         session.setCurrentDatabase(persistInfo.getDatabase());
+        session.getLensSessionPersistInfo().setMarkedForClose(persistInfo.isMarkedForClose());
 
         // Add resources for restored sessions
         for (LensSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
@@ -399,7 +397,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
         throw new RuntimeException(e);
       }
     }
-    log.info("Session service restoed " + restorableSessions.size() + " sessions");
+    log.info("Session service restored " + restorableSessions.size() + " sessions");
   }
 
   private int getSessionExpiryInterval() {
@@ -481,11 +479,6 @@ public class HiveSessionService extends BaseLensService implements SessionServic
    */
   private void closeInternal(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
-    // Inform query service
-    BaseLensService svc = LensServices.get().getService(QueryExecutionService.NAME);
-    if (svc instanceof QueryExecutionServiceImpl) {
-      ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
-    }
   }
 
   /**

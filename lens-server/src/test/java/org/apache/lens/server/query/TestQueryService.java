@@ -1357,8 +1357,8 @@ public class TestQueryService extends LensJerseyTest {
     }
   }
   /**
-   * Data provider for test case {@link testExecuteWithTimeoutAndPreFetchAndServerPersistence}
-   * @return
+   * Data provider for test case
+   * {@link #testExecuteWithTimeoutAndPreFetchAndServerPersistence(long, int, boolean, long)}
    */
   @DataProvider
   public Object[][] executeWithTimeoutAndPreFetechAndServerPersistenceDP() {

@@ -18,6 +18,9 @@
  */
 package org.apache.lens.server;
 
+import static org.apache.lens.server.error.LensServerErrorCode.SESSION_CLOSED;
+import static org.apache.lens.server.error.LensServerErrorCode.SESSION_ID_NOT_PROVIDED;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,17 +30,20 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.LensService;
+import org.apache.lens.server.api.SessionValidator;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventService;
-import org.apache.lens.server.api.health.HealthStatus;
+import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.error.LensServerErrorCode;
+import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
@@ -62,7 +68,8 @@ import lombok.extern.slf4j.Slf4j;
  * The Class LensService.
  */
 @Slf4j
-public abstract class BaseLensService extends CompositeService implements Externalizable, LensService {
+public abstract class BaseLensService extends CompositeService implements Externalizable, LensService,
+  SessionValidator {
 
   /** The cli service. */
   private final CLIService cliService;
@@ -290,11 +297,21 @@ public abstract class BaseLensService extends CompositeService implements Extern
    */
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     try {
-      String userName = getSession(sessionHandle).getLoggedInUser();
-      cliService.closeSession(getHiveSessionHandle(sessionHandle));
-      String publicId = sessionHandle.getPublicId().toString();
-      SESSION_MAP.remove(publicId);
-      decrementSessionCountForUser(sessionHandle, userName);
+      LensSessionImpl session = getSession(sessionHandle);
+      if (session.activeOperationsPresent()) {
+        session.markForClose();
+      } else {
+        cliService.closeSession(getHiveSessionHandle(sessionHandle));
+        SESSION_MAP.remove(sessionHandle.getPublicId().toString());
+      }
+      decrementSessionCountForUser(sessionHandle, session.getLoggedInUser());
+      if (!SESSION_MAP.containsKey(sessionHandle.getPublicId().toString())) {
+        // Inform query service
+        BaseLensService svc = LensServices.get().getService(QueryExecutionService.NAME);
+        if (svc instanceof QueryExecutionServiceImpl) {
+          ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
+        }
+      }
     } catch (HiveSQLException e) {
       throw new LensException(e);
     }
@@ -331,13 +348,13 @@ public abstract class BaseLensService extends CompositeService implements Extern
     if (sessionHandle == null) {
       throw new ClientErrorException("Session is null", 400);
     }
-
     try {
       return ((LensSessionImpl) getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
       log.warn("Session {} not found", sessionHandle.getPublicId(), exc);
       // throw resource gone exception (410)
-      throw new ClientErrorException("Session " + sessionHandle.getPublicId() + " is invalid " + sessionHandle, 410);
+      throw new ClientErrorException("Session " + sessionHandle.getPublicId() + " is invalid " + sessionHandle,
+        Response.Status.GONE, exc);
     }
   }
 
@@ -480,12 +497,6 @@ public abstract class BaseLensService extends CompositeService implements Extern
   public void writeExternal(ObjectOutput out) throws IOException {
   }
 
-  /**
-   * Returns the health status of the service.
-   *
-   * @return
-   */
-  public abstract HealthStatus getHealthStatus();
 
   /**
    * Method that uses PathValidator to get appropriate path.
@@ -516,4 +527,15 @@ public abstract class BaseLensService extends CompositeService implements Extern
     }
     return pathValidator.removePrefixBeforeURI(path);
   }
+
+  @Override
+  public void validateSession(LensSessionHandle handle) throws LensException {
+    if (handle == null) {
+      throw new LensException(SESSION_ID_NOT_PROVIDED.getLensErrorInfo());
+    }
+    if (!getSession(handle).isActive()) {
+      throw new LensException(SESSION_CLOSED.getLensErrorInfo(), handle);
+    }
+  }
 }
+

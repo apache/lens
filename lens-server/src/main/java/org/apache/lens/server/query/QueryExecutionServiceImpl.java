@@ -170,7 +170,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   /**
    * The all queries.
    */
-  protected ConcurrentMap<QueryHandle, QueryContext> allQueries = new ConcurrentHashMap<QueryHandle, QueryContext>();
+  protected final ConcurrentMap<QueryHandle, QueryContext> allQueries = new ConcurrentHashMap<>();
 
   /**
    * The conf.
@@ -1300,8 +1300,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * @see org.apache.hive.service.CompositeService#start()
    */
   public synchronized void start() {
-    final List<QueryContext> allRestoredQueuedQueries = new LinkedList<QueryContext>();
     synchronized (allQueries) {
+      // populate the query queues
+      final List<QueryContext> allRestoredQueuedQueries = new LinkedList<QueryContext>();
       for (QueryContext ctx : allQueries.values()) {
         // recover query configurations from session
         try {
@@ -2931,17 +2932,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         ((HiveDriver) driver).closeSession(sessionHandle);
       }
     }
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.LensService#closeSession(org.apache.lens.api.LensSessionHandle)
-   */
-  public void closeSession(LensSessionHandle sessionHandle) throws LensException {
-    super.closeSession(sessionHandle);
-    // Call driver session close in case some one closes sessions directly on query service
-    closeDriverSessions(sessionHandle);
   }
 
   // Used in test code
