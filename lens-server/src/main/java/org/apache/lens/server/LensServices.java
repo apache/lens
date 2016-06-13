@@ -20,7 +20,10 @@ package org.apache.lens.server;
 
 import static org.apache.lens.server.api.LensConfConstants.*;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.*;
@@ -34,6 +37,7 @@ import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
+import org.apache.lens.server.scheduler.notification.services.AlarmService;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
@@ -199,6 +203,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       UserConfigLoaderFactory.init(conf);
       // Add default services
       addService(cliService);
+      addService(new AlarmService(AlarmService.NAME));
       addService(new EventServiceImpl(LensEventService.NAME));
       addService(new MetricsServiceImpl(MetricsService.NAME));
       addService(new StatisticsService(StatisticsService.STATS_SVC_NAME));

@@ -242,6 +242,10 @@
       <artifactId>guava</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.quartz-scheduler</groupId>
+      <artifactId>quartz</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.lens</groupId>
       <artifactId>lens-server-api</artifactId>
       <type>test-jar</type>
