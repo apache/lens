@@ -416,6 +416,20 @@
         <include>**</include>
       </includes>
     </fileSet>
+
+    <fileSet>
+      <directory>../lens-ui/</directory>
+      <outputDirectory>/ui/</outputDirectory>
+      <includes>
+        <include>app/</include>
+        <include>*json</include>
+        <include>*html</include>
+        <include>*js</include>
+        <include>*js</include>
+        <include>*markdown</include>
+      </includes>
+    </fileSet>
+
   </fileSets>
 
   <files>
