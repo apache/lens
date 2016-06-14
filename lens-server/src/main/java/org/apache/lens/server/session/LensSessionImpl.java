@@ -249,11 +249,12 @@ public class LensSessionImpl extends HiveSessionImpl {
   @Override
   public synchronized void acquire(boolean userAccess) {
     super.acquire(userAccess);
-    acquireCount.incrementAndGet();
-    // Update thread's class loader with current DBs class loader
-    ClassLoader classLoader = getClassLoader(getCurrentDatabase());
-    Thread.currentThread().setContextClassLoader(classLoader);
-    SessionState.getSessionConf().setClassLoader(classLoader);
+    if (acquireCount.incrementAndGet() == 1) { // first acquire
+      // Update thread's class loader with current DBs class loader
+      ClassLoader classLoader = getClassLoader(getCurrentDatabase());
+      Thread.currentThread().setContextClassLoader(classLoader);
+      SessionState.getSessionConf().setClassLoader(classLoader);
+    }
     setActive();
   }
 
