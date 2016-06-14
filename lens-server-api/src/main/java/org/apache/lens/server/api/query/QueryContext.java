@@ -160,6 +160,10 @@ public class QueryContext extends AbstractQueryContext {
   @Setter
   private boolean finishedQueryPersisted = false;
 
+  @Getter
+  @Setter
+  private boolean isQueryClosedOnDriver = false;
+
   /**
    * The query name.
    */
