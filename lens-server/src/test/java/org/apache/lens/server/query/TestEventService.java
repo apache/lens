@@ -485,13 +485,8 @@ public class TestEventService {
     // Catch all listener just to make sure that the query accepted and
     // query exec stat events get through
     final CountDownLatch latch = new CountDownLatch(2);
-    service.addListenerForType(new LensEventListener<LensEvent>() {
-      @Override
-      public void onEvent(LensEvent event) throws LensException {
-        System.out.println("@@@@ Got Event: Type= " + event.getClass().getName() + " obj = " + event);
-        latch.countDown();
-      }
-    }, LensEvent.class);
+    LensEventListener<LensEvent> eventListener = queryEventListener(latch);
+    service.addListenerForType(eventListener, LensEvent.class);
 
     QueryHandle queryHandle = new QueryHandle(UUID.randomUUID());
     QueryAccepted queryAccepted = new QueryAccepted(System.currentTimeMillis(), "beforeAccept", "afterAccept",
@@ -503,7 +498,17 @@ public class TestEventService {
     service.notifyEvent(queryExecStats);
 
     latch.await();
+    service.removeListener(eventListener);
+  }
 
+  private LensEventListener<LensEvent> queryEventListener(final CountDownLatch latch) {
+    return new LensEventListener<LensEvent>() {
+      @Override
+      public void onEvent(LensEvent event) throws LensException {
+        System.out.println("@@@@ Got Event: Type= " + event.getClass().getName() + " obj = " + event);
+        latch.countDown();
+      }
+    };
   }
 
   @Test
