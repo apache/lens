@@ -20,7 +20,7 @@
 import React from 'react';
 import UserStore from '../stores/UserStore';
 import LoginActions from '../actions/LoginActions';
-
+import Config from 'config.json'
 import '../styles/css/login.css';
 
 var error = false;
@@ -31,7 +31,8 @@ class Login extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this._onChange = this._onChange.bind(this);
     this.state = {
-      error: UserStore.isUserLoggedIn()
+      error: UserStore.isUserLoggedIn(),
+      password_required: Config.password_required
     };
   }
 
@@ -61,7 +62,8 @@ class Login extends React.Component {
             placeholder='Email address' required autoFocus/>
           <label htmlFor='inputPassword' className='sr-only'>Password</label>
           <input ref='pass' type='password' id='inputPassword'
-            className='form-control' placeholder='Password' required/>
+            className='form-control' placeholder='Password'
+                 required={this.state.password_required} disabled={!this.state.password_required}/>
           <button className='btn btn-primary btn-block'
             type='submit'>Sign in</button>
           {this.state.error && (

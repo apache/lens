@@ -47,8 +47,7 @@ app.use(session({
   saveUninitialized : true
 }));
 
-var fs = require('fs')
-;
+var fs = require('fs');
 app.use(express.static(path.resolve(__dirname, 'target', 'assets')));
 
 app.get('/health', function (req, res) {

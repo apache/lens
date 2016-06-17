@@ -75,10 +75,10 @@ class DatabaseComponent extends React.Component {
 
     databaseComponent = (<div>
         <label className='control-label' id='db'>Select a Database</label>
-        <select className='form-control' id='db' onChange={this.setDatabase}>
+        <select className='form-control' id='db' onChange={this.setDatabase} value={this.state.selectedDatabase} >
           <option value=''>Select</option>
           {this.state.databases.map(database => {
-            return <option key={database} value={database}  selected={database == this.state.selectedDatabase}>{database}</option>;
+            return <option key={database} value={database}>{database}</option>;
           })}
         </select>
       </div>);

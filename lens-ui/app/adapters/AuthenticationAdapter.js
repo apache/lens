@@ -43,7 +43,7 @@ let AuthenticationAdapter = {
     // preparing data as API accepts multipart/form-data :(
     var formData = new FormData();
     formData.append('username', email);
-    formData.append('password', password);
+    formData.append('password', password || "");
     formData.append('sessionconf', sessionconf);
 
     return BaseAdapter.post(authUrl, formData, {

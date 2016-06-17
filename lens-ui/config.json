@@ -1,4 +1,5 @@
 {
   "isPersistent": true,
-  "baseURL": "/serverproxy/"
+  "baseURL": "/serverproxy/",
+  "password_required" : true
 }
