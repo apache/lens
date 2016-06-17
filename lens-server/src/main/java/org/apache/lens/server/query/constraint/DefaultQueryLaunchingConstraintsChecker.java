@@ -29,6 +29,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -37,6 +38,7 @@ import lombok.NonNull;
  * for query allow the query to be launched.
  *
  */
+@Slf4j
 public class DefaultQueryLaunchingConstraintsChecker implements QueryLaunchingConstraintsChecker {
 
   private final ImmutableSet<QueryLaunchingConstraint> lensQueryConstraints;
@@ -53,6 +55,7 @@ public class DefaultQueryLaunchingConstraintsChecker implements QueryLaunchingCo
 
     for (QueryLaunchingConstraint queryConstraint : allConstraints) {
       if (!queryConstraint.allowsLaunchOf(candidateQuery, launchedQueries)) {
+        log.info("query {} not allowed to launch. Constraint failed: {}", candidateQuery, queryConstraint);
         return false;
       }
     }

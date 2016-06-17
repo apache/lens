@@ -32,11 +32,13 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Selects queries eligible by all {@link WaitingQueriesSelectionPolicy} to move them out of waiting state.
  *
  */
+@Slf4j
 public class UnioningWaitingQueriesSelector implements WaitingQueriesSelector {
 
   private final ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies;
@@ -86,6 +88,7 @@ public class UnioningWaitingQueriesSelector implements WaitingQueriesSelector {
 
       Set<QueryContext> candiateQueries = selectionPolicy.selectQueries(finishedQuery, waitingQueries);
       candidateQueriesSets.add(candiateQueries);
+      log.info("Queries selected by policy: {} are: {}", selectionPolicy, candiateQueries);
     }
     return candidateQueriesSets;
   }
