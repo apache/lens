@@ -29,7 +29,7 @@ class AdhocQuery extends React.Component {
     return (
       <section className='row'>
         <div className='col-md-4'>
-          <Sidebar />
+          <Sidebar {...this.props}/>
         </div>
 
         <div className='col-md-8'>

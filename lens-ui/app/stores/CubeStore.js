@@ -24,34 +24,43 @@ import { EventEmitter } from 'events';
 
 // private methods
 function receiveCubes (payload) {
-  payload.cubes && payload.cubes.stringList &&
+  let currentDatabase = payload.database;
+  cubes[currentDatabase] = cubes[currentDatabase] || {};
+  payload.database && payload.cubes && payload.cubes.stringList &&
     payload.cubes.stringList.elements &&
     payload.cubes.stringList.elements.forEach(cube => {
-      if (!cubes[cube]) {
-        cubes[cube] = { name: cube, isLoaded: false };
+      if (!cubes[currentDatabase][cube]) {
+        cubes[currentDatabase][cube] = { name: cube, isLoaded: false };
       }
     });
 }
 
 function receiveCubeDetails (payload) {
+  cubes[payload.database] = cubes[payload.database] || {};
   let cubeDetails = payload.cubeDetails && payload.cubeDetails.x_cube;
-
-  let dimensions = cubeDetails.dim_attributes &&
-    cubeDetails.dim_attributes.dim_attribute;
-  let measures = cubeDetails.measures &&
-    cubeDetails.measures.measure;
-
-  cubes[cubeDetails.name].measures = measures;
-  cubes[cubeDetails.name].dimensions = dimensions;
-  cubes[cubeDetails.name].isLoaded = true;
+  let dimensions = null;
+  let measures = null;
+  if (cubeDetails.type == 'x_base_cube') {
+    dimensions = cubeDetails.dim_attributes &&
+      cubeDetails.dim_attributes.dim_attribute;
+    measures = cubeDetails.measures &&
+      cubeDetails.measures.measure;
+  } else if (cubeDetails.type == 'x_derived_cube') {
+    dimensions = cubeDetails.dim_attr_names && cubeDetails.dim_attr_names.attr_name;
+    measures = cubeDetails.measure_names && cubeDetails.measure_names.measure_name;
+  }
+  cubes[payload.database][cubeDetails.name] = cubes[payload.database][cubeDetails.name] || { name: cubeDetails.name, isLoaded: false };
+  cubes[payload.database][cubeDetails.name].measures = measures;
+  cubes[payload.database][cubeDetails.name].dimensions = dimensions;
+  cubes[payload.database][cubeDetails.name].isLoaded = true;
 }
 
 let CHANGE_EVENT = 'change';
 var cubes = {};
-
+var currentDatabase = null;
 let CubeStore = assign({}, EventEmitter.prototype, {
-  getCubes () {
-    return cubes;
+  getCubes (currentDatabase) {
+    return cubes[currentDatabase];
   },
 
   emitChange () {

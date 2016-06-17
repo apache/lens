@@ -33,7 +33,7 @@ app.use(logger('dev'));
 app.use(cookieParser());
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-
+process.env['lensserver'] = process.env['lensserver'] || 'http://0.0.0.0:9999/lensapi/';
 if (!process.env['lensserver']) {
   throw new Error('Specify LENS Server address in `lensserver` argument');
 }

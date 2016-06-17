@@ -30,6 +30,7 @@ import About from './components/AboutComponent';
 import App from './components/AppComponent';
 import AdhocQuery from './components/AdhocQueryComponent';
 import QueryResults from './components/QueryResultsComponent';
+import DatabaseComponent from './components/DatabaseComponent';
 import CubeSchema from './components/CubeSchemaComponent';
 import QueryDetailResult from './components/QueryDetailResultComponent';
 import TableSchema from './components/TableSchemaComponent';
@@ -43,10 +44,11 @@ let routes = (
       <Route name='results' handler={QueryResults}/>
       <Route name='savedqueries' handler={SavedQueries}/>
       <Route name='result' path='/results/:handle' handler={QueryDetailResult}/>
-      <Route name='cubeschema' path='schema/cube/:cubeName' handler={CubeSchema}/>
-      <Route name='tableschema' path='schema/table/:tableName'
-        handler={TableSchema}/>
-
+    </Route>
+    <Route name='schema' path='schema/:databaseName/' handler={AdhocQuery} >
+      <Route name='cubeschema' path='cube/:cubeName' handler={CubeSchema}/>
+      <Route name='tableschema' path='table/:tableName'
+             handler={TableSchema}/>
     </Route>
     <Route name='about' handler={About} />
     <DefaultRoute handler={AdhocQuery} />

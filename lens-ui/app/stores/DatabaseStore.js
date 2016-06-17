@@ -32,12 +32,14 @@ function receiveDatabases (payload) {
 
 let CHANGE_EVENT = 'change';
 var databases = [];
-
+var currentDatabase = null;
 let DatabaseStore = assign({}, EventEmitter.prototype, {
   getDatabases () {
     return databases;
   },
-
+  currentDatabase() {
+    return currentDatabase;
+  },
   emitChange () {
     this.emit(CHANGE_EVENT);
   },
@@ -55,6 +57,10 @@ AppDispatcher.register((action) => {
   switch (action.actionType) {
     case AdhocQueryConstants.RECEIVE_DATABASES:
       receiveDatabases(action.payload);
+      DatabaseStore.emitChange();
+      break;
+    case AdhocQueryConstants.SELECT_DATABASE:
+      currentDatabase = action.payload.database;
       DatabaseStore.emitChange();
       break;
   }

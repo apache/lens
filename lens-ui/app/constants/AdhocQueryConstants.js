@@ -47,6 +47,9 @@ const AdhocQueryConstants = KeyMirror({
   RECEIVE_DATABASES: null,
   RECEIVE_DATABASES_FAILED: null,
 
+  SELECT_DATABASE: null,
+  SELECT_DATABASE_FAILED: null,
+
   RECEIVE_QUERY_PARAMS_META: null,
 
   SAVE_QUERY_SUCCESS: null,

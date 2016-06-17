@@ -24,37 +24,53 @@ import UserStore from '../stores/UserStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
 import Loader from '../components/LoaderComponent';
 
-function getCubes () {
-  return CubeStore.getCubes();
+function getCubes (database) {
+  return CubeStore.getCubes(database);
 }
 
 function constructMeasureTable (cubeName, measures) {
   let table = measures.map((measure) => {
-    return (
-      <tr key={cubeName + '|' + measure.name}>
-        <td>{ measure.name }</td>
-        <td>{ measure._type }</td>
-        <td>{ measure.default_aggr }</td>
-        <td>{ measure.display_string }</td>
-      </tr>
-    );
+    if (typeof(measure) == "string") {
+      return (
+        <tr key={cubeName + '|' + measure}>
+          <td>{ measure }</td>
+        </tr>
+      );
+    } else {
+      return (
+        <tr key={cubeName + '|' + measure.name}>
+          <td>{ measure.name }</td>
+          <td>{ measure._type }</td>
+          <td>{ measure.default_aggr }</td>
+          <td>{ measure.display_string }</td>
+        </tr>
+      );
+    }
   });
+
+  let header = (
+    <tr>
+      <th>Name</th>
+    </tr>
+  );
+  if (typeof(measures[0]) != "string") {
+    header = (
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Default Aggr</th>
+        <th>Description</th>
+      </tr>
+
+    );
+  }
 
   return (
     <div className='table-responsive'>
       <table className='table table-striped table-condensed'>
         <caption className='bg-primary text-center'>Measures</caption>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Default Aggr</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {table}
-        </tbody>
+        <thead>{header}</thead>
+        <tbody>{table}</tbody>
       </table>
     </div>
   );
@@ -62,35 +78,48 @@ function constructMeasureTable (cubeName, measures) {
 
 function constructDimensionTable (cubeName, dimensions) {
   let table = dimensions.map((dimension) => {
-    return (
-      <tr key={cubeName + '|' + dimension.name}>
-        <td>{ dimension.name }</td>
-        <td>{ dimension._type }</td>
-        <td>{ dimension.ref_spec && dimension.ref_spec.chain_ref_column &&
+    if (typeof(dimension) =="string") {
+      return (
+        <tr key={cubeName + '|' + dimension}>
+          <td>{ dimension}</td>
+        </tr>
+      );
+    } else {
+      return (
+        <tr key={cubeName + '|' + dimension.name}>
+          <td>{ dimension.name }</td>
+          <td>{ dimension._type }</td>
+          <td>{ dimension.ref_spec && dimension.ref_spec.chain_ref_column &&
           dimension.ref_spec.chain_ref_column.dest_table }</td>
-        <td>{ dimension.ref_spec && dimension.ref_spec.chain_ref_column &&
+          <td>{ dimension.ref_spec && dimension.ref_spec.chain_ref_column &&
           dimension.ref_spec.chain_ref_column.ref_col }</td>
-        <td>{ dimension.description }</td>
+          <td>{ dimension.description }</td>
+        </tr>
+      );
+    }
+  });
+  let header = (
+    <tr>
+      <th>Name</th>
+    </tr>
+  );
+  if (typeof(dimensions[0]) != "string") {
+    header =  (
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Destination Table</th>
+        <th>Column</th>
+        <th>Description</th>
       </tr>
     );
-  });
-
+  }
   return (
     <div className='table-responsive'>
       <table className='table table-striped'>
         <caption className='bg-primary text-center'>Dimensions</caption>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Destination Table</th>
-            <th>Column</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {table}
-        </tbody>
+        <thead>{header}</thead>
+        <tbody>{table}</tbody>
       </table>
     </div>
   );
@@ -100,14 +129,11 @@ function constructDimensionTable (cubeName, dimensions) {
 class CubeSchema extends React.Component {
   constructor (props) {
     super(props);
-    this.state = {cube: {}};
+    this.state = {cube: {}, database: props.params.databaseName};
     this._onChange = this._onChange.bind(this);
 
-    // firing the action for the first time component is rendered
-    // it won't have a cube in the state.
-    let cubeName = props.params.cubeName;
     AdhocQueryActions
-      .getCubeDetails(UserStore.getUserDetails().secretToken, cubeName);
+      .getCubeDetails(UserStore.getUserDetails().secretToken, props.params.databaseName, props.params.cubeName);
   }
 
   componentDidMount () {
@@ -121,18 +147,18 @@ class CubeSchema extends React.Component {
   componentWillReceiveProps (props) {
     // TODO are props updated automatically, unlike state?
     let cubeName = props.params.cubeName;
-    let cube = getCubes()[cubeName];
+    let cube = getCubes(props.params.databaseName)[cubeName];
 
     if (cube.isLoaded) {
-      this.setState({ cube: getCubes()[cubeName] });
+      this.setState({ cube: cube, database: props.params.database });
       return;
     }
 
     AdhocQueryActions
-      .getCubeDetails(UserStore.getUserDetails().secretToken, cubeName);
+      .getCubeDetails(UserStore.getUserDetails().secretToken, props.params.databaseName, cubeName);
 
     // empty the previous state
-    this.setState({ cube: {} });
+    this.setState({ cube: {}, database: props.params.databaseName });
   }
 
   render () {
@@ -184,7 +210,7 @@ class CubeSchema extends React.Component {
   }
 
   _onChange () {
-    this.setState({cube: getCubes()[this.props.params.cubeName]});
+    this.setState({cube: getCubes(this.props.params.databaseName)[this.props.params.cubeName]});
   }
 }
 

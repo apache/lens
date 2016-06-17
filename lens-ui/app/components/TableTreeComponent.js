@@ -21,6 +21,7 @@ import React from 'react';
 import TreeView from 'react-treeview';
 import { Link } from 'react-router';
 import 'react-treeview/react-treeview.css';
+import ClassNames from 'classnames';
 
 import TableStore from '../stores/TableStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
@@ -65,7 +66,8 @@ function getTables (page, filterString, database) {
 
   return {
     totalPages: Math.ceil(allTables.length / pageSize),
-    tables: pageTables
+    tables: pageTables,
+    database: database,
   };
 }
 
@@ -77,7 +79,8 @@ class TableTree extends React.Component {
       totalPages: 0,
       page: 0,
       loading: true,
-      isCollapsed: false
+      isCollapsed: false,
+      database: props.database
     };
     this._onChange = this._onChange.bind(this);
     this.prevPage = this.prevPage.bind(this);
@@ -115,17 +118,15 @@ class TableTree extends React.Component {
     TableStore.removeChangeListener(this._onChange);
   }
 
-  render () {
-    let tableTree = '';
-
+  render() {
     // construct tree
-    tableTree = this.state.tables.map(table => {
-      let label = (<Link to='tableschema' params={{tableName: table.name}}
-        title={table.name} query={{database: this.props.database}}>
-          {table.name}</Link>);
+    let tableTreeInternal = this.state.tables.map(table => {
+      let label = (<Link to='tableschema' params={{databaseName: this.state.database, tableName: table.name}}
+                         title={table.name} query={{database: this.props.database}}>
+        {table.name}</Link>);
       return (
         <TreeView key={table.name} nodeLabel={label}
-          defaultCollapsed={!table.isLoaded}>
+                  defaultCollapsed={!table.isLoaded}>
 
           {table.isLoaded ? table.columns.map(col => {
             return (
@@ -141,11 +142,11 @@ class TableTree extends React.Component {
 
     // show a loader when tree is loading
     if (this.state.loading) {
-      tableTree = <Loader size='4px' margin='2px' />;
+      tableTreeInternal = <Loader size='4px' margin='2px'/>;
     } else if (!this.state.tables.length) {
-      tableTree = (<div className='alert-danger' style={{padding: '8px 5px'}}>
-          <strong>Sorry, we couldn&#39;t find any.</strong>
-        </div>);
+      tableTreeInternal = (<div className='alert-danger' style={{padding: '8px 5px'}}>
+        <strong>Sorry, we couldn&#39;t find any.</strong>
+      </div>);
     }
 
     let pagination = this.state.tables.length ?
@@ -162,20 +163,43 @@ class TableTree extends React.Component {
           </div>
         </div>
       ) : null;
-
-    return (
+    let tableTree = (
       <div>
         { !this.state.loading &&
-          <div className='form-group'>
-            <input type='search' className='form-control'
-              placeholder='Type to filter tables'
-              onChange={this._filter.bind(this)}/>
-          </div>
+        <div className='form-group'>
+          <input type='search' className='form-control'
+                 placeholder='Type to filter tables'
+                 onChange={this._filter.bind(this)}/>
+        </div>
         }
 
         {pagination}
 
         <div ref='tableTree' style={{maxHeight: '350px', overflowY: 'auto'}}>
+          {tableTreeInternal}
+        </div>
+      </div>
+    );
+    let collapseClass = ClassNames({
+      'pull-right': true,
+      'glyphicon': true,
+      'glyphicon-chevron-up': !this.state.isCollapsed,
+      'glyphicon-chevron-down': this.state.isCollapsed
+    });
+
+    let panelBodyClassName = ClassNames({
+      'panel-body': true,
+      'hide': this.state.isCollapsed
+    });
+    return (
+      <div className='panel panel-default'>
+        <div className='panel-heading'>
+          <h3 className='panel-title'>
+            Tables
+            <span className={collapseClass} onClick={this.toggle}></span>
+          </h3>
+        </div>
+        <div className={panelBodyClassName} style={{maxHeight: '350px', overflowY: 'auto'}}>
           {tableTree}
         </div>
       </div>

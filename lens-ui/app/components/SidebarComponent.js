@@ -19,7 +19,6 @@
 
 import React from 'react';
 
-import CubeTree from './CubeTreeComponent';
 import Database from './DatabaseComponent';
 import QueryOperations from './QueryOperationsComponent';
 
@@ -28,8 +27,7 @@ class Sidebar extends React.Component {
     return (
       <section>
         <QueryOperations />
-        <CubeTree />
-        <Database />
+        <Database  {...this.props}/>
       </section>
     );
   }

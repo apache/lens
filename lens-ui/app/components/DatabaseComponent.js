@@ -24,6 +24,7 @@ import DatabaseStore from '../stores/DatabaseStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
 import UserStore from '../stores/UserStore';
 import Loader from '../components/LoaderComponent';
+import CubeTree from './CubeTreeComponent';
 import TableTree from './TableTreeComponent';
 
 function getDatabases () {
@@ -37,13 +38,16 @@ class DatabaseComponent extends React.Component {
       databases: [],
       loading: true,
       isCollapsed: false,
-      selectedDatabase: ''
+      selectedDatabase: props.params.databaseName,
     };
     this._onChange = this._onChange.bind(this);
     this.toggle = this.toggle.bind(this);
     this.setDatabase = this.setDatabase.bind(this);
 
     AdhocQueryActions.getDatabases(UserStore.getUserDetails().secretToken);
+    if (this.state.selectedDatabase) {
+      this.setDatabase(this.state.selectedDatabase);
+    }
   }
 
   componentDidMount () {
@@ -74,39 +78,40 @@ class DatabaseComponent extends React.Component {
         <select className='form-control' id='db' onChange={this.setDatabase}>
           <option value=''>Select</option>
           {this.state.databases.map(database => {
-            return <option key={database} value={database}>{database}</option>;
+            return <option key={database} value={database}  selected={database == this.state.selectedDatabase}>{database}</option>;
           })}
         </select>
       </div>);
 
+
     if (this.state.loading) {
-      databaseComponent = <Loader size='4px' margin='2px' />;
+      databaseComponent = <Loader size='4px' margin='2px'/>;
     } else if (!this.state.databases.length) {
       databaseComponent = (<div className='alert-danger'
-          style={{padding: '8px 5px'}}>
-          <strong>Sorry, we couldn&#39;t find any databases.</strong>
-        </div>);
+                                style={{padding: '8px 5px'}}>
+        <strong>Sorry, we couldn&#39;t find any databases.</strong>
+      </div>);
     }
 
-    return (
-      <div className='panel panel-default'>
-        <div className='panel-heading'>
-          <h3 className='panel-title'>
-            Tables
-            <span className={collapseClass} onClick={this.toggle}></span>
-          </h3>
-        </div>
-        <div className={panelBodyClassName}>
-          {databaseComponent}
+    return (<div>
+        {databaseComponent}
+        {
+          this.state.selectedDatabase &&
+          <div>
+            <hr style={{marginTop: '10px', marginBottom: '10px'}}/>
+            <CubeTree key={this.state.selectedDatabase}
+                      database={this.state.selectedDatabase}/>
+          </div>
+        }
+        {
+          this.state.selectedDatabase &&
+          <div>
+            <hr style={{marginTop: '10px', marginBottom: '10px'}}/>
+            <TableTree key={this.state.selectedDatabase}
+                       database={this.state.selectedDatabase}/>
+          </div>
+        }
 
-          { this.state.selectedDatabase &&
-            <div>
-              <hr style={{marginTop: '10px', marginBottom: '10px'}}/>
-              <TableTree key={this.state.selectedDatabase}
-                database={this.state.selectedDatabase} />
-            </div>
-          }
-        </div>
       </div>
     );
   }
@@ -119,8 +124,15 @@ class DatabaseComponent extends React.Component {
     this.setState({ isCollapsed: !this.state.isCollapsed });
   }
 
-  setDatabase (event) {
-    this.setState({selectedDatabase: event.target.value});
+  setDatabase(event) {
+    var dbName = null;
+    if (typeof(event) == "string") {
+      dbName = event;
+    } else {
+      dbName = event.target.value;
+    }
+    AdhocQueryActions.setDatabase(UserStore.getUserDetails().secretToken, dbName);
+    this.setState({databases: getDatabases(), selectedDatabase: dbName, loading: false});
   }
 }
 

@@ -64,6 +64,42 @@ function _saveQuery (secretToken, user, query, options) {
       });
     }).catch(e => { console.error(e); });
 }
+function _getTables (secretToken, database) {
+  AdhocQueryAdapter.getTables(secretToken, database)
+    .then(function (tables) {
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.RECEIVE_TABLES,
+        payload: { tables: tables, database: database }
+      });
+    }, function (error) {
+      // propagating the error message, couldn't fetch cubes
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.RECEIVE_TABLES_FAILED,
+        payload: {
+          responseCode: error.status,
+          responseMessage: error.statusText
+        }
+      });
+    });
+}
+function _getCubes (secretToken, database) {
+  AdhocQueryAdapter.getCubes(secretToken)
+    .then(function (cubes) {
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.RECEIVE_CUBES,
+        payload: { cubes: cubes, database: database }
+      });
+    }, function (error) {
+      // propagating the error message, couldn't fetch cubes
+      AppDispatcher.dispatch({
+        actionType: AdhocQueryConstants.RECEIVE_CUBES_FAILED,
+        payload: {
+          responseCode: error.status,
+          responseMessage: error.statusText
+        }
+      });
+    });
+}
 
 let AdhocQueryActions = {
   getDatabases (secretToken) {
@@ -83,18 +119,18 @@ let AdhocQueryActions = {
         });
       });
   },
-
-  getCubes (secretToken) {
-    AdhocQueryAdapter.getCubes(secretToken)
-      .then(function (cubes) {
+  setDatabase (secretToken, database) {
+    AdhocQueryAdapter.setDatabase(secretToken, database)
+      .then(function (success) {
         AppDispatcher.dispatch({
-          actionType: AdhocQueryConstants.RECEIVE_CUBES,
-          payload: { cubes: cubes }
+          actionType: AdhocQueryConstants.SELECT_DATABASE,
+          payload: { database: database }
         });
+        _getTables(secretToken, database);
+        _getCubes(secretToken, database);
       }, function (error) {
-        // propagating the error message, couldn't fetch cubes
         AppDispatcher.dispatch({
-          actionType: AdhocQueryConstants.RECEIVE_CUBES_FAILED,
+          actionType: AdhocQueryConstants.SELECT_DATABASE_FAILED,
           payload: {
             responseCode: error.status,
             responseMessage: error.statusText
@@ -102,6 +138,7 @@ let AdhocQueryActions = {
         });
       });
   },
+  getCubes: _getCubes,
 
   getSavedQueries (secretToken, user, options) {
     AdhocQueryAdapter.getSavedQueries(secretToken, user, options)
@@ -216,12 +253,12 @@ let AdhocQueryActions = {
     });
   },
 
-  getCubeDetails (secretToken, cubeName) {
+  getCubeDetails (secretToken, databaseName, cubeName) {
     AdhocQueryAdapter.getCubeDetails(secretToken, cubeName)
       .then(function (cubeDetails) {
         AppDispatcher.dispatch({
           actionType: AdhocQueryConstants.RECEIVE_CUBE_DETAILS,
-          payload: { cubeDetails: cubeDetails }
+          payload: {database: databaseName, cubeDetails: cubeDetails }
         });
       }, function (error) {
         AppDispatcher.dispatch({
@@ -300,24 +337,7 @@ let AdhocQueryActions = {
       });
   },
 
-  getTables (secretToken, database) {
-    AdhocQueryAdapter.getTables(secretToken, database)
-      .then(function (tables) {
-        AppDispatcher.dispatch({
-          actionType: AdhocQueryConstants.RECEIVE_TABLES,
-          payload: { tables: tables, database: database }
-        });
-      }, function (error) {
-        // propagating the error message, couldn't fetch cubes
-        AppDispatcher.dispatch({
-          actionType: AdhocQueryConstants.RECEIVE_TABLES_FAILED,
-          payload: {
-            responseCode: error.status,
-            responseMessage: error.statusText
-          }
-        });
-      });
-  },
+  getTables: _getTables,
 
   getTableDetails (secretToken, tableName, database) {
     AdhocQueryAdapter.getTableDetails(secretToken, tableName, database)

@@ -25,6 +25,7 @@ import Config from 'config.json';
 let baseUrl = Config.baseURL;
 let urls = {
   getDatabases: 'metastore/databases',
+  setDatabases: 'metastore/databases/current',
   getCubes: 'metastore/cubes',
   query: 'queryapi/queries', // POST on this to execute, GET to fetch all
   getTables: 'metastore/nativetables',
@@ -38,6 +39,15 @@ let AdhocQueryAdapter = {
   getDatabases (secretToken) {
     let url = baseUrl + urls.getDatabases;
     return BaseAdapter.get(url + '?sessionid=' + secretToken);
+  },
+  setDatabase (secretToken, database) {
+    let url = baseUrl + urls.setDatabases;
+    return BaseAdapter.put(url + '?sessionid=' + secretToken, database, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
   },
 
   getCubes (secretToken) {
