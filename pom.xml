@@ -657,6 +657,11 @@
             <exclude>**/*.js</exclude>
             <exclude>**/*.properties</exclude>
             <exclude>**/*.json</exclude>
+            <!-- python client -->
+            <exclude>**/.tox/</exclude>
+            <exclude>**/.cache/</exclude>
+            <exclude>**/*.egg-info/**</exclude>
+            <exclude>**/*.egg</exclude>
           </excludes>
         </configuration>
         <executions>
