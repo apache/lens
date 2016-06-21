@@ -620,7 +620,7 @@
           <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
           <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
           <excludes>
-            <exclude>README.*</exclude>
+            <exclude>**/README.*</exclude>
             <exclude>DEPENDENCIES</exclude>
             <exclude>**/LICENSE*</exclude>
             <!-- Local git repo -->
