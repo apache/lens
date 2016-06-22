@@ -26,7 +26,9 @@ public enum LensServerErrorCode {
   NULL_OR_EMPTY_OR_BLANK_QUERY(2002, 0),
   UNSUPPORTED_QUERY_SUBMIT_OPERATION(2003, 0),
   TOO_MANY_OPEN_SESSIONS(2004, 0),
-  SESSION_CLOSED(2005, 0);
+  SESSION_CLOSED(2005, 0),
+  INVALID_HANDLE(2006, 0),
+  NULL_OR_EMPTY_ARGUMENT(2007, 0);
 
   public LensErrorInfo getLensErrorInfo() {
     return this.errorInfo;

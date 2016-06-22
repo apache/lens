@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.xml.bind.annotation.*;
 
 import org.apache.lens.api.query.QuerySubmitResult;
+import org.apache.lens.api.query.SupportedQuerySubmitOperations;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -38,7 +39,7 @@ import lombok.*;
  *
  */
 @XmlRootElement
-@XmlSeeAlso({NoResultData.class, NoErrorPayload.class, QuerySubmitResult.class})
+@XmlSeeAlso({NoResultData.class, NoErrorPayload.class, QuerySubmitResult.class, SupportedQuerySubmitOperations.class})
 @NoArgsConstructor(access=AccessLevel.PACKAGE)
 @ToString
 @XmlAccessorType(XmlAccessType.FIELD)

@@ -18,8 +18,6 @@
  */
 package org.apache.lens.api.query;
 
-import static org.apache.lens.api.query.SubmitOp.*;
-
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,15 +26,15 @@ import javax.xml.bind.annotation.*;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @XmlRootElement
 @EqualsAndHashCode
 @ToString
 @XmlAccessorType(XmlAccessType.FIELD)
+@NoArgsConstructor
 public class SupportedQuerySubmitOperations implements Serializable {
 
   private static final String SEP = ", ";
@@ -45,9 +43,7 @@ public class SupportedQuerySubmitOperations implements Serializable {
   @XmlElement(name = "operation")
   private List<String> supportedOps = new LinkedList<String>();
 
-  public SupportedQuerySubmitOperations() {
-    ImmutableSet<SubmitOp> supportedOps = Sets.immutableEnumSet(ESTIMATE, EXECUTE, EXPLAIN, EXECUTE_WITH_TIMEOUT);
-
+  public SupportedQuerySubmitOperations(SubmitOp... supportedOps) {
     for (SubmitOp supportedOp : supportedOps) {
       this.supportedOps.add(supportedOp.toString().toLowerCase());
     }
@@ -56,5 +52,4 @@ public class SupportedQuerySubmitOperations implements Serializable {
   public String getSupportedOperationsAsString() {
     return StringUtils.join(supportedOps, SEP);
   }
-
 }

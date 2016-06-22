@@ -22,33 +22,34 @@ import static org.apache.lens.server.error.LensServerErrorCode.UNSUPPORTED_QUERY
 
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.LensError;
+import org.apache.lens.api.query.SubmitOp;
 import org.apache.lens.api.query.SupportedQuerySubmitOperations;
 import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.server.api.error.LensException;
 
 public class UnSupportedQuerySubmitOpException extends LensException {
 
-  private final SupportedQuerySubmitOperations supportedOps = new SupportedQuerySubmitOperations();
+  private final SupportedQuerySubmitOperations supportedOps;
 
-  public UnSupportedQuerySubmitOpException() {
+  public UnSupportedQuerySubmitOpException(SubmitOp... supportedSubmitOps) {
     super(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getLensErrorInfo());
+    this.supportedOps = new SupportedQuerySubmitOperations(supportedSubmitOps);
   }
 
-  public UnSupportedQuerySubmitOpException(final Throwable cause) {
+  public UnSupportedQuerySubmitOpException(final Throwable cause, SubmitOp... supportedSubmitOps) {
     super(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getLensErrorInfo(), cause);
+    this.supportedOps = new SupportedQuerySubmitOperations(supportedSubmitOps);
   }
 
   @Override
   public String getFormattedErrorMsg(LensError lensError) {
-
     final String supportedOpsStr = supportedOps.getSupportedOperationsAsString();
     return lensError.getFormattedErrorMsg(supportedOpsStr);
   }
 
   @Override
   protected LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection, final String errorMsg,
-      final String stackTrace) {
-
+    final String stackTrace) {
     return LensErrorTO.composedOf(getErrorCode(), errorMsg, stackTrace, supportedOps, null);
   }
 }
