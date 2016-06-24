@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,15 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.api.query;
+package org.apache.lens.api.scheduler;
 
 import org.apache.lens.api.LensSessionHandle;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+
 /**
  * POJO for an instance of SchedulerJob.
  */
 @Data
+@AllArgsConstructor
 public class SchedulerJobInstanceInfo {
 
   /**
@@ -70,10 +73,10 @@ public class SchedulerJobInstanceInfo {
   private String query;
 
   /**
-   * @param status status to be set.
-   * @return status of this instance.
+   * @param state state to be set.
+   * @return state of this instance.
    */
-  private String status;
+  private SchedulerJobInstanceState state;
 
   /**
    * @param createdOn time to be set as created_on time for the instance.

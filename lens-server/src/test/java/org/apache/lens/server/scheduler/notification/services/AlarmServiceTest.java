@@ -23,7 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.*;
 
-import org.apache.lens.api.query.SchedulerJobHandle;
+import org.apache.lens.api.scheduler.SchedulerJobHandle;
 import org.apache.lens.api.scheduler.XFrequency;
 import org.apache.lens.api.scheduler.XFrequencyEnum;
 import org.apache.lens.server.EventServiceImpl;

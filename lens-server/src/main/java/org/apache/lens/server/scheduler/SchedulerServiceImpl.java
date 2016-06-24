@@ -23,15 +23,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.SchedulerJobHandle;
-import org.apache.lens.api.query.SchedulerJobInfo;
-import org.apache.lens.api.query.SchedulerJobInstanceHandle;
-import org.apache.lens.api.query.SchedulerJobInstanceInfo;
-import org.apache.lens.api.scheduler.XJob;
+import org.apache.lens.api.scheduler.*;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
-import org.apache.lens.server.api.scheduler.SchedulerJobStats;
 import org.apache.lens.server.api.scheduler.SchedulerService;
 
 import org.apache.hive.service.cli.CLIService;

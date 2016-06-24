@@ -18,7 +18,7 @@
 
 package org.apache.lens.server.scheduler.notification.services;
 
-import org.apache.lens.api.query.SchedulerJobHandle;
+import org.apache.lens.api.scheduler.SchedulerJobHandle;
 import org.apache.lens.api.scheduler.XFrequency;
 import org.apache.lens.api.scheduler.XFrequencyEnum;
 import org.apache.lens.server.LensServices;
@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  * This service is used primarily by Scheduler to get alarm notifications for scheduled queries.
  *
  * As a schedule this service accepts start time, frequency, end time and timeZone. It also requires the
- * {@link org.apache.lens.api.query.SchedulerJobHandle} which it sends as part of the
+ * {@link SchedulerJobHandle} which it sends as part of the
  * {@link org.apache.lens.server.api.events.SchedulerAlarmEvent} to inform the scheduler about the job for which
  * job the notification has been generated.
  */

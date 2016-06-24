@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.lens.api.query;
+package org.apache.lens.api.scheduler;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -27,22 +27,16 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.lens.api.UUIDAdapter;
 
-import org.apache.commons.lang.StringUtils;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
- * Handle for <code>SchedulerJobInstance</code>
+ * Handle for <code>SchedulerJob</code>.
  */
 @XmlRootElement
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = false)
-public class SchedulerJobInstanceHandle implements Serializable {
+public class SchedulerJobHandle implements Serializable {
 
   /**
    * The Constant serialVersionUID.
@@ -55,32 +49,26 @@ public class SchedulerJobInstanceHandle implements Serializable {
   @XmlElement
   @Getter
   @XmlJavaTypeAdapter(UUIDAdapter.class)
+  @NonNull
   private UUID handleId;
 
   /**
    * From string.
    *
-   * @param handle the handle
-   * @return the <code>SchedulerJobInstance</code>'s handle
+   * @param handle the handle for scheduler job
+   * @return the handle for
    */
-  public static SchedulerJobInstanceHandle fromString(String handle) {
-    return new SchedulerJobInstanceHandle(UUID.fromString(handle));
+  public static SchedulerJobHandle fromString(@NonNull String handle) {
+    return new SchedulerJobHandle(UUID.fromString(handle));
   }
 
-  /**
-   * Returns handle id as a string.
-   * @return handleId as a string.
-   */
   public String getHandleIdString() {
-    if (handleId == null) {
-      return StringUtils.EMPTY;
-    }
     return handleId.toString();
   }
 
   /**
-   * String representation of the SchedulerJobInstanceHandle.
-   * @return the handleID as a string
+   * String representation of the SchedulerJobHandle.
+   * @return string representation of the handleId
    */
   @Override
   public String toString() {

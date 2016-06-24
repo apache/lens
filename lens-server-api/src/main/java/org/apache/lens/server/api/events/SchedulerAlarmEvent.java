@@ -18,7 +18,7 @@
 
 package org.apache.lens.server.api.events;
 
-import org.apache.lens.api.query.SchedulerJobHandle;
+import org.apache.lens.api.scheduler.SchedulerJobHandle;
 
 import org.joda.time.DateTime;
 

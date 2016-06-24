@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.lens.server.api.scheduler;
+package org.apache.lens.api.scheduler;
 
 import lombok.Data;
 
