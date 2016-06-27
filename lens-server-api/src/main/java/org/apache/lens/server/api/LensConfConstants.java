@@ -1108,4 +1108,10 @@ public final class LensConfConstants {
    * Default value of "lens.query.cancel.on.timeout"
    */
   public static final boolean DEFAULT_CANCEL_QUERY_ON_TIMEOUT = true;
+
+  /**
+   * Scheduler store class
+   */
+  public static final java.lang.String SCHEDULER_STORE_CLASS = SERVER_PFX + "scheduler.store.class";
+
 }

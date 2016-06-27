@@ -859,6 +859,12 @@
       lens server will return the handle of the previous query
     </description>
   </property>
+   <property>
+    <name>lens.server.scheduler.store.class</name>
+    <value>org.apache.lens.server.scheduler.SchedulerDAO$SchedulerHsqlDBStore</value>
+    <description>A subclass of SchedulerDBStore class used for storing scheduler related information.
+    </description>
+  </property>
   <property>
   <name>lens.server.status.update.exponential.wait.millis</name>
   <value>30000</value>
