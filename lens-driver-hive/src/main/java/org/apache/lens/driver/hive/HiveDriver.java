@@ -655,7 +655,7 @@ public class HiveDriver extends AbstractLensDriver {
           if (tstate == Task.TaskState.FINISHED) {
             completedTasks++;
           }
-          if (taskStat.getErrorMsg() != null) {
+          if ((taskStat.getReturnValue() != null && taskStat.getReturnValue() != 0) || taskStat.getErrorMsg() != null) {
             appendTaskIds(errorMessage, taskStat);
             errorMessage.append(" has failed! ");
           }
