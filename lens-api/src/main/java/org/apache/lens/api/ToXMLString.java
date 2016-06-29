@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,32 +18,28 @@
  */
 package org.apache.lens.api;
 
-
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.*;
 
 import org.apache.lens.api.jaxb.LensJAXBContext;
 
 public abstract class ToXMLString {
   protected static final Map<Class<?>, JAXBContext> JAXB_CONTEXTS = new HashMap<>();
 
-
-  @Override
-  public String toString() {
-    return toString(this);
-  }
-
   public static String toString(Object o) {
     try {
       StringWriter stringWriter = new StringWriter();
-      Marshaller marshaller = getLensJAXBContext(o.getClass()).createMarshaller();
+      Class cl = null;
+      if (o instanceof JAXBElement) {
+        cl = ((JAXBElement) o).getDeclaredType();
+      } else {
+        cl = o.getClass();
+      }
+      Marshaller marshaller = getLensJAXBContext(cl).createMarshaller();
       marshaller.marshal(o, stringWriter);
       return stringWriter.toString();
     } catch (JAXBException e) {
@@ -62,12 +58,21 @@ public abstract class ToXMLString {
     return JAXB_CONTEXTS.get(clazz);
   }
 
-  public static <T> T valueOf(String sessionStr, Class<T> tClass) {
+  public static <T> T valueOf(String sessionStr, Class tClass) {
     try {
       Unmarshaller unmarshaller = getLensJAXBContext(tClass).createUnmarshaller();
-      return (T) unmarshaller.unmarshal(new StringReader(sessionStr));
+      Object ret = unmarshaller.unmarshal(new StringReader(sessionStr));
+      if (ret instanceof JAXBElement) {
+        return ((JAXBElement<T>) ret).getValue();
+      }
+      return (T) ret;
     } catch (JAXBException e) {
       return null;
     }
+  }
+
+  @Override
+  public String toString() {
+    return toString(this);
   }
 }

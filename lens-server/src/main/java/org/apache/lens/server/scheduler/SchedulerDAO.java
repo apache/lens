@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.JAXBElement;
+
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.ToXMLString;
 import org.apache.lens.api.scheduler.*;
@@ -63,7 +65,7 @@ public class SchedulerDAO {
       throw new LensException("No class found ", e);
     } catch (InstantiationException | IllegalAccessException e) {
       log.error("Illegal access exception", e);
-      throw new LensException("Illegal access exceptio ", e);
+      throw new LensException("Illegal access exception ", e);
     }
   }
 
@@ -221,10 +223,10 @@ public class SchedulerDAO {
    * @param endTime   : Created on should be less than the end time.
    * @return List of Job handles
    */
-  public List<SchedulerJobHandle> getJobs(String username, SchedulerJobInstanceState state, Long startTime,
+  public List<SchedulerJobHandle> getJobs(String username, SchedulerJobState state, Long startTime,
       Long endTime) {
     try {
-      return store.getJobs(username, state.name(), startTime, endTime);
+      return store.getJobs(username, state == null ? null : state.name(), startTime, endTime);
     } catch (SQLException e) {
       log.error("Error while getting jobs ", e);
       return null;
@@ -247,6 +249,7 @@ public class SchedulerDAO {
     protected static final String COLUMN_RESULT_PATH = "resultpath";
     protected static final String COLUMN_QUERY = "query";
     protected QueryRunner runner;
+    protected ObjectFactory jobFactory = new ObjectFactory();
     // Generic multiple row handler for the fetch query.
     private ResultSetHandler<List<Object[]>> multipleRowsHandler = new ResultSetHandler<List<Object[]>>() {
       @Override
@@ -297,9 +300,9 @@ public class SchedulerDAO {
      */
     public int insertIntoJobTable(SchedulerJobInfo jobInfo) throws SQLException {
       String insertSQL = "INSERT INTO " + JOB_TABLE + " VALUES(?,?,?,?,?,?)";
-      return runner
-          .update(insertSQL, jobInfo.getId().toString(), ToXMLString.toString(jobInfo.getJob()), jobInfo.getUserName(),
-              jobInfo.getState().name(), jobInfo.getCreatedOn(), jobInfo.getModifiedOn());
+      JAXBElement<XJob> xmlJob = jobFactory.createJob(jobInfo.getJob());
+      return runner.update(insertSQL, jobInfo.getId().toString(), ToXMLString.toString(xmlJob), jobInfo.getUserName(),
+          jobInfo.getState().name(), jobInfo.getCreatedOn(), jobInfo.getModifiedOn());
     }
 
     /**
@@ -333,7 +336,7 @@ public class SchedulerDAO {
       } else {
         Object[] jobInfo = result.get(0);
         SchedulerJobHandle id = SchedulerJobHandle.fromString((String) jobInfo[0]);
-        XJob xJob = ToXMLString.valueOf((String) jobInfo[1], XJob.class);
+        XJob xJob = ToXMLString.valueOf((String) jobInfo[1], ObjectFactory.class);
         String userName = (String) jobInfo[2];
         String state = (String) jobInfo[3];
         long createdOn = (Long) jobInfo[4];
@@ -355,7 +358,7 @@ public class SchedulerDAO {
       if (result.size() == 0) {
         return null;
       } else {
-        return ToXMLString.valueOf((String) result.get(0)[0], XJob.class);
+        return ToXMLString.valueOf((String) result.get(0)[0], ObjectFactory.class);
       }
     }
 
@@ -390,19 +393,19 @@ public class SchedulerDAO {
       throws SQLException {
       String whereClause = "";
       if (username != null && !username.isEmpty()) {
-        whereClause += (whereClause.isEmpty()) ? " WHERE " : " AND " + COLUMN_USER + "=?";
+        whereClause += ((whereClause.isEmpty()) ? " WHERE " : " AND ") + COLUMN_USER + " = '" + username+"'";
       }
       if (state != null && !state.isEmpty()) {
-        whereClause += (whereClause.isEmpty()) ? " WHERE " : " AND " + COLUMN_STATE + "=?";
+        whereClause += ((whereClause.isEmpty()) ? " WHERE " : " AND ") + COLUMN_STATE + " = '" + state + "'";
       }
       if (starttime != null && starttime > 0) {
-        whereClause += (whereClause.isEmpty()) ? " WHERE " : " AND " + COLUMN_CREATED_ON + ">=?";
+        whereClause += ((whereClause.isEmpty()) ? " WHERE " : " AND ") + COLUMN_CREATED_ON + " >= " + starttime;
       }
       if (endtime != null && endtime > 0) {
-        whereClause += (whereClause.isEmpty()) ? " WHERE " : " AND " + COLUMN_CREATED_ON + "< ?";
+        whereClause += ((whereClause.isEmpty()) ? " WHERE " : " AND ") + COLUMN_CREATED_ON + " < " + endtime;
       }
       String fetchSQL = "SELECT " + COLUMN_ID + " FROM " + JOB_TABLE + whereClause;
-      List<Object[]> result = runner.query(fetchSQL, multipleRowsHandler, username, state, starttime, endtime);
+      List<Object[]> result = runner.query(fetchSQL, multipleRowsHandler);
       List<SchedulerJobHandle> resOut = new ArrayList<>();
       for (int i = 0; i < result.size(); i++) {
         Object[] row = result.get(i);
@@ -424,7 +427,8 @@ public class SchedulerDAO {
       String updateSQL =
           "UPDATE " + JOB_TABLE + " SET " + COLUMN_JOB + "=?, " + COLUMN_MODIFIED_ON + "=? " + " WHERE " + COLUMN_ID
               + "=?";
-      return runner.update(updateSQL, ToXMLString.toString(job), modifiedOn, id);
+      JAXBElement<XJob> xmlJob = jobFactory.createJob(job);
+      return runner.update(updateSQL, ToXMLString.toString(xmlJob), modifiedOn, id);
     }
 
     /**

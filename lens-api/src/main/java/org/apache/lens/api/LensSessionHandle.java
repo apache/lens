@@ -27,10 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * The Class LensSessionHandle.
@@ -49,6 +46,7 @@ import lombok.NoArgsConstructor;
  * Instantiates a new lens session handle.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode
 public class LensSessionHandle extends ToXMLString {
 
   /**
