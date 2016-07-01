@@ -28,7 +28,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -331,11 +330,7 @@ public class CandidateFact implements CandidateTable, QueryAST {
     Set<String> timePartDimensions = new HashSet<String>();
     String singleStorageTable = storageTables.iterator().next();
     List<FieldSchema> partitionKeys = null;
-    try {
-      partitionKeys = query.getMetastoreClient().getTable(singleStorageTable).getPartitionKeys();
-    } catch (HiveException e) {
-      throw new LensException(e);
-    }
+    partitionKeys = query.getMetastoreClient().getTable(singleStorageTable).getPartitionKeys();
     for (FieldSchema fs : partitionKeys) {
       if (cubeTimeDimensions.contains(CubeQueryContext.getTimeDimOfPartitionColumn(baseTable, fs.getName()))) {
         timePartDimensions.add(fs.getName());

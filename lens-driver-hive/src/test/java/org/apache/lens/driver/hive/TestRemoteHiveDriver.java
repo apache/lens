@@ -62,6 +62,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
   /** The Constant HS2_PORT. */
   static final int HS2_PORT = 12345;
+  static final int HS2_UI_PORT = 12346;
 
   /** The server. */
   private static HiveServer2 server;
@@ -91,6 +92,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     remoteConf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
     HiveConf.setVar(remoteConf, HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST, HS2_HOST);
     HiveConf.setIntVar(remoteConf, HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT, HS2_PORT);
+    HiveConf.setIntVar(remoteConf, HiveConf.ConfVars.HIVE_SERVER2_WEBUI_PORT, HS2_UI_PORT);
     HiveConf.setIntVar(remoteConf, HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_CONNECTION_RETRY_LIMIT, 3);
     HiveConf.setIntVar(remoteConf, HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
     HiveConf.setVar(remoteConf, HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_DELAY_SECONDS, "10s");

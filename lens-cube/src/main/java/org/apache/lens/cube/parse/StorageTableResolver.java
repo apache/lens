@@ -318,38 +318,34 @@ class StorageTableResolver implements ContextRewriter {
   private TimeRange getFallbackRange(TimeRange range, CandidateFact cfact, CubeQueryContext cubeql)
     throws LensException {
     Cube baseCube = cubeql.getBaseCube();
-    try {
-      ArrayList<String> tableNames = Lists.newArrayList(cfact.fact.getName(), cubeql.getCube().getName());
-      if (!cubeql.getCube().getName().equals(baseCube.getName())) {
-        tableNames.add(baseCube.getName());
-      }
-      String fallBackString = null;
-      String timedim = baseCube.getTimeDimOfPartitionColumn(range.getPartitionColumn());
-      for (String tableName : tableNames) {
-        fallBackString = cubeql.getMetastoreClient().getTable(tableName).getParameters()
-          .get(MetastoreConstants.TIMEDIM_RELATION + timedim);
-        if (StringUtils.isNotBlank(fallBackString)) {
-          break;
-        }
-      }
-      if (StringUtils.isBlank(fallBackString)) {
-        return null;
-      }
-      Matcher matcher = Pattern.compile("(.*?)\\+\\[(.*?),(.*?)\\]").matcher(fallBackString.replaceAll(WSPACE, ""));
-      if (!matcher.matches()) {
-        return null;
-      }
-      DateUtil.TimeDiff diff1 = DateUtil.TimeDiff.parseFrom(matcher.group(2).trim());
-      DateUtil.TimeDiff diff2 = DateUtil.TimeDiff.parseFrom(matcher.group(3).trim());
-      String relatedTimeDim = matcher.group(1).trim();
-      String fallbackPartCol = baseCube.getPartitionColumnOfTimeDim(relatedTimeDim);
-      return TimeRange.getBuilder()
-        .fromDate(diff2.negativeOffsetFrom(range.getFromDate()))
-        .toDate(diff1.negativeOffsetFrom(range.getToDate()))
-        .partitionColumn(fallbackPartCol).build();
-    } catch (HiveException e) {
-      throw new LensException(e);
+    ArrayList<String> tableNames = Lists.newArrayList(cfact.fact.getName(), cubeql.getCube().getName());
+    if (!cubeql.getCube().getName().equals(baseCube.getName())) {
+      tableNames.add(baseCube.getName());
     }
+    String fallBackString = null;
+    String timedim = baseCube.getTimeDimOfPartitionColumn(range.getPartitionColumn());
+    for (String tableName : tableNames) {
+      fallBackString = cubeql.getMetastoreClient().getTable(tableName).getParameters()
+        .get(MetastoreConstants.TIMEDIM_RELATION + timedim);
+      if (StringUtils.isNotBlank(fallBackString)) {
+        break;
+      }
+    }
+    if (StringUtils.isBlank(fallBackString)) {
+      return null;
+    }
+    Matcher matcher = Pattern.compile("(.*?)\\+\\[(.*?),(.*?)\\]").matcher(fallBackString.replaceAll(WSPACE, ""));
+    if (!matcher.matches()) {
+      return null;
+    }
+    DateUtil.TimeDiff diff1 = DateUtil.TimeDiff.parseFrom(matcher.group(2).trim());
+    DateUtil.TimeDiff diff2 = DateUtil.TimeDiff.parseFrom(matcher.group(3).trim());
+    String relatedTimeDim = matcher.group(1).trim();
+    String fallbackPartCol = baseCube.getPartitionColumnOfTimeDim(relatedTimeDim);
+    return TimeRange.getBuilder()
+      .fromDate(diff2.negativeOffsetFrom(range.getFromDate()))
+      .toDate(diff1.negativeOffsetFrom(range.getToDate()))
+      .partitionColumn(fallbackPartCol).build();
   }
 
   private void resolveFactStoragePartitions(CubeQueryContext cubeql) throws LensException {

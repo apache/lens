@@ -24,6 +24,9 @@ import org.apache.lens.cli.commands.LensNativeTableCommands;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.server.LensServerTestUtil;
 
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.session.SessionState;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -47,6 +50,7 @@ public class TestLensNativeTableCommands extends LensCliApplicationTest {
   public void testNativeTableCommands() throws Exception {
     LensClient client = new LensClient();
     try {
+      SessionState.start(new HiveConf());
       LensNativeTableCommands command = new LensNativeTableCommands();
       command.setClient(client);
       LOG.debug("Starting to test nativetable commands");
@@ -65,6 +69,7 @@ public class TestLensNativeTableCommands extends LensCliApplicationTest {
     } finally {
       LensServerTestUtil.dropHiveTable("test_native_table_command");
       client.closeConnection();
+      SessionState.detachSession();
     }
   }
 }

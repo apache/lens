@@ -151,7 +151,15 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     }
     try {
       String result = qCom.executeQuery(sql, false, "testQuerySync");
-      assertTrue(result.contains("1\tfirst"), result);
+      if (shouldPass) {
+        assertTrue(result.contains("1\tfirst"), result);
+      } else {
+        assertTrue(result.contains("Error"));
+        if (closeConn) {
+          closeClientConnection(qCom);
+        }
+        return;
+      }
     } catch (Exception e) {
       if (closeConn) {
         closeClientConnection(qCom);

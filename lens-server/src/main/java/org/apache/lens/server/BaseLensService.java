@@ -537,5 +537,18 @@ public abstract class BaseLensService extends CompositeService implements Extern
       throw new LensException(SESSION_CLOSED.getLensErrorInfo(), handle);
     }
   }
+
+  public class SessionContext implements AutoCloseable {
+    private LensSessionHandle sessionHandle;
+
+    public SessionContext(LensSessionHandle sessionHandle) {
+      this.sessionHandle = sessionHandle;
+      acquire(sessionHandle);
+    }
+    @Override
+    public void close() {
+      release(sessionHandle);
+    }
+  }
 }
 

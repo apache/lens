@@ -88,7 +88,7 @@ class JoinResolver implements ContextRewriter {
     }
   }
 
-  private void processJoinChains(CubeQueryContext cubeql) throws HiveException {
+  private void processJoinChains(CubeQueryContext cubeql) throws HiveException, LensException {
     for (JoinChain chain : cubeql.getJoinchains().values()) {
       Set<String> dims = chain.getIntermediateDimensions();
 

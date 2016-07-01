@@ -31,7 +31,6 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 import com.google.common.collect.Sets;
 
@@ -88,27 +87,23 @@ class CandidateTableResolver implements ContextRewriter {
   }
 
   private void populateCandidateTables(CubeQueryContext cubeql) throws LensException {
-    try {
-      if (cubeql.getCube() != null) {
-        List<CubeFactTable> factTables = cubeql.getMetastoreClient().getAllFacts(cubeql.getCube());
-        if (factTables.isEmpty()) {
-          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
-              cubeql.getCube().getName() + " does not have any facts");
-        }
-        for (CubeFactTable fact : factTables) {
-          CandidateFact cfact = new CandidateFact(fact, cubeql.getCube());
-          cubeql.getCandidateFacts().add(cfact);
-        }
-        log.info("Populated candidate facts: {}", cubeql.getCandidateFacts());
+    if (cubeql.getCube() != null) {
+      List<CubeFactTable> factTables = cubeql.getMetastoreClient().getAllFacts(cubeql.getCube());
+      if (factTables.isEmpty()) {
+        throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
+            cubeql.getCube().getName() + " does not have any facts");
       }
+      for (CubeFactTable fact : factTables) {
+        CandidateFact cfact = new CandidateFact(fact, cubeql.getCube());
+        cubeql.getCandidateFacts().add(cfact);
+      }
+      log.info("Populated candidate facts: {}", cubeql.getCandidateFacts());
+    }
 
-      if (cubeql.getDimensions().size() != 0) {
-        for (Dimension dim : cubeql.getDimensions()) {
-          populateDimTables(dim, cubeql, false);
-        }
+    if (cubeql.getDimensions().size() != 0) {
+      for (Dimension dim : cubeql.getDimensions()) {
+        populateDimTables(dim, cubeql, false);
       }
-    } catch (HiveException e) {
-      throw new LensException(e);
     }
   }
 
@@ -116,27 +111,23 @@ class CandidateTableResolver implements ContextRewriter {
     if (cubeql.getCandidateDimTables().get(dim) != null) {
       return;
     }
-    try {
-      Set<CandidateDim> candidates = new HashSet<>();
-      cubeql.getCandidateDimTables().put(dim, candidates);
-      List<CubeDimensionTable> dimtables = cubeql.getMetastoreClient().getAllDimensionTables(dim);
-      if (dimtables.isEmpty()) {
-        if (!optional) {
-          throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo(),
-                  dim.getName().concat(" has no dimension tables"));
-        } else {
-          log.info("Not considering optional dimension {}  as, No dimension tables exist", dim);
-          removeOptionalDimWithoutAlias(cubeql, dim);
-        }
+    Set<CandidateDim> candidates = new HashSet<>();
+    cubeql.getCandidateDimTables().put(dim, candidates);
+    List<CubeDimensionTable> dimtables = cubeql.getMetastoreClient().getAllDimensionTables(dim);
+    if (dimtables.isEmpty()) {
+      if (!optional) {
+        throw new LensException(LensCubeErrorCode.NO_CANDIDATE_DIM_AVAILABLE.getLensErrorInfo(),
+                dim.getName().concat(" has no dimension tables"));
+      } else {
+        log.info("Not considering optional dimension {}  as, No dimension tables exist", dim);
+        removeOptionalDimWithoutAlias(cubeql, dim);
       }
-      for (CubeDimensionTable dimtable : dimtables) {
-        CandidateDim cdim = new CandidateDim(dimtable, dim);
-        candidates.add(cdim);
-      }
-      log.info("Populated candidate dims: {} for {}", cubeql.getCandidateDimTables().get(dim), dim);
-    } catch (HiveException e) {
-      throw new LensException(e);
     }
+    for (CubeDimensionTable dimtable : dimtables) {
+      CandidateDim cdim = new CandidateDim(dimtable, dim);
+      candidates.add(cdim);
+    }
+    log.info("Populated candidate dims: {} for {}", cubeql.getCandidateDimTables().get(dim), dim);
   }
 
   private void removeOptionalDimWithoutAlias(CubeQueryContext cubeql, Dimension dim) {

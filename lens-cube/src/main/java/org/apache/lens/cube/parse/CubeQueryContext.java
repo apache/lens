@@ -334,7 +334,8 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
       } else {
         return false;
       }
-    } catch (HiveException e) {
+    } catch (LensException e) {
+      //TODO: check if catch can be removed
       return false;
     }
     return true;

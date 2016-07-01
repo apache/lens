@@ -227,7 +227,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
             Class<? extends BaseLensService> serviceClass = (Class<? extends BaseLensService>) cls;
             log.info("Adding {}  service with {}", sName, serviceClass);
             Constructor<?> constructor = serviceClass.getConstructor(CLIService.class);
-            BaseLensService service = (BaseLensService) constructor.newInstance(new Object[]{cliService});
+            BaseLensService service = (BaseLensService) constructor.newInstance(cliService);
             addService(service);
             lensServices.add(service);
           } else if (Service.class.isAssignableFrom(cls)) {

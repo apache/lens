@@ -27,9 +27,9 @@ import org.apache.lens.cube.parse.CandidateTable;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,7 @@ public final class RewriterPlan extends DriverQueryPlan {
           Table tbl;
           try {
             tbl = ctx.getMetastoreClient().getTable(table);
-          } catch (HiveException e) {
+          } catch (LensException e) {
             log.error("Error while getting table:" + table, e);
             continue;
           }

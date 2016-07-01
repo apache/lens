@@ -325,13 +325,17 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
 
     final String query = "select COUNT(ID) from test_hive_server_restart";
     Response response = null;
-    while (response == null || response.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
+    while (true) {
       response = execute(target(), Optional.of(lensSessionId), Optional.of(query), defaultMT);
+      if (response != null) {
+        LensAPIResult<QueryHandle> result = response.readEntity(new GenericType<LensAPIResult<QueryHandle>>() {});
+        handle = result.getData();
+        if (handle != null) {
+          break;
+        }
+      }
       Thread.sleep(1000);
     }
-
-    handle = response.readEntity(new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
-
     // Poll for second query, this should finish successfully
     ctx = waitForQueryToFinish(target(), lensSessionId, handle, defaultMT);
     log.info("Final status for {}: {}", handle, ctx.getStatus().getStatus());

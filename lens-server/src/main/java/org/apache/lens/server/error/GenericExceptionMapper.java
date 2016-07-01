@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.lens.api.APIResult;
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.result.LensErrorTO;
@@ -64,7 +65,9 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
     } else {
       status = Response.Status.INTERNAL_SERVER_ERROR;
     }
-
+    if (extendedUriInfo.getMatchedResourceMethod() == null) {
+      return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
+    }
     if (extendedUriInfo.getMatchedResourceMethod().getInvocable().getRawResponseType() == LensAPIResult.class) {
       if (le != null) {
         return Response.status(status).entity(le.getLensAPIResult()).build();
@@ -72,6 +75,8 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
       // if no LensException construct LensAPIResult
       LensAPIResult lensAPIResult = constructLensAPIResult(exception, status);
       return Response.status(lensAPIResult.getHttpStatusCode()).entity(lensAPIResult).build();
+    } else if (extendedUriInfo.getMatchedResourceMethod().getInvocable().getRawResponseType() == APIResult.class) {
+      return Response.status(status).entity(APIResult.failure(exception)).build();
     } else {
       return Response.status(status).entity(exception.getMessage()).build();
     }

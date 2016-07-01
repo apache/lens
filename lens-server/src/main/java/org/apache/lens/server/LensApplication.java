@@ -25,6 +25,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.error.GenericExceptionMapper;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -74,7 +75,7 @@ public class LensApplication extends Application {
 
     log.debug("LensRequestContextInitFilter added...");
     classes.add(LensRequestContextInitFilter.class);
-
+    classes.add(GenericExceptionMapper.class);
     return classes;
   }
 

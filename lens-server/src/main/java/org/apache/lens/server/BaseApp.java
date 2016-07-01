@@ -25,6 +25,7 @@ import javax.ws.rs.core.Application;
 
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
+import org.apache.lens.server.error.GenericExceptionMapper;
 import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 
 import org.glassfish.jersey.filter.LoggingFilter;
@@ -46,6 +47,7 @@ public abstract class BaseApp extends Application {
     classes.add(LensApplicationListener.class);
     classes.add(MoxyJsonConfigurationContextResolver.class);
     classes.add(MoxyJsonFeature.class);
+    classes.add(GenericExceptionMapper.class);
     return classes;
   }
 

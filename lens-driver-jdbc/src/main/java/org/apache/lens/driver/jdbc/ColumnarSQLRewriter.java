@@ -1328,7 +1328,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
               tabNameChild.insertChild(0, dbIdentifier);
             }
           }
-        } catch (HiveException e) {
+        } catch (LensException | HiveException e) {
           log.warn("No corresponding table in metastore:", e);
         }
       }
@@ -1377,7 +1377,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /**
    * Gets the underlying db name.
    *
-   * @param table the table
+   * @param tbl the table
    * @return the underlying db name
    * @throws HiveException the hive exception
    */
@@ -1388,7 +1388,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /**
    * Gets the underlying table name.
    *
-   * @param table the table
+   * @param tbl the table
    * @return the underlying table name
    * @throws HiveException the hive exception
    */
