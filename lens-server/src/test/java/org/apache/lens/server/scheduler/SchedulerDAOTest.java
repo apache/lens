@@ -1,0 +1,188 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.lens.server.scheduler;
+
+import java.util.*;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.scheduler.*;
+import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.scheduler.util.UtilityMethods;
+
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.hadoop.conf.Configuration;
+
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Test(groups = "unit-test")
+public class SchedulerDAOTest {
+
+  SchedulerDAO schedulerDAO;
+  Map<SchedulerJobInstanceHandle, SchedulerJobInstanceInfo> instances = new HashMap<>();
+
+  @BeforeClass
+  public void setup() throws Exception {
+    System.setProperty(LensConfConstants.CONFIG_LOCATION, "target/test-classes/");
+    Configuration conf = LensServerConf.getHiveConf();
+    QueryRunner runner = new QueryRunner(UtilityMethods.getDataSourceFromConf(conf));
+    // Cleanup all tables
+    runner.update("DROP TABLE IF EXISTS job_table");
+    runner.update("DROP TABLE IF EXISTS job_instance_table");
+    this.schedulerDAO = new SchedulerDAO(conf);
+  }
+
+  private XTrigger getTestTrigger() {
+    XTrigger trigger = new XTrigger();
+    XFrequency frequency = new XFrequency();
+    frequency.setCronExpression("0 0 12 * * ?");
+    frequency.setTimezone("UTC");
+    trigger.setFrequency(frequency);
+    return trigger;
+  }
+
+  private XExecution getTestExecution() {
+    XExecution execution = new XExecution();
+    XJobQuery query = new XJobQuery();
+    query.setQuery("select * from test_table");
+    execution.setQuery(query);
+    XSessionType sessionType = new XSessionType();
+    sessionType.setDb("test");
+    execution.setSession(sessionType);
+    return execution;
+  }
+
+  private XJob getTestJob() throws DatatypeConfigurationException {
+    XJob job = new XJob();
+    job.setTrigger(getTestTrigger());
+    job.setName("Test lens Job");
+    GregorianCalendar startTime = new GregorianCalendar();
+    startTime.setTimeInMillis(System.currentTimeMillis());
+    XMLGregorianCalendar start = DatatypeFactory.newInstance().newXMLGregorianCalendar(startTime);
+
+    GregorianCalendar endTime = new GregorianCalendar();
+    endTime.setTimeInMillis(System.currentTimeMillis());
+    XMLGregorianCalendar end = DatatypeFactory.newInstance().newXMLGregorianCalendar(endTime);
+
+    job.setStartTime(start);
+    job.setEndTime(end);
+    job.setExecution(getTestExecution());
+    return job;
+  }
+
+  @Test
+  public void testStoreJob() throws Exception {
+    XJob job = getTestJob();
+    long currentTime = System.currentTimeMillis();
+    SchedulerJobInfo info = new SchedulerJobInfo(SchedulerJobHandle.fromString(UUID.randomUUID().toString()), job,
+        "lens", SchedulerJobState.NEW, currentTime, currentTime);
+    // Store the job
+    schedulerDAO.storeJob(info);
+    // Retrive the stored job
+    XJob outJob = schedulerDAO.getJob(info.getId());
+    Assert.assertEquals(job, outJob);
+  }
+
+  @Test
+  public void testStoreInstance() throws Exception {
+    long currentTime = System.currentTimeMillis();
+    SchedulerJobHandle jobHandle = SchedulerJobHandle.fromString(UUID.randomUUID().toString());
+    SchedulerJobInstanceInfo firstInstance = new SchedulerJobInstanceInfo(
+        SchedulerJobInstanceHandle.fromString(UUID.randomUUID().toString()), jobHandle,
+        new LensSessionHandle(UUID.randomUUID(), UUID.randomUUID()), currentTime, currentTime, "/tmp/",
+        "select * form yoda_cube", SchedulerJobInstanceState.WAITING, currentTime);
+    instances.put(firstInstance.getId(), firstInstance);
+    schedulerDAO.storeJobInstance(firstInstance);
+
+    currentTime = System.currentTimeMillis();
+    SchedulerJobInstanceInfo secondInstance = new SchedulerJobInstanceInfo(
+        SchedulerJobInstanceHandle.fromString(UUID.randomUUID().toString()), jobHandle,
+        new LensSessionHandle(UUID.randomUUID(), UUID.randomUUID()), currentTime, currentTime, "/tmp/",
+        "select * form yoda_cube", SchedulerJobInstanceState.WAITING, currentTime);
+    instances.put(secondInstance.getId(), secondInstance);
+    schedulerDAO.storeJobInstance(secondInstance);
+    List<SchedulerJobInstanceHandle> handleList = schedulerDAO.getJobInstances(jobHandle);
+    // Size should be 2
+    Assert.assertEquals(handleList.size(), 2);
+    // Get the definition of instance from the store.
+    SchedulerJobInstanceInfo instance1 = schedulerDAO.getSchedulerJobInstanceInfo(handleList.get(0));
+    Assert.assertEquals(instances.get(handleList.get(0)), instance1);
+
+    SchedulerJobInstanceInfo instance2 = schedulerDAO.getSchedulerJobInstanceInfo(handleList.get(1));
+    Assert.assertEquals(instances.get(handleList.get(1)), instance2);
+  }
+
+  @Test(dependsOnMethods = { "testStoreJob" })
+  public void testUpdateJob() throws Exception {
+    // Get all the stored jobs.
+    // update one and check if it successful.
+    List<SchedulerJobHandle> jobHandles = schedulerDAO.getJobs(null, null, null, null);
+    Assert.assertEquals(jobHandles.size() > 0, true);
+
+    SchedulerJobInfo jobInfo = schedulerDAO.getSchedulerJobInfo(jobHandles.get(0));
+    XJob newJob = getTestJob();
+    jobInfo.setJob(newJob);
+    schedulerDAO.updateJob(jobInfo);
+
+    XJob storedJob = schedulerDAO.getJob(jobInfo.getId());
+    Assert.assertEquals(storedJob, newJob);
+
+    // Change State
+    jobInfo.setState(SchedulerJobState.SCHEDULED);
+    schedulerDAO.updateJobState(jobInfo);
+    Assert.assertEquals(schedulerDAO.getJobState(jobInfo.getId()), SchedulerJobState.SCHEDULED);
+  }
+
+  @Test(dependsOnMethods = { "testStoreInstance" })
+  public void testUpdateJobInstance() {
+    SchedulerJobInstanceHandle handle = instances.keySet().iterator().next();
+    SchedulerJobInstanceInfo info = instances.get(handle);
+    info.setState(SchedulerJobInstanceState.LAUNCHED);
+    schedulerDAO.updateJobInstanceState(info);
+    // Get the instance
+    Assert.assertEquals(schedulerDAO.getSchedulerJobInstanceInfo(handle), info);
+  }
+
+  @Test(dependsOnMethods = { "testUpdateJob" })
+  public void testSearchStoreJob() throws Exception {
+    // Store more jobs with the one user and search
+    XJob job = getTestJob();
+    long currentTime = System.currentTimeMillis();
+    SchedulerJobInfo info = new SchedulerJobInfo(SchedulerJobHandle.fromString(UUID.randomUUID().toString()), job,
+        "lens", SchedulerJobState.NEW, currentTime, currentTime);
+    // Store the job
+    schedulerDAO.storeJob(info);
+    info = new SchedulerJobInfo(SchedulerJobHandle.fromString(UUID.randomUUID().toString()), job, "lens",
+        SchedulerJobState.NEW, currentTime, currentTime);
+    schedulerDAO.storeJob(info);
+    // There should be 3 jobs till now.
+    Assert.assertEquals(schedulerDAO.getJobs("lens", null, null, null).size(), 3);
+    Assert.assertEquals(schedulerDAO.getJobs("lens", SchedulerJobState.NEW, 1L, System.currentTimeMillis()).size(), 2);
+    Assert.assertEquals(schedulerDAO.getJobs("Alice", SchedulerJobState.NEW, null, null).size(), 0);
+  }
+}
