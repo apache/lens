@@ -1302,8 +1302,24 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
     factColumns.add(new FieldSchema("test_time_dim_hour_id", "int", "time id"));
 
-    // create cube fact
+    // create cube fact with materialized expressions
     client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
+      factValidityProperties, storageTables);
+
+    factName = "testFact5_BASE";
+    factColumns = new ArrayList<>(cubeMeasures.size());
+    for (CubeMeasure measure : cubeMeasures) {
+      factColumns.add(measure.getColumn());
+    }
+
+    // add dimensions of the cube
+    factColumns.add(new FieldSchema("d_time", "timestamp", "event time"));
+    factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
+    factColumns.add(new FieldSchema("dim1", "string", "base dim"));
+    factColumns.add(new FieldSchema("booleancut", "boolean", "expr dim"));
+
+    // create cube fact
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 150L,
       factValidityProperties, storageTables);
 
     // create fact only with extra measures
@@ -1343,6 +1359,22 @@ public class CubeTestSetup {
 
     // create cube fact
     client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
+      factValidityProperties, storageTables);
+
+    // create fact with materialized expression
+    factName = "testFact6_BASE";
+    factColumns = new ArrayList<>();
+    factColumns.add(new FieldSchema("msr13", "double", "third measure"));
+    factColumns.add(new FieldSchema("msr14", "bigint", "fourth measure"));
+
+    // add dimensions of the cube
+    factColumns.add(new FieldSchema("d_time", "timestamp", "event time"));
+    factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
+    factColumns.add(new FieldSchema("dim1", "string", "base dim"));
+    factColumns.add(new FieldSchema("booleancut", "boolean", "expr dim"));
+
+    // create cube fact
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 150L,
       factValidityProperties, storageTables);
 
     // create raw fact only with extra measures

@@ -356,7 +356,9 @@ class ExpressionResolver implements ContextRewriter {
       ExpressionContext ec = getExpressionContext(expr, alias);
       if (cTable.getColumns().contains(expr)) {
         // expression is directly materialized in candidate table
+        log.debug("{} is directly evaluable in {}", expr, cTable);
         ec.addDirectlyAvailable(cTable);
+        return;
       }
       for (ExprSpecContext esc : ec.allExprs) {
         if (esc.getTblAliasToColumns().get(alias) == null) {
