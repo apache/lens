@@ -19,18 +19,22 @@
 package org.apache.lens.server.api.scheduler;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.scheduler.*;
+import org.apache.lens.server.api.LensService;
+import org.apache.lens.server.api.SessionValidator;
 import org.apache.lens.server.api.error.LensException;
 
 
 /**
  * Scheduler interface.
  */
-public interface SchedulerService {
+public interface SchedulerService extends LensService, SessionValidator {
+
+  /** The constant NAME */
+  String NAME = "scheduler";
 
   /**
    * Submit a job.
@@ -104,11 +108,9 @@ public interface SchedulerService {
    *
    * @param sessionHandle handle for the current session.
    * @param jobHandle     handle for the job
-   * @param expiryTime    time after which the job shouldn't execute.
    * @throws LensException the lens exception
    */
-  void expireJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle,
-                 Date expiryTime) throws LensException;
+  void expireJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
 
 
   /**
@@ -131,12 +133,10 @@ public interface SchedulerService {
    *
    * @param sessionHandle handle for the session.
    * @param jobHandle     handle for the job
-   * @param effectiveTime time from which to resume the instances.
    * @return true if the job was resumed successfully, false otherwise.
    * @throws LensException the lens exception
    */
-  boolean resumeJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle,
-                    Date effectiveTime) throws LensException;
+  boolean resumeJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
 
   /**
    * Delete a job.
@@ -155,16 +155,13 @@ public interface SchedulerService {
    *                      if null no entries will be removed from result
    * @param user          filter for user who submitted the job, if specified only jobs submitted by the given user
    *                      will be returned, if not specified no entries will be removed from result on basis of userName
-   * @param jobName       filter for jobName, if specified only the jobs with name same as given name will be considered
-   *                      , else no jobs will be filtered out on the basis of name.
    * @param startTime     if specified only instances with scheduleTime after this time will be considered.
    * @param endTime       if specified only instances with scheduleTime before this time will be considered.
    * @return A collection of stats per job
    * @throws LensException
    */
   Collection<SchedulerJobStats> getAllJobStats(LensSessionHandle sessionHandle,
-                                      String state, String user,
-                                      String jobName, long startTime, long endTime) throws LensException;
+                                      String state, String user, long startTime, long endTime) throws LensException;
 
   /**
    * Returns stats for a job.
@@ -187,10 +184,10 @@ public interface SchedulerService {
    * @param sessionHandle handle for the session.
    * @param jobHandle     handle for the job
    * @param numResults    - number of results to be returned, default 100.
-   * @return list of instance ids for the job
+   * @return list of instances for the job
    * @throws LensException the lens exception
    */
-  List<String> getJobInstances(LensSessionHandle sessionHandle,
+  List<SchedulerJobInstanceInfo> getJobInstances(LensSessionHandle sessionHandle,
                                SchedulerJobHandle jobHandle, Long numResults) throws LensException;
 
   /**
