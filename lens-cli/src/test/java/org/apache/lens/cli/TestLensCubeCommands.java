@@ -51,8 +51,7 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
    */
   @Test
   public void testCubeCommands() throws Exception {
-    LensClient client = new LensClient();
-    try {
+    try(LensClient client = new LensClient()) {
       LensDimensionCommands dimensionCommand = new LensDimensionCommands();
       dimensionCommand.setClient(client);
       dimensionCommand.createDimension(new File(
@@ -83,8 +82,6 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
       assertFalse(cubeList.contains("sample_cube"));
       dimensionCommand.dropDimension("test_detail");
       dimensionCommand.dropDimension("test_dim");
-    } finally {
-      client.closeConnection();
     }
   }
 
@@ -176,7 +173,6 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
       writer.close();
 
       String desc = command.describeCube("sample_cube");
-      LensClient client = command.getClient();
       LOG.debug(desc);
       String propString = "sample_cube.prop: sample";
       String propString1 = "sample_cube.prop1: sample1";

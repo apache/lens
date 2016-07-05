@@ -143,16 +143,17 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
     lensClientConfig.setLensDatabase(TEST_DB);
     Assert.assertEquals(lensClientConfig.getLensDatabase(), TEST_DB);
 
-    LensClient client = new LensClient(lensClientConfig);
-    Assert.assertEquals(client.getCurrentDatabae(), TEST_DB,
-      "current database");
+    try (LensClient client = new LensClient(lensClientConfig)) {
+      Assert.assertEquals(client.getCurrentDatabae(), TEST_DB,
+          "current database");
 
-    client.createDatabase("testclientdb", true);
-    Assert.assertTrue(client.getAllDatabases().contains("testclientdb"));
-    client.dropDatabase("testclientdb", false);
-    Assert.assertFalse(client.getAllDatabases().contains("testclientdb"));
+      client.createDatabase("testclientdb", true);
+      Assert.assertTrue(client.getAllDatabases().contains("testclientdb"));
+      client.dropDatabase("testclientdb", false);
+      Assert.assertFalse(client.getAllDatabases().contains("testclientdb"));
 
-    Assert.assertTrue(RequestTestFilter.isAccessed(), "RequestTestFilter not invoked");
+      Assert.assertTrue(RequestTestFilter.isAccessed(), "RequestTestFilter not invoked");
+    }
   }
 
   @DataProvider(name = "testIterableHttpResultSetDP")
@@ -275,27 +276,28 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
   @Test
   public void testWaitForQueryToCompleteWithAndWithoutRetryOnTimeOut() throws LensAPIException {
     LensClientConfig config = createLensClientConfigWithServerUrl();
-    config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, 3000);
-    LensClient lensClient = new LensClient(config);
-    assertTrue(lensClient.setDatabase(TEST_DB));
-    lensClient.setConnectionParam(ENABLE_SLEEP_FOR_GET_QUERY_OP, "true");
+    try (LensClient lensClient = new LensClient(config)) {
+      config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, 3000);
+      assertTrue(lensClient.setDatabase(TEST_DB));
+      lensClient.setConnectionParam(ENABLE_SLEEP_FOR_GET_QUERY_OP, "true");
 
-    //Test waitForQueryToComplete without retry on timeout
-    QueryHandle handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");
-    try {
-      lensClient.getStatement().waitForQueryToComplete(handle, false);
-      fail("SocketTimeoutException was expected");
-    } catch (Exception e) {
-      if (!isExceptionDueToSocketTimeout(e)) {
-        fail("SocketTimeoutException was excepted as part of Read Timeout");
+      //Test waitForQueryToComplete without retry on timeout
+      QueryHandle handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");
+      try {
+        lensClient.getStatement().waitForQueryToComplete(handle, false);
+        fail("SocketTimeoutException was expected");
+      } catch (Exception e) {
+        if (!isExceptionDueToSocketTimeout(e)) {
+          fail("SocketTimeoutException was excepted as part of Read Timeout");
+        }
       }
-    }
 
-    //Test waitForQueryToComplete with Retry on timeout
-    handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");
-    lensClient.getStatement().waitForQueryToComplete(handle);
-    LensQuery query = lensClient.getQueryDetails(handle);
-    assertTrue(query.getStatus().successful());
+      //Test waitForQueryToComplete with Retry on timeout
+      handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");
+      lensClient.getStatement().waitForQueryToComplete(handle);
+      LensQuery query = lensClient.getQueryDetails(handle);
+      assertTrue(query.getStatus().successful());
+    }
   }
 
   private LensClientConfig createLensClientConfigWithServerUrl() {

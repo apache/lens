@@ -63,19 +63,19 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
    */
   @Test
   public void testConnectionCommand() {
-    LensClient client = new LensClient();
-    LensConnectionCommands commands = new LensConnectionCommands();
-    commands.setClient(client);
-    String key = "connectiontest1";
-    String value = "connectiontest1val";
-    String keyvalList = commands.showParameters();
+    try (LensClient client = new LensClient()) {
+      LensConnectionCommands commands = new LensConnectionCommands();
+      commands.setClient(client);
+      String key = "connectiontest1";
+      String value = "connectiontest1val";
+      String keyvalList = commands.showParameters();
 
-    Assert.assertFalse(keyvalList.contains("connectiontest1"));
+      Assert.assertFalse(keyvalList.contains("connectiontest1"));
 
-    commands.setParam(key + "=" + value);
-    String val = commands.getParam(key);
-    Assert.assertEquals(val, key + "=" + value);
-    commands.quitShell();
+      commands.setParam(key + "=" + value);
+      String val = commands.getParam(key);
+      Assert.assertEquals(val, key + "=" + value);
+    }
   }
 
   private File createNewPath(String fileName) {
@@ -133,28 +133,28 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
    */
   @Test
   public void testFileCommands() {
-    LensClient client = new LensClient();
-    LensConnectionCommands commands = new LensConnectionCommands();
-    commands.setClient(client);
-    LOG.debug("Testing set/remove file operations");
+    try (LensClient client = new LensClient()) {
+      LensConnectionCommands commands = new LensConnectionCommands();
+      commands.setClient(client);
+      LOG.debug("Testing set/remove file operations");
 
-    File f = null;
-    try {
-      String filename = "target/data";
-      f = createNewPath(filename);
+      File f = null;
+      try {
+        String filename = "target/data";
+        f = createNewPath(filename);
 
-      String result = commands.addFile(filename);
-      Assert.assertEquals("Add resource succeeded", result);
+        String result = commands.addFile(filename);
+        Assert.assertEquals("Add resource succeeded", result);
 
-      result = commands.removeFile(filename);
-      Assert.assertEquals("Delete resource succeeded", result);
+        result = commands.removeFile(filename);
+        Assert.assertEquals("Delete resource succeeded", result);
 
-      LOG.debug("Testing set/remove file operation done");
-    } finally {
-      if (f != null) {
-        f.delete();
+        LOG.debug("Testing set/remove file operation done");
+      } finally {
+        if (f != null) {
+          f.delete();
+        }
       }
-      commands.quitShell();
     }
   }
 
@@ -163,50 +163,50 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
    */
   @Test
   public void testFileCommandsWithURIRegex() {
-    LensClient client = new LensClient();
-    LensConnectionCommands commands = new LensConnectionCommands();
-    commands.setClient(client);
-    LOG.debug("Testing set/remove file operations");
+    try (LensClient client = new LensClient()) {
+      LensConnectionCommands commands = new LensConnectionCommands();
+      commands.setClient(client);
+      LOG.debug("Testing set/remove file operations");
 
-    java.io.File file = new java.io.File("");
-    String projectdir = file.getAbsolutePath();
+      java.io.File file = new java.io.File("");
+      String projectdir = file.getAbsolutePath();
 
     /* Tests input file pattern file: and file://  */
-    String filenameA = "file:" + projectdir + "/target/tempdata_a.txt";
-    String filenameB = "file://" + projectdir + "/target/tempdata_b.txt";
+      String filenameA = "file:" + projectdir + "/target/tempdata_a.txt";
+      String filenameB = "file://" + projectdir + "/target/tempdata_b.txt";
 
-    String fileRegex = "file:" + projectdir + "/target/tempdata_*.txt";
+      String fileRegex = "file:" + projectdir + "/target/tempdata_*.txt";
 
-    try {
-      createNewFile(filenameA);
-      createNewFile(filenameB);
+      try {
+        createNewFile(filenameA);
+        createNewFile(filenameB);
 
-      String result = commands.addFile(fileRegex);
-      Assert.assertEquals("Add resource succeeded", result);
+        String result = commands.addFile(fileRegex);
+        Assert.assertEquals("Add resource succeeded", result);
 
-      result = commands.removeFile(fileRegex);
-      Assert.assertEquals("Delete resource succeeded", result);
+        result = commands.removeFile(fileRegex);
+        Assert.assertEquals("Delete resource succeeded", result);
 
-      LOG.debug("Testing set/remove file operation done");
-    } finally {
-      deleteFile(filenameA);
-      deleteFile(filenameB);
-      commands.quitShell();
+        LOG.debug("Testing set/remove file operation done");
+      } finally {
+        deleteFile(filenameA);
+        deleteFile(filenameB);
+      }
     }
   }
+
 
   /**
    * Test jar commands.
    */
   @Test
   public void testJarCommands() {
-    LensClient client = new LensClient();
-    LensConnectionCommands commands = new LensConnectionCommands();
-    commands.setClient(client);
-    LOG.debug("Testing set/remove file operations");
-
     File jar = null;
-    try {
+    LensConnectionCommands commands = new LensConnectionCommands();
+    try (LensClient client = new LensClient()) {
+      commands.setClient(client);
+      LOG.debug("Testing set/remove file operations");
+
       String filename = "target/data.jar";
       jar = createNewPath(filename);
 
@@ -220,7 +220,6 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
       if (jar != null) {
         jar.delete();
       }
-      commands.quitShell();
     }
   }
 
@@ -229,14 +228,14 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
    */
   @Test
   public void testResourceCommandsWithRegex() {
-    LensClient client = new LensClient();
-    LensConnectionCommands commands = new LensConnectionCommands();
-    commands.setClient(client);
-    LOG.debug("Testing set/remove file operations");
-
     File fileA = null, fileB = null;
     String filenameA, filenameB, fileRegex, result;
-    try {
+    LensConnectionCommands commands = new LensConnectionCommands();
+
+    try (LensClient client = new LensClient()) {
+      commands.setClient(client);
+      LOG.debug("Testing set/remove file operations");
+
       filenameA = "target/tempdata_a";
       filenameB = "target/tempdata_b";
       fileRegex = "target/tempdata_*";
@@ -270,7 +269,6 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
       if (fileB != null) {
         fileB.delete();
       }
-      commands.quitShell();
     }
   }
 
@@ -279,14 +277,14 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
    */
   @Test
   public void testListResourcesCommands() {
-    LensClient client = new LensClient();
-    LensConnectionCommands commands = new LensConnectionCommands();
-    commands.setClient(client);
-    LOG.debug("Testing set/remove file operations");
-
     File file = null;
     File jar = null;
-    try {
+
+    LensConnectionCommands commands = new LensConnectionCommands();
+    try (LensClient client = new LensClient()) {
+      commands.setClient(client);
+      LOG.debug("Testing set/remove file operations");
+
       String fileName = "target/data.txt";
       file = createNewPath(fileName);
       commands.addFile(fileName);
@@ -324,7 +322,6 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
       if (jar != null) {
         jar.delete();
       }
-      commands.quitShell();
     }
   }
 
@@ -333,16 +330,13 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
    */
   @Test
   public void testGetSessionHandle() {
-    LensClient client = new LensClient();
     LensConnectionCommands commands = new LensConnectionCommands();
-    commands.setClient(client);
-    try {
+    try (LensClient client = new LensClient()) {
+      commands.setClient(client);
       LensSessionHandle sessionHandle = client.getConnection().getSessionHandle();
       Assert.assertNotNull(sessionHandle);
       String output = commands.getSessionHandle();
       Assert.assertTrue(output.contains(sessionHandle.getPublicId().toString()), "session handle output: " + output);
-    } finally {
-      commands.quitShell();
     }
   }
 }

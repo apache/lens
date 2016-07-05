@@ -48,8 +48,7 @@ public class TestLensNativeTableCommands extends LensCliApplicationTest {
    */
   @Test
   public void testNativeTableCommands() throws Exception {
-    LensClient client = new LensClient();
-    try {
+    try (LensClient client = new LensClient()) {
       SessionState.start(new HiveConf());
       LensNativeTableCommands command = new LensNativeTableCommands();
       command.setClient(client);
@@ -68,7 +67,6 @@ public class TestLensNativeTableCommands extends LensCliApplicationTest {
       Assert.assertTrue(desc.contains("test.hive.table.prop"));
     } finally {
       LensServerTestUtil.dropHiveTable("test_native_table_command");
-      client.closeConnection();
       SessionState.detachSession();
     }
   }
