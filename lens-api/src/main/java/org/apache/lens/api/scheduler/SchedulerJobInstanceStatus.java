@@ -18,6 +18,6 @@
  */
 package org.apache.lens.api.scheduler;
 
-public enum SchedulerJobState {
-  NEW, SCHEDULED, EXPIRED, PAUSED
+public enum SchedulerJobInstanceStatus {
+  WAITING, TIMED_OUT, LAUNCHED, RUNNING, FAILED, SUCCEEDED, KILLED,
 }

@@ -76,7 +76,7 @@ public class SchedulerJobInstanceInfo {
    * @param state state to be set.
    * @return state of this instance.
    */
-  private SchedulerJobInstanceState state;
+  private SchedulerJobInstanceStatus state;
 
   /**
    * @param createdOn time to be set as created_on time for the instance.

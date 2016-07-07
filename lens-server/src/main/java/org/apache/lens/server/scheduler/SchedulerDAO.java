@@ -120,7 +120,7 @@ public class SchedulerDAO {
    * @param id : Job handle id.
    * @return SchedulerJobState of the job.
    */
-  public SchedulerJobState getJobState(SchedulerJobHandle id) {
+  public SchedulerJobStatus getJobState(SchedulerJobHandle id) {
     try {
       return store.getJobState(id.getHandleIdString());
     } catch (SQLException e) {
@@ -223,7 +223,7 @@ public class SchedulerDAO {
    * @param endTime   : Created on should be less than the end time.
    * @return List of Job handles
    */
-  public List<SchedulerJobHandle> getJobs(String username, SchedulerJobState state, Long startTime,
+  public List<SchedulerJobHandle> getJobs(String username, SchedulerJobStatus state, Long startTime,
       Long endTime) {
     try {
       return store.getJobs(username, state == null ? null : state.name(), startTime, endTime);
@@ -341,7 +341,7 @@ public class SchedulerDAO {
         String state = (String) jobInfo[3];
         long createdOn = (Long) jobInfo[4];
         long modifiedOn = (Long) jobInfo[5];
-        return new SchedulerJobInfo(id, xJob, userName, SchedulerJobState.valueOf(state), createdOn, modifiedOn);
+        return new SchedulerJobInfo(id, xJob, userName, SchedulerJobStatus.valueOf(state), createdOn, modifiedOn);
       }
     }
 
@@ -369,13 +369,13 @@ public class SchedulerDAO {
      * @return SchedulerJobState
      * @throws SQLException
      */
-    public SchedulerJobState getJobState(String id) throws SQLException {
+    public SchedulerJobStatus getJobState(String id) throws SQLException {
       String fetchSQL = "SELECT " + COLUMN_STATE + " FROM " + JOB_TABLE + " WHERE " + COLUMN_ID + "=?";
       List<Object[]> result = runner.query(fetchSQL, multipleRowsHandler, id);
       if (result.size() == 0) {
         return null;
       } else {
-        return SchedulerJobState.valueOf((String) result.get(0)[0]);
+        return SchedulerJobStatus.valueOf((String) result.get(0)[0]);
       }
     }
 
@@ -468,7 +468,7 @@ public class SchedulerDAO {
         long endtime = (Long) instanceInfo[4];
         String resultPath = (String) instanceInfo[5];
         String query = (String) instanceInfo[6];
-        SchedulerJobInstanceState state = SchedulerJobInstanceState.valueOf((String) instanceInfo[7]);
+        SchedulerJobInstanceStatus state = SchedulerJobInstanceStatus.valueOf((String) instanceInfo[7]);
         long createdOn = (Long) instanceInfo[8];
         return new SchedulerJobInstanceInfo(id, jobId, sessionHandle, starttime, endtime, resultPath, query, state,
             createdOn);

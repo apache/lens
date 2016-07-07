@@ -52,7 +52,7 @@ public class SchedulerJobInfo {
    * @param state state of this job.
    * @return current state of this job
    */
-  private SchedulerJobState state;
+  private SchedulerJobStatus state;
 
   /**
    * @param createdOn time to be set as createdOn.
