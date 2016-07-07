@@ -669,7 +669,7 @@ public class HiveDriver extends AbstractLensDriver {
       if (StringUtils.isNotBlank(errorMsg)) {
         error = errorMsg;
       } else if (opStatus.getState().equals(OperationState.ERROR)) {
-        error = context.getDriverStatus().getStatusMessage();
+        error = context.getDriverStatus().getErrorMessage();
       }
       context.getDriverStatus().setErrorMessage(error);
       context.getDriverStatus().setProgressMessage(jsonTaskStatus);
