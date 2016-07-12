@@ -53,6 +53,7 @@ public class KillQueryTests extends BaseTestClass {
   private final String localJarPath = new File("").getAbsolutePath() + "/lens-regression/target/testjars/";
   private final String hiveUdfJar = "hiveudftest.jar";
   private final String serverResourcePath = "/tmp/regression/resources";
+  String sleepQuery = QueryInventory.getSleepQuery("5");
 
   private static Logger logger = Logger.getLogger(KillQueryTests.class);
 
@@ -86,7 +87,7 @@ public class KillQueryTests extends BaseTestClass {
   @Test(enabled = true)
   public void killQueryByHandle() throws Exception {
 
-    QueryHandle qH = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    QueryHandle qH = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
     logger.info("QUERY HANDLE : " + qH);
 
     QueryStatus queryStatus = qHelper.waitForQueryToRun(qH);
@@ -110,13 +111,13 @@ public class KillQueryTests extends BaseTestClass {
     logger.info("Adding jar for making query to run for longer period of time");
     sHelper.addResourcesJar(hdfsJarPath + "/" + hiveUdfJar, newSessionHandleSring);
 
-    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
     logger.info("1st QUERY HANDLE : " + queryHandle1);
 
-    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
     logger.info("2nd QUERY HANDLE : " + queryHandle2);
 
-    QueryHandle queryHandle3 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, null,
+    QueryHandle queryHandle3 = (QueryHandle) qHelper.executeQuery(sleepQuery, null,
         newSessionHandleSring).getData();
     logger.info("3rd QUERY HANDLE : " + queryHandle3);
 
@@ -155,9 +156,9 @@ public class KillQueryTests extends BaseTestClass {
     String newSessionHandleSring = sHelper.openNewSession(diffUser, diffPass, lens.getCurrentDB());
     sHelper.addResourcesJar(hdfsJarPath + "/" + hiveUdfJar, newSessionHandleSring);
 
-    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
-    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
-    QueryHandle queryHandle3 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, null,
+    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
+    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
+    QueryHandle queryHandle3 = (QueryHandle) qHelper.executeQuery(sleepQuery, null,
         newSessionHandleSring).getData();
 
     QueryStatus queryStatus1 = qHelper.waitForQueryToRun(queryHandle1);
@@ -183,8 +184,8 @@ public class KillQueryTests extends BaseTestClass {
   @Test(enabled = true)
   public void killAllQueryOfUser() throws Exception {
 
-    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
-    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
+    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
 
     QueryStatus queryStatus1 = qHelper.waitForQueryToRun(queryHandle1);
     QueryStatus queryStatus2 = qHelper.waitForQueryToRun(queryHandle2);
@@ -205,8 +206,8 @@ public class KillQueryTests extends BaseTestClass {
   @Test(enabled = true)
   public void killQueryByState() throws Exception {
 
-    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
-    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
+    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
 
     QueryStatus queryStatus1 = qHelper.waitForQueryToRun(queryHandle1);
     QueryStatus queryStatus2 = qHelper.waitForQueryToRun(queryHandle2);
@@ -255,13 +256,13 @@ public class KillQueryTests extends BaseTestClass {
     String queryName2 = "queryNameSecond";
     String queryName3 = "Name";
 
-    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName1).getData();
+    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(sleepQuery, queryName1).getData();
     logger.info("1st QUERY HANDLE : " + queryHandle1);
 
-    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName2).getData();
+    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(sleepQuery, queryName2).getData();
     logger.info("2nd QUERY HANDLE : " + queryHandle2);
 
-    QueryHandle queryHandle3 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName3).getData();
+    QueryHandle queryHandle3 = (QueryHandle) qHelper.executeQuery(sleepQuery, queryName3).getData();
     logger.info("3rd QUERY HANDLE : " + queryHandle3);
 
     QueryStatus queryStatus1 = qHelper.waitForQueryToRun(queryHandle1);
@@ -302,7 +303,7 @@ public class KillQueryTests extends BaseTestClass {
     String startTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of 1st Query : " + startTime1);
     Thread.sleep(1000);
-    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
     Thread.sleep(1000);
     String endTime1 = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 1st Query : " + endTime1);
@@ -312,7 +313,7 @@ public class KillQueryTests extends BaseTestClass {
     String startTime2 = String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of 2nd Query : " + startTime2);
     Thread.sleep(1000);
-    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY).getData();
+    QueryHandle queryHandle2 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();
     Thread.sleep(1000);
     String endTime2 = String.valueOf(System.currentTimeMillis());
     logger.info("End Time of 2nd Query : " + endTime2);
@@ -348,7 +349,7 @@ public class KillQueryTests extends BaseTestClass {
     logger.info("Start Time of 1st Query : " + startTime1);
     Thread.sleep(1000);
 
-    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, queryName1).getData();
+    QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(sleepQuery, queryName1).getData();
     Thread.sleep(1000);
 
     String endTime1 = String.valueOf(System.currentTimeMillis());

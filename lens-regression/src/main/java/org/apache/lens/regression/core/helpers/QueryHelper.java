@@ -175,11 +175,35 @@ public class QueryHelper extends ServiceManagerHelper {
     }
     formData.getForm().bodyPart(
         new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
-            MediaType.APPLICATION_XML_TYPE));
+        MediaType.APPLICATION_XML_TYPE));
+
     Response response = this.exec("post", "/queryapi/queries", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
     LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>(){});
     log.info("QueryHandle String:{}", result);
+    return result;
+  }
+
+  public LensAPIResult executeQueryTimeout(String queryString, String timeout, String queryName,
+      String sessionHandleString, LensConf conf) throws LensException {
+    FormBuilder formData = new FormBuilder();
+    formData.add("sessionid", sessionHandleString);
+    formData.add("query", queryString);
+    formData.add("operation", "EXECUTE_WITH_TIMEOUT");
+    if (timeout != null) {
+      formData.add("timeoutmillis", timeout);
+    }
+    if (queryName != null) {
+      formData.add("queryName", queryName);
+    }
+
+    formData.getForm().bodyPart(
+        new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+        MediaType.APPLICATION_XML_TYPE));
+
+    Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
+        MediaType.APPLICATION_XML, formData.getForm());
+    LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>(){});
     return result;
   }
 

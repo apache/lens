@@ -20,6 +20,9 @@
 package org.apache.lens.regression.client;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -27,6 +30,8 @@ import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
+import org.apache.lens.cube.parse.CubeQueryConfUtil;
+import org.apache.lens.regression.core.constants.DriverConfig;
 import org.apache.lens.regression.core.constants.QueryInventory;
 import org.apache.lens.regression.core.constants.QueryURL;
 import org.apache.lens.regression.core.helpers.LensServerHelper;
@@ -37,7 +42,9 @@ import org.apache.lens.regression.core.helpers.SessionHelper;
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
 import org.apache.lens.regression.core.type.MapBuilder;
 import org.apache.lens.regression.util.AssertUtil;
+import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.log4j.Logger;
 
@@ -55,6 +62,7 @@ public class ITQueryApiTests extends BaseTestClass {
   SessionHelper sHelper = getSessionHelper();
   QueryHelper qHelper = getQueryHelper();
 
+  private String hiveDriverSitePath  = lens.getServerDir() + "/conf/drivers/hive/hive1/hivedriver-site.xml";
   private static Logger logger = Logger.getLogger(ITQueryApiTests.class);
 
 
@@ -74,6 +82,12 @@ public class ITQueryApiTests extends BaseTestClass {
   public void closeSession() throws Exception {
     logger.info("Closing Session");
     lens.closeSession();
+  }
+
+  @DataProvider(name = "persistance_values")
+  public Object[][] data() {
+    String[][] testData = {{"true", "true"}, {"true", "false"}, {"false", "false"}};
+    return testData;
   }
 
 
@@ -330,6 +344,168 @@ public class ITQueryApiTests extends BaseTestClass {
     String resultUrl = result.getHttpResultUrl();
     System.out.println("http url : " + resultUrl);
     Assert.assertTrue(resultUrl.contains("httpresultset"));
+  }
+
+
+  @Test(dataProvider = "persistance_values")
+  public void testCancelQueryOnTimeout(String serverPersistent, String driverPersistent) throws Exception {
+
+    sHelper.setAndValidateParam(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, serverPersistent);
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, driverPersistent);
+    String query = QueryInventory.getSleepQuery("5");
+
+    //checking for default value
+    QueryHandleWithResultSet qhr1 = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(query, "10",
+        null, sessionHandleString).getData();
+    LensQuery lq1 = qHelper.waitForCompletion(qhr1.getQueryHandle());
+    Assert.assertEquals(lq1.getStatus().getStatus(), QueryStatus.Status.CANCELED);
+
+    //Setting explicitly
+    LensConf lensConf = new LensConf();
+    lensConf.addProperty(LensConfConstants.CANCEL_QUERY_ON_TIMEOUT, "true");
+    QueryHandleWithResultSet qhr2 = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(query, "5",
+        null, sessionHandleString, lensConf).getData();
+    LensQuery lq2 = qHelper.waitForCompletion(qhr2.getQueryHandle());
+    Assert.assertEquals(lq2.getStatus().getStatus(), QueryStatus.Status.CANCELED);
+  }
+
+
+  @Test(dataProvider = "persistance_values")
+  public void testDontCancelQueryOnTimeout(String serverPersistent, String driverPersistent) throws Exception {
+
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, serverPersistent);
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, driverPersistent);
+    String query = QueryInventory.getSleepQuery("5");
+
+    LensConf lensConf = new LensConf();
+    lensConf.addProperty(LensConfConstants.CANCEL_QUERY_ON_TIMEOUT, "false");
+
+    QueryHandleWithResultSet qHWithResultSet = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(query, "5",
+        null, sessionHandleString, lensConf).getData();
+
+    LensQuery lq = qHelper.waitForCompletion(qHWithResultSet.getQueryHandle());
+    Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+  }
+
+  /* LENS-1019 : If query is repeated from user - with same query, same name, same conf on the same session
+     and earlier is still queued or running, then return the same handle.
+  */
+
+
+  @DataProvider(name = "query_names")
+  public Object[][] queryName() {
+    String[][] testData = {{"query-name"}, {null}};
+    return testData;
+  }
+
+  @Test(dataProvider = "query_names")
+  public void testRunningSameNameSessionQuery(String queryName) throws Exception {
+
+    String query = QueryInventory.getSleepQuery("10");
+    List<QueryHandle> handleList = new ArrayList<>();
+    List<PersistentQueryResult> resultList = new ArrayList<>();
+
+    for(int i=0; i<3; i++){
+      handleList.add((QueryHandle) qHelper.executeQuery(query, queryName).getData());
+    }
+
+    Assert.assertEquals(handleList.get(1).getHandleIdString(), handleList.get(0).getHandleIdString());
+    Assert.assertEquals(handleList.get(2).getHandleIdString(), handleList.get(0).getHandleIdString());
+
+    for(QueryHandle handle : handleList){
+      LensQuery lq = qHelper.waitForCompletion(handle);
+      Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+      resultList.add((PersistentQueryResult) qHelper.getResultSet(handle));
+    }
+
+    Assert.assertEquals(resultList.get(1).getPersistedURI(), resultList.get(0).getPersistedURI());
+    Assert.assertEquals(resultList.get(2).getPersistedURI(), resultList.get(0).getPersistedURI());
+  }
+
+  @Test()
+  public void testQueuedSameNameSessionQuery() throws Exception {
+
+    String query = QueryInventory.getSleepQuery("10");
+    List<QueryHandle> handleList = new ArrayList<>();
+    List<PersistentQueryResult> resultList = new ArrayList<>();
+    HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "1");
+
+    try {
+      Util.changeConfig(map, hiveDriverSitePath);
+      lens.restart();
+
+      //Fire long running query so that 2nd  query is in queued state
+      qHelper.executeQuery(query, "query1").getData();
+
+      for (int i = 0; i < 3; i++) {
+        handleList.add((QueryHandle) qHelper.executeQuery(QueryInventory.HIVE_CUBE_QUERY, "query1").getData());
+      }
+
+      Assert.assertEquals(handleList.get(1), handleList.get(0));
+      Assert.assertEquals(handleList.get(2), handleList.get(0));
+
+      for (QueryHandle handle : handleList) {
+        LensQuery lq = qHelper.waitForCompletion(handle);
+        Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+        resultList.add((PersistentQueryResult) qHelper.getResultSet(handle));
+      }
+
+      Assert.assertEquals(resultList.get(1).getPersistedURI(), resultList.get(0).getPersistedURI());
+      Assert.assertEquals(resultList.get(2).getPersistedURI(), resultList.get(0).getPersistedURI());
+
+    } finally {
+      Util.changeConfig(hiveDriverSitePath);
+      lens.restart();
+    }
+  }
+
+  @Test
+  public void differentQuerySameNameSession() throws Exception {
+
+    String cost5 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_5"), "5");
+    String cost3 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_3"), "3");
+
+    QueryHandle handle1 = (QueryHandle) qHelper.executeQuery(cost5, "queryName").getData();
+    QueryHandle handle2 = (QueryHandle) qHelper.executeQuery(cost3, "queryName").getData();
+
+    Assert.assertFalse(handle1.getHandleIdString().equals(handle2.getHandleIdString()));
+  }
+
+  @Test
+  public void differentSessionSameNameQuery() throws Exception {
+
+    String query = QueryInventory.getSleepQuery("10");
+    String session1 = sHelper.openNewSession("user1", "pwd1", lens.getCurrentDB());
+    String session2 = sHelper.openNewSession("user2", "pwd2", lens.getCurrentDB());
+    QueryHandle handle1 = (QueryHandle) qHelper.executeQuery(query, "name", session1).getData();
+    QueryHandle handle2 = (QueryHandle) qHelper.executeQuery(query, "name", session2).getData();
+    Assert.assertFalse(handle1.getHandleIdString().equals(handle2.getHandleIdString()));
+  }
+
+  @Test
+  public void differentNameSameSessionQuery() throws Exception {
+    String query = QueryInventory.getSleepQuery("3");
+    QueryHandle handle1 = (QueryHandle) qHelper.executeQuery(query, "name1").getData();
+    QueryHandle handle2 = (QueryHandle) qHelper.executeQuery(query, "name2").getData();
+    Assert.assertFalse(handle1.getHandleIdString().equals(handle2.getHandleIdString()));
+  }
+
+  @Test
+  public void differentConfSameNameSessionQuery() throws Exception {
+
+    String query = QueryInventory.getSleepQuery("5");
+    LensConf lensConf = new LensConf();
+
+    lensConf.addProperty(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
+    QueryHandle qhr1 = (QueryHandle) qHelper.executeQuery(query, "query-name", null, sessionHandleString,
+        lensConf).getData();
+
+    lensConf.addProperty(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "true");
+    QueryHandle qhr2 = (QueryHandle) qHelper.executeQuery(query, "query-name", null, sessionHandleString,
+         lensConf).getData();
+
+    Assert.assertFalse(qhr1.getHandleIdString().equals(qhr2.getHandleIdString()));
   }
 
 }
