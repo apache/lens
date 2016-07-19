@@ -62,11 +62,13 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
       status = le.getLensAPIResult().getHttpStatusCode();
     } else if (exception instanceof WebApplicationException) {
       status = Response.Status.fromStatusCode(((WebApplicationException) exception).getResponse().getStatus());
+    } else if (extendedUriInfo.getMatchedResourceMethod() == null) {
+      status = Response.Status.METHOD_NOT_ALLOWED;
     } else {
       status = Response.Status.INTERNAL_SERVER_ERROR;
     }
     if (extendedUriInfo.getMatchedResourceMethod() == null) {
-      return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
+      return Response.status(status).entity("No matching resource method").build();
     }
     if (extendedUriInfo.getMatchedResourceMethod().getInvocable().getRawResponseType() == LensAPIResult.class) {
       if (le != null) {
