@@ -52,7 +52,12 @@ let AdhocQueryAdapter = {
 
   getCubes (secretToken) {
     let url = baseUrl + urls.getCubes;
-    return BaseAdapter.get(url + '?sessionid=' + secretToken);
+    let postURL = "?";
+    if (Config.cubes_type) {
+      postURL += "type=" + Config.cubes_type + "&"
+    }
+    postURL += "sessionid=" + secretToken;
+    return BaseAdapter.get(url + postURL);
   },
 
   getCubeDetails (secretToken, cubeName) {
@@ -212,7 +217,7 @@ let AdhocQueryAdapter = {
   },
 
   getParams (secretToken, query) {
-    let url = baseUrl + urls.parameters;
+    let url = baseUrl + urls.parameters + '?sessionid=' + secretToken;
 
     let formData = new FormData();
     formData.append('query', query);

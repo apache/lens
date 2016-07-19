@@ -393,7 +393,7 @@ class QueryBox extends React.Component {
 
   _onChangeCubeStore () {
     // cubes
-    let cubes = CubeStore.getCubes(DatabaseStore.currentDatabase()); // hashmap
+    let cubes = CubeStore.getCubes(UserStore.currentDatabase()); // hashmap
     Object.keys(cubes).forEach((cubeName) => {
       let cube = cubes[cubeName];
       codeMirrorHints[cubeName] = [];

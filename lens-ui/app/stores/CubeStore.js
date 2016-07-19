@@ -52,12 +52,15 @@ function receiveCubeDetails (payload) {
   cubes[payload.database][cubeDetails.name] = cubes[payload.database][cubeDetails.name] || { name: cubeDetails.name, isLoaded: false };
   cubes[payload.database][cubeDetails.name].measures = measures;
   cubes[payload.database][cubeDetails.name].dimensions = dimensions;
+  if (cubeDetails.type == 'x_base_cube') {
+    cubes[payload.database][cubeDetails.name].join_chains = cubeDetails.join_chains.join_chain;
+    cubes[payload.database][cubeDetails.name].expressions = cubeDetails.expressions.expression;
+  }
   cubes[payload.database][cubeDetails.name].isLoaded = true;
 }
 
 let CHANGE_EVENT = 'change';
 var cubes = {};
-var currentDatabase = null;
 let CubeStore = assign({}, EventEmitter.prototype, {
   getCubes (currentDatabase) {
     return cubes[currentDatabase];

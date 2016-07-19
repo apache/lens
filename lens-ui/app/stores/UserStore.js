@@ -19,6 +19,8 @@
 
 import AppDispatcher from '../dispatcher/AppDispatcher';
 import AppConstants from '../constants/AppConstants';
+import AdhocQueryConstants from '../constants/AdhocQueryConstants';
+
 import assign from 'object-assign';
 import { EventEmitter } from 'events';
 
@@ -35,6 +37,7 @@ function authenticateUser (details) {
   userDetails = {
     isUserLoggedIn: true,
     email: details.email,
+    database: details.database || "default",
     // creating the session string which is passed with every request
     secretToken: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
       <lensSessionHandle>
@@ -88,6 +91,9 @@ var UserStore = assign({}, EventEmitter.prototype, {
   getUserDetails () {
     return userDetails;
   },
+  currentDatabase() {
+    return userDetails.database || "default";
+  },
 
   logout () {
     unauthenticateUser();
@@ -112,6 +118,11 @@ AppDispatcher.register((action) => {
   switch (action.actionType) {
     case AppConstants.AUTHENTICATION_SUCCESS:
       authenticateUser(action.payload);
+      UserStore.emitChange();
+      break;
+
+    case AdhocQueryConstants.SELECT_DATABASE:
+      userDetails.database = action.payload.database;
       UserStore.emitChange();
       break;
 

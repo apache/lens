@@ -18,35 +18,10 @@
 */
 
 let ErrorParser = {
-  getMessage (errorXML) {
-    let errors = [];
-
-    errors = Array.prototype.slice.call(errorXML.getElementsByTagName('error'))
-      .map(error => {
-        return {
-          code: error.getElementsByTagName('code')[0].textContent,
-          message: error.getElementsByTagName('message')[0].textContent
-        };
-      })
-      .sort((a, b) => {
-        return parseInt(a.code, 10) - parseInt(b.code, 10);
-      })
-      // removes duplicate error messages
-      .filter((item, pos, array) => {
-        return !pos || (item.code != (array[pos - 1] && array[pos - 1].code));
-      })
-      // removes not so helpful `Internal Server Error`
-      .filter(error => {
-        return error.code != 1001;
-      });
-
-    if (errors && errors.length == 0) {
-      errors[0] = {};
-      errors[0].code = 500;
-      errors[0].message = 'Oh snap! Something went wrong. Please try again later.';
+  getMessage (error) {
+    if (error && error.lensAPIResult && error.lensAPIResult.error) {
+      return [error.lensAPIResult.error]
     }
-
-    return errors;
   }
 };
 

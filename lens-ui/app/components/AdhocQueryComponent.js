@@ -28,11 +28,11 @@ class AdhocQuery extends React.Component {
   render () {
     return (
       <section className='row'>
-        <div className='col-md-4'>
+        <div className='col-md-2'>
           <Sidebar {...this.props}/>
         </div>
 
-        <div className='col-md-8'>
+        <div className='col-md-10'>
           <QueryBox {...this.props}/>
 
           <RouteHandler/>

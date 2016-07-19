@@ -26,6 +26,7 @@ import UserStore from '../stores/UserStore';
 import Loader from '../components/LoaderComponent';
 import CubeTree from './CubeTreeComponent';
 import TableTree from './TableTreeComponent';
+import Config from 'config.json';
 
 function getDatabases () {
   return DatabaseStore.getDatabases();
@@ -38,24 +39,23 @@ class DatabaseComponent extends React.Component {
       databases: [],
       loading: true,
       isCollapsed: false,
-      selectedDatabase: props.params.databaseName,
+      selectedDatabase: UserStore.getUserDetails().database
     };
     this._onChange = this._onChange.bind(this);
     this.toggle = this.toggle.bind(this);
     this.setDatabase = this.setDatabase.bind(this);
 
     AdhocQueryActions.getDatabases(UserStore.getUserDetails().secretToken);
-    if (this.state.selectedDatabase) {
-      this.setDatabase(this.state.selectedDatabase);
-    }
   }
 
   componentDidMount () {
     DatabaseStore.addChangeListener(this._onChange);
+    UserStore.addChangeListener(this._onChange);
   }
 
   componentWillUnmount () {
     DatabaseStore.removeChangeListener(this._onChange);
+    UserStore.removeChangeListener(this._onChange);
   }
 
   render () {
@@ -92,7 +92,6 @@ class DatabaseComponent extends React.Component {
         <strong>Sorry, we couldn&#39;t find any databases.</strong>
       </div>);
     }
-
     return (<div>
         {databaseComponent}
         {
@@ -104,7 +103,7 @@ class DatabaseComponent extends React.Component {
           </div>
         }
         {
-          this.state.selectedDatabase &&
+          this.state.selectedDatabase && Config.display_tables &&
           <div>
             <hr style={{marginTop: '10px', marginBottom: '10px'}}/>
             <TableTree key={this.state.selectedDatabase}
@@ -117,7 +116,7 @@ class DatabaseComponent extends React.Component {
   }
 
   _onChange () {
-    this.setState({ databases: getDatabases(), loading: false });
+    this.setState({ databases: getDatabases(), loading: false, selectedDatabase:  UserStore.currentDatabase() });
   }
 
   toggle () {
@@ -132,7 +131,6 @@ class DatabaseComponent extends React.Component {
       dbName = event.target.value;
     }
     AdhocQueryActions.setDatabase(UserStore.getUserDetails().secretToken, dbName);
-    this.setState({databases: getDatabases(), selectedDatabase: dbName, loading: false});
   }
 }
 

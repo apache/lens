@@ -22,8 +22,8 @@ import AppConstants from '../constants/AppConstants';
 import AuthenticationAdapter from '../adapters/AuthenticationAdapter';
 
 let LoginActions = {
-  authenticate (email, password) {
-    AuthenticationAdapter.authenticate(email, password)
+  authenticate (email, password, database) {
+    AuthenticationAdapter.authenticate(email, password, database)
       .then(function (response) {
 
         // authenticating user right away
@@ -31,6 +31,7 @@ let LoginActions = {
           actionType: AppConstants.AUTHENTICATION_SUCCESS,
           payload: {
             email: email,
+            database: database,
             secretToken: response
           }
         });

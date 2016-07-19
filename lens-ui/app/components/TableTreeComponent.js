@@ -80,7 +80,6 @@ class TableTree extends React.Component {
       page: 0,
       loading: true,
       isCollapsed: false,
-      database: props.database
     };
     this._onChange = this._onChange.bind(this);
     this.prevPage = this.prevPage.bind(this);
@@ -88,18 +87,18 @@ class TableTree extends React.Component {
     this.toggle = this.toggle.bind(this);
     this.validateClickEvent = this.validateClickEvent.bind(this);
 
-    if (!TableStore.getTables(props.database)) {
+    if (!TableStore.getTables(UserStore.currentDatabase())) {
       AdhocQueryActions
-        .getTables(UserStore.getUserDetails().secretToken, props.database);
+        .getTables(UserStore.getUserDetails().secretToken, UserStore.currentDatabase());
     } else {
-      let state = getState(1, '', props.database);
+      let state = getState(1, '', UserStore.currentDatabase());
       this.state = state;
 
       // on page refresh only a single table is fetched, and hence we need to
       // fetch others too.
-      if (!TableStore.areTablesCompletelyFetched(props.database)) {
+      if (!TableStore.areTablesCompletelyFetched(UserStore.currentDatabase())) {
         AdhocQueryActions
-          .getTables(UserStore.getUserDetails().secretToken, props.database);
+          .getTables(UserStore.getUserDetails().secretToken, UserStore.currentDatabase());
       }
     }
   }
@@ -122,7 +121,7 @@ class TableTree extends React.Component {
     // construct tree
     let tableTreeInternal = this.state.tables.map(table => {
       let label = (<Link to='tableschema' params={{databaseName: this.state.database, tableName: table.name}}
-                         title={table.name} query={{database: this.props.database}}>
+                         title={table.name} query={{database: UserStore.currentDatabase()}}>
         {table.name}</Link>);
       return (
         <TreeView key={table.name} nodeLabel={label}
@@ -209,7 +208,7 @@ class TableTree extends React.Component {
   _onChange (page) {
     // so that page doesn't reset to beginning
     page = page || this.state.page || 1;
-    this.setState(getState(page, filterString, this.props.database));
+    this.setState(getState(page, filterString, UserStore.currentDatabase()));
   }
 
   getDetails (tableName, database) {
@@ -247,7 +246,7 @@ class TableTree extends React.Component {
   validateClickEvent (e) {
     if (e.target && e.target.nodeName === 'DIV' &&
       e.target.nextElementSibling.nodeName === 'A') {
-      this.getDetails(e.target.nextElementSibling.textContent, this.props.database);
+      this.getDetails(e.target.nextElementSibling.textContent, UserStore.currentDatabase());
     }
   }
 

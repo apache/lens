@@ -33,7 +33,7 @@ import '../styles/css/tree.css';
 
 function getCubeData () {
   return {
-    cubes: CubeStore.getCubes(DatabaseStore.currentDatabase())
+    cubes: CubeStore.getCubes(UserStore.currentDatabase())
   };
 }
 
@@ -45,12 +45,17 @@ class CubeTree extends React.Component {
     // comes with React.createClass, using constructor is the new
     // idiomatic way
     // https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html
-    this.state = {database: props.database, cubes: [], loading: true, isCollapsed: false };
+    this.state = {cubes: CubeStore.getCubes(UserStore.currentDatabase()), loading: false, isCollapsed: false };
 
     // no autobinding with ES6 so doing it manually, see link below
     // https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html#autobinding
     this._onChange = this._onChange.bind(this);
     this.toggle = this.toggle.bind(this);
+    if (!this.state.cubes) {
+      this.state.cubes = this.state.cubes || [];
+      this.state.loading = true;
+      AdhocQueryActions.getCubes(UserStore.getUserDetails().secretToken, UserStore.currentDatabase());
+    }
   }
 
   componentDidMount () {
@@ -84,7 +89,7 @@ class CubeTree extends React.Component {
 
       let dimensionLabel = <Link to='cubeschema' params={{databaseName: this.state.database, cubeName: cubeName}}
         query={{type: 'dimensions'}}>
-          <span className='quiet'>Dimensions</span>
+          <span className='quiet'>Dim-Attributes</span>
         </Link>;
       return (
         <TreeView key={cube.name + '|' + i} nodeLabel={label}
@@ -101,7 +106,7 @@ class CubeTree extends React.Component {
             }) : null }
           </TreeView >
 
-          <TreeView key={cube.name + '|dimensions'} nodeLabel={dimensionLabel}
+          <TreeView key={cube.name + '|dim attributes'} nodeLabel={dimensionLabel}
             defaultCollapsed={!cube.isLoaded}>
             { cube.dimensions ? cube.dimensions.map(dimension => {
               return (

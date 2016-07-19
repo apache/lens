@@ -38,12 +38,13 @@ let sessionconf = `<?xml version="1.0" encoding="UTF-8"?>
                   </conf>`;
 
 let AuthenticationAdapter = {
-  authenticate (email, password) {
+  authenticate (email, password, database) {
 
     // preparing data as API accepts multipart/form-data :(
     var formData = new FormData();
     formData.append('username', email);
     formData.append('password', password || "");
+    formData.append('database', database|| "default");
     formData.append('sessionconf', sessionconf);
 
     return BaseAdapter.post(authUrl, formData, {

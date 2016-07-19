@@ -32,8 +32,8 @@ class Login extends React.Component {
     this._onChange = this._onChange.bind(this);
     this.state = {
       error: UserStore.isUserLoggedIn(),
-      password_required: Config.password_required
     };
+    this.props.db = Config.default_database || "default";
   }
 
   componentDidMount () {
@@ -48,11 +48,13 @@ class Login extends React.Component {
     event.preventDefault();
     var email = this.refs.email.getDOMNode().value;
     var pass = this.refs.pass.getDOMNode().value;
-
-    LoginActions.authenticate(email, pass);
+    var db = this.refs.db.getDOMNode().value || this.refs.db.getDOMNode().placeholder;
+    LoginActions.authenticate(email, pass, db);
   }
 
   render () {
+    var { router } = this.context;
+    var db = router.getCurrentQuery().db || router.getCurrentQuery().database || this.props.db;
     return (
       <section className='row' style={{margin: 'auto'}}>
         <form className='form-signin' onSubmit={this.handleSubmit}>
@@ -63,7 +65,9 @@ class Login extends React.Component {
           <label htmlFor='inputPassword' className='sr-only'>Password</label>
           <input ref='pass' type='password' id='inputPassword'
             className='form-control' placeholder='Password'
-                 required={this.state.password_required} disabled={!this.state.password_required}/>
+                 required={Config.password_required} disabled={!Config.password_required}/>
+          <input ref='db' id='inputDatabase'
+                 className='form-control' placeholder={db}/>
           <button className='btn btn-primary btn-block'
             type='submit'>Sign in</button>
           {this.state.error && (

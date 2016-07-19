@@ -27,18 +27,17 @@ var app = express();
 var httpProxy = require('http-proxy');
 var proxy = httpProxy.createProxyServer();
 
-var port = process.env['port'] || 8082;
+var port = process.env.npm_config_port || 8082;
 
 app.use(logger('dev'));
 app.use(cookieParser());
-
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-process.env['lensserver'] = process.env['lensserver'] || 'http://0.0.0.0:9999/lensapi/';
-if (!process.env['lensserver']) {
+process.env.npm_config_lensserver = process.env.npm_config_lensserver || 'http://0.0.0.0:9999/lensapi/';
+if (!process.env.npm_config_lensserver) {
   throw new Error('Specify LENS Server address in `lensserver` argument');
 }
-
-console.log('Using this as your LENS Server Address: ', process.env['lensserver']);
+process.title = "lens-ui-server";
+console.log('Using this as your LENS Server Address: ', process.env.npm_config_lensserver);
 console.log('If this seems wrong, please edit `lensserver` argument in package.json. Do not forget to append http://\n');
 
 app.use(session({
@@ -62,7 +61,7 @@ app.get('/target/assets/*', function (req, res) {
 app.all('/serverproxy/*', function (req, res) {
   req.url = req.url.replace('serverproxy', '');
   proxy.web(req, res, {
-    target: process.env['lensserver']
+    target: process.env.npm_config_lensserver
   }, function (e) {
     console.error('Proxy Error: ', e);
   });
@@ -71,7 +70,6 @@ app.all('/serverproxy/*', function (req, res) {
 app.get('*', function (req, res) {
   res.end(fs.readFileSync(__dirname + '/index.html'));
 });
-
 var server = app.listen(port, function (err) {
   if (err) throw err;
 

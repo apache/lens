@@ -45,7 +45,7 @@ let routes = (
       <Route name='savedqueries' handler={SavedQueries}/>
       <Route name='result' path='/results/:handle' handler={QueryDetailResult}/>
     </Route>
-    <Route name='schema' path='schema/:databaseName/' handler={AdhocQuery} >
+    <Route name='schema' path='schema/' handler={AdhocQuery} >
       <Route name='cubeschema' path='cube/:cubeName' handler={CubeSchema}/>
       <Route name='tableschema' path='table/:tableName'
              handler={TableSchema}/>
