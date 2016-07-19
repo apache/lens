@@ -42,7 +42,7 @@ public abstract class BaseApp extends Application {
     classes.add(MultiPartFeature.class);
     classes.add(LensJAXBContextResolver.class);
     classes.add(LensJAXBValidationExceptionMapper.class);
-    classes.add(LensRequestContextInitFilter.class);
+    classes.add(LensRequestLoggingFilter.class);
     classes.add(LoggingFilter.class);
     classes.add(LensApplicationListener.class);
     classes.add(MoxyJsonConfigurationContextResolver.class);

@@ -157,7 +157,7 @@
 
   <property>
     <name>lens.server.ws.filternames</name>
-    <value>authentication,consistentState,serverMode,logging</value>
+    <value>requestlogger,consistentState,serverMode,logging</value>
     <description>These JAX-RS filters would be started in the specified order when lens-server starts up</description>
   </property>
 
