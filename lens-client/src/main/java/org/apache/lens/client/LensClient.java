@@ -99,9 +99,6 @@ public class LensClient implements AutoCloseable {
     this.conf = conf;
     conf.setUser(username);
     this.password = password;
-    if (this.conf.get(LensClientConfig.SESSION_CLUSTER_USER) == null) {
-      this.conf.set(LensClientConfig.SESSION_CLUSTER_USER, System.getProperty("user.name"));
-    }
     connectToLensServer();
     mc = new LensMetadataClient(connection);
     statement = new LensStatement(connection);
