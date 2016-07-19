@@ -324,7 +324,7 @@ public class YAMLToStringStrategy extends JAXBToStringStrategy {
           Object wrappedValue = claz.getDeclaredMethod(getterName).invoke(value);
           return appendNewLine(appendInternal(locator, stringBuilder, wrappedValue));
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-          log.debug("getter access failed for {}#{}. Going the usual way", claz.getName(), getterName, e);
+          log.trace("getter access failed for {}#{}. Going the usual way", claz.getName(), getterName, e);
         }
       }
       return super.appendInternal(locator, stringBuilder, value);
