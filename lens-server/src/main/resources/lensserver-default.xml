@@ -55,7 +55,7 @@
 
   <property>
     <name>lens.server.servicenames</name>
-    <value>session,query,metastore,scheduler,quota</value>
+    <value>session,query,savedquery,metastore,scheduler,quota</value>
     <description>These services would be started in the specified order when lens-server starts up</description>
   </property>
 
@@ -395,7 +395,7 @@
 
   <property>
     <name>lens.server.ws.resourcenames</name>
-    <value>session,metastore,query,quota,scheduler,index,log</value>
+    <value>session,metastore,query,savedquery,quota,scheduler,index,log</value>
     <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
   </property>
 
