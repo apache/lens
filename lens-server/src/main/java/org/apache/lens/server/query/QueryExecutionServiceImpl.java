@@ -1236,6 +1236,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   }
 
   private void awaitTermination(QueryResultPurger service) {
+    if (service == null) {
+      return;
+    }
     try {
       service.awaitTermination(1, TimeUnit.MINUTES);
     } catch (InterruptedException e) {
