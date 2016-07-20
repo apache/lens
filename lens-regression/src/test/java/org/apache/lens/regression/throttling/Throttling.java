@@ -1,3 +1,4 @@
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -72,7 +73,7 @@ public class Throttling extends BaseTestClass {
   private static final long SECONDS_IN_A_MINUTE = 60;
   private String session1 = null, session2 = null;
   //TODO : Read queue names from property file
-  private static String queue1 = "queue1", queue2 = "queue2";
+  private static String queue1 = "dwh", queue2 = "reports";
 
   private static Logger logger = Logger.getLogger(Throttling.class);
 
@@ -88,9 +89,9 @@ public class Throttling extends BaseTestClass {
   @BeforeMethod(alwaysRun = true)
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
-    session1 = sHelper.openNewSession("diff1", "diff1", lens.getCurrentDB());
-    session2 = sHelper.openNewSession("diff2", "diff2", lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
+    session1 = sHelper.openSession("diff1", "diff1", lens.getCurrentDB());
+    session2 = sHelper.openSession("diff2", "diff2", lens.getCurrentDB());
 
     sHelper.setAndValidateParam(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
     sHelper.setAndValidateParam(session1, CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
@@ -103,9 +104,9 @@ public class Throttling extends BaseTestClass {
     qHelper.killQuery(null, "QUEUED", "all");
     qHelper.killQuery(null, "RUNNING", "all");
     qHelper.killQuery(null, "EXECUTED", "all");
-    sHelper.closeNewSession(session1);
-    sHelper.closeNewSession(session2);
-    sHelper.closeNewSession(sessionHandleString);
+    sHelper.closeSession(session1);
+    sHelper.closeSession(session2);
+    sHelper.closeSession(sessionHandleString);
 
     Util.changeConfig(hiveDriverConf);
     lens.restart();
@@ -243,9 +244,8 @@ public class Throttling extends BaseTestClass {
         normalConcurrent = 2;
     HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES,
         String.valueOf(maxConcurrent), DriverConfig.PRIORITY_MAX_CONCURRENT,
-        "LOW=" + String.valueOf(lowConCurrent) + ",VERY_LOW=" + String.valueOf(veryLowConcurrent),
-        "NORMAL=" + String.valueOf(normalConcurrent) + ",HIGH=" + String.valueOf(highConcurrent));
-
+        "LOW=" + String.valueOf(lowConCurrent) + ",VERY_LOW=" + String.valueOf(veryLowConcurrent)
+        + ",NORMAL=" + String.valueOf(normalConcurrent) + ",HIGH=" + String.valueOf(highConcurrent));
     Util.changeConfig(map, hiveDriverConf);
     lens.restart();
 
@@ -549,7 +549,7 @@ public class Throttling extends BaseTestClass {
     Util.changeConfig(map, hiveDriverConf);
     lens.restart();
 
-    String newSession = sHelper.openNewSession("user", "pwd", lens.getCurrentDB());
+    String newSession = sHelper.openSession("user", "pwd", lens.getCurrentDB());
     sHelper.setAndValidateParam(newSession, LensConfConstants.MAPRED_JOB_QUEUE_NAME, queue2);
     handleList.add((QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_QUERY, null, newSession).getData());
 
@@ -557,7 +557,7 @@ public class Throttling extends BaseTestClass {
       handleList.add((QueryHandle) qHelper.executeQuery(QueryInventory.HIVE_CUBE_QUERY).getData());
     }
 
-    sHelper.closeNewSession(newSession);
+    sHelper.closeSession(newSession);
     lens.restart();
     Assert.assertFalse(qHelper.getQueryStatus(handleList.get(0)).finished());
 
@@ -571,4 +571,3 @@ public class Throttling extends BaseTestClass {
     }
   }
 }
-

@@ -67,13 +67,13 @@ public class ITStreamingTests extends BaseTestClass {
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
     logger.info("Creating a new Session");
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
   @AfterMethod(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
-    lens.closeSession();
+    sHelper.closeSession();
   }
 
   @DataProvider(name="query_provider")

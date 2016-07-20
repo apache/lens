@@ -89,12 +89,14 @@ public class ITServerConfigTests extends BaseTestClass {
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
     Util.runRemoteCommand("cp " + confFilePath + " " + backupConfFilePath);
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
 
   @AfterMethod(alwaysRun = true)
   public void restoreConfig() throws JSchException, IOException, LensException, InterruptedException {
     logger.info("Executing after method\n");
+    sHelper.closeSession();
     Util.runRemoteCommand("cp " + backupConfFilePath + " " + confFilePath);
     lens.restart();
   }
@@ -112,7 +114,7 @@ public class ITServerConfigTests extends BaseTestClass {
       Util.changeConfig(map, confFilePath);
       lens.restart();
 
-      sessionHandle = sHelper.openNewSession("user", "pass");
+      sessionHandle = sHelper.openSession("user", "pass");
       sHelper.setAndValidateParam(sessionHandle, LensConfConstants.SESSION_CLUSTER_USER, "test");
 
       // Waiting for session timeout
@@ -124,7 +126,7 @@ public class ITServerConfigTests extends BaseTestClass {
 
     } finally {
       if (sessionHandle!=null) {
-        sHelper.closeNewSession(sessionHandle);
+        sHelper.closeSession(sessionHandle);
       }
     }
   }
@@ -148,7 +150,7 @@ public class ITServerConfigTests extends BaseTestClass {
     Util.changeConfig(map, confFilePath);
     lens.restart();
 
-    String session = sHelper.openNewSession("user", "pass");
+    String session = sHelper.openSession("user", "pass");
     lens.restart();
 
     MapBuilder query = new MapBuilder("sessionid", session);
@@ -156,7 +158,7 @@ public class ITServerConfigTests extends BaseTestClass {
 
     if (restartEnabled.equalsIgnoreCase("true")) {
       Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-      sHelper.closeNewSession(session);
+      sHelper.closeSession(session);
     } else {
       Assert.assertEquals(response.getStatus(), Response.Status.GONE.getStatusCode());
     }
@@ -176,7 +178,7 @@ public class ITServerConfigTests extends BaseTestClass {
       Util.changeConfig(map, confFilePath);
       lens.restart();
 
-      sessionHandle = sHelper.openNewSession("user", "pass");
+      sessionHandle = sHelper.openSession("user", "pass");
       sHelper.setAndValidateParam(sessionHandle, LensConfConstants.SESSION_CLUSTER_USER, "test");
       //Waiting for snapshot interval time
       Thread.sleep(11000);
@@ -188,7 +190,7 @@ public class ITServerConfigTests extends BaseTestClass {
 
     } finally {
       if (sessionHandle != null) {
-        sHelper.closeNewSession(sessionHandle);
+        sHelper.closeSession(sessionHandle);
       }
     }
 
@@ -207,7 +209,7 @@ public class ITServerConfigTests extends BaseTestClass {
     Util.changeConfig(map, confFilePath);
     lens.restart();
 
-    String sessionHandle = sHelper.openNewSession("user", "pass");
+    String sessionHandle = sHelper.openSession("user", "pass");
     sHelper.setAndValidateParam(sessionHandle, LensConfConstants.SESSION_CLUSTER_USER, "test");
 
     //killing so that lens is not stopped gracefully.
@@ -239,7 +241,7 @@ public class ITServerConfigTests extends BaseTestClass {
       Util.changeConfig(map, confFilePath);
       lens.restart();
 
-      sessionHandle = sHelper.openNewSession("user", "pass");
+      sessionHandle = sHelper.openSession("user", "pass");
       sHelper.setAndValidateParam(sessionHandle, LensConfConstants.SESSION_CLUSTER_USER, "test");
 
       lens.restart();
@@ -249,7 +251,7 @@ public class ITServerConfigTests extends BaseTestClass {
 
     } finally {
       if (sessionHandle != null) {
-        sHelper.closeNewSession(sessionHandle);
+        sHelper.closeSession(sessionHandle);
       }
     }
   }
@@ -270,29 +272,24 @@ public class ITServerConfigTests extends BaseTestClass {
   @Test(enabled = false)
   public void testServerModeReadOnly() throws Exception {
 
-    try {
-      sessionHandleString = lens.openSession();
-      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.SERVER_MODE, "READ_ONLY");
-      Util.changeConfig(map, confFilePath);
-      lens.restart();
+    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.SERVER_MODE, "READ_ONLY");
+    Util.changeConfig(map, confFilePath);
+    lens.restart();
 
-      sHelper.setAndValidateParam(sessionHandleString, LensConfConstants.SESSION_CLUSTER_USER, "test");
+    sHelper.setAndValidateParam(sessionHandleString, LensConfConstants.SESSION_CLUSTER_USER, "test");
 
-      FormBuilder formData = new FormBuilder();
-      formData.add("sessionid", sessionHandleString);
-      formData.add("query", QueryInventory.QUERY);
-      formData.add("operation", "EXECUTE");
-      formData.add("conf", "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
-      Response response = lens.sendForm("post", QueryURL.QUERY_URL, formData);
-      Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
+    FormBuilder formData = new FormBuilder();
+    formData.add("sessionid", sessionHandleString);
+    formData.add("query", QueryInventory.QUERY);
+    formData.add("operation", "EXECUTE");
+    formData.add("conf", "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />");
+    Response response = lens.sendForm("post", QueryURL.QUERY_URL, formData);
+    Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
 
-      MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-      response = lens.sendQuery("get", QueryURL.QUERYAPI_BASE_URL, query);
-      Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    response = lens.sendQuery("get", QueryURL.QUERYAPI_BASE_URL, query);
+    Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-    } finally {
-      lens.closeSession();
-    }
   }
 
   /*
@@ -303,49 +300,41 @@ public class ITServerConfigTests extends BaseTestClass {
   @Test(enabled = true)
   public void testServerMode() throws Exception {
 
-    try {
-      sessionHandleString = lens.openSession(lens.getCurrentDB());
-      String newDb = "TestMetastoreService_testDb1";
+    String newDb = "TestMetastoreService_testDb1";
 
-      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.SERVER_MODE, "METASTORE_READONLY");
-      Util.changeConfig(map, confFilePath);
-      lens.restart();
+    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.SERVER_MODE, "METASTORE_READONLY");
+    Util.changeConfig(map, confFilePath);
+    lens.restart();
 
-      MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-      Response response = mHelper.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
-          null, query, MediaType.APPLICATION_XML_TYPE, null, newDb);
-      Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = mHelper.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
+        null, query, MediaType.APPLICATION_XML_TYPE, null, newDb);
+    Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
 
-      map.put(LensConfConstants.SERVER_MODE, "METASTORE_NODROP");
-      Util.changeConfig(map, confFilePath);
-      lens.restart();
+    map.put(LensConfConstants.SERVER_MODE, "METASTORE_NODROP");
+    Util.changeConfig(map, confFilePath);
+    lens.restart();
 
-      response = mHelper.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
-          null, query, MediaType.APPLICATION_XML_TYPE, null, newDb);
-      AssertUtil.assertSucceededResponse(response);
-      StringList allDb = mHelper.listDatabases();
-      Assert.assertTrue(allDb.getElements().contains(newDb.toLowerCase()), "Unable to Create DB");
+    response = mHelper.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
+        null, query, MediaType.APPLICATION_XML_TYPE, null, newDb);
+    AssertUtil.assertSucceededResponse(response);
+    StringList allDb = mHelper.listDatabases();
+    Assert.assertTrue(allDb.getElements().contains(newDb.toLowerCase()), "Unable to Create DB");
 
-      query.put("cascade", "true");
-      response = mHelper.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + newDb, servLens,
-          null, query, MediaType.APPLICATION_XML_TYPE, null);
-      Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
+    query.put("cascade", "true");
+    response = mHelper.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + newDb, servLens,
+        null, query, MediaType.APPLICATION_XML_TYPE, null);
+    Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
 
-      map.put(LensConfConstants.SERVER_MODE, "OPEN");
-      Util.changeConfig(map, confFilePath);
-      lens.restart();
+    map.put(LensConfConstants.SERVER_MODE, "OPEN");
+    Util.changeConfig(map, confFilePath);
+    lens.restart();
 
-      response = mHelper.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + newDb, servLens,
-          null, query, MediaType.APPLICATION_XML_TYPE, null);
-      AssertUtil.assertSucceededResponse(response);
-      allDb = mHelper.listDatabases();
-      Assert.assertFalse(allDb.getElements().contains(newDb.toLowerCase()), "Unable to Create DB");
-
-    } finally {
-      if (sessionHandleString != null) {
-        lens.closeSession();
-      }
-    }
+    response = mHelper.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + newDb, servLens,
+        null, query, MediaType.APPLICATION_XML_TYPE, null);
+    AssertUtil.assertSucceededResponse(response);
+    allDb = mHelper.listDatabases();
+    Assert.assertFalse(allDb.getElements().contains(newDb.toLowerCase()), "Unable to Create DB");
   }
 
 
@@ -359,7 +348,6 @@ public class ITServerConfigTests extends BaseTestClass {
   public void testLensStatistics() throws Exception {
 
     try {
-      sessionHandleString = sHelper.openSession(lens.getCurrentDB());
       HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.STATS_ROLLUP_SCAN_RATE, "60000",
           LensConfConstants.STATISTICS_DATABASE_KEY, "stats",
           LensConfConstants.STATISTICS_WAREHOUSE_KEY, lens.getServerHdfsUrl() + "/tmp/lens/statistics/warehouse");
@@ -410,40 +398,33 @@ public class ITServerConfigTests extends BaseTestClass {
   //This is failing
   @Test(enabled = true)
   public void testQueryResultRetention() throws Exception {
-    try {
-      sessionHandleString = lens.openSession(lens.getCurrentDB());
-      sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
-      sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
 
-      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.RESULTSET_PURGE_ENABLED, "true",
-          LensConfConstants.RESULTSET_PURGE_INTERVAL_IN_SECONDS, "10",
-          LensConfConstants.QUERY_RESULTSET_RETENTION, "20 sec",
-          LensConfConstants.HDFS_OUTPUT_RETENTION, "60 min");
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
 
-      Util.changeConfig(map, confFilePath);
-      lens.restart();
+    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.RESULTSET_PURGE_ENABLED, "true",
+        LensConfConstants.RESULTSET_PURGE_INTERVAL_IN_SECONDS, "10",
+        LensConfConstants.QUERY_RESULTSET_RETENTION, "20 sec",
+        LensConfConstants.HDFS_OUTPUT_RETENTION, "60 min");
 
-      MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Util.changeConfig(map, confFilePath);
+    lens.restart();
 
-      QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY).getData();
-      LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
-      Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
 
-      Response response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
-          servLens, null, query);
-      AssertUtil.assertSucceededResponse(response);
+    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY).getData();
+    LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
+    Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
 
-      Thread.sleep(40000);
+    Response response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
+        servLens, null, query);
+    AssertUtil.assertSucceededResponse(response);
 
-      response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
-          servLens, null, query);
-      Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    Thread.sleep(40000);
 
-    } finally {
-      if (sessionHandleString != null) {
-        lens.closeSession();
-      }
-    }
+    response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
+        servLens, null, query);
+    Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
   }
 
 
@@ -454,7 +435,6 @@ public class ITServerConfigTests extends BaseTestClass {
   @Test(enabled = true, dataProvider = "query_provider")
   public void testInMemoryPurger(String query) throws Exception {
 
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     sHelper.setAndValidateParam(LensConfConstants.QUERY_MAIL_NOTIFY, "false");
@@ -479,7 +459,7 @@ public class ITServerConfigTests extends BaseTestClass {
 
     } finally {
       if (sessionHandleString != null) {
-        sHelper.closeNewSession(sessionHandleString);
+        sHelper.closeSession(sessionHandleString);
       }
     }
   }
@@ -488,32 +468,25 @@ public class ITServerConfigTests extends BaseTestClass {
   @Test(enabled = true)
   public void readInmemoryTwiceBeforePurgerTime() throws Exception {
 
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     sHelper.setAndValidateParam(LensConfConstants.QUERY_MAIL_NOTIFY, "false");
 
-    try {
+    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.INMEMORY_RESULT_SET_TTL_SECS, "500",
+        LensConfConstants.PURGE_INTERVAL, "10000");
+    Util.changeConfig(map, confFilePath);
+    lens.restart();
 
-      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.INMEMORY_RESULT_SET_TTL_SECS, "500",
-          LensConfConstants.PURGE_INTERVAL, "10000");
-      Util.changeConfig(map, confFilePath);
-      lens.restart();
+    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY).getData();
+    LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
+    Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
 
-      QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY).getData();
-      LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
-      Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
+    Response response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
+    Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-      Response response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
-      Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
-
-      response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
-      //Currently its throwing 500 which needs to be fixed. LENS-823
-      Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
-
-    } finally {
-      lens.closeSession();
-    }
+    response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
+    //Currently its throwing 500 which needs to be fixed. LENS-823
+    Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
   }
 
 
@@ -531,7 +504,7 @@ public class ITServerConfigTests extends BaseTestClass {
       lens.restart();
 
       for (int i = 1; i <= maxSession; i++) {
-        sessionList.add(sHelper.openNewSession(user, pwd, lens.getCurrentDB()));
+        sessionList.add(sHelper.openSession(user, pwd, lens.getCurrentDB()));
       }
 
       Response response = sHelper.openSessionReturnResponse(user, pwd, lens.getCurrentDB(), null);
@@ -540,7 +513,7 @@ public class ITServerConfigTests extends BaseTestClass {
     } finally {
       for (String session : sessionList) {
         if (session != null) {
-          sHelper.closeNewSession(session);
+          sHelper.closeSession(session);
         }
       }
     }
@@ -564,8 +537,8 @@ public class ITServerConfigTests extends BaseTestClass {
       lens.restart();
 
       for (int i = 0; i < maxSession; i++) {
-        sessionList1.add(sHelper.openNewSession(user1, pwd1, lens.getCurrentDB()));
-        sessionList2.add(sHelper.openNewSession(user2, pwd2, lens.getCurrentDB()));
+        sessionList1.add(sHelper.openSession(user1, pwd1, lens.getCurrentDB()));
+        sessionList2.add(sHelper.openSession(user2, pwd2, lens.getCurrentDB()));
       }
 
       for (int i = 0; i < maxSession; i++) {
@@ -576,17 +549,17 @@ public class ITServerConfigTests extends BaseTestClass {
         Assert.assertEquals(response1.getStatus(), LensHttpStatus.TOO_MANY_REQUESTS.getStatusCode());
         Assert.assertEquals(response2.getStatus(), LensHttpStatus.TOO_MANY_REQUESTS.getStatusCode());
 
-        sHelper.closeNewSession(sessionList1.remove(1));
-        sHelper.closeNewSession(sessionList2.remove(1));
+        sHelper.closeSession(sessionList1.remove(1));
+        sHelper.closeSession(sessionList2.remove(1));
 
-        sessionList1.add(sHelper.openNewSession(user1, pwd1, lens.getCurrentDB()));
-        sessionList2.add(sHelper.openNewSession(user2, pwd2, lens.getCurrentDB()));
+        sessionList1.add(sHelper.openSession(user1, pwd1, lens.getCurrentDB()));
+        sessionList2.add(sHelper.openSession(user2, pwd2, lens.getCurrentDB()));
       }
 
     }finally {
       for (int i = 0; i < sessionList1.size(); i++) {
-        sHelper.closeNewSession(sessionList1.get(i));
-        sHelper.closeNewSession(sessionList2.get(i));
+        sHelper.closeSession(sessionList1.get(i));
+        sHelper.closeSession(sessionList2.get(i));
       }
     }
   }

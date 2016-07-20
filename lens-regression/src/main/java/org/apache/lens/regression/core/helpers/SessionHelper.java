@@ -27,7 +27,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.regression.core.constants.SessionURL;
 import org.apache.lens.regression.core.type.FormBuilder;
@@ -55,7 +54,6 @@ public class SessionHelper extends ServiceManagerHelper {
 
   /**
    * Open a New Session
-   *
    * @param userName
    * @param password
    * @param database
@@ -76,13 +74,26 @@ public class SessionHelper extends ServiceManagerHelper {
             MediaType.APPLICATION_XML_TYPE));
     formData.add("sessionconf", conf.toString(), MediaType.APPLICATION_JSON_TYPE);
 
-    Response response = this
-        .exec("post", "/session", servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE, outputMediaType,
-            formData.getForm());
+    Response response = this.exec("post", SessionURL.SESSION_BASE_URL, servLens, null, null,
+        MediaType.MULTIPART_FORM_DATA_TYPE, outputMediaType, formData.getForm());
+
     return response;
   }
 
-  public String openNewSession(String userName, String password, String database, String outputMediaType)
+  public String openSession(String database) throws LensException {
+    Response response = openSessionReturnResponse(this.getUserName(), this.getPassword(), database,
+        MediaType.APPLICATION_XML);
+    AssertUtil.assertSucceededResponse(response);
+    sessionHandleString = response.readEntity(String.class);
+    log.info("Session Handle String:{}", sessionHandleString);
+    return sessionHandleString;
+  }
+
+  public String openSession() throws LensException {
+    return openSession(null);
+  }
+
+  public String openSession(String userName, String password, String database, String outputMediaType)
     throws LensException {
     Response response = openSessionReturnResponse(userName, password, database, outputMediaType);
     AssertUtil.assertSucceededResponse(response);
@@ -91,22 +102,12 @@ public class SessionHelper extends ServiceManagerHelper {
     return newSessionHandleString;
   }
 
-  public String openNewSession(String userName, String password) throws LensException {
-    return openNewSession(userName, password, null, MediaType.APPLICATION_XML);
+  public String openSession(String userName, String password) throws LensException {
+    return openSession(userName, password, null, MediaType.APPLICATION_XML);
   }
 
-  public String openNewSession(String userName, String password, String database) throws LensException {
-    return openNewSession(userName, password, database, MediaType.APPLICATION_XML);
-  }
-
-  public LensSessionHandle openNewSessionJson(String userName, String password, String database, String outputMediaType)
-    throws LensException {
-
-    Response response = openSessionReturnResponse(userName, password, database, outputMediaType);
-    AssertUtil.assertSucceededResponse(response);
-    LensSessionHandle newSessionHandleString = response.readEntity(new GenericType<LensSessionHandle>(){});
-    log.info("Session Handle String:{}", newSessionHandleString);
-    return newSessionHandleString;
+  public String openSession(String userName, String password, String database) throws LensException {
+    return openSession(userName, password, database, MediaType.APPLICATION_XML);
   }
 
   /**
@@ -114,8 +115,7 @@ public class SessionHelper extends ServiceManagerHelper {
    * @param sessionHandleString
    */
 
-  public void closeNewSession(String sessionHandleString, String outputMediaType) throws LensException {
-
+  public void closeSession(String sessionHandleString, String outputMediaType) throws LensException {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     Response response = this.exec("delete", SessionURL.SESSION_BASE_URL, servLens, null, query, null,
         outputMediaType, null);
@@ -123,8 +123,12 @@ public class SessionHelper extends ServiceManagerHelper {
     log.info("Closed Session : {}", sessionHandleString);
   }
 
-  public void closeNewSession(String sessionHandleString) throws LensException {
-    closeNewSession(sessionHandleString, null);
+  public void closeSession(String sessionHandleString) throws LensException {
+    closeSession(sessionHandleString, null);
+  }
+
+  public void closeSession() throws LensException {
+    closeSession(sessionHandleString, null);
   }
 
   /**
@@ -134,6 +138,7 @@ public class SessionHelper extends ServiceManagerHelper {
    * @param param
    * @param value
    */
+
   public void setAndValidateParam(String sessionHandleString, String param, String value) throws Exception {
 
     FormBuilder formData = new FormBuilder();

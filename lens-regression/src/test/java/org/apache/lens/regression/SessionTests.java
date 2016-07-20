@@ -73,13 +73,13 @@ public class SessionTests extends BaseTestClass {
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
     logger.info("Creating a new Session");
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
   @AfterMethod(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
-    lens.closeSession();
+    sHelper.closeSession();
   }
 
 
@@ -102,48 +102,58 @@ public class SessionTests extends BaseTestClass {
   @Test(enabled = true)
   public void testRunningQueryContinuationOnSessionClose()  throws Exception {
 
-    String session = sHelper.openNewSession("test", "test", lens.getCurrentDB());
-    List<QueryHandle> handleList = new ArrayList<QueryHandle>();
-    String sleepQuery = QueryInventory.getSleepQuery("5");
+    HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "10");
+    String hiveDriverConf = lens.getServerDir() + "/conf/drivers/hive/hive1/hivedriver-site.xml";
 
-    for(int i=1; i<=5; i++){
-      handleList.add((QueryHandle) qHelper.executeQuery(sleepQuery, null, session).getData());
-    }
+    try {
+      Util.changeConfig(map, hiveDriverConf);
+      lens.restart();
 
-    Thread.sleep(3000);
+      String session = sHelper.openSession("test", "test", lens.getCurrentDB());
+      List<QueryHandle> handleList = new ArrayList<QueryHandle>();
+      String sleepQuery = QueryInventory.getSleepQuery("5");
 
-    List<QueryHandle> running = qHelper.getQueryHandleList(null, "RUNNING", "all", sessionHandleString, null, null);
-    sHelper.closeNewSession(session);
-    Assert.assertTrue(running.size() > 0);
-    logger.info("Running query count " + running.size());
+      for(int i=1; i<=5; i++){
+        handleList.add((QueryHandle) qHelper.executeQuery(sleepQuery, null, session).getData());
+      }
+      qHelper.waitForQueryToRun(handleList.get(3));
 
-    for(QueryHandle handle : running){
-      LensQuery lq = qHelper.waitForCompletion(handle);
-      Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+      List<QueryHandle> running = qHelper.getQueryHandleList(null, "RUNNING", "all", sessionHandleString);
+      sHelper.closeSession(session);
+      Assert.assertTrue(running.size() > 0);
+      logger.info("Running query count " + running.size());
+
+      for(QueryHandle handle : running){
+        LensQuery lq = qHelper.waitForCompletion(handle);
+        Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+      }
+    } finally {
+      Util.changeConfig(hiveDriverConf);
+      lens.restart();
     }
   }
 
   // Fails. Bug : LENS-904
   // Check for query continuation on session close.
-  @Test(enabled = false)
+  @Test(enabled = true)
   public void testQueryContinuationOnSessionClose()  throws Exception {
 
     HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "1");
-    String expHiveDriverConf = lens.getServerDir() + "/conf/drivers/hive/hive1/hivedriver-site.xml";
+    String hiveDriverConf = lens.getServerDir() + "/conf/drivers/hive/hive1/hivedriver-site.xml";
 
     try {
-      Util.changeConfig(map, expHiveDriverConf);
+      Util.changeConfig(map, hiveDriverConf);
       lens.restart();
 
-      String session = sHelper.openNewSession("test", "test", lens.getCurrentDB());
+      String session = sHelper.openSession("test", "test", lens.getCurrentDB());
       List<QueryHandle> handleList = new ArrayList<QueryHandle>();
-      String sleepQuery = QueryInventory.getSleepQuery("5");
+      String sleepQuery = QueryInventory.getSleepQuery("3");
 
       for (int i = 1; i <= 5; i++) {
         handleList.add((QueryHandle) qHelper.executeQuery(sleepQuery, null, session).getData());
       }
 
-      sHelper.closeNewSession(session);
+      sHelper.closeSession(session);
 
       for (QueryHandle handle : handleList) {
         LensQuery lq = qHelper.waitForCompletion(handle);
@@ -151,7 +161,7 @@ public class SessionTests extends BaseTestClass {
       }
 
     } finally {
-      Util.changeConfig(expHiveDriverConf);
+      Util.changeConfig(hiveDriverConf);
       lens.restart();
     }
   }

@@ -79,8 +79,7 @@ public class ITPreparedQueryTests extends BaseTestClass {
   public void initialize() throws IOException, JAXBException, LensException {
     servLens = ServiceManagerHelper.init();
     logger.info("Creating a new Session");
-    sessionHandleString = lens.openSession();
-    mHelper.setCurrentDatabase(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
   @BeforeMethod(alwaysRun = true)
@@ -91,7 +90,7 @@ public class ITPreparedQueryTests extends BaseTestClass {
   @AfterClass(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
-    lens.closeSession();
+    sHelper.closeSession();
   }
 
   @Test
@@ -240,7 +239,7 @@ public class ITPreparedQueryTests extends BaseTestClass {
 
     String user = "diff", pass = "diff";
 
-    String session1 = sHelper.openNewSession(user, pass, lens.getCurrentDB());
+    String session1 = sHelper.openSession(user, pass, lens.getCurrentDB());
 
     QueryPrepareHandle queryPrepareHandle1 = qHelper.submitPreparedQuery(QueryInventory.QUERY);
     Assert.assertNotEquals(queryPrepareHandle1, null, "Query Execute Failed");
@@ -376,7 +375,7 @@ public class ITPreparedQueryTests extends BaseTestClass {
     //TODO : Destroy by user is not working, Commented the fail part, Uncomment it when fixed
 
     String user = "diff", pass = "diff";
-    String session1 = sHelper.openNewSession(user, pass, lens.getCurrentDB());
+    String session1 = sHelper.openSession(user, pass, lens.getCurrentDB());
 
     QueryPrepareHandle queryPrepareHandle1 = qHelper.submitPreparedQuery(QueryInventory.QUERY);
     Assert.assertNotEquals(queryPrepareHandle1, null, "Query Execute Failed marker");
@@ -473,7 +472,7 @@ public class ITPreparedQueryTests extends BaseTestClass {
 
     String queryName1 = "queryfirst", queryName2 = "querysecond";
     String user2 = "user2", pass2 = "pass2";
-    String session1 = sHelper.openNewSession(user2, pass2, lens.getCurrentDB());
+    String session1 = sHelper.openSession(user2, pass2, lens.getCurrentDB());
 
     String startTime1=String.valueOf(System.currentTimeMillis());
     logger.info("Start Time of first query- "+startTime1);

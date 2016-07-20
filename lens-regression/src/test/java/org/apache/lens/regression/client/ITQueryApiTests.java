@@ -75,13 +75,13 @@ public class ITQueryApiTests extends BaseTestClass {
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
     logger.info("Creating a new Session");
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
   @AfterMethod(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
-    lens.closeSession();
+    sHelper.closeSession();
   }
 
   @DataProvider(name = "persistance_values")
@@ -392,14 +392,13 @@ public class ITQueryApiTests extends BaseTestClass {
      and earlier is still queued or running, then return the same handle.
   */
 
-
   @DataProvider(name = "query_names")
   public Object[][] queryName() {
     String[][] testData = {{"query-name"}, {null}};
     return testData;
   }
 
-  @Test(dataProvider = "query_names")
+  @Test(dataProvider = "query_names", enabled = false)
   public void testRunningSameNameSessionQuery(String queryName) throws Exception {
 
     String query = QueryInventory.getSleepQuery("10");
@@ -423,7 +422,7 @@ public class ITQueryApiTests extends BaseTestClass {
     Assert.assertEquals(resultList.get(2).getPersistedURI(), resultList.get(0).getPersistedURI());
   }
 
-  @Test()
+  @Test(enabled = false)
   public void testQueuedSameNameSessionQuery() throws Exception {
 
     String query = QueryInventory.getSleepQuery("10");
@@ -460,7 +459,7 @@ public class ITQueryApiTests extends BaseTestClass {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void differentQuerySameNameSession() throws Exception {
 
     String cost5 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_5"), "5");
@@ -472,18 +471,18 @@ public class ITQueryApiTests extends BaseTestClass {
     Assert.assertFalse(handle1.getHandleIdString().equals(handle2.getHandleIdString()));
   }
 
-  @Test
+  @Test(enabled = false)
   public void differentSessionSameNameQuery() throws Exception {
 
     String query = QueryInventory.getSleepQuery("10");
-    String session1 = sHelper.openNewSession("user1", "pwd1", lens.getCurrentDB());
-    String session2 = sHelper.openNewSession("user2", "pwd2", lens.getCurrentDB());
+    String session1 = sHelper.openSession("user1", "pwd1", lens.getCurrentDB());
+    String session2 = sHelper.openSession("user2", "pwd2", lens.getCurrentDB());
     QueryHandle handle1 = (QueryHandle) qHelper.executeQuery(query, "name", session1).getData();
     QueryHandle handle2 = (QueryHandle) qHelper.executeQuery(query, "name", session2).getData();
     Assert.assertFalse(handle1.getHandleIdString().equals(handle2.getHandleIdString()));
   }
 
-  @Test
+  @Test(enabled = false)
   public void differentNameSameSessionQuery() throws Exception {
     String query = QueryInventory.getSleepQuery("3");
     QueryHandle handle1 = (QueryHandle) qHelper.executeQuery(query, "name1").getData();
@@ -491,7 +490,7 @@ public class ITQueryApiTests extends BaseTestClass {
     Assert.assertFalse(handle1.getHandleIdString().equals(handle2.getHandleIdString()));
   }
 
-  @Test
+  @Test(enabled = false)
   public void differentConfSameNameSessionQuery() throws Exception {
 
     String query = QueryInventory.getSleepQuery("5");

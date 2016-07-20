@@ -78,7 +78,7 @@ public class ITCostTests extends BaseTestClass {
   public void initialize() throws Exception {
     servLens = ServiceManagerHelper.init();
     logger.info("Creating a new Session");
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
     sHelper.setAndValidateParam(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
   }
 
@@ -98,7 +98,7 @@ public class ITCostTests extends BaseTestClass {
   @AfterClass(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
-    lens.closeSession();
+    sHelper.closeSession();
   }
 
   @BeforeGroups("user-cost-ceiling")
@@ -221,41 +221,32 @@ public class ITCostTests extends BaseTestClass {
     HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "5",
         DriverConfig.PRIORITY_MAX_CONCURRENT, "HIGH=3");
 
-    try {
-      Util.changeConfig(map, hiveDriverSitePath);
-      lens.restart();
+    List<QueryHandle> handleList = new ArrayList<QueryHandle>();
+    for(int i=1; i<=5; i++){
+      handleList.add((QueryHandle) qHelper.executeQuery(query).getData());
+    }
 
-      List<QueryHandle> handleList = new ArrayList<QueryHandle>();
-      for(int i=1; i<=5; i++){
-        handleList.add((QueryHandle) qHelper.executeQuery(query).getData());
-      }
+    QueryStatus s0 = qHelper.getQueryStatus(handleList.get(0));
+    QueryStatus s1 = qHelper.getQueryStatus(handleList.get(1));
+    QueryStatus s2 = qHelper.getQueryStatus(handleList.get(2));
+    QueryStatus s3 = qHelper.getQueryStatus(handleList.get(3));
+    QueryStatus s4 = qHelper.getQueryStatus(handleList.get(4));
 
-      QueryStatus s0 = qHelper.getQueryStatus(handleList.get(0));
-      QueryStatus s1 = qHelper.getQueryStatus(handleList.get(1));
-      QueryStatus s2 = qHelper.getQueryStatus(handleList.get(2));
-      QueryStatus s3 = qHelper.getQueryStatus(handleList.get(3));
-      QueryStatus s4 = qHelper.getQueryStatus(handleList.get(4));
+    Assert.assertEquals(s0.getStatus(), QueryStatus.Status.RUNNING);
+    Assert.assertEquals(s1.getStatus(), QueryStatus.Status.RUNNING);
+    Assert.assertEquals(s2.getStatus(), QueryStatus.Status.RUNNING);
+    Assert.assertEquals(s3.getStatus(), QueryStatus.Status.QUEUED);
+    Assert.assertEquals(s4.getStatus(), QueryStatus.Status.QUEUED);
 
-      Assert.assertEquals(s0.getStatus(), QueryStatus.Status.RUNNING);
-      Assert.assertEquals(s1.getStatus(), QueryStatus.Status.RUNNING);
-      Assert.assertEquals(s2.getStatus(), QueryStatus.Status.RUNNING);
-      Assert.assertEquals(s3.getStatus(), QueryStatus.Status.QUEUED);
-      Assert.assertEquals(s4.getStatus(), QueryStatus.Status.QUEUED);
+    qHelper.waitForCompletion(handleList.get(0));
+    Assert.assertEquals(qHelper.getQueryStatus(handleList.get(3)).getStatus(), QueryStatus.Status.RUNNING);
 
-      qHelper.waitForCompletion(handleList.get(0));
-      Assert.assertEquals(qHelper.getQueryStatus(handleList.get(3)).getStatus(), QueryStatus.Status.RUNNING);
+    qHelper.waitForCompletion(handleList.get(1));
+    Assert.assertEquals(qHelper.getQueryStatus(handleList.get(4)).getStatus(), QueryStatus.Status.RUNNING);
 
-      qHelper.waitForCompletion(handleList.get(1));
-      Assert.assertEquals(qHelper.getQueryStatus(handleList.get(4)).getStatus(), QueryStatus.Status.RUNNING);
-
-      for(QueryHandle q :handleList){
-        LensQuery lq = qHelper.waitForCompletion(q);
-        Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-      }
-
-    } finally {
-      Util.changeConfig(hiveDriverSitePath);
-      lens.restart();
+    for(QueryHandle q :handleList){
+      LensQuery lq = qHelper.waitForCompletion(q);
+      Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
     }
   }
 
@@ -269,48 +260,39 @@ public class ITCostTests extends BaseTestClass {
     HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "5",
         DriverConfig.PRIORITY_MAX_CONCURRENT, "HIGH=3");
 
-    try {
-      Util.changeConfig(map, hiveDriverSitePath);
-      lens.restart();
+    String session1 = sHelper.openSession("diff1", "diff1", lens.getCurrentDB());
+    String session2 = sHelper.openSession("diff2", "diff2", lens.getCurrentDB());
+    sHelper.setAndValidateParam(session1, CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
+    sHelper.setAndValidateParam(session2, CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
 
-      String session1 = sHelper.openNewSession("diff1", "diff1", lens.getCurrentDB());
-      String session2 = sHelper.openNewSession("diff2", "diff2", lens.getCurrentDB());
-      sHelper.setAndValidateParam(session1, CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
-      sHelper.setAndValidateParam(session2, CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
+    List<QueryHandle> handleList = new ArrayList<QueryHandle>();
+    for (int i = 1; i <= 3; i++) {
+      handleList.add((QueryHandle) qHelper.executeQuery(query).getData());
+      handleList.add((QueryHandle) qHelper.executeQuery(query, "", session1).getData());
+      handleList.add((QueryHandle) qHelper.executeQuery(query, "", session2).getData());
+    }
+    Thread.sleep(50);
 
-      List<QueryHandle> handleList = new ArrayList<QueryHandle>();
-      for (int i = 1; i <= 3; i++) {
-        handleList.add((QueryHandle) qHelper.executeQuery(query).getData());
-        handleList.add((QueryHandle) qHelper.executeQuery(query, "", session1).getData());
-        handleList.add((QueryHandle) qHelper.executeQuery(query, "", session2).getData());
-      }
-      Thread.sleep(50);
+    List<QueryHandle> running = null, queued = null;
+    for (int t = 0; t < timeToWait; t = t + sleepTime) {
 
-      List<QueryHandle> running = null, queued = null;
-      for (int t = 0; t < timeToWait; t = t + sleepTime) {
+      running = qHelper.getQueryHandleList(null, "RUNNING", "all", sessionHandleString, null, null, hiveDriver);
+      queued = qHelper.getQueryHandleList(null, "QUEUED", "all", sessionHandleString, null, null, hiveDriver);
+      logger.info("Running query count : " + running.size() + "\t Queued query count : " + queued.size());
 
-        running = qHelper.getQueryHandleList(null, "RUNNING", "all", sessionHandleString, null, null, hiveDriver);
-        queued = qHelper.getQueryHandleList(null, "QUEUED", "all", sessionHandleString, null, null, hiveDriver);
-        logger.info("Running query count : " + running.size() + "\t Queued query count : " + queued.size());
-
-        if (running.isEmpty() && queued.isEmpty()) {
-          break;
-        }
-
-        Assert.assertTrue(running.size() < 4);
-        TimeUnit.SECONDS.sleep(sleepTime);
+      if (running.isEmpty() && queued.isEmpty()) {
+        break;
       }
 
-      Assert.assertTrue(running.isEmpty() && queued.isEmpty(), "Queries are taking very long time");
+      Assert.assertTrue(running.size() < 4);
+      TimeUnit.SECONDS.sleep(sleepTime);
+    }
 
-      for (QueryHandle q : handleList) {
-        LensQuery lq = qHelper.waitForCompletion(q);
-        Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-      }
+    Assert.assertTrue(running.isEmpty() && queued.isEmpty(), "Queries are taking very long time");
 
-    } finally {
-      Util.changeConfig(hiveDriverSitePath);
-      lens.restart();
+    for (QueryHandle q : handleList) {
+      LensQuery lq = qHelper.waitForCompletion(q);
+      Assert.assertEquals(lq.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
     }
   }
 

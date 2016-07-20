@@ -78,13 +78,13 @@ public class ITMetricsTest extends BaseTestClass {
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
     logger.info("Creating a new Session for " + method.getName());
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
   @AfterMethod(alwaysRun = true)
   public void closeSession(Method method) throws Exception {
     logger.info("Closing Session for " + method.getName());
-    lens.closeSession();
+    sHelper.closeSession();
   }
 
 
@@ -134,7 +134,7 @@ public class ITMetricsTest extends BaseTestClass {
     HashMap<String, Integer> oldMap = getMetricsSnapshot();
     HashMap<String, Integer> newMap = null;
 
-    String sessionHandleString = sHelper.openNewSession("diff", "diff");
+    String sessionHandleString = sHelper.openSession("diff", "diff");
     newMap = getMetricsSnapshot();
     Assert.assertEquals(newMap.get(HTTP_REQUESTS_FINISHED) - oldMap.get(HTTP_REQUESTS_FINISHED), 1);
 

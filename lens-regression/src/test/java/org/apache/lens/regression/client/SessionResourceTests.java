@@ -91,13 +91,13 @@ public class SessionResourceTests extends BaseTestClass {
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
     logger.info("Creating a new Session");
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
   @AfterMethod(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
-    lens.closeSession();
+    sHelper.closeSession();
   }
 
   private boolean checkSessionParamMap(String sessionHandle) throws Exception {
@@ -115,7 +115,7 @@ public class SessionResourceTests extends BaseTestClass {
 
   @Test
   public void testSessionGet() throws Exception {
-    String newSessionHandle = sHelper.openNewSession("diff", "diff");
+    String newSessionHandle = sHelper.openSession("diff", "diff");
     Assert.assertNotNull(newSessionHandle);
   }
 
@@ -233,8 +233,8 @@ public class SessionResourceTests extends BaseTestClass {
   @Test
   public void testSessionGone() throws Exception {
 
-    String newSession = sHelper.openNewSession("test", "test");
-    sHelper.closeNewSession(newSession);
+    String newSession = sHelper.openSession("test", "test");
+    sHelper.closeSession(newSession);
 
     MapBuilder query = new MapBuilder("sessionid", newSession);
 
@@ -275,20 +275,20 @@ public class SessionResourceTests extends BaseTestClass {
 
     String newDb = "opensessionwithdb";
     mHelper.createDatabase(newDb);
-    String newSession = sHelper.openNewSession("test", "test", newDb);
+    String newSession = sHelper.openSession("test", "test", newDb);
     String curDB = mHelper.getCurrentDatabase(newSession);
     Assert.assertEquals(curDB, newDb, "Could not open session with passed db");
-    sHelper.closeNewSession(newSession);
+    sHelper.closeSession(newSession);
     mHelper.dropDatabase(newDb);
   }
 
   @Test
   public void testOpenSessionDefault() throws Exception {
 
-    String newSession = sHelper.openNewSession("test", "test");
+    String newSession = sHelper.openSession("test", "test");
     String curDB = mHelper.getCurrentDatabase(newSession);
     Assert.assertEquals(curDB, "default", "Could not open session with passed db");
-    sHelper.closeNewSession(newSession);
+    sHelper.closeSession(newSession);
   }
 
 
@@ -307,7 +307,7 @@ public class SessionResourceTests extends BaseTestClass {
     mHelper.createDatabase(newDb);
     mHelper.createDatabase(newDb1);
 
-    String newSession = sHelper.openNewSession("test", "test", newDb);
+    String newSession = sHelper.openSession("test", "test", newDb);
     String curDB = mHelper.getCurrentDatabase(newSession);
     Assert.assertEquals(curDB, newDb, "Could not open session with passed db");
 
@@ -315,7 +315,7 @@ public class SessionResourceTests extends BaseTestClass {
     curDB = mHelper.getCurrentDatabase(newSession);
     Assert.assertEquals(curDB, newDb1, "Could not open session with passed db");
 
-    sHelper.closeNewSession(newSession);
+    sHelper.closeSession(newSession);
     mHelper.dropDatabase(newDb);
     mHelper.dropDatabase(newDb1);
   }
@@ -324,17 +324,21 @@ public class SessionResourceTests extends BaseTestClass {
   @Test(enabled = false)
   public void testGetSessionJson() throws Exception {
 
-    String newSessionHandle = sHelper.openNewSession("diff", "diff", null, MediaType.APPLICATION_JSON);
+    String newSessionHandle = sHelper.openSession("diff", "diff", null, MediaType.APPLICATION_JSON);
     Assert.assertNotNull(newSessionHandle);
     Assert.assertFalse(newSessionHandle.isEmpty());
-    sHelper.closeNewSession(newSessionHandle, MediaType.APPLICATION_JSON);
+    sHelper.closeSession(newSessionHandle, MediaType.APPLICATION_JSON);
   }
 
   @Test(enabled = true)
-  public void testCloseSessionJson() throws Exception {
-    String s2 = sHelper.openNewSession("diff", "diff", null, MediaType.APPLICATION_XML);
-    Assert.assertNotNull(s2);
-    Assert.assertFalse(s2.isEmpty());
-    sHelper.closeNewSession(s2, MediaType.APPLICATION_JSON);
+  public void assertSucceededResponse() throws Exception {
+    String session = sHelper.openSession("diff", "diff", null, MediaType.APPLICATION_XML);
+    Assert.assertNotNull(session);
+    Assert.assertFalse(session.isEmpty());
+
+    MapBuilder query = new MapBuilder("sessionid", session);
+    Response response = lens.exec("delete", SessionURL.SESSION_BASE_URL, servLens, null, query, null,
+        MediaType.APPLICATION_JSON, null);
+    AssertUtil.assertSucceededResponse(response);
   }
 }

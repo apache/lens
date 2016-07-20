@@ -80,14 +80,14 @@ public class ITRestartTests extends BaseTestClass {
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
     logger.info("Creating a new Session");
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
   @AfterMethod(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
     if (sessionHandleString!=null) {
-      lens.closeSession();
+      sHelper.closeSession();
     }
   }
 
@@ -109,7 +109,7 @@ public class ITRestartTests extends BaseTestClass {
 
     LensConf lensConf = new LensConf();
     lensConf.addProperties(confMap);
-    String session1 = sHelper.openNewSession("diff1", "diff1", lens.getCurrentDB());
+    String session1 = sHelper.openSession("diff1", "diff1", lens.getCurrentDB());
     sHelper.setAndValidateParam(confMap, session1);
 
     List<QueryHandle> qList = new ArrayList<QueryHandle>();
@@ -117,12 +117,12 @@ public class ITRestartTests extends BaseTestClass {
       qList.add((QueryHandle)qHelper.executeQuery(query, null, null, session1, lensConf).getData());
     }
 
-    String session2 = sHelper.openNewSession("diff2", "diff2", lens.getCurrentDB());
-    String session3 = sHelper.openNewSession("diff3", "diff3", lens.getCurrentDB());
+    String session2 = sHelper.openSession("diff2", "diff2", lens.getCurrentDB());
+    String session3 = sHelper.openSession("diff3", "diff3", lens.getCurrentDB());
 
     qHelper.waitForCompletion(qList.get(0));
     Thread.sleep(5000);                         // wait till query gets persisted
-    sHelper.closeNewSession(session1);          // required to hit that flow
+    sHelper.closeSession(session1);          // required to hit that flow
     lens.restart();
 
     Assert.assertTrue(Boolean.parseBoolean(sHelper.getSessionParam(session2,
@@ -134,7 +134,7 @@ public class ITRestartTests extends BaseTestClass {
 
     for(int i=4; i<8; i++){
       String user = "diff" + Integer.toString(i);
-      String session = sHelper.openNewSession(user, user, lens.getCurrentDB());
+      String session = sHelper.openSession(user, user, lens.getCurrentDB());
       String isDriverPersist = sHelper.getSessionParam(session, LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER);
       String isMailNotify = sHelper.getSessionParam(session, mailNotify);
       logger.info(user + " session  : " + isDriverPersist);

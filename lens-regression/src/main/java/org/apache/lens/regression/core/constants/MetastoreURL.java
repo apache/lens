@@ -35,5 +35,4 @@ public class MetastoreURL {
   public static final String METASTORE_FLATTENED_URL = METASTORE_BASE_URL + "/flattened";
   public static final String METASTORE_NATIVETABLES_URL = METASTORE_BASE_URL + "/nativetables";
   public static final String METASTORE_STORAGES_URL = METASTORE_BASE_URL + "/storages";
-
 }

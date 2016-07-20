@@ -19,9 +19,9 @@
 
 package org.apache.lens.regression.core.helpers;
 
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 
 import javax.xml.bind.JAXBException;
 
@@ -357,6 +357,16 @@ public class MetastoreHelper extends ServiceManagerHelper {
 
   public void getLatestDate() throws Exception {
     getLatestDate(sessionHandleString);
+  }
+
+  public StringList getAllFactsOfCube(String cubeName, String sessionHandleString)
+    throws InstantiationException, IllegalAccessException, JAXBException, LensException {
+    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+    Response response = this.exec("get", MetastoreURL.METASTORE_CUBES_URL + "/" + cubeName + "/facts", servLens, null,
+        query, MediaType.APPLICATION_XML_TYPE);
+    AssertUtil.assertSucceededResponse(response);
+    StringList factList = response.readEntity(new GenericType<StringList>(){});
+    return factList;
   }
 
 }

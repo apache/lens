@@ -62,10 +62,10 @@ public class KillQueryTests extends BaseTestClass {
       InstantiationException {
     servLens = ServiceManagerHelper.init();
     logger.info("Creating a new Session");
-    sessionHandleString = lens.openSession(lens.getCurrentDB());
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
 
     //TODO : Enable when udf registration per driver is fixed
-/*    HadoopUtil.uploadJars(localJarPath + "/" + hiveUdfJar, hdfsJarPath);
+/*  HadoopUtil.uploadJars(localJarPath + "/" + hiveUdfJar, hdfsJarPath);
     logger.info("Adding jar for making query to run for longer period of time");
     sHelper.addResourcesJar(hdfsJarPath + "/" + hiveUdfJar);
     QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.SLEEP_FUNCTION).getData();*/
@@ -80,7 +80,7 @@ public class KillQueryTests extends BaseTestClass {
   @AfterClass(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
-    lens.closeSession();
+    sHelper.closeSession();
   }
 
 
@@ -106,7 +106,7 @@ public class KillQueryTests extends BaseTestClass {
     String diffUser = "diff";
     String diffPass = "diff";
 
-    String newSessionHandleSring = sHelper.openNewSession(diffUser, diffPass, lens.getCurrentDB());
+    String newSessionHandleSring = sHelper.openSession(diffUser, diffPass, lens.getCurrentDB());
 
     logger.info("Adding jar for making query to run for longer period of time");
     sHelper.addResourcesJar(hdfsJarPath + "/" + hiveUdfJar, newSessionHandleSring);
@@ -153,7 +153,7 @@ public class KillQueryTests extends BaseTestClass {
 
     String diffUser = "diff";
     String diffPass = "diff";
-    String newSessionHandleSring = sHelper.openNewSession(diffUser, diffPass, lens.getCurrentDB());
+    String newSessionHandleSring = sHelper.openSession(diffUser, diffPass, lens.getCurrentDB());
     sHelper.addResourcesJar(hdfsJarPath + "/" + hiveUdfJar, newSessionHandleSring);
 
     QueryHandle queryHandle1 = (QueryHandle) qHelper.executeQuery(sleepQuery).getData();

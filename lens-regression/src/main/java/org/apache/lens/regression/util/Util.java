@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.lens.regression.util;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -28,6 +29,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Response;
 import javax.xml.bind.*;
@@ -36,10 +39,13 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.StringList;
@@ -48,13 +54,19 @@ import org.apache.lens.api.metastore.ObjectFactory;
 import org.apache.lens.api.metastore.XProperties;
 import org.apache.lens.api.metastore.XProperty;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.jcraft.jsch.*;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import com.jcraft.jsch.*;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,6 +77,8 @@ public class Util {
   private static String localFilePath = "target/";
   private static String localFile;
   private static String backupFile;
+
+  private static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Util.class);
 
   private Util() {
 
@@ -391,5 +405,66 @@ public class Util {
       log.info("Error converting date " + d, e);
       return null;
     }
+  }
+
+  public static String getJobIdFromProgressMsg(String progressMsg){
+    Pattern jobIdPattern = Pattern.compile("(job_\\d*_\\d*)");
+    Matcher matcher = jobIdPattern.matcher(progressMsg);
+    String jobid=null;
+    if (matcher.find()) {
+      jobid = matcher.group(1);
+    }
+    return jobid;
+  }
+
+  public static String getMapredJobPrority(String url, String jobId) throws IOException, IllegalAccessException,
+      InstantiationException, ParserConfigurationException, SAXException {
+
+    String xmlPathExpr = "/conf/property[name='mapreduce.job.priority']/value";
+    String jobConfXml = sendHttpGetRequest(url.replace("JOB_ID", jobId));
+    String priority = getValueFromXml(jobConfXml, xmlPathExpr);
+    return priority;
+  }
+
+  public static String sendHttpGetRequest(String url) throws IOException {
+    HttpGet request = new HttpGet(url);
+    request.addHeader("Accept", "application/xml");
+    HttpResponse response = new DefaultHttpClient().execute(request);
+    BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+    StringBuffer result = new StringBuffer();
+    String line = "";
+    while ((line = rd.readLine()) != null) {
+      result.append(line);
+    }
+    return result.toString();
+  }
+
+  public static Document getDocument(String xmlContent) throws ParserConfigurationException, SAXException, IOException {
+
+    DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+    InputSource is = new InputSource();
+    is.setCharacterStream(new StringReader(xmlContent));
+    Document doc = db.parse(is);
+    return doc;
+  }
+
+  public static String getValueFromXml(String xmlContent, String xmlPathExpr) {
+
+    String value    = null;
+    try {
+      Document doc = getDocument(xmlContent);
+      XPath xpath  = XPathFactory.newInstance().newXPath();
+      value        = xpath.compile(xmlPathExpr).evaluate(doc);
+
+    } catch (ParserConfigurationException e) {
+      logger.info(e);
+    } catch (SAXException e) {
+      logger.info(e);
+    } catch (IOException e) {
+      logger.info(e);
+    } catch (XPathExpressionException e) {
+      logger.info(e);
+    }
+    return value;
   }
 }
