@@ -114,14 +114,30 @@ Developer Documentation : How to contribute to Apache Lens?
 +---+
 
   Once one of the above sets of commands completes successfully, the build will produce
-  <lens-dist/target/apache-lens-<version>-bin/apache-lens-<version>-bin/server> and
-  <lens-dist/target/apache-lens-<version>-bin/apache-lens-<version>-bin/client>. Former can be used as the Lens server
-   installation directory and later can be used as Lens client installation directory to
-   {{{/lenshome/install-and-run.html#Running_Lens} run}} lens server and lens client.
+  <lens-dist/target/apache-lens-<version>-bin/apache-lens-<version>-bin/server>,
+  <lens-dist/target/apache-lens-<version>-bin/apache-lens-<version>-bin/client>, and
+  <lens-dist/target/apache-lens-<version>-bin/apache-lens-<version>-bin/ui>. These can be used as the Lens server
+   installation directory, Lens client installation directory, and Lens UI installation directory respectively.
+   {{{/lenshome/install-and-run.html#Running_Lens} run}} lens server, lens client and UI.
 
-  The build will also produce debians for both client and server in <lens-dist/target>. Client debian uses
+   Lens UI is written in <nodejs>, and can be run directly from the module itself. In fact, it's recommended to run
+   from there since the npm dependencies are already fetched in <lens-ui> module by <mvn clean package> step above.
+
++---+
+   cd lens-ui
+   npm start
++---+
+
+  For making changes in lens-ui code, it can be started in dev mode where it'll watch for your changes and re-bundle
+  whenever changes are made. To run ui server in dev mode, use the following command:
+
++---+   
+   npm run dev
++---+
+
+  The build will also produce debians for server, client and ui in <lens-dist/target>. Client debian uses
   </usr/local/lens/client> as the Lens client installation directory and Server debian uses </usr/local/lens/server> as
-  the Lens server installation directory.
+  the Lens server installation directory. UI debian uses </usr/local/lens/ui> as the installation directory.
 
   Apache Lens depends on Hive. Please {{{#Building_Hive_from_Source} build}} Hive from Source or install it using the
   documentation {{{/lenshome/install-and-run.html#Installing_Hive} here}}. After installing Lens and Hive,

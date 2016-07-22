@@ -48,10 +48,11 @@ Installing and Running Lens
   ├── NOTICE
   ├── README
   ├── LICENSE*
-  └── server
+  ├── server
+  └── ui
 +---+
 
- <apache-lens-<verison>-bin/client> can be used as the Lens client installation directory and <apache-lens-<verison>-bin/server> can be used as the Lens server installation directory to {{{#Running_Lens}run}} lens client and lens server respectively.
+ <apache-lens-<verison>-bin/client> can be used as the Lens client installation directory, <apache-lens-<verison>-bin/server> can be used as the Lens server installation directory, and <apache-lens-<verison>-bin/ui> can be used as the Lens UI installation directory to {{{#Running_Lens}run}} lens client, lens server and lens ui respectively.
 
 ** Installing Hive
 
@@ -159,9 +160,6 @@ Installing and Running Lens
 
   You can try out examples described below or use the REST api <link> for each service.
 
-  Lens server also comes with simple UI service which can be used to browse catalog and submit queries. Once the server
-  starts up, you can open the UI service on http://<serverhost>:19999/index.html and browse.
-
   The command to stop the server:
 
 +---+
@@ -228,7 +226,7 @@ Installing and Running Lens
 
   Examples folder contains sample resource files, data files and query files which will be used by <<run-examples.sh>> script.
 
-*** Starting Lens Client
+*** Starting Lens CLI Client
 
 +---+
 
@@ -236,13 +234,11 @@ Installing and Running Lens
 
 +---+
 
+*** Starting Lens UI
 
++---+
+  npm install # One time setup step. Brings all the dependencies.
+  npm start
+  npm stop # to stop the ui
 
-
-
-
-
-
-
-
-
++---+
