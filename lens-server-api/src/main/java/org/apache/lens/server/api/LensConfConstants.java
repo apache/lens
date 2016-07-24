@@ -188,46 +188,6 @@ public final class LensConfConstants {
   public static final long SESSION_TIMEOUT_SECONDS_DEFAULT = 1440 * 60; // Default is one day
 
   /**
-   * The Constant
-   */
-  public static final String SERVER_UI_ENABLE = SERVER_PFX + "ui.enable";
-
-  /**
-   * The Constant
-   */
-  public static final boolean DEFAULT_SERVER_UI_ENABLE = true;
-
-  /**
-   * The Constant SERVER_UI_URI.
-   */
-  public static final String SERVER_UI_URI = SERVER_PFX + "ui.base.uri";
-
-  /**
-   * The Constant DEFAULT_SERVER_UI_URI.
-   */
-  public static final String DEFAULT_SERVER_UI_URI = "http://0.0.0.0:19999/";
-
-  /**
-   * The Constant SERVER_UI_STATIC_DIR.
-   */
-  public static final String SERVER_UI_STATIC_DIR = SERVER_PFX + ".ui.static.dir";
-
-  /**
-   * The Constant DEFAULT_SERVER_UI_STATIC_DIR.
-   */
-  public static final String DEFAULT_SERVER_UI_STATIC_DIR = "webapp/lens-server/static";
-
-  /**
-   * The Constant SERVER_UI_ENABLE_CACHING.
-   */
-  public static final String SERVER_UI_ENABLE_CACHING = SERVER_PFX + "ui.enable.caching";
-
-  /**
-   * The Constant DEFAULT_SERVER_UI_ENABLE_CACHING.
-   */
-  public static final boolean DEFAULT_SERVER_UI_ENABLE_CACHING = true;
-
-  /**
    * The Constant SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS.
    */
   public static final String SERVER_STATE_PERSISTENCE_INTERVAL_MILLIS =

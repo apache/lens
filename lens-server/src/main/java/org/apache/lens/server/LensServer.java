@@ -32,7 +32,6 @@ import org.apache.lens.server.error.GenericExceptionMapper;
 import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
-import org.apache.lens.server.ui.UIApp;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
@@ -93,19 +92,9 @@ public class LensServer {
     adminCtx
       .setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry", (metricsService.getMetricRegistry()));
     adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry", metricsService.getHealthCheck());
-
     final ServletRegistration sgMetrics = adminCtx.addServlet("admin", new AdminServlet());
     sgMetrics.addMapping("/admin/*");
-
     adminCtx.deploy(server);
-
-    if (conf.getBoolean(LensConfConstants.SERVER_UI_ENABLE,
-      LensConfConstants.DEFAULT_SERVER_UI_ENABLE)) {
-      String uiServerURI = conf.get(LensConfConstants.SERVER_UI_URI, LensConfConstants.DEFAULT_SERVER_UI_URI);
-      HttpServer uiServer = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(uiServerURI).build(),
-        getUIApp(), false);
-      serverList.add(uiServer);
-    }
   }
 
   private ResourceConfig getApp() {
@@ -117,12 +106,6 @@ public class LensServer {
     app.register(LensJAXBContextResolver.class);
     app.setApplicationName("AllApps");
     return app;
-  }
-
-  private ResourceConfig getUIApp() {
-    ResourceConfig uiApp = ResourceConfig.forApplicationClass(UIApp.class);
-    uiApp.setApplicationName("Lens UI");
-    return uiApp;
   }
 
   /**

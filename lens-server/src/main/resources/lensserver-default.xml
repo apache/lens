@@ -102,30 +102,6 @@
   </property>
 
   <property>
-    <name>lens.server.ui.base.uri</name>
-    <value>http://0.0.0.0:19999/</value>
-    <description>The base url for the Lens UI Server</description>
-  </property>
-
-  <property>
-    <name>lens.server.ui.static.dir</name>
-    <value>webapp/lens-server/static</value>
-    <description>The base directory to server UI static files from</description>
-  </property>
-
-  <property>
-    <name>lens.server.ui.enable</name>
-    <value>true</value>
-    <description>Bringing up the ui server is optional. By default it brings up UI server.</description>
-  </property>
-
-  <property>
-    <name>lens.server.ui.enable.caching</name>
-    <value>true</value>
-    <description>Set this to false to disable static file caching in the UI server</description>
-  </property>
-
-  <property>
     <name>lens.server.query.state.logger.enabled</name>
     <value>true</value>
     <description>Disable or enable the query state logger with this config.

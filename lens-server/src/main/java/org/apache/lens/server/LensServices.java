@@ -425,7 +425,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
           //2. persist the latest state of all the services
           persistLensServiceState();
-        }finally {
+        } finally {
           try {
             persistenceFS.close();
             log.info("Persistence File system object close complete");
