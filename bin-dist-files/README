@@ -14,14 +14,12 @@ Detailed documentation for the project is available at https://lens.apache.org
 Here are quick start steps :
 
 Before starting the server, you need to set HADOOP_HOME and HIVE_HOME environment variables. These should point to
-the Hadoop and Hive installation directories. Lens depends on a forked version of Hive which is available at
-https://github.com/inmobi/hive. So, Hive needs to be built and HIVE_HOME should be set as packaged directory from
-build.
+the Hadoop and Hive installation directories. Lens depends on apache Hive 2.1+.
 
-Building hive :
-$ git clone https://github.com/inmobi/hive
-$ git checkout hive-release-0.13.3-inm
-$ mvn clean package -DskipTests -Phadoop-2,dist
+Installing Hive :
+$ # Download hive binary from http://apache.org/download.cgi
+$ # extract
+$ export HIVE_HOME=<extracted_directory>
 
 Server packaging is server/ folder.
 $ cd server

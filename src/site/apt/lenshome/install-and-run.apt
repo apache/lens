@@ -26,8 +26,10 @@ Installing and Running Lens
 ** Downloading
 
   Download a release of Apache Lens from {{{/releases/download.html}here}}.
-  Lens depends on Hive forked from Apache Hive. Download a release of hive from {{{https://github.com/InMobi/hive/releases}https://github.com/InMobi/hive/releases}}.
-  Lens < 2.6 works with hive 0.13.x releases, Lens >= 2.6 works with hive 2.1+ releases.
+  Lens \< 2.6 depend on Hive forked from Apache Hive. Download a release of hive from {{{https://github.com/InMobi/hive/releases}https://github.com/InMobi/hive/releases}}. Compatible versions are 0.13.x.
+
+  In version <2.6>, hive dependency has been migrated to apache hive. Now lens no longer depends on forked hive.
+  Lens > 2.6 work with apache hive 2.1+ releases. Downloadable from {{{http://www.apache.org/dyn/closer.cgi/hive/}http://www.apache.org/dyn/closer.cgi/hive/}}
 
 ** Installing Lens
 
@@ -35,14 +37,14 @@ Installing and Running Lens
 
 +---+
 
-  tar zxvf apache-lens-<verison>-bin.tar.gz
+  tar zxvf apache-lens-<version>-bin.tar.gz
 
 +---+
 
-  This will result in the creation of a directory named apache-lens-<verison>-bin (where <version> is the release number).
+  This will result in the creation of a directory named apache-lens-<version>-bin (where <version> is the release number).
 
 +---+
-  apache-lens-<verison>-bin
+  apache-lens-<version>-bin
   ├── client
   ├── LICENSE
   ├── NOTICE
@@ -52,15 +54,18 @@ Installing and Running Lens
   └── ui
 +---+
 
- <apache-lens-<verison>-bin/client> can be used as the Lens client installation directory, <apache-lens-<verison>-bin/server> can be used as the Lens server installation directory, and <apache-lens-<verison>-bin/ui> can be used as the Lens UI installation directory to {{{#Running_Lens}run}} lens client, lens server and lens ui respectively.
+ <apache-lens-<version>-bin/client> can be used as the Lens client installation directory, <apache-lens-<version>-bin/server> can be used as the Lens server installation directory, and <apache-lens-<version>-bin/ui> can be used as the Lens UI installation directory to {{{#Running_Lens}run}} lens client, lens server and lens ui respectively.
 
 ** Installing Hive
 
-  Unpack the tarball.
+
+*** Lens \< 2.6
+
+  Only source releases are available so we'll have to download source and build from there:
 
 +---+
 
-  tar -xzvf hive-hive-release-<version>-inm.tar.gz
+  tar -xzvf hive-hive-release-<version>-inm.tar.gz # Lens < 2.6
 
 +---+
 
@@ -87,6 +92,14 @@ Installing and Running Lens
   cd apache-hive-<version>-inm-bin
   export HIVE_HOME=`pwd`
 +---+
+
+*** Lens \>= 2.6
+
+  Apache hive releases are available as both binary and source releases. You can move forward with the source release
+  following the steps mentioned in the earlier section, with minor changes in names of the files and directories.
+  The other way is to download the bin tarball directly and proceed with that. Steps will be similar as above, except
+  that you'll directly start from the <bin.tar.gz> instead of building that from source first.
+
 
 * Running Lens
 
