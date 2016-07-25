@@ -56,9 +56,3 @@ class WrappedJson(dict):
     def __eq__(self, other):
         return super(WrappedJson, self).__eq__(other) or (
         self._is_wrapper and other._is_wrapper and str(self) == str(other))
-
-
-class LensQuery(WrappedJson):
-    @property
-    def finished(self):
-        return self.status.status in ('SUCCESSFUL', 'FAILED', 'CANCELED', 'CLOSED')

@@ -16,11 +16,11 @@
 #
 import os
 
-import requests
 from six import string_types
 from .log import LensLogClient
+from .session import LensSessionClient
 from .query import LensQueryClient
-from .utils import conf_to_xml, xml_file_to_conf
+from .utils import xml_file_to_conf
 
 
 class LensClient(object):
@@ -37,25 +37,12 @@ class LensClient(object):
             self.base_url += "/"
         username = username or conf.get('lens.client.user.name', "anonymous")
         database = database or conf.get('lens.client.dbname')
-        self.open_session(username, password, database, conf)
-        self.queries = LensQueryClient(self.base_url, self._sessionid)
+        self.session = LensSessionClient(self.base_url, username, password, database, conf)
+        self.queries = LensQueryClient(self.base_url, self.session)
         self.logs = LensLogClient(self.base_url)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close_session()
-
-    def close_session(self):
-        if self._sessionid:
-            requests.delete(self.base_url + "session/", params={'sessionid': self._sessionid})
-            self._sessionid = None
-
-    def open_session(self, username, password, database, conf):
-        payload = [('username', username), ('password', password), ('sessionconf', conf_to_xml(conf))]
-        if database:
-            payload.append(('database', database))
-        r = requests.post(self.base_url + "session/", files=payload, headers={'accept': 'application/xml'})
-        r.raise_for_status()
-        self._sessionid = r.text
+        self.session.close()
