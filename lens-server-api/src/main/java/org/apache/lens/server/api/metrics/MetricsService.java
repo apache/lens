@@ -124,6 +124,8 @@ public interface MetricsService extends LensService {
    */
   String WAITING_QUERIES = "waiting-queries";
 
+  String LAUNCHING_QUERIES = "launching-queries";
+
   /**
    * The Constant FINISHED_QUERIES.
    */

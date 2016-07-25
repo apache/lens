@@ -748,6 +748,28 @@
   </property>
 
   <property>
+    <name>lens.server.launcher.pool.min.threads</name>
+    <value>3</value>
+    <description>Minimum number of threads in the query launcher thread pool</description>
+  </property>
+
+  <property>
+    <name>lens.server.launcher.pool.max.threads</name>
+    <value>100</value>
+    <description>Maximum number of threads in the query launcher thread pool. Keeping the default to hundred, we may
+      never grow till there, it would go to max for concurrrent queries allowed on all drivers together.
+      This value should be greater than the max concurrent queries allowed on all drivers. </description>
+  </property>
+
+  <property>
+    <name>lens.server.launcher.pool.keepalive.millis</name>
+    <value>60000</value>
+    <description>Thread keep alive time in milliseconds for the query launcher thread pool.
+      If there are no query launches for this period,then cached threads will be released from the pool.
+    </description>
+  </property>
+
+  <property>
     <name>lens.server.session.expiry.service.interval.secs</name>
     <value>3600</value>
     <description>Interval at which lens session expiry service runs</description>

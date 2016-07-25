@@ -53,6 +53,15 @@ public class FailingQueryDriver extends MockDriver {
 
   @Override
   public void executeAsync(final QueryContext ctx) throws LensException {
+    // simulate wait for execution.
+    if (ctx.getUserQuery().contains("wait")) {
+      try {
+        // wait for 1 second.
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        // ignore interrupted exception
+      }
+    }
     throw new LensException("Simulated Launch Failure");
   }
 }

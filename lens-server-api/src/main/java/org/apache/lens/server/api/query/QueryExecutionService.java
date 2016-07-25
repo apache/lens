@@ -317,4 +317,11 @@ public interface QueryExecutionService extends LensService, SessionValidator {
    * @return finished queries count
    */
   long getFinishedQueriesCount();
+
+  /**
+   * Get queries being launched count
+   *
+   * @return Queries being launched count
+   */
+  long getLaunchingQueriesCount();
 }

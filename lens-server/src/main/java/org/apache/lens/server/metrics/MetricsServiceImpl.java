@@ -139,6 +139,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   /** The waiting queries. */
   private Gauge<Long> waitingQueries;
 
+  /** The queries being launched. */
+  private Gauge<Long> launchingQueries;
+
   /** The finished queries. */
   private Gauge<Long> finishedQueries;
 
@@ -355,6 +358,14 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         @Override
         public Long getValue() {
           return getQuerySvc().getWaitingQueriesCount();
+        }
+      });
+
+    launchingQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, LAUNCHING_QUERIES),
+      new Gauge<Long>() {
+        @Override
+        public Long getValue() {
+          return getQuerySvc().getLaunchingQueriesCount();
         }
       });
 

@@ -25,7 +25,7 @@
       <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
     </encoder>
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>ERROR</level>
+      <level>INFO</level>
     </filter>
   </appender>
   <appender name="TEST_LOG_FILE" class="ch.qos.logback.core.FileAppender">

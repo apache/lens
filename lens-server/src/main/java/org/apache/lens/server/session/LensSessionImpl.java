@@ -243,11 +243,11 @@ public class LensSessionImpl extends HiveSessionImpl {
    *
    * @see org.apache.hive.service.cli.session.HiveSessionImpl#acquire()
    */
-  public synchronized void acquire() {
+  public void acquire() {
     this.acquire(true);
   }
   @Override
-  public synchronized void acquire(boolean userAccess) {
+  public void acquire(boolean userAccess) {
     super.acquire(userAccess);
     if (acquireCount.incrementAndGet() == 1) { // first acquire
       // Update thread's class loader with current DBs class loader
@@ -263,13 +263,13 @@ public class LensSessionImpl extends HiveSessionImpl {
    *
    * @see org.apache.hive.service.cli.session.HiveSessionImpl#release()
    */
-  public synchronized void release() {
-    setActive();
+  public void release() {
     this.release(true);
   }
+
   @Override
   public synchronized void release(boolean userAccess) {
-    lastAccessTime = System.currentTimeMillis();
+    setActive();
     if (acquireCount.decrementAndGet() == 0) {
       super.release(userAccess);
     }
@@ -280,7 +280,7 @@ public class LensSessionImpl extends HiveSessionImpl {
       && (!persistInfo.markedForClose|| activeOperationsPresent());
   }
 
-  public void setActive() {
+  public synchronized void setActive() {
     setLastAccessTime(System.currentTimeMillis());
   }
 

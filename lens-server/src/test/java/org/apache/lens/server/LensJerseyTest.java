@@ -260,7 +260,7 @@ public abstract class LensJerseyTest extends JerseyTest {
       }
     }
     if (unPurgable.size() > allowUnpurgable) {
-      throw new RuntimeException("finished queries can't be purged: " + unPurgable);
+      throw new RuntimeException(unPurgable.size() + " finished queries can't be purged: " + unPurgable);
     }
     while (finishedQueries.size() > allowUnpurgable) {
       Thread.sleep(5000);

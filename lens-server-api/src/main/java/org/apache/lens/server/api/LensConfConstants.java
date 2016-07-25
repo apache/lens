@@ -886,6 +886,26 @@ public final class LensConfConstants {
   public static final String ESTIMATE_POOL_KEEP_ALIVE_MILLIS = SERVER_PFX + "estimate.pool.keepalive.millis";
   public static final int DEFAULT_ESTIMATE_POOL_KEEP_ALIVE_MILLIS = 60000; // 1 minute
 
+  /**
+   * Key used to get minimum number of threads in the launcher thread pool
+   */
+  public static final String LAUNCHER_POOL_MIN_THREADS = SERVER_PFX + "launcher.pool.min.threads";
+  public static final int DEFAULT_LAUNCHER_POOL_MIN_THREADS = 3;
+
+  /**
+   * Key used to get maximum number of threads in the laucnher thread pool
+   */
+  public static final String LAUNCHER_POOL_MAX_THREADS = SERVER_PFX + "launcher.pool.max.threads";
+  // keeping the default to hundred, we may never grow till there, it would go to max for concurrrent queries allowed on
+  // all drivers together.
+  public static final int DEFAULT_LAUNCHER_POOL_MAX_THREADS = 100;
+
+  /**
+   * Key used to get keep alive time for threads in the launcher thread pool
+   */
+  public static final String LAUNCHER_POOL_KEEP_ALIVE_MILLIS = SERVER_PFX + "launcher.pool.keepalive.millis";
+  public static final int DEFAULT_LAUNCHER_POOL_KEEP_ALIVE_MILLIS = 60000; // 1 minute
+
   public static final String QUERY_PHASE1_REWRITERS = SERVER_PFX + "query.phase1.rewriters";
 
   /**

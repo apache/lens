@@ -44,7 +44,8 @@ public class MaxConcurrentDriverQueriesConstraintTest {
 
   MaxConcurrentDriverQueriesConstraintFactory factory = new MaxConcurrentDriverQueriesConstraintFactory();
   QueryLaunchingConstraint constraint = factory.create(getConfiguration(
-    "driver.max.concurrent.launched.queries", 10
+    "driver.max.concurrent.launched.queries", 10,
+    "driver.max.concurrent.launches", 4
   ));
 
   QueryLaunchingConstraint perQueueConstraint = factory.create(getConfiguration(
@@ -64,7 +65,12 @@ public class MaxConcurrentDriverQueriesConstraintTest {
 
   @DataProvider
   public Object[][] dpTestAllowsLaunchOfQuery() {
-    return new Object[][]{{2, true}, {10, false}, {11, false}};
+    return new Object[][]{{2, true}, {3, true}, {4, true}, {5, true}, {10, false}, {11, false}};
+  }
+
+  @DataProvider
+  public Object[][] dpTestConcurrentLaunches() {
+    return new Object[][]{{2, true}, {3, true}, {4, false}, {5, false}, {10, false}, {11, false}};
   }
 
   @DataProvider
@@ -157,6 +163,28 @@ public class MaxConcurrentDriverQueriesConstraintTest {
 
     when(mockCandidateQuery.getSelectedDriver()).thenReturn(mockDriver);
     when(mockLaunchedQueries.getQueriesCount(mockDriver)).thenReturn(currentDriverLaunchedQueries);
+
+    boolean actualCanLaunch = constraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
+
+    assertEquals(actualCanLaunch, expectedCanLaunch);
+  }
+
+  @Test(dataProvider = "dpTestConcurrentLaunches")
+  public void testConcurrentLaunches(final int currentDriverLaunchedQueries, final boolean expectedCanLaunch) {
+
+    QueryContext mockCandidateQuery = mock(QueryContext.class);
+    EstimatedImmutableQueryCollection mockLaunchedQueries = mock(EstimatedImmutableQueryCollection.class);
+    LensDriver mockDriver = mock(LensDriver.class);
+
+    Set<QueryContext> queries = new HashSet<>(currentDriverLaunchedQueries);
+    for (int i = 0; i < currentDriverLaunchedQueries; i++) {
+      QueryContext mQuery = mock(QueryContext.class);
+      when(mQuery.isLaunching()).thenReturn(true);
+      queries.add(mQuery);
+    }
+    when(mockCandidateQuery.getSelectedDriver()).thenReturn(mockDriver);
+    when(mockLaunchedQueries.getQueriesCount(mockDriver)).thenReturn(currentDriverLaunchedQueries);
+    when(mockLaunchedQueries.getQueries(mockDriver)).thenReturn(queries);
 
     boolean actualCanLaunch = constraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
 
