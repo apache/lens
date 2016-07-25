@@ -57,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
  * The Class LensSessionImpl.
  */
 @Slf4j
-public class LensSessionImpl extends HiveSessionImpl {
+public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
 
   /** The persist info. */
   private LensSessionPersistInfo persistInfo = new LensSessionPersistInfo();

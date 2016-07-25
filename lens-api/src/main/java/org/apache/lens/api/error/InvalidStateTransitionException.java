@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.lens.server.api.error;
+package org.apache.lens.api.error;
 
 /**
  * Exception thrown during state transition of jobs and job instances.
  */
-public class InvalidStateTransitionException extends LensException {
+public class InvalidStateTransitionException extends Exception {
   /**
    * @param e Exception
    */

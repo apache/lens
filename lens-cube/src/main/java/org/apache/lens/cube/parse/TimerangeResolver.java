@@ -18,8 +18,6 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE;
-
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
@@ -31,6 +29,7 @@ import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.join.JoinPath;
 import org.apache.lens.cube.parse.DenormalizationResolver.ReferencedQueriedColumn;
 import org.apache.lens.cube.parse.join.AutoJoinContext;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -127,8 +126,13 @@ class TimerangeResolver implements ContextRewriter {
         toDateRaw = PlanUtils.stripQuotes(timenode.getChild(3).getText());
       }
     }
-
-    Date now = new Date();
+    long currentTime = cubeql.getConf().getLong(LensConfConstants.QUERY_CURRENT_TIME_IN_MILLIS, 0);
+    Date now;
+    if (currentTime != 0) {
+      now = new Date(currentTime);
+    } else {
+      now = new Date();
+    }
     builder.fromDate(DateUtil.resolveDate(fromDateRaw, now));
     if (StringUtils.isNotBlank(toDateRaw)) {
       builder.toDate(DateUtil.resolveDate(toDateRaw, now));
@@ -256,6 +260,6 @@ class TimerangeResolver implements ContextRewriter {
         iter.remove();
       }
     }
-    cubeql.pruneCandidateFactSet(FACT_NOT_AVAILABLE_IN_RANGE);
+    cubeql.pruneCandidateFactSet(CandidateTablePruneCause.CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE);
   }
 }

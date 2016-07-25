@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -26,9 +26,12 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.sql.DataSource;
 
+import org.apache.lens.api.scheduler.SchedulerJobHandle;
+import org.apache.lens.api.scheduler.SchedulerJobInstanceHandle;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.dbcp.*;
@@ -40,7 +43,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
 
 import lombok.extern.slf4j.Slf4j;
-
 
 /**
  * The Class UtilityMethods.
@@ -138,30 +140,29 @@ public final class UtilityMethods {
    */
   public static BasicDataSource getDataSourceFromConf(Configuration conf) {
     BasicDataSource tmp = new BasicDataSource();
-    tmp.setDriverClassName(conf.get(LensConfConstants.SERVER_DB_DRIVER_NAME,
-      LensConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
+    tmp.setDriverClassName(
+        conf.get(LensConfConstants.SERVER_DB_DRIVER_NAME, LensConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
     tmp.setUrl(conf.get(LensConfConstants.SERVER_DB_JDBC_URL, LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
     tmp.setUsername(conf.get(LensConfConstants.SERVER_DB_JDBC_USER, LensConfConstants.DEFAULT_SERVER_DB_USER));
     tmp.setPassword(conf.get(LensConfConstants.SERVER_DB_JDBC_PASS, LensConfConstants.DEFAULT_SERVER_DB_PASS));
-    tmp.setValidationQuery(conf.get(LensConfConstants.SERVER_DB_VALIDATION_QUERY,
-      LensConfConstants.DEFAULT_SERVER_DB_VALIDATION_QUERY));
+    tmp.setValidationQuery(
+        conf.get(LensConfConstants.SERVER_DB_VALIDATION_QUERY, LensConfConstants.DEFAULT_SERVER_DB_VALIDATION_QUERY));
     tmp.setDefaultAutoCommit(false);
     return tmp;
   }
 
   public static DataSource getPoolingDataSourceFromConf(Configuration conf) {
     final ConnectionFactory cf = new DriverManagerConnectionFactory(
-      conf.get(LensConfConstants.SERVER_DB_JDBC_URL, LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL),
-      conf.get(LensConfConstants.SERVER_DB_JDBC_USER, LensConfConstants.DEFAULT_SERVER_DB_USER),
-      conf.get(LensConfConstants.SERVER_DB_JDBC_PASS, LensConfConstants.DEFAULT_SERVER_DB_PASS));
+        conf.get(LensConfConstants.SERVER_DB_JDBC_URL, LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL),
+        conf.get(LensConfConstants.SERVER_DB_JDBC_USER, LensConfConstants.DEFAULT_SERVER_DB_USER),
+        conf.get(LensConfConstants.SERVER_DB_JDBC_PASS, LensConfConstants.DEFAULT_SERVER_DB_PASS));
     final GenericObjectPool connectionPool = new GenericObjectPool();
     connectionPool.setTestOnBorrow(false);
     connectionPool.setTestOnReturn(false);
     connectionPool.setTestWhileIdle(true);
-    new PoolableConnectionFactory(cf, connectionPool, null
-      , conf.get(LensConfConstants.SERVER_DB_VALIDATION_QUERY,
-        LensConfConstants.DEFAULT_SERVER_DB_VALIDATION_QUERY), false, false)
-      .setDefaultAutoCommit(true);
+    new PoolableConnectionFactory(cf, connectionPool, null,
+        conf.get(LensConfConstants.SERVER_DB_VALIDATION_QUERY, LensConfConstants.DEFAULT_SERVER_DB_VALIDATION_QUERY),
+        false, false).setDefaultAutoCommit(true);
     return new PoolingDataSource(connectionPool);
   }
 
@@ -204,13 +205,31 @@ public final class UtilityMethods {
   public static byte[] generateHashOfWritable(Writable writable) {
     try {
       MessageDigest md = MessageDigest.getInstance("MD5");
-      byte [] lensConfBytes = WritableUtils.toByteArray(writable);
+      byte[] lensConfBytes = WritableUtils.toByteArray(writable);
       md.update(lensConfBytes);
-      byte [] digest = md.digest();
+      byte[] digest = md.digest();
       return digest;
     } catch (NoSuchAlgorithmException e) {
       log.warn("MD5: No such method error " + writable);
       return null;
     }
+  }
+
+  /**
+   * @param conf
+   * @return
+   */
+  public static BasicDataSource getDataSourceFromConfForScheduler(Configuration conf) {
+    BasicDataSource basicDataSource = getDataSourceFromConf(conf);
+    basicDataSource.setDefaultAutoCommit(true);
+    return basicDataSource;
+  }
+
+  public static SchedulerJobHandle generateSchedulerJobHandle() {
+    return new SchedulerJobHandle(UUID.randomUUID());
+  }
+
+  public static SchedulerJobInstanceHandle generateSchedulerJobInstanceHandle() {
+    return new SchedulerJobInstanceHandle(UUID.randomUUID());
   }
 }

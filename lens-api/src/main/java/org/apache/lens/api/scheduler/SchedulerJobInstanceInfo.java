@@ -18,7 +18,7 @@
  */
 package org.apache.lens.api.scheduler;
 
-import org.apache.lens.api.LensSessionHandle;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -43,45 +43,15 @@ public class SchedulerJobInstanceInfo {
   private SchedulerJobHandle jobId;
 
   /**
-   * @param sessionHandle new session handle.
-   * @return session handle for this instance.
+   * @param scheduleTime time to be set as the nomial time for the instance.
+   * @return scheduled time of this instance.
    */
-  private LensSessionHandle sessionHandle;
+  private long scheduleTime;
 
   /**
-   * @param startTime start time to be set for the instance.
-   * @return actual start time of this instance.
+   * @param instanceRunList: List of runs.
+   * @return A list of instance-run for this instance.
    */
-  private long startTime;
-
-  /**
-   * @param endTime end time to be set for the instance.
-   * @return actual finish time of this instance.
-   */
-  private long endTime;
-
-  /**
-   * @param resultPath result path to be set.
-   * @return result path of this instance.
-   */
-  private String resultPath;
-
-  /**
-   * @param query query to be set
-   * @return query of this instance.
-   */
-  private String query;
-
-  /**
-   * @param state state to be set.
-   * @return state of this instance.
-   */
-  private SchedulerJobInstanceStatus state;
-
-  /**
-   * @param createdOn time to be set as created_on time for the instance.
-   * @return created_on time of this instance.
-   */
-  private long createdOn;
+  private List<SchedulerJobInstanceRun> instanceRunList;
 
 }

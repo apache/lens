@@ -47,7 +47,6 @@ public class FieldsCannotBeQueriedTogetherTest extends TestQueryRewrite {
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, false);
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
-
   }
 
   @Test

@@ -146,6 +146,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
     return numSessions != null && numSessions >= maxNumSessionsPerUser;
   }
 
+
   /**
    * Open session.
    *
@@ -157,12 +158,19 @@ public abstract class BaseLensService extends CompositeService implements Extern
    */
   public LensSessionHandle openSession(String username, String password, Map<String, String> configuration)
     throws LensException {
+    return openSession(username, password, configuration, true);
+  }
+
+  public LensSessionHandle openSession(String username, String password, Map<String, String> configuration,
+      boolean auth) throws LensException {
     if (StringUtils.isBlank(username)) {
       throw new BadRequestException("User name cannot be null or empty");
     }
     SessionHandle sessionHandle;
     username = UtilityMethods.removeDomain(username);
-    doPasswdAuth(username, password);
+    if (auth) {
+      doPasswdAuth(username, password);
+    }
     SessionUser sessionUser = SESSION_USER_INSTANCE_MAP.get(username);
     if (sessionUser == null) {
       sessionUser = new SessionUser(username);

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.lens.server.scheduler.notification.services;
+package org.apache.lens.server.scheduler;
 
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -38,14 +38,15 @@ import org.apache.lens.server.api.events.SchedulerAlarmEvent;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
-
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
+
 /**
  * Tests for AlarmService.
  */
@@ -53,22 +54,21 @@ import lombok.extern.slf4j.Slf4j;
 @Test(groups = "unit-test")
 public class AlarmServiceTest {
 
+  private static List<SchedulerAlarmEvent> events = new LinkedList<>();
+  private static volatile int counter = 0;
+  private final LensEventListener<SchedulerAlarmEvent> alarmEventListener;
   private AlarmService alarmService;
-
   private EventServiceImpl eventService;
 
-  private static List<SchedulerAlarmEvent> events = new LinkedList<>();
+  {
+    alarmEventListener = new LensEventListener<SchedulerAlarmEvent>() {
 
-  private static volatile int counter = 0;
-
-  private final LensEventListener<SchedulerAlarmEvent> alarmEventListener = new
-    LensEventListener<SchedulerAlarmEvent>() {
-
-    @Override
-    public void onEvent(SchedulerAlarmEvent event) {
-      events.add(event);
-    }
-  };
+      @Override
+      public void onEvent(SchedulerAlarmEvent event) {
+        events.add(event);
+      }
+    };
+  }
 
   @BeforeMethod
   public void initializeEventsList() {
@@ -98,40 +98,27 @@ public class AlarmServiceTest {
     SchedulerFactory sf = new StdSchedulerFactory();
     Scheduler scheduler = sf.getScheduler();
     scheduler.start();
-    try {
-      // prepare a sample Job
-      JobDetail job = JobBuilder.newJob(TestJob.class).withIdentity("random", "group").build();
-      scheduler.scheduleJob(job, getPastPerSecondsTrigger());
-      Thread.sleep(2000);
-      Assert.assertEquals(counter, 10);
-    } finally {
-      scheduler.shutdown();
-    }
+    // prepare a sample Job
+    JobDetail job = JobBuilder.newJob(TestJob.class).withIdentity("random", "group").build();
+    scheduler.scheduleJob(job, getPastPerSecondsTrigger());
+    Thread.sleep(2000);
+    Assert.assertEquals(counter, 10);
+    scheduler.deleteJob(job.getKey());
   }
 
-  private CalendarIntervalScheduleBuilder  getPerSecondCalendar() {
-    return CalendarIntervalScheduleBuilder.calendarIntervalSchedule()
-      .withInterval(1, DateBuilder.IntervalUnit.SECOND)
-      .withMisfireHandlingInstructionFireAndProceed();
+  private CalendarIntervalScheduleBuilder getPerSecondCalendar() {
+    return CalendarIntervalScheduleBuilder.calendarIntervalSchedule().withInterval(1, DateBuilder.IntervalUnit.SECOND)
+        .withMisfireHandlingInstructionFireAndProceed();
   }
+
   private Trigger getPastPerSecondsTrigger() {
     CalendarIntervalScheduleBuilder scheduleBuilder = getPerSecondCalendar();
     Date start = new Date();
     start = new Date(start.getTime() - 10000);
     Date end = new Date();
 
-    return TriggerBuilder.newTrigger().withIdentity("trigger1", "group1")
-      .startAt(start).endAt(end).withSchedule(scheduleBuilder).build();
-  }
-
-
-  @PersistJobDataAfterExecution
-  @DisallowConcurrentExecution
-  public static class TestJob implements Job {
-    @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
-      AlarmServiceTest.counter++;
-    }
+    return TriggerBuilder.newTrigger().withIdentity("trigger1", "group1").startAt(start).endAt(end)
+        .withSchedule(scheduleBuilder).build();
   }
 
   @Test
@@ -150,14 +137,15 @@ public class AlarmServiceTest {
         count++;
       }
     }
-    Assert.assertEquals(count, 3);
+    // 3 scheduled events, and one expired event.
+    Assert.assertEquals(count, 4);
     DateTime expectedDate = start;
     Set<DateTime> actualSet = new HashSet<>();
     for (SchedulerAlarmEvent e : events) {
       actualSet.add(e.getNominalTime());
     }
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < actualSet.size(); i++) {
       Assert.assertTrue(actualSet.contains(expectedDate));
       expectedDate = expectedDate.plusDays(1);
     }
@@ -176,5 +164,14 @@ public class AlarmServiceTest {
     Thread.sleep(2000);
     // Assert that the events are fired and at per second interval.
     assertTrue(events.size() > 1);
+  }
+
+  @PersistJobDataAfterExecution
+  @DisallowConcurrentExecution
+  public static class TestJob implements Job {
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+      AlarmServiceTest.counter++;
+    }
   }
 }

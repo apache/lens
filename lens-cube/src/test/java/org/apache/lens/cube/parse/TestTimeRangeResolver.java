@@ -26,16 +26,21 @@ import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTable
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
+import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 
+import org.joda.time.DateTime;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -95,5 +100,19 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     // That would prove that parsing of properties has gone through successfully
     assertEquals(pruningMsg.getCause(), FACT_NOT_AVAILABLE_IN_RANGE);
     assertTrue(pruningMsg.getInvalidRanges().containsAll(ctx.getTimeRanges()));
+  }
+
+  @Test
+  public void testCustomNow() throws Exception {
+    Configuration conf = getConf();
+    DateTime dt = new DateTime(1990, 3, 23, 12, 0, 0, 0);
+    conf.setLong(LensConfConstants.QUERY_CURRENT_TIME_IN_MILLIS, dt.getMillis());
+    CubeQueryContext ctx = rewriteCtx("select msr12 from basecube where time_range_in(d_time, 'now.day-275days','now')",
+        conf);
+    TimeRange timeRange = ctx.getTimeRanges().get(0);
+    // Month starts from zero.
+    Calendar from = new GregorianCalendar(1989, 5, 21, 0, 0, 0);
+    assertEquals(timeRange.getFromDate(), from.getTime());
+    assertEquals(timeRange.getToDate(), dt.toDate());
   }
 }

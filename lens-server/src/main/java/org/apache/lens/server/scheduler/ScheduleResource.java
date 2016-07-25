@@ -40,7 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public class ScheduleResource {
 
-  public static enum INSTANCE_ACTIONS {
+  public enum INSTANCE_ACTIONS {
     KILL, RERUN;
 
     public static INSTANCE_ACTIONS fromString(String name) {
@@ -48,7 +48,7 @@ public class ScheduleResource {
     }
   }
 
-  public static enum JOB_ACTIONS {
+  public enum JOB_ACTIONS {
     SCHEDULE, EXPIRE, SUSPEND, RESUME;
 
     public static JOB_ACTIONS fromString(String name) {
@@ -89,12 +89,12 @@ public class ScheduleResource {
   @GET
   @Path("jobs/stats")
   public Collection<SchedulerJobStats> getAllJobStats(@QueryParam("sessionid") LensSessionHandle sessionId,
-                                                @DefaultValue("running") @QueryParam("state") String state,
+                                                @DefaultValue("running") @QueryParam("status") String status,
                                                 @QueryParam("name") String jobName,
                                                 @DefaultValue("user") @QueryParam("user") String user,
                                                 @DefaultValue("-1") @QueryParam("start") long start,
                                                 @DefaultValue("-1") @QueryParam("end") long end) throws LensException {
-    return getSchedulerService().getAllJobStats(sessionId, state, user, start, end);
+    return getSchedulerService().getAllJobStats(sessionId, status, user, jobName, start, end);
   }
 
   @GET
@@ -187,20 +187,30 @@ public class ScheduleResource {
                                 @QueryParam("action") INSTANCE_ACTIONS action) throws LensException {
     validateSession(sessionId);
 
+    APIResult res;
     switch (action) {
     case KILL:
-      getSchedulerService().killInstance(sessionId, instanceHandle);
+      if (getSchedulerService().killInstance(sessionId, instanceHandle)) {
+        res = new APIResult(APIResult.Status.SUCCEEDED,
+            "Killing the instance with id " + instanceHandle + " was successful");
+      } else {
+        res = new APIResult(APIResult.Status.FAILED,
+            "Killing the instance with id " + instanceHandle + " was not successful");
+      }
       break;
-
     case RERUN:
-      getSchedulerService().rerunInstance(sessionId, instanceHandle);
+      if (getSchedulerService().rerunInstance(sessionId, instanceHandle)) {
+        res = new APIResult(APIResult.Status.SUCCEEDED,
+            "Rerunning the instance with id " + instanceHandle + " was successful");
+      } else {
+        res = new APIResult(APIResult.Status.FAILED,
+            "Rerunning the instance with id " + instanceHandle + " was not successful");
+      }
       break;
-
     default:
       throw new BadRequestException("Unsupported action " + action.toString());
 
     }
-    return APIResult.success();
+    return res;
   }
-
 }
