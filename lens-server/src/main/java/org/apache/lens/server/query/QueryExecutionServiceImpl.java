@@ -902,18 +902,16 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   private void updateFinishedQuery(QueryContext ctx, QueryStatus before) {
     // before would be null in case of server restart
     if (before != null) {
-      if (before.queued()) {
-        /* Seems like query is cancelled, remove it from both queuedQueries and waitingQueries because we don't know
-        * where it is right now. It might happen that when we remove it from queued, it was in waiting OR
-        * when we removed it from waiting, it was in queued. We might just miss removing it from everywhere due to this
-        * hide and seek. Then QuerySubmitter thread will come to rescue, as it always checks that a query should be in
-        * queued state before processing it after deque. If it is in cancelled state, then it will skip it. */
-        queuedQueries.remove(ctx);
-        waitingQueries.remove(ctx);
-      } else {
-        if (removeFromLaunchedQueries(ctx)) {
-          processWaitingQueriesAsync(ctx);
-        }
+      /* Seems like query is cancelled, remove it from both queuedQueries and waitingQueries because we don't know
+       * where it is right now. It might happen that when we remove it from queued, it was in waiting OR
+       * when we removed it from waiting, it was in queued. We might just miss removing it from everywhere due to this
+       * hide and seek. Then QuerySubmitter thread will come to rescue, as it always checks that a query should be in
+       * queued state before processing it after deque. If it is in cancelled state, then it will skip it. */
+      queuedQueries.remove(ctx);
+      waitingQueries.remove(ctx);
+      // Remove it from launched queries as well - the query got cancelled or failed to launch or failed to execute
+      if (removeFromLaunchedQueries(ctx)) {
+        processWaitingQueriesAsync(ctx);
       }
     }
     // Remove from active queries

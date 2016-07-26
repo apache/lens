@@ -529,4 +529,7 @@ public class QueryContext extends AbstractQueryContext {
     this.driverResult = result;
   }
 
+  public String toString() {
+    return queryHandle + ":" + this.status;
+  }
 }

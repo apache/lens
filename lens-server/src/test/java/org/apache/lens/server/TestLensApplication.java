@@ -29,6 +29,7 @@ import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -50,6 +51,10 @@ public class TestLensApplication extends LensAllApplicationJerseyTest {
     super.setUp();
   }
 
+  @AfterTest
+  public void tearDown() throws Exception {
+    super.tearDown();
+  }
   /**
    * Test ws resources loaded.
    *

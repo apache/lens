@@ -173,4 +173,9 @@ public class DefaultEstimatedQueryCollection implements EstimatedQueryCollection
     log.debug("Total Query Cost:{}", totalQueryCost);
     return totalQueryCost;
   }
+
+  @Override
+  public synchronized String toString() {
+    return getClass().getSimpleName() + "(Queries=" + this.queries + ")";
+  }
 }

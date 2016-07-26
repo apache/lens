@@ -63,14 +63,27 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
   LensSessionHandle lensSessionId;
   private LensConf conf;
 
+  @BeforeTest
+  public void setUp() throws Exception {
+    super.setUp();
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+   */
+  @AfterTest
+  public void tearDown() throws Exception {
+    super.tearDown();
+  }
   /*
    * (non-Javadoc)
    *
    * @see org.glassfish.jersey.test.JerseyTest#setUp()
    */
   @BeforeClass
-  public void setUp() throws Exception {
-    super.setUp();
+  public void setUpClass() throws Exception {
     queryService = LensServices.get().getService(QueryExecutionService.NAME);
     lensSessionId = getSession();
     createTable(TEST_TABLE);
@@ -104,7 +117,7 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
      * @see org.glassfish.jersey.test.JerseyTest#tearDown()
      */
   @AfterClass
-  public void tearDown() throws Exception {
+  public void tearDownClass() throws Exception {
     dropTable(TEST_TABLE);
     queryService.closeSession(lensSessionId);
     for (LensDriver driver : queryService.getDrivers()) {
@@ -112,7 +125,6 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
         assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
       }
     }
-    super.tearDown();
   }
 
   @Override
