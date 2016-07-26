@@ -306,13 +306,17 @@ public abstract class BaseLensService extends CompositeService implements Extern
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     try {
       LensSessionImpl session = getSession(sessionHandle);
+      boolean shouldDecrementOpenedSessionCount = !session.getLensSessionPersistInfo().isMarkedForClose();
       if (session.activeOperationsPresent()) {
         session.markForClose();
       } else {
         cliService.closeSession(getHiveSessionHandle(sessionHandle));
         SESSION_MAP.remove(sessionHandle.getPublicId().toString());
+        log.info("Closed session {} for {} user", sessionHandle, session.getLoggedInUser());
       }
-      decrementSessionCountForUser(sessionHandle, session.getLoggedInUser());
+      if (shouldDecrementOpenedSessionCount) {
+        decrementSessionCountForUser(sessionHandle, session.getLoggedInUser());
+      }
       if (!SESSION_MAP.containsKey(sessionHandle.getPublicId().toString())) {
         // Inform query service
         BaseLensService svc = LensServices.get().getService(QueryExecutionService.NAME);
@@ -333,7 +337,6 @@ public abstract class BaseLensService extends CompositeService implements Extern
     }
     synchronized (sessionUser) {
       Integer sessionCount = SESSIONS_PER_USER.get(userName);
-      log.info("Closed session {} for {} user", sessionHandle, userName);
       if (sessionCount == 1) {
         SESSIONS_PER_USER.remove(userName);
       } else {

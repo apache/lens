@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
@@ -41,6 +42,7 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
+import org.apache.lens.api.query.*;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
@@ -481,6 +483,21 @@ public class TestSessionResource extends LensJerseyTest {
     } catch (NotFoundException nfe) {
       // PASS
     }
+  }
+
+  /**
+   * Test multiple closeSession invocations for a session
+   */
+  @Test(dataProvider = "mediaTypeData")
+  public void testCloseSessionMultipleTimes(MediaType mt) throws Exception {
+    HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
+
+    LensSessionHandle sessionHandle = sessionService.openSession("foo@localhost", "bar", new HashMap<String, String>());
+    Assert.assertNotNull(sessionHandle, "Expected session to be opened");
+    sessionService.getSession(sessionHandle).addToActiveQueries(QueryHandle.fromString(UUID.randomUUID().toString()));
+    // Closing multiple times should not cause any issues
+    sessionService.closeSession(sessionHandle);
+    sessionService.closeSession(sessionHandle);
   }
 
   /**
