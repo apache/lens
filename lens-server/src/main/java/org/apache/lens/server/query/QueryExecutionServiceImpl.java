@@ -2049,17 +2049,18 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   }
 
   private QueryHandle submitQuery(final QueryContext ctx) throws LensException {
-
-    QueryStatus before = ctx.getStatus();
-    ctx.setStatus(new QueryStatus(0.0, null, QUEUED, "Query is queued", false, null, null, null));
-    queuedQueries.add(ctx);
-    log.debug("Added to Queued Queries:{}", ctx.getQueryHandleString());
-    allQueries.put(ctx.getQueryHandle(), ctx);
-    // Add to session's active query list
-    getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).addToActiveQueries(ctx.getQueryHandle());
-    fireStatusChangeEvent(ctx, ctx.getStatus(), before);
-    log.info("Returning handle {}", ctx.getQueryHandle().getHandleId());
-    return ctx.getQueryHandle();
+    synchronized (ctx) {
+      QueryStatus before = ctx.getStatus();
+      ctx.setStatus(new QueryStatus(0.0, null, QUEUED, "Query is queued", false, null, null, null));
+      queuedQueries.add(ctx);
+      log.info("Added to Queued Queries:{}", ctx.getQueryHandleString());
+      allQueries.put(ctx.getQueryHandle(), ctx);
+      // Add to session's active query list
+      getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).addToActiveQueries(ctx.getQueryHandle());
+      fireStatusChangeEvent(ctx, ctx.getStatus(), before);
+      log.info("Returning handle {}", ctx.getQueryHandle().getHandleId());
+      return ctx.getQueryHandle();
+    }
   }
 
   /*
