@@ -125,12 +125,13 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
         assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
       }
     }
+    // bring it back with normal configuration
+    restartLensServer();
   }
 
-  @Override
-  protected void restartLensServer() {
+  private void customRestartLensServer() {
     queryService = null;
-    super.restartLensServer();
+    super.restartLensServer(getServerConf(), false);
     queryService = LensServices.get().getService(QueryExecutionService.NAME);
   }
 
@@ -208,7 +209,7 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
     // Just 'marked' for closing
     assertTrue(queryService.getSession(sesssionHandle).getLensSessionPersistInfo().isMarkedForClose());
     if (restartBeforeFinish) {
-      restartLensServer();
+      customRestartLensServer();
     }
     assertTrue(queryService.getSession(sesssionHandle).getLensSessionPersistInfo().isMarkedForClose());
     assertTrue(queryService.getSession(sesssionHandle).isActive());
@@ -217,7 +218,7 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
     // Session should not be active
     assertFalse(queryService.getSession(sesssionHandle).isActive());
     if (restartAfterFinish) {
-      restartLensServer();
+      customRestartLensServer();
     }
     assertTrue(queryService.getSession(sesssionHandle).getLensSessionPersistInfo().isMarkedForClose());
     // Now, session is not active anymore

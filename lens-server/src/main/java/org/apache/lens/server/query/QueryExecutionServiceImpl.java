@@ -2839,8 +2839,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         // query service will do the selection from existing drivers and update
         if (driverAvailable) {
           String selectedDriverQualifiedName = in.readUTF();
-          ctx.getDriverContext().setSelectedDriver(drivers.get(selectedDriverQualifiedName));
-          ctx.setDriverQuery(ctx.getSelectedDriver(), ctx.getSelectedDriverQuery());
+          if (drivers.get(selectedDriverQualifiedName) != null) {
+            ctx.getDriverContext().setSelectedDriver(drivers.get(selectedDriverQualifiedName));
+            ctx.setDriverQuery(ctx.getSelectedDriver(), ctx.getSelectedDriverQuery());
+          } else {
+            log.info("Ignoring {} as the driver is not loaded", ctx.getQueryHandle());
+            continue;
+          }
         }
         allQueries.put(ctx.getQueryHandle(), ctx);
       }

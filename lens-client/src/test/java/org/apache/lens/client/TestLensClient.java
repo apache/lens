@@ -39,7 +39,6 @@ import org.apache.lens.client.exceptions.LensAPIException;
 import org.apache.lens.client.exceptions.LensClientIOException;
 import org.apache.lens.client.resultset.ResultSet;
 import org.apache.lens.server.LensAllApplicationJerseyTest;
-import org.apache.lens.server.api.util.LensUtil;
 
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -57,12 +56,6 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
   @Override
   protected URI getBaseUri() {
     return UriBuilder.fromUri("http://localhost/").port(getTestPort()).path("/lensapi").build();
-  }
-
-  @Override
-  public Map<String, String> getServerConfOverWrites() {
-    return LensUtil.getHashMap("lens.server.query.service.impl",
-      "org.apache.lens.server.MockQueryExecutionServiceImpl");
   }
 
   @BeforeTest
@@ -276,10 +269,10 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
   @Test
   public void testWaitForQueryToCompleteWithAndWithoutRetryOnTimeOut() throws LensAPIException {
     LensClientConfig config = createLensClientConfigWithServerUrl();
+    config.set(ENABLE_SLEEP_FOR_GET_QUERY_OP, "true");
+    config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, 3000);
     try (LensClient lensClient = new LensClient(config)) {
-      config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, 3000);
       assertTrue(lensClient.setDatabase(TEST_DB));
-      lensClient.setConnectionParam(ENABLE_SLEEP_FOR_GET_QUERY_OP, "true");
 
       //Test waitForQueryToComplete without retry on timeout
       QueryHandle handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");

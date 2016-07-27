@@ -128,6 +128,10 @@ public abstract class LensJerseyTest extends JerseyTest {
     config.register(LensJAXBContextResolver.class);
   }
 
+  /**
+   * This should used only on restarts and not during initial setup.
+   * @return Modified Server conf with over-writes
+   */
   public final HiveConf getServerConf() {
     HiveConf serverConf = LensServerConf.getHiveConf();
     Map<String, String> overWrites = getServerConfOverWrites();
@@ -164,7 +168,7 @@ public abstract class LensJerseyTest extends JerseyTest {
     createTestDatabaseResources(new String[]{DB_WITH_JARS, DB_WITH_JARS_2},
       hiveConf);
 
-    LensServices.get().init(getServerConf());
+    LensServices.get().init(LensServerConf.getHiveConf());
     LensServices.get().start();
 
     // Check if mock service is started
@@ -226,8 +230,11 @@ public abstract class LensJerseyTest extends JerseyTest {
    * Restart lens server.
    */
   protected void restartLensServer() {
-    HiveConf h = getServerConf();
-    restartLensServer(h, false);
+    restartLensServer(LensServerConf.getHiveConf());
+  }
+
+  protected void restartLensServer(HiveConf conf) {
+    restartLensServer(conf, false);
   }
 
   /**

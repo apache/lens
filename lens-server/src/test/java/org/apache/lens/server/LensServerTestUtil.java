@@ -30,6 +30,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
@@ -136,7 +137,8 @@ public final class LensServerTestUtil {
         mt));
 
     final QueryHandle handle = target.request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
+      new GenericType<LensAPIResult<QueryHandle>>() {
+      }).getData();
 
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request(mt)
@@ -302,4 +304,41 @@ public final class LensServerTestUtil {
       }
     }
   }
+
+
+  public static LensSessionHandle openSession(WebTarget target, final String userName, final String passwd, final
+  LensConf
+    conf, MediaType
+    mt) {
+
+    final WebTarget sessionTarget = target.path("session");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), userName));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), passwd));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+      conf, mt));
+
+    return sessionTarget.request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+      LensSessionHandle.class);
+
+  }
+
+  public static void addResource(WebTarget target, final LensSessionHandle lensSessionHandle, final String
+    resourceType, final String resourcePath, MediaType mt) {
+    final WebTarget resourceTarget = target.path("session/resources");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionHandle,
+      mt));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), resourceType));
+    mp.bodyPart(
+      new FormDataBodyPart(FormDataContentDisposition.name("path").build(), resourcePath));
+    APIResult result = resourceTarget.path("add").request(mt)
+      .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+
+    if (!result.getStatus().equals(APIResult.Status.SUCCEEDED)) {
+      throw new RuntimeException("Could not add resource:" + result);
+    }
+  }
+
 }

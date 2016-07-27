@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+  <property>
+    <name>lens.server.drivers</name>
+    <value>hive:org.apache.lens.driver.hive.HiveDriver,jdbc:org.apache.lens.driver.jdbc.JDBCDriver,
+      mock:org.apache.lens.server.common.FailingQueryDriver</value> <!--$LENS_CONF/drivers-->
+  </property>
+
+  <property>
+    <name>lens.server.query.acceptors</name>
+    <value>org.apache.lens.server.query.BlahQueryAcceptor</value>
+    <description>Query Acceptors configured</description>
+  </property>
+
+  <property>
+    <name>test.lens.site.key</name>
+    <value>gsvalue</value>
+  </property>
+
+  <property>
+    <name>lens.server.enable.console.metrics</name>
+    <value>true</value>
+    <description>Enable metrics to be reported on console</description>
+  </property>
+
+  <property>
+    <name>lens.server.persist.location</name>
+    <value>target/persist-dir</value>
+  </property>
+
+  <property>
+    <name>lens.query.result.parent.dir</name>
+    <value>target/lens-results</value>
+  </property>
+  
+  <property>
+    <name>hive.server2.authentication</name>
+    <value>CUSTOM</value>
+  </property>
+
+  <property>
+    <name>hive.server2.custom.authentication.class</name>
+    <value>org.apache.lens.server.auth.FooBarAuthenticationProvider</value>
+  </property>
+
+
+  <property>
+    <name>lens.query.enable.mail.notify</name>
+    <value>false</value>
+    <description>When a query ends, whether to notify the submitter by mail or not.</description>
+  </property>
+
+  <property>
+    <name>lens.server.mail.from.address</name>
+    <value>blah@company.com</value>
+    <description>The from field in the notifier mail to the submitter.</description>
+  </property>
+
+  <property>
+    <name>lens.server.mail.host</name>
+    <value>localhost</value>
+    <description>SMTP Host for sending mail</description>
+  </property>
+
+  <property>
+    <name>lens.server.mail.port</name>
+    <value>25000</value>
+    <description>SMTP Port</description>
+  </property>
+
+  <property>
+    <name>lens.server.ws.resourcenames</name>
+    <value>session,metastore,query,quota,scheduler,index,log,test,savedquery</value>
+    <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
+  </property>
+
+  <property>
+    <name>lens.server.test.ws.resource.impl</name>
+    <value>org.apache.lens.server.TestResource</value>
+    <description>Implementation class for Test Resource</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.ws.resource.impl</name>
+    <value>org.apache.lens.server.query.save.SavedQueryResource</value>
+    <description>Implementation class for saved query Resource</description>
+  </property>
+
+  <property>
+    <name>lens.server.user.resolver.type</name>
+    <value>FIXED</value>
+  </property>
+  <property>
+    <name>lens.server.user.resolver.fixed.value</name>
+    <value>testlensuser</value>
+  </property>
+  <property>
+    <name>lens.server.domain</name>
+    <value>localhost</value>
+  </property>
+
+  <property>
+    <!-- run every second -->
+    <name>lens.server.querypurger.sleep.interval</name>
+    <value>100</value>
+  </property>
+
+  <property>
+    <name>lens.server.db.jdbc.url</name>
+    <value>jdbc:hsqldb:target/queries.db</value>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.jdbc.dialectclass</name>
+    <value>org.apache.lens.server.query.save.SavedQueryDao$HSQLDialect</value>
+    <description>Dialect of the target DB, Default is HSQL</description>
+  </property>
+
+  <property>
+    <name>lens.server.servicenames</name>
+    <value>session,query,metastore,scheduler,quota,mocknonlens,savedquery</value>
+  </property>
+
+  <property>
+    <name>lens.server.mocknonlens.service.impl</name>
+    <value>org.apache.lens.server.MockNonLensService</value>
+    <description>Implementation class for session service</description>
+  </property>
+
+  <property>
+    <name>lens.server.query.service.impl</name>
+    <value>org.apache.lens.server.MockQueryExecutionServiceImpl</value>
+    <description>Mock Implementation class for query service</description>
+  </property>
+
+  <property>
+    <name>lens.server.savedquery.service.impl</name>
+    <value>org.apache.lens.server.query.save.SavedQueryServiceImpl</value>
+    <description>Implementation class for saved query service</description>
+  </property>
+
+  <property>
+    <name>lens.server.ws.filternames</name>
+    <value>requestlogger,consistentState,serverMode,logging</value>
+    <description>These JAX-RS filters would be started in the specified order when lens-server starts up</description>
+  </property>
+
+  <property>
+    <name>lens.server.logging.ws.filter.impl</name>
+    <value>org.glassfish.jersey.filter.LoggingFilter</value>
+    <description>Logging filter</description>
+  </property>
+
+  <property>
+    <name>lens.server.database.resource.dir</name>
+    <value>target/resources</value>
+  </property>
+
+  <property>
+    <name>lens.server.statistics.warehouse.dir</name>
+    <value>file://${project.build.directory}/lens/statistics/warehouse</value>
+    <description>Default top level location where stats are moved by the log statistics store.</description>
+  </property>
+
+  <property>
+    <name>lens.server.estimate.timeout.millis</name>
+    <value>120000</value>
+  </property>
+  <property>
+    <name>lens.server.max.sessions.per.user</name>
+    <value>20</value>
+    <description>Number of sessions can be allowed for each user.</description>
+  </property>
+  <property>
+    <name>lens.server.status.update.exponential.wait.millis</name>
+    <value>1000</value>
+    <description>Number of millis that would grow exponentially for next update, incase of transient failures.
+    </description>
+  </property>
+  <property>
+    <name>lens.server.duplicate.query.allowed</name>
+    <value>true</value>
+  </property>
+
+</configuration>

@@ -106,6 +106,7 @@ public class TestDuplicateQueries extends LensJerseyTest {
     try {
       MediaType mt = defaultMT;
       log.info("Restarting lens server!");
+      //restart with overridden conf
       restartLensServer(getServerConfLocal(), false);
       log.info("Restarted lens server!");
 
@@ -191,7 +192,8 @@ public class TestDuplicateQueries extends LensJerseyTest {
         }
       }
       log.info("Restarting lens server!");
-      restartLensServer(super.getServerConf(), false);
+      // restart without overwrites
+      restartLensServer();
       log.info("Restarted lens server!");
     }
   }

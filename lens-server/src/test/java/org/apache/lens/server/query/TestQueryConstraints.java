@@ -99,7 +99,8 @@ public class TestQueryConstraints extends LensJerseyTest {
 
   @BeforeClass
   public void setupTest() throws Exception {
-    restartLensServer();
+    // restart with overwritten conf
+    restartLensServer(getServerConf());
     queryService = LensServices.get().getService(QueryExecutionService.NAME);
     metricsSvc = LensServices.get().getService(MetricsService.NAME);
     Map<String, String> sessionConf = new HashMap<>();
@@ -114,6 +115,7 @@ public class TestQueryConstraints extends LensJerseyTest {
   public void afterTest() throws Exception {
     dropTable(TEST_TABLE);
     queryService.closeSession(lensSessionId);
+    // bring it back without overwritten conf
     restartLensServer();
   }
 

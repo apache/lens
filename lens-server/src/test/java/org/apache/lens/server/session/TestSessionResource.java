@@ -381,63 +381,6 @@ public class TestSessionResource extends LensJerseyTest {
   }
 
   @Test(dataProvider = "mediaTypeData")
-  public void testServerMustRestartOnManualDeletionOfAddedResources(MediaType mt)
-    throws IOException, LensException, LenServerTestException {
-
-    /* Begin: Setup */
-
-    /* Add a resource jar to current working directory */
-    File jarFile = new File(TestResourceFile.TEST_RESTART_ON_RESOURCE_MOVE_JAR.getValue());
-    FileUtils.touch(jarFile);
-
-    /* Add the created resource jar to lens server */
-    LensSessionHandle sessionHandle = openSession("foo", "bar", new LensConf(), mt);
-    addResource(sessionHandle, "jar", jarFile.getPath(), mt);
-
-    /* Delete resource jar from current working directory */
-    LensServerTestFileUtils.deleteFile(jarFile);
-
-    /* End: Setup */
-
-    /* Verification Steps: server should restart without exceptions */
-    restartLensServer();
-    HiveSessionService service = LensServices.get().getService(SessionService.NAME);
-    service.closeSession(sessionHandle);
-  }
-
-  private LensSessionHandle openSession(final String userName, final String passwd, final LensConf conf, MediaType mt) {
-
-    final WebTarget target = target().path("session");
-    final FormDataMultiPart mp = new FormDataMultiPart();
-
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), userName));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), passwd));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        conf, mt));
-
-    return target.request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      LensSessionHandle.class);
-
-  }
-
-  private void addResource(final LensSessionHandle lensSessionHandle, final String resourceType,
-    final String resourcePath, MediaType mt) {
-    final WebTarget target = target().path("session/resources");
-    final FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionHandle,
-      mt));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), resourceType));
-    mp.bodyPart(
-      new FormDataBodyPart(FormDataContentDisposition.name("path").build(), resourcePath));
-    APIResult result = target.path("add").request(mt)
-      .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
-
-    if (!result.getStatus().equals(Status.SUCCEEDED)) {
-      throw new RuntimeException("Could not add resource:" + result);
-    }
-  }
-
-  @Test(dataProvider = "mediaTypeData")
   public void testOpenSessionWithDatabase(MediaType mt) throws Exception {
     // TEST1 - Check if call with database parameter sets current database
     // Create the test DB
