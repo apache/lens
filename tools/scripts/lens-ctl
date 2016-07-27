@@ -168,6 +168,9 @@ restart() {
 stop() {
   if [ -f $LENS_PID_FILE ]; then
     if kill -0 `cat $LENS_PID_FILE` > /dev/null 2>&1; then
+      echo Taking thread-dump for lens server running as `cat $LENS_PID_FILE`
+        kill -3 `cat $LENS_PID_FILE`
+        sleep 1
       echo Stopping lens server running as `cat $LENS_PID_FILE`
       if [ -n "$opt_force" ] ; then
         kill -9 `cat $LENS_PID_FILE`
