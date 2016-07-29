@@ -34,6 +34,7 @@ import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.server.api.error.LensException;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
@@ -110,24 +111,21 @@ public abstract class TestTimeRangeWriter {
     }
 
   }
-
-  @Test
-  public void testConsecutiveDayParts() throws LensException {
-    Set<FactPartition> answeringParts = new LinkedHashSet<FactPartition>();
-    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, null));
-    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -2), DAILY, null, null));
-    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, 0), DAILY, null, null));
-
+  @DataProvider
+  public Object[][] formatDataProvider() {
+    return new Object[][] {
+      {null, },
+      {DB_FORMAT, },
+    };
+  }
+  @Test(dataProvider = "formatDataProvider")
+  public void testConsecutiveDayParts(DateFormat format) throws LensException, InterruptedException {
+    Set<FactPartition> answeringParts = new LinkedHashSet<>();
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, format));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -2), DAILY, null, format));
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, 0), DAILY, null, format));
     String whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
-    validateConsecutive(whereClause, null);
-
-    answeringParts = new LinkedHashSet<FactPartition>();
-    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, DB_FORMAT));
-    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -2), DAILY, null, DB_FORMAT));
-    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, 0), DAILY, null, DB_FORMAT));
-
-    whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
-    validateConsecutive(whereClause, DB_FORMAT);
+    validateConsecutive(whereClause, format);
   }
 
   @Test
@@ -137,7 +135,7 @@ public abstract class TestTimeRangeWriter {
     String whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
     validateSingle(whereClause, null);
 
-    answeringParts = new LinkedHashSet<FactPartition>();
+    answeringParts = new LinkedHashSet<>();
     answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, DB_FORMAT));
     whereClause = getTimerangeWriter().getTimeRangeWhereClause(null, "test", answeringParts);
     validateSingle(whereClause, DB_FORMAT);

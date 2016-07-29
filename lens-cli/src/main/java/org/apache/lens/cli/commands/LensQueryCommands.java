@@ -267,10 +267,8 @@ public class LensQueryCommands extends BaseLensCommand {
     @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName,
     @CliOption(key = {"user"}, mandatory = false, help = "<user-who-submitted-query>") String user,
     @CliOption(key = {"driver"}, mandatory = false, help = "<driver-where-query-ran>") String driver,
-    @CliOption(key = {"fromDate"}, mandatory = false, unspecifiedDefaultValue = "-1", help
-      = "<submission-time-is-after>") long fromDate,
-    @CliOption(key = {"toDate"}, mandatory = false, unspecifiedDefaultValue = "" + Long.MAX_VALUE, help
-      = "<submission-time-is-before>") long toDate) {
+    @CliOption(key = {"fromDate"}, mandatory = false, help = "<submission-time-is-after>") String fromDate,
+    @CliOption(key = {"toDate"}, mandatory = false, help = "<submission-time-is-before>") String toDate) {
     List<QueryHandle> handles = getClient().getQueries(state, queryName, user, driver, fromDate, toDate);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles).concat("\n").concat("Total number of queries: "
@@ -378,10 +376,8 @@ public class LensQueryCommands extends BaseLensCommand {
   public String getAllPreparedQueries(
     @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName,
     @CliOption(key = {"user"}, mandatory = false, help = "<user-who-submitted-query>") String userName,
-    @CliOption(key = {"fromDate"}, mandatory = false, unspecifiedDefaultValue = "-1", help
-      = "<submission-time-is-after>") long fromDate,
-    @CliOption(key = {"toDate"}, mandatory = false, unspecifiedDefaultValue = "" + Long.MAX_VALUE, help
-      = "<submission-time-is-before>") long toDate) {
+    @CliOption(key = {"fromDate"}, mandatory = false, help = "<submission-time-is-after>") String fromDate,
+    @CliOption(key = {"toDate"}, mandatory = false, help = "<submission-time-is-before>") String toDate) {
     List<QueryPrepareHandle> handles = getClient().getPreparedQueries(userName, queryName, fromDate, toDate);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);

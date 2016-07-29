@@ -338,19 +338,24 @@ public class TestQueryService extends LensJerseyTest {
     long finishedQueries = metricsSvc.getFinishedQueries();
 
     int noOfQueriesBeforeExecution = queryService.allQueries.size();
+    long before = System.currentTimeMillis();
     QueryHandle theHandle = executeAndGetHandle(target(), Optional.of(lensSessionId), Optional.of("select ID from "
       + TEST_TABLE), Optional.<LensConf>absent(), mt);
-
-    // Get all queries
-    // XML
-    List<QueryHandle> allQueriesXML = target.queryParam("sessionid", lensSessionId).request(MediaType.APPLICATION_XML)
-      .get(new GenericType<List<QueryHandle>>() {});
-    assertTrue(allQueriesXML.size() >= 1);
 
     List<QueryHandle> allQueries = target.queryParam("sessionid", lensSessionId).request(mt)
       .get(new GenericType<List<QueryHandle>>() {});
     assertTrue(allQueries.size() >= 1);
     assertTrue(allQueries.contains(theHandle));
+    // time filter
+    allQueries = target.queryParam("sessionid", lensSessionId).queryParam("fromDate", before)
+      .queryParam("toDate", "now").request(mt).get(new GenericType<List<QueryHandle>>() {});
+    assertEquals(allQueries.size(), 1);
+    assertTrue(allQueries.contains(theHandle));
+
+    // status filter
+    allQueries = target.queryParam("sessionid", lensSessionId).queryParam("state", "SUCCESSFUL, CANCELED")
+      .request(mt).get(new GenericType<List<QueryHandle>>() {});
+    assertTrue(allQueries.size() >= 1);
 
     String queryXML = target.path(theHandle.toString()).queryParam("sessionid", lensSessionId)
       .request(MediaType.APPLICATION_XML).get(String.class);

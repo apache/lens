@@ -56,6 +56,7 @@ public final class DateUtil {
   public static final String UNIT;
   public static final Date MAX_DATE = new Date(Long.MAX_VALUE);
   public static final Date MIN_DATE = new Date(Long.MIN_VALUE);
+
   static {
     StringBuilder sb = new StringBuilder();
     String sep = "";
@@ -85,6 +86,7 @@ public final class DateUtil {
     + WSPACE + ")?" + "(" + QUANTITY + ")" + OPTIONAL_WSPACE + "(" + UNIT + "))?" + "(s?)";
 
   public static final Pattern RELDATE_VALIDATOR = Pattern.compile(RELDATE_VALIDATOR_STR, Pattern.CASE_INSENSITIVE);
+  public static final Pattern TIMESTAMP_VALIDATOR = Pattern.compile("\\d{5,}");
 
   public static final String YEAR_FMT = "[0-9]{4}";
   public static final String MONTH_FMT = YEAR_FMT + "-[0-9]{2}";
@@ -131,7 +133,9 @@ public final class DateUtil {
   }
 
   public static Date resolveDate(String str, Date now) throws LensException {
-    if (RELDATE_VALIDATOR.matcher(str).matches()) {
+    if (TIMESTAMP_VALIDATOR.matcher(str).matches()) {
+      return new Date(Long.parseLong(str));
+    } else if (RELDATE_VALIDATOR.matcher(str).matches()) {
       return resolveRelativeDate(str, now);
     } else {
       return resolveAbsoluteDate(str);

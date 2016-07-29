@@ -18,7 +18,6 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -46,14 +45,12 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
       partStr.append(partFilter);
       partStr.append(")");
     } else {
-      TreeSet<FactPartition> parts = new TreeSet<FactPartition>();
+      TreeSet<FactPartition> parts = new TreeSet<>();
       FactPartition first = null;
-      Iterator<FactPartition> it = rangeParts.iterator();
-      while (it.hasNext()) {
-        FactPartition part = it.next();
+      for (FactPartition part : rangeParts) {
         if (part.hasContainingPart()) {
           throw new LensException(LensCubeErrorCode.CANNOT_USE_TIMERANGE_WRITER.getLensErrorInfo(),
-              "Partition has containing part");
+            "Partition has containing part");
         }
         if (first == null) {
           first = part;

@@ -307,8 +307,8 @@ public class LensClient implements AutoCloseable {
     return getLensStatement(query).getResultSet();
   }
 
-  public List<QueryHandle> getQueries(String state, String queryName, String user, String driver, long fromDate,
-    long toDate) {
+  public List<QueryHandle> getQueries(String state, String queryName, String user, String driver, String fromDate,
+    String toDate) {
     return statement.getAllQueries(state, queryName, user, driver, fromDate, toDate);
   }
 
@@ -663,7 +663,8 @@ public class LensClient implements AutoCloseable {
     return statement.destroyPrepared(queryPrepareHandle);
   }
 
-  public List<QueryPrepareHandle> getPreparedQueries(String userName, String queryName, long fromDate, long toDate) {
+  public List<QueryPrepareHandle> getPreparedQueries(String userName, String queryName, String fromDate,
+    String toDate) {
     return statement.getAllPreparedQueries(userName, queryName, fromDate, toDate);
   }
 

@@ -27,6 +27,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.FinishedLensQuery;
 import org.apache.lens.server.util.UtilityMethods;
@@ -156,7 +157,7 @@ public class LensServerDAO {
   /**
    * Find finished queries.
    *
-   * @param state     the state
+   * @param states     the state
    * @param user      the user
    * @param driverName the driver's fully qualified Name
    * @param queryName the query name
@@ -165,42 +166,44 @@ public class LensServerDAO {
    * @return the list
    * @throws LensException the lens exception
    */
-  public List<QueryHandle> findFinishedQueries(String state, String user, String driverName, String queryName,
-    long fromDate, long toDate) throws LensException {
-    boolean addFilter = StringUtils.isNotBlank(state) || StringUtils.isNotBlank(user)
-      || StringUtils.isNotBlank(queryName);
+  public List<QueryHandle> findFinishedQueries(List<QueryStatus.Status> states, String user, String driverName,
+    String queryName, long fromDate, long toDate) throws LensException {
     StringBuilder builder = new StringBuilder("SELECT handle FROM finished_queries");
     List<Object> params = null;
-    if (addFilter) {
-      builder.append(" WHERE ");
-      List<String> filters = new ArrayList<String>(3);
-      params = new ArrayList<Object>(3);
+    builder.append(" WHERE ");
+    List<String> filters = new ArrayList<String>(3);
+    params = new ArrayList<Object>(3);
 
-      if (StringUtils.isNotBlank(state)) {
-        filters.add("status=?");
-        params.add(state);
+    if (states != null && !states.isEmpty()) {
+      StringBuilder statusFilterBuilder = new StringBuilder("status in (");
+      String sep = "";
+      for(QueryStatus.Status status: states) {
+        statusFilterBuilder.append(sep).append("?");
+        sep = ", ";
+        params.add(status.toString());
       }
-
-      if (StringUtils.isNotBlank(user)) {
-        filters.add("submitter=?");
-        params.add(user);
-      }
-
-      if (StringUtils.isNotBlank(queryName)) {
-        filters.add("queryname like ?");
-        params.add("%" + queryName + "%");
-      }
-
-      if (StringUtils.isNotBlank(driverName)) {
-        filters.add("lower(drivername)=?");
-        params.add(driverName.toLowerCase());
-      }
-
-      filters.add("submissiontime BETWEEN ? AND ?");
-      params.add(fromDate);
-      params.add(toDate);
-      builder.append(StringUtils.join(filters, " AND "));
+      filters.add(statusFilterBuilder.append(")").toString());
     }
+
+    if (StringUtils.isNotBlank(user)) {
+      filters.add("submitter=?");
+      params.add(user);
+    }
+
+    if (StringUtils.isNotBlank(queryName)) {
+      filters.add("queryname like ?");
+      params.add("%" + queryName + "%");
+    }
+
+    if (StringUtils.isNotBlank(driverName)) {
+      filters.add("lower(drivername)=?");
+      params.add(driverName.toLowerCase());
+    }
+
+    filters.add("submissiontime BETWEEN ? AND ?");
+    params.add(fromDate);
+    params.add(toDate);
+    builder.append(StringUtils.join(filters, " AND "));
 
     ResultSetHandler<List<QueryHandle>> resultSetHandler = new ResultSetHandler<List<QueryHandle>>() {
       @Override
@@ -221,11 +224,7 @@ public class LensServerDAO {
     QueryRunner runner = new QueryRunner(ds);
     String query = builder.toString();
     try {
-      if (addFilter) {
-        return runner.query(query, resultSetHandler, params.toArray());
-      } else {
-        return runner.query(query, resultSetHandler);
-      }
+      return runner.query(query, resultSetHandler, params.toArray());
     } catch (SQLException e) {
       throw new LensException(e);
     }

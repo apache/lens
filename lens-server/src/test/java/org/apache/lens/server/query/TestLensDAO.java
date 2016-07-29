@@ -44,6 +44,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -140,9 +141,9 @@ public class TestLensDAO {
     }
 
     System.out.println("@@ State = " + queryContext.getStatus().getStatus().name());
-    List<QueryHandle> daoTestQueryHandles = service.lensServerDao.findFinishedQueries(finishedLensQuery.getStatus(),
-        queryContext.getSubmittedUser(), queryContext.getSelectedDriver().getFullyQualifiedName(), "daotestquery1", -1L,
-      Long.MAX_VALUE);
+    List<QueryHandle> daoTestQueryHandles = service.lensServerDao.findFinishedQueries(
+      Lists.newArrayList(QueryStatus.Status.valueOf(finishedLensQuery.getStatus())), queryContext.getSubmittedUser(),
+      queryContext.getSelectedDriver().getFullyQualifiedName(), "daotestquery1", -1L, Long.MAX_VALUE);
     Assert.assertEquals(daoTestQueryHandles.size(), 1);
     Assert.assertEquals(daoTestQueryHandles.get(0).getHandleId().toString(), finishedHandle);
     service.closeSession(session);

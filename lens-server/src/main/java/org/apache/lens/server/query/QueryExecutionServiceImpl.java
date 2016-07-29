@@ -44,6 +44,7 @@ import org.apache.lens.api.Priority;
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
+import org.apache.lens.cube.metadata.DateUtil;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServerConf;
@@ -92,7 +93,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -2551,21 +2553,38 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * java.lang.String, java.lang.String, java.lang.String, java.lang.String, long, long)
    */
   @Override
-  public List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle, String state, String userName, String driver,
-    String queryName, long fromDate, long toDate) throws LensException {
-    validateTimeRange(fromDate, toDate);
+  public List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle, String states, String userName, String driver,
+    String queryName, String fromDate, String toDate) throws LensException {
+    long fromTime = -1;
+    long toTime = Long.MAX_VALUE;
+    Date now = new Date();
+    if (fromDate != null) {
+      fromTime = DateUtil.resolveDate(fromDate, now).getTime();
+    }
+    if (toDate != null) {
+      toTime = DateUtil.resolveDate(toDate, now).getTime();
+    }
+    validateTimeRange(fromTime, toTime);
     userName = UtilityMethods.removeDomain(userName);
+    Set<Status> statuses;
     try {
       acquire(sessionHandle);
-      Status status = null;
       try {
-        status = StringUtils.isBlank(state) ? null : Status.valueOf(state);
+        if (StringUtils.isNotBlank(states)) {
+          statuses = Sets.newHashSet();
+          for(String state: states.split(",")) {
+            statuses.add(Status.valueOf(state.trim().toUpperCase()));
+          }
+        } else {
+          statuses = Sets.newHashSet(Status.values());
+        }
       } catch (IllegalArgumentException e) {
         throw new BadRequestException("Bad state argument passed, possible values are " + Status.values(), e);
       }
-      boolean filterByStatus = status != null;
-      queryName = queryName.toLowerCase();
       boolean filterByQueryName = StringUtils.isNotBlank(queryName);
+      if (filterByQueryName) {
+        queryName = queryName.toLowerCase();
+      }
 
       if (StringUtils.isBlank(userName)) {
         userName = getSession(sessionHandle).getLoggedInUser();
@@ -2578,28 +2597,42 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         QueryHandle q = itr.next();
         QueryContext context = allQueries.get(q);
         long querySubmitTime = context.getSubmissionTime();
-        if ((filterByStatus && status != context.getStatus().getStatus())
+        if ((!statuses.contains(context.getStatus().getStatus()))
           || (filterByQueryName && !context.getQueryName().toLowerCase().contains(queryName))
           || (filterByDriver && !context.getSelectedDriver().getFullyQualifiedName().equalsIgnoreCase(driver))
           || (!"all".equalsIgnoreCase(userName) && !userName.equalsIgnoreCase(context.getSubmittedUser()))
-          || (!(fromDate <= querySubmitTime && querySubmitTime <= toDate))) {
+          || (!(fromTime <= querySubmitTime && querySubmitTime < toTime))) {
           itr.remove();
         }
       }
 
       // Unless user wants to get queries in 'non finished' state, get finished queries from DB as well
-      if (status == null || status == CANCELED || status == SUCCESSFUL || status == FAILED) {
+      List<Status> finishedStatusesQueried = null;
+      if (statuses.size() != Status.values().length) {
+        finishedStatusesQueried = Lists.newArrayList();
+        for (Status status: statuses) {
+          switch(status) {
+          case CANCELED:
+          case SUCCESSFUL:
+          case FAILED:
+            finishedStatusesQueried.add(status);
+            break;
+          default:
+            break;
+          }
+        }
+      }
+      if (finishedStatusesQueried == null || !finishedStatusesQueried.isEmpty()) {
         if ("all".equalsIgnoreCase(userName)) {
           userName = null;
         }
-        List<QueryHandle> persistedQueries = lensServerDao.findFinishedQueries(state, userName, driver, queryName,
-          fromDate, toDate);
+        List<QueryHandle> persistedQueries = lensServerDao.findFinishedQueries(finishedStatusesQueried, userName,
+          driver, queryName, fromTime, toTime);
         if (persistedQueries != null && !persistedQueries.isEmpty()) {
           log.info("Adding persisted queries {}", persistedQueries.size());
           all.addAll(persistedQueries);
         }
       }
-
       return all;
     } finally {
       release(sessionHandle);
@@ -2615,8 +2648,17 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   @Override
   public List<QueryPrepareHandle> getAllPreparedQueries(LensSessionHandle sessionHandle, String user, String queryName,
-    long fromDate, long toDate) throws LensException {
-    validateTimeRange(fromDate, toDate);
+    String fromDate, String toDate) throws LensException {
+    long fromTime = -1;
+    long toTime = Long.MAX_VALUE;
+    Date now = new Date();
+    if (fromDate != null) {
+      fromTime = DateUtil.resolveDate(fromDate, now).getTime();
+    }
+    if (toDate != null) {
+      toTime = DateUtil.resolveDate(toDate, now).getTime();
+    }
+    validateTimeRange(fromTime, toTime);
     user = UtilityMethods.removeDomain(user);
     try {
       acquire(sessionHandle);
@@ -2640,7 +2682,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           }
         }
         long queryPrepTime = preparedQueryContext.getPreparedTime().getTime();
-        if (fromDate <= queryPrepTime && queryPrepTime <= toDate) {
+        if (fromTime <= queryPrepTime && queryPrepTime < toTime) {
           continue;
         }
         itr.remove();
@@ -2808,7 +2850,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           // we will create an instance and read its state still.
           try {
             Class<? extends LensDriver> driverCls = (Class<? extends LensDriver>) Class.forName(driverClsName);
-            driver = (LensDriver) driverCls.newInstance();
+            driver = driverCls.newInstance();
             String[] driverTypeAndName = StringUtils.split(driverQualifiedName, '/');
             driver.configure(conf, driverTypeAndName[0], driverTypeAndName[1]);
           } catch (Exception e) {

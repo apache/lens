@@ -294,4 +294,9 @@ public class TestDateUtil {
     assertEquals(relativeToAbsolute("now.day -2 day", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
     assertEquals(relativeToAbsolute("now.day -2 days", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
   }
+  @Test
+  public void testTimestamp() throws LensException {
+    Date now = new Date();
+    assertEquals(DateUtil.resolveDate(String.valueOf(now.getTime()+1), now), new Date(now.getTime()+1));
+  }
 }

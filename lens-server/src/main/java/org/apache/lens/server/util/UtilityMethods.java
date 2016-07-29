@@ -77,7 +77,7 @@ public final class UtilityMethods {
    * @return the string
    */
   public static String removeDomain(String username) {
-    if (username.contains("@")) {
+    if (username != null && username.contains("@")) {
       username = username.substring(0, username.indexOf("@"));
     }
     return username;

@@ -459,15 +459,14 @@ public class LensStatement {
    * @param toDate    the to date
    * @return the all queries
    */
-  public List<QueryHandle> getAllQueries(String state, String queryName, String user, String driver, long fromDate,
-    long toDate) {
+  public List<QueryHandle> getAllQueries(String state, String queryName, String user, String driver, String fromDate,
+    String toDate) {
     WebTarget target = getQueryWebTarget(connection.buildClient());
-    List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
+    return target.queryParam("sessionid", connection.getSessionHandle())
       .queryParam("state", state).queryParam("queryName", queryName).queryParam("user", user)
       .queryParam("driver", driver).queryParam("fromDate", fromDate).queryParam("toDate", toDate).request()
       .get(new GenericType<List<QueryHandle>>() {
       });
-    return handles;
   }
 
   /**
@@ -479,13 +478,13 @@ public class LensStatement {
    * @param toDate    the to date
    * @return the all prepared queries
    */
-  public List<QueryPrepareHandle> getAllPreparedQueries(String userName, String queryName, long fromDate, long toDate) {
+  public List<QueryPrepareHandle> getAllPreparedQueries(String userName, String queryName, String fromDate,
+    String toDate) {
     Client client = connection.buildClient();
     WebTarget target = getPreparedQueriesWebTarget(client);
-    List<QueryPrepareHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
+    return target.queryParam("sessionid", connection.getSessionHandle())
       .queryParam("user", userName).queryParam("queryName", queryName).queryParam("fromDate", fromDate)
       .queryParam("toDate", toDate).request().get(new GenericType<List<QueryPrepareHandle>>() {});
-    return handles;
   }
 
   /**

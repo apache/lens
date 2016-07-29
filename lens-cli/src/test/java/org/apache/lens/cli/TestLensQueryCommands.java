@@ -141,8 +141,8 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   @Test(dataProvider = "executeSyncQueryDP")
   public void executeSyncQuery(LensQueryCommands qCom, String sql, boolean shouldPass, boolean closeConn)
     throws Exception{
-    assertEquals(qCom.getAllPreparedQueries("all", "", -1, -1), "No prepared queries");
-    String successfulQueries = qCom.getAllQueries("SUCCESSFUL", null, "all", null, -1, Long.MAX_VALUE);
+    assertEquals(qCom.getAllPreparedQueries("all", "", null, null), "No prepared queries");
+    String successfulQueries = qCom.getAllQueries("SUCCESSFUL", null, "all", null, null, null);
     int noOfSuccQueriesSoFar;
     if (successfulQueries.contains("No queries")) {
       noOfSuccQueriesSoFar = 0;
@@ -172,7 +172,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     }
     // Wait for query to reach successful state
     int chkCount = 0;
-    while (!qCom.getAllQueries("SUCCESSFUL", null, "all", null, -1, Long.MAX_VALUE).contains(
+    while (!qCom.getAllQueries("SUCCESSFUL", null, "all", null, null, null).contains(
         "Total number of queries: " + (noOfSuccQueriesSoFar + 1))) {
       Thread.sleep(100);
       chkCount++;
@@ -195,11 +195,11 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   public void preparedQuery(LensQueryCommands qCom) throws Exception {
     long submitTime = System.currentTimeMillis();
     String sql = "cube select id, name from test_dim";
-    String result = qCom.getAllPreparedQueries("testPreparedName", "all", submitTime, Long.MAX_VALUE);
+    String result = qCom.getAllPreparedQueries("testPreparedName", "all", String.valueOf(submitTime), null);
 
     assertEquals(result, "No prepared queries");
     final String qh = qCom.prepare(sql, "testPreparedName");
-    result = qCom.getAllPreparedQueries("testPreparedName", "all", submitTime, System.currentTimeMillis());
+    result = qCom.getAllPreparedQueries("testPreparedName", "all", String.valueOf(submitTime), "now");
     assertEquals(qh, result);
 
     result = qCom.getPreparedStatus(qh);
@@ -235,16 +235,16 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     log.debug("destroy result is " + result);
     assertEquals("Successfully destroyed " + qh, result);
-    result = qCom.getAllPreparedQueries("testPreparedName", "all", submitTime, Long.MAX_VALUE);
+    result = qCom.getAllPreparedQueries("testPreparedName", "all", String.valueOf(submitTime), null);
 
     assertEquals(result, "No prepared queries");
 
     final String qh2 = qCom.explainAndPrepare(sql, "testPrepQuery3");
     assertExplainOutput(qh2);
-    String handles = qCom.getAllPreparedQueries("testPrepQuery3", "all", -1, Long.MAX_VALUE);
+    String handles = qCom.getAllPreparedQueries("testPrepQuery3", "all", null, null);
     assertFalse(handles.contains("No prepared queries"), handles);
 
-    String handles2 = qCom.getAllPreparedQueries("testPrepQuery3", "all", -1, submitTime - 1);
+    String handles2 = qCom.getAllPreparedQueries("testPrepQuery3", "all", null, String.valueOf(submitTime - 1));
     assertFalse(handles2.contains(qh), handles2);
     result = qCom.destroyPreparedQuery(handles);
     assertEquals("Successfully destroyed " + handles, result);
@@ -320,7 +320,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String qh = qCom.executeQuery(sql, true, "testQuery1");
     String user = qCom.getClient().getLensStatement(new QueryHandle(UUID.fromString(qh)))
         .getQuery().getSubmittedUser();
-    String result = qCom.getAllQueries("", "testQuery1", user, "", -1, Long.MAX_VALUE);
+    String result = qCom.getAllQueries("", "testQuery1", user, "", null, null);
     // this is because previous query has run two query handle will be there
     assertTrue(result.contains(qh), result);
     assertTrue(result.contains("Total number of queries"));
@@ -339,7 +339,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     }
 
     // Check that query name searching is 'ilike'
-    String result2 = qCom.getAllQueries("", "query", "all", "", -1, Long.MAX_VALUE);
+    String result2 = qCom.getAllQueries("", "query", "all", "", null, null);
     assertTrue(result2.contains(qh), result2);
     assertTrue(qCom.getStatus(qh).contains("Status: SUCCESSFUL"));
     String details = qCom.getDetails(qh);
@@ -350,10 +350,10 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     // Kill query is not tested as there is no deterministic way of killing a query
 
-    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "", -1, Long.MAX_VALUE);
+    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "", null, null);
     assertTrue(result.contains(qh), result);
 
-    result = qCom.getAllQueries("FAILED", "", "all", "", -1, Long.MAX_VALUE);
+    result = qCom.getAllQueries("FAILED", "", "all", "", null, null);
     if (!result.contains("No queries")) {
       // Make sure valid query handles are returned
       String[] handles = StringUtils.split(result, "\n");
@@ -367,30 +367,31 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String queryName = qCom.getClient().getLensStatement(new QueryHandle(UUID.fromString(qh))).getQuery()
             .getQueryName();
     assertTrue("testQuery1".equalsIgnoreCase(queryName), queryName);
-    result = qCom.getAllQueries("", "", "", "", submitTime, System.currentTimeMillis());
+    result = qCom.getAllQueries("", "", "", "", String.valueOf(submitTime), "now");
     assertTrue(result.contains(qh), result);
 
-    result = qCom.getAllQueries("", "fooBar", "all", "", submitTime, System.currentTimeMillis());
+    result = qCom.getAllQueries("", "fooBar", "all", "", String.valueOf(submitTime), "now");
     assertTrue(result.contains("No queries"), result);
 
-    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "", submitTime, System.currentTimeMillis());
+    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "", String.valueOf(submitTime), "now");
     assertTrue(result.contains(qh));
 
-    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "", submitTime - 5000, submitTime - 1);
+    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "", String.valueOf(submitTime - 5000),
+      String.valueOf(submitTime - 1));
     // should not give query since its not in the range
     assertFalse(result.contains(qh));
 
     // Filters on driver
-    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "hive/hive1", submitTime,
-      System.currentTimeMillis());
+    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "hive/hive1", String.valueOf(submitTime), "now");
     assertTrue(result.contains(qh));
 
-    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "DummyDriver", submitTime, System.currentTimeMillis());
+    result = qCom.getAllQueries("SUCCESSFUL", "", "all", "DummyDriver", String.valueOf(submitTime), "now");
     assertFalse(result.contains(qh));
 
     try {
       // Should fail with bad request since fromDate > toDate
-      result = qCom.getAllQueries("SUCCESSFUL", "", "all", "", submitTime + 5000, submitTime);
+      result = qCom.getAllQueries("SUCCESSFUL", "", "all", "", String.valueOf(submitTime + 5000),
+        String.valueOf(submitTime));
       fail("Call should have failed with BadRequestException, instead got " + result);
     } catch (BadRequestException exc) {
       // pass

@@ -113,30 +113,30 @@ public class QueryServiceResource {
    * parameter to false.
    *
    * @param sessionid The sessionid in which queryName is working
-   * @param state     If any state is passed, all the queries in that state will be returned, otherwise all queries will
-   *                  be returned. Possible states are {link QueryStatus.Status#values()}
+   * @param states    If any state is passed, all the queries in that state will be returned, otherwise all queries will
+   *                  be returned. Possible states are {link QueryStatus.Status#values()}. Multiple states can be
+   *                  passed as comma separated string
    * @param queryName If any queryName is passed, all the queries containing the queryName will be returned, otherwise
    *                  all the queries will be returned
    * @param user      Returns queries submitted by this user. If set to "all", returns queries of all users. By default,
    *                  returns queries of the current user.
    * @param driver    Get queries submitted on a specific driver.
    * @param fromDate  from date to search queries in a time range, the range is inclusive(submitTime &gt;= fromDate)
-   * @param toDate    to date to search queries in a time range, the range is inclusive(toDate &gt;= submitTime)
+   *                  from date can be a long value indicating timestamp, or it can be in a format acceptable in
+   *                  time_range_in function. Notably: yyyy[-MM[-dd[-HH-[mm...]]]], or now based relative format
+   * @param toDate    to date to search queries in a time range, the range is inclusive(toDate &gt; submitTime)
+   *                  possible formats it can take is same as fromDate
    * @return List of {@link QueryHandle} objects
    */
   @GET
   @Path("queries")
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("queryName") String queryName,
-    @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("driver") String driver,
-    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate)
+    @QueryParam("state") String states, @QueryParam("queryName") String queryName, @QueryParam("user") String user,
+    @QueryParam("driver") String driver, @QueryParam("fromDate") String fromDate, @QueryParam("toDate") String toDate)
     throws LensException {
     validateSessionId(sessionid);
-    if (toDate == -1L) {
-      toDate = Long.MAX_VALUE;
-    }
-    return queryServer.getAllQueries(sessionid, state, user, driver, queryName, fromDate, toDate);
+    return queryServer.getAllQueries(sessionid, states, user, driver, queryName, fromDate, toDate);
   }
 
   /**
@@ -228,15 +228,14 @@ public class QueryServiceResource {
   public APIResult cancelAllQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("state") String state, @DefaultValue("") @QueryParam("user") String user,
     @DefaultValue("") @QueryParam("queryName") String queryName, @DefaultValue("") @QueryParam("driver") String driver,
-    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate)
+    @QueryParam("fromDate") String fromDate, @QueryParam("toDate") String toDate)
     throws LensException {
     validateSessionId(sessionid);
     int numCancelled = 0;
     List<QueryHandle> handles = null;
     boolean failed = false;
     try {
-      handles = getAllQueries(sessionid, state, queryName, user, driver, fromDate,
-        toDate == -1L ? Long.MAX_VALUE : toDate);
+      handles = getAllQueries(sessionid, state, queryName, user, driver, fromDate, toDate);
       for (QueryHandle handle : handles) {
         if (queryServer.cancelQuery(sessionid, handle)) {
           numCancelled++;
@@ -276,12 +275,8 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public List<QueryPrepareHandle> getAllPreparedQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
     @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
-    @DefaultValue("-1") @QueryParam("fromDate") long fromDate, @DefaultValue("-1") @QueryParam("toDate") long toDate)
-    throws LensException {
+    @QueryParam("fromDate") String fromDate, @QueryParam("toDate") String toDate) throws LensException {
     validateSessionId(sessionid);
-    if (toDate == -1L) {
-      toDate = Long.MAX_VALUE;
-    }
     return queryServer.getAllPreparedQueries(sessionid, user, queryName, fromDate, toDate);
   }
 
@@ -347,14 +342,13 @@ public class QueryServiceResource {
   @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") LensSessionHandle sessionid,
       @DefaultValue("") @QueryParam("user") String user, @DefaultValue("") @QueryParam("queryName") String queryName,
-      @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
-      @DefaultValue("-1") @QueryParam("toDate") long toDate) throws LensException {
+      @QueryParam("fromDate") String fromDate, @QueryParam("toDate") String toDate) throws LensException {
     validateSessionId(sessionid);
     int numDestroyed = 0;
     boolean failed = false;
     List<QueryPrepareHandle> handles = null;
     try {
-      handles = getAllPreparedQueries(sessionid, user, queryName, fromDate, toDate == -1L ? Long.MAX_VALUE : toDate);
+      handles = getAllPreparedQueries(sessionid, user, queryName, fromDate, toDate);
       for (QueryPrepareHandle prepared : handles) {
         if (queryServer.destroyPrepared(sessionid, prepared)) {
           numDestroyed++;

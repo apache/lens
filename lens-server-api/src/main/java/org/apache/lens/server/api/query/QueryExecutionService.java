@@ -227,7 +227,8 @@ public interface QueryExecutionService extends LensService, SessionValidator {
    * Returns all the queries in the specified state, for the given user and matching query name.
    *
    * @param sessionHandle the session handle
-   * @param state         return queries in this state. if null, all queries will be returned
+   * @param states        return queries in these state. if null, all queries will be returned. Multiple states can
+   *                      be supplied separated by comma
    * @param user          Get queries submitted by a specific user.
    *                      If this set to "all", queries of all users are returned
    * @param driver        Get queries submitted on a specific driver.
@@ -237,8 +238,8 @@ public interface QueryExecutionService extends LensService, SessionValidator {
    * @return List of query handles
    * @throws LensException the lens exception
    */
-  List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle, String state, String user, String driver,
-    String queryName, long fromDate, long toDate) throws LensException;
+  List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle, String states, String user, String driver,
+    String queryName, String fromDate, String toDate) throws LensException;
 
   /**
    * Returns all the prepared queries for the specified user. If no user is passed, queries of all users will be
@@ -255,7 +256,7 @@ public interface QueryExecutionService extends LensService, SessionValidator {
    * @throws LensException the lens exception
    */
   List<QueryPrepareHandle> getAllPreparedQueries(LensSessionHandle sessionHandle, String user, String queryName,
-    long fromDate, long toDate) throws LensException;
+    String fromDate, String toDate) throws LensException;
 
   /**
    * Destroy a prepared query.
