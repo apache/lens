@@ -254,4 +254,11 @@
       is enabled by using org.apache.lens.server.api.query.constraint.MaxConcurrentDriverQueriesConstraintFactory as
       one of the factories in lens.driver.jdbc.query.constraint.factories property.</description>
   </property>
+
+  <property>
+    <name>lens.driver.jdbc.statement.cancel.supported</name>
+    <value>true</value>
+    <description>Flag to indicate Whether cancel on JDBC statement is supported. If not supported,
+      framework wont call cancel on JDBC statement.</description>
+  </property>
 </configuration>

@@ -110,4 +110,7 @@ public final class JDBCDriverConfConstants {
   public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY = JDBC_DRIVER_PFX
     + "waiting.queries.selection.policy.factories";
   public static final String REGEX_REPLACEMENT_VALUES = JDBC_DRIVER_PFX + "regex.replacement.values";
+  public static final String STATEMENT_CANCEL_SUPPORTED = JDBC_DRIVER_PFX + "statement.cancel.supported";
+  public static final boolean DEFAULT_STATEMENT_CANCEL_SUPPORTED = true;
+
 }

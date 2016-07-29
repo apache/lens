@@ -85,8 +85,10 @@ Jdbc driver configuration
 *--+--+---+--+
 |30|lens.driver.jdbc.regex.replacement.values|to_date=date, format_number=format, date_sub\((.*?)\,\s*([0-9]+\s*)\)=date_sub($1\, interval $2 day), date_add\((.*?)\,\s*([0-9]+\s*)\)=date_add($1\, interval $2 day)|Rewriting the HQL to optimized sql queries|
 *--+--+---+--+
-|31|lens.driver.jdbc.validate.through.prepare|true|Flag to enable query syntactic and semantic validation using prepared statement.|
+|31|lens.driver.jdbc.statement.cancel.supported|true|Flag to indicate Whether cancel on JDBC statement is supported. If not supported, framework wont call cancel on JDBC statement.|
 *--+--+---+--+
-|32|lens.driver.jdbc.waiting.queries.selection.policy.factories|org.apache.lens.server.api.query.collect.DriverSpecificWaitingQueriesSelectionPolicyFactory|Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
+|32|lens.driver.jdbc.validate.through.prepare|true|Flag to enable query syntactic and semantic validation using prepared statement.|
+*--+--+---+--+
+|33|lens.driver.jdbc.waiting.queries.selection.policy.factories|org.apache.lens.server.api.query.collect.DriverSpecificWaitingQueriesSelectionPolicyFactory|Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
 *--+--+---+--+
 The configuration parameters and their default values

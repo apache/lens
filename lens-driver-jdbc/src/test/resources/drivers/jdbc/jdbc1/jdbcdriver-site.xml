@@ -64,7 +64,8 @@
 
   <property>
     <name>lens.driver.jdbc.regex.replacement.values</name>
-    <value>weekofyear=week, to_date=date, format_number=format, date_sub\((.*?)\,\s*([0-9]+\s*)\)=date_sub($1\, interval$2 day), date_add\((.*?)\,\s*([0-9]+\s*)\)=date_add($1\, interval $2 day)</value>
+    <value>weekofyear=week, to_date=date, format_number=format, date_sub\((.*?)\,\s*([0-9]+\s*)\)=date_sub($1\,
+        interval$2 day), date_add\((.*?)\,\s*([0-9]+\s*)\)=date_add($1\, interval $2 day),positive=sleep</value>
     <description>Rewriting the HQL to optimized sql queries</description>
   </property>
 </configuration>

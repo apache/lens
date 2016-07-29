@@ -139,13 +139,17 @@ public class TestJdbcDriver {
   }
 
   synchronized void createTable(String table, Connection conn) throws Exception {
+    runTestSetupQuery(conn, "CREATE TABLE " + table + " (ID INT)");
+  }
+
+  void runTestSetupQuery(Connection conn, String query) throws Exception {
     Statement stmt = null;
     try {
       if (conn == null) {
         conn = driver.getConnection();
       }
       stmt = conn.createStatement();
-      stmt.execute("CREATE TABLE " + table + " (ID INT)");
+      stmt.execute(query);
 
       conn.commit();
     } finally {
@@ -163,13 +167,16 @@ public class TestJdbcDriver {
     insertData(table, null);
   }
 
+  void insertData(String table, Connection conn) throws Exception {
+    insertData(table, conn, 10);
+  }
   /**
    * Insert data.
    *
    * @param table the table
    * @throws Exception the exception
    */
-  void insertData(String table, Connection conn) throws Exception {
+  void insertData(String table, Connection conn, int numRows) throws Exception {
     PreparedStatement stmt = null;
     try {
       if (conn == null) {
@@ -177,7 +184,7 @@ public class TestJdbcDriver {
       }
       stmt = conn.prepareStatement("INSERT INTO " + table + " VALUES(?)");
 
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < numRows; i++) {
         stmt.setInt(1, i);
         stmt.executeUpdate();
       }
@@ -449,7 +456,7 @@ public class TestJdbcDriver {
 
 
   /**
-   * Data provider for test case {@link #testExecuteWithPreFetch()}
+   * Data provider for test case {@link #testExecuteWithPreFetch(int, boolean, int, boolean, long)} ()}
    * @return
    */
   @DataProvider
@@ -822,29 +829,58 @@ public class TestJdbcDriver {
     driver.execute(validCtx);
   }
 
+  public static int sleep(int t) {
+    try {
+      Thread.sleep(t * 1000);
+    } catch (InterruptedException ie) {
+      // ignore
+    }
+    return t;
+  }
+
+  @DataProvider(name = "waitBeforeCancel")
+  public Object[][] mediaTypeData() {
+    return new Object[][] {
+      {true},
+      {false},
+    };
+  }
+
+  boolean setupCancel = false;
+  private void setupCancelQuery() throws Exception {
+    if (!setupCancel) {
+      createTable("cancel_query_test");
+      insertData("cancel_query_test", null, 1);
+      final String function = "create function sleep(t int) returns int no sql language java PARAMETER STYLE JAVA"
+        + " EXTERNAL NAME 'CLASSPATH:org.apache.lens.driver.jdbc.TestJdbcDriver.sleep'";
+      runTestSetupQuery(null, function);
+      setupCancel = true;
+    }
+  }
   /**
    * Test cancel query.
    *
    * @throws Exception the exception
    */
-  @Test
-  public void testCancelQuery() throws Exception {
-    createTable("cancel_query_test");
-    insertData("cancel_query_test");
-    final String query = "SELECT * FROM cancel_query_test";
+  @Test(dataProvider = "waitBeforeCancel")
+  public void testCancelQuery(boolean waitBeforeCancel) throws Exception {
+    setupCancelQuery();
+    // picked function as positive with udf mapping to sleep - sothat the signature of both are same.
+    // Here we need a UDF mapping because the function sleep is not available in Hive functions and semantic analysis
+    // would fail otherwise.
+    final String query = "SELECT positive(5) FROM cancel_query_test";
     QueryContext context = createQueryContext(query);
     System.out.println("@@@ test_cancel:" + context.getQueryHandle());
     executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
+    // without wait query may not be launched.
+    if (waitBeforeCancel) {
+      Thread.sleep(100);
+    }
     boolean isCancelled = driver.cancelQuery(handle);
     driver.updateStatus(context);
-
-    if (isCancelled) {
-      assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED);
-    } else {
-      // Query completed before cancelQuery call
-      assertEquals(context.getDriverStatus().getState(), DriverQueryState.SUCCESSFUL);
-    }
+    assertTrue(isCancelled);
+    assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED);
 
     assertTrue(context.getDriverStatus().getDriverStartTime() > 0);
     assertTrue(context.getDriverStatus().getDriverFinishTime() > 0);

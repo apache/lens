@@ -112,6 +112,7 @@ public class JDBCDriver extends AbstractLensDriver {
   private ImmutableSet<QueryLaunchingConstraint> queryConstraints;
   private ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies;
 
+  private boolean isStatementCancelSupported;
   /**
    * Data related to a query submitted to JDBCDriver.
    */
@@ -207,6 +208,29 @@ public class JDBCDriver extends AbstractLensDriver {
         queryResult.close();
       }
       isClosed = true;
+    }
+
+    public boolean cancel() {
+      boolean ret;
+      log.debug("Canceling resultFuture object");
+      ret = resultFuture.cancel(true);
+      log.debug("Done resultFuture cancel!");
+      // queryResult object would be null if query is not yet launched - since we did future.cancel, no other cancel is
+      // required.
+      if (queryResult != null && isStatementCancelSupported) {
+        log.debug("Cancelling query through statement cancel");
+        try {
+          queryResult.stmt.cancel();
+          log.debug("Done statement cancel!");
+          ret = true;
+        } catch (SQLFeatureNotSupportedException se) {
+          log.warn("Statement cancel not supported", se);
+        } catch(SQLException e) {
+          log.warn("Statement cancel failed", e);
+          ret = false;
+        }
+      }
+      return ret;
     }
 
     public String getQueryHandleString() {
@@ -484,6 +508,7 @@ public class JDBCDriver extends AbstractLensDriver {
     this.logSegregationContext = new MappedDiagnosticLogSegregationContext();
     this.queryConstraints = getImplementations(QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY, this.conf);
     this.selectionPolicies = getImplementations(WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY, this.conf);
+    this.isStatementCancelSupported = conf.getBoolean(STATEMENT_CANCEL_SUPPORTED, DEFAULT_STATEMENT_CANCEL_SUPPORTED);
   }
 
   /**
@@ -1045,7 +1070,8 @@ public class JDBCDriver extends AbstractLensDriver {
   public boolean cancelQuery(QueryHandle handle) throws LensException {
     checkConfigured();
     JdbcQueryContext context = getQueryContext(handle);
-    boolean cancelResult = context.getResultFuture().cancel(true);
+    log.info("{} cancel request on query {}", getFullyQualifiedName(), handle);
+    boolean cancelResult = context.cancel();
     if (cancelResult) {
       context.setCancelled(true);
       // this is required because future.cancel does not guarantee
