@@ -24,7 +24,7 @@ RUN mv spark-1.3.0-bin-hadoop2.4 /usr/local
 ENV SPARK_HOME /usr/local/spark-1.3.0-bin-hadoop2.4
 RUN rm spark-1.3.0-bin-hadoop2.4.tar
 
-ENV LENS_VERSION 2.6.0-beta-SNAPSHOT
+ENV LENS_VERSION 2.7.0-SNAPSHOT
 ENV BASEDIR /opt/lens
 ENV LENS_HOME $BASEDIR/lens-dist/target/apache-lens-${LENS_VERSION}-bin/apache-lens-${LENS_VERSION}-bin/server
 ENV LENS_CLIENT $BASEDIR/lens-dist/target/apache-lens-${LENS_VERSION}-bin/apache-lens-${LENS_VERSION}-bin/client
