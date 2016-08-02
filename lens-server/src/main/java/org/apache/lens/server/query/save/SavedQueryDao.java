@@ -282,7 +282,7 @@ public class SavedQueryDao {
         + QUERY_COL_NAME + " longtext,"
         + PARAMS_COL_NAME + " longtext,"
         + CREATED_AT_COL_NAME + " timestamp DEFAULT CURRENT_TIMESTAMP,"
-        + UPDATED_AT_COL_NAME + " timestamp DEFAULT CURRENT_TIMESTAMP,"
+        + UPDATED_AT_COL_NAME + " timestamp NOT NULL,"
         + "  PRIMARY KEY ("+ ID_COL_NAME +")"
         + ")";
 
