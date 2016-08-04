@@ -58,14 +58,20 @@ public class LensClientSingletonWrapper {
     log.error("failed login attempt", e);
     switch (e.getErrorCode()) {
     case 401:
-      System.console().printf("username/password combination incorrect.\n");
+      printError("username/password combination incorrect.");
       break;
     case 500:
-      System.console().printf("server unresponsive, Returned error code 500\n");
+      printError("server unresponsive, Returned error code 500");
       break;
     default:
-      System.console().printf("ERROR: " + e.getMessage() + "\n");
+      printError("ERROR: " + e.getMessage());
     }
+  }
+  private void printError(String error) {
+    if (System.console() != null) {
+      System.console().printf(error + "\n");
+    }
+    log.error(error);
   }
 
   public LensClient getClient() {
