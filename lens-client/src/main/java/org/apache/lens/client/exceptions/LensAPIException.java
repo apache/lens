@@ -45,4 +45,8 @@ public class LensAPIException extends Exception {
   public String getLensAPIRequestId() {
     return this.errorResult.getId();
   }
+
+  public String getMessage() {
+    return getLensAPIErrorMessage();
+  }
 }
