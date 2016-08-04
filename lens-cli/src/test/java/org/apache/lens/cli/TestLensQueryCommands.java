@@ -461,6 +461,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   public void showPersistentResultSet(LensQueryCommands qCom) throws Exception {
     System.out.println("@@PERSISTENT_RESULT_TEST-------------");
     qCom.getClient().setConnectionParam("lens.query.enable.persistent.resultset", "true");
+    qCom.getClient().setConnectionParam("lens.query.prefetch.inmemory.resultset", "false");
     String query = "cube select id,name from test_dim";
     try {
       String result = qCom.executeQuery(query, false, "testQuery3");
