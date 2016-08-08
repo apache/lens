@@ -875,4 +875,18 @@
     <description>Query current time in millis. This is used to resolve 'now'. If value is set to zero, 'now' is
      resolved to current value</description>
   </property>
+
+  <property>
+    <name>lens.server.http.notification.conn.timeout.millis</name>
+    <value>5000</value>
+    <description>This is the connection timeout for all HTTP Notifications sent by lens server.
+      Default connection timeout is 5 secs</description>
+  </property>
+  <property>
+    <name>lens.server.http.notification.read.timeout.millis</name>
+    <value>10000</value>
+    <description>This is the read timeout for all HTTP Notifications sent by lens server.
+      Default read timeout is 10 secs</description>
+  </property>
+
 </configuration>

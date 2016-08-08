@@ -365,6 +365,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       QueryEnded.class);
     getEventService().addListenerForType(
       new QueryEndNotifier(this, getCliService().getHiveConf(), this.logSegregationContext), QueryEnded.class);
+    getEventService().addListenerForType(
+      new QueryEndHttpNotifier(getCliService().getHiveConf(), this.logSegregationContext), QueryEnded.class);
     log.info("Registered query result formatter");
   }
 

@@ -60,50 +60,56 @@ Lens session configuration
 *--+--+---+--+
 |18|lens.query.hdfs.output.path|hdfsout|The directory under the parent result directory, in which HiveDriver will persist the results, if persisting by driver is enabled. This directory should exist and should have world writable permissions sothat all users will be able put query outputs here.|
 *--+--+---+--+
-|19|lens.query.output.charset.encoding|UTF-8|The charset encoding for formatting query result. It supports all the encodings supported by java.io.OutputStreamWriter.|
+|19|lens.query.http.notification.mediatype|application/json|This is the media type for Query Http notifications. Accepted types are "application/json" and "application/xml". The default value is "application/json"|
 *--+--+---+--+
-|20|lens.query.output.compression.codec|org.apache.hadoop.io.compress.GzipCodec|The codec used to compress the query output, if compression is enabled|
+|20|lens.query.http.notification.type.FINISHED|false|Setting this property to true will enable query FINISHED notifications which includes SUCCESSFUL, FAILED and CANCELLED queries. The notification will have eventtype = "FINISHED", eventtime = long event time and query = org.apache.lens.api.query.LensQuery instance. The mediatype for eventtype and eventtime will be TEXT/PLAIN and the mediatype for query will be based on property lens.query.http.notification.mediatype. Default value of this property is false.|
 *--+--+---+--+
-|21|lens.query.output.enable.compression|false|Whether to compress the query result output|
+|21|lens.query.http.notification.urls| |These are the http end points for Query http notifications. Users can specify more than one comma separated end points for a query. If this property is not set, no http notification will be sent out by lens server for the query.|
 *--+--+---+--+
-|22|lens.query.output.file.extn|.csv|The extension name for the persisted query output file. If file is compressed, the extension from compression codec will be appended to this extension.|
+|22|lens.query.output.charset.encoding|UTF-8|The charset encoding for formatting query result. It supports all the encodings supported by java.io.OutputStreamWriter.|
 *--+--+---+--+
-|23|lens.query.output.footer| |The value of custom footer that should be written, if any. This footer will be added in formatting driver persisted results.|
+|23|lens.query.output.compression.codec|org.apache.hadoop.io.compress.GzipCodec|The codec used to compress the query output, if compression is enabled|
 *--+--+---+--+
-|24|lens.query.output.formatter| |The query result output formatter for the query. If no value is specified, then org.apache.lens.lib.query.FileSerdeFormatter will be used to format in-memory result sets, org.apache.lens.lib.query.FilePersistentFormatter will be used to format driver persisted result sets.|
+|24|lens.query.output.enable.compression|false|Whether to compress the query result output|
 *--+--+---+--+
-|25|lens.query.output.header| |The value of custom header that should be written, if any. If no value column names will be used as header.|
+|25|lens.query.output.file.extn|.csv|The extension name for the persisted query output file. If file is compressed, the extension from compression codec will be appended to this extension.|
 *--+--+---+--+
-|26|lens.query.output.write.footer|false|Whether to write footer as part of query result. When enabled, total number of rows will be written as part of header.|
+|26|lens.query.output.footer| |The value of custom footer that should be written, if any. This footer will be added in formatting driver persisted results.|
 *--+--+---+--+
-|27|lens.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results.|
+|27|lens.query.output.formatter| |The query result output formatter for the query. If no value is specified, then org.apache.lens.lib.query.FileSerdeFormatter will be used to format in-memory result sets, org.apache.lens.lib.query.FilePersistentFormatter will be used to format driver persisted result sets.|
 *--+--+---+--+
-|28|lens.query.prefetch.inmemory.resultset|true|When set to true, specified number of rows of result set will be pre-fetched if the result set is of type InMemoryResultSet and query execution is not asynchronous i.e. query should be launched with operation as EXECUTE_WITH_TIMEOUT. Suggested usage of this property: It can be used by client to stream as well as persist results in server for queries that finish fast and produce results with fewer rows (should be less than number of rows pre-fetched). Note that the results are streamed to the client early, without waiting for persistence to finish. Default value of this property is true.|
+|28|lens.query.output.header| |The value of custom header that should be written, if any. If no value column names will be used as header.|
 *--+--+---+--+
-|29|lens.query.prefetch.inmemory.resultset.rows|100|Specifies the number of rows to pre-fetch when lens.query.prefetch.inmemory.resultset is set to true. Default value is 100 rows.|
+|29|lens.query.output.write.footer|false|Whether to write footer as part of query result. When enabled, total number of rows will be written as part of header.|
 *--+--+---+--+
-|30|lens.query.result.email.cc| |When query ends, the result/failure reason will be sent to the user via email. The mail would be cc'ed to the addresses provided in this field.|
+|30|lens.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results.|
 *--+--+---+--+
-|31|lens.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1. Currently we support only webhdfs url as the http url for HDFS file system|
+|31|lens.query.prefetch.inmemory.resultset|true|When set to true, specified number of rows of result set will be pre-fetched if the result set is of type InMemoryResultSet and query execution is not asynchronous i.e. query should be launched with operation as EXECUTE_WITH_TIMEOUT. Suggested usage of this property: It can be used by client to stream as well as persist results in server for queries that finish fast and produce results with fewer rows (should be less than number of rows pre-fetched). Note that the results are streamed to the client early, without waiting for persistence to finish. Default value of this property is true.|
 *--+--+---+--+
-|32|lens.query.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
+|32|lens.query.prefetch.inmemory.resultset.rows|100|Specifies the number of rows to pre-fetch when lens.query.prefetch.inmemory.resultset is set to true. Default value is 100 rows.|
 *--+--+---+--+
-|33|lens.query.result.output.serde|org.apache.lens.lib.query.CSVSerde|The default serde class name that should be used by org.apache.lens.lib.query.FileSerdeFormatter for formatting the output|
+|33|lens.query.result.email.cc| |When query ends, the result/failure reason will be sent to the user via email. The mail would be cc'ed to the addresses provided in this field.|
 *--+--+---+--+
-|34|lens.query.result.parent.dir|file:///tmp/lensreports|The directory for storing persisted result of query. This directory should exist and should have writable permissions by lens server|
+|34|lens.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1. Currently we support only webhdfs url as the http url for HDFS file system|
 *--+--+---+--+
-|35|lens.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
+|35|lens.query.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
 *--+--+---+--+
-|36|lens.query.result.split.multiple|false|Whether to split the result into multiple files. If enabled, each file will be restricted to max rows configured. All the files will be available as zip.|
+|36|lens.query.result.output.serde|org.apache.lens.lib.query.CSVSerde|The default serde class name that should be used by org.apache.lens.lib.query.FileSerdeFormatter for formatting the output|
 *--+--+---+--+
-|37|lens.query.result.split.multiple.maxrows|100000|The maximum number of rows allowed in each file, when splitting the result into multiple files is enabled.|
+|37|lens.query.result.parent.dir|file:///tmp/lensreports|The directory for storing persisted result of query. This directory should exist and should have writable permissions by lens server|
 *--+--+---+--+
-|38|lens.session.aux.jars| |List of comma separated jar paths, which will added to the session|
+|38|lens.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
 *--+--+---+--+
-|39|lens.session.cluster.user| |Session level config which will determine which cluster user will access hdfs|
+|39|lens.query.result.split.multiple|false|Whether to split the result into multiple files. If enabled, each file will be restricted to max rows configured. All the files will be available as zip.|
 *--+--+---+--+
-|40|lens.session.loggedin.user| |The username used to log in to lens. e.g. LDAP user|
+|40|lens.query.result.split.multiple.maxrows|100000|The maximum number of rows allowed in each file, when splitting the result into multiple files is enabled.|
 *--+--+---+--+
-|41|lens.session.metastore.exclude.cubetables.from.nativetables|true|Exclude cube related tables when fetching native tables|
+|41|lens.session.aux.jars| |List of comma separated jar paths, which will added to the session|
+*--+--+---+--+
+|42|lens.session.cluster.user| |Session level config which will determine which cluster user will access hdfs|
+*--+--+---+--+
+|43|lens.session.loggedin.user| |The username used to log in to lens. e.g. LDAP user|
+*--+--+---+--+
+|44|lens.session.metastore.exclude.cubetables.from.nativetables|true|Exclude cube related tables when fetching native tables|
 *--+--+---+--+
 The configuration parameters and their default values

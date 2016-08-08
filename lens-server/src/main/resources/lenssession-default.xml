@@ -242,6 +242,31 @@
     </description>
   </property>
 
+  <property>
+    <name>lens.query.http.notification.mediatype</name>
+    <value>application/json</value>
+    <description>This is the media type for Query Http notifications. Accepted types are "application/json" and
+      "application/xml". The default value is "application/json"</description>
+  </property>
+
+  <property>
+    <name>lens.query.http.notification.type.FINISHED</name>
+    <value>false</value>
+    <description>Setting this property to true will enable query FINISHED notifications which includes
+      SUCCESSFUL, FAILED and CANCELLED queries. The notification will have eventtype = "FINISHED",
+      eventtime = long event time and query = org.apache.lens.api.query.LensQuery instance. The mediatype for
+      eventtype and eventtime will be TEXT/PLAIN and the mediatype for query will be based on property
+      lens.query.http.notification.mediatype. Default value of this property is false. </description>
+  </property>
+
+  <property>
+    <name>lens.query.http.notification.urls</name>
+    <value></value>
+    <description>These are the http end points for Query http notifications. Users can specify more than one comma
+      separated end points for a query. If this property is not set, no http notification will be sent out by lens
+      server for the query.</description>
+  </property>
+
   <!--  properties for session -->
   <property>
     <name>lens.session.aux.jars</name>
