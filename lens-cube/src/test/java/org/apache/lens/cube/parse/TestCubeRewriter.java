@@ -617,6 +617,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
   public void testCubeGroupbyQuery() throws Exception {
     Configuration conf = getConf();
     conf.set(DRIVER_SUPPORTED_STORAGES, "C2");
+
     String hqlQuery =
       rewrite("select name, SUM(msr2) from" + " testCube join citydim on testCube.cityid = citydim.id where "
         + TWO_DAYS_RANGE, conf);
@@ -692,6 +693,23 @@ public class TestCubeRewriter extends TestQueryRewrite {
     expected =
       getExpectedQuery(TEST_CUBE_NAME, "select round(testcube.zipcode) as `rzc`," + " sum(testcube.msr2) FROM ", null,
         " group by testcube.zipcode  order by rzc asc", getWhereForDailyAndHourly2days(TEST_CUBE_NAME, "C2_testfact"));
+    compareQueries(hqlQuery, expected);
+
+    //Dim attribute with aggregate function
+    hqlQuery =
+        rewrite("select countofdistinctcityid, zipcode from" + " testCube where " + TWO_DAYS_RANGE, conf);
+    expected =
+        getExpectedQuery(TEST_CUBE_NAME, "select " + " count(distinct (testcube.cityid)), (testcube.zipcode) FROM ",
+            null, " group by (testcube.zipcode)", getWhereForDailyAndHourly2days(TEST_CUBE_NAME, "C2_testfact"));
+    compareQueries(hqlQuery, expected);
+
+    //Dim attribute with single row function
+    hqlQuery =
+        rewrite("select notnullcityid, zipcode from" + " testCube where " + TWO_DAYS_RANGE, conf);
+    expected =
+        getExpectedQuery(TEST_CUBE_NAME, "select " + " distinct case  when (testcube.cityid) is null then 0 "
+                + "else (testcube.cityid) end, (testcube.zipcode)  FROM ", null,
+            "", getWhereForDailyAndHourly2days(TEST_CUBE_NAME, "C2_testfact"));
     compareQueries(hqlQuery, expected);
 
     // rewrite with expressions

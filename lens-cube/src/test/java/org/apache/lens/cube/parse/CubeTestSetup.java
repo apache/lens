@@ -659,6 +659,11 @@ public class CubeTestSetup {
       "substr(dim2big1, 5)"));
     exprs.add(new ExprColumn(new FieldSchema("asciicity", "String", "ascii cityname"), "ascii cityname substr",
       "ascii(cityname)"));
+    exprs.add(new ExprColumn(new FieldSchema("countofdistinctcityid", "int", "Count of Distinct CityId"),
+        "Count of Distinct CityId Expr", "count(distinct(cityid))"));
+    exprs.add(new ExprColumn(new FieldSchema("notnullcityid", "int", "Not null cityid"),
+        "Not null cityid Expr", "case when cityid is null then 0 else cityid end"));
+
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(TEST_CUBE_NAME),
       "d_time,pt,it,et,test_time_dim,test_time_dim2");

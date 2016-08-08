@@ -26,6 +26,7 @@ import java.util.Iterator;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.CubeMeasure;
+import org.apache.lens.cube.metadata.ExprColumn;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 import org.apache.lens.server.api.error.LensException;
@@ -102,10 +103,31 @@ class AggregateResolver implements ContextRewriter {
       // Check if any measure/aggregate columns and distinct clause used in
       // select tree. If not, update selectAST token "SELECT" to "SELECT DISTINCT"
       if (!hasMeasures(cubeql, cubeql.getSelectAST()) && !isDistinctClauseUsed(cubeql.getSelectAST())
-        && !HQLParser.hasAggregate(cubeql.getSelectAST())) {
+        && !HQLParser.hasAggregate(cubeql.getSelectAST())
+          && !isAggregateDimExprUsedInSelect(cubeql, cubeql.getSelectAST())) {
         cubeql.getSelectAST().getToken().setType(HiveParser.TOK_SELECTDI);
       }
     }
+  }
+
+  private boolean isAggregateDimExprUsedInSelect(CubeQueryContext cubeql, ASTNode selectAST) throws LensException {
+    for (int i = 0; i < selectAST.getChildCount(); i++) {
+      ASTNode child = (ASTNode) selectAST.getChild(i);
+      String expr = HQLParser.getString((ASTNode) child.getChild(0).getChild(1));
+      if (cubeql.getQueriedExprs().contains(expr)) {
+        for (Iterator<ExpressionResolver.ExpressionContext> itrContext =
+             cubeql.getExprCtx().getAllExprsQueried().get(expr).iterator(); itrContext.hasNext();) {
+          for (Iterator<ExprColumn.ExprSpec> itrCol =
+               itrContext.next().getExprCol().getExpressionSpecs().iterator(); itrCol.hasNext();) {
+            ASTNode exprAST = HQLParser.parseExpr(itrCol.next().getExpr());
+            if (HQLParser.isAggregateAST(exprAST)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   // We need to traverse the clause looking for eligible measures which can be
