@@ -987,6 +987,11 @@ public class CubeTestSetup {
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("userid", "int", "userid")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("xuserid", "int", "userid")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("yuserid", "int", "userid")));
+    cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("user_id_added_in_past", "int", "user_id_added_in_past")));
+    cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("user_id_added_far_future", "int",
+        "user_id_added_far_future")));
+    cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("user_id_deprecated", "int", "user_id_deprecated")));
+
     cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("xsports", "array<string>", ""),
       "xuser sports", "xusersports", "name", null, null, null));
     cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("ysports", "array<string>", ""),
@@ -1004,7 +1009,6 @@ public class CubeTestSetup {
     refCols.add(new ChainRefCol("cubeCityStateCountry", "capital"));
     cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("cubeCountryCapital", "String", "ref dim"),
       "Country capital", refCols, null, null, null, null));
-
     Map<String, String> cubeProperties = new HashMap<>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(BASE_CUBE_NAME),
       "d_time,pt,it,et,test_time_dim,test_time_dim2");
@@ -1110,6 +1114,17 @@ public class CubeTestSetup {
           {
             add(new TableReference("basecube", "userid"));
             add(new TableReference("userdim", "id"));
+          }
+        });
+      }
+    });
+    joinChains.add(new JoinChain("user_id_added_far_future_chain", "user_id_added_far_future_chain",
+        "user_id_added_far_future_chain") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference("basecube", "user_id_added_far_future"));
+            add(new TableReference("userdim", "user_id_added_far_future"));
           }
         });
       }
@@ -1433,10 +1448,32 @@ public class CubeTestSetup {
 
     storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c1, s1);
-
+    properties.put(MetastoreConstants.FACT_COL_START_TIME_PFX.concat("user_id_added_in_past"), "2016-01-01");
+    properties.put(MetastoreConstants.FACT_COL_END_TIME_PFX.concat("user_id_deprecated"), "2016-01-01");
+    properties.put(MetastoreConstants.FACT_COL_START_TIME_PFX.concat("user_id_added_far_future"), "2099-01-01");
     client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 100L, properties,
       storageTables);
 
+    factName = "testFact4_RAW_BASE";
+    factColumns = new ArrayList<FieldSchema>();
+    factColumns.add(new FieldSchema("msr13", "double", "third measure"));
+    factColumns.add(new FieldSchema("msr14", "bigint", "fourth measure"));
+
+    // add dimensions of the cube
+    factColumns.add(new FieldSchema("d_time", "timestamp", "event time"));
+    factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
+    factColumns.add(new FieldSchema("dim1", "string", "base dim"));
+    factColumns.add(new FieldSchema("user_id_added_in_past", "int", "user id"));
+    factColumns.add(new FieldSchema("user_id_added_far_future", "int", "user id"));
+    factColumns.add(new FieldSchema("user_id_deprecated", "int", "user id"));
+
+    storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.put(c1, s1);
+    properties.put(MetastoreConstants.FACT_COL_START_TIME_PFX.concat("user_id_added_in_past"), "2016-01-01");
+    properties.put(MetastoreConstants.FACT_COL_END_TIME_PFX.concat("user_id_deprecated"), "2016-01-01");
+    properties.put(MetastoreConstants.FACT_COL_START_TIME_PFX.concat("user_id_added_far_future"), "2099-01-01");
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 100L, properties,
+        storageTables);
   }
 
   private void createCubeContinuousFact(CubeMetastoreClient client) throws Exception {
@@ -2703,6 +2740,8 @@ public class CubeTestSetup {
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("age", "string", "age")));
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("gender", "string", "gender")));
+    dimAttrs.add(new BaseDimAttribute(new FieldSchema("gender", "string", "gender")));
+
     Map<String, String> dimProps = new HashMap<String, String>();
     dimProps.put(MetastoreUtil.getDimTimedDimensionKey(dimName), TestCubeMetastoreClient.getDatePartitionKey());
     Set<JoinChain> joinChains = new HashSet<JoinChain>();
@@ -2727,6 +2766,8 @@ public class CubeTestSetup {
     dimColumns.add(new FieldSchema("name", "string", "name"));
     dimColumns.add(new FieldSchema("age", "string", "age"));
     dimColumns.add(new FieldSchema("gender", "string", "gender"));
+    dimColumns.add(new FieldSchema("user_id_added_in_past", "int", "user_id_added_in_past"));
+    dimColumns.add(new FieldSchema("user_id_added_far_future", "int", "user_id_added_far_future"));
 
     Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
     StorageTableDesc s1 = new StorageTableDesc();

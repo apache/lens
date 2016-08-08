@@ -18,6 +18,12 @@ columns:
   measure2: type: BIGINT
   measure3: type: INT
   measure4: type: FLOAT
+  measure5:
+    type: FLOAT
+    startTime: 2015-01-01
+  measure6:
+    type: FLOAT
+    endTime: 2015-01-01
 properties:
   cube.fact.is.aggregated: true
 storageTables:

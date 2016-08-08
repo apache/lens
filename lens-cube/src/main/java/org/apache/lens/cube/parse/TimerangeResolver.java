@@ -22,13 +22,8 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
 
-import org.apache.lens.cube.error.ColUnAvailableInTimeRange;
-import org.apache.lens.cube.error.ColUnAvailableInTimeRangeException;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
-import org.apache.lens.cube.metadata.join.JoinPath;
-import org.apache.lens.cube.parse.DenormalizationResolver.ReferencedQueriedColumn;
-import org.apache.lens.cube.parse.join.AutoJoinContext;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 
@@ -37,7 +32,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.plan.PlanUtils;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -54,8 +48,6 @@ class TimerangeResolver implements ContextRewriter {
       return;
     }
     extractTimeRange(cubeql);
-    doColLifeValidation(cubeql);
-    doFactRangeValidation(cubeql);
   }
 
 
@@ -145,121 +137,5 @@ class TimerangeResolver implements ContextRewriter {
     cubeql.getTimeRanges().add(range);
   }
 
-  private void doColLifeValidation(CubeQueryContext cubeql) throws LensException,
-    ColUnAvailableInTimeRangeException {
-    Set<String> cubeColumns = cubeql.getColumnsQueried(cubeql.getCube().getName());
-    if (cubeColumns == null || cubeColumns.isEmpty()) {
-      // Query doesn't have any columns from cube
-      return;
-    }
 
-    for (String col : cubeql.getColumnsQueried(cubeql.getCube().getName())) {
-      CubeColumn column = cubeql.getCube().getColumnByName(col);
-      for (TimeRange range : cubeql.getTimeRanges()) {
-        if (column == null) {
-          if (!cubeql.getCube().getTimedDimensions().contains(col)) {
-            throw new LensException(LensCubeErrorCode.NOT_A_CUBE_COLUMN.getLensErrorInfo(), col);
-          }
-          continue;
-        }
-        if (!column.isColumnAvailableInTimeRange(range)) {
-          throwException(column);
-        }
-      }
-    }
-
-    // Look at referenced columns through denormalization resolver
-    // and do column life validation
-    Map<String, Set<ReferencedQueriedColumn>> refCols = cubeql.getDeNormCtx().getReferencedCols();
-    for (String col : refCols.keySet()) {
-      Iterator<ReferencedQueriedColumn> refColIter = refCols.get(col).iterator();
-      while (refColIter.hasNext()) {
-        ReferencedQueriedColumn refCol = refColIter.next();
-        for (TimeRange range : cubeql.getTimeRanges()) {
-          if (!refCol.col.isColumnAvailableInTimeRange(range)) {
-            log.debug("The refernced column: {} is not in the range queried", refCol.col.getName());
-            refColIter.remove();
-            break;
-          }
-        }
-      }
-    }
-
-    // Remove join paths that have columns with invalid life span
-    AutoJoinContext joinContext = cubeql.getAutoJoinCtx();
-    if (joinContext == null) {
-      return;
-    }
-    // Get cube columns which are part of join chain
-    Set<String> joinColumns = joinContext.getAllJoinPathColumnsOfTable((AbstractCubeTable) cubeql.getCube());
-    if (joinColumns == null || joinColumns.isEmpty()) {
-      return;
-    }
-
-    // Loop over all cube columns part of join paths
-    for (String col : joinColumns) {
-      CubeColumn column = cubeql.getCube().getColumnByName(col);
-      for (TimeRange range : cubeql.getTimeRanges()) {
-        if (!column.isColumnAvailableInTimeRange(range)) {
-          log.info("Timerange queried is not in column life for {}, Removing join paths containing the column", column);
-          // Remove join paths containing this column
-          Map<Aliased<Dimension>, List<JoinPath>> allPaths = joinContext.getAllPaths();
-
-          for (Aliased<Dimension> dimension : allPaths.keySet()) {
-            List<JoinPath> joinPaths = allPaths.get(dimension);
-            Iterator<JoinPath> joinPathIterator = joinPaths.iterator();
-
-            while (joinPathIterator.hasNext()) {
-              JoinPath path = joinPathIterator.next();
-              if (path.containsColumnOfTable(col, (AbstractCubeTable) cubeql.getCube())) {
-                log.info("Removing join path: {} as columns :{} is not available in the range", path, col);
-                joinPathIterator.remove();
-                if (joinPaths.isEmpty()) {
-                  // This dimension doesn't have any paths left
-                  throw new LensException(LensCubeErrorCode.NO_JOIN_PATH.getLensErrorInfo(),
-                      "No valid join path available for dimension " + dimension + " which would satisfy time range "
-                          + range.getFromDate() + "-" + range.getToDate());
-                }
-              }
-            } // End loop to remove path
-
-          } // End loop for all paths
-        }
-      } // End time range loop
-    } // End column loop
-  }
-
-
-  private void throwException(CubeColumn column) throws ColUnAvailableInTimeRangeException {
-
-    final Long availabilityStartTime = (column.getStartTimeMillisSinceEpoch().isPresent())
-      ? column.getStartTimeMillisSinceEpoch().get() : null;
-
-    final Long availabilityEndTime = column.getEndTimeMillisSinceEpoch().isPresent()
-      ? column.getEndTimeMillisSinceEpoch().get() : null;
-
-    ColUnAvailableInTimeRange col = new ColUnAvailableInTimeRange(column.getName(), availabilityStartTime,
-      availabilityEndTime);
-
-    throw new ColUnAvailableInTimeRangeException(col);
-  }
-
-  private void doFactRangeValidation(CubeQueryContext cubeql) {
-    Iterator<CandidateFact> iter = cubeql.getCandidateFacts().iterator();
-    while (iter.hasNext()) {
-      CandidateFact cfact = iter.next();
-      List<TimeRange> invalidTimeRanges = Lists.newArrayList();
-      for (TimeRange timeRange : cubeql.getTimeRanges()) {
-        if (!cfact.isValidForTimeRange(timeRange)) {
-          invalidTimeRanges.add(timeRange);
-        }
-      }
-      if (!invalidTimeRanges.isEmpty()){
-        cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.factNotAvailableInRange(invalidTimeRanges));
-        log.info("Not considering {} as it's not available for time ranges: {}", cfact, invalidTimeRanges);
-        iter.remove();
-      }
-    }
-    cubeql.pruneCandidateFactSet(CandidateTablePruneCause.CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE);
-  }
 }

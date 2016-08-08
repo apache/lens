@@ -1812,6 +1812,13 @@ public class TestMetastoreService extends LensJerseyTest {
     c2.setComment("col2");
     f.getColumns().getColumn().add(c2);
 
+    XColumn c3 = cubeObjectFactory.createXColumn();
+    c3.setName("c3");
+    c3.setType("STRING");
+    c3.setComment("col3");
+    c3.setStartTime("2016-01-01");
+    c3.setEndTime("2017-01-01");
+    f.getColumns().getColumn().add(c3);
 
     Map<String, String> properties = LensUtil.getHashMap("foo", "bar");
     f.getProperties().getProperty().addAll(JAXBUtils.xPropertiesFromMap(properties));
@@ -1863,6 +1870,11 @@ public class TestMetastoreService extends LensJerseyTest {
           break;
         }
       }
+
+      //Check for column with start time
+      Map<String, String> props = JAXBUtils.mapFromXProperties(gotFact.getProperties());
+      assertEquals(props.get(MetastoreConstants.FACT_COL_START_TIME_PFX.concat("c3")), "2016-01-01");
+      assertEquals(props.get(MetastoreConstants.FACT_COL_END_TIME_PFX.concat("c3")), "2017-01-01");
 
       assertTrue(foundC1);
       assertEquals(cf.getProperties().get("foo"), "bar");

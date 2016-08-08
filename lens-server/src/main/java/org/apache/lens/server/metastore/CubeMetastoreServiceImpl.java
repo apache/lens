@@ -430,10 +430,16 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
         JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()),
         JAXBUtils.getFactUpdatePeriodsFromStorageTables(fact.getStorageTables()),
         fact.getWeight(),
-        JAXBUtils.mapFromXProperties(fact.getProperties()),
+        addFactColStartTimePropertyToFactProperties(fact),
         JAXBUtils.storageTableMapFromXStorageTables(fact.getStorageTables()));
       log.info("Created fact table " + fact.getName());
     }
+  }
+  public  Map<String, String> addFactColStartTimePropertyToFactProperties(XFactTable fact) {
+    Map<String, String> props = new HashMap<String, String>();
+    props.putAll(JAXBUtils.mapFromXProperties(fact.getProperties()));
+    props.putAll(JAXBUtils.columnStartAndEndTimeFromXColumns(fact.getColumns()));
+    return props;
   }
 
   @Override

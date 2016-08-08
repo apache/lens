@@ -26,6 +26,8 @@
     <column comment="" name="measure2" _type="BIGINT"/>
     <column comment="" name="measure3" _type="INT"/>
     <column comment="" name="measure4" _type="FLOAT"/>
+    <column comment="" name="measure5" _type="FLOAT" start_time="2015-01-01"/>
+    <column comment="" name="measure6" _type="FLOAT" end_time="2015-01-01"/>
   </columns>
   <properties>
     <property name="cube.fact.is.aggregated" value="true"/>

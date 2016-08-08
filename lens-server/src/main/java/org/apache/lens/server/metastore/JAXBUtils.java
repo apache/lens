@@ -560,6 +560,22 @@ public final class JAXBUtils {
     return null;
   }
 
+  public static Map<String, String> columnStartAndEndTimeFromXColumns(XColumns columns) {
+    if (columns != null && !columns.getColumn().isEmpty()) {
+      Map<String, String> colStartTimeMap = new HashMap<String, String>();
+      for (XColumn c : columns.getColumn()) {
+        if (!(c.getStartTime() == null)) {
+          colStartTimeMap.put(MetastoreConstants.FACT_COL_START_TIME_PFX.concat(c.getName()), c.getStartTime());
+        }
+        if (!(c.getEndTime() == null)) {
+          colStartTimeMap.put(MetastoreConstants.FACT_COL_END_TIME_PFX.concat(c.getName()), c.getEndTime());
+        }
+      }
+      return colStartTimeMap;
+    }
+    return null;
+  }
+
   public static List<XColumn> columnsFromFieldSchemaList(List<FieldSchema> fslist) {
     List<XColumn> cols = new ArrayList<XColumn>();
     if (fslist == null || fslist.isEmpty()) {
