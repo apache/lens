@@ -30,6 +30,7 @@ import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
+import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
@@ -260,4 +261,15 @@ public class SessionResource {
     return new APIResult(Status.SUCCEEDED, "Set param succeeded");
   }
 
+  /**
+   * Returns a list of all sessions
+   * @return
+   */
+  @GET
+  @Path("sessions")
+  @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
+  public List<UserSessionInfo> getSession() {
+    List<UserSessionInfo> l = sessionService.getSessionInfo();
+    return l;
+  }
 }

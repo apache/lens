@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.server.api.error.LensException;
 
 public interface SessionService {
@@ -121,4 +122,10 @@ public interface SessionService {
    * Returns true if the session is open
    */
   boolean isOpen(LensSessionHandle sessionHandle);
+
+  /**
+   *
+   * @return a list of all sessions
+   */
+  List<UserSessionInfo> getSessionInfo();
 }

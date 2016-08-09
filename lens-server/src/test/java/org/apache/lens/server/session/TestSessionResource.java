@@ -22,17 +22,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -42,7 +39,8 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
-import org.apache.lens.api.query.*;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
@@ -57,7 +55,6 @@ import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.error.GenericExceptionMapper;
 
 import org.apache.commons.io.FileUtils;
-
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -578,5 +575,23 @@ public class TestSessionResource extends LensJerseyTest {
 
     result = target.queryParam("sessionid", lensSessionHandle1).request(mt).delete(APIResult.class);
     Assert.assertTrue(metricsSvc.getTotalClosedSessions() >= 2);
+  }
+
+  @Test(dataProvider = "mediaTypeData")
+  public void testSessionList(MediaType mt) {
+    final WebTarget target = target().path("session").path("sessions");
+    Response res = target.request().get(Response.class);
+    List<UserSessionInfo> sessionsList = res.readEntity(new GenericType<List<UserSessionInfo>>() {
+    });
+    int size = sessionsList.size();
+    //Create a new session
+    FormDataMultiPart mp = getMultiFormData("foo", "bar", mt);
+    LensSessionHandle lensSessionHandle = target().path("session").request(mt)
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
+    res = target.request().get(Response.class);
+    sessionsList = res.readEntity(new GenericType<List<UserSessionInfo>>() {
+    });
+    Assert.assertEquals(sessionsList.size(), size + 1);
+    target().path("session").queryParam("sessionid", lensSessionHandle).request(mt).delete(APIResult.class);
   }
 }

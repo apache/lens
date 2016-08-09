@@ -22,7 +22,9 @@ import static org.apache.lens.server.error.LensServerErrorCode.SESSION_CLOSED;
 import static org.apache.lens.server.error.LensServerErrorCode.SESSION_ID_NOT_PROVIDED;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,6 +36,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.LensService;
@@ -560,6 +563,21 @@ public abstract class BaseLensService extends CompositeService implements Extern
     public void close() {
       release(sessionHandle);
     }
+  }
+
+  public List<UserSessionInfo> getSessionInfo() {
+    List<UserSessionInfo> userSessionInfoList = new ArrayList<>();
+    for (LensSessionHandle handle : SESSION_MAP.values()) {
+      LensSessionImpl session = getSession(handle);
+      UserSessionInfo sessionInfo = new UserSessionInfo();
+      sessionInfo.setHandle(handle.getPublicId().toString());
+      sessionInfo.setUserName(session.getLoggedInUser());
+      sessionInfo.setActiveQueries(session.getActiveQueries());
+      sessionInfo.setCreationTime(session.getCreationTime());
+      sessionInfo.setLastAccessTime(session.getLastAccessTime());
+      userSessionInfoList.add(sessionInfo);
+    }
+    return userSessionInfoList;
   }
 }
 
