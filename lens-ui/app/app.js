@@ -35,6 +35,7 @@ import CubeSchema from './components/CubeSchemaComponent';
 import QueryDetailResult from './components/QueryDetailResultComponent';
 import TableSchema from './components/TableSchemaComponent';
 import SavedQueries from './components/SavedQueriesComponent';
+import SessionList from './components/SessionListComponent'
 
 let routes = (
   <Route name='app' path='/' handler={App} >
@@ -50,6 +51,7 @@ let routes = (
       <Route name='tableschema' path='table/:tableName'
              handler={TableSchema}/>
     </Route>
+    <Route name='sessions' path='sessions' handler={SessionList}/>
     <Route name='about' handler={About} />
     <DefaultRoute handler={AdhocQuery} />
   </Route>

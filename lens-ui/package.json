@@ -34,7 +34,8 @@
     "react-sidebar": "~1.1.0",
     "react-treeview": "^0.3.12",
     "react-widgets": "^2.8.0",
-    "serve-favicon": "~2.2.1"
+    "serve-favicon": "~2.2.1",
+    "react-bootstrap-table" : "0.9.17"
   },
   "devDependencies": {
     "autoprefixer-loader": "^1.2.0",
