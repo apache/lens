@@ -97,8 +97,9 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
 
   private void doesSessionBelongToUser(LensSessionHandle sessionHandle, String user) throws LensException {
     LensSessionImpl session = getSession(sessionHandle);
-    if (!session.getLoggedInUser().equals(user))
+    if (!session.getLoggedInUser().equals(user)) {
       throw new LensException("Logged in user " + session.getLoggedInUser() + " is not same as " + user);
+    }
   }
 
   @Override
