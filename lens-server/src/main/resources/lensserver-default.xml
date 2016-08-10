@@ -55,7 +55,7 @@
 
   <property>
     <name>lens.server.servicenames</name>
-    <value>session,query,savedquery,metastore,scheduler,quota</value>
+    <value>session,alarm,query,savedquery,metastore,scheduler,quota</value>
     <description>These services would be started in the specified order when lens-server starts up</description>
   </property>
 
@@ -87,6 +87,12 @@
     <name>lens.server.metastore.service.impl</name>
     <value>org.apache.lens.server.metastore.CubeMetastoreServiceImpl</value>
     <description>Implementation class for metastore service</description>
+  </property>
+
+  <property>
+    <name>lens.server.alarm.service.impl</name>
+    <value>org.apache.lens.server.scheduler.AlarmService</value>
+    <description>Implementation class for alarm service</description>
   </property>
 
   <property>
