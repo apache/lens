@@ -140,7 +140,7 @@
 
   <property>
     <name>lens.server.servicenames</name>
-    <value>session,query,metastore,scheduler,quota,mocknonlens,savedquery</value>
+    <value>session,alarm,query,metastore,scheduler,quota,mocknonlens,savedquery</value>
   </property>
 
   <property>

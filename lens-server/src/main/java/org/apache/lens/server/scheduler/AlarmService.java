@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AlarmService extends AbstractService implements LensService {
 
-  public static final String NAME = "alarm-service";
+  public static final String NAME = "alarm";
 
   public static final String LENS_JOBS = "LensJobs";
   public static final String ALARM_SERVICE = "AlarmService";
@@ -68,10 +68,9 @@ public class AlarmService extends AbstractService implements LensService {
   /**
    * Creates a new instance of AlarmService.
    *
-   * @param name the name
    */
-  public AlarmService(String name) {
-    super(name);
+  public AlarmService() {
+    super(NAME);
   }
 
   @Override
