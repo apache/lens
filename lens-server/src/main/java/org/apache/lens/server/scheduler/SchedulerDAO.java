@@ -286,7 +286,7 @@ public class SchedulerDAO {
     protected static final String COLUMN_USER = "username";
     protected static final String COLUMN_STATUS = "status";
     protected static final String COLUMN_CREATED_ON = "createdon";
-    protected static final String COLUMN_SCHEDULE_TIME = "schedultime";
+    protected static final String COLUMN_SCHEDULE_TIME = "scheduledtime";
     protected static final String COLUMN_MODIFIED_ON = "modifiedon";
     protected static final String COLUMN_JOB_ID = "jobid";
     protected static final String COLUMN_SESSION_HANDLE = "sessionhandle";
@@ -376,8 +376,8 @@ public class SchedulerDAO {
     public int insertIntoJobInstanceRunTable(SchedulerJobInstanceRun instanceRun) throws SQLException {
       String insetSQL = "INSERT INTO " + JOB_INSTANCE_RUN_TABLE + " VALUES(?,?,?,?,?,?,?,?)";
       return runner.update(insetSQL, instanceRun.getHandle().getHandleIdString(), instanceRun.getRunId(),
-          instanceRun.getSessionHandle().toString(), instanceRun.getStartTime(), instanceRun.getEndTime(),
-          instanceRun.getResultPath(),
+          instanceRun.getSessionHandle() == null ? "" : instanceRun.getSessionHandle().toString(),
+          instanceRun.getStartTime(), instanceRun.getEndTime(), instanceRun.getResultPath(),
           instanceRun.getQueryHandle() == null ? "" : instanceRun.getQueryHandle().getHandleIdString(),
           instanceRun.getInstanceState().name());
     }
@@ -665,7 +665,7 @@ public class SchedulerDAO {
           "CREATE TABLE IF NOT EXISTS " + JOB_INSTANCE_RUN_TABLE + "( " + COLUMN_ID + " VARCHAR(255) NOT NULL, "
               + COLUMN_RUN_ID + " INT NOT NULL, " + COLUMN_SESSION_HANDLE + " VARCHAR(255), " + COLUMN_START_TIME
               + " BIGINT, " + COLUMN_END_TIME + " BIGINT, " + COLUMN_RESULT_PATH + " TEXT, " + COLUMN_QUERY_HANDLE
-              + " TEXT, " + COLUMN_STATUS + " VARCHAR(20), " + " PRIMARY KEY ( " + COLUMN_ID + ", " + COLUMN_RUN_ID
+              + " VARCHAR(255), " + COLUMN_STATUS + " VARCHAR(20), " + " PRIMARY KEY ( " + COLUMN_ID + ", " + COLUMN_RUN_ID
               + ")" + ")";
       runner.update(createSQL);
     }
@@ -709,7 +709,7 @@ public class SchedulerDAO {
           "CREATE TABLE IF NOT EXISTS " + JOB_INSTANCE_RUN_TABLE + "( " + COLUMN_ID + " VARCHAR(255) NOT NULL, "
               + COLUMN_RUN_ID + " INT NOT NULL, " + COLUMN_SESSION_HANDLE + " VARCHAR(255), " + COLUMN_START_TIME
               + " BIGINT, " + COLUMN_END_TIME + " BIGINT, " + COLUMN_RESULT_PATH + " VARCHAR(1024),"
-              + COLUMN_QUERY_HANDLE + " VARCHAR(1024), " + COLUMN_STATUS + " VARCHAR(20), " + " PRIMARY KEY ( "
+              + COLUMN_QUERY_HANDLE + " VARCHAR(255), " + COLUMN_STATUS + " VARCHAR(20), " + " PRIMARY KEY ( "
               + COLUMN_ID + ", " + COLUMN_RUN_ID + " )" + ")";
       runner.update(createSQL);
     }

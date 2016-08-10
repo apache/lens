@@ -70,22 +70,20 @@ public interface SchedulerService extends LensService, SessionValidator {
   /**
    * Returns the definition of a job.
    *
-   * @param sessionHandle handle for the session.
    * @param jobHandle     handle for the job
    * @return job definition
    * @throws LensException the lens exception
    */
-  XJob getJobDefinition(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
+  XJob getJobDefinition(SchedulerJobHandle jobHandle) throws LensException;
 
   /**
    * Returns the details of a job. Details may contain extra system information like id for the job.
    *
-   * @param sessionHandle handle for the session.
    * @param jobHandle     handle for the job
    * @return job details for the job
    * @throws LensException the lens exception
    */
-  SchedulerJobInfo getJobDetails(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
+  SchedulerJobInfo getJobDetails(SchedulerJobHandle jobHandle) throws LensException;
 
   /**
    * Update a job with new definition.
@@ -146,7 +144,6 @@ public interface SchedulerService extends LensService, SessionValidator {
   boolean deleteJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
 
   /**
-   * @param sessionHandle handle for the current session.
    * @param state         filter for status, if specified only jobs in that state will be returned,
    *                      if null no entries will be removed from result
    * @param user          filter for user who submitted the job, if specified only jobs submitted by the given user
@@ -158,13 +155,12 @@ public interface SchedulerService extends LensService, SessionValidator {
    * @return A collection of stats per job
    * @throws LensException
    */
-  Collection<SchedulerJobStats> getAllJobStats(LensSessionHandle sessionHandle, String state, String user,
+  Collection<SchedulerJobStats> getAllJobStats(String state, String user,
       String jobName, long startTime, long endTime) throws LensException;
 
   /**
    * Returns stats for a job.
    *
-   * @param sessionHandle handle for session.
    * @param handle        handle for the job
    * @param state         filter for status, if specified only jobs in that state will be returned,
    *                      if null no entries will be removed from result
@@ -172,19 +168,18 @@ public interface SchedulerService extends LensService, SessionValidator {
    * @param endTime       if specified only instances with scheduleTime before this time will be considered.
    * @throws LensException the lens exception
    */
-  SchedulerJobStats getJobStats(LensSessionHandle sessionHandle, SchedulerJobHandle handle, String state,
+  SchedulerJobStats getJobStats(SchedulerJobHandle handle, String state,
       long startTime, long endTime) throws LensException;
 
   /**
    * Returns handles for last <code>numResults</code> instances for the job.
    *
-   * @param sessionHandle handle for the session.
    * @param jobHandle     handle for the job
    * @param numResults    - number of results to be returned, default 100.
    * @return list of instance ids for the job
    * @throws LensException the lens exception
    */
-  List<SchedulerJobInstanceInfo> getJobInstances(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle,
+  List<SchedulerJobInstanceInfo> getJobInstances(SchedulerJobHandle jobHandle,
       Long numResults) throws LensException;
 
   /**
@@ -215,12 +210,16 @@ public interface SchedulerService extends LensService, SessionValidator {
   /**
    * Instance details for an instance.
    *
-   * @param sessionHandle  handle for the session.
    * @param instanceHandle handle for the instance.
    * @return details for the instance.
    * @throws LensException the lens exception
    */
-  SchedulerJobInstanceInfo getInstanceDetails(LensSessionHandle sessionHandle,
-      SchedulerJobInstanceHandle instanceHandle) throws LensException;
+  SchedulerJobInstanceInfo getInstanceDetails(SchedulerJobInstanceHandle instanceHandle) throws LensException;
 
+  /**
+   * Create session as user for scheduling the job with no auth.
+   * @param user
+   * @return LensSessionHandle
+   */
+  LensSessionHandle openSessionAsUser(String user) throws LensException;
 }
