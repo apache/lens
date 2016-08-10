@@ -56,10 +56,10 @@ public class SchedulerQueryEventListener extends AsyncEventListener<QueryEnded> 
       return;
     }
     SchedulerJobInstanceInfo info = schedulerDAO
-        .getSchedulerJobInstanceInfo(SchedulerJobInstanceHandle.fromString(instanceHandle));
+      .getSchedulerJobInstanceInfo(SchedulerJobInstanceHandle.fromString(instanceHandle));
     List<SchedulerJobInstanceRun> runList = info.getInstanceRunList();
     if (runList.size() == 0) {
-      log.error("No instance run for " + instanceHandle + " with query " + queryContext.getQueryHandle());
+      log.error("No instance run for {} with query {}", instanceHandle, queryContext.getQueryHandle());
       return;
     }
     SchedulerJobInstanceRun latestRun = runList.get(runList.size() - 1);
@@ -78,8 +78,10 @@ public class SchedulerQueryEventListener extends AsyncEventListener<QueryEnded> 
       }
       latestRun.setEndTime(System.currentTimeMillis());
       latestRun.setInstanceState(state);
-      latestRun.setResultPath(queryContext.getDriverResultPath());
+      latestRun.setResultPath(queryContext.getResultSetPath());
       schedulerDAO.updateJobInstanceRun(latestRun);
+      log.info("Updated instance run {} for instance {} for job {} to {}", latestRun.getRunId(), info.getId(),
+        info.getJobId(), state);
     } catch (InvalidStateTransitionException e) {
       log.error("Instance Transition Failed ", e);
     }

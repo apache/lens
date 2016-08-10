@@ -126,13 +126,25 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element type="xs:string" name="resource_path" minOccurs="0" maxOccurs="unbounded">
+            <xs:element type="resource_path" name="resource_path" minOccurs="0" maxOccurs="unbounded">
                 <xs:annotation>
                     <xs:documentation>
                         Path for resources like jars etc. e.g. /path/to/my/jar
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="resource_path">
+        <xs:annotation>
+            <xs:documentation>
+                A resource path with file name and type
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="path" type="xs:string"/>
+            <xs:element name="type" type="xs:string"/>
         </xs:sequence>
     </xs:complexType>
 

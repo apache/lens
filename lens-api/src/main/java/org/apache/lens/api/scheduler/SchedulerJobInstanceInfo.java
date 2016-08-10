@@ -20,14 +20,19 @@ package org.apache.lens.api.scheduler;
 
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * POJO for an instance of SchedulerJob.
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
+@XmlRootElement
 public class SchedulerJobInstanceInfo {
 
   /**

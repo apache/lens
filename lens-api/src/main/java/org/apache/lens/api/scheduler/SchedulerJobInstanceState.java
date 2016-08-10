@@ -18,8 +18,11 @@
  */
 package org.apache.lens.api.scheduler;
 
+import javax.xml.bind.annotation.*;
+
 import org.apache.lens.api.error.InvalidStateTransitionException;
 
+@XmlRootElement
 public enum SchedulerJobInstanceState
     implements StateTransitioner<SchedulerJobInstanceState, SchedulerJobInstanceEvent> {
   // repeating same operation will return the same state to ensure idempotent behavior.

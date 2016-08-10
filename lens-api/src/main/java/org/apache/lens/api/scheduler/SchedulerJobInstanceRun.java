@@ -18,16 +18,21 @@
  */
 package org.apache.lens.api.scheduler;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.QueryHandle;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode
+@NoArgsConstructor
+@XmlRootElement
 public class SchedulerJobInstanceRun {
 
   /**
