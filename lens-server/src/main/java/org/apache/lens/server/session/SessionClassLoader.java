@@ -20,7 +20,8 @@ package org.apache.lens.server.session;
 
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLClassLoader;
+
+import org.apache.hadoop.hive.ql.exec.UDFClassLoader;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = false)
-public class SessionClassLoader extends URLClassLoader {
+public class SessionClassLoader extends UDFClassLoader {
   @Getter
   @Setter
   private boolean closed;
