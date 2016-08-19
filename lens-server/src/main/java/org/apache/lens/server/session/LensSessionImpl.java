@@ -221,6 +221,8 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
       }
       sessionDbClassLoaders.clear();
     }
+    // reset classloader in close
+    Thread.currentThread().setContextClassLoader(LensSessionImpl.class.getClassLoader());
   }
 
   public CubeMetastoreClient getCubeMetastoreClient() throws LensException {
@@ -272,6 +274,8 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
     setActive();
     if (acquireCount.decrementAndGet() == 0) {
       super.release(userAccess);
+      // reset classloader in release
+      Thread.currentThread().setContextClassLoader(LensSessionImpl.class.getClassLoader());
     }
   }
 
