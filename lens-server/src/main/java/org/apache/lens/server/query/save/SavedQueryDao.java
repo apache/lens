@@ -45,7 +45,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SavedQueryDao {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -65,12 +67,12 @@ public class SavedQueryDao {
   SavedQueryDao(String dialectClass, QueryRunner runner)
     throws LensException {
     try {
-      this.runner = runner;
       this.dialect = (Dialect) Class.forName(dialectClass).newInstance();
-      createSavedQueryTableIfNotExists();
-    } catch (Exception e) {
+    } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
       throw new LensException("Error initializing saved query dao", e);
     }
+    this.runner = runner;
+    createSavedQueryTableIfNotExists();
   }
 
   /**
@@ -82,7 +84,7 @@ public class SavedQueryDao {
     try {
       runner.update(dialect.getCreateTableSyntax());
     } catch (SQLException e) {
-      throw new LensException("Cannot create saved query table!", e);
+      log.warn("Unable to create saved query table.");
     }
   }
 
