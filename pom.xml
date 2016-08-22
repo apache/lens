@@ -815,6 +815,14 @@
         <groupId>org.quartz-scheduler</groupId>
         <artifactId>quartz</artifactId>
         <version>${quartz.version}</version>
+        <!-- This version of c3p0 is LGPL and incompatible with Apache License 2.0
+        hence excluding. A compatible version is included in lens as separate dependency -->
+        <exclusions>
+          <exclusion>
+            <groupId>c3p0</groupId>
+            <artifactId>c3p0</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.projectlombok</groupId>
