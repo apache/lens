@@ -2296,9 +2296,15 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         long totalWaitMillisSoFar = 0;
         synchronized (listener) {
           while (totalWaitMillisSoFar < totalWaitTime
-            && !queryCtx.getStatus().executed() && !queryCtx.getStatus().finished()) {
+            && !listener.querySuccessful
+            && !queryCtx.getStatus().executed()
+            && !queryCtx.getStatus().finished()) {
             listener.wait(waitMillisPerCheck);
             totalWaitMillisSoFar += waitMillisPerCheck;
+            if (!listener.querySuccessful) {
+              //update ths status in case query is not successful yet
+              queryCtx = getUpdatedQueryContext(sessionHandle, handle);
+            }
           }
         }
       } catch (InterruptedException e) {
