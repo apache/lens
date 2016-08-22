@@ -41,8 +41,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +75,7 @@ public class AlarmServiceTest {
     events = new LinkedList<>();
   }
 
-  @BeforeTest
+  @BeforeClass
   public void setUp() {
     System.setProperty(LensConfConstants.CONFIG_LOCATION, "target/test-classes/");
     LensServices.get().init(LensServerConf.getHiveConf());

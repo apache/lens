@@ -85,16 +85,23 @@ public class TestMetastoreService extends LensJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
+  }
+
+  @BeforeClass
+  public void create() throws Exception {
     cubeObjectFactory = new ObjectFactory();
     metastoreService = LensServices.get().getService(CubeMetastoreService.NAME);
     lensSessionId = metastoreService.openSession("foo", "bar", new HashMap<String, String>());
-
   }
 
   @AfterTest
   public void tearDown() throws Exception {
-    metastoreService.closeSession(lensSessionId);
     super.tearDown();
+  }
+
+  @AfterClass
+  public void drop() throws Exception {
+    metastoreService.closeSession(lensSessionId);
   }
 
   @Override

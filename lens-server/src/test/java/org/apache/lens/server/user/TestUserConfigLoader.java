@@ -33,9 +33,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.hsqldb.server.Server;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import liquibase.Liquibase;
 import liquibase.database.jvm.HsqlConnection;
@@ -54,7 +52,7 @@ public class TestUserConfigLoader {
   /**
    * Inits the.
    */
-  @BeforeTest(alwaysRun = true)
+  @BeforeClass(alwaysRun = true)
   public void init() {
     conf = new HiveConf(LensServerConf.getHiveConf());
   }
@@ -62,7 +60,7 @@ public class TestUserConfigLoader {
   /**
    * Reset factory.
    */
-  @AfterTest
+  @AfterClass
   public void resetFactory() {
     init();
     UserConfigLoaderFactory.init(conf);

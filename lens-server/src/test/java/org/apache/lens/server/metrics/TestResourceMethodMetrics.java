@@ -55,9 +55,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.test.TestProperties;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,13 +76,16 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
+  }
+
+  @BeforeClass
+  public void create() throws Exception {
     metricsSvc = LensServices.get().getService(MetricsService.NAME);
     metastoreService = LensServices.get().getService(CubeMetastoreService.NAME);
     lensSessionId = metastoreService.openSession("foo", "bar", new HashMap<String, String>());
     methodMetricsMap = metricsSvc.getMethodMetricsFactory().getMethodMetricsMap();
     //reset
   }
-
   private void createTable(String tblName) throws InterruptedException {
     LensServerTestUtil.createTable(tblName, target(), lensSessionId, defaultMT);
   }
@@ -95,9 +96,13 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
 
   @AfterTest
   public void tearDown() throws Exception {
+    super.tearDown();
+  }
+
+  @AfterClass
+  public void drop() throws Exception {
     LensServerTestUtil.dropTable(TestQueryService.TEST_TABLE, target(), lensSessionId, defaultMT);
     metastoreService.closeSession(lensSessionId);
-    super.tearDown();
   }
 
   private void disableResourceMethodMetering() {

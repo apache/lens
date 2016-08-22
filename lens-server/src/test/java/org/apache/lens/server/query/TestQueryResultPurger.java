@@ -30,9 +30,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 @Test(groups = "unit-test")
 public class TestQueryResultPurger {
@@ -47,7 +45,7 @@ public class TestQueryResultPurger {
    * @throws IOException          Signals that an I/O exception has occurred.
    */
 
-  @BeforeTest
+  @BeforeClass
   public void setUp() throws IOException {
     String resultsetPath = "target/" + getClass().getSimpleName();
     conf = new Configuration();
@@ -59,7 +57,7 @@ public class TestQueryResultPurger {
     createTestFiles();
   }
 
-  @AfterTest
+  @AfterClass
   public void cleanup() throws Exception {
     Path dir = new Path(conf.get(LensConfConstants.RESULT_SET_PARENT_DIR));
     FileSystem fs = dir.getFileSystem(conf);
