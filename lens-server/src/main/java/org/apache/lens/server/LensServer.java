@@ -36,14 +36,18 @@ import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.servlet.ServletRegistration;
 import org.glassfish.grizzly.servlet.WebappContext;
+import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.codahale.metrics.servlets.AdminServlet;
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,6 +89,21 @@ public class LensServer {
     String baseURI = conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL);
     HttpServer server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(), getApp(),
       false);
+
+    int corePoolSize = conf.getInt(LensConfConstants.GRIZZLY_CORE_POOL_SIZE,
+            LensConfConstants.DEFAULT_GRIZZLY_CORE_POOL_SIZE);
+    int maxPoolSize = conf.getInt(LensConfConstants.GRIZZLY_MAX_POOL_SIZE,
+            LensConfConstants.DEFAULT_GRIZZLY_MAX_POOL_SIZE);
+
+    ThreadPoolConfig config = ThreadPoolConfig.defaultConfig();
+    config.setPoolName("lensserver-pool");
+    config.setCorePoolSize(corePoolSize);
+    config.setMaxPoolSize(maxPoolSize);
+    config.setThreadFactory((new ThreadFactoryBuilder()).setNameFormat("grizzly-http-server-%d")
+      .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler()).build());
+
+    NetworkListener listener = server.getListeners().iterator().next();
+    listener.getTransport().setWorkerThreadPoolConfig(config);
     serverList.add(server);
 
     WebappContext adminCtx = new WebappContext("admin", "");

@@ -1149,6 +1149,24 @@ public final class LensConfConstants {
    */
   public static final String QUERY_HTTP_NOTIFICATION_TYPE_FINISHED = QUERY_HTTP_NOTIFICATION_TYPE_PFX + "FINISHED";
 
+  /**
+   * The Constant GRIZZLY_CORE_POOL_SIZE.
+   */
+  public static final String GRIZZLY_CORE_POOL_SIZE = SERVER_PFX + "grizzly.core.pool.size";
 
+  /**
+   * The Constant DEFAULT_GRIZZLY_CORE_POOL_SIZE.
+   */
+  public static final int DEFAULT_GRIZZLY_CORE_POOL_SIZE = 20;
+
+  /**
+   * The Constant GRIZZLY_MAX_POOL_SIZE.
+   */
+  public static final String GRIZZLY_MAX_POOL_SIZE = SERVER_PFX + "grizzly.max.pool.size";
+
+  /**
+   * The Constant DEFAULT_GRIZZLY_MAX_POOL_SIZE.
+   */
+  public static final int DEFAULT_GRIZZLY_MAX_POOL_SIZE = 40;
 
 }

@@ -895,4 +895,14 @@
       Default read timeout is 10 secs</description>
   </property>
 
+  <property>
+    <name>lens.server.grizzly.core.pool.size</name>
+    <value>20</value>
+    <description>Core pool size for lens grizzly server</description>
+  </property>
+  <property>
+    <name>lens.server.grizzly.max.pool.size</name>
+    <value>40</value>
+    <description>Max pool size for lens grizzly server</description>
+  </property>
 </configuration>
