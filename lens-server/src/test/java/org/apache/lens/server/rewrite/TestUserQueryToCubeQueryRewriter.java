@@ -30,7 +30,7 @@ import org.apache.lens.server.api.query.rewrite.Phase1Rewriter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class TestUserQueryToCubeQueryRewriter {
@@ -66,7 +66,7 @@ public class TestUserQueryToCubeQueryRewriter {
 
   UserQueryToCubeQueryRewriter rewriter;
 
-  @BeforeTest
+  @BeforeClass
   public void setup() throws LensException {
     Configuration conf = new Configuration();
     conf.set(LensConfConstants.QUERY_PHASE1_REWRITERS, Rewriter1.class.getName() + "," + Rewriter2.class.getName());

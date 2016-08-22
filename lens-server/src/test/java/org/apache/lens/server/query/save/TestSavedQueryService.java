@@ -45,9 +45,7 @@ import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
@@ -93,6 +91,10 @@ public class TestSavedQueryService extends LensJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
+  }
+
+  @BeforeClass
+  public void create() throws Exception {
     savedQueryService = LensServices.get().getService(SavedQueryService.NAME);
     queryService = LensServices.get().getService(QueryExecutionService.NAME);
     metricsSvc = LensServices.get().getService(MetricsService.NAME);
@@ -105,9 +107,13 @@ public class TestSavedQueryService extends LensJerseyTest {
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
-    queryService.closeSession(lensSessionId);
-    super.tearDown();
   }
+
+  @AfterClass
+  public void drop() throws Exception {
+    queryService.closeSession(lensSessionId);
+  }
+
 
   @Override
   protected Application configure() {

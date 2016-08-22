@@ -65,6 +65,8 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.test.TestProperties;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeClass;
+
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -85,11 +87,14 @@ public class TestSessionResource extends LensJerseyTest {
    */
   @BeforeTest
   public void setUp() throws Exception {
-    metricsSvc = LensServices.get().getService(MetricsService.NAME);
-    LensServices.get().getLogSegregationContext().setLogSegregationId("logid");
     super.setUp();
   }
 
+  @BeforeClass
+  public void create() throws Exception {
+    metricsSvc = LensServices.get().getService(MetricsService.NAME);
+    LensServices.get().getLogSegregationContext().setLogSegregationId("logid");
+  }
   /*
    * (non-Javadoc)
    *

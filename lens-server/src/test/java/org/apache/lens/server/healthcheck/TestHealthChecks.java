@@ -32,9 +32,7 @@ import org.apache.lens.server.quota.QuotaServiceImpl;
 import org.apache.lens.server.scheduler.SchedulerServiceImpl;
 import org.apache.lens.server.session.HiveSessionService;
 
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import com.codahale.metrics.health.HealthCheck;
 
