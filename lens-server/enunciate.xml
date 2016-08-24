@@ -19,16 +19,12 @@
     under the License.
 
 -->
-<enunciate label="lens" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.25.xsd">
+<enunciate slug="lens" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="http://enunciate.webcohesion.com/schemas/enunciate-2.0.0-M.4.xsd">
   <namespaces>
     <namespace uri="https://git-wip-us.apache.org/repos/asf/lens.git" id="lens"/>
   </namespaces>
-  <services>
-    <rest defaultRestSubcontext="/">
-      <custom-resource-parameter-annotation qualifiedName="org.glassfish.jersey.media.multipart.FormDataParam"/>
-    </rest>
-  </services>
+  <modules>
   <api-classes>
     <include pattern="org.apache.lens.server.query.*"/>
     <include pattern="org.apache.lens.server.query.save.*"/>
@@ -37,10 +33,10 @@
     <include pattern="org.apache.lens.server.scheduler.*"/>
     <include pattern="org.apache.lens.server.session.*"/>
   </api-classes>
-  <modules>
-    <docs docsDir="lens-server" title="Lens Server REST API"/>
+    <docs docsDir="target/enunciate/lens-server"/>
     <csharp disabled="true"/>
     <c disabled="true"/>
     <obj-c disabled="true"></obj-c>
+    <java-json-client disabled="true"/>
   </modules>
 </enunciate>

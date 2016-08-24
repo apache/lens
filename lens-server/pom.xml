@@ -391,33 +391,22 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>com.webcohesion.enunciate</groupId>
+        <artifactId>enunciate-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>docs</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+          <configFile>enunciate.xml</configFile>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>enunciate</id>
-      <activation>
-        <jdk>[1.7,1.8)</jdk>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.enunciate</groupId>
-            <artifactId>maven-enunciate-plugin</artifactId>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>docs</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <configFile>enunciate.xml</configFile>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
