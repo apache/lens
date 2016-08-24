@@ -27,6 +27,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.events.SchedulerAlarmEvent;
 import org.apache.lens.server.api.health.HealthStatus;
+import org.apache.lens.server.error.LensSchedulerErrorCode;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
@@ -153,7 +154,8 @@ public class AlarmService extends AbstractService implements LensService {
       scheduler.scheduleJob(job, trigger);
     } catch (SchedulerException e) {
       log.error("Error scheduling job with jobHandle: {}", jobHandle);
-      throw new LensException("Failed to schedule job with jobHandle: " + jobHandle, e);
+      throw new LensException(LensSchedulerErrorCode.FAILED_ALARM_SERVICE_OPERATION.getLensErrorInfo(), e, "schedule",
+        jobHandle);
     }
   }
 
@@ -192,7 +194,8 @@ public class AlarmService extends AbstractService implements LensService {
       return scheduler.deleteJob(JobKey.jobKey(jobHandle.getHandleIdString(), LENS_JOBS));
     } catch (SchedulerException e) {
       log.error("Failed to remove alarm triggers for job with jobHandle: {}", jobHandle);
-      throw new LensException("Failed to remove alarm triggers for job with jobHandle: " + jobHandle, e);
+      throw new LensException(LensSchedulerErrorCode.FAILED_ALARM_SERVICE_OPERATION.getLensErrorInfo(), e, "unschedule",
+        jobHandle.getHandleIdString());
     }
   }
 
@@ -210,7 +213,8 @@ public class AlarmService extends AbstractService implements LensService {
       scheduler.pauseJob(JobKey.jobKey(jobHandle.getHandleIdString(), LENS_JOBS));
     } catch (SchedulerException e) {
       log.error("Failed to pause alarm triggers for job with jobHandle: {}", jobHandle);
-      throw new LensException("Failed to pause alarm triggers for job with jobHandle: " + jobHandle, e);
+      throw new LensException(LensSchedulerErrorCode.FAILED_ALARM_SERVICE_OPERATION.getLensErrorInfo(), e, "pause",
+        jobHandle.getHandleIdString());
     }
   }
 
@@ -219,7 +223,8 @@ public class AlarmService extends AbstractService implements LensService {
       scheduler.resumeJob(JobKey.jobKey(jobHandle.getHandleIdString(), LENS_JOBS));
     } catch (SchedulerException e) {
       log.error("Failed to resume alarm triggers for job with jobHandle: {}", jobHandle);
-      throw new LensException("Failed to resume alarm triggers for job with jobHandle: " + jobHandle, e);
+      throw new LensException(LensSchedulerErrorCode.FAILED_ALARM_SERVICE_OPERATION.getLensErrorInfo(), e, "resume",
+        jobHandle.getHandleIdString());
     }
   }
 

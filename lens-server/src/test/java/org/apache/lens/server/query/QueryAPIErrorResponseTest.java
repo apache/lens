@@ -22,8 +22,10 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 import static org.apache.lens.api.error.LensCommonErrorCode.INTERNAL_SERVER_ERROR;
+
 import static org.apache.lens.cube.error.LensCubeErrorCode.COLUMN_UNAVAILABLE_IN_TIME_RANGE;
 import static org.apache.lens.cube.error.LensCubeErrorCode.SYNTAX_ERROR;
+
 import static org.apache.lens.server.common.RestAPITestUtil.*;
 import static org.apache.lens.server.common.TestDataUtils.*;
 import static org.apache.lens.server.error.LensServerErrorCode.*;
@@ -38,9 +40,9 @@ import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.SupportedOperations;
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;
 import org.apache.lens.api.metastore.*;
-import org.apache.lens.api.query.SupportedQuerySubmitOperations;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
@@ -138,8 +140,8 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       + "[estimate, execute, explain, execute_with_timeout]";
 
     LensErrorTO expectedLensErrorTO = LensErrorTO.composedOf(
-        UNSUPPORTED_QUERY_SUBMIT_OPERATION.getLensErrorInfo().getErrorCode(),
-      expectedErrMsg, MOCK_STACK_TRACE, new SupportedQuerySubmitOperations());
+        UNSUPPORTED_OPERATION.getLensErrorInfo().getErrorCode(),
+      expectedErrMsg, MOCK_STACK_TRACE, new SupportedOperations());
     ErrorResponseExpectedData expectedData = new ErrorResponseExpectedData(BAD_REQUEST, expectedLensErrorTO);
 
     expectedData.verify(response);

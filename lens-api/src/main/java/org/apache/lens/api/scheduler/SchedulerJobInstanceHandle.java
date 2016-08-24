@@ -34,7 +34,6 @@ import lombok.*;
  */
 @XmlRootElement
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = false)
 public class SchedulerJobInstanceHandle implements Serializable {
 
@@ -42,7 +41,6 @@ public class SchedulerJobInstanceHandle implements Serializable {
    * The Constant serialVersionUID.
    */
   private static final long serialVersionUID = 1L;
-
   /**
    * The handle id.
    */
@@ -51,6 +49,10 @@ public class SchedulerJobInstanceHandle implements Serializable {
   @XmlJavaTypeAdapter(UUIDAdapter.class)
   @NonNull
   private UUID handleId;
+
+  public SchedulerJobInstanceHandle() {
+    this(UUID.randomUUID());
+  }
 
   /**
    * From string.

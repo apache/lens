@@ -52,10 +52,9 @@ public interface SchedulerService extends LensService, SessionValidator {
    *
    * @param sessionHandle handle for the current session.
    * @param jobHandle     handle for the job to be scheduled.
-   * @return true if there is a successful schedule
    * @throws LensException the lens exception
    */
-  boolean scheduleJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
+  void scheduleJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
 
   /**
    * Submit a job and also schedule it.
@@ -93,10 +92,9 @@ public interface SchedulerService extends LensService, SessionValidator {
    * @param sessionHandle
    * @param jobHandle        handle for the job which you want to update.
    * @param newJobDefinition
-   * @return true or false based on whether the update was successful or failed.
    * @throws LensException the lens exception
    */
-  boolean updateJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle, XJob newJobDefinition)
+  void updateJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle, XJob newJobDefinition)
     throws LensException;
 
   /**
@@ -104,10 +102,9 @@ public interface SchedulerService extends LensService, SessionValidator {
    *
    * @param sessionHandle handle for the current session.
    * @param jobHandle     handle for the job
-   * @return true if the operation is successful.
    * @throws LensException the lens exception
    */
-  boolean expireJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
+  void expireJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
 
   /**
    * Suspend a job.
@@ -118,30 +115,27 @@ public interface SchedulerService extends LensService, SessionValidator {
    *
    * @param sessionHandle handle for the current session.
    * @param jobHandle     handle for the job
-   * @return true if the job was suspended successfully, false otherwise.
    * @throws LensException the lens exception
    */
-  boolean suspendJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
+  void suspendJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
 
   /**
    * Resume a job from a given time.
    *
    * @param sessionHandle handle for the session.
    * @param jobHandle     handle for the job
-   * @return true if the job was resumed successfully, false otherwise.
    * @throws LensException the lens exception
    */
-  boolean resumeJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
+  void resumeJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
 
   /**
    * Delete a job.
    *
    * @param sessionHandle handle for the session.
    * @param jobHandle     handle for the job
-   * @return true if the job was deleted successfully.
    * @throws LensException the lens exception
    */
-  boolean deleteJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
+  void deleteJob(LensSessionHandle sessionHandle, SchedulerJobHandle jobHandle) throws LensException;
 
   /**
    * @param state         filter for status, if specified only jobs in that state will be returned,
@@ -189,7 +183,6 @@ public interface SchedulerService extends LensService, SessionValidator {
    *
    * @param sessionHandle  handle for the session.
    * @param instanceHandle handle for the instance
-   * @return true if the instance was killed successfully, false otherwise.
    * @throws LensException the lens exception
    */
   boolean killInstance(LensSessionHandle sessionHandle, SchedulerJobInstanceHandle instanceHandle) throws LensException;
@@ -201,10 +194,9 @@ public interface SchedulerService extends LensService, SessionValidator {
    *
    * @param sessionHandle  handle for the session.
    * @param instanceHandle handle for the instance
-   * @return true if the instance was re run successfully, false otherwise.
    * @throws LensException the lens exception
    */
-  boolean rerunInstance(LensSessionHandle sessionHandle, SchedulerJobInstanceHandle instanceHandle)
+  void rerunInstance(LensSessionHandle sessionHandle, SchedulerJobInstanceHandle instanceHandle)
     throws LensException;
 
   /**
@@ -222,4 +214,14 @@ public interface SchedulerService extends LensService, SessionValidator {
    * @return LensSessionHandle
    */
   LensSessionHandle openSessionAsUser(String user) throws LensException;
+
+  /**
+   * Get all jobs matching the filter parameters.
+   * @param user
+   * @param state
+   * @param start
+   * @param end
+   * @return List of all job handles matching the parameters.
+   */
+  List<SchedulerJobHandle> getAllJobs(String user, SchedulerJobState state, Long start, Long end) throws LensException;
 }

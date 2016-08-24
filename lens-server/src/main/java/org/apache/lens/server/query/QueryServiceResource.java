@@ -39,8 +39,9 @@ import org.apache.lens.server.api.annotations.MultiPurposeResource;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.cost.QueryCostTOBuilder;
-import org.apache.lens.server.error.UnSupportedQuerySubmitOpException;
+import org.apache.lens.server.error.UnSupportedOpException;
 import org.apache.lens.server.model.LogSegregationContext;
+import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -64,21 +65,6 @@ public class QueryServiceResource {
 
   private void validateSessionId(final LensSessionHandle sessionHandle) throws LensException {
     queryServer.validateSession(sessionHandle);
-  }
-
-  private SubmitOp checkAndGetQuerySubmitOperation(final String operation, SubmitOp... supportedOperations)
-    throws UnSupportedQuerySubmitOpException {
-    try {
-      SubmitOp op = SubmitOp.valueOf(operation.toUpperCase());
-      for(SubmitOp supportedOperation: supportedOperations) {
-        if (op.equals(supportedOperation)) {
-          return op;
-        }
-      }
-      throw new UnSupportedQuerySubmitOpException(supportedOperations);
-    } catch (IllegalArgumentException e) {
-      throw new UnSupportedQuerySubmitOpException(e, supportedOperations);
-    }
   }
 
   private void validateQuery(String query) throws LensException {
@@ -179,7 +165,7 @@ public class QueryServiceResource {
     final String requestId = this.logSegregationContext.getLogSegragationId();
     validateSessionId(sessionid);
     SubmitOp[] supportedOperations = new SubmitOp[]{ESTIMATE, EXECUTE, EXPLAIN, EXECUTE_WITH_TIMEOUT};
-    SubmitOp sop = checkAndGetQuerySubmitOperation(operation, supportedOperations);
+    SubmitOp sop = UtilityMethods.checkAndGetOperation(operation, SubmitOp.class, supportedOperations);
     validateQuery(query);
     QuerySubmitResult result;
     switch (sop) {
@@ -196,7 +182,7 @@ public class QueryServiceResource {
       result = queryServer.execute(sessionid, query, timeoutmillis, conf, queryName);
       break;
     default:
-      throw new UnSupportedQuerySubmitOpException(supportedOperations);
+      throw new UnSupportedOpException(supportedOperations);
     }
     return LensAPIResult.composedOf(null, requestId, result);
   }
@@ -309,7 +295,7 @@ public class QueryServiceResource {
     validateSessionId(sessionid);
     validateQuery(query);
     SubmitOp[] supportedOperations = new SubmitOp[]{PREPARE, EXPLAIN_AND_PREPARE};
-    SubmitOp sop = checkAndGetQuerySubmitOperation(operation, supportedOperations);
+    SubmitOp sop = UtilityMethods.checkAndGetOperation(operation, SubmitOp.class, supportedOperations);
     QuerySubmitResult result;
     switch (sop) {
     case PREPARE:
@@ -319,7 +305,7 @@ public class QueryServiceResource {
       result = queryServer.explainAndPrepare(sessionid, query, conf, queryName);
       break;
     default:
-      throw new UnSupportedQuerySubmitOpException(supportedOperations);
+      throw new UnSupportedOpException(supportedOperations);
     }
     return LensAPIResult.composedOf(null, requestId, result);
   }
@@ -555,14 +541,14 @@ public class QueryServiceResource {
     @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
     validateSessionId(sessionid);
     SubmitOp[] supportedOperations = new SubmitOp[]{EXECUTE, EXECUTE_WITH_TIMEOUT};
-    SubmitOp sop = checkAndGetQuerySubmitOperation(operation, supportedOperations);
+    SubmitOp sop = UtilityMethods.checkAndGetOperation(operation, SubmitOp.class, supportedOperations);
     switch (sop) {
     case EXECUTE:
       return queryServer.executePrepareAsync(sessionid, getPrepareHandle(prepareHandle), conf, queryName);
     case EXECUTE_WITH_TIMEOUT:
       return queryServer.executePrepare(sessionid, getPrepareHandle(prepareHandle), timeoutmillis, conf, queryName);
     default:
-      throw new UnSupportedQuerySubmitOpException(supportedOperations);
+      throw new UnSupportedOpException(supportedOperations);
     }
   }
 

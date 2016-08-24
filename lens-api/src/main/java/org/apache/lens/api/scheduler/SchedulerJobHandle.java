@@ -27,14 +27,16 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.lens.api.UUIDAdapter;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * Handle for <code>SchedulerJob</code>.
  */
 @XmlRootElement
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = false)
 public class SchedulerJobHandle implements Serializable {
 
@@ -53,6 +55,13 @@ public class SchedulerJobHandle implements Serializable {
   private UUID handleId;
 
   /**
+   * Default constructor
+   */
+  public SchedulerJobHandle() {
+    this(UUID.randomUUID());
+  }
+
+  /**
    * From string.
    *
    * @param handle the handle for scheduler job
@@ -68,6 +77,7 @@ public class SchedulerJobHandle implements Serializable {
 
   /**
    * String representation of the SchedulerJobHandle.
+   *
    * @return string representation of the handleId
    */
   @Override

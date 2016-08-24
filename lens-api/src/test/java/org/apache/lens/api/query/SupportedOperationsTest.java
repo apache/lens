@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,28 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.error;
 
-import org.apache.lens.server.api.LensErrorInfo;
+package org.apache.lens.api.query;
 
-public enum LensServerErrorCode {
+import org.apache.lens.api.SupportedOperations;
+import org.apache.lens.api.serialize.SerializationTest;
 
-  SESSION_ID_NOT_PROVIDED(2001, 0),
-  NULL_OR_EMPTY_OR_BLANK_QUERY(2002, 0),
-  UNSUPPORTED_OPERATION(2003, 0),
-  TOO_MANY_OPEN_SESSIONS(2004, 0),
-  SESSION_CLOSED(2005, 0),
-  INVALID_HANDLE(2006, 0),
-  NULL_OR_EMPTY_ARGUMENT(2007, 0);
+import org.testng.annotations.Test;
 
-  public LensErrorInfo getLensErrorInfo() {
-    return this.errorInfo;
+public class SupportedOperationsTest {
+
+  @Test
+  public void testIfSupportedQuerySubmitOperationsIsSerializable() {
+
+    /* Payload class has to be Serializable because it is part of QueryContext collaboration graph,
+    which is serialized to be persisted on disk in lens */
+
+    SerializationTest st = new SerializationTest();
+    st.verifySerializationAndDeserialization(new SupportedOperations());
   }
-
-  LensServerErrorCode(final int code, final int weight) {
-    this.errorInfo = new LensErrorInfo(code, weight, name());
-  }
-
-  private final LensErrorInfo errorInfo;
-
 }

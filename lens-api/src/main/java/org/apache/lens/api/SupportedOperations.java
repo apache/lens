@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.api.query;
+package org.apache.lens.api;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -35,7 +35,7 @@ import lombok.ToString;
 @ToString
 @XmlAccessorType(XmlAccessType.FIELD)
 @NoArgsConstructor
-public class SupportedQuerySubmitOperations implements Serializable {
+public class SupportedOperations<T> implements Serializable {
 
   private static final String SEP = ", ";
 
@@ -43,8 +43,8 @@ public class SupportedQuerySubmitOperations implements Serializable {
   @XmlElement(name = "operation")
   private List<String> supportedOps = new LinkedList<String>();
 
-  public SupportedQuerySubmitOperations(SubmitOp... supportedOps) {
-    for (SubmitOp supportedOp : supportedOps) {
+  public SupportedOperations(T... supportedOps) {
+    for (T supportedOp : supportedOps) {
       this.supportedOps.add(supportedOp.toString().toLowerCase());
     }
   }

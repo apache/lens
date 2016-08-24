@@ -18,27 +18,26 @@
  */
 package org.apache.lens.server.error;
 
-import static org.apache.lens.server.error.LensServerErrorCode.UNSUPPORTED_QUERY_SUBMIT_OPERATION;
+import static org.apache.lens.server.error.LensServerErrorCode.UNSUPPORTED_OPERATION;
 
+import org.apache.lens.api.SupportedOperations;
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.LensError;
-import org.apache.lens.api.query.SubmitOp;
-import org.apache.lens.api.query.SupportedQuerySubmitOperations;
 import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.server.api.error.LensException;
 
-public class UnSupportedQuerySubmitOpException extends LensException {
+public class UnSupportedOpException extends LensException {
 
-  private final SupportedQuerySubmitOperations supportedOps;
+  private final SupportedOperations supportedOps;
 
-  public UnSupportedQuerySubmitOpException(SubmitOp... supportedSubmitOps) {
-    super(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getLensErrorInfo());
-    this.supportedOps = new SupportedQuerySubmitOperations(supportedSubmitOps);
+  public UnSupportedOpException(Enum... supportedOps) {
+    super(UNSUPPORTED_OPERATION.getLensErrorInfo());
+    this.supportedOps = new SupportedOperations<>(supportedOps);
   }
 
-  public UnSupportedQuerySubmitOpException(final Throwable cause, SubmitOp... supportedSubmitOps) {
-    super(UNSUPPORTED_QUERY_SUBMIT_OPERATION.getLensErrorInfo(), cause);
-    this.supportedOps = new SupportedQuerySubmitOperations(supportedSubmitOps);
+  public UnSupportedOpException(final Throwable cause, Enum... supportedOps) {
+    super(UNSUPPORTED_OPERATION.getLensErrorInfo(), cause);
+    this.supportedOps = new SupportedOperations<>(supportedOps);
   }
 
   @Override

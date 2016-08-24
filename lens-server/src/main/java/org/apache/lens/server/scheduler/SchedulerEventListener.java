@@ -66,10 +66,6 @@ public class SchedulerEventListener extends AsyncEventListener<SchedulerAlarmEve
     this.schedulerDAO = schedulerDAO;
   }
 
-  private LensSessionHandle getSessionHandle(String user) throws LensException {
-    return schedulerService.openSessionAsUser(user);
-  }
-
   private void setSessionConf(LensSessionHandle sessionHandle, XJob job) throws LensException {
     XExecution execution = job.getExecution();
     XSessionType executionSession = execution.getSession();
@@ -121,7 +117,7 @@ public class SchedulerEventListener extends AsyncEventListener<SchedulerAlarmEve
     LensSessionHandle sessionHandle = null;
 
     try {
-      sessionHandle = getSessionHandle(user);
+      sessionHandle = schedulerService.openSessionAsUser(user);
       setSessionConf(sessionHandle, job);
       if (event.getType() == SchedulerAlarmEvent.EventType.EXPIRE) {
         try {

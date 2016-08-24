@@ -33,6 +33,7 @@ import javax.sql.DataSource;
 import org.apache.lens.api.scheduler.SchedulerJobHandle;
 import org.apache.lens.api.scheduler.SchedulerJobInstanceHandle;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.error.UnSupportedOpException;
 
 import org.apache.commons.dbcp.*;
 import org.apache.commons.dbutils.QueryRunner;
@@ -231,5 +232,19 @@ public final class UtilityMethods {
 
   public static SchedulerJobInstanceHandle generateSchedulerJobInstanceHandle() {
     return new SchedulerJobInstanceHandle(UUID.randomUUID());
+  }
+  public static <T extends Enum<T>> T checkAndGetOperation(final String operation, Class<T> enumType,
+    T... supportedOperations) throws UnSupportedOpException {
+    try {
+      T op = Enum.valueOf(enumType, operation.toUpperCase());
+      for (T supportedOperation : supportedOperations) {
+        if (op.equals(supportedOperation)) {
+          return op;
+        }
+      }
+      throw new UnSupportedOpException(supportedOperations);
+    } catch (IllegalArgumentException e) {
+      throw new UnSupportedOpException(e, supportedOperations);
+    }
   }
 }
