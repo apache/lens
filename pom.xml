@@ -93,7 +93,7 @@
     <jaxb2.basics.plugin.version>0.9.5</jaxb2.basics.plugin.version>
     <jaxb2.fluent.plugin.version>3.0</jaxb2.fluent.plugin.version>
     <exec.plugin.version>1.2.1</exec.plugin.version>
-    <enunciate.plugin.version>1.28</enunciate.plugin.version>
+    <enunciate.plugin.version>2.5.0</enunciate.plugin.version>
     <reports.plugin.version>2.7</reports.plugin.version>
     <javadoc.plugin.version>2.10.3</javadoc.plugin.version>
     <surefire.plugin.version>2.15</surefire.plugin.version>
@@ -556,8 +556,8 @@
           <version>${exec.plugin.version}</version>
         </plugin>
         <plugin>
-          <groupId>org.codehaus.enunciate</groupId>
-          <artifactId>maven-enunciate-plugin</artifactId>
+          <groupId>com.webcohesion.enunciate</groupId>
+          <artifactId>enunciate-maven-plugin</artifactId>
           <version>${enunciate.plugin.version}</version>
         </plugin>
         <plugin>
@@ -748,6 +748,11 @@
             <phase>verify</phase>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.webcohesion.enunciate</groupId>
+        <artifactId>enunciate-maven-plugin</artifactId>
+        <version>${enunciate.plugin.version}</version>
       </plugin>
     </plugins>
   </build>
@@ -1855,21 +1860,6 @@
             <configuration>
               <skip>false</skip>
             </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>enunciate</id>
-      <activation>
-        <jdk>[1.7,1.8)</jdk>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.enunciate</groupId>
-            <artifactId>maven-enunciate-plugin</artifactId>
-            <version>${enunciate.plugin.version}</version>
           </plugin>
         </plugins>
       </build>
