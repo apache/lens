@@ -21,6 +21,7 @@ package org.apache.lens.driver.hive;
 import static org.testng.Assert.assertEquals;
 
 import java.io.*;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -104,8 +105,14 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     hiveConf.addResource(remoteConf);
     server.init(hiveConf);
     server.start();
-    // TODO figure out a better way to wait for thrift service to start
-    Thread.sleep(7000);
+    while (true) {
+      try {
+        new Socket(HS2_HOST, HS2_PORT);
+        break;
+      } catch (Throwable th) {
+        Thread.sleep(1000);
+      }
+    }
   }
 
   /**

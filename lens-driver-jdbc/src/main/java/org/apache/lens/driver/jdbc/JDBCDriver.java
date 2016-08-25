@@ -70,9 +70,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import com.google.common.collect.ImmutableSet;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -116,89 +114,26 @@ public class JDBCDriver extends AbstractLensDriver {
   /**
    * Data related to a query submitted to JDBCDriver.
    */
+  @Data
   protected class JdbcQueryContext {
 
     /** The lens context. */
-    @Getter
     private final QueryContext lensContext;
 
     /** The result future. */
-    @Getter
-    @Setter
     private Future<QueryResult> resultFuture;
 
     /** The rewritten query. */
-    @Getter
-    @Setter
     private String rewrittenQuery;
 
     /** The is prepared. */
-    @Getter
-    @Setter
     private boolean isPrepared;
 
-    /** The is cancelled. */
-    @Getter
-    @Setter
-    private boolean isCancelled;
-
     /** The is closed. */
-    @Getter
     private boolean isClosed;
 
-    /** The listener. */
-    @Getter
-    @Setter
-    private QueryCompletionListener listener;
-
     /** The query result. */
-    @Getter
-    @Setter
     private QueryResult queryResult;
-
-    /** The start time. */
-    @Getter
-    @Setter
-    private long startTime;
-
-    /** The end time. */
-    @Getter
-    @Setter
-    private long endTime;
-
-    private final LogSegregationContext logSegregationContext;
-
-    /**
-     * Instantiates a new jdbc query context.
-     *
-     * @param context the context
-     */
-    public JdbcQueryContext(QueryContext context, @NonNull final LogSegregationContext logSegregationContext) {
-      this.logSegregationContext = logSegregationContext;
-      this.lensContext = context;
-    }
-
-    /**
-     * Notify error.
-     *
-     * @param th the th
-     */
-    public void notifyError(Throwable th) {
-      // If query is closed in another thread while the callable is still waiting for result
-      // set, then it throws an SQLException in the callable. We don't want to send that exception
-      if (listener != null && !isClosed) {
-        listener.onError(lensContext.getQueryHandle(), th.getMessage());
-      }
-    }
-
-    /**
-     * Notify complete.
-     */
-    public void notifyComplete() {
-      if (listener != null) {
-        listener.onCompletion(lensContext.getQueryHandle());
-      }
-    }
 
     /**
      * Close result.
@@ -325,7 +260,7 @@ public class JDBCDriver extends AbstractLensDriver {
     public QueryCallable(JdbcQueryContext queryContext, @NonNull LogSegregationContext logSegregationContext) {
       this.queryContext = queryContext;
       this.logSegregationContext = logSegregationContext;
-      queryContext.setStartTime(System.currentTimeMillis());
+      queryContext.getLensContext().setDriverStatus(DriverQueryState.INITIALIZED);
     }
 
     /*
@@ -335,15 +270,13 @@ public class JDBCDriver extends AbstractLensDriver {
      */
     @Override
     public QueryResult call() {
-
       logSegregationContext.setLogSegragationAndQueryId(this.queryContext.getQueryHandleString());
-
+      queryContext.getLensContext().setDriverStatus(DriverQueryState.RUNNING);
       Statement stmt;
       Connection conn = null;
       QueryResult result = new QueryResult();
       try {
         queryContext.setQueryResult(result);
-
         try {
           conn = getConnection();
           result.conn = conn;
@@ -351,33 +284,42 @@ public class JDBCDriver extends AbstractLensDriver {
           log.error("Error obtaining connection: ", e);
           result.error = e;
         }
-
         if (conn != null) {
           try {
             stmt = createStatement(conn);
             result.stmt = stmt;
             Boolean isResultAvailable = stmt.execute(queryContext.getRewrittenQuery());
+            if (queryContext.getLensContext().getDriverStatus().isCanceled()) {
+              return result;
+            }
+            queryContext.getLensContext().getDriverStatus().setResultSetAvailable(isResultAvailable);
+            queryContext.getLensContext().setDriverStatus(DriverQueryState.SUCCESSFUL);
             if (isResultAvailable) {
               result.resultSet = stmt.getResultSet();
             }
-            queryContext.notifyComplete();
-          } catch (SQLException sqlEx) {
+          } catch (Exception e) {
+            if (queryContext.getLensContext().getDriverStatus().isCanceled()) {
+              return result;
+            }
             if (queryContext.isClosed()) {
               log.info("Ignored exception on already closed query : {} - {}",
-                queryContext.getLensContext().getQueryHandle(), sqlEx.getMessage());
+                queryContext.getLensContext().getQueryHandle(), e.getMessage());
             } else {
               log.error("Error executing SQL query: {} reason: {}", queryContext.getLensContext().getQueryHandle(),
-                sqlEx.getMessage(), sqlEx);
-              result.error = sqlEx;
+                e.getMessage(), e);
+              result.error = e;
+              queryContext.getLensContext().setDriverStatus(DriverQueryState.FAILED, e.getMessage());
               // Close connection in case of failed queries. For successful queries, connection is closed
               // When result set is closed or driver.closeQuery is called
               result.close();
-              queryContext.notifyError(sqlEx);
             }
           }
         }
       } finally {
-        queryContext.setEndTime(System.currentTimeMillis());
+        Long endTime = queryContext.getLensContext().getDriverStatus().getDriverFinishTime();
+        if (endTime == null || endTime <= 0) {
+          queryContext.getLensContext().getDriverStatus().setDriverFinishTime(System.currentTimeMillis());
+        }
       }
       return result;
     }
@@ -688,7 +630,7 @@ public class JDBCDriver extends AbstractLensDriver {
   /**
    * Validate query using prepare
    *
-   * @param pContext
+   * @param pContext context to validate
    * @throws LensException
    */
   public void validate(AbstractQueryContext pContext) throws LensException {
@@ -698,7 +640,7 @@ public class JDBCDriver extends AbstractLensDriver {
     boolean validateThroughPrepare = pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_THROUGH_PREPARE,
       DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE);
     if (validateThroughPrepare) {
-      PreparedStatement stmt = null;
+      PreparedStatement stmt;
       // Estimate queries need to get connection from estimate pool to make sure
       // we are not blocked by data queries.
       stmt = prepareInternal(pContext, true, true, "validate-");
@@ -771,8 +713,8 @@ public class JDBCDriver extends AbstractLensDriver {
   /**
    * Internally prepare the query
    *
-   * @param pContext
-   * @return
+   * @param pContext prepare context
+   * @return prepared statement of the query
    * @throws LensException
    */
   private PreparedStatement prepareInternal(AbstractQueryContext pContext) throws LensException {
@@ -940,7 +882,7 @@ public class JDBCDriver extends AbstractLensDriver {
    */
 
   private QueryResult executeInternal(QueryContext context, String rewrittenQuery) throws LensException {
-    JdbcQueryContext queryContext = new JdbcQueryContext(context, logSegregationContext);
+    JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
     return new QueryCallable(queryContext, logSegregationContext).call();
@@ -959,7 +901,7 @@ public class JDBCDriver extends AbstractLensDriver {
     // Always use the driver rewritten query not user query. Since the
     // conf we are passing here is query context conf, we need to add jdbc xml in resource path
     String rewrittenQuery = rewriteQuery(context);
-    JdbcQueryContext jdbcCtx = new JdbcQueryContext(context, logSegregationContext);
+    JdbcQueryContext jdbcCtx = new JdbcQueryContext(context);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
     try {
       Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx, logSegregationContext));
@@ -973,21 +915,6 @@ public class JDBCDriver extends AbstractLensDriver {
   }
 
   /**
-   * Register for query completion notification.
-   *
-   * @param handle        the handle
-   * @param timeoutMillis the timeout millis
-   * @param listener      the listener
-   * @throws LensException the lens exception
-   */
-  @Override
-  public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis,
-    QueryCompletionListener listener) throws LensException {
-    checkConfigured();
-    getQueryContext(handle).setListener(listener);
-  }
-
-  /**
    * Get status of the query, specified by the handle.
    *
    * @param context The query handle
@@ -997,15 +924,18 @@ public class JDBCDriver extends AbstractLensDriver {
   public void updateStatus(QueryContext context) throws LensException {
     checkConfigured();
     JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
-    context.getDriverStatus().setDriverStartTime(ctx.getStartTime());
-    if (ctx.getResultFuture().isDone()) {
-      // Since future is already done, this call should not block
+    if (ctx.getLensContext().getDriverStatus().isFinished()) {
+      // terminal state. No updates can be done.
+      return;
+    }
+    if (ctx.getResultFuture().isCancelled()) {
       context.getDriverStatus().setProgress(1.0);
-      context.getDriverStatus().setDriverFinishTime(ctx.getEndTime());
-      if (ctx.isCancelled()) {
-        context.getDriverStatus().setState(DriverQueryState.CANCELED);
-        context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " cancelled");
-      } else if (ctx.getQueryResult() != null && ctx.getQueryResult().error != null) {
+      context.getDriverStatus().setState(DriverQueryState.CANCELED);
+      context.getDriverStatus().setStatusMessage("Query Canceled");
+    } else if (ctx.getResultFuture().isDone()) {
+      context.getDriverStatus().setProgress(1.0);
+      // Since future is already done, this call should not block
+      if (ctx.getQueryResult() != null && ctx.getQueryResult().error != null) {
         context.getDriverStatus().setState(DriverQueryState.FAILED);
         context.getDriverStatus().setStatusMessage("Query execution failed!");
         context.getDriverStatus().setErrorMessage(ctx.getQueryResult().error.getMessage());
@@ -1015,7 +945,6 @@ public class JDBCDriver extends AbstractLensDriver {
         context.getDriverStatus().setResultSetAvailable(true);
       }
     } else {
-      context.getDriverStatus().setProgress(0.0);
       context.getDriverStatus().setState(DriverQueryState.RUNNING);
       context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " is running");
     }
@@ -1029,8 +958,8 @@ public class JDBCDriver extends AbstractLensDriver {
 
   private LensResultSet getDriverResult(QueryContext context) throws LensException {
     JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
-    if (ctx.isCancelled()) {
-      throw new LensException("Result set not available for cancelled query " + context.getQueryHandle());
+    if (ctx.getLensContext().getDriverStatus().isCanceled()) {
+      throw new LensException("Result set not available for canceled query " + context.getQueryHandle());
     }
 
     Future<QueryResult> future = ctx.getResultFuture();
@@ -1043,7 +972,7 @@ public class JDBCDriver extends AbstractLensDriver {
     } catch (ExecutionException e) {
       throw new LensException("Error while executing query " + queryHandle.getHandleId() + " in background", e);
     } catch (CancellationException e) {
-      throw new LensException("Query was already cancelled " + queryHandle.getHandleId(), e);
+      throw new LensException("Query was already canceled " + queryHandle.getHandleId(), e);
     }
   }
 
@@ -1073,14 +1002,9 @@ public class JDBCDriver extends AbstractLensDriver {
     log.info("{} cancel request on query {}", getFullyQualifiedName(), handle);
     boolean cancelResult = context.cancel();
     if (cancelResult) {
-      context.setCancelled(true);
-      // this is required because future.cancel does not guarantee
-      // that finally block is always called.
-      if (context.getEndTime() == 0) {
-        context.setEndTime(System.currentTimeMillis());
-      }
+      context.getLensContext().setDriverStatus(DriverQueryState.CANCELED);
       context.closeResult();
-      log.info("{} Cancelled query : {}", getFullyQualifiedName(), handle);
+      log.info("{} Canceled query : {}", getFullyQualifiedName(), handle);
     }
     return cancelResult;
   }
@@ -1113,7 +1037,7 @@ public class JDBCDriver extends AbstractLensDriver {
   public void close() throws LensException {
     checkConfigured();
     try {
-      for (QueryHandle query : new ArrayList<QueryHandle>(queryContextMap.keySet())) {
+      for (QueryHandle query : new ArrayList<>(queryContextMap.keySet())) {
         try {
           closeQuery(query);
         } catch (LensException e) {
@@ -1175,5 +1099,10 @@ public class JDBCDriver extends AbstractLensDriver {
   @Override
   public DriverQueryHook getQueryHook() {
     return queryHook;
+  }
+
+  @Override
+  public StatusUpdateMethod getStatusUpdateMethod() {
+    return StatusUpdateMethod.PUSH;
   }
 }

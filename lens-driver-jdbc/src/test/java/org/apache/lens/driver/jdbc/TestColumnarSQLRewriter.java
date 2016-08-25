@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -1082,12 +1083,15 @@ public class TestColumnarSQLRewriter {
     Database database = new Database();
     database.setName("mydb");
 
-    Hive.get(hconf).createDatabase(database);
-    SessionState.get().setCurrentDatabase("mydb");
-    createTable(hconf, "mydb", "mytable", "testDB", "testTable_1");
-    createTable(hconf, "mydb", "mytable_2", "testDB", "testTable_2");
-    createTable(hconf, "default", "mytable_3", "testDB", "testTable_3");
-
+    try {
+      Hive.get(hconf).createDatabase(database);
+      SessionState.get().setCurrentDatabase("mydb");
+      createTable(hconf, "mydb", "mytable", "testDB", "testTable_1");
+      createTable(hconf, "mydb", "mytable_2", "testDB", "testTable_2");
+      createTable(hconf, "default", "mytable_3", "testDB", "testTable_3");
+    } catch (AlreadyExistsException e) {
+      //pass
+    }
     String query = "SELECT * FROM mydb.mytable t1 JOIN mytable_2 t2 ON t1.t2id = t2.id "
       + " left outer join default.mytable_3 t3 on t2.t3id = t3.id " + "WHERE A = 100";
 
@@ -1176,7 +1180,11 @@ public class TestColumnarSQLRewriter {
     Database database = new Database();
     database.setName(testDB);
 
-    Hive.get(hconf).createDatabase(database);
+    try {
+      Hive.get(hconf).createDatabase(database);
+    } catch(AlreadyExistsException ignored) {
+      //ignore
+    }
     try {
       SessionState.get().setCurrentDatabase(testDB);
       Map<String, String> columnMap = new HashMap<>();

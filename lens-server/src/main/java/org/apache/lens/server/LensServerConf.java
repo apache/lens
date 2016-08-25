@@ -18,7 +18,6 @@
  */
 package org.apache.lens.server;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.lens.server.api.LensConfConstants;
@@ -45,9 +44,7 @@ public final class LensServerConf {
       HIVE_CONF.addResource("lens-site.xml");
       Configuration conf = new Configuration(false);
       conf.addResource("lens-site.xml");
-      Iterator<Map.Entry<String, String>> confItr = conf.iterator();
-      while (confItr.hasNext()) {
-        Map.Entry<String, String> prop = confItr.next();
+      for (Map.Entry<String, String> prop : conf) {
         if (!prop.getKey().startsWith(LensConfConstants.SERVER_PFX)) {
           OVERRIDING_CONF_FOR_DRIVER.set(prop.getKey(), prop.getValue());
         }

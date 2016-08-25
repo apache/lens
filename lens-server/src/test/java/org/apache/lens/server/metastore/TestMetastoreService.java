@@ -1046,10 +1046,13 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XDimension dimension = cubeObjectFactory.createXDimension();
     dimension.setName(dimName);
+
     dimension.setAttributes(new XDimAttributes());
     dimension.setExpressions(new XExpressions());
     dimension.setJoinChains(new XJoinChains());
-    dimension.setProperties(new XProperties());
+    dimension.setProperties(new XProperties().withProperty(
+      new XProperty().withName(MetastoreUtil.getDimTimedDimensionKey(dimName)).withValue("dt"))
+    );
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("col1");
     xd1.setType("STRING");

@@ -24,6 +24,7 @@ import static org.apache.lens.server.api.LensConfConstants.PREFETCH_INMEMORY_RES
 import static org.apache.lens.server.api.LensConfConstants.PREFETCH_INMEMORY_RESULTSET_ROWS;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Future;
@@ -36,13 +37,8 @@ import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.common.BackOffRetryHandler;
 import org.apache.lens.server.api.common.FailureContext;
-import org.apache.lens.server.api.driver.DriverQueryStatus;
-import org.apache.lens.server.api.driver.InMemoryResultSet;
-import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.driver.LensResultSet;
-import org.apache.lens.server.api.driver.PartiallyFetchedInMemoryResultSet;
+import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.util.LensUtil;
 
@@ -207,6 +203,8 @@ public class QueryContext extends AbstractQueryContext {
   @Getter
   @Setter
   private transient Future queryLauncher;
+  private List<QueryDriverStatusUpdateListener> driverStatusUpdateListener = Lists.newArrayList();
+
   /**
    * Creates context from query
    *
@@ -446,8 +444,7 @@ public class QueryContext extends AbstractQueryContext {
 
 
   /**
-   * Get query handle string
-   * @return
+   * @return query handle string
    */
   @Override
   public String getLogHandle() {
@@ -489,10 +486,6 @@ public class QueryContext extends AbstractQueryContext {
     return getSelectedDriver().getQueryConstraints();
   }
 
-  public ImmutableSet<WaitingQueriesSelectionPolicy> getSelectedDriverSelectionPolicies() {
-    return getSelectedDriver().getWaitingQuerySelectionPolicies();
-  }
-
   public synchronized void registerDriverResult(LensResultSet result) throws LensException {
     if (isDriverResultRegistered) {
       return; //already registered
@@ -528,8 +521,58 @@ public class QueryContext extends AbstractQueryContext {
     }
     this.driverResult = result;
   }
+  public void setDriverStatus(DriverQueryStatus.DriverQueryState state, String message) {
+    if (getDriverStatus().getState().getOrder() > state.getOrder()) {
+      log.info("current driver status: {}, ignoring transition request to {}", getDriverStatus().getState(), state);
+      return;
+    }
+    switch (state) {
+    case NEW:
+    case INITIALIZED:
+    case PENDING:
+      getDriverStatus().setProgress(0.0);
+    case RUNNING:
+      if (getDriverStatus().getDriverStartTime() == null || getDriverStatus().getDriverStartTime() <= 0) {
+        getDriverStatus().setDriverStartTime(System.currentTimeMillis());
+      }
+      break;
+    case SUCCESSFUL:
+    case FAILED:
+    case CANCELED:
+      getDriverStatus().setProgress(1.0);
+      if (getDriverStatus().getDriverFinishTime() == null || getDriverStatus().getDriverFinishTime() <= 0) {
+        getDriverStatus().setDriverFinishTime(System.currentTimeMillis());
+      }
+      break;
+    default:
+      break;
+    }
+    if (message != null) {
+      if (state == DriverQueryStatus.DriverQueryState.FAILED) {
+        getDriverStatus().setErrorMessage(message);
+      } else {
+        getDriverStatus().setStatusMessage(message);
+      }
+    }
+    if (getDriverStatus().getStatusMessage() == null) {
+      getDriverStatus().setStatusMessage("Query " + getQueryHandleString() + " " + state.name().toLowerCase());
+    }
+    getDriverStatus().setState(state);
+    for (QueryDriverStatusUpdateListener listener: this.driverStatusUpdateListener) {
+      listener.onDriverStatusUpdated(getQueryHandle(), getDriverStatus());
+    }
+  }
 
   public String toString() {
     return queryHandle + ":" + this.status;
+  }
+
+  public void setDriverStatus(DriverQueryStatus.DriverQueryState state) {
+    setDriverStatus(state, null);
+  }
+
+
+  public void registerStatusUpdateListener(QueryDriverStatusUpdateListener driverStatusUpdateListener) {
+    this.driverStatusUpdateListener.add(driverStatusUpdateListener);
   }
 }

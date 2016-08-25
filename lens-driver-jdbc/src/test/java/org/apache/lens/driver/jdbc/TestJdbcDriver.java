@@ -457,7 +457,7 @@ public class TestJdbcDriver {
 
   /**
    * Data provider for test case {@link #testExecuteWithPreFetch(int, boolean, int, boolean, long)} ()}
-   * @return
+   * @return data
    */
   @DataProvider
   public Object[][] executeWithPreFetchDP() {
@@ -470,7 +470,7 @@ public class TestJdbcDriver {
     };
   }
 
-  /**
+  /**Testjdbcdri
    * @param rowsToPreFecth  : requested number of rows to be pre-fetched
    * @param isComplteleyFetched : whether the wrapped in memory result has been completely accessed due to pre fetch
    * @param rowsPreFetched : actual rows pre-fetched
@@ -689,7 +689,7 @@ public class TestJdbcDriver {
 
     executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
-    driver.registerForCompletionNotification(handle, 0, listener);
+    driver.registerForCompletionNotification(context, 0, listener);
 
     while (true) {
       driver.updateStatus(context);
@@ -881,7 +881,6 @@ public class TestJdbcDriver {
     driver.updateStatus(context);
     assertTrue(isCancelled);
     assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED);
-
     assertTrue(context.getDriverStatus().getDriverStartTime() > 0);
     assertTrue(context.getDriverStatus().getDriverFinishTime() > 0);
     driver.closeQuery(handle);
@@ -915,22 +914,21 @@ public class TestJdbcDriver {
       public void onCompletion(QueryHandle handle) {
         fail("Was expecting this query to fail " + handle);
       }
+
     };
 
     executeAsync(ctx);
     QueryHandle handle = ctx.getQueryHandle();
-    driver.registerForCompletionNotification(handle, 0, listener);
+    driver.registerForCompletionNotification(ctx, 0, listener);
 
-    while (true) {
+    while (!ctx.getDriverStatus().isFinished()) {
       driver.updateStatus(ctx);
       System.out.println("Query: " + handle + " Status: " + ctx.getDriverStatus());
-      if (ctx.getDriverStatus().isFinished()) {
-        assertEquals(ctx.getDriverStatus().getState(), DriverQueryState.FAILED);
-        assertEquals(ctx.getDriverStatus().getProgress(), 1.0);
-        break;
-      }
       Thread.sleep(500);
     }
+    assertEquals(ctx.getDriverStatus().getState(), DriverQueryState.FAILED);
+    assertEquals(ctx.getDriverStatus().getProgress(), 1.0);
+
     assertTrue(ctx.getDriverStatus().getDriverStartTime() > 0);
     assertTrue(ctx.getDriverStatus().getDriverFinishTime() > 0);
 

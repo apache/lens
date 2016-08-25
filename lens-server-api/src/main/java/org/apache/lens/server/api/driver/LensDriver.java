@@ -125,12 +125,14 @@ public interface LensDriver extends Externalizable {
   /**
    * Register for query completion notification.
    *
-   * @param handle        the handle
+   * @param context       the context
    * @param timeoutMillis the timeout millis
-   * @param listener      the listener
+   * @param listener      the listener. Only query completions are guaranteed to be notified.
+   *                      Notably: SUCCESS and FAILURE
    * @throws LensException the lens exception
    */
-  void registerForCompletionNotification(QueryHandle handle, long timeoutMillis, QueryCompletionListener listener)
+  void registerForCompletionNotification(QueryContext context, long timeoutMillis,
+    QueryCompletionListener listener)
     throws LensException;
 
   /**
@@ -215,8 +217,7 @@ public interface LensDriver extends Externalizable {
   /**
    * decide priority based on query's cost. The cost should be already computed by estimate call, but it's
    * not guaranteed to be pre-computed. It's up to the driver to do an on-demand computation of cost.
-   * @see AbstractQueryContext#decidePriority(LensDriver, QueryPriorityDecider) that handles this on-demand computation.
-   * @param queryContext
+   * @param queryContext Query context whose priority is to be decided
    */
   Priority decidePriority(AbstractQueryContext queryContext);
 
@@ -225,4 +226,10 @@ public interface LensDriver extends Externalizable {
    * @see DriverQueryHook for more details.
    */
   DriverQueryHook getQueryHook();
+
+  /**
+   *
+   * @return The method of status update supported by this driver.
+   */
+  StatusUpdateMethod getStatusUpdateMethod();
 }

@@ -35,6 +35,8 @@ public class DriverQueryStatus implements Serializable {
    */
   private static final long serialVersionUID = 1L;
 
+
+
   /**
    * The Enum DriverQueryState.
    */
@@ -43,42 +45,52 @@ public class DriverQueryStatus implements Serializable {
     /**
      * The new.
      */
-    NEW,
+    NEW(0),
 
     /**
      * The initialized.
      */
-    INITIALIZED,
+    INITIALIZED(1),
 
     /**
      * The pending.
      */
-    PENDING,
+    PENDING(2),
 
     /**
      * The running.
      */
-    RUNNING,
+    RUNNING(3),
 
     /**
      * The successful.
      */
-    SUCCESSFUL,
+    SUCCESSFUL(4),
 
     /**
      * The failed.
      */
-    FAILED,
+    FAILED(4),
 
     /**
      * The canceled.
      */
-    CANCELED,
+    CANCELED(4),
 
     /**
      * The closed.
      */
-    CLOSED
+    CLOSED(5);
+
+    private int order;
+
+    DriverQueryState(int order) {
+      this.order = order;
+    }
+
+    public int getOrder() {
+      return order;
+    }
   }
 
   /**
@@ -171,18 +183,6 @@ public class DriverQueryStatus implements Serializable {
             errorMessage, null);
   }
 
-  /**
-   * Creates the query status.
-   *
-   * @param state   the state
-   * @param dstatus the dstatus
-   * @return the query status
-   */
-  public static QueryStatus createQueryStatus(QueryStatus.Status state, DriverQueryStatus dstatus) {
-    return new QueryStatus(dstatus.progress, null, state, dstatus.statusMessage,
-            dstatus.isResultSetAvailable, dstatus.progressMessage, dstatus.errorMessage, null);
-  }
-
   /*
    * (non-Javadoc)
    *
@@ -214,6 +214,9 @@ public class DriverQueryStatus implements Serializable {
 
   public boolean isSuccessful() {
     return state.equals(DriverQueryState.SUCCESSFUL);
+  }
+  public boolean isCanceled() {
+    return state.equals(DriverQueryState.CANCELED);
   }
 
 }

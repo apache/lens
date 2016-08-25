@@ -388,12 +388,11 @@ public class MockDriver extends AbstractLensDriver {
    *
    * @see
    * org.apache.lens.server.api.driver.LensDriver#registerForCompletionNotification
-   * (org.apache.lens.api.query.QueryHandle, long, org.apache.lens.server.api.driver.QueryCompletionListener)
+   * (org.apache.lens.api.query.QueryHandle, long, org.apache.lens.server.api.driver.QueryDriverStatusUpdateListener)
    */
   @Override
-  public void registerForCompletionNotification(QueryHandle handle,
-    long timeoutMillis, QueryCompletionListener listener)
-    throws LensException {
+  public void registerForCompletionNotification(QueryContext context,
+    long timeoutMillis, QueryCompletionListener listener) {
     // TODO Auto-generated method stub
 
   }

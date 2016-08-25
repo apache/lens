@@ -106,6 +106,17 @@ public abstract class AbstractLensDriver implements LensDriver {
   }
 
   @Override
+  public StatusUpdateMethod getStatusUpdateMethod() {
+    return StatusUpdateMethod.PULL;
+  }
+
+  @Override
+  public void registerForCompletionNotification(QueryContext context, long timeoutMillis,
+    QueryCompletionListener listener) {
+    context.registerStatusUpdateListener(listener);
+  }
+
+  @Override
   public String toString() {
     return getFullyQualifiedName();
   }

@@ -27,14 +27,13 @@ import org.apache.lens.api.query.QueryHandle;
  * the queryCompletion event occurs, that object's appropriate
  * method is invoked.
  */
-public interface QueryCompletionListener {
-
+public abstract class QueryCompletionListener implements QueryDriverStatusUpdateListener {
   /**
    * On completion.
    *
    * @param handle the handle
    */
-  void onCompletion(QueryHandle handle);
+  public abstract void onCompletion(QueryHandle handle);
 
   /**
    * On error.
@@ -42,6 +41,22 @@ public interface QueryCompletionListener {
    * @param handle the handle
    * @param error  the error
    */
-  void onError(QueryHandle handle, String error);
+  public abstract void onError(QueryHandle handle, String error);
 
+  @Override
+  public void onDriverStatusUpdated(QueryHandle handle, DriverQueryStatus status) {
+    switch (status.getState()) {
+    case SUCCESSFUL:
+      onCompletion(handle);
+      break;
+    case FAILED:
+      onError(handle, status.getErrorMessage());
+      break;
+    case CANCELED:
+      onError(handle, "Query cancelled");
+      break;
+    default:
+      break;
+    }
+  }
 }
