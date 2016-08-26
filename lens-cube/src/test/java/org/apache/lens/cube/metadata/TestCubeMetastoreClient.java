@@ -1062,7 +1062,7 @@ public class TestCubeMetastoreClient {
     // Partition with different schema
     FieldSchema newcol = new FieldSchema("newcol", "int", "new col for part");
     cubeFact.alterColumn(newcol);
-    client.alterCubeFactTable(cubeFact.getName(), cubeFact, storageTables);
+    client.alterCubeFactTable(cubeFact.getName(), cubeFact, storageTables, new HashMap<String, String>());
     String storageTableName = getFactOrDimtableStorageTableName(factName, c1);
     assertEquals(client.getAllParts(storageTableName).size(), 1);
     List<Partition> parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
@@ -1202,7 +1202,7 @@ public class TestCubeMetastoreClient {
     Set<UpdatePeriod> alterupdates = Sets.newHashSet(HOURLY, DAILY, MONTHLY);
     factTable.alterStorage(c2, alterupdates);
 
-    client.alterCubeFactTable(factName, factTable, storageTables);
+    client.alterCubeFactTable(factName, factTable, storageTables, new HashMap<String, String>());
 
     Table factHiveTable = Hive.get(conf).getTable(factName);
     CubeFactTable altered = new CubeFactTable(factHiveTable);
@@ -1239,7 +1239,7 @@ public class TestCubeMetastoreClient {
     storageTables.put(c1, s1);
     storageTables.put(c4, s1);
     factTable.addStorage(c4, hourlyAndDaily);
-    client.alterCubeFactTable(factName, factTable, storageTables);
+    client.alterCubeFactTable(factName, factTable, storageTables, new HashMap<String, String>());
     CubeFactTable altered2 = client.getCubeFact(factName);
     assertTrue(client.tableExists(c1TableName));
     Table alteredC1Table = client.getTable(c1TableName);
@@ -1541,7 +1541,7 @@ public class TestCubeMetastoreClient {
       getPartitionTimelineCachePresenceKey()), "true");
 
     // alter tables and see timeline still exists
-    client.alterCubeFactTable(factName, cubeFact, storageTables);
+    client.alterCubeFactTable(factName, cubeFact, storageTables, new HashMap<String, String>());
     assertSameTimelines(factName, storages, HOURLY, partColNames);
     assertEquals(Hive.get(client.getConf()).getTable(c1TableName).getParameters().get(
       getPartitionTimelineCachePresenceKey()), "true");

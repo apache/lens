@@ -2275,8 +2275,13 @@ public class CubeMetastoreClient {
    * @throws HiveException
    */
   public void alterCubeFactTable(String factTableName, CubeFactTable cubeFactTable,
-    Map<String, StorageTableDesc> storageTableDescs) throws HiveException, LensException {
+                                 Map<String, StorageTableDesc> storageTableDescs,
+                                 Map<String, String> props)
+    throws HiveException, LensException {
     Table factTbl = getTableWithTypeFailFast(factTableName, CubeTableType.FACT);
+    if (!props.isEmpty()) {
+      cubeFactTable.getProperties().putAll(props);
+    }
     alterCubeTable(factTableName, factTbl, cubeFactTable);
     if (storageTableDescs != null) {
       // create/alter tables for each storage

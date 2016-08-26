@@ -460,7 +460,8 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   public void updateFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
       getClient(sessionid).alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(fact),
-        JAXBUtils.storageTableMapFromXStorageTables(fact.getStorageTables()));
+        JAXBUtils.storageTableMapFromXStorageTables(fact.getStorageTables()),
+          JAXBUtils.columnStartAndEndTimeFromXColumns(fact.getColumns()));
       log.info("Updated fact table " + fact.getName());
     } catch (HiveException e) {
       throw new LensException(e);
