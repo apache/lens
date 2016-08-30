@@ -29,7 +29,14 @@
                 <key>userName</key>
                 <value>ajayyadava</value>
             </conf>
-            <resource_path>/path/to/a/resource/</resource_path>
+            <resource_path>
+                <path>/tmp/myjars/example.jar</path>
+                <type>JAR</type>
+            </resource_path>
+            <resource_path>
+                <path>/tmp/myjars/example.conf</path>
+                <type>FILE</type>
+            </resource_path>
         </session>
         <query>
             <query>cube select measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')</query>
