@@ -284,7 +284,7 @@ public class TestQueryService extends LensJerseyTest {
     LensQuery lensQuery = executeAndWaitForQueryToFinish(target(), lensSessionId, "select fail from non_exist",
       Optional.<LensConf>absent(), Optional.of(Status.FAILED), mt);
     assertTrue(lensQuery.getSubmissionTime() > 0);
-    assertEquals(lensQuery.getLaunchTime(), 0);
+    assertTrue(lensQuery.getLaunchTime() > 0);
     assertEquals(lensQuery.getDriverStartTime(), 0);
     assertEquals(lensQuery.getDriverFinishTime(), 0);
     assertTrue(lensQuery.getFinishTime() > 0);

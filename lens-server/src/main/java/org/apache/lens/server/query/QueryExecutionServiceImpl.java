@@ -746,6 +746,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
     QueryLauncher(QueryContext query) {
       this.query = query;
+      log.info("Query launcher created for query {} on driver {}", query.getQueryHandle(),
+        query.getSelectedDriver().getFullyQualifiedName());
+      query.setLaunchTime(System.currentTimeMillis());
     }
 
     @Override
@@ -753,6 +756,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       synchronized (query) {
         try {
           logSegregationContext.setLogSegragationAndQueryId(query.getQueryHandleString());
+          log.info("Starting to launch query {} on driver {}", query.getQueryHandle(),
+            query.getSelectedDriver().getFullyQualifiedName());
           // acquire session before launching query.
           acquire(query.getLensSessionIdentifier());
           if (!query.getStatus().cancelled()) {
@@ -794,7 +799,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       addSessionResourcesToDriver(query);
       query.getSelectedDriver().executeAsync(query);
       query.setStatusSkippingTransitionTest(newStatus);
-      query.setLaunchTime(System.currentTimeMillis());
       query.clearTransientStateAfterLaunch();
       log.info("Added to launched queries. QueryId:{}", query.getQueryHandleString());
       fireStatusChangeEvent(query, newStatus, oldStatus);
