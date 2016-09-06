@@ -18,6 +18,9 @@
 
 package org.apache.lens.server.scheduler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.lens.api.scheduler.SchedulerJobHandle;
 import org.apache.lens.api.scheduler.XFrequency;
 import org.apache.lens.api.scheduler.XFrequencyEnum;
@@ -36,6 +39,8 @@ import org.joda.time.DateTime;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -53,6 +58,11 @@ public class AlarmService extends AbstractService implements LensService {
 
   public static final String LENS_JOBS = "LensJobs";
   public static final String ALARM_SERVICE = "AlarmService";
+  private static final String JOB_HANDLE = "jobHandle";
+  private static final String SHOULD_WAIT = "shouldWaitForProcessing";
+  @Getter
+  @Setter
+  private boolean shouldWaitForScheduleEventProcessing = false;
 
   private Scheduler scheduler;
 
@@ -116,6 +126,15 @@ public class AlarmService extends AbstractService implements LensService {
     }
   }
 
+  public List<JobExecutionContext> getCurrentlyExecutingJobs() {
+    try {
+      return scheduler.getCurrentlyExecutingJobs();
+    } catch (SchedulerException e) {
+      log.error("Failed to get currently executing jobs");
+    }
+    return new ArrayList<>();
+  }
+
   /**
    * This method can be used by any consumer who wants to receive notifications during a time range at a given
    * frequency.
@@ -132,8 +151,8 @@ public class AlarmService extends AbstractService implements LensService {
   public void schedule(DateTime start, DateTime end, XFrequency frequency, String jobHandle) throws LensException {
     // accept the schedule and then keep on sending the notifications for that schedule
     JobDataMap map = new JobDataMap();
-    map.put("jobHandle", jobHandle);
-
+    map.put(JOB_HANDLE, jobHandle);
+    map.put(SHOULD_WAIT, shouldWaitForScheduleEventProcessing);
     JobDetail job = JobBuilder.newJob(LensJob.class).withIdentity(jobHandle, LENS_JOBS).usingJobData(map).build();
 
     Trigger trigger;
@@ -230,24 +249,37 @@ public class AlarmService extends AbstractService implements LensService {
 
   public static class LensJob implements Job {
 
+    private void notifyEventService(SchedulerAlarmEvent alarmEvent, boolean shouldWait)
+      throws LensException, InterruptedException {
+      LensEventService eventService = LensServices.get().getService(LensEventService.NAME);
+      if (shouldWait) {
+        eventService.notifyEventSync(alarmEvent);
+      } else {
+        eventService.notifyEvent(alarmEvent);
+      }
+    }
+
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
       JobDataMap data = jobExecutionContext.getMergedJobDataMap();
       DateTime nominalTime = new DateTime(jobExecutionContext.getScheduledFireTime());
-      SchedulerJobHandle jobHandle = SchedulerJobHandle.fromString(data.getString("jobHandle"));
+      SchedulerJobHandle jobHandle = SchedulerJobHandle.fromString(data.getString(JOB_HANDLE));
+      boolean shouldWait = data.getBoolean(SHOULD_WAIT);
       SchedulerAlarmEvent alarmEvent = new SchedulerAlarmEvent(jobHandle, nominalTime,
         SchedulerAlarmEvent.EventType.SCHEDULE, null);
       try {
-        LensEventService eventService = LensServices.get().getService(LensEventService.NAME);
-        eventService.notifyEvent(alarmEvent);
+        notifyEventService(alarmEvent, shouldWait);
         if (jobExecutionContext.getNextFireTime() == null) {
-          eventService
-            .notifyEvent(new SchedulerAlarmEvent(jobHandle, nominalTime, SchedulerAlarmEvent.EventType.EXPIRE, null));
+          SchedulerAlarmEvent expireEvent = (new SchedulerAlarmEvent(jobHandle, nominalTime,
+            SchedulerAlarmEvent.EventType.EXPIRE, null));
+          notifyEventService(expireEvent, shouldWait);
         }
       } catch (LensException e) {
         log.error("Failed to notify SchedulerAlarmEvent for jobHandle: {} and scheduleTime: {}",
           jobHandle.getHandleIdString(), nominalTime.toString());
         throw new JobExecutionException("Failed to notify alarmEvent", e);
+      } catch (InterruptedException e) {
+        log.error("Job execution tread interrupted", e);
       }
     }
   }

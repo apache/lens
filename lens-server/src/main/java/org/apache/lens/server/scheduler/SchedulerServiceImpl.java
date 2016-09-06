@@ -74,6 +74,7 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
   @Getter
   @VisibleForTesting
   protected SchedulerDAO schedulerDAO;
+  @Getter
   private AlarmService alarmService;
 
   /**

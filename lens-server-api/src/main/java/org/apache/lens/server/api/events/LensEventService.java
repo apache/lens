@@ -73,4 +73,11 @@ public interface LensEventService extends LensService {
    */
   <T extends LensEvent> Collection<LensEventListener> getListeners(Class<T> changeType);
 
+  /**
+   * Process an event synchronously.
+   * It does not return until the processing is finished.
+   * @param event
+   * @throws LensException
+   */
+  void notifyEventSync(LensEvent event) throws LensException;
 }

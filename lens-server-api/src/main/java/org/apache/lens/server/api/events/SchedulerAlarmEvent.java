@@ -40,7 +40,7 @@ public class SchedulerAlarmEvent extends LensEvent {
   private SchedulerJobInstanceHandle previousInstance;
 
   public SchedulerAlarmEvent(SchedulerJobHandle jobHandle, DateTime nominalTime, EventType type,
-      SchedulerJobInstanceHandle previousInstance) {
+    SchedulerJobInstanceHandle previousInstance) {
     super(nominalTime.getMillis());
     this.jobHandle = jobHandle;
     this.nominalTime = nominalTime;
@@ -51,6 +51,11 @@ public class SchedulerAlarmEvent extends LensEvent {
   @Override
   public String getEventId() {
     return jobHandle.getHandleIdString();
+  }
+
+  @Override
+  public String toString() {
+    return "Job Handle : " + jobHandle + ", Nominal Time :" + nominalTime + ", type : " + type;
   }
 
   /**

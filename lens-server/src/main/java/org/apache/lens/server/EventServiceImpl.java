@@ -118,7 +118,9 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
    */
   private final class EventHandler implements Runnable {
 
-    /** The event. */
+    /**
+     * The event.
+     */
     final LensEvent event;
 
     /**
@@ -177,6 +179,18 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
   @Override
   public <T extends LensEvent> Collection<LensEventListener> getListeners(Class<T> eventType) {
     return Collections.unmodifiableList(eventListeners.get(eventType));
+  }
+
+  @Override
+  public void notifyEventSync(LensEvent event) throws LensException {
+    if (getServiceState() != STATE.STARTED) {
+      throw new LensException("Event service is not in STARTED state. Current state is " + getServiceState());
+    }
+    if (event == null) {
+      return;
+    }
+    // Call the run() method directly and not submit to Executor Service.
+    new EventHandler(event).run();
   }
 
   @Override

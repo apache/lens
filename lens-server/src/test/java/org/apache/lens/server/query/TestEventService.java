@@ -543,6 +543,38 @@ public class TestEventService {
       "DummyAsncEventListener_AsyncThread-5")));
   }
 
+  /**
+   * Test synchronous events
+   * @throws Exception
+   */
+  @Test
+  public void testNotifySync() throws Exception {
+    service.addListenerForType(new TestEventHandler(), TestEvent.class);
+    TestEvent testEvent = new TestEvent("ID");
+    service.notifyEventSync(testEvent);
+    assertTrue(testEvent.processed);
+  }
+
+  private static class TestEvent extends LensEvent{
+    String id;
+    boolean processed = false;
+    public TestEvent(String id) {
+      super(System.currentTimeMillis());
+      this.id = id;
+    }
+    @Override
+    public String getEventId() {
+      return id;
+    }
+  }
+
+  private static class TestEventHandler extends AsyncEventListener<TestEvent> {
+
+    @Override
+    public void process(TestEvent event) {
+      event.processed = true;
+    }
+  }
   private static class DummyAsncEventListener extends AsyncEventListener<QuerySuccess> {
     public DummyAsncEventListener(){
       super(5); //core pool = 5
@@ -552,5 +584,4 @@ public class TestEventService {
       throw new RuntimeException("Simulated Exception");
     }
   }
-
 }
