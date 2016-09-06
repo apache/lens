@@ -201,6 +201,41 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   }
 
   @Test
+  public void testMoreThanTwoFactQueryWithNoDimensionsSelected() throws Exception {
+    CubeQueryContext ctx = rewriteCtx("select roundedmsr2, msr14, msr12 from basecube" + " where " + TWO_DAYS_RANGE,
+      conf);
+    Set<String> candidateFacts = new HashSet<String>();
+    for (CandidateFact cfact : ctx.getCandidateFacts()) {
+      candidateFacts.add(cfact.getName().toLowerCase());
+    }
+    Assert.assertEquals(candidateFacts.size(), 3);
+    Assert.assertTrue(candidateFacts.contains("testfact1_base"));
+    Assert.assertTrue(candidateFacts.contains("testfact2_base"));
+    Assert.assertTrue(candidateFacts.contains("testfact3_base"));
+    String hqlQuery = ctx.toHQL();
+    String expected1 = getExpectedQuery(cubeName, "select sum(basecube.msr12) as `msr12` FROM ", null, null,
+      getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
+    String expected2 = getExpectedQuery(cubeName, "select round(sum(basecube.msr2)/1000) as `roundedmsr2` FROM ", null,
+      null, getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+    String expected3 = getExpectedQuery(cubeName, "select count((basecube.msr14)) as `msr14` FROM ", null, null,
+      getWhereForDailyAndHourly2days(cubeName, "C1_testFact3_BASE"));
+    compareContains(expected1, hqlQuery);
+    compareContains(expected2, hqlQuery);
+    compareContains(expected3, hqlQuery);
+    String lower = hqlQuery.toLowerCase();
+    assertTrue(lower.startsWith("select mq1.roundedmsr2 roundedmsr2, mq3.msr14 msr14, mq2.msr12 msr12 from ") || lower
+      .startsWith("select mq3.roundedmsr2 roundedmsr2, mq1.msr14 msr14, mq2.msr12 msr12 from ") || lower
+      .startsWith("select mq2.roundedmsr2 roundedmsr2, mq3.msr14 msr14, mq1.msr12 msr12 from ") || lower
+      .startsWith("select mq3.roundedmsr2 roundedmsr2, mq2.msr14 msr14, mq1.msr12 msr12 from ") || lower
+      .startsWith("select mq1.roundedmsr2 roundedmsr2, mq2.msr14 msr14, mq3.msr12 msr12 from ") || lower
+      .startsWith("select mq2.roundedmsr2 roundedmsr2, mq1.msr14 msr14, mq3.msr12 msr12 from "), hqlQuery);
+    assertTrue(lower.contains("mq1 full outer join") && lower.endsWith("mq3"));
+    assertFalse(lower.contains("mq3 on"), hqlQuery);
+    assertFalse(lower.contains("mq2 on"), hqlQuery);
+    assertFalse(lower.contains("<=>"), hqlQuery);
+  }
+
+  @Test
   public void testMultiFactQueryWithSingleCommonDimension() throws Exception {
     String hqlQuery = rewrite("select dim1, roundedmsr2, msr12 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     String expected1 =

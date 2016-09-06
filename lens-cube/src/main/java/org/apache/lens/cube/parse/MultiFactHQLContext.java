@@ -152,7 +152,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
           fromBuilder.append(" AND ");
         }
       }
-      if (i != facts.size()) {
+      if (i != facts.size() && firstFact.getDimFieldIndices().size() > 0) {
         fromBuilder.append(" AND ");
       }
     }
