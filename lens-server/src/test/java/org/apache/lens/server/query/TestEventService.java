@@ -568,10 +568,10 @@ public class TestEventService {
     }
   }
 
-  private static class TestEventHandler extends AsyncEventListener<TestEvent> {
+  private static class TestEventHandler implements LensEventListener<TestEvent> {
 
     @Override
-    public void process(TestEvent event) {
+    public void onEvent(TestEvent event) throws LensException {
       event.processed = true;
     }
   }
