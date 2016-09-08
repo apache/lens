@@ -668,7 +668,7 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param cubeName  name of the base cube or derived cube
-   * @return List of {@link XFactTable} objects
+   * @return StringList consisting of all the fact names in the given cube
    */
   @GET
   @Path("/cubes/{cubeName}/facts")
