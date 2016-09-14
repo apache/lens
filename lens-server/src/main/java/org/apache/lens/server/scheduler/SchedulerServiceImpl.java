@@ -29,7 +29,9 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.error.InvalidStateTransitionException;
 import org.apache.lens.api.error.LensCommonErrorCode;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.scheduler.*;
 import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.apache.lens.server.BaseLensService;
@@ -86,13 +88,13 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
     super(NAME, cliService);
   }
 
+  @Override
   public synchronized void init(HiveConf hiveConf) {
     super.init(hiveConf);
     try {
       schedulerDAO = new SchedulerDAO(hiveConf);
       alarmService = LensServices.get().getService(AlarmService.NAME);
       queryService = LensServices.get().getService(QueryExecutionService.NAME);
-      // Get the listeners' classes from the configuration.
       this.schedulerEventListener = new SchedulerEventListener(schedulerDAO);
       this.schedulerQueryEventListener = new SchedulerQueryEventListener(schedulerDAO);
       getEventService().addListenerForType(schedulerEventListener, SchedulerAlarmEvent.class);
@@ -105,14 +107,112 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
   private void doesSessionBelongToUser(LensSessionHandle sessionHandle, String user) throws LensException {
     LensSessionImpl session = getSession(sessionHandle);
     if (!session.getLoggedInUser().equals(user)) {
+      log.warn("Session User {} is not equal to Job owner {}", session.getLoggedInUser(), user);
       throw new LensException(LensSchedulerErrorCode.CURRENT_USER_IS_NOT_SAME_AS_OWNER.getLensErrorInfo(), null,
         session.getLoggedInUser(), sessionHandle.getPublicId().toString(), user);
     }
   }
 
+  /**
+   * How the restarts are handled?
+   * Get all the instances with state Running or New.
+   * If They are running then check the query status. If Query is finished, take query parameters and update the
+   * instance. If query is still running then do nothing.
+   * If the state is New then Kill the instance and rerun it.
+   */
   @Override
   public synchronized void start() {
     super.start();
+    List<SchedulerJobInstanceRun> instanceRuns = schedulerDAO
+      .getInstanceRuns(SchedulerJobInstanceState.WAITING, SchedulerJobInstanceState.LAUNCHED,
+        SchedulerJobInstanceState.RUNNING);
+    for (SchedulerJobInstanceRun run : instanceRuns) {
+      LensSessionHandle sessionHandle = null;
+      try {
+        SchedulerJobInstanceInfo instanceInfo = schedulerDAO.getSchedulerJobInstanceInfo(run.getHandle());
+        log.info("Recovering instance {} of job {} ", instanceInfo.getId(), instanceInfo.getJobId());
+        switch (run.getInstanceState()) {
+        case WAITING:
+        case LAUNCHED:
+          // Kill and rerun
+          if (updateInstanceRun(run, SchedulerJobInstanceState.KILLED)) {
+            notifyRerun(instanceInfo);
+            log.info("Re-running instance {} of job {}", instanceInfo.getId(), instanceInfo.getJobId());
+          } else {
+            log.error("Not able to recover instance {} of job {}", instanceInfo.getId(), instanceInfo.getJobId());
+          }
+          break;
+        case RUNNING:
+          sessionHandle = openSessionAsUser(schedulerDAO.getUser(instanceInfo.getJobId()));
+          if (!checkQueryState(sessionHandle, run)) {
+            log.info("Re-running instance {} of job {}", instanceInfo.getId(), instanceInfo.getJobId());
+            notifyRerun(instanceInfo);
+          }
+          break;
+        }
+      } catch (LensException e) {
+        log.error("Not able to recover instance {} ", run.getHandle().getHandleIdString(), e);
+      } finally {
+        try {
+          if (sessionHandle != null) {
+            closeSession(sessionHandle);
+          }
+        } catch (Exception e) {
+          log.error("Error closing session ", e);
+        }
+      }
+    }
+  }
+
+  /**
+   * If query is not found of is invalid then rerun again else get the status and update correspondingly.
+   *
+   * @param sessionHandle
+   * @param run
+   * @return
+   * @throws LensException
+   */
+  private boolean checkQueryState(LensSessionHandle sessionHandle, SchedulerJobInstanceRun run) throws LensException {
+    QueryHandle queryHandle = run.getQueryHandle();
+    LensQuery query = null;
+    try {
+      query = this.queryService.getQuery(sessionHandle, queryHandle);
+    } catch (Exception e) {
+      updateInstanceRun(run, SchedulerJobInstanceState.KILLED);
+      return false;
+    }
+    if (query == null) {
+      // This means we have no idea what happened to query
+      // Mark it as Killed.
+      updateInstanceRun(run, SchedulerJobInstanceState.KILLED);
+      return false;
+    }
+    QueryStatus.Status status = query.getStatus().getStatus();
+    SchedulerJobInstanceState state = run.getInstanceState();
+    switch (status) {
+    case NEW:
+    case QUEUED:
+    case LAUNCHED:
+    case RUNNING:
+    case EXECUTED:
+      break;
+    case CANCELED:
+      state = SchedulerJobInstanceState.KILLED;
+      break;
+    case SUCCESSFUL:
+      state = SchedulerJobInstanceState.SUCCEEDED;
+      break;
+    case FAILED:
+      state = SchedulerJobInstanceState.FAILED;
+      break;
+    default:
+      // This should not happen
+      log.warn("Unexpected status {} for the query id {}", status, queryHandle);
+      state = SchedulerJobInstanceState.KILLED;
+    }
+    run.setResultPath(query.getResultSetPath());
+    updateInstanceRun(run, state);
+    return true;
   }
 
   /**
@@ -150,9 +250,8 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
     validateJob(job);
     SchedulerJobHandle handle = UtilityMethods.generateSchedulerJobHandle();
     long createdOn = System.currentTimeMillis();
-    long modifiedOn = createdOn;
     SchedulerJobInfo info = new SchedulerJobInfo(handle, job, session.getLoggedInUser(), SchedulerJobState.NEW,
-      createdOn, modifiedOn);
+      createdOn, createdOn);
     if (schedulerDAO.storeJob(info) == 1) {
       log.info("Successfully submitted job with handle {}", handle);
       return handle;
@@ -335,9 +434,7 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
     SchedulerJobInstanceRun latestRun = runList.get(runList.size() - 1);
     try {
       latestRun.getInstanceState().nextTransition(ON_RERUN);
-      getEventService().notifyEvent(
-        new SchedulerAlarmEvent(instanceInfo.getJobId(), new DateTime(instanceInfo.getScheduleTime()),
-          SchedulerAlarmEvent.EventType.SCHEDULE, instanceHandle));
+      notifyRerun(instanceInfo);
       log.info("Rerunning the instance with {} for job {} ", instanceHandle, instanceInfo.getJobId());
     } catch (InvalidStateTransitionException e) {
       throw new LensException(LensSchedulerErrorCode.INVALID_EVENT_FOR_JOB_INSTANCE.getLensErrorInfo(), e,
@@ -379,16 +476,22 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
     }
     QueryHandle handle = latestRun.getQueryHandle();
     if (handle == null || handle.getHandleIdString().isEmpty()) {
-      latestRun.setEndTime(System.currentTimeMillis());
-      latestRun.setInstanceState(state);
-      schedulerDAO.updateJobInstanceRun(latestRun);
-      log.info("Killing instance with {} for job {} ", instanceHandle, instanceInfo.getJobId());
-      return true;
+      log.info("Killing instance {} for job {} ", instanceInfo.getId(), instanceInfo.getJobId());
+      return updateInstanceRun(latestRun, state);
+    } else {
+      log.info("Killing instance {} for job {} with query handle {} ", instanceInfo.getId(),
+        instanceInfo.getJobId(), handle);
+      // This will cause the QueryEnd event which will set the status of the instance to KILLED.
+      return queryService.cancelQuery(sessionHandle, handle);
     }
-    log.info("Killing instance with {} for job {} with query handle {} ", instanceHandle, instanceInfo.getJobId(),
-      handle);
-    // This will cause the QueryEnd event which will set the status of the instance to KILLED.
-    return queryService.cancelQuery(sessionHandle, handle);
+
+  }
+
+  private boolean updateInstanceRun(SchedulerJobInstanceRun latestRun, SchedulerJobInstanceState state)
+    throws LensException {
+    latestRun.setEndTime(System.currentTimeMillis());
+    latestRun.setInstanceState(state);
+    return schedulerDAO.updateJobInstanceRun(latestRun) == 1;
   }
 
   /**
@@ -417,5 +520,11 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
       throw new LensException(LensSchedulerErrorCode.INVALID_EVENT_FOR_JOB.getLensErrorInfo(), e, event.name(),
         currentState.name(), info.getId().getHandleIdString());
     }
+  }
+
+  private void notifyRerun(SchedulerJobInstanceInfo instanceInfo) throws LensException {
+    getEventService().notifyEvent(
+      new SchedulerAlarmEvent(instanceInfo.getJobId(), new DateTime(instanceInfo.getScheduleTime()),
+        SchedulerAlarmEvent.EventType.SCHEDULE, instanceInfo.getId()));
   }
 }

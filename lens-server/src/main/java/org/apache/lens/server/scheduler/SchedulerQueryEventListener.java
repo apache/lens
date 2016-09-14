@@ -79,9 +79,13 @@ public class SchedulerQueryEventListener extends AsyncEventListener<QueryEnded> 
       latestRun.setEndTime(System.currentTimeMillis());
       latestRun.setInstanceState(state);
       latestRun.setResultPath(queryContext.getResultSetPath());
-      schedulerDAO.updateJobInstanceRun(latestRun);
-      log.info("Updated instance run {} for instance {} for job {} to {}", latestRun.getRunId(), info.getId(),
-        info.getJobId(), state);
+      if (schedulerDAO.updateJobInstanceRun(latestRun) == 1) {
+        log.info("Updated instance run {} for instance {} for job {} to {}", latestRun.getRunId(), info.getId(),
+          info.getJobId(), state);
+      } else {
+        log.error("Failed to update instance run {} for instance {} for job {} to {}", latestRun.getRunId(),
+          info.getId(), info.getJobId(), state);
+      }
     } catch (InvalidStateTransitionException e) {
       log.error("Instance Transition Failed ", e);
     }

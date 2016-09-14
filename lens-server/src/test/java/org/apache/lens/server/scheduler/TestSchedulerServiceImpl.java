@@ -18,31 +18,19 @@
  */
 package org.apache.lens.server.scheduler;
 
-import static org.apache.lens.server.scheduler.util.SchedulerTestUtils.getTestJob;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.apache.lens.server.scheduler.util.SchedulerTestUtils.*;
 
 import java.util.List;
-import java.util.UUID;
 
-import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.scheduler.*;
 import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryEnded;
-import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.scheduler.SchedulerService;
 
-import org.apache.hadoop.conf.Configuration;
-
-import org.powermock.api.mockito.PowerMockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -63,34 +51,7 @@ public class TestSchedulerServiceImpl {
     System.setProperty(LensConfConstants.CONFIG_LOCATION, "target/test-classes/");
   }
 
-  private void setupQueryService() throws Exception {
-    QueryExecutionService queryExecutionService = PowerMockito.mock(QueryExecutionService.class);
-    scheduler.setQueryService(queryExecutionService);
-    PowerMockito.when(
-      scheduler.getQueryService().estimate(anyString(), any(LensSessionHandle.class), anyString(), any(LensConf.class)))
-      .thenReturn(null);
-    PowerMockito.when(scheduler.getQueryService()
-      .executeAsync(any(LensSessionHandle.class), anyString(), any(LensConf.class), anyString()))
-      .thenReturn(new QueryHandle(UUID.randomUUID()));
-    PowerMockito.when(scheduler.getQueryService().cancelQuery(any(LensSessionHandle.class), any(QueryHandle.class)))
-      .thenReturn(true);
-    scheduler.getSchedulerEventListener().setQueryService(queryExecutionService);
-  }
 
-  private QueryEnded mockQueryEnded(SchedulerJobInstanceHandle instanceHandle, QueryStatus.Status status) {
-    QueryContext mockContext = PowerMockito.mock(QueryContext.class);
-    PowerMockito.when(mockContext.getResultSetPath()).thenReturn("/tmp/query1/result");
-    Configuration conf = new Configuration();
-    // set the instance handle
-    conf.set("job_instance_key", instanceHandle.getHandleIdString());
-    PowerMockito.when(mockContext.getConf()).thenReturn(conf);
-    // Get the queryHandle.
-    PowerMockito.when(mockContext.getQueryHandle()).thenReturn(new QueryHandle(UUID.randomUUID()));
-    QueryEnded queryEnded = PowerMockito.mock(QueryEnded.class);
-    PowerMockito.when(queryEnded.getQueryContext()).thenReturn(mockContext);
-    PowerMockito.when(queryEnded.getCurrentValue()).thenReturn(status);
-    return queryEnded;
-  }
 
   @Test(priority = 1)
   public void testScheduler() throws Exception {
@@ -98,7 +59,7 @@ public class TestSchedulerServiceImpl {
     LensServices.get().start();
     scheduler = LensServices.get().getService(SchedulerService.NAME);
     eventService = LensServices.get().getService(EventServiceImpl.NAME);
-    setupQueryService();
+    setupQueryService(scheduler);
     LensSessionHandle sessionHandle = scheduler.openSessionAsUser(user);
     long currentTime = System.currentTimeMillis();
     XJob job = getTestJob("0/5 * * * * ?", queryString, currentTime, currentTime + 15000);

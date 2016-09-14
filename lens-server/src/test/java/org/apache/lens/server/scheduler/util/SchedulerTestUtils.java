@@ -18,18 +18,35 @@
  */
 package org.apache.lens.server.scheduler.util;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+
 import java.util.GregorianCalendar;
+import java.util.UUID;
 
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.scheduler.*;
+import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.QueryEnded;
+import org.apache.lens.server.api.query.QueryExecutionService;
+import org.apache.lens.server.scheduler.SchedulerServiceImpl;
+
+import org.apache.hadoop.conf.Configuration;
+
+import org.powermock.api.mockito.PowerMockito;
 
 public class SchedulerTestUtils {
 
   private SchedulerTestUtils() {
 
   }
+
   private static XTrigger getTestTrigger(String cron) {
     XTrigger trigger = new XTrigger();
     XFrequency frequency = new XFrequency();
@@ -66,5 +83,34 @@ public class SchedulerTestUtils {
     job.setEndTime(endCal);
     job.setExecution(getTestExecution(query));
     return job;
+  }
+
+  public static void setupQueryService(SchedulerServiceImpl scheduler) throws Exception {
+    QueryExecutionService queryExecutionService = PowerMockito.mock(QueryExecutionService.class);
+    scheduler.setQueryService(queryExecutionService);
+    PowerMockito
+      .when(queryExecutionService.estimate(anyString(), any(LensSessionHandle.class), anyString(), any(LensConf.class)))
+      .thenReturn(null);
+    PowerMockito.when(
+      queryExecutionService.executeAsync(any(LensSessionHandle.class), anyString(), any(LensConf.class), anyString()))
+      .thenReturn(new QueryHandle(UUID.randomUUID()));
+    PowerMockito.when(queryExecutionService.cancelQuery(any(LensSessionHandle.class), any(QueryHandle.class)))
+      .thenReturn(true);
+    scheduler.getSchedulerEventListener().setQueryService(queryExecutionService);
+  }
+
+  public static QueryEnded mockQueryEnded(SchedulerJobInstanceHandle instanceHandle, QueryStatus.Status status) {
+    QueryContext mockContext = PowerMockito.mock(QueryContext.class);
+    PowerMockito.when(mockContext.getResultSetPath()).thenReturn("/tmp/query1/result");
+    Configuration conf = new Configuration();
+    // set the instance handle
+    conf.set("job_instance_key", instanceHandle.getHandleIdString());
+    PowerMockito.when(mockContext.getConf()).thenReturn(conf);
+    // Get the queryHandle.
+    PowerMockito.when(mockContext.getQueryHandle()).thenReturn(new QueryHandle(UUID.randomUUID()));
+    QueryEnded queryEnded = PowerMockito.mock(QueryEnded.class);
+    PowerMockito.when(queryEnded.getQueryContext()).thenReturn(mockContext);
+    PowerMockito.when(queryEnded.getCurrentValue()).thenReturn(status);
+    return queryEnded;
   }
 }
