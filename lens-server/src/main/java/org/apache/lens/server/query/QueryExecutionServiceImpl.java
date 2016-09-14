@@ -2277,6 +2277,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     long timeoutMillis, Configuration conf) throws LensException {
     QueryHandle handle = submitQuery(ctx);
     long timeOutTime = ctx.getSubmissionTime() + timeoutMillis;
+    log.info("query {} is executed with a timeout of {} and will timeout by {}", handle, timeoutMillis, timeOutTime);
     QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
 
     boolean isQueued = true;
@@ -2303,25 +2304,24 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     QueryCompletionListenerImpl listener = new QueryCompletionListenerImpl(handle);
     long totalWaitTime = timeOutTime - System.currentTimeMillis();
 
-    if (totalWaitTime > 0 && !queryCtx.getStatus().executed() && !queryCtx.getStatus().finished()) {
+    if (System.currentTimeMillis() < timeOutTime
+      && !queryCtx.getStatus().executed() && !queryCtx.getStatus().finished()) {
       log.info("Registering for query {} completion notification", ctx.getQueryHandleString());
       queryCtx.getSelectedDriver().registerForCompletionNotification(ctx, totalWaitTime, listener);
       try {
         // We will wait for a few millis at a time until we reach max required wait time and also check the state
         // each time we come out of the wait.
         // This is done because the registerForCompletionNotification and query execution completion can happen
-        // parallely especailly in case of drivers like JDBC and in that case completion notification may not be
-        //  received by this listener. So its better to break the wait into smaller ones.
+        // parallely especially in case of drivers like JDBC and in that case completion notification may not be
+        // received by this listener. So its better to break the wait into smaller ones.
         long waitMillisPerCheck = totalWaitTime/10;
-        waitMillisPerCheck = (waitMillisPerCheck > 500) ? 500 : waitMillisPerCheck; // Lets keep max as 500
-        long totalWaitMillisSoFar = 0;
+        waitMillisPerCheck = (waitMillisPerCheck > 500) ? 500 : waitMillisPerCheck; // Lets keep max as 0.5 sec
         synchronized (listener) {
-          while (totalWaitMillisSoFar < totalWaitTime
+          while (System.currentTimeMillis() < timeOutTime
             && !listener.querySuccessful
             && !queryCtx.getStatus().executed()
             && !queryCtx.getStatus().finished()) {
             listener.wait(waitMillisPerCheck);
-            totalWaitMillisSoFar += waitMillisPerCheck;
             if (!listener.querySuccessful) {
               //update ths status in case query is not successful yet
               queryCtx = getUpdatedQueryContext(sessionHandle, handle);
@@ -2388,9 +2388,12 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   private void addQueryToCancellationPool(QueryContext queryCtx, Configuration config, long timeoutMillis) {
     if (config.getBoolean(CANCEL_QUERY_ON_TIMEOUT, DEFAULT_CANCEL_QUERY_ON_TIMEOUT)) {
-      log.info("Query {} will be cancelled as it could not be completed within the specified timeout interval {}",
-        queryCtx.getQueryHandle(), timeoutMillis);
+      log.info("Query {} could not be completed within the specified timeout interval. It will be cancelled",
+        queryCtx.getQueryHandleString());
       queryCancellationPool.submit(new CancelQueryTask(queryCtx.getQueryHandle()));
+    } else {
+      log.info("Query {} could not be completed within the specified timeout interval. Query cancellation is disabled",
+        queryCtx.getQueryHandleString());
     }
   }
 
