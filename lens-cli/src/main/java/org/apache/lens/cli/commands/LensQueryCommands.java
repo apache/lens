@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.PrettyPrintable;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
@@ -110,14 +111,15 @@ public class LensQueryCommands extends BaseLensCommand {
 
     try {
       if (async) {
-        QueryHandle queryHandle = getClient().executeQueryAsynch(sql, queryName);
+        QueryHandle queryHandle = getClient().executeQueryAsynch(sql, queryName, new LensConf());
         return queryHandle.getHandleIdString();
       } else {
         LensClientResultSetWithStats resultWithStats;
         long timeOutMillis = getClient().getConf().getLong(LensCliConfigConstants.QUERY_EXECUTE_TIMEOUT_MILLIS,
             LensCliConfigConstants.DEFAULT_QUERY_EXECUTE_TIMEOUT_MILLIS);
         LensClient.getCliLogger().info("Executing query with timeout of {} milliseconds", timeOutMillis);
-        QueryHandleWithResultSet result = getClient().executeQueryWithTimeout(sql, queryName, timeOutMillis);
+        QueryHandleWithResultSet result = getClient().executeQueryWithTimeout(sql, queryName, timeOutMillis,
+          new LensConf());
         if (result.getResult() == null) {
           //Query not finished yet. Wait till it finishes and get result.
           LensClient.getCliLogger().info("Couldn't complete query execution within timeout. Waiting for completion");
@@ -475,7 +477,7 @@ public class LensQueryCommands extends BaseLensCommand {
   public String prepare(@CliOption(key = {"", "query"}, mandatory = true, help = "<query-string>") String sql,
     @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName)
     throws UnsupportedEncodingException, LensAPIException {
-    return getClient().prepare(sql, queryName).getData().toString();
+    return getClient().prepare(sql, queryName, new LensConf()).getData().toString();
   }
 
   /**
@@ -499,7 +501,7 @@ public class LensQueryCommands extends BaseLensCommand {
     throws UnsupportedEncodingException, LensAPIException {
     PrettyPrintable cliOutput;
     try {
-      QueryPlan plan = getClient().explainAndPrepare(sql, queryName).getData();
+      QueryPlan plan = getClient().explainAndPrepare(sql, queryName, new LensConf()).getData();
       return plan.getPlanString() + "\n" + "Prepare handle:" + plan.getPrepareHandle();
     } catch (final LensAPIException e) {
       BriefError briefError = new BriefError(e.getLensAPIErrorCode(), e.getLensAPIErrorMessage());

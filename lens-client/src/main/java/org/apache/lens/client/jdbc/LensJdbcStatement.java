@@ -20,6 +20,7 @@ package org.apache.lens.client.jdbc;
 
 import java.sql.*;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.client.LensStatement;
 import org.apache.lens.client.exceptions.LensAPIException;
 
@@ -58,7 +59,7 @@ public class LensJdbcStatement implements Statement {
   @Override
   public ResultSet executeQuery(String s) throws SQLException {
     try {
-      statement.executeQuery(s, true, null);
+      statement.executeQuery(s, true, null, new LensConf());
     } catch (LensAPIException e) {
       log.error("Execution Failed for Statement:{}", s, e);
     }
@@ -115,7 +116,7 @@ public class LensJdbcStatement implements Statement {
       throw new SQLException("Cannot execute statemes on closed statements");
     }
     try {
-      statement.executeQuery(s, true, null);
+      statement.executeQuery(s, true, null, new LensConf());
     } catch (Throwable t) {
       throw new SQLException(t);
     }

@@ -31,6 +31,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
@@ -202,9 +203,18 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
     for (Map.Entry<String, String> e : queryConf.entrySet()) {
       client.setConnectionParam(e.getKey(), e.getValue());
     }
-    QueryHandle handle = client.executeQueryAsynch(query, "testQuery");
+
+    LensConf conf = new LensConf();
+    Map<String, String> confProps = new HashMap<>();
+    confProps.put("custom.property.for.validation", "present");
+    conf.addProperties(confProps);
+
+    QueryHandle handle = client.executeQueryAsynch(query, "testQuery", conf);
     client.getStatement().waitForQueryToComplete(handle);
     assertTrue(client.getStatement().wasQuerySuccessful());
+    LensQuery persistedQuery = client.getQueryDetails(handle);
+    Assert.assertNotNull(persistedQuery.getQueryConf());
+    Assert.assertEquals(persistedQuery.getQueryConf().getProperty("custom.property.for.validation"), "present");
 
     ResultSet result = null;
     boolean isHeaderRowPresent = columnNamesExpected > 0 ? true : false;
@@ -247,7 +257,7 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
       // Setting very small timeout. Expecting timeouts after this
       // Note: Timeout values can be changed even after LensClient has been created.
       config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, 200);
-      lensClient.executeQueryWithTimeout("cube select id,name from test_dim", "test1", 100000);
+      lensClient.executeQueryWithTimeout("cube select id,name from test_dim", "test1", 100000, new LensConf());
       fail("Read Timeout was expected");
     } catch (Exception e) {
       if (!(isExceptionDueToSocketTimeout(e))) {
@@ -261,7 +271,7 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
     //Setting back default timeout. Not expecting timeouts after this
     config.setInt(LensClientConfig.READ_TIMEOUT_MILLIS, LensClientConfig.DEFAULT_READ_TIMEOUT_MILLIS);
     QueryHandleWithResultSet result = lensClient.executeQueryWithTimeout("cube select id,name from test_dim", "test2",
-      100000);
+      100000, new LensConf());
     assertTrue(result.getStatus().successful());
     lensClient.closeConnection();
   }
@@ -275,7 +285,8 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
       assertTrue(lensClient.setDatabase(TEST_DB));
 
       //Test waitForQueryToComplete without retry on timeout
-      QueryHandle handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");
+      QueryHandle handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3",
+        new LensConf());
       try {
         lensClient.getStatement().waitForQueryToComplete(handle, false);
         fail("SocketTimeoutException was expected");
@@ -286,7 +297,7 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
       }
 
       //Test waitForQueryToComplete with Retry on timeout
-      handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3");
+      handle = lensClient.executeQueryAsynch("cube select id,name from test_dim", "test3", new LensConf());
       lensClient.getStatement().waitForQueryToComplete(handle);
       LensQuery query = lensClient.getQueryDetails(handle);
       assertTrue(query.getStatus().successful());

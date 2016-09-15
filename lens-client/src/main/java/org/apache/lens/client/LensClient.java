@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
@@ -112,9 +113,14 @@ public class LensClient implements AutoCloseable {
     return mc;
   }
 
+  @Deprecated
   public QueryHandle executeQueryAsynch(String sql, String queryName) throws LensAPIException {
+    return executeQueryAsynch(sql, queryName, new LensConf());
+  }
+
+  public QueryHandle executeQueryAsynch(String sql, String queryName, LensConf conf) throws LensAPIException {
     log.debug("Executing query {}", sql);
-    QueryHandle handle = statement.executeQuery(sql, false, queryName);
+    QueryHandle handle = statement.executeQuery(sql, false, queryName, conf);
     statementMap.put(handle, statement);
     return handle;
   }
@@ -130,10 +136,28 @@ public class LensClient implements AutoCloseable {
    * @return
    * @throws LensAPIException
    */
+  @Deprecated
   public QueryHandleWithResultSet executeQueryWithTimeout(String sql, String queryName, long timeOutMillis)
     throws LensAPIException {
+    return executeQueryWithTimeout(sql, queryName, timeOutMillis, new LensConf());
+  }
+
+  /**
+   * Execute query with timeout option.
+   * If the query does not finish within the timeout time, server returns the query handle which can be used to
+   * track further progress.
+   *
+   * @param sql : query/command to be executed
+   * @param queryName : optional query name
+   * @param timeOutMillis : timeout milliseconds for the query execution.
+   * @param conf      config to be used for the query
+   * @return
+   * @throws LensAPIException
+   */
+  public QueryHandleWithResultSet executeQueryWithTimeout(String sql, String queryName,
+    long timeOutMillis, LensConf conf) throws LensAPIException {
     log.info("Executing query {} with timeout of {} milliseconds", sql, timeOutMillis);
-    QueryHandleWithResultSet result = statement.executeQuery(sql, queryName, timeOutMillis);
+    QueryHandleWithResultSet result = statement.executeQuery(sql, queryName, timeOutMillis, conf);
     statementMap.put(result.getQueryHandle(), statement);
     if (result.getStatus().failed()) {
       IdBriefErrorTemplate errorResult = new IdBriefErrorTemplate(IdBriefErrorTemplateKey.QUERY_ID,
@@ -289,7 +313,7 @@ public class LensClient implements AutoCloseable {
   }
 
   public LensAPIResult<QueryPlan> getQueryPlan(String q) throws LensAPIException {
-    return statement.explainQuery(q);
+    return statement.explainQuery(q, new LensConf());
   }
 
   public boolean killQuery(QueryHandle q) {
@@ -651,11 +675,23 @@ public class LensClient implements AutoCloseable {
     return mc.updatePartitionsOfDimensionTable(table, storage, partsSpec);
   }
 
+  @Deprecated
   public LensAPIResult<QueryPrepareHandle> prepare(String sql, String queryName) throws LensAPIException {
-    return statement.prepareQuery(sql, queryName);
+    return prepare(sql, queryName, new LensConf());
   }
 
+  public LensAPIResult<QueryPrepareHandle> prepare(String sql, String queryName, LensConf conf)
+    throws LensAPIException {
+    return statement.prepareQuery(sql, queryName, conf);
+  }
+
+  @Deprecated
   public LensAPIResult<QueryPlan> explainAndPrepare(String sql, String queryName) throws LensAPIException {
+    return explainAndPrepare(sql, queryName, new LensConf());
+  }
+
+  public LensAPIResult<QueryPlan> explainAndPrepare(String sql, String queryName, LensConf conf)
+    throws LensAPIException {
     return statement.explainAndPrepare(sql, queryName);
   }
 
@@ -677,8 +713,13 @@ public class LensClient implements AutoCloseable {
     return getResultsFromHandle(qh, true);
   }
 
+  @Deprecated
   public QueryHandle executePrepared(QueryPrepareHandle phandle, String queryName) {
-    return statement.executeQuery(phandle, false, queryName);
+    return executePrepared(phandle, queryName, new LensConf());
+  }
+
+  public QueryHandle executePrepared(QueryPrepareHandle phandle, String queryName, LensConf conf) {
+    return statement.executeQuery(phandle, false, queryName, conf);
   }
 
   public boolean isConnectionOpen() {

@@ -32,6 +32,7 @@ import javax.ws.rs.BadRequestException;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
@@ -534,7 +535,8 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   @Test
   public void testProxyLensQuery() throws Exception {
     LensClient client = new LensClient();
-    QueryHandle handle = client.executeQueryAsynch("cube select id,name from test_dim", "proxyTestQuery");
+    QueryHandle handle = client.executeQueryAsynch("cube select id,name from test_dim", "proxyTestQuery",
+      new LensConf());
     client.getStatement().waitForQueryToComplete(handle);
     LensQuery query = client.getQueryDetails(handle);
     ProxyLensQuery proxyQuery = new ProxyLensQuery(client.getStatement(), handle);
