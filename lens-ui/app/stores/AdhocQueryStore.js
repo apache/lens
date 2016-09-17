@@ -1,21 +1,21 @@
 /**
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements. See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership. The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License. You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied. See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
 import assign from 'object-assign';
 import { EventEmitter } from 'events';
@@ -33,7 +33,7 @@ var adhocDetails = {
   dbName: Config.dbName
 };
 
-function receiveQueryHandle (payload) {
+function receiveQueryHandle(payload) {
   if (typeof payload.queryHandle === 'string') {
     adhocDetails.queryHandle = payload.queryHandle;
     return;
@@ -44,23 +44,22 @@ function receiveQueryHandle (payload) {
   adhocDetails.queryHandle = id;
 }
 
-function receiveQueries (payload) {
-  let queries = payload.queries;
-  let queryObjects = {};
-
-  queries.forEach((query) => {
-    queryObjects[query.lensQuery.queryHandle.handleId] = query.lensQuery;
+function receiveQueries(payload) {
+  adhocDetails.queries = adhocDetails.queries || {};
+  payload.queries.forEach((query) => {
+    adhocDetails.queries[query.lensQuery.queryHandle.handleId] = query.lensQuery;
   });
-
-  adhocDetails.queries = queryObjects;
+}
+function receiveQueryHandles(payload) {
+  adhocDetails.handles = payload.handles.map(handle=>handle.queryHandle.handleId);
 }
 
-function receiveQuery (payload) {
+function receiveQuery(payload) {
   let query = payload.query;
   adhocDetails.queries[query.queryHandle.handleId] = query;
 }
 
-function receiveQueryResult (payload) {
+function receiveQueryResult(payload) {
   let queryResult = {};
   queryResult.type = payload && payload.type;
 
@@ -83,7 +82,12 @@ let AdhocQueryStore = assign({}, EventEmitter.prototype, {
   getQueries () {
     return adhocDetails.queries;
   },
-
+  getQueryHandles () {
+    return adhocDetails.handles;
+  },
+  getQueryDetails (handle) {
+    return adhocDetails.queries[handle];
+  },
   getQueryResult (handle) {
     return adhocDetails.queryResults[handle];
   },
@@ -121,6 +125,11 @@ AppDispatcher.register((action) => {
       AdhocQueryStore.emitChange();
       break;
 
+    case AdhocQueryConstants.RECEIVE_QUERY_HANDLES:
+      receiveQueryHandles(action.payload);
+      AdhocQueryStore.emitChange();
+      break;
+
     case AdhocQueryConstants.RECEIVE_QUERY_RESULT:
       receiveQueryResult(action.payload);
       AdhocQueryStore.emitChange();
@@ -132,6 +141,7 @@ AppDispatcher.register((action) => {
       break;
 
     case AdhocQueryConstants.RECEIVE_QUERY_HANDLE_FAILED:
+    case AdhocQueryConstants.RECEIVE_QUERY_HANDLES_FAILED:
       AdhocQueryStore.emitChange(action.payload);
       break;
   }

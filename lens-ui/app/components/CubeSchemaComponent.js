@@ -182,7 +182,7 @@ function constructExpressionTable(cubeName, expressions) {
   return (
     <div className='table-responsive'>
       <table className='table table-striped'>
-        <caption className='bg-primary text-center'>Join Chains</caption>
+        <caption className='bg-primary text-center'>Expressions</caption>
         <thead>{header}</thead>
         <tbody>{table}</tbody>
       </table>

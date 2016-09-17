@@ -108,6 +108,10 @@ class QueryPreview extends React.Component {
             paddingBottom: '0px'}} key={'preview' + handle}>
               <div className='row'>
                 <div className='col-lg-4 col-sm-4'>
+                  <span className='text-muted'>Handle </span>
+                  <strong>{ query.queryHandle.handleId || 'Unknown'}</strong>
+                </div>
+                <div className='col-lg-4 col-sm-4'>
                   <span className='text-muted'>Name </span>
                   <strong>{ query.queryName || 'Not specified'}</strong>
                 </div>

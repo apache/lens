@@ -56,24 +56,24 @@ class QueryOperations extends React.Component {
         <div className={panelBodyClassName}>
           <ul style={{listStyle: 'none', paddingLeft: '0px',
             marginBottom: '0px'}}>
-            <li><Link to='results'>All</Link></li>
+            <li><Link to='results' query={{fromDate: 'now.day-2days'}}>All</Link></li>
             <li>
-              <Link to='results' query={{category: 'running'}}>
+              <Link to='results' query={{state: 'running'}}>
                 Running
               </Link>
             </li>
             <li>
-              <Link to='results' query={{category: 'successful'}}>
-                Completed
+              <Link to='results' query={{state: 'successful', fromDate: 'now.day-2days'}}>
+                Successful
               </Link>
             </li>
             <li>
-              <Link to='results' query={{category: 'queued'}}>
+              <Link to='results' query={{state: 'queued'}}>
                 Queued
               </Link>
             </li>
             <li>
-              <Link to='results' query={{category: 'failed'}}>
+              <Link to='results' query={{state: 'failed', fromDate: 'now.day-2days'}}>
                 Failed
               </Link>
             </li>

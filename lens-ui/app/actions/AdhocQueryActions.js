@@ -288,7 +288,42 @@ let AdhocQueryActions = {
         });
       });
   },
-
+  getQueryHandles (secretToken, email, options) {
+    AdhocQueryAdapter.getQueryHandles(secretToken, email, options)
+      .then(function (handles) {
+        AppDispatcher.dispatch({
+          actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLES,
+          payload: { handles: handles }
+        });
+      }, function (error) {
+        AppDispatcher.dispatch({
+          actionType: AdhocQueryConstants.RECEIVE_QUERY_HANDLES_FAILED,
+          payload: {
+            responseCode: error.status,
+            responseMessage: error.statusText
+          }
+        });
+      });
+  },
+  getQueriesDetails (secretToken, handles) {
+    if (handles && handles.length) {
+      AdhocQueryAdapter.getQueriesDetails(secretToken, handles)
+        .then(function (queries) {
+          AppDispatcher.dispatch({
+            actionType: AdhocQueryConstants.RECEIVE_QUERIES,
+            payload: {queries: queries}
+          });
+        }, function (error) {
+          AppDispatcher.dispatch({
+            actionType: AdhocQueryConstants.RECEIVE_QUERIES_FAILED,
+            payload: {
+              responseCode: error.status,
+              responseMessage: error.statusText
+            }
+          });
+        });
+    }
+  },
   getQuery (secretToken, handle) {
     AdhocQueryAdapter.getQuery(secretToken, handle)
       .then(function (query) {

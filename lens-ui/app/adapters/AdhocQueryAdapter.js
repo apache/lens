@@ -150,6 +150,29 @@ let AdhocQueryAdapter = {
         }));
       });
   },
+  getQueryHandles (secretToken, email, options) {
+    let queryOptions = {};
+    queryOptions.sessionid = secretToken;
+    queryOptions.user = email;
+    var state;
+    if (options && options.state) {
+      state = options.state.toUpperCase();
+    }
+    let handlesUrl = baseUrl + urls.query + '?sessionid=' + secretToken + '&user=' +
+      email;
+    if (state) handlesUrl += '&state=' + state;
+    if (options.fromDate) handlesUrl += "&fromDate="+options.fromDate;
+    if (options.toDate) handlesUrl += "&toDate="+options.toDate;
+    return BaseAdapter.get(handlesUrl);
+  },
+  getQueriesDetails (secretToken, handles) {
+    let url = baseUrl + urls.query + '?sessionid=' + secretToken;
+    return Promise.all(handles.map((handle) => {
+      let queryUrl = baseUrl + urls.query + '/' + handle +
+        '?sessionid=' + secretToken + '&queryHandle=' + handle;
+      return BaseAdapter.get(queryUrl);
+    }));
+  },
 
   getQueryResult (secretToken, handle, queryMode) {
     // on page refresh, the store won't have queryMode so fetch query
