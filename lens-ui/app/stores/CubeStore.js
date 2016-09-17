@@ -55,6 +55,11 @@ function receiveCubeDetails (payload) {
   if (cubeDetails.type == 'x_base_cube') {
     cubes[payload.database][cubeDetails.name].join_chains = cubeDetails.join_chains.join_chain;
     cubes[payload.database][cubeDetails.name].expressions = cubeDetails.expressions.expression;
+    let join_chains_by_name = {};
+    cubes[payload.database][cubeDetails.name].join_chains.map((join_chain)=>{
+      join_chains_by_name[join_chain.name] = join_chain
+    });
+    cubes[payload.database][cubeDetails.name].join_chains_by_name = join_chains_by_name;
   }
   cubes[payload.database][cubeDetails.name].isLoaded = true;
 }

@@ -23,6 +23,7 @@ import CubeStore from '../stores/CubeStore';
 import UserStore from '../stores/UserStore';
 import AdhocQueryActions from '../actions/AdhocQueryActions';
 import Loader from '../components/LoaderComponent';
+import {Tooltip, OverlayTrigger} from 'react-bootstrap'
 
 function getCubes(database) {
   return CubeStore.getCubes(database);
@@ -73,23 +74,41 @@ function constructMeasureTable(cubeName, measures) {
   );
 }
 
-function constructDimensionTable(cubeName, dimensions) {
+function constructDimensionTable(cubeName, dimensions, join_chains_by_name) {
   let table = dimensions.map((dimension) => {
     if (typeof(dimension) == "string") {
       return (
         <tr key={cubeName + '|' + dimension}>
-          <td>{ dimension}</td>
         </tr>
       );
     } else {
+      let join_chain_column;
+      if (dimension.chain_ref_column) {
+        let inner =  dimension.chain_ref_column.map((ref) => {
+          let join_chain = join_chains_by_name[ref.chain_name];
+          let tooltip = <Tooltip id={dimension.name + "|" + ref.chain_name + "|tooltip"}><div> {
+            join_chain.paths.path.map((path) => {
+              let paths = path.edges.edge.map((edge) => {
+                return edge.from.table + "." + edge.from.column + "=" + edge.to.table + "." + edge.to.column
+              }).join("->")
+              return (<span>{paths}<br/></span>)
+            })
+          }
+          </div></Tooltip>;
+          return (<div>
+            <OverlayTrigger placement="top" overlay={tooltip}>
+              <strong>{ref.chain_name}</strong>
+            </OverlayTrigger>{"."+ref.ref_col}
+          </div>);
+        });
+        join_chain_column = (<div>{inner}</div>);
+      }
       return (
         <tr key={cubeName + '|' + dimension.name}>
           <td>{ dimension.name }</td>
           <td>{ dimension.display_string }</td>
           <td>{ dimension.description }</td>
-          <td>{ dimension.chain_ref_column ? dimension.chain_ref_column.map((ref) => {
-            return ref.chain_name + "." + ref.ref_col
-          }).join("  ") : ""}</td>
+          <td>{join_chain_column}</td>
         </tr>
       );
     }
@@ -194,11 +213,11 @@ function constructExpressionTable(cubeName, expressions) {
 class CubeSchema extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {cube: {}, database: props.params.databaseName};
+    this.state = {cube: {}, database: UserStore.currentDatabase()};
     this._onChange = this._onChange.bind(this);
 
     AdhocQueryActions
-      .getCubeDetails(UserStore.getUserDetails().secretToken, props.params.databaseName, props.params.cubeName);
+      .getCubeDetails(UserStore.getUserDetails().secretToken, UserStore.currentDatabase(), props.params.cubeName);
   }
 
   componentDidMount() {
@@ -212,7 +231,7 @@ class CubeSchema extends React.Component {
   componentWillReceiveProps(props) {
     // TODO are props updated automatically, unlike state?
     let cubeName = props.params.cubeName;
-    let cube = getCubes(props.params.databaseName)[cubeName];
+    let cube = getCubes(UserStore.currentDatabase())[cubeName];
 
     if (cube.isLoaded) {
       this.setState({cube: cube, database: props.params.database});
@@ -220,10 +239,10 @@ class CubeSchema extends React.Component {
     }
 
     AdhocQueryActions
-      .getCubeDetails(UserStore.getUserDetails().secretToken, props.params.databaseName, cubeName);
+      .getCubeDetails(UserStore.getUserDetails().secretToken, UserStore.currentDatabase(), cubeName);
 
     // empty the previous state
-    this.setState({cube: {}, database: props.params.databaseName});
+    this.setState({cube: {}, database: UserStore.currentDatabase()});
   }
 
   render() {
@@ -246,7 +265,7 @@ class CubeSchema extends React.Component {
         schemaSection = (
           <div>
             { constructMeasureTable(cube.name, cube.measures) }
-            { constructDimensionTable(cube.name, cube.dimensions) }
+            { constructDimensionTable(cube.name, cube.dimensions, cube.join_chains_by_name) }
             { cube.join_chains && constructJoinChainTable(cube.name, cube.join_chains) }
             { cube.expressions && constructExpressionTable(cube.name, cube.expressions) }
           </div>
@@ -277,7 +296,8 @@ class CubeSchema extends React.Component {
   }
 
   _onChange() {
-    this.setState({cube: getCubes(this.props.params.databaseName)[this.props.params.cubeName]});
+    let cube = getCubes(UserStore.currentDatabase())[this.props.params.cubeName];
+    this.setState({cube: cube});
   }
 }
 

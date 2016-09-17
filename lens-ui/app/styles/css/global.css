@@ -38,3 +38,7 @@
   /*background: rgba(51, 122, 183, 1);*/
   transform: scale(1.018);
 }
+div.tooltip-inner{
+  max-width:none;
+  width:auto;
+}
