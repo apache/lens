@@ -179,12 +179,14 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     final int THREADS = 5;
     final long POLL_DELAY = 500;
     List<Thread> thrs = new ArrayList<Thread>();
+    List<QueryContext> queries = new ArrayList<>();
     final AtomicInteger errCount = new AtomicInteger();
     for (int q = 0; q < QUERIES; q++) {
       final QueryContext qctx;
       try {
         qctx = createContext("SELECT * FROM test_multithreads", queryConf, thrDriver);
         thrDriver.executeAsync(qctx);
+        queries.add(qctx);
       } catch (LensException e) {
         errCount.incrementAndGet();
         log.info(q + " executeAsync error: " + e.getCause());
@@ -205,7 +207,6 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
                 thrDriver.updateStatus(qctx);
                 if (qctx.getDriverStatus().isFinished()) {
                   log.info("@@ " + handle.getHandleId() + " >> " + qctx.getDriverStatus().getState());
-                  thrDriver.closeQuery(handle);
                   break;
                 }
                 Thread.sleep(POLL_DELAY);
@@ -232,6 +233,9 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       } catch (InterruptedException e) {
         log.warn("Not ended yet: " + th.getName());
       }
+    }
+    for (QueryContext queryContext: queries) {
+      thrDriver.closeQuery(queryContext.getQueryHandle());
     }
     Assert.assertEquals(0, thrDriver.getHiveHandleSize());
     log.info("@@ Completed all pollers. Total thrift errors: " + errCount.get());
