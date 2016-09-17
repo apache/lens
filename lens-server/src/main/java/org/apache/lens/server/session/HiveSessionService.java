@@ -22,9 +22,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
@@ -470,6 +468,17 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     closeInternal(sessionHandle);
     notifyEvent(new SessionClosed(System.currentTimeMillis(), sessionHandle));
+  }
+
+  @Override
+  public void cleanupIdleSessions() throws LensException {
+    ScheduledFuture<?> schedule = sessionExpiryThread.schedule(sessionExpiryRunnable, 0, TimeUnit.MILLISECONDS);
+    // wait till completion
+    try {
+      schedule.get();
+    } catch (InterruptedException | ExecutionException e) {
+      throw new LensException(e);
+    }
   }
 
   /**

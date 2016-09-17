@@ -547,7 +547,13 @@ public abstract class BaseLensService extends CompositeService implements Extern
     if (handle == null) {
       throw new LensException(SESSION_ID_NOT_PROVIDED.getLensErrorInfo());
     }
-    if (!getSession(handle).isActive()) {
+    LensSessionImpl session;
+    try {
+      session = getSession(handle);
+    } catch (ClientErrorException e) {
+      throw new LensException(SESSION_CLOSED.getLensErrorInfo(), handle, e);
+    }
+    if (!session.isActive() || session.isMarkedForClose()) {
       throw new LensException(SESSION_CLOSED.getLensErrorInfo(), handle);
     }
   }

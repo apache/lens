@@ -98,6 +98,9 @@ public class APIResult extends ToYAMLString {
   public static APIResult success() {
     return SUCCESS;
   }
+  public static APIResult success(String message) {
+    return new APIResult(Status.SUCCEEDED, message);
+  }
 
   public static APIResult failure(Exception e) {
     String cause = extractCause(e);

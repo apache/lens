@@ -263,13 +263,25 @@ public class SessionResource {
 
   /**
    * Returns a list of all sessions
-   * @return
    */
   @GET
   @Path("sessions")
   @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-  public List<UserSessionInfo> getSession() {
-    List<UserSessionInfo> l = sessionService.getSessionInfo();
-    return l;
+  public List<UserSessionInfo> getSessionInfo() {
+    return sessionService.getSessionInfo();
+  }
+
+  /**
+   * Clears idle sessions. response will contain how many sessions were cleared.
+   * @throws LensException
+   */
+  @DELETE
+  @Path("sessions")
+  @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
+  public APIResult clearIdleSessions() throws LensException {
+    int before = getSessionInfo().size();
+    sessionService.cleanupIdleSessions();
+    int after = getSessionInfo().size();
+    return APIResult.success("cleared " + (after - before) + " idle sessions");
   }
 }

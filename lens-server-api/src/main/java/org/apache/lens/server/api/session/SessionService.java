@@ -67,6 +67,13 @@ public interface SessionService {
   void closeSession(LensSessionHandle sessionHandle) throws LensException;
 
   /**
+   * Close idle sessions.
+   *
+   * @throws LensException the lens exception
+   */
+
+  void cleanupIdleSessions() throws LensException;
+  /**
    * Adds the resource.
    *
    * @param sessionHandle the session handle

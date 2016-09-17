@@ -283,7 +283,9 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
     return System.currentTimeMillis() - lastAccessTime < sessionTimeout
       && (!persistInfo.markedForClose|| activeOperationsPresent());
   }
-
+  public boolean isMarkedForClose() {
+    return persistInfo.isMarkedForClose();
+  }
   public synchronized void setActive() {
     setLastAccessTime(System.currentTimeMillis());
   }
