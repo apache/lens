@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.query;
 
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,12 +27,16 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.FinishedLensQuery;
 import org.apache.lens.server.util.UtilityMethods;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.dbutils.BasicRowProcessor;
+import org.apache.commons.dbutils.BeanProcessor;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -87,7 +92,8 @@ public class LensServerDAO {
       + "starttime bigint, " + "endtime bigint," + "result varchar(255)," + "status varchar(255), "
       + "metadata varchar(100000), " + "rows int, " + "filesize bigint, " + "errormessage varchar(10000), "
       + "driverstarttime bigint, " + "driverendtime bigint, " + "drivername varchar(10000), "
-      + "queryname varchar(255), " + "submissiontime bigint, " + "driverquery varchar(1000000)" + ")";
+      + "queryname varchar(255), " + "submissiontime bigint, " + "driverquery varchar(1000000), "
+      + "conf varchar(100000))";
     try {
       QueryRunner runner = new QueryRunner(ds);
       runner.update(sql);
@@ -110,8 +116,8 @@ public class LensServerDAO {
       Connection conn = null;
       String sql = "insert into finished_queries (handle, userquery, submitter, priority, "
         + "starttime,endtime,result,status,metadata,rows,filesize,"
-        + "errormessage,driverstarttime,driverendtime, drivername, queryname, submissiontime, driverquery)"
-        + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        + "errormessage,driverstarttime,driverendtime, drivername, queryname, submissiontime, driverquery, conf)"
+        + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       try {
         conn = getConnection();
         QueryRunner runner = new QueryRunner();
@@ -119,7 +125,7 @@ public class LensServerDAO {
             query.getStartTime(), query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(),
             query.getRows(), query.getFileSize(), query.getErrorMessage(), query.getDriverStartTime(),
             query.getDriverEndTime(), query.getDriverName(), query.getQueryName(), query.getSubmissionTime(),
-            query.getDriverQuery());
+            query.getDriverQuery(), serializeConf(query.getConf()));
         conn.commit();
       } finally {
         DbUtils.closeQuietly(conn);
@@ -137,6 +143,15 @@ public class LensServerDAO {
     }
   }
 
+  private String serializeConf(LensConf conf) {
+    return Base64.encodeBase64String(conf.toXMLString().getBytes(Charset.defaultCharset()));
+  }
+
+  private LensConf deserializeConf(String serializedConf) {
+    return LensConf.fromXMLString(new String(Base64.decodeBase64(serializedConf),
+        Charset.defaultCharset()), LensConf.class);
+  }
+
   /**
    * Fetch Finished query from Database.
    *
@@ -144,7 +159,8 @@ public class LensServerDAO {
    * @return Finished query.
    */
   public FinishedLensQuery getQuery(String handle) {
-    ResultSetHandler<FinishedLensQuery> rsh = new BeanHandler<FinishedLensQuery>(FinishedLensQuery.class);
+    ResultSetHandler<FinishedLensQuery> rsh = new BeanHandler<>(FinishedLensQuery.class,
+        new BasicRowProcessor(new FinishedLensQueryBeanProcessor()));
     String sql = "select * from finished_queries where handle=?";
     QueryRunner runner = new QueryRunner(ds);
     try {
@@ -153,6 +169,18 @@ public class LensServerDAO {
       log.error("SQL exception while executing query.", e);
     }
     return null;
+  }
+
+  private class FinishedLensQueryBeanProcessor extends BeanProcessor {
+
+    @Override
+    protected Object processColumn(ResultSet rs, int index, Class<?> propType) throws SQLException {
+      Object obj = super.processColumn(rs, index, propType);
+      if (obj != null && propType.equals(LensConf.class) && obj instanceof String) {
+        return deserializeConf((String) obj);
+      }
+      return obj;
+    }
   }
 
   /**

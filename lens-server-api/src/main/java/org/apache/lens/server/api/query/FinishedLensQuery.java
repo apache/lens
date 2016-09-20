@@ -46,7 +46,7 @@ import lombok.ToString;
  *
  * @see java.lang.Object#hashCode()
  */
-@EqualsAndHashCode(exclude = "selectedDriver")
+@EqualsAndHashCode(exclude = {"selectedDriver", "conf"})
 /*
  * (non-Javadoc)
  *
@@ -174,6 +174,10 @@ public class FinishedLensQuery {
   @Setter
   private String priority;
 
+  @Getter
+  @Setter
+  private LensConf conf;
+
   /**
    * The selected driver's query.
    */
@@ -217,6 +221,7 @@ public class FinishedLensQuery {
     if (null != ctx.getPriority()) {
       this.priority = ctx.getPriority().toString();
     }
+    this.conf = ctx.getLensConf();
   }
 
   public QueryContext toQueryContext(Configuration conf, Collection<LensDriver> drivers) {
@@ -226,7 +231,7 @@ public class FinishedLensQuery {
     }
 
     QueryContext qctx =
-      new QueryContext(userQuery, submitter, new LensConf(), conf, drivers, selectedDriver, submissionTime,
+      new QueryContext(userQuery, submitter, this.conf, conf, drivers, selectedDriver, submissionTime,
         false);
 
     qctx.setQueryHandle(QueryHandle.fromString(handle));

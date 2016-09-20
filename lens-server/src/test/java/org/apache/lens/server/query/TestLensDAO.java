@@ -72,6 +72,8 @@ public class TestLensDAO {
             new Configuration(), 0);
     long submissionTime = queryContext.getSubmissionTime();
     queryContext.setQueryName("daoTestQuery1");
+    queryContext.getDriverContext().setSelectedDriver(new MockDriver());
+    queryContext.getLensConf().addProperty("prop", "value");
 
     LensDriver mockDriver = new MockDriver();
     DriverSelectorQueryContext mockDriverContext = new DriverSelectorQueryContext(userQuery,
@@ -126,6 +128,9 @@ public class TestLensDAO {
     service.lensServerDao.insertFinishedQuery(finishedLensQuery);
 
     FinishedLensQuery actual = service.lensServerDao.getQuery(finishedHandle);
+
+    Assert.assertEquals(finishedLensQuery, actual);
+    Assert.assertEquals(actual.getConf().getProperty("prop"), "value");
 
     // Try to read back result set metadata class, should not throw deserialize exception
     JDBCResultSet.JDBCResultSetMetadata actualRsMeta = MAPPER.readValue(actual.getMetadata(),
