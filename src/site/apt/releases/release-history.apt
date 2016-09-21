@@ -23,6 +23,8 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |Release version|Major features|Release documentation|Release Notes|Download|Incompatibilities|More Info |
 *--+--+---+--+--+--+--+
+|2.6.0| GA release, Apache Hive 2 support, Query Scheduler, Lens UI enhancements, Python client, Streaming results, New regression module, Weighted Driver selector, Limit number of open sessions, Exponential back off for hive status updates, Single execution for duplicate queries, Auto kill queries on timeout, Convert dimension filter to fact filters for performance improvement, Code cleanup and refactor, Doc/javadoc improvements, Bug fixes| {{{../versions/2.6.0/index.html} 2.6.x docs}} |{{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12333846&styleName=&projectId=12315923} 2.6 release notes}} |{{{http://archive.apache.org/dist/lens/2.6/} Download}} |{{{#a2.6.x_from_2.5.x} 2.6.x-incompatibilities}} | - |
+*--+--+---+--+--+--+--+
 |2.5.0-beta| Support for multiple instances of a driver, REST API enhancements, Derived cube validation, Per-queue driver max launched queries constraint, New error codes for Hive and JDBC Driver, Lens CLI improvements, Query result retention policy, UI Enhancements, Code cleanup and refactor, Doc/javadoc improvements, Bug fixes| {{{../versions/2.5.0-beta/index.html} 2.5.x docs}} |{{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12333326&projectId=12315923} 2.5 release notes}} |{{{http://archive.apache.org/dist/lens/2.5-beta/} Download}} |{{{#a2.5.x_from_2.4.x} 2.5.x-incompatibilities}} | - |
 *--+--+---+--+--+--+--+
 |2.4.0-beta| JDK8 support, new web client, Saved Query and Parameterization, Support flattening of columns selected through bridge-tables(many-to-many relationships), column name mapping for columns in underlying storage tables, Enhancements cube.xsd and jdbc driver, Improvements in Error codes, Doc improvements, bug fixes| {{{../versions/2.4.0-beta/index.html} 2.4.x docs}} |{{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12333087} 2.4 release notes}} |{{{http://archive.apache.org/dist/lens/2.4-beta/} Download}} |{{{#a2.4.x_from_2.3.x} 2.4.x-incompatibilities}} | - |
@@ -43,6 +45,39 @@ All Apache Lens releases
   ganglia metrics reporting, the jar needs to be downloaded and used.
 
 * Incompatibilities
+
+** 2.6.x from 2.5.x
+
+  * LENS-919: For older deployments the schema for "finished_queries" table needs to be modified to include "priority"
+
+  * LENS-1212: Saved query service is enabled by default now. "saved_query" table will be created to store information
+    pertaining to saved queries
+
+  * LENS-833: Number of open sessions allowed for each user is capped at 10 by default now
+
+  * LENS-1244: Dropping beta from lens releases. Lens 2.6 will be a GA release
+
+  * LENS-909: Query finish email notification message body will not have query results inline in case of inmemory
+    resultset
+
+  * LENS-1198: Lens 2.6 is compatible with hive 2.1.0 and above
+
+  * LENS-1217: Old lens GUI is removed. For new GUI check
+    http://lens.apache.org/lenshome/install-and-run.html#Starting_Lens_UI
+
+  * LENS-1215: Cluster user was defaulted to operating system user by lens-client module earlier. This logic have been
+    moved to cli. Direct users of lens-client will see a change in behavior due to this modification
+
+  * LENS-1187: For metastore REST end point most of the apis returning APIResult were giving http status 200 even in
+    case of failure. The payload object had a FAILED APIResult, but the status code was 200. After this, the status
+    code comes as 500.
+
+  * LENS-1029: Lens server configuration lens.server.snapshot.interval is changed to
+    lens.server.state.persistence.interval.millis, lens.server.restart.enabled is changed to
+    lens.server.state.persistence.enabled and lens.server.recover.onrestart is removed
+
+  * LENS-1013: postDriverSelection method has been added DriverQueryHook SPI. Implementation providers need to adapt to
+    new interface (if the implementation is not extending org.apache.lens.server.api.driver.NoOpDriverQueryHook)
 
 ** 2.5.x from 2.4.x
 
