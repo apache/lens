@@ -655,7 +655,6 @@
             <!-- Used on ui -->
             <exclude>**/codemirror.min.*</exclude>
             <exclude>**/*.js</exclude>
-            <exclude>**/*.properties</exclude>
             <exclude>**/*.json</exclude>
             <!-- python client -->
             <exclude>**/.tox/</exclude>
