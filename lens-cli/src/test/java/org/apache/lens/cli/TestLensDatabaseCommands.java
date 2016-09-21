@@ -23,12 +23,10 @@ import static org.testng.Assert.*;
 import java.io.File;
 import java.net.URISyntaxException;
 
-import javax.ws.rs.InternalServerErrorException;
-
-import org.apache.lens.api.APIResult;
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensDatabaseCommands;
 import org.apache.lens.client.LensClient;
+import org.apache.lens.client.exceptions.LensBriefErrorException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,9 +80,8 @@ public class TestLensDatabaseCommands extends LensCliApplicationTest {
       try {
         command.dropDatabase(myDatabase, false);
         fail("Should have failed");
-      } catch(InternalServerErrorException ignored) {
-        APIResult apiResult = ignored.getResponse().readEntity(APIResult.class);
-        assertTrue(apiResult.getMessage().contains("my_db is not empty"));
+      } catch(LensBriefErrorException e) {
+        assertTrue(e.getIdBriefErrorTemplate().getBriefError().toPrettyString().contains("my_db is not empty"));
       }
     }
     result = command.dropDatabase(myDatabase, cascade);

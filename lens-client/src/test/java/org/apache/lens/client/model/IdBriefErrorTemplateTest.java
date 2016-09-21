@@ -53,14 +53,14 @@ public class IdBriefErrorTemplateTest {
     return new Object[][] {{null}, {""}, {"  "}};
   }
 
-  @Test(expectedExceptions = NullPointerException.class)
+  @Test(expectedExceptions = NullPointerException.class, enabled = false)
   public void testIdBriefErrorTemplateMustNotAcceptNullIdKey() {
 
     final BriefError mockBriefError = mock(BriefError.class);
     new IdBriefErrorTemplate(null, "ValidIdValue", mockBriefError);
   }
 
-  @Test(dataProvider = "dpInvalidStrings", expectedExceptions = IllegalArgumentException.class)
+  @Test(dataProvider = "dpInvalidStrings", expectedExceptions = IllegalArgumentException.class, enabled = false)
   public void testIdBriefErrorTemplateMustNotAcceptInvalidIdValue(final String invalidIdValue) {
 
     final BriefError mockBriefError = mock(BriefError.class);

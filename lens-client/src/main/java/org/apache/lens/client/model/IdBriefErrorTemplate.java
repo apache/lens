@@ -18,35 +18,29 @@
  */
 package org.apache.lens.client.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import org.apache.lens.api.result.PrettyPrintable;
 
 import org.apache.commons.lang.StringUtils;
 
+import lombok.Data;
 import lombok.NonNull;
 
+@Data
 public class IdBriefErrorTemplate implements PrettyPrintable {
 
   private final IdBriefErrorTemplateKey idKey;
   private final String idValue;
+  @NonNull
   private final BriefError briefError;
-
-  public IdBriefErrorTemplate(@NonNull final IdBriefErrorTemplateKey idKey, final String idValue,
-      @NonNull BriefError briefError) {
-
-    checkArgument(StringUtils.isNotBlank(idValue));
-    this.idKey = idKey;
-    this.idValue = idValue;
-    this.briefError = briefError;
-  }
 
   @Override
   public String toPrettyString() {
 
-    StringBuilder sb = new StringBuilder(idKey.getConstant()).append(": ").append(this.idValue).append("\n")
-        .append(this.briefError.toPrettyString());
-
+    StringBuilder sb = new StringBuilder();
+    if (idKey != null && StringUtils.isNotBlank(idValue)) {
+      sb.append(idKey.getConstant()).append(": ").append(this.idValue).append("\n");
+    }
+    sb.append(this.briefError.toPrettyString());
     return sb.toString();
   }
 }

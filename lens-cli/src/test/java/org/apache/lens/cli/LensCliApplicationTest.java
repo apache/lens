@@ -31,7 +31,7 @@ import org.testng.annotations.BeforeTest;
  * The Class LensCliApplicationTest.
  */
 public class LensCliApplicationTest extends LensAllApplicationJerseyTest {
-  public static final String SUCCESS_MESSAGE = "status: succeeded\n";
+  public static final String SUCCESS_MESSAGE = "succeeded";
 
   @Override
   protected int getTestPort() {

@@ -68,7 +68,10 @@ public abstract class ToYAMLString implements ToString {
       for (Field field : this.getClass().getDeclaredFields()) {
         try {
           Method getter = getGetter(field);
-          fieldNameAndValueList.add(new FieldNameAndValue(getReadableName(getter), getter.invoke(this)));
+          Object value = getter.invoke(this);
+          if (value != null) {
+            fieldNameAndValueList.add(new FieldNameAndValue(getReadableName(getter), value));
+          }
         } catch (IllegalAccessException | InvocationTargetException e) {
           throw new RuntimeException(e);
         } catch (NoSuchMethodException e) {

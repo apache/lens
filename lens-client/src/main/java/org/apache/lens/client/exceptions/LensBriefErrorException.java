@@ -31,4 +31,9 @@ public class LensBriefErrorException extends RuntimeException {
   public LensBriefErrorException(@NonNull final IdBriefErrorTemplate idBriefErrorTemplate) {
     this.idBriefErrorTemplate = idBriefErrorTemplate;
   }
+
+  @Override
+  public String toString() {
+    return idBriefErrorTemplate.toPrettyString();
+  }
 }

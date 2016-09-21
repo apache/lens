@@ -33,6 +33,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 public class YAMLToStringStrategyTest {
   String timeZone;
@@ -108,12 +109,21 @@ public class YAMLToStringStrategyTest {
   }
 
   @Data
+  @RequiredArgsConstructor
   public static class ToStringTestData {
     private final String name;
     private final Object object;
     private final String toString;
+    private Throwable throwable;
 
-    public void verify() {
+    public ToStringTestData(String name, Throwable th) {
+      this(name, null, null);
+      this.throwable = th;
+    }
+    public void verify() throws Throwable {
+      if (this.throwable != null) {
+        throw throwable;
+      }
       Assert.assertEquals(object.toString().trim(), toString.trim(), "toString didn't match for " + name);
     }
   }
@@ -147,7 +157,7 @@ public class YAMLToStringStrategyTest {
   }
 
   @Test(dataProvider = "toStringDataProvider")
-  public void testToString(ToStringTestData testData) {
+  public void testToString(ToStringTestData testData) throws Throwable {
     testData.verify();
   }
 
