@@ -36,6 +36,7 @@ import org.apache.lens.api.scheduler.*;
 import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.LensErrorInfo;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.SchedulerAlarmEvent;
@@ -79,6 +80,8 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
   @Getter
   private AlarmService alarmService;
 
+  private int maxJobsPerUser = LensConfConstants.DEFAULT_MAX_SCHEDULED_JOB_PER_USER;
+
   /**
    * Instantiates a new scheduler service.
    *
@@ -91,6 +94,7 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
   @Override
   public synchronized void init(HiveConf hiveConf) {
     super.init(hiveConf);
+    maxJobsPerUser = hiveConf.getInt(LensConfConstants.MAX_SCHEDULED_JOB_PER_USER, maxJobsPerUser);
     try {
       schedulerDAO = new SchedulerDAO(hiveConf);
       alarmService = LensServices.get().getService(AlarmService.NAME);
@@ -237,7 +241,7 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
   @Override
   public List<SchedulerJobHandle> getAllJobs(String user, SchedulerJobState state, Long start, Long end)
     throws LensException {
-    return this.schedulerDAO.getJobs(user, state, start, end);
+    return this.schedulerDAO.getJobs(user, start, end, state);
   }
 
   /**
@@ -247,7 +251,7 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
   public SchedulerJobHandle submitJob(LensSessionHandle sessionHandle, XJob job) throws LensException {
     LensSessionImpl session = getSession(sessionHandle);
     // Validate XJob
-    validateJob(job);
+    validateJob(session, job);
     SchedulerJobHandle handle = UtilityMethods.generateSchedulerJobHandle();
     long createdOn = System.currentTimeMillis();
     SchedulerJobInfo info = new SchedulerJobInfo(handle, job, session.getLoggedInUser(), SchedulerJobState.NEW,
@@ -260,7 +264,18 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
     }
   }
 
-  private void validateJob(XJob job) throws LensException {
+  private void validateJob(LensSessionImpl session, XJob job) throws LensException {
+    // Check if the number of scheduled jobs are not exceeding the configured global value.
+    if (maxJobsPerUser > 0) {
+      int currentJobs = schedulerDAO
+        .getJobs(session.getLoggedInUser(), null, null, SchedulerJobState.NEW, SchedulerJobState.SCHEDULED,
+          SchedulerJobState.SUSPENDED).size();
+      if (currentJobs >= maxJobsPerUser) {
+        throw new LensException(LensSchedulerErrorCode.MAX_SCHEDULED_JOB_EXCEEDED.getLensErrorInfo(), null,
+          currentJobs);
+      }
+
+    }
   }
 
   /**
@@ -479,8 +494,8 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
       log.info("Killing instance {} for job {} ", instanceInfo.getId(), instanceInfo.getJobId());
       return updateInstanceRun(latestRun, state);
     } else {
-      log.info("Killing instance {} for job {} with query handle {} ", instanceInfo.getId(),
-        instanceInfo.getJobId(), handle);
+      log.info("Killing instance {} for job {} with query handle {} ", instanceInfo.getId(), instanceInfo.getJobId(),
+        handle);
       // This will cause the QueryEnd event which will set the status of the instance to KILLED.
       return queryService.cancelQuery(sessionHandle, handle);
     }

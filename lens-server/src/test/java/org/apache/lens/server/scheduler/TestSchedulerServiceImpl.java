@@ -29,7 +29,9 @@ import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.scheduler.SchedulerService;
+import org.apache.lens.server.error.LensSchedulerErrorCode;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -50,8 +52,6 @@ public class TestSchedulerServiceImpl {
   public void setup() throws Exception {
     System.setProperty(LensConfConstants.CONFIG_LOCATION, "target/test-classes/");
   }
-
-
 
   @Test(priority = 1)
   public void testScheduler() throws Exception {
@@ -159,4 +159,25 @@ public class TestSchedulerServiceImpl {
     Assert.assertEquals(scheduler.getSchedulerDAO().getJobState(jobHandle), SchedulerJobState.EXPIRED);
     scheduler.closeSession(sessionHandle);
   }
+
+  @Test(priority = 2)
+  public void testAdminControl() throws Exception {
+    long currentTime = System.currentTimeMillis();
+    XJob job = getTestJob("0/5 * * * * ?", queryString, currentTime, currentTime + 180000);
+    LensSessionHandle sessionHandle = scheduler.openSessionAsUser(user);
+    SchedulerJobHandle jobHandle1 = scheduler.submitJob(sessionHandle, job);
+    SchedulerJobHandle jobHandle2 = scheduler.submitJob(sessionHandle, job);
+    SchedulerJobHandle jobHandle3 = scheduler.submitJob(sessionHandle, job);
+    // Fourth should throw an error.
+    try {
+      SchedulerJobHandle jobHandle = scheduler.submitJob(sessionHandle, job);
+    } catch (LensException e) {
+      Assert.assertEquals(e.getErrorCode(), 5009);
+      Assert.assertEquals(e.getErrorInfo().getErrorName(), LensSchedulerErrorCode.MAX_SCHEDULED_JOB_EXCEEDED.name());
+    }
+    scheduler.expireJob(sessionHandle, jobHandle1);
+    scheduler.expireJob(sessionHandle, jobHandle2);
+    scheduler.expireJob(sessionHandle, jobHandle3);
+  }
+
 }

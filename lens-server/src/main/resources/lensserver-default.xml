@@ -905,4 +905,10 @@
     <value>40</value>
     <description>Max pool size for lens grizzly server</description>
   </property>
+
+  <property>
+    <name>lens.server.scheduler.max.job.per.user</name>
+    <value>-1</value>
+    <description>The maximum number of jobs per user which can be scheduled. -1 means unlimited jobs.</description>
+  </property>
 </configuration>

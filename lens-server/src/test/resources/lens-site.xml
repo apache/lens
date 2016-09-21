@@ -197,5 +197,9 @@
     <name>lens.server.duplicate.query.allowed</name>
     <value>true</value>
   </property>
+  <property>
+    <name>lens.server.scheduler.max.job.per.user</name>
+    <value>3</value>
+  </property>
 
 </configuration>

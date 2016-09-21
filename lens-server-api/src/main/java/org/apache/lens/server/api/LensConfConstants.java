@@ -1169,4 +1169,15 @@ public final class LensConfConstants {
    */
   public static final int DEFAULT_GRIZZLY_MAX_POOL_SIZE = 40;
 
+  /**
+   * Maximum Scheduled job per user.
+   */
+  public static final String MAX_SCHEDULED_JOB_PER_USER = SERVER_PFX + "scheduler.max.job.per.user";
+
+  /**
+   * -1 represents that the default is unlimited
+   */
+
+  public static final int DEFAULT_MAX_SCHEDULED_JOB_PER_USER = -1;
+
 }

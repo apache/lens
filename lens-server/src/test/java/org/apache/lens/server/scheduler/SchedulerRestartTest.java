@@ -120,5 +120,7 @@ public class SchedulerRestartTest {
     Assert.assertEquals(previousInstanceInfo.getInstanceRunList().get(0).getResultPath(), "/tmp/path");
     Assert.assertEquals(previousInstanceInfo.getInstanceRunList().get(0).getInstanceState(),
       SchedulerJobInstanceState.SUCCEEDED);
+    scheduler.expireJob(sessionHandle, jobHandle);
+    scheduler.closeSession(sessionHandle);
   }
 }
