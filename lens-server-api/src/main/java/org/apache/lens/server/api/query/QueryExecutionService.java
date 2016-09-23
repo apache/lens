@@ -241,6 +241,25 @@ public interface QueryExecutionService extends LensService, SessionValidator {
   List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle, String states, String user, String driver,
     String queryName, String fromDate, String toDate) throws LensException;
 
+
+  /**
+   * Returns all the queries in the specified state, for the given user and matching query name.
+   *
+   * @param sessionHandle the session handle
+   * @param states        return queries in these state. if null, all queries will be returned. Multiple states can
+   *                      be supplied separated by comma
+   * @param user          Get queries submitted by a specific user.
+   *                      If this set to "all", queries of all users are returned
+   * @param driver        Get queries submitted on a specific driver.
+   * @param queryName     return queries containing the query name. If null, all queries will be returned
+   * @param fromDate      start date of time range interval
+   * @param toDate        end date of the time range interval
+   * @return List of Lens Query object
+   * @throws LensException the lens exception
+   */
+  List<LensQuery> getAllQueryDetails(LensSessionHandle sessionHandle, String states, String user, String driver,
+    String queryName, String fromDate, String toDate) throws LensException;
+
   /**
    * Returns all the prepared queries for the specified user. If no user is passed, queries of all users will be
    * returned.

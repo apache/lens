@@ -126,6 +126,38 @@ public class QueryServiceResource {
   }
 
   /**
+   * Get all the queries in the query server; can be filtered with state and queryName. This will by default only return
+   * queries submitted by the user that has started the session. To get queries of all users, set the searchAllUsers
+   * parameter to false.
+   *
+   * @param sessionid The sessionid in which queryName is working
+   * @param states    If any state is passed, all the queries in that state will be returned, otherwise all queries will
+   *                  be returned. Possible states are {link QueryStatus.Status#values()}. Multiple states can be
+   *                  passed as comma separated string
+   * @param queryName If any queryName is passed, all the queries containing the queryName will be returned, otherwise
+   *                  all the queries will be returned
+   * @param user      Returns queries submitted by this user. If set to "all", returns queries of all users. By default,
+   *                  returns queries of the current user.
+   * @param driver    Get queries submitted on a specific driver.
+   * @param fromDate  from date to search queries in a time range, the range is inclusive(submitTime &gt;= fromDate)
+   *                  from date can be a long value indicating timestamp, or it can be in a format acceptable in
+   *                  time_range_in function. Notably: yyyy[-MM[-dd[-HH-[mm...]]]], or now based relative format
+   * @param toDate    to date to search queries in a time range, the range is inclusive(toDate &gt; submitTime)
+   *                  possible formats it can take is same as fromDate
+   * @return List of {@link LensQuery} objects
+   */
+  @GET
+  @Path("queries/detail")
+  @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+  public List<LensQuery> getAllQueryDetails(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @QueryParam("state") String states, @QueryParam("queryName") String queryName, @QueryParam("user") String user,
+    @QueryParam("driver") String driver, @QueryParam("fromDate") String fromDate, @QueryParam("toDate") String toDate)
+    throws LensException {
+    validateSessionId(sessionid);
+    return queryServer.getAllQueryDetails(sessionid, states, user, driver, queryName, fromDate, toDate);
+  }
+
+  /**
    * Submit the query for explain or execute or execute with a timeout.
    *
    * @param sessionid     The session in which user is submitting the query. Any configuration set in the session will

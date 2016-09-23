@@ -84,6 +84,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.test.TestProperties;
+import org.junit.Assert;
 import org.testng.annotations.*;
 
 import com.codahale.metrics.MetricRegistry;
@@ -1931,5 +1932,38 @@ public class TestQueryService extends LensJerseyTest {
     assertEquals(TestQueryNotifictaionResource.getFinishedCount(), 6);
 
     TestQueryNotifictaionResource.clearState();
+  }
+
+  @Test
+  public void testGetQueryDetails() throws IOException, InterruptedException, LensException {
+
+    UUID queryName = UUID.randomUUID();
+    WebTarget target = target().path("queryapi/queries");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
+      + TEST_TABLE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute_with_timeout"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(), "300000"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(), queryName.toString()));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
+    QueryHandleWithResultSet result = target.request(MediaType.APPLICATION_XML_TYPE)
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+        new GenericType<LensAPIResult<QueryHandleWithResultSet>>() {}).getData();
+    assertNotNull(result.getQueryHandle());
+    assertNotNull(result.getResult());
+
+    target = target().path("queryapi/queries/detail");
+    List<LensQuery> results = target.queryParam("queryName", queryName)
+      .queryParam("sessionid", lensSessionId)
+      .request(MediaType.APPLICATION_XML_TYPE)
+      .get(new GenericType<List<LensQuery>>(){});
+    Assert.assertNotNull(results);
+    Assert.assertEquals(1, results.size());
+    Assert.assertEquals(queryName.toString(), results.get(0).getQueryName());
+    Assert.assertEquals(result.getQueryHandle(), results.get(0).getQueryHandle());
   }
 }

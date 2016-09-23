@@ -578,6 +578,27 @@ public class LensStatement {
   }
 
   /**
+   * Gets the all queries with details.
+   *
+   * @param state     the state
+   * @param queryName the query name
+   * @param user      the user
+   * @param driver    the driver name
+   * @param fromDate  the from date
+   * @param toDate    the to date
+   * @return the all queries as per criteria along with additional details
+   */
+  public List<LensQuery> getAllQueryDetails(String state, String queryName, String user, String driver,
+     String fromDate, String toDate) {
+    WebTarget target = getQueryWebTarget(connection.buildClient());
+    return target.queryParam("sessionid", connection.getSessionHandle())
+      .queryParam("state", state).queryParam("queryName", queryName).queryParam("user", user)
+      .queryParam("driver", driver).queryParam("fromDate", fromDate).queryParam("toDate", toDate).request()
+      .get(new GenericType<List<LensQuery>>() {
+      });
+  }
+
+  /**
    * Gets the all prepared queries.
    *
    * @param userName  the user name

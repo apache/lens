@@ -40,6 +40,7 @@ import org.apache.commons.dbutils.BeanProcessor;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.RowProcessor;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -183,6 +184,54 @@ public class LensServerDAO {
     }
   }
 
+  private class NestedResultHandler<T> implements ResultSetHandler<T> {
+
+    private final Class<T> type;
+    private final RowProcessor convert;
+
+    public NestedResultHandler(Class<T> type, RowProcessor convert) {
+      this.type = type;
+      this.convert = convert;
+    }
+
+    @Override
+    public T handle(ResultSet rs) throws SQLException {
+      return this.convert.toBean(rs, this.type);
+    }
+  }
+
+  private class QueryHandleNestedHandler implements ResultSetHandler<QueryHandle> {
+
+    @Override
+    public QueryHandle handle(ResultSet rs) throws SQLException {
+      try {
+        return QueryHandle.fromString(rs.getString(1));
+      } catch (IllegalArgumentException exc) {
+        log.warn("Warning invalid query handle found in DB " + rs.getString(1));
+        return null;
+      }
+    }
+  }
+
+  /**
+   * Find finished queries.
+   *
+   * @param states     the state
+   * @param user      the user
+   * @param driverName the driver's fully qualified Name
+   * @param queryName the query name
+   * @param fromDate  the from date
+   * @param toDate    the to date
+   * @return the list
+   * @throws LensException the lens exception
+   */
+  public List<FinishedLensQuery> findFinishedQueryDetails(List<QueryStatus.Status> states, String user,
+    String driverName, String queryName, long fromDate, long toDate) throws LensException {
+    ResultSetHandler<FinishedLensQuery> handler = new NestedResultHandler<>(FinishedLensQuery.class,
+        new BasicRowProcessor(new FinishedLensQueryBeanProcessor()));
+    return findInternal(states, user, driverName, queryName, fromDate, toDate, handler, "*");
+  }
+
   /**
    * Find finished queries.
    *
@@ -197,11 +246,17 @@ public class LensServerDAO {
    */
   public List<QueryHandle> findFinishedQueries(List<QueryStatus.Status> states, String user, String driverName,
     String queryName, long fromDate, long toDate) throws LensException {
-    StringBuilder builder = new StringBuilder("SELECT handle FROM finished_queries");
-    List<Object> params = null;
+
+    ResultSetHandler<QueryHandle> handler = new QueryHandleNestedHandler();
+    return findInternal(states, user, driverName, queryName, fromDate, toDate, handler, "handle");
+  }
+
+  private <T> List<T> findInternal(List<QueryStatus.Status> states, String user, String driverName, String queryName,
+    long fromDate, long toDate, final ResultSetHandler<T> handler, String projection) throws LensException {
+    StringBuilder builder = new StringBuilder("SELECT " + projection + " FROM finished_queries");
+    List<Object> params = new ArrayList<>(3);
     builder.append(" WHERE ");
-    List<String> filters = new ArrayList<String>(3);
-    params = new ArrayList<Object>(3);
+    List<String> filters = new ArrayList<>(3);
 
     if (states != null && !states.isEmpty()) {
       StringBuilder statusFilterBuilder = new StringBuilder("status in (");
@@ -234,19 +289,18 @@ public class LensServerDAO {
     params.add(toDate);
     builder.append(StringUtils.join(filters, " AND "));
 
-    ResultSetHandler<List<QueryHandle>> resultSetHandler = new ResultSetHandler<List<QueryHandle>>() {
+    ResultSetHandler<List<T>> resultSetHandler = new ResultSetHandler<List<T>>() {
       @Override
-      public List<QueryHandle> handle(ResultSet resultSet) throws SQLException {
-        List<QueryHandle> queryHandleList = new ArrayList<QueryHandle>();
+      public List<T> handle(ResultSet resultSet) throws SQLException {
+        List<T> results = new ArrayList<T>();
         while (resultSet.next()) {
-          String handle = resultSet.getString(1);
           try {
-            queryHandleList.add(QueryHandle.fromString(handle));
-          } catch (IllegalArgumentException exc) {
-            log.warn("Warning invalid query handle found in DB " + handle);
+            results.add(handler.handle(resultSet));
+          } catch (RuntimeException e) {
+            log.warn("Unable to handle row " + LensServerDAO.toString(resultSet), e);
           }
         }
-        return queryHandleList;
+        return results;
       }
     };
 
@@ -259,4 +313,15 @@ public class LensServerDAO {
     }
   }
 
+  private static String toString(ResultSet resultSet) {
+    try {
+      StringBuilder builder = new StringBuilder();
+      for (int index = 1; index <= resultSet.getMetaData().getColumnCount(); index++) {
+        builder.append(index > 1 ? ", " : "").append(resultSet.getString(index));
+      }
+      return builder.toString();
+    } catch (SQLException e) {
+      return "Error : " + e.getMessage();
+    }
+  }
 }

@@ -336,6 +336,11 @@ public class LensClient implements AutoCloseable {
     return statement.getAllQueries(state, queryName, user, driver, fromDate, toDate);
   }
 
+  public List<LensQuery> getQueriesWithDetails(String state, String queryName, String user, String driver,
+    String fromDate, String toDate) {
+    return statement.getAllQueryDetails(state, queryName, user, driver, fromDate, toDate);
+  }
+
   private void connectToLensServer() {
     log.debug("Connecting to lens server {}", new LensConnectionParams(conf));
     connection = new LensConnection(new LensConnectionParams(conf));
