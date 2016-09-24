@@ -1706,6 +1706,7 @@
     <module>lens-ml-dist</module>
     <module>lens-regression</module>
     <module>lens-ui</module>
+    <module>contrib</module>
   </modules>
 
   <profiles>
