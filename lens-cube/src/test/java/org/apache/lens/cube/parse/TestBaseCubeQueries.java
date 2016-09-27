@@ -331,42 +331,46 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   @Test
   public void testMultiFactQueryInvolvingThreeFactTables() throws Exception {
     // query with 3 fact tables
-    String hqlQuery = rewrite("select dim1, msr12, roundedmsr2, msr13, msr3 from basecube where " + TWO_DAYS_RANGE,
-      conf);
+    String hqlQuery = rewrite("select dim1, d_time, msr12, roundedmsr2, msr13, msr3 from basecube where "
+        + TWO_DAYS_RANGE, conf);
     String expected1 =
-      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, sum(basecube.msr12) as `msr12` FROM ", null,
-        " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, basecube.d_time as `d_time`, "
+          + "sum(basecube.msr12) as `msr12` FROM ", null, " group by basecube.dim1",
+          getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
     String expected2 = getExpectedQuery(
         cubeName,
-        "select basecube.dim1 as `dim1`, round(sum(basecube.msr2)/1000) as `roundedmsr2`, max(basecube.msr3) as `msr3` "
-        + "FROM ", null, " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+        "select basecube.dim1 as `dim1`, basecube.d_time as `d_time`, round(sum(basecube.msr2)/1000) "
+            + "as `roundedmsr2`, max(basecube.msr3) as `msr3` FROM ", null,
+        " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
     String expected3 =
-      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, max(basecube.msr13) as `msr13` FROM ", null,
+      getExpectedQuery(cubeName, "select basecube.dim1 as `dim1`, basecube.d_time as `d_time`, "
+          + "max(basecube.msr13) as `msr13` FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "c1_testfact3_base"));
     compareContains(expected1, hqlQuery);
     compareContains(expected2, hqlQuery);
     compareContains(expected3, hqlQuery);
     assertTrue(
       hqlQuery.toLowerCase().startsWith(
-        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, mq1.msr12 msr12,"
-          + " mq2.roundedmsr2 roundedmsr2, mq3.msr13 msr13, mq2.msr3 msr3 from ")
+        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, coalesce(mq1.d_time, mq2.d_time, mq3.d_time) d_time, "
+            + "mq1.msr12 msr12, mq2.roundedmsr2 roundedmsr2, mq3.msr13 msr13, mq2.msr3 msr3 from ")
         || hqlQuery.toLowerCase().startsWith(
-        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, mq1.msr12 msr12,"
-          + " mq3.roundedmsr2 roundedmsr2, mq2.msr13 msr13, mq3.msr3 msr3 from ")
+        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, coalesce(mq1.d_time, mq2.d_time, mq3.d_time) d_time,"
+            + " mq1.msr12 msr12, mq3.roundedmsr2 roundedmsr2, mq2.msr13 msr13, mq3.msr3 msr3 from ")
         || hqlQuery.toLowerCase().startsWith(
-        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, mq2.msr12 msr12,"
-          + " mq1.roundedmsr2 roundedmsr2, mq3.msr13 msr13, mq1.msr3 msr3 from ")
+        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, coalesce(mq1.d_time, mq2.d_time, mq3.d_time) d_time,"
+            + " mq2.msr12 msr12, mq1.roundedmsr2 roundedmsr2, mq3.msr13 msr13, mq1.msr3 msr3 from ")
         || hqlQuery.toLowerCase().startsWith(
-        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, mq2.msr12 msr12,"
-          + " mq3.roundedmsr2 roundedmsr2, mq1.msr13 msr13, mq3.msr3 msr3 from ")
+        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, coalesce(mq1.d_time, mq2.d_time, mq3.d_time) d_time, "
+            + "mq2.msr12 msr12, mq3.roundedmsr2 roundedmsr2, mq1.msr13 msr13, mq3.msr3 msr3 from ")
         || hqlQuery.toLowerCase().startsWith(
-        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, mq3.msr12 msr12,"
-          + " mq1.roundedmsr2 roundedmsr2, mq2.msr13 msr13, mq1.msr3 msr3 from ")
+        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, coalesce(mq1.d_time, mq2.d_time, mq3.d_time) d_time,"
+            + " mq3.msr12 msr12, mq1.roundedmsr2 roundedmsr2, mq2.msr13 msr13, mq1.msr3 msr3 from ")
         || hqlQuery.toLowerCase().startsWith(
-        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, mq3.msr12 msr12,"
-          + " mq2.roundedmsr2 roundedmsr2, mq1.msr13 msr13, mq2.msr3 msr3 from "), hqlQuery);
-    assertTrue(hqlQuery.contains("mq1 full outer join ") && hqlQuery.contains("mq2 full outer join ")
-      && hqlQuery.endsWith("mq3 on mq1.dim1 <=> mq2.dim1 AND mq1.dim1 <=> mq3.dim1"), hqlQuery);
+        "select coalesce(mq1.dim1, mq2.dim1, mq3.dim1) dim1, coalesce(mq1.d_time, mq2.d_time, mq3.d_time) d_time, "
+            + "mq3.msr12 msr12, mq2.roundedmsr2 roundedmsr2, mq1.msr13 msr13, mq2.msr3 msr3 from "), hqlQuery);
+    assertTrue(hqlQuery.toLowerCase().contains("mq1 full outer join ")
+        && hqlQuery.toLowerCase().contains("mq2 on mq1.dim1 <=> mq2.dim1 and mq1.d_time <=> mq2.d_time")
+        && hqlQuery.toLowerCase().endsWith("mq3 on mq2.dim1 <=> mq3.dim1 and mq2.d_time <=> mq3.d_time"), hqlQuery);
   }
 
   @Test
