@@ -6,6 +6,12 @@ You can install like this:
 
     pip install -e 'git+https://github.com/apache/lens.git#egg=lenspythonclient&subdirectory=contrib/clients/python' # install a python package from a repo subdirectory
 
+## Local development
+
+    For local development, fork the project, build with profile `py` (`mvn clean install -Ppy`). That should link python client to 
+    your PYTHONPATH. After that, all the changes you make in client here are accessible to your other applications that depend 
+    the python client. If that fails, going inside python client directory (contrig/clients/python) and running `python setup.py develop` or 
+    `python setup.py develop --user` should work.
 
 ## Usage
 
