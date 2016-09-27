@@ -37,8 +37,12 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
     if (rangeParts.size() == 0) {
       return "";
     }
+    //Flag to check if only between range needs to be used
+    boolean useBetweenOnly = cubeQueryContext.getConf().getBoolean(CubeQueryConfUtil.BETWEEN_ONLY_TIME_RANGE_WRITER,
+      CubeQueryConfUtil.DEFAULT_BETWEEN_ONLY_TIME_RANGE_WRITER);
+
     StringBuilder partStr = new StringBuilder();
-    if (rangeParts.size() == 1) {
+    if (!useBetweenOnly && rangeParts.size() == 1) {
       partStr.append("(");
       String partFilter =
         TimeRangeUtils.getTimeRangePartitionFilter(rangeParts.iterator().next(), cubeQueryContext, tableName);

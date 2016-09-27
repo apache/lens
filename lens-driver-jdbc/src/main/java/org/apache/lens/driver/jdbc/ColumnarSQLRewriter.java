@@ -55,10 +55,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ColumnarSQLRewriter implements QueryRewriter {
 
   /** The clause name. */
-  private String clauseName = null;
+  protected String clauseName = null;
 
   /** The qb. */
-  private QB qb;
+  protected QB qb;
 
   /** The ast. */
   protected ASTNode ast;
@@ -67,13 +67,13 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   protected String query;
 
   /** The limit. */
-  private String limit;
+  protected String limit;
 
   /** The fact filters. */
-  private final StringBuilder factFilters = new StringBuilder();
+  protected final StringBuilder factFilters = new StringBuilder();
 
   /** The fact in line query. */
-  private final StringBuilder factInLineQuery = new StringBuilder();
+  protected final StringBuilder factInLineQuery = new StringBuilder();
 
   /** The all sub queries. */
   protected StringBuilder allSubQueries = new StringBuilder();
@@ -103,7 +103,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   protected List<String> rightFilter = new ArrayList<String>();
 
   /** The left filter. */
-  private String leftFilter;
+  protected String leftFilter;
 
   /** The map agg tab alias. */
   private final Map<String, String> mapAggTabAlias = new LinkedHashMap<String, String>();
@@ -122,54 +122,54 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   private final Map<String, String> dimTableToSubqueryMap = new LinkedHashMap<String, String>();
 
   /** The where tree. */
-  private String whereTree;
+  protected String whereTree;
 
   /** The having tree. */
-  private String havingTree;
+  protected String havingTree;
 
   /** The order by tree. */
-  private String orderByTree;
+  protected String orderByTree;
 
   /** The select tree. */
-  private String selectTree;
+  protected String selectTree;
 
   /** The group by tree. */
-  private String groupByTree;
+  protected String groupByTree;
 
   /** The join tree. */
-  private String joinTree;
+  protected String joinTree;
 
   /** The from tree. */
-  private String fromTree;
+  protected String fromTree;
 
   /** The join ast. */
   @Getter
-  private ASTNode joinAST;
+  protected ASTNode joinAST;
 
   /** The having ast. */
   @Getter
-  private ASTNode havingAST;
+  protected ASTNode havingAST;
 
   /** The select ast. */
   @Getter
-  private ASTNode selectAST;
+  protected ASTNode selectAST;
 
   /** The where ast. */
   @Getter
-  private ASTNode whereAST;
+  protected ASTNode whereAST;
 
   /** The order by ast. */
   @Getter
-  private ASTNode orderByAST;
+  protected ASTNode orderByAST;
 
   /** The group by ast. */
   @Getter
-  private ASTNode groupByAST;
+  protected ASTNode groupByAST;
 
   /** The from ast. */
   @Getter
   protected ASTNode fromAST;
-  private Map<String, String> regexReplaceMap;
+  protected Map<String, String> regexReplaceMap;
 
   /**
    * Instantiates a new columnar sql rewriter.
@@ -413,7 +413,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @param count
    * @return Number of fact columns used in expression
    */
-  private int getNumFactTableInExpressions(ASTNode node, MutableInt count) {
+  protected int getNumFactTableInExpressions(ASTNode node, MutableInt count) {
 
     if (node == null) {
       log.debug("ASTNode is null ");
@@ -1072,7 +1072,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @param fromTables the from tables
    * @return the all tablesfrom from ast
    */
-  private void getAllTablesfromFromAST(ASTNode from, ArrayList<String> fromTables) {
+  protected void getAllTablesfromFromAST(ASTNode from, ArrayList<String> fromTables) {
     String table;
     if (TOK_TABREF == from.getToken().getType()) {
       ASTNode tabName = (ASTNode) from.getChild(0);
@@ -1098,7 +1098,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *
    * @param from
    */
-  private void updateAliasFromAST(ASTNode from) {
+  protected void updateAliasFromAST(ASTNode from) {
 
     String newAlias;
     String table;
@@ -1129,7 +1129,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *
    * @param tree
    */
-  private void replaceAlias(ASTNode tree) {
+  protected void replaceAlias(ASTNode tree) {
     if (TOK_TABLE_OR_COL == tree.getToken().getType()) {
       ASTNode alias = (ASTNode) tree.getChild(0);
       if (mapAliases.get(tree.getChild(0).toString()) != null) {
@@ -1157,7 +1157,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @param orderbytree the orderbytree
    * @param limit       the limit
    */
-  private void constructQuery(String selecttree, String wheretree, String groupbytree,
+  protected void constructQuery(String selecttree, String wheretree, String groupbytree,
     String havingtree, String orderbytree, String limit) {
 
     String finalJoinClause = "";
@@ -1235,7 +1235,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
 
   @NoArgsConstructor
-  private static class NativeTableInfo {
+  protected static class NativeTableInfo {
     private Map<String, String> columnMapping = new LinkedHashMap<>();
     NativeTableInfo(Table tbl) {
       String columnMappingProp = tbl.getProperty(LensConfConstants.NATIVE_TABLE_COLUMN_MAPPING);
@@ -1253,7 +1253,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
   }
 
-  private Map<String, NativeTableInfo> aliasToNativeTableInfo = new LinkedHashMap<>();
+  protected Map<String, NativeTableInfo> aliasToNativeTableInfo = new LinkedHashMap<>();
 
   /**
    * Replace with underlying storage.

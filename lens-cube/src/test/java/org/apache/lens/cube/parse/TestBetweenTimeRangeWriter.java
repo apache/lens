@@ -19,14 +19,17 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.metadata.DateFactory.NOW;
-import static org.apache.lens.cube.metadata.DateFactory.TWODAYS_BACK;
+import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.DAILY;
 
 import java.text.DateFormat;
-import java.util.Date;
+import java.util.*;
+
+import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.server.api.error.LensException;
 
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
 
@@ -61,5 +64,31 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
     String first = format.format(start);
     String last = format.format(end);
     return " (" + alias + "." + colName + " BETWEEN '" + first + "' AND '" + last + "') ";
+  }
+
+  @Test
+  public void testSinglePartBetweenOnly() throws LensException {
+    Set<FactPartition> answeringParts = new LinkedHashSet<FactPartition>();
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, null));
+    String whereClause = getTimerangeWriter().getTimeRangeWhereClause(getMockedCubeContext(true), "test",
+      answeringParts);
+    validateBetweenOnlySingle(whereClause, null);
+
+    answeringParts = new LinkedHashSet<>();
+    answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, -1), DAILY, null, DB_FORMAT));
+    whereClause = getTimerangeWriter().getTimeRangeWhereClause(getMockedCubeContext(true), "test", answeringParts);
+    validateBetweenOnlySingle(whereClause, DB_FORMAT);
+
+  }
+
+  public void validateBetweenOnlySingle(String whereClause, DateFormat format) {
+    String expected = null;
+    if (format == null) {
+      expected =
+        getBetweenClause("test", "dt", getDateWithOffset(DAILY, -1), getDateWithOffset(DAILY, -1), DAILY.format());
+    } else {
+      expected = getBetweenClause("test", "dt", getDateWithOffset(DAILY, -1), getDateWithOffset(DAILY, -1), format);
+    }
+    Assert.assertEquals(expected, whereClause);
   }
 }
