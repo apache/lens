@@ -766,6 +766,10 @@ public class TestQueryService extends LensJerseyTest {
       Thread.sleep(1000);
     }
     assertEquals(ctx.getSelectedDriverConf().get(KEY_PRE_LAUNCH), VALUE_PRE_LAUNCH);
+    assertEquals(ctx.getSelectedDriverConf().get(PRE_REWRITE), PRE_REWRITE);
+    assertEquals(ctx.getSelectedDriverConf().get(POST_REWRITE), POST_REWRITE);
+    assertEquals(ctx.getSelectedDriverConf().get(PRE_ESTIMATE), PRE_ESTIMATE);
+    assertEquals(ctx.getSelectedDriverConf().get(POST_ESTIMATE), POST_ESTIMATE);
     assertTrue(lensQuery.getSubmissionTime() > 0);
     assertTrue(lensQuery.getLaunchTime() > 0);
     assertTrue(lensQuery.getDriverStartTime() > 0);

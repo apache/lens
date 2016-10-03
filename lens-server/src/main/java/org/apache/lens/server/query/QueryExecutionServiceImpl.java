@@ -1689,12 +1689,17 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         acquire(ctx.getLensSessionIdentifier());
         MethodMetricsContext rewriteGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
           REWRITE_GAUGE);
+        log.info("Calling preRewrite hook for driver {}", driver.getFullyQualifiedName());
+        driver.getQueryHook().preRewrite(ctx);
         // 1. Rewrite for driver
         rewriterRunnable.run();
         succeeded = rewriterRunnable.isSucceeded();
         if (!succeeded) {
           failureCause = rewriterRunnable.getFailureCause();
           cause = rewriterRunnable.getCause();
+        } else {
+          log.info("Calling postRewrite hook for driver {}", driver.getFullyQualifiedName());
+          driver.getQueryHook().postRewrite(ctx);
         }
 
         rewriteGauge.markSuccess();
@@ -1704,14 +1709,19 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           MethodMetricsContext estimateGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
             DRIVER_ESTIMATE_GAUGE);
 
+          log.info("Calling preEstimate hook for driver {}", driver.getFullyQualifiedName());
+          driver.getQueryHook().preEstimate(ctx);
           estimateRunnable.run();
           succeeded = estimateRunnable.isSucceeded();
-
           if (!succeeded) {
             failureCause = estimateRunnable.getFailureCause();
             cause = estimateRunnable.getCause();
             log.error("Estimate failed for driver {} cause: {}", driver, failureCause);
+          } else {
+            log.info("Calling postRewrite hook for driver {}", driver.getFullyQualifiedName());
+            driver.getQueryHook().postEstimate(ctx);
           }
+
           estimateGauge.markSuccess();
         } else {
           log.error("Estimate skipped since rewrite failed for driver {} cause: {}", driver, failureCause);

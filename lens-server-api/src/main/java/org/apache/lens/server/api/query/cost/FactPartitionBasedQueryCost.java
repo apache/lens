@@ -64,4 +64,9 @@ public class FactPartitionBasedQueryCost implements QueryCost<FactPartitionBased
   public int compareTo(final FactPartitionBasedQueryCost o) {
     return new Double(partitionCost).compareTo(o.partitionCost);
   }
+
+  @Override
+  public String toString() {
+    return getQueryCostType() + "(" + getEstimatedResourceUsage() + ")";
+  }
 }

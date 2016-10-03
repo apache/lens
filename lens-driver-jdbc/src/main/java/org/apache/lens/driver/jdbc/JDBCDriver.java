@@ -407,6 +407,7 @@ public class JDBCDriver extends AbstractLensDriver {
       queryHook = this.conf.getClass(
         JDBC_QUERY_HOOK_CLASS, NoOpDriverQueryHook.class, DriverQueryHook.class
       ).newInstance();
+      queryHook.setDriver(this);
     } catch (InstantiationException | IllegalAccessException e) {
       throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
     }

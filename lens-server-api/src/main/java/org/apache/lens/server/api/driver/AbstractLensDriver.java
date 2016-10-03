@@ -55,6 +55,7 @@ public abstract class AbstractLensDriver implements LensDriver {
       throw new LensException("Driver Type and Name can not be null or empty");
     }
     fullyQualifiedName = new StringBuilder(driverType).append(SEPARATOR).append(driverName).toString();
+    noOpDriverQueryHook.setDriver(this);
   }
 
   /**
