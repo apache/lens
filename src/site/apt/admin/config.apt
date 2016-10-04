@@ -36,245 +36,249 @@ Lens server configuration
 *--+--+---+--+
 |6|hive.server2.authentication.ldap.url| |LDAP connection URL|
 *--+--+---+--+
-|7|hive.server2.log.redirection.enabled|false|Disable the log direction on the lens server sessions. There are no logs required for each session in lens sessions. This will decrease number of file handles associated to lens server.|
+|7|hive.server2.idle.operation.timeout|0|Closing of operations should be handled by lens. Hive should not invalidate operations upon timeout|
 *--+--+---+--+
-|8|hive.server2.logging.operation.enabled|false|Disable the operation logging, since there are no execution operation happening in lens session. Keeping it true might conflict with Hive Server if both are running on the same machine causing disappearance of the operation log directory.|
+|8|hive.server2.idle.session.timeout|0|Session should be closed by lens. There would be a mismatch when hive has closed session due to timeout and lens is not aware of that.|
 *--+--+---+--+
-|9|lens.query.current.time.millis|0|Query current time in millis. This is used to resolve 'now'. If value is set to zero, 'now' is resolved to current value|
+|9|hive.server2.log.redirection.enabled|false|Disable the log direction on the lens server sessions. There are no logs required for each session in lens sessions. This will decrease number of file handles associated to lens server.|
 *--+--+---+--+
-|10|lens.server.alarm.service.impl|org.apache.lens.server.scheduler.AlarmService|Implementation class for alarm service|
+|10|hive.server2.logging.operation.enabled|false|Disable the operation logging, since there are no execution operation happening in lens session. Keeping it true might conflict with Hive Server if both are running on the same machine causing disappearance of the operation log directory.|
 *--+--+---+--+
-|11|lens.server.appevent.ws.listener.impl|org.apache.lens.server.LensApplicationListener|Implementation class for Lens Application Listener|
+|11|lens.query.current.time.millis|0|Query current time in millis. This is used to resolve 'now'. If value is set to zero, 'now' is resolved to current value|
 *--+--+---+--+
-|12|lens.server.base.url|http://0.0.0.0:9999/lensapi/|The base url for the lens server|
+|12|lens.server.alarm.service.impl|org.apache.lens.server.scheduler.AlarmService|Implementation class for alarm service|
 *--+--+---+--+
-|13|lens.server.consistentState.ws.filter.impl|org.apache.lens.server.ConsistentStateFilter|Implementation class for ConsistentState Filter|
+|13|lens.server.appevent.ws.listener.impl|org.apache.lens.server.LensApplicationListener|Implementation class for Lens Application Listener|
 *--+--+---+--+
-|14|lens.server.database.resource.dir|/tmp/lens/resources|Top level directory to store database specific static resources which are added to each database. To add a static resource for a DB, create a directory with the same name as that of the DB under this directory, and place the resources inside the DB directory. Any subdirectories under the DB directory and the resources under them will be ignored|
+|14|lens.server.base.url|http://0.0.0.0:9999/lensapi/|The base url for the lens server|
 *--+--+---+--+
-|15|lens.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored. Also used for database based user config loaders|
+|15|lens.server.consistentState.ws.filter.impl|org.apache.lens.server.ConsistentStateFilter|Implementation class for ConsistentState Filter|
 *--+--+---+--+
-|16|lens.server.db.jdbc.pass| |JDBC Password for Finished queries table. Also used for database based user config loaders|
+|16|lens.server.database.resource.dir|/tmp/lens/resources|Top level directory to store database specific static resources which are added to each database. To add a static resource for a DB, create a directory with the same name as that of the DB under this directory, and place the resources inside the DB directory. Any subdirectories under the DB directory and the resources under them will be ignored|
 *--+--+---+--+
-|17|lens.server.db.jdbc.url|jdbc:hsqldb:/tmp/lensserver/queries.db|JDBC URL where the database for storing finished queries is located. Also used for database based user config loaders|
+|17|lens.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored. Also used for database based user config loaders|
 *--+--+---+--+
-|18|lens.server.db.jdbc.user|SA|JDBC User for Finished queries table. Also used for database based user config loaders|
+|18|lens.server.db.jdbc.pass| |JDBC Password for Finished queries table. Also used for database based user config loaders|
 *--+--+---+--+
-|19|lens.server.db.validation.query|select 1 from INFORMATION_SCHEMA.SYSTEM_USERS|BasicDatasource has a config parameter called validationQuery. This query is run before passing the Datasource to the application to verify if connection is valid.\ |
+|19|lens.server.db.jdbc.url|jdbc:hsqldb:/tmp/lensserver/queries.db|JDBC URL where the database for storing finished queries is located. Also used for database based user config loaders|
+*--+--+---+--+
+|20|lens.server.db.jdbc.user|SA|JDBC User for Finished queries table. Also used for database based user config loaders|
+*--+--+---+--+
+|21|lens.server.db.validation.query|select 1 from INFORMATION_SCHEMA.SYSTEM_USERS|BasicDatasource has a config parameter called validationQuery. This query is run before passing the Datasource to the application to verify if connection is valid.\ |
 |  |                               |                                             |{{{http://commons.apache.org/proper/commons-dbcp/configuration.html}dbcp configuration}}                                                                           \ |
 |  |                               |                                             |{{{http://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases}validationquery for different databases}}                              \ |
 |  |                               |                                             |                                                                                                                                                                     |
 *--+--+---+--+
-|20|lens.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users. For the server, the username will be without domain and domain will come through conf.|
+|22|lens.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users. For the server, the username will be without domain and domain will come through conf.|
 *--+--+---+--+
-|21|lens.server.driver.selector.class|org.apache.lens.server.api.driver.MinQueryCostSelector|Class for selecting best driver given the query context|
+|23|lens.server.driver.selector.class|org.apache.lens.server.api.driver.MinQueryCostSelector|Class for selecting best driver given the query context|
 *--+--+---+--+
-|22|lens.server.drivers|hive:org.apache.lens.driver.hive.HiveDriver|Drivers enabled for this lens server instance|
+|24|lens.server.drivers|hive:org.apache.lens.driver.hive.HiveDriver|Drivers enabled for this lens server instance|
 *--+--+---+--+
-|23|lens.server.duplicate.query.allowed|false|If this is false and same query is submitted by a user in the same session and with the same configuration while earlier query is not completed then lens server will return the handle of the previous query|
+|25|lens.server.duplicate.query.allowed|false|If this is false and same query is submitted by a user in the same session and with the same configuration while earlier query is not completed then lens server will return the handle of the previous query|
 *--+--+---+--+
-|24|lens.server.enable.console.metrics|false|Enable metrics to be reported on console|
+|26|lens.server.enable.console.metrics|false|Enable metrics to be reported on console|
 *--+--+---+--+
-|25|lens.server.enable.csv.metrics|false|Enable metrics to be reported as csv files in a directory|
+|27|lens.server.enable.csv.metrics|false|Enable metrics to be reported as csv files in a directory|
 *--+--+---+--+
-|26|lens.server.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
+|28|lens.server.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
 *--+--+---+--+
-|27|lens.server.enable.graphite.metrics|false|Enable metrics to be reported on graphite|
+|29|lens.server.enable.graphite.metrics|false|Enable metrics to be reported on graphite|
 *--+--+---+--+
-|28|lens.server.enable.resource.method.metering|false|Whether to Enable metering for all resource methods.|
+|30|lens.server.enable.resource.method.metering|false|Whether to Enable metering for all resource methods.|
 *--+--+---+--+
-|29|lens.server.estimate.pool.keepalive.millis|60000|Thread keep alive time in milliseconds for the estimate thread pool. If there are no estimate requests for this period,then cached threads are released from the pool.|
+|31|lens.server.estimate.pool.keepalive.millis|60000|Thread keep alive time in milliseconds for the estimate thread pool. If there are no estimate requests for this period,then cached threads are released from the pool.|
 *--+--+---+--+
-|30|lens.server.estimate.pool.max.threads|100|Maximum number of threads in the estimate thread pool|
+|32|lens.server.estimate.pool.max.threads|100|Maximum number of threads in the estimate thread pool|
 *--+--+---+--+
-|31|lens.server.estimate.pool.min.threads|3|Minimum number of threads in the estimate thread pool|
+|33|lens.server.estimate.pool.min.threads|3|Minimum number of threads in the estimate thread pool|
 *--+--+---+--+
-|32|lens.server.estimate.timeout.millis|300000|Timeout for parallel query estimate calls in milliseconds. A driver needs to comeback with a query estimate within this timeout. If the timeout is reached, only the drivers that have provided an estimate would be considered for query selection. If the timeout is reached and none of the drivers have provided an estimate then estimate calls fails with an exception.|
+|34|lens.server.estimate.timeout.millis|300000|Timeout for parallel query estimate calls in milliseconds. A driver needs to comeback with a query estimate within this timeout. If the timeout is reached, only the drivers that have provided an estimate would be considered for query selection. If the timeout is reached and none of the drivers have provided an estimate then estimate calls fails with an exception.|
 *--+--+---+--+
-|33|lens.server.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
+|35|lens.server.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
 *--+--+---+--+
-|34|lens.server.grizzly.core.pool.size|20|Core pool size for lens grizzly server|
+|36|lens.server.grizzly.core.pool.size|20|Core pool size for lens grizzly server|
 *--+--+---+--+
-|35|lens.server.grizzly.max.pool.size|40|Max pool size for lens grizzly server|
+|37|lens.server.grizzly.max.pool.size|40|Max pool size for lens grizzly server|
 *--+--+---+--+
-|36|lens.server.hdfs.output.retention|1 day|hdfs output retention period. Default 1 day|
+|38|lens.server.hdfs.output.retention|1 day|hdfs output retention period. Default 1 day|
 *--+--+---+--+
-|37|lens.server.http.notification.conn.timeout.millis|5000|This is the connection timeout for all HTTP Notifications sent by lens server. Default connection timeout is 5 secs|
+|39|lens.server.http.notification.conn.timeout.millis|5000|This is the connection timeout for all HTTP Notifications sent by lens server. Default connection timeout is 5 secs|
 *--+--+---+--+
-|38|lens.server.http.notification.read.timeout.millis|10000|This is the read timeout for all HTTP Notifications sent by lens server. Default read timeout is 10 secs|
+|40|lens.server.http.notification.read.timeout.millis|10000|This is the read timeout for all HTTP Notifications sent by lens server. Default read timeout is 10 secs|
 *--+--+---+--+
-|39|lens.server.index.ws.resource.impl|org.apache.lens.server.IndexResource|Implementation class for Index Resource|
+|41|lens.server.index.ws.resource.impl|org.apache.lens.server.IndexResource|Implementation class for Index Resource|
 *--+--+---+--+
-|40|lens.server.inmemory.resultset.ttl.secs|300|This property defines the TTL(time to live) in seconds for all result sets of type InMemoryResultSet beyond which they are eligible for purging irrespective of whether the result set has been read or not. The default value is 300 seconds (5 minutes).|
+|42|lens.server.inmemory.resultset.ttl.secs|300|This property defines the TTL(time to live) in seconds for all result sets of type InMemoryResultSet beyond which they are eligible for purging irrespective of whether the result set has been read or not. The default value is 300 seconds (5 minutes).|
 *--+--+---+--+
-|41|lens.server.launcher.pool.keepalive.millis|60000|Thread keep alive time in milliseconds for the query launcher thread pool. If there are no query launches for this period,then cached threads will be released from the pool.|
+|43|lens.server.launcher.pool.keepalive.millis|60000|Thread keep alive time in milliseconds for the query launcher thread pool. If there are no query launches for this period,then cached threads will be released from the pool.|
 *--+--+---+--+
-|42|lens.server.launcher.pool.max.threads|100|Maximum number of threads in the query launcher thread pool. Keeping the default to hundred, we may never grow till there, it would go to max for concurrrent queries allowed on all drivers together. This value should be greater than the max concurrent queries allowed on all drivers.|
+|44|lens.server.launcher.pool.max.threads|100|Maximum number of threads in the query launcher thread pool. Keeping the default to hundred, we may never grow till there, it would go to max for concurrrent queries allowed on all drivers together. This value should be greater than the max concurrent queries allowed on all drivers.|
 *--+--+---+--+
-|43|lens.server.launcher.pool.min.threads|3|Minimum number of threads in the query launcher thread pool|
+|45|lens.server.launcher.pool.min.threads|3|Minimum number of threads in the query launcher thread pool|
 *--+--+---+--+
-|44|lens.server.log.ws.resource.impl|org.apache.lens.server.LogResource|Implementation class for Log Resource|
+|46|lens.server.log.ws.resource.impl|org.apache.lens.server.LogResource|Implementation class for Log Resource|
 *--+--+---+--+
-|45|lens.server.mail.from.address|blah@company.com|The from field in the notifier mail to the submitter.|
+|47|lens.server.mail.from.address|blah@company.com|The from field in the notifier mail to the submitter.|
 *--+--+---+--+
-|46|lens.server.mail.host|mail-host.company.com|SMTP Host for sending mail|
+|48|lens.server.mail.host|mail-host.company.com|SMTP Host for sending mail|
 *--+--+---+--+
-|47|lens.server.mail.port|25|SMTP Port|
+|49|lens.server.mail.port|25|SMTP Port|
 *--+--+---+--+
-|48|lens.server.mail.smtp.connectiontimeout|15000|Socket connection timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 15 seconds.|
+|50|lens.server.mail.smtp.connectiontimeout|15000|Socket connection timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 15 seconds.|
 *--+--+---+--+
-|49|lens.server.mail.smtp.timeout|30000|Socket read timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 30 seconds.|
+|51|lens.server.mail.smtp.timeout|30000|Socket read timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 30 seconds.|
 *--+--+---+--+
-|50|lens.server.max.sessions.per.user|10|Number of sessions can be allowed for each user. User has to close one of the active sessions to open a new session once limit is reached. Otherwise Server throws an exception by saying that opened session limit has been already reached for user.|
+|52|lens.server.max.sessions.per.user|10|Number of sessions can be allowed for each user. User has to close one of the active sessions to open a new session once limit is reached. Otherwise Server throws an exception by saying that opened session limit has been already reached for user.|
 *--+--+---+--+
-|51|lens.server.metastore.service.impl|org.apache.lens.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
+|53|lens.server.metastore.service.impl|org.apache.lens.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
 *--+--+---+--+
-|52|lens.server.metastore.ws.resource.impl|org.apache.lens.server.metastore.MetastoreResource|Implementation class for Metastore Resource|
+|54|lens.server.metastore.ws.resource.impl|org.apache.lens.server.metastore.MetastoreResource|Implementation class for Metastore Resource|
 *--+--+---+--+
-|53|lens.server.metrics.csv.directory.path|metrics/|Path of the directory in which to report metrics as separate csv files.|
+|55|lens.server.metrics.csv.directory.path|metrics/|Path of the directory in which to report metrics as separate csv files.|
 *--+--+---+--+
-|54|lens.server.metrics.ganglia.host| |The ganglia host name|
+|56|lens.server.metrics.ganglia.host| |The ganglia host name|
 *--+--+---+--+
-|55|lens.server.metrics.ganglia.port| |The ganglia port|
+|57|lens.server.metrics.ganglia.port| |The ganglia port|
 *--+--+---+--+
-|56|lens.server.metrics.graphite.host| |The graphite host name|
+|58|lens.server.metrics.graphite.host| |The graphite host name|
 *--+--+---+--+
-|57|lens.server.metrics.graphite.port| |The graphite port|
+|59|lens.server.metrics.graphite.port| |The graphite port|
 *--+--+---+--+
-|58|lens.server.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
+|60|lens.server.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
 *--+--+---+--+
-|59|lens.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests.|
+|61|lens.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests.|
 *--+--+---+--+
-|60|lens.server.moxyjson.ws.feature.impl|org.glassfish.jersey.moxy.json.MoxyJsonFeature|Enable Moxy json feature|
+|62|lens.server.moxyjson.ws.feature.impl|org.glassfish.jersey.moxy.json.MoxyJsonFeature|Enable Moxy json feature|
 *--+--+---+--+
-|61|lens.server.moxyjsonconfigresovler.ws.feature.impl|org.apache.lens.api.util.MoxyJsonConfigurationContextResolver|Moxy json configuration resolver|
+|63|lens.server.moxyjsonconfigresovler.ws.feature.impl|org.apache.lens.api.util.MoxyJsonConfigurationContextResolver|Moxy json configuration resolver|
 *--+--+---+--+
-|62|lens.server.multipart.ws.feature.impl|org.glassfish.jersey.media.multipart.MultiPartFeature|Implementation class for query scheduler resource|
+|64|lens.server.multipart.ws.feature.impl|org.glassfish.jersey.media.multipart.MultiPartFeature|Implementation class for query scheduler resource|
 *--+--+---+--+
-|63|lens.server.persist.location|file:///tmp/lensserver|The directory in which lens server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location|
+|65|lens.server.persist.location|file:///tmp/lensserver|The directory in which lens server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location|
 *--+--+---+--+
-|64|lens.server.query.acceptors| |Query Acceptors configured. Query acceptors are consulted first, before anything happens for the given query. They can either return null or return a messaging indicating why the given query shouldn't be accepted. These can be used to filter out queries at the earliest.|
+|66|lens.server.query.acceptors| |Query Acceptors configured. Query acceptors are consulted first, before anything happens for the given query. They can either return null or return a messaging indicating why the given query shouldn't be accepted. These can be used to filter out queries at the earliest.|
 *--+--+---+--+
-|65|lens.server.query.launching.constraint.factories|org.apache.lens.server.query.constraint.TotalQueryCostCeilingConstraintFactory|Factories used to instantiate constraints enforced on queries by lens. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint. A query will be launched only if all constraints pass.|
+|67|lens.server.query.launching.constraint.factories|org.apache.lens.server.query.constraint.TotalQueryCostCeilingConstraintFactory|Factories used to instantiate constraints enforced on queries by lens. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint. A query will be launched only if all constraints pass.|
 *--+--+---+--+
-|66|lens.server.query.phase1.rewriters| |Query phase 1 rewriters. This is to convert user query to cube query. The resulting cube query will be passed for validation and rewriting to hql query.\ |
+|68|lens.server.query.phase1.rewriters| |Query phase 1 rewriters. This is to convert user query to cube query. The resulting cube query will be passed for validation and rewriting to hql query.\ |
 |  |                                  | |Use cases will be to use extra intelligence to convert user query to optimized cube query.                                                              \ |
 |  |                                  | |Or define shortcuts for certain frequently used queries :)                                                                                                |
 *--+--+---+--+
-|67|lens.server.query.resultset.retention|1 day|Lens query resultset retention period. Default 1 day|
+|69|lens.server.query.resultset.retention|1 day|Lens query resultset retention period. Default 1 day|
 *--+--+---+--+
-|68|lens.server.query.service.impl|org.apache.lens.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
+|70|lens.server.query.service.impl|org.apache.lens.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|69|lens.server.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in logback xml for the class org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger|
+|71|lens.server.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in logback xml for the class org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger|
 *--+--+---+--+
-|70|lens.server.query.ws.resource.impl|org.apache.lens.server.query.QueryServiceResource|Implementation class for Query Resource|
+|72|lens.server.query.ws.resource.impl|org.apache.lens.server.query.QueryServiceResource|Implementation class for Query Resource|
 *--+--+---+--+
-|71|lens.server.querypurger.sleep.interval|10000|The interval(milliseconds) with which purger to run periodically. Default 10 sec.|
+|73|lens.server.querypurger.sleep.interval|10000|The interval(milliseconds) with which purger to run periodically. Default 10 sec.|
 *--+--+---+--+
-|72|lens.server.quota.service.impl|org.apache.lens.server.quota.QuotaServiceImpl|Implementation class for quota service|
+|74|lens.server.quota.service.impl|org.apache.lens.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|73|lens.server.quota.ws.resource.impl|org.apache.lens.server.quota.QuotaResource|Implementation class for Quota Resource|
+|75|lens.server.quota.ws.resource.impl|org.apache.lens.server.quota.QuotaResource|Implementation class for Quota Resource|
 *--+--+---+--+
-|74|lens.server.requestlogger.ws.filter.impl|org.apache.lens.server.LensRequestLoggingFilter|Implementation class for Request logging Filter|
+|76|lens.server.requestlogger.ws.filter.impl|org.apache.lens.server.LensRequestLoggingFilter|Implementation class for Request logging Filter|
 *--+--+---+--+
-|75|lens.server.resultset.purge.enabled|false|Whether to purge the query results|
+|77|lens.server.resultset.purge.enabled|false|Whether to purge the query results|
 *--+--+---+--+
-|76|lens.server.resultsetpurger.sleep.interval.secs|3600|Periodicity for Query result purger runs. Default 1 hour.|
+|78|lens.server.resultsetpurger.sleep.interval.secs|3600|Periodicity for Query result purger runs. Default 1 hour.|
 *--+--+---+--+
-|77|lens.server.savedquery.jdbc.dialectclass|org.apache.lens.server.query.save.SavedQueryDao$HSQLDialect|Dialect of the target DB, Default is HSQL. Override with the target DB used.|
+|79|lens.server.savedquery.jdbc.dialectclass|org.apache.lens.server.query.save.SavedQueryDao$HSQLDialect|Dialect of the target DB, Default is HSQL. Override with the target DB used.|
 *--+--+---+--+
-|78|lens.server.savedquery.list.default.count|20|Key denoting the default fetch value of saved query list api.|
+|80|lens.server.savedquery.list.default.count|20|Key denoting the default fetch value of saved query list api.|
 *--+--+---+--+
-|79|lens.server.savedquery.list.default.offset|0|Key denoting the default start value of saved query list api.|
+|81|lens.server.savedquery.list.default.offset|0|Key denoting the default start value of saved query list api.|
 *--+--+---+--+
-|80|lens.server.savedquery.service.impl|org.apache.lens.server.query.save.SavedQueryServiceImpl|Implementation class for saved query service|
+|82|lens.server.savedquery.service.impl|org.apache.lens.server.query.save.SavedQueryServiceImpl|Implementation class for saved query service|
 *--+--+---+--+
-|81|lens.server.savedquery.ws.resource.impl|org.apache.lens.server.query.save.SavedQueryResource|Implementation class for Saved query Resource|
+|83|lens.server.savedquery.ws.resource.impl|org.apache.lens.server.query.save.SavedQueryResource|Implementation class for Saved query Resource|
 *--+--+---+--+
-|82|lens.server.scheduler.max.job.per.user|-1|The maximum number of jobs per user which can be scheduled. -1 means unlimited jobs.|
+|84|lens.server.scheduler.max.job.per.user|-1|The maximum number of jobs per user which can be scheduled. -1 means unlimited jobs.|
 *--+--+---+--+
-|83|lens.server.scheduler.service.impl|org.apache.lens.server.scheduler.SchedulerServiceImpl|Implementation class for query scheduler service|
+|85|lens.server.scheduler.service.impl|org.apache.lens.server.scheduler.SchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
-|84|lens.server.scheduler.store.class|org.apache.lens.server.scheduler.SchedulerDAO$SchedulerHsqlDBStore|A subclass of SchedulerDBStore class used for storing scheduler related information.|
+|86|lens.server.scheduler.store.class|org.apache.lens.server.scheduler.SchedulerDAO$SchedulerHsqlDBStore|A subclass of SchedulerDBStore class used for storing scheduler related information.|
 *--+--+---+--+
-|85|lens.server.scheduler.ws.resource.impl|org.apache.lens.server.scheduler.ScheduleResource|Implementation class for query scheduler resource|
+|87|lens.server.scheduler.ws.resource.impl|org.apache.lens.server.scheduler.ScheduleResource|Implementation class for query scheduler resource|
 *--+--+---+--+
-|86|lens.server.scheduling.queue.poll.interval.millisec|2000|The interval at which submission thread will poll scheduling queue to fetch the next query for submission. If value is less than equal to 0, then it would mean that thread will continuosly poll without sleeping. The interval has to be given in milliseconds.|
+|88|lens.server.scheduling.queue.poll.interval.millisec|2000|The interval at which submission thread will poll scheduling queue to fetch the next query for submission. If value is less than equal to 0, then it would mean that thread will continuosly poll without sleeping. The interval has to be given in milliseconds.|
 *--+--+---+--+
-|87|lens.server.serverMode.ws.filter.impl|org.apache.lens.server.ServerModeFilter|Implementation class for ServerMode Filter|
+|89|lens.server.serverMode.ws.filter.impl|org.apache.lens.server.ServerModeFilter|Implementation class for ServerMode Filter|
 *--+--+---+--+
-|88|lens.server.service.provider.factory|org.apache.lens.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used to lookup the factory implementation class name that would provide an instance of ServiceProvider. Users should instantiate the class to obtain its instance. Example -- Class spfClass = conf.getClass("lens.server.service.provider.factory", null, ServiceProviderFactory.class); ServiceProviderFactory spf = spfClass.newInstance(); ServiceProvider serviceProvider = spf.getServiceProvider(); -- This is not supposed to be overridden by users.|
+|90|lens.server.service.provider.factory|org.apache.lens.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used to lookup the factory implementation class name that would provide an instance of ServiceProvider. Users should instantiate the class to obtain its instance. Example -- Class spfClass = conf.getClass("lens.server.service.provider.factory", null, ServiceProviderFactory.class); ServiceProviderFactory spf = spfClass.newInstance(); ServiceProvider serviceProvider = spf.getServiceProvider(); -- This is not supposed to be overridden by users.|
 *--+--+---+--+
-|89|lens.server.servicenames|session,alarm,query,savedquery,metastore,scheduler,quota|These services would be started in the specified order when lens-server starts up|
+|91|lens.server.servicenames|session,alarm,query,savedquery,metastore,scheduler,quota|These services would be started in the specified order when lens-server starts up|
 *--+--+---+--+
-|90|lens.server.session.expiry.service.interval.secs|3600|Interval at which lens session expiry service runs|
+|92|lens.server.session.expiry.service.interval.secs|3600|Interval at which lens session expiry service runs|
 *--+--+---+--+
-|91|lens.server.session.service.impl|org.apache.lens.server.session.HiveSessionService|Implementation class for session service|
+|93|lens.server.session.service.impl|org.apache.lens.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
-|92|lens.server.session.timeout.seconds|86400|Lens session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
+|94|lens.server.session.timeout.seconds|86400|Lens session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
-|93|lens.server.session.ws.resource.impl|org.apache.lens.server.session.SessionResource|Implementation class for Session Resource|
+|95|lens.server.session.ws.resource.impl|org.apache.lens.server.session.SessionResource|Implementation class for Session Resource|
 *--+--+---+--+
-|94|lens.server.state.persist.out.stream.buffer.size|1048576|Output Stream Buffer Size used in writing lens server state to file system. Size is in bytes.|
+|96|lens.server.state.persist.out.stream.buffer.size|1048576|Output Stream Buffer Size used in writing lens server state to file system. Size is in bytes.|
 *--+--+---+--+
-|95|lens.server.state.persistence.enabled|true|If flag is enabled, state of all the services will be persisted periodically to a location specified by lens.server.persist.location and on server restart all the services will be started from last saved state.|
+|97|lens.server.state.persistence.enabled|true|If flag is enabled, state of all the services will be persisted periodically to a location specified by lens.server.persist.location and on server restart all the services will be started from last saved state.|
 *--+--+---+--+
-|96|lens.server.state.persistence.interval.millis|300000|Lens server state persistence time interval in milliseconds|
+|98|lens.server.state.persistence.interval.millis|300000|Lens server state persistence time interval in milliseconds|
 *--+--+---+--+
-|97|lens.server.statistics.db|lensstats|Database to which statistics tables are created and partitions are added.|
+|99|lens.server.statistics.db|lensstats|Database to which statistics tables are created and partitions are added.|
 *--+--+---+--+
-|98|lens.server.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
+|100|lens.server.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
 *--+--+---+--+
-|99|lens.server.statistics.store.class|org.apache.lens.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Lens Statistics.|
+|101|lens.server.statistics.store.class|org.apache.lens.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Lens Statistics.|
 *--+--+---+--+
-|100|lens.server.statistics.warehouse.dir|file:///tmp/lens/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
+|102|lens.server.statistics.warehouse.dir|file:///tmp/lens/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
 *--+--+---+--+
-|101|lens.server.status.update.exponential.wait.millis|30000|Number of millis that would grow exponentially for next update, incase of transient failures.|
+|103|lens.server.status.update.exponential.wait.millis|30000|Number of millis that would grow exponentially for next update, incase of transient failures.|
 *--+--+---+--+
-|102|lens.server.status.update.maximum.delay.secs|1800|The maximum delay in seconds for next status update to happen after any transient failure. This will be used a maximum delay sothat exponential wait times not to grow to bigger value.|
+|104|lens.server.status.update.maximum.delay.secs|1800|The maximum delay in seconds for next status update to happen after any transient failure. This will be used a maximum delay sothat exponential wait times not to grow to bigger value.|
 *--+--+---+--+
-|103|lens.server.status.update.num.retries|10|The number of retries a status update will tried with exponentital back off, in case of transient issues, upon which query will be marked FAILED.|
+|105|lens.server.status.update.num.retries|10|The number of retries a status update will tried with exponentital back off, in case of transient issues, upon which query will be marked FAILED.|
 *--+--+---+--+
-|104|lens.server.total.query.cost.ceiling.per.user|-1.0|A query submitted by user will be launched only if total query cost of all current launched queries of user is less than or equal to total query cost ceiling defined by this property. This configuration value is only useful when TotalQueryCostCeilingConstraint is enabled by using org.apache.lens.server.query.constraint.TotalQueryCostCeilingConstraintFactory as one of the factories in lens.server.query.constraint.factories property. Default is -1.0 which means that there is no limit on the total query cost of launched queries submitted by a user.|
+|106|lens.server.total.query.cost.ceiling.per.user|-1.0|A query submitted by user will be launched only if total query cost of all current launched queries of user is less than or equal to total query cost ceiling defined by this property. This configuration value is only useful when TotalQueryCostCeilingConstraint is enabled by using org.apache.lens.server.query.constraint.TotalQueryCostCeilingConstraintFactory as one of the factories in lens.server.query.constraint.factories property. Default is -1.0 which means that there is no limit on the total query cost of launched queries submitted by a user.|
 *--+--+---+--+
-|105|lens.server.user.resolver.custom.class|full.package.name.Classname|Required for CUSTOM user resolver. In case the provided implementations are not sufficient for user config resolver, a custom classname can be provided. Class should extend org.apache.lens.server.user.UserConfigLoader|
+|107|lens.server.user.resolver.custom.class|full.package.name.Classname|Required for CUSTOM user resolver. In case the provided implementations are not sufficient for user config resolver, a custom classname can be provided. Class should extend org.apache.lens.server.user.UserConfigLoader|
 *--+--+---+--+
-|106|lens.server.user.resolver.db.keys|lens.session.cluster.user,mapred.job.queue.name|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loaders, the conf keys that will be loaded from database.|
+|108|lens.server.user.resolver.db.keys|lens.session.cluster.user,mapred.job.queue.name|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loaders, the conf keys that will be loaded from database.|
 *--+--+---+--+
-|107|lens.server.user.resolver.db.query|select clusteruser,queue from user_config_table where username=?|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loader, this query will be run with single argument = logged in user and the result columns will be assigned to lens.server.user.resolver.db.keys in order. For ldap backed database resolver, the argument to this query will be the intermediate values obtained from ldap.|
+|109|lens.server.user.resolver.db.query|select clusteruser,queue from user_config_table where username=?|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loader, this query will be run with single argument = logged in user and the result columns will be assigned to lens.server.user.resolver.db.keys in order. For ldap backed database resolver, the argument to this query will be the intermediate values obtained from ldap.|
 *--+--+---+--+
-|108|lens.server.user.resolver.fixed.value| |Required for FIXED user resolver. when lens.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.|
+|110|lens.server.user.resolver.fixed.value| |Required for FIXED user resolver. when lens.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.|
 *--+--+---+--+
-|109|lens.server.user.resolver.ldap.bind.dn| |Required for LDAP_BACKED_DATABASE user resolvers. ldap dn for admin binding example: CN=company-it-admin,ou=service-account,ou=company-service-account,dc=dc1,dc=com...|
+|111|lens.server.user.resolver.ldap.bind.dn| |Required for LDAP_BACKED_DATABASE user resolvers. ldap dn for admin binding example: CN=company-it-admin,ou=service-account,ou=company-service-account,dc=dc1,dc=com...|
 *--+--+---+--+
-|110|lens.server.user.resolver.ldap.bind.password| |Required for LDAP_BACKED_DATABASE user resolvers. ldap password for admin binding above|
+|112|lens.server.user.resolver.ldap.bind.password| |Required for LDAP_BACKED_DATABASE user resolvers. ldap password for admin binding above|
 *--+--+---+--+
-|111|lens.server.user.resolver.ldap.fields|department|Required for LDAP_BACKED_DATABASE user resolvers. list of fields to be obtained from ldap. These will be cached by the intermediate db.|
+|113|lens.server.user.resolver.ldap.fields|department|Required for LDAP_BACKED_DATABASE user resolvers. list of fields to be obtained from ldap. These will be cached by the intermediate db.|
 *--+--+---+--+
-|112|lens.server.user.resolver.ldap.intermediate.db.delete.sql|delete from user_department where username=?|Required for LDAP_BACKED_DATABASE user resolvers. query to delete intermediate values from database backing ldap as cache. one argument: logged in user.|
+|114|lens.server.user.resolver.ldap.intermediate.db.delete.sql|delete from user_department where username=?|Required for LDAP_BACKED_DATABASE user resolvers. query to delete intermediate values from database backing ldap as cache. one argument: logged in user.|
 *--+--+---+--+
-|113|lens.server.user.resolver.ldap.intermediate.db.insert.sql|insert into user_department (username, department, expiry) values (?, ?, ?)|Required for LDAP_BACKED_DATABASE user resolvers. query to insert intermediate values from database backing ldap as cache. arguments: first logged in user, then all intermediate values, then current time + expiration time|
+|115|lens.server.user.resolver.ldap.intermediate.db.insert.sql|insert into user_department (username, department, expiry) values (?, ?, ?)|Required for LDAP_BACKED_DATABASE user resolvers. query to insert intermediate values from database backing ldap as cache. arguments: first logged in user, then all intermediate values, then current time + expiration time|
 *--+--+---+--+
-|114|lens.server.user.resolver.ldap.intermediate.db.query|select department from user_department where username=? and expiry>?|Required for LDAP_BACKED_DATABASE user resolvers. query to obtain intermediate values from database backing ldap as cache. two arguments: logged in user and current time.|
+|116|lens.server.user.resolver.ldap.intermediate.db.query|select department from user_department where username=? and expiry>?|Required for LDAP_BACKED_DATABASE user resolvers. query to obtain intermediate values from database backing ldap as cache. two arguments: logged in user and current time.|
 *--+--+---+--+
-|115|lens.server.user.resolver.ldap.search.base| |Required for LDAP_BACKED_DATABASE user resolvers. for searching intermediate values for a user, the search keys. example: cn=users,dc=dc1,dc=dc2...|
+|117|lens.server.user.resolver.ldap.search.base| |Required for LDAP_BACKED_DATABASE user resolvers. for searching intermediate values for a user, the search keys. example: cn=users,dc=dc1,dc=dc2...|
 *--+--+---+--+
-|116|lens.server.user.resolver.ldap.search.filter|(&(objectClass=user)(sAMAccountName=%s))|Required for LDAP_BACKED_DATABASE user resolvers. filter pattern for ldap search|
+|118|lens.server.user.resolver.ldap.search.filter|(&(objectClass=user)(sAMAccountName=%s))|Required for LDAP_BACKED_DATABASE user resolvers. filter pattern for ldap search|
 *--+--+---+--+
-|117|lens.server.user.resolver.ldap.url| |Required for LDAP_BACKED_DATABASE user resolvers. ldap url to connect to.|
+|119|lens.server.user.resolver.ldap.url| |Required for LDAP_BACKED_DATABASE user resolvers. ldap url to connect to.|
 *--+--+---+--+
-|118|lens.server.user.resolver.propertybased.filename|/path/to/propertyfile|Required for PROPERTYBASED user resolver. when lens.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to determine cluster user. Each line should contain username followed by DOT followed by property full name followed by equal-to sign and followed by value. example schema of the file is: user1.lens.server.cluster.user=clusteruser1 user1.mapred.job.queue.name=queue1 *.lens.server.cluster.user=defaultclusteruser *.mapred.job.queue.name=default|
+|120|lens.server.user.resolver.propertybased.filename|/path/to/propertyfile|Required for PROPERTYBASED user resolver. when lens.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to determine cluster user. Each line should contain username followed by DOT followed by property full name followed by equal-to sign and followed by value. example schema of the file is: user1.lens.server.cluster.user=clusteruser1 user1.mapred.job.queue.name=queue1 *.lens.server.cluster.user=defaultclusteruser *.mapred.job.queue.name=default|
 *--+--+---+--+
-|119|lens.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, LDAP_BACKED_DATABASE, CUSTOM.|
+|121|lens.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, LDAP_BACKED_DATABASE, CUSTOM.|
 *--+--+---+--+
-|120|lens.server.waiting.queries.selection.policy.factories|org.apache.lens.server.query.collect.UserSpecificWaitingQueriesSelectionPolicyFactory|Factories used to instantiate waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
+|122|lens.server.waiting.queries.selection.policy.factories|org.apache.lens.server.query.collect.UserSpecificWaitingQueriesSelectionPolicyFactory|Factories used to instantiate waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
 *--+--+---+--+
-|121|lens.server.ws.featurenames|multipart,moxyjson,moxyjsonconfigresovler|These JAX-RS Feature(s) would be started in the specified order when lens-server starts up|
+|123|lens.server.ws.featurenames|multipart,moxyjson,moxyjsonconfigresovler|These JAX-RS Feature(s) would be started in the specified order when lens-server starts up|
 *--+--+---+--+
-|122|lens.server.ws.filternames|requestlogger,consistentState,serverMode|These JAX-RS filters would be started in the specified order when lens-server starts up|
+|124|lens.server.ws.filternames|requestlogger,consistentState,serverMode|These JAX-RS filters would be started in the specified order when lens-server starts up|
 *--+--+---+--+
-|123|lens.server.ws.listenernames|appevent|These listeners would be called in the specified order when lens-server starts up|
+|125|lens.server.ws.listenernames|appevent|These listeners would be called in the specified order when lens-server starts up|
 *--+--+---+--+
-|124|lens.server.ws.resourcenames|session,metastore,query,savedquery,quota,scheduler,index,log|These JAX-RS resources would be started in the specified order when lens-server starts up|
+|126|lens.server.ws.resourcenames|session,metastore,query,savedquery,quota,scheduler,index,log|These JAX-RS resources would be started in the specified order when lens-server starts up|
 *--+--+---+--+
 The configuration parameters and their default values

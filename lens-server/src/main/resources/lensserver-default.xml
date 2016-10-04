@@ -491,6 +491,18 @@
   <!-- CLI service properties which can be overriden for LENS services -->
 
   <property>
+    <name>hive.server2.idle.session.timeout</name>
+    <value>0</value>
+    <description>Session should be closed by lens. There would be a mismatch when hive has closed session due to timeout
+    and lens is not aware of that.</description>
+  </property>
+    <property>
+    <name>hive.server2.idle.operation.timeout</name>
+    <value>0</value>
+    <description>Closing of operations should be handled by lens. Hive should not invalidate operations upon timeout
+    </description>
+  </property>
+  <property>
     <name>hive.server2.async.exec.threads</name>
     <value>5</value>
     <description>Number of threads required in async thread pool for query execution in the lens directly. Lens uses
