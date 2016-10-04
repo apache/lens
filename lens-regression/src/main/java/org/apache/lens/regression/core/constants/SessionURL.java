@@ -30,5 +30,6 @@ public class SessionURL {
   public static final String SESSION_ADD_RESOURCE_URL = SESSION_BASE_URL + "/resources/add";
   public static final String SESSION_REMOVE_RESOURCE_URL = SESSION_BASE_URL + "/resources/delete";
   public static final String SESSION_LIST_RESOURCE_URL = SESSION_BASE_URL + "/resources/list";
+  public static final String SESSIONS_LIST_URL = SESSION_BASE_URL + "/sessions";
 
 }

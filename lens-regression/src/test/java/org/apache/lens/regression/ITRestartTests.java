@@ -49,11 +49,6 @@ public class ITRestartTests extends BaseTestClass {
   WebTarget servLens;
   String sessionHandleString;
 
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
-
   private static String hiveDriver = "hive/hive1";
   private static String jdbcDriver = "jdbc/jdbc1";
 

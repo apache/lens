@@ -32,11 +32,7 @@ import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.regression.core.constants.QueryInventory;
-import org.apache.lens.regression.core.helpers.LensServerHelper;
-import org.apache.lens.regression.core.helpers.MetastoreHelper;
-import org.apache.lens.regression.core.helpers.QueryHelper;
 import org.apache.lens.regression.core.helpers.ServiceManagerHelper;
-import org.apache.lens.regression.core.helpers.SessionHelper;
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
 import org.apache.lens.server.LensRequestListener;
 import org.apache.lens.server.api.query.QueryExecutionService;
@@ -53,11 +49,6 @@ public class ITMetricsTest extends BaseTestClass {
 
   WebTarget servLens;
   String sessionHandleString;
-
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
 
   private static String admin = "/metrics?pretty=true";
   private static Logger logger = Logger.getLogger(ITMetricsTest.class);

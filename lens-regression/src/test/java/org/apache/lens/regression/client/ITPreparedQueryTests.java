@@ -36,11 +36,7 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
 import org.apache.lens.regression.core.constants.QueryInventory;
 import org.apache.lens.regression.core.constants.QueryURL;
-import org.apache.lens.regression.core.helpers.LensServerHelper;
-import org.apache.lens.regression.core.helpers.MetastoreHelper;
-import org.apache.lens.regression.core.helpers.QueryHelper;
 import org.apache.lens.regression.core.helpers.ServiceManagerHelper;
-import org.apache.lens.regression.core.helpers.SessionHelper;
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
@@ -60,11 +56,6 @@ public class ITPreparedQueryTests extends BaseTestClass {
 
   WebTarget servLens;
   String sessionHandleString;
-
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
 
   private static Map<String, String> defaultParams = new HashMap<String, String>();
   static {
@@ -97,7 +88,7 @@ public class ITPreparedQueryTests extends BaseTestClass {
   public void testPrepareAndExecutePreparedQuery()  throws Exception {
 
     sHelper.setAndValidateParam(defaultParams);
-    QueryPrepareHandle queryPrepareHandle = qHelper.submitPreparedQuery(QueryInventory.QUERY);
+    QueryPrepareHandle queryPrepareHandle = qHelper.submitPreparedQuery(QueryInventory.JDBC_DIM_QUERY);
     Assert.assertNotNull(queryPrepareHandle, "Query Execute Failed");
     logger.info("PREPARE QUERY HANDLE : " + queryPrepareHandle);
 
@@ -105,11 +96,11 @@ public class ITPreparedQueryTests extends BaseTestClass {
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
     InMemoryQueryResult result = (InMemoryQueryResult) qHelper.getResultSet(queryHandle);
-    validateInMemoryResultSet(result);
+    Assert.assertEquals(result.getRows().size(), 2);
   }
 
   // This is failing
-  @Test(enabled = false)
+  @Test(enabled = true)
   public void testPrepareAndExecuteTimeoutPreparedQuery()  throws Exception {
 
     sHelper.setAndValidateParam(defaultParams);
@@ -141,7 +132,7 @@ public class ITPreparedQueryTests extends BaseTestClass {
 
     logger.info("Get Should now give 404");
     response = qHelper.getPreparedQuery(queryPrepareHandle);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
   }
 
   @Test
@@ -323,10 +314,10 @@ public class ITPreparedQueryTests extends BaseTestClass {
     qHelper.destroyPreparedQuery();
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
 
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
 
   }
 
@@ -355,16 +346,16 @@ public class ITPreparedQueryTests extends BaseTestClass {
     qHelper.destroyPreparedQuery(name1);
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
     //AssertUtil.assertSucceededResponse(response);
 
     qHelper.destroyPreparedQuery(name2);
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
 
   }
 
@@ -393,16 +384,16 @@ public class ITPreparedQueryTests extends BaseTestClass {
     qHelper.destroyPreparedQuery(null, lens.getUserName());
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
 //    Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
     qHelper.destroyPreparedQuery(null, user);
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
   }
 
   //jira raised LENS-567
@@ -441,16 +432,16 @@ public class ITPreparedQueryTests extends BaseTestClass {
     qHelper.destroyPreparedQuery(null, null, sessionHandleString, startTime, endTime);
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
     AssertUtil.assertSucceededResponse(response);
 
     qHelper.destroyPreparedQuery(null, null, sessionHandleString, startTime1, endTime1);
 
     response = qHelper.getPreparedQuery(queryPrepareHandle1);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
     response = qHelper.getPreparedQuery(queryPrepareHandle2);
-    AssertUtil.assertFailedResponse(response);
+    AssertUtil.assertNotFound(response);
 
   }
 

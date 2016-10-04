@@ -34,11 +34,7 @@ import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.regression.core.constants.DriverConfig;
 import org.apache.lens.regression.core.constants.QueryInventory;
-import org.apache.lens.regression.core.helpers.LensServerHelper;
-import org.apache.lens.regression.core.helpers.MetastoreHelper;
-import org.apache.lens.regression.core.helpers.QueryHelper;
 import org.apache.lens.regression.core.helpers.ServiceManagerHelper;
-import org.apache.lens.regression.core.helpers.SessionHelper;
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
 import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.LensConfConstants;
@@ -54,22 +50,19 @@ public class Throttling extends BaseTestClass {
   WebTarget servLens;
   String sessionHandleString;
 
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
-
   public static final String SLEEP_QUERY = QueryInventory.getSleepQuery("5");
-  public static final String COST_95 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_95"), "7");
-  public static final String COST_60 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_60"), "7");
-  public static final String COST_30 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_30"), "6");
-  public static final String COST_20 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_20"), "6");
-  public static final String COST_10 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_10"), "6");
-  public static final String COST_5 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_5"), "5");
+  public static final String COST_95 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_95"), "5");
+  public static final String COST_60 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_60"), "5");
+  public static final String COST_30 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_30"), "5");
+  public static final String COST_20 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_20"), "4");
+  public static final String COST_10 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_10"), "4");
+  public static final String COST_5 = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_5"), "3");
   public static final String JDBC_QUERY1 = QueryInventory.getQueryFromInventory("JDBC.QUERY1");
 
   private static String hiveDriver = "hive/hive1";
-  String hiveDriverConf = lens.getServerDir() + "/conf/drivers/hive/hive1/hivedriver-site.xml";
+  private final String hiveDriverConf = lens.getServerDir() + "/conf/drivers/hive/hive1/hivedriver-site.xml";
+  private final String backupConfFilePath = lens.getServerDir() + "/conf/drivers/hive/hive1/backup-hivedriver-site.xml";
+
   private static final long SECONDS_IN_A_MINUTE = 60;
   private String session1 = null, session2 = null;
   //TODO : Read queue names from property file
@@ -89,10 +82,11 @@ public class Throttling extends BaseTestClass {
   @BeforeMethod(alwaysRun = true)
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
+    Util.runRemoteCommand("cp " + hiveDriverConf + " " + backupConfFilePath);
+
     sessionHandleString = sHelper.openSession(lens.getCurrentDB());
     session1 = sHelper.openSession("diff1", "diff1", lens.getCurrentDB());
     session2 = sHelper.openSession("diff2", "diff2", lens.getCurrentDB());
-
     sHelper.setAndValidateParam(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
     sHelper.setAndValidateParam(session1, CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
     sHelper.setAndValidateParam(session2, CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
@@ -108,12 +102,12 @@ public class Throttling extends BaseTestClass {
     sHelper.closeSession(session2);
     sHelper.closeSession(sessionHandleString);
 
-    Util.changeConfig(hiveDriverConf);
-    lens.restart();
+    Util.runRemoteCommand("cp " + backupConfFilePath + " " + hiveDriverConf);
   }
 
-  @AfterClass(alwaysRun = true)
+  @AfterClass(alwaysRun = false)
   public void closeSession() throws Exception {
+    lens.restart();
   }
 
 
@@ -348,6 +342,43 @@ public class Throttling extends BaseTestClass {
     qHelper.waitForCompletion(handleList.get(2));
     Assert.assertEquals(qHelper.getQueryStatus(handleList.get(4)).getStatus(), QueryStatus.Status.RUNNING);
   }
+
+  // LENS-1027
+  @Test(enabled = true)
+  public void queueDefaultThresholdConstraint() throws Exception {
+
+    int maxConcurrent = 5, queue1Count = 1, queue2Count = 2;
+    HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES,
+        String.valueOf(maxConcurrent), DriverConfig.QUEUE_MAX_CONCURRENT,
+        "*=" + String.valueOf(queue1Count) + "," + queue2 + "=" + String.valueOf(queue2Count));
+    List<QueryHandle> handleList = new ArrayList<>();
+
+    Util.changeConfig(map, hiveDriverConf);
+    lens.restart();
+
+    sHelper.setAndValidateParam(LensConfConstants.MAPRED_JOB_QUEUE_NAME, queue1);
+    handleList.add((QueryHandle) qHelper.executeQuery(COST_60).getData());
+    handleList.add((QueryHandle) qHelper.executeQuery(COST_95).getData());
+
+    sHelper.setAndValidateParam(LensConfConstants.MAPRED_JOB_QUEUE_NAME, queue2);
+    handleList.add((QueryHandle) qHelper.executeQuery(COST_60).getData());
+    handleList.add((QueryHandle) qHelper.executeQuery(COST_95).getData());
+    handleList.add((QueryHandle) qHelper.executeQuery(COST_95).getData());
+
+    Thread.sleep(2000);
+
+    List<QueryStatus.Status> statusList = new ArrayList<>();
+    for (QueryHandle handle : handleList){
+      statusList.add(qHelper.getQueryStatus(handle).getStatus());
+    }
+
+    Assert.assertEquals(statusList.get(0), QueryStatus.Status.RUNNING);
+    Assert.assertEquals(statusList.get(1), QueryStatus.Status.QUEUED);
+    Assert.assertEquals(statusList.get(2), QueryStatus.Status.RUNNING);
+    Assert.assertEquals(statusList.get(3), QueryStatus.Status.RUNNING);
+    Assert.assertEquals(statusList.get(4), QueryStatus.Status.QUEUED);
+  }
+
 
   @Test(enabled = true)
   public void enableQueueThrottlingWithExistingQueuedQueries() throws Exception {

@@ -43,11 +43,6 @@ public class ITListQueryTest extends BaseTestClass {
   WebTarget servLens;
   private String sessionHandleString;
 
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
-
   String jdbcDriver = "jdbc/jdbc1", hiveDriver = "hive/hive1";
   String sleepQuery = QueryInventory.getSleepQuery("5");
 

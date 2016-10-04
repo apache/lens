@@ -20,6 +20,7 @@
 package org.apache.lens.regression.core.helpers;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.GenericType;
@@ -28,6 +29,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.StringList;
+import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.regression.core.constants.SessionURL;
 import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
@@ -119,7 +121,7 @@ public class SessionHelper extends ServiceManagerHelper {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     Response response = this.exec("delete", SessionURL.SESSION_BASE_URL, servLens, null, query, null,
         outputMediaType, null);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
     log.info("Closed Session : {}", sessionHandleString);
   }
 
@@ -191,7 +193,7 @@ public class SessionHelper extends ServiceManagerHelper {
     Response response = this.exec("put", SessionURL.SESSION_ADD_RESOURCE_URL, servLens, null, null,
         MediaType.MULTIPART_FORM_DATA_TYPE, null, formData.getForm());
     log.info("Response : {}", response);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void addResourcesJar(String path) throws  LensException {
@@ -213,7 +215,7 @@ public class SessionHelper extends ServiceManagerHelper {
     Response response = this.exec("put", SessionURL.SESSION_REMOVE_RESOURCE_URL, servLens, null, null,
         MediaType.MULTIPART_FORM_DATA_TYPE, null,  formData.getForm());
     log.info("Response : {}", response);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void removeResourcesJar(String path) throws LensException {
@@ -231,6 +233,13 @@ public class SessionHelper extends ServiceManagerHelper {
 
   public String getSessionParam(String param) throws Exception {
     return getSessionParam(sessionHandleString, param);
+  }
+
+  public List<UserSessionInfo> getSessionList() throws Exception {
+    Response response = this.exec("get", SessionURL.SESSIONS_LIST_URL, servLens, null, null);
+    AssertUtil.assertSucceededResponse(response);
+    List<UserSessionInfo> sessionInfoList = response.readEntity(new GenericType<List<UserSessionInfo>>(){});
+    return sessionInfoList;
   }
 
 }

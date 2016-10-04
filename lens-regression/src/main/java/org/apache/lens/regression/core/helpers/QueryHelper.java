@@ -127,7 +127,7 @@ public class QueryHelper extends ServiceManagerHelper {
     }
     Response response = this.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
         MediaType.APPLICATION_XML, formData.getForm());
-    LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>(){});
+    LensAPIResult result = response.readEntity(LensAPIResult.class);
     return result;
   }
 
@@ -472,7 +472,7 @@ public class QueryHelper extends ServiceManagerHelper {
     }
     Response response = this.exec("post", QueryURL.PREPAREDQUERY_URL + queryHandle.toString(), servLens, null, null,
         MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
-    QueryHandleWithResultSet result = response.readEntity(new GenericType<QueryHandleWithResultSet>(){});
+    QueryHandleWithResultSet result = response.readEntity(QueryHandleWithResultSet.class);
     return result;
   }
 

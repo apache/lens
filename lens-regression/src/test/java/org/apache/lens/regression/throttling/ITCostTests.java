@@ -53,11 +53,6 @@ public class ITCostTests extends BaseTestClass {
   private WebTarget servLens;
   private String sessionHandleString;
 
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
-
   public static final String COST_95 = QueryInventory.getQueryFromInventory("HIVE.COST_95");
   public static final String COST_60 = QueryInventory.getQueryFromInventory("HIVE.COST_60");
   public static final String COST_30 = QueryInventory.getQueryFromInventory("HIVE.COST_30");
@@ -284,7 +279,7 @@ public class ITCostTests extends BaseTestClass {
         break;
       }
 
-      Assert.assertTrue(running.size() < 4);
+      Assert.assertTrue(running.size() <= 5);
       TimeUnit.SECONDS.sleep(sleepTime);
     }
 
@@ -299,7 +294,7 @@ public class ITCostTests extends BaseTestClass {
   //TODO : Add queue level throttling along with user ceiling constraint
 
   /*
-  * Queue number shouldn't change with in the same prority
+  * LENS-995 : Queue number shouldn't change with in the same prority
   */
 
   @Test(enabled = true)

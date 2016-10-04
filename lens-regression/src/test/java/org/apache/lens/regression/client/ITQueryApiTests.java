@@ -25,21 +25,20 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.apache.lens.regression.core.constants.DriverConfig;
 import org.apache.lens.regression.core.constants.QueryInventory;
 import org.apache.lens.regression.core.constants.QueryURL;
-import org.apache.lens.regression.core.helpers.LensServerHelper;
-import org.apache.lens.regression.core.helpers.MetastoreHelper;
-import org.apache.lens.regression.core.helpers.QueryHelper;
 import org.apache.lens.regression.core.helpers.ServiceManagerHelper;
-import org.apache.lens.regression.core.helpers.SessionHelper;
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
+import org.apache.lens.regression.core.type.FormBuilder;
 import org.apache.lens.regression.core.type.MapBuilder;
 import org.apache.lens.regression.util.AssertUtil;
 import org.apache.lens.regression.util.Util;
@@ -57,14 +56,8 @@ public class ITQueryApiTests extends BaseTestClass {
   WebTarget servLens;
   private String sessionHandleString;
 
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
-
   private String hiveDriverSitePath  = lens.getServerDir() + "/conf/drivers/hive/hive1/hivedriver-site.xml";
   private static Logger logger = Logger.getLogger(ITQueryApiTests.class);
-
 
   @BeforeClass(alwaysRun = true)
   public void initialize() throws Exception {
@@ -126,6 +119,7 @@ public class ITQueryApiTests extends BaseTestClass {
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
+
   @Test
   public void testExecuteWrongQuery() throws Exception {
     QueryHandle qH = (QueryHandle) qHelper.executeQuery(QueryInventory.WRONG_QUERY, "queryName").getData();
@@ -172,15 +166,15 @@ public class ITQueryApiTests extends BaseTestClass {
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
 
     QueryHandleWithResultSet qHWithResultSet = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(
-        QueryInventory.QUERY, "60000").getData();
+        QueryInventory.JDBC_DIM_QUERY, "60000").getData();
     QueryStatus queryStatus = qHelper.getQueryStatus(qHWithResultSet.getQueryHandle());
     Assert.assertEquals(queryStatus.getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
     InMemoryQueryResult result = (InMemoryQueryResult) qHWithResultSet.getResult();
     Assert.assertNotNull(result);
-    validateInMemoryResultSet(result);
+    Assert.assertEquals(result.getRows().size(), 2);
 
-    qHWithResultSet = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(QueryInventory.SLEEP_QUERY, "10000")
-        .getData();
+    qHWithResultSet = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(QueryInventory.getSleepQuery("10"),
+        "10000").getData();
     queryStatus = qHelper.getQueryStatus(qHWithResultSet.getQueryHandle());
     Assert.assertEquals(queryStatus.getStatus(), QueryStatus.Status.RUNNING, "Query is Not Running");
 
@@ -196,13 +190,29 @@ public class ITQueryApiTests extends BaseTestClass {
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     sHelper.setAndValidateParam(LensConfConstants.QUERY_MAIL_NOTIFY, "false");
 
-    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.QUERY).getData();
+    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_DIM_QUERY).getData();
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
     InMemoryQueryResult result = (InMemoryQueryResult) qHelper.getResultSet(queryHandle);
     Assert.assertNotNull(result);
     validateInMemoryResultSet(result);
+  }
 
+  //LENS-909
+  @Test
+  public void testInMemoryResultMailNotify() throws Exception {
+
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    sHelper.setAndValidateParam(LensConfConstants.QUERY_MAIL_NOTIFY, "true");
+
+    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_DIM_QUERY).getData();
+    LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
+    Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
+    InMemoryQueryResult result = (InMemoryQueryResult) qHelper.getResultSet(queryHandle);
+    Assert.assertNotNull(result);
+    validateInMemoryResultSet(result);
+    //TODO : add assert on actual mail sent
   }
 
   @Test
@@ -211,7 +221,7 @@ public class ITQueryApiTests extends BaseTestClass {
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
 
-    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.QUERY).getData();
+    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_DIM_QUERY).getData();
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
     Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
     PersistentQueryResult result = (PersistentQueryResult) qHelper.getResultSet(queryHandle);
@@ -398,7 +408,7 @@ public class ITQueryApiTests extends BaseTestClass {
     return testData;
   }
 
-  @Test(dataProvider = "query_names", enabled = false)
+  @Test(dataProvider = "query_names", enabled = true)
   public void testRunningSameNameSessionQuery(String queryName) throws Exception {
 
     String query = QueryInventory.getSleepQuery("10");
@@ -422,7 +432,7 @@ public class ITQueryApiTests extends BaseTestClass {
     Assert.assertEquals(resultList.get(2).getPersistedURI(), resultList.get(0).getPersistedURI());
   }
 
-  @Test(enabled = false)
+  @Test(enabled = true)
   public void testQueuedSameNameSessionQuery() throws Exception {
 
     String query = QueryInventory.getSleepQuery("10");
@@ -507,4 +517,43 @@ public class ITQueryApiTests extends BaseTestClass {
     Assert.assertFalse(qhr1.getHandleIdString().equals(qhr2.getHandleIdString()));
   }
 
+  // LENS-1186
+  @Test
+  public void testInvalidOperation() throws Exception {
+    FormBuilder formData = new FormBuilder();
+    formData.add("sessionid", sessionHandleString);
+    formData.add("query", QueryInventory.JDBC_CUBE_QUERY);
+    formData.add("operation", "INVALID_EXECUTE");
+    String conf = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />";
+    formData.add("conf", conf);
+
+    Response response = lens.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
+        MediaType.APPLICATION_XML, formData.getForm());
+    AssertUtil.assertBadRequest(response);
+    LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>(){});
+    Assert.assertEquals(result.getErrorCode(), 2003);
+  }
+
+  @Test
+  public void testInvalidSessionHandle() throws Exception {
+
+    String session = sHelper.openSession("u1", "p1", lens.getCurrentDB());
+    QueryHandle q = (QueryHandle) qHelper.executeQuery(QueryInventory.getSleepQuery("10"), null, session).getData();
+    qHelper.waitForQueryToRun(q);
+    sHelper.closeSession(session);
+
+    FormBuilder formData = new FormBuilder();
+    formData.add("sessionid", session);
+    formData.add("query", QueryInventory.HIVE_CUBE_QUERY);
+    formData.add("operation", "EXECUTE");
+    String conf = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><conf />";
+    formData.add("conf", conf);
+
+    Response response = lens.exec("post", QueryURL.QUERY_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
+        MediaType.APPLICATION_XML, formData.getForm());
+    AssertUtil.assertBadRequest(response);
+    LensAPIResult result = response.readEntity(new GenericType<LensAPIResult>() {
+    });
+    Assert.assertEquals(result.getErrorCode(), 2005);
+  }
 }

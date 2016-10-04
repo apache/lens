@@ -20,6 +20,7 @@
 package org.apache.lens.regression.core.type;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.lens.server.api.util.LensUtil;
 
@@ -53,6 +54,10 @@ public class MapBuilder {
 
   public void put(String key, String value) {
     map.put(key, value);
+  }
+
+  public void put(Map<String, String> map) {
+    this.map.putAll(map);
   }
 
   public String get(String key) {

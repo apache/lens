@@ -115,7 +115,7 @@ public class ITPriorityTests extends BaseTestClass{
     QueryHandle qh = (QueryHandle) qHelper.executeQuery(query).getData();
     qHelper.waitForQueryToRun(qh);
     LensQuery lq = qHelper.getLensQuery(sessionHandleString, qh);
-    String progressMsg = qHelper.getQueryStatus(qh).getProgressMessage();
+    String progressMsg = lq.getStatus().getProgressMessage();
     logger.info("Progress msg : " + progressMsg);
     String jobId = Util.getJobIdFromProgressMsg(progressMsg);
     Assert.assertEquals(lq.getPriority(), priority);
@@ -158,8 +158,11 @@ public class ITPriorityTests extends BaseTestClass{
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
 
-    QueryHandleWithResultSet qhr = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(cost60, "10000")
-        .getData();
+    LensConf lensConf = new LensConf();
+    lensConf.addProperty(LensConfConstants.CANCEL_QUERY_ON_TIMEOUT, "false");
+
+    QueryHandleWithResultSet qhr = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(cost60, "10000",
+        null, sessionHandleString, lensConf).getData();
 
     for(int i = 0; i < 6; i++){
       list.add((QueryHandle) qHelper.executeQuery(QueryInventory.HIVE_CUBE_QUERY).getData());

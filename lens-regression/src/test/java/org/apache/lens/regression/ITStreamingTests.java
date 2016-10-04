@@ -26,6 +26,7 @@ import java.util.HashMap;
 import javax.ws.rs.client.WebTarget;
 import javax.xml.bind.JAXBException;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.*;
 import org.apache.lens.regression.core.constants.QueryInventory;
 import org.apache.lens.regression.core.helpers.*;
@@ -49,13 +50,7 @@ public class ITStreamingTests extends BaseTestClass {
   private WebTarget servLens;
   private String sessionHandleString;
 
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
-
   private static Logger logger = Logger.getLogger(ITStreamingTests.class);
-
   String lensSiteConfPath = lens.getServerDir() + "/conf/lens-site.xml";
 
   @BeforeClass(alwaysRun = true)
@@ -131,8 +126,11 @@ public class ITStreamingTests extends BaseTestClass {
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
     sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
 
+    LensConf lensConf = new LensConf();
+    lensConf.addProperty(LensConfConstants.CANCEL_QUERY_ON_TIMEOUT, "false");
+
     QueryHandleWithResultSet qhr = (QueryHandleWithResultSet) qHelper.executeQueryTimeout(
-        QueryInventory.getSleepQuery("10"), "100").getData();
+        QueryInventory.getSleepQuery("5"), "10", null, sessionHandleString, lensConf).getData();
     InMemoryQueryResult inmemoryResult = (InMemoryQueryResult) qhr.getResult();
     Assert.assertNull(inmemoryResult);
 
@@ -141,7 +139,7 @@ public class ITStreamingTests extends BaseTestClass {
 
     PersistentQueryResult persistResult = (PersistentQueryResult)qHelper.getResultSet(qhr.getQueryHandle());
     Assert.assertNotNull(persistResult);
-    Assert.assertEquals(persistResult.getNumRows().intValue(), 7);
+    Assert.assertEquals(persistResult.getNumRows().intValue(), 8);
   }
 
 

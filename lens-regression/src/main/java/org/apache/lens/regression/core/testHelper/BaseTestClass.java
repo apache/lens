@@ -19,29 +19,26 @@
 
 package org.apache.lens.regression.core.testHelper;
 
-import org.apache.lens.regression.core.helpers.LensHelper;
-import org.apache.lens.regression.core.helpers.LensServerHelper;
-import org.apache.lens.regression.core.helpers.MetastoreHelper;
-import org.apache.lens.regression.core.helpers.QueryHelper;
-import org.apache.lens.regression.core.helpers.SessionHelper;
+import org.apache.lens.regression.core.helpers.*;
 
 public class BaseTestClass {
 
-  private LensHelper lensHelper;
-  private QueryHelper qHelper;
-  private MetastoreHelper mHelper;
-  private SessionHelper sHelper;
-  private LensServerHelper lens;
+  protected QueryHelper qHelper;
+  protected MetastoreHelper mHelper;
+  protected SessionHelper sHelper;
+  protected LensServerHelper lens;
+  protected SavedQueryResourceHelper savedQueryResourceHelper;
+  protected ScheduleResourceHelper scheduleHelper;
 
   public static final String LENS_PROPERTIES = "lens.properties";
 
   public BaseTestClass() {
-
-    lensHelper = new LensHelper(LENS_PROPERTIES);
-    qHelper = lensHelper.getQueryHelper();
-    mHelper = lensHelper.getMetastoreHelper();
-    sHelper = lensHelper.getSessionHelper();
-    lens = lensHelper.getServerHelper();
+    qHelper = new QueryHelper(LENS_PROPERTIES);
+    mHelper = new MetastoreHelper(LENS_PROPERTIES);
+    sHelper = new SessionHelper(LENS_PROPERTIES);
+    lens = new LensServerHelper(LENS_PROPERTIES);
+    savedQueryResourceHelper = new SavedQueryResourceHelper(LENS_PROPERTIES);
+    scheduleHelper = new ScheduleResourceHelper(LENS_PROPERTIES);
   }
 
   public QueryHelper getQueryHelper() {
@@ -58,6 +55,10 @@ public class BaseTestClass {
 
   public LensServerHelper getLensServerHelper() {
     return lens;
+  }
+
+  public SavedQueryResourceHelper getSavedQueryResourceHelper() {
+    return savedQueryResourceHelper;
   }
 
 

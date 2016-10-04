@@ -61,5 +61,25 @@ public class LensServerHelper extends ServiceManagerHelper {
 
     AssertUtil.assertSucceededResponse(response);
   }
+
+  public void stop() throws JSchException, IOException, InterruptedException, LensException {
+    int counter = 0;
+    Util.runRemoteCommand("bash /usr/local/lens/server/bin/lens-ctl stop");
+  }
+
+  public void start() throws JSchException, IOException, InterruptedException, LensException {
+    int counter = 0;
+    Util.runRemoteCommand("bash /usr/local/lens/server/bin/lens-ctl start");
+
+    Response response = this.exec("get", "", servLens, null, null, MediaType.TEXT_PLAIN_TYPE, MediaType.TEXT_PLAIN);
+    while (response == null && counter < 40) {
+      log.info("Waiting for Lens server to come up ");
+      Thread.sleep(1000);
+      response = this.exec("get", "", servLens, null, null, MediaType.TEXT_PLAIN_TYPE, MediaType.TEXT_PLAIN);
+      counter++;
+    }
+
+    AssertUtil.assertSucceededResponse(response);
+  }
 }
 

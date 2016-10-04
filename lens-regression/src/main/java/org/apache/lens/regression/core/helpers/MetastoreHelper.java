@@ -125,7 +125,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     Response response = this
         .exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens, null, query, MediaType.APPLICATION_XML_TYPE, null,
             dbName);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void createDatabase(String dbName) throws JAXBException, LensException {
@@ -143,7 +143,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     query.put("cascade", "true");
     Response response = this.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + dbName, servLens, null, query,
         MediaType.APPLICATION_XML_TYPE, null);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void dropDatabase(String dbName) throws JAXBException, LensException {
@@ -158,7 +158,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     Response response = this
         .exec("post", MetastoreURL.METASTORE_STORAGES_URL, servLens, null, query, MediaType.APPLICATION_XML_TYPE, null,
             storageString);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void createStorage(XStorage storage) throws Exception {
@@ -170,7 +170,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     Response response = this
         .exec("delete", MetastoreURL.METASTORE_STORAGES_URL + "/" + storageName, servLens, null, query,
             MediaType.APPLICATION_XML_TYPE, null);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void dropStorage(String storageName) throws JAXBException, LensException {
@@ -195,7 +195,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     Response response = this
         .exec("post", MetastoreURL.METASTORE_CUBES_URL, servLens, null, query, MediaType.APPLICATION_XML_TYPE, null,
             cubeString);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void createCube(XCube cube) throws Exception {
@@ -212,7 +212,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     Response response = this
         .exec("post", MetastoreURL.METASTORE_FACTS_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
             MediaType.APPLICATION_XML, formData.getForm());
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void createFacts(XFactTable facts) throws Exception {
@@ -311,7 +311,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     String cubeString = Util.convertObjectToXml(cube, XCube.class, "createXCube");
     Response response = this.exec("put", MetastoreURL.METASTORE_CUBES_URL + "/" + cubeName, servLens, null, query,
         MediaType.APPLICATION_XML_TYPE, null, cubeString);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void updateCube(XCube cube, String cubeName) throws Exception {
@@ -322,7 +322,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
     Response response = this.exec("delete", MetastoreURL.METASTORE_CUBES_URL + "/" + cubeName, servLens, null, query,
         MediaType.APPLICATION_XML_TYPE, null);
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void dropCube(String cubeName) throws JAXBException, LensException {
@@ -339,7 +339,7 @@ public class MetastoreHelper extends ServiceManagerHelper {
     Response response = this
         .exec("post", MetastoreURL.METASTORE_DIMTABLES_URL, servLens, null, null, MediaType.MULTIPART_FORM_DATA_TYPE,
             MediaType.APPLICATION_XML, formData.getForm());
-    AssertUtil.assertSucceeded(response);
+    AssertUtil.assertSucceededResult(response);
   }
 
   public void createDimTable(XDimensionTable dt) throws Exception {

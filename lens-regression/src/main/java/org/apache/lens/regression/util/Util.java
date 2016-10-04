@@ -27,6 +27,8 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -98,7 +100,7 @@ public class Util {
     return null;
   }
 
-  public static String getProperty(String property) {
+  public static String getProperty(String property){
     Properties prop = Util.getPropertiesObj(PROPERTY_FILE);
     return prop.getProperty(property);
   }
@@ -303,7 +305,9 @@ public class Util {
   public static final void prettyPrint(Document xml) throws TransformerFactoryConfigurationError, TransformerException {
     xml.normalize();
     Transformer transformer = TransformerFactory.newInstance().newTransformer();
-    Result output = new StreamResult(new File(localFile));
+    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+    StreamResult output = new StreamResult(new File(localFile));
     Source input = new DOMSource(xml);
     transformer.transform(input, output);
   }
@@ -467,4 +471,46 @@ public class Util {
     }
     return value;
   }
+
+
+  public static String getCurrentDate(String format){
+    SimpleDateFormat sdf = new SimpleDateFormat(format);
+    return sdf.format(new Date());
+  }
+
+  public static String getFormattedDate(String epochTime, String format){
+    SimpleDateFormat sdf = new SimpleDateFormat(format);
+    return sdf.format(Long.parseLong(epochTime));
+  }
+
+  public static String modifyDate(String dateString, String format, int calenderIntervalUnit, int diff)
+    throws ParseException {
+
+    SimpleDateFormat sdf = new SimpleDateFormat(format);
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(sdf.parse(dateString));
+    calendar.add(calenderIntervalUnit, diff);
+    return sdf.format(calendar.getTime());
+  }
+
+  public static XMLGregorianCalendar getGregorianCalendar(String date, String format) throws ParseException,
+      DatatypeConfigurationException {
+    GregorianCalendar cal = new GregorianCalendar();
+    cal.setTime(new SimpleDateFormat(format).parse(date));
+    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
+    XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal);
+    return calendar;
+  }
+
+  public static XMLGregorianCalendar getGregorianCalendar(String date) throws ParseException,
+      DatatypeConfigurationException {
+    return getGregorianCalendar(date, "yyyy-MM-dd HH:mm:ss");  //"yyyy-MM-dd'T'HH:mm:ss.SSSX"
+  }
+
+  public static String getDateStringFromGregorainCalender(XMLGregorianCalendar xcal, String format){
+    Date dt = xcal.toGregorianCalendar().getTime();
+    SimpleDateFormat sdf = new SimpleDateFormat(format);
+    return sdf.format(dt);
+  }
+
 }

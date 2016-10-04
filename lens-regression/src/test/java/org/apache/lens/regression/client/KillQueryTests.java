@@ -44,11 +44,6 @@ public class KillQueryTests extends BaseTestClass {
   WebTarget servLens;
   private String sessionHandleString;
 
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
-
   private final String hdfsJarPath = lens.getServerHdfsUrl() + "/tmp";
   private final String localJarPath = new File("").getAbsolutePath() + "/lens-regression/target/testjars/";
   private final String hiveUdfJar = "hiveudftest.jar";
@@ -234,13 +229,12 @@ public class KillQueryTests extends BaseTestClass {
     Assert.assertEquals(queryStatus2.getStatus(), QueryStatus.Status.CANCELED, "Query is Not Running");
 
     //kill successful query
-
     QueryHandle queryHandle3 = (QueryHandle) qHelper.executeQuery(QueryInventory.QUERY).getData();
     LensQuery lensQuery = qHelper.waitForCompletion(queryHandle3);
-    Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query is Not Successful");
+    Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
     qHelper.killQuery(null, "SUCCESSFUL");
     QueryStatus queryStatus3 = qHelper.getQueryStatus(queryHandle3);
-    Assert.assertEquals(queryStatus3.getStatus(), QueryStatus.Status.SUCCESSFUL, "Not able to kill successful query");
+    Assert.assertEquals(queryStatus3.getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
   //TODO: enable when the bug is fixed.

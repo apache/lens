@@ -66,7 +66,7 @@ public abstract class ServiceManagerHelper {
 
   public static WebTarget init() {
     Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
-    String baseUri = Util.getProperty("lens.baseurl");
+    String baseUri = Util.getProperty(LENS_BASE_URL);
     servLens = client.target(UriBuilder.fromUri(baseUri).build());
     return servLens;
   }
@@ -138,12 +138,16 @@ public abstract class ServiceManagerHelper {
     return exec(functionName, path, service, headers, queryParams, null, null, null);
   }
 
+  public <T> Response exec(String functionName, String path, WebTarget service, FormDataMultiPart headers,
+      MapBuilder queryParams, MediaType inputMediaType, String outputMediaType, T inputObject) {
+
+    Response cl = (Response) exec(functionName, path, service, headers, queryParams, inputMediaType, outputMediaType,
+        Response.class, inputObject);
+    return cl;
+  }
+
   public <T> Object exec(String functionName, String path, WebTarget service, FormDataMultiPart headers,
       MapBuilder queryParams, MediaType inputMediaType, String outputMediaType, Class responseClass, T inputObject) {
-
-    Object result;
-    WebTarget builder = null;
-    String className = this.getClass().getName();
 
     if (outputMediaType == null) {
       outputMediaType = MediaType.APPLICATION_XML;
@@ -152,7 +156,7 @@ public abstract class ServiceManagerHelper {
       inputMediaType = MediaType.APPLICATION_XML_TYPE;
     }
 
-    builder = service.path(path);
+    WebTarget builder = service.path(path);
     if (queryParams != null) {
       for (Map.Entry<String, String> queryMapEntry : queryParams.getMap().entrySet()) {
         builder = builder.queryParam(queryMapEntry.getKey(), queryMapEntry.getValue());
@@ -163,13 +167,13 @@ public abstract class ServiceManagerHelper {
     functionName = "exec" + functionName.toUpperCase();
 
     try {
-      Class methodClass = Class.forName(className);
+      Class methodClass = Class.forName(this.getClass().getName());
       Object methodObject = methodClass.newInstance();
 
       Method method = methodObject.getClass()
           .getMethod(functionName, Invocation.Builder.class, inputMediaType.getClass(), responseClass.getClass(),
               Object.class);
-      result = method.invoke(methodObject, build, inputMediaType, responseClass, inputObject);
+      Object result = method.invoke(methodObject, build, inputMediaType, responseClass, inputObject);
       return result;
 
     } catch (Exception e) {
@@ -178,19 +182,7 @@ public abstract class ServiceManagerHelper {
     }
   }
 
-  public <T> Response exec(String functionName, String path, WebTarget service, FormDataMultiPart headers,
-      MapBuilder queryParams, MediaType inputMediaType, String outputMediaType, T inputObject) {
 
-    Class responseClass = Response.class;
-    Response cl = null;
-    try {
-      cl = (Response) exec(functionName, path, service, headers, queryParams, inputMediaType, outputMediaType,
-          responseClass, inputObject);
-    } catch (Exception e) {
-      log.error("Exception in exec", e);
-    }
-    return cl;
-  }
 
   public <T> Object execPUT(Invocation.Builder builder, MediaType inputMediaType, Class<?> responseClass,
       T inputObject) {

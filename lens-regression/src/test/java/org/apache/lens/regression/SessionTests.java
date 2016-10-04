@@ -57,11 +57,6 @@ public class SessionTests extends BaseTestClass {
   private WebTarget servLens;
   private String sessionHandleString;
 
-  LensServerHelper lens = getLensServerHelper();
-  MetastoreHelper mHelper = getMetastoreHelper();
-  SessionHelper sHelper = getSessionHelper();
-  QueryHelper qHelper = getQueryHelper();
-
   private static Logger logger = Logger.getLogger(SessionTests.class);
 
   @BeforeClass(alwaysRun = true)
