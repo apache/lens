@@ -66,7 +66,7 @@ function constructMeasureTable(cubeName, measures) {
   return (
     <div className='table-responsive'>
       <table className='table table-striped table-condensed'>
-        <caption className='bg-primary text-center'>Measures</caption>
+        <caption className='bg-primary text-left'>Measures</caption>
         <thead>{header}</thead>
         <tbody>{table}</tbody>
       </table>
@@ -131,7 +131,7 @@ function constructDimensionTable(cubeName, dimensions, join_chains_by_name) {
   return (
     <div className='table-responsive'>
       <table className='table table-striped'>
-        <caption className='bg-primary text-center'>Dim-Attributes</caption>
+        <caption className='bg-primary text-left'>Dim-Attributes</caption>
         <thead>{header}</thead>
         <tbody>{table}</tbody>
       </table>
@@ -165,7 +165,7 @@ function constructJoinChainTable(cubeName, join_chains) {
   return (
     <div className='table-responsive'>
       <table className='table table-striped'>
-        <caption className='bg-primary text-center'>Join Chains</caption>
+        <caption className='bg-primary text-left'>Join Chains</caption>
         <thead>{header}</thead>
         <tbody>{table}</tbody>
       </table>
@@ -201,7 +201,7 @@ function constructExpressionTable(cubeName, expressions) {
   return (
     <div className='table-responsive'>
       <table className='table table-striped'>
-        <caption className='bg-primary text-center'>Expressions</caption>
+        <caption className='bg-primary text-left'>Expressions</caption>
         <thead>{header}</thead>
         <tbody>{table}</tbody>
       </table>
