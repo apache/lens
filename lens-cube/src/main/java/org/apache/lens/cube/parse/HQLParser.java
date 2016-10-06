@@ -201,7 +201,7 @@ public final class HQLParser {
     try {
       tree = driver.parseExpression(expr);
     } catch (ParseException e) {
-      throw new LensException(COULD_NOT_PARSE_EXPRESSION.getLensErrorInfo(), e, e.getMessage());
+      throw new LensException(COULD_NOT_PARSE_EXPRESSION.getLensErrorInfo(), e, expr);
     }
     return ParseUtils.findRootNonNullToken(tree);
   }
