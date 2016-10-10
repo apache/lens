@@ -85,7 +85,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
   @Test
   public void testDimTableCommands() throws IOException, URISyntaxException {
     createDimension();
-    addDim1Table("dim_table2", "dim_table2.xml", DIM_LOCAL);
+    addDim1Table("dim_table2", "schema/dimtables/dim_table2.xml", DIM_LOCAL);
     updateDim1Table();
     testDimStorageActions();
     testDimPartitionActions();
@@ -98,7 +98,8 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
   }
 
   private void createDimension() throws URISyntaxException {
-    URL dimensionSpec = TestLensDimensionTableCommands.class.getClassLoader().getResource("test-dimension.xml");
+    URL dimensionSpec = TestLensDimensionTableCommands.class.getClassLoader()
+      .getResource("schema/dimensions/test-dimension.xml");
     getDimensionCommand().createDimension(new File(dimensionSpec.toURI()));
 
   }
@@ -153,7 +154,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
    */
   private static void updateDim1Table() throws IOException {
     LensDimensionTableCommands command = getCommand();
-    URL dimSpec = TestLensFactCommands.class.getClassLoader().getResource("dim_table2.xml");
+    URL dimSpec = TestLensFactCommands.class.getClassLoader().getResource("schema/dimtables/dim_table2.xml");
     StringBuilder sb = new StringBuilder();
     BufferedReader bufferedReader = new BufferedReader(new FileReader(dimSpec.getFile()));
     String s;

@@ -53,10 +53,10 @@ public class TestLensFactCommandsWithMissingWeight extends LensCliApplicationTes
   public static final String FACT_NAME = "fact_without_wt";
 
   /* The File name with cube details */
-  public static final String CUBE_XML_FILE = "cube_with_no_weight_facts.xml";
+  public static final String CUBE_XML_FILE = "schema/cubes/base/cube_with_no_weight_facts.xml";
 
   /* The File name with fact details */
-  public static final String FACT_XML_FILE = "fact_without_weight.xml";
+  public static final String FACT_XML_FILE = "schema/facts/fact_without_weight.xml";
 
   /** The command. */
   private static LensFactCommands command = null;

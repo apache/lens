@@ -105,7 +105,8 @@ public class LensFactCommands extends LogicalTableCrudCommand<XFactTable> {
       + " By default <cascade> is false")
   public String dropFact(
     @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String fact,
-    @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false", help = "<cascade>")
+    @CliOption(key = {"cascade"}, mandatory = false, specifiedDefaultValue = "true", unspecifiedDefaultValue = "false",
+      help = "<cascade>")
     boolean cascade) {
     return drop(fact, cascade);
   }

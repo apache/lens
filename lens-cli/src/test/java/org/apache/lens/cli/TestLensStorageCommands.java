@@ -92,8 +92,8 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
    */
   public static synchronized void addLocalStorage(String storageName) throws IOException {
     LensStorageCommands command = getCommand();
-    URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
-    File newFile = new File("target/local-" + storageName + ".xml");
+    URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("schema/storages/local-storage.xml");
+    File newFile = new File(storageSpec.getFile().replace("local-storage", "local-"+storageName));
     try {
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
@@ -131,7 +131,7 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
   private void testUpdateStorage(String storageName) throws IOException {
 
     LensStorageCommands command = getCommand();
-    URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
+    URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("schema/storages/local-storage.xml");
     StringBuilder sb = new StringBuilder();
     BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
     String s;

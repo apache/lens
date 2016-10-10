@@ -71,8 +71,9 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
    */
   public static void createDimension() throws URISyntaxException {
     getCommand().createDimension(new File(
-      TestLensCubeCommands.class.getClassLoader().getResource("test-detail.xml").toURI()));
-    URL dimensionSpec = TestLensDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
+      TestLensCubeCommands.class.getClassLoader().getResource("schema/dimensions/test-detail.xml").toURI()));
+    URL dimensionSpec = TestLensDimensionCommands.class.getClassLoader()
+      .getResource("schema/dimensions/test-dimension.xml");
     getCommand().createDimension(new File(dimensionSpec.toURI()));
   }
 
@@ -85,7 +86,8 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
   @Test
   public void testDimensionCommands() throws Exception {
     log.debug("Starting to test dimension commands");
-    URL dimensionSpec = TestLensDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
+    URL dimensionSpec = TestLensDimensionCommands.class.getClassLoader()
+      .getResource("schema/dimensions/test-dimension.xml");
     String dimensionList = getCommand().showDimensions();
     Assert.assertFalse(dimensionList.contains("test_dim"));
     createDimension();

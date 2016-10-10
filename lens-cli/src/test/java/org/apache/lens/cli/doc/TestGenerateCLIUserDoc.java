@@ -28,24 +28,53 @@ import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TestGenerateCLIUserDoc {
   public static final String APT_FILE = "../src/site/apt/user/cli.apt";
-
+  @Data
+  static class DocEntry {
+    private String command;
+    private String[] help;
+    private int maxLength = 0;
+    public DocEntry(String command, String help) {
+      this.command = command;
+      this.help = help.split("\r|\n");
+      for (int i = 0; i < this.help.length; i++) {
+        this.help[i] = this.help[i].replaceAll("\\|", "\\\\|");
+        if (i > 0) {
+          this.help[i] = this.help[i].replaceAll("\\ ", "\\\\ ");
+        }
+      }
+      for (String line: this.help) {
+        if (line.length() > maxLength) {
+          maxLength = line.length();
+        }
+      }
+      for (int i = 0; i < this.help.length; i++) {
+        StringBuilder sb = new StringBuilder(this.help[i]);
+        while (sb.length() < maxLength) {
+          sb.append(" ");
+        }
+        this.help[i] = sb.append("\\ ").toString();
+      }
+    }
+  }
   @Test
   public void generateDoc() throws IOException {
     BufferedWriter bw = new BufferedWriter(new FileWriter(new File(APT_FILE)));
     StringBuilder sb = new StringBuilder();
     sb.append(getCLIIntroduction()).append("\n\n\n");
-    List<Class<? extends BaseLensCommand>> classes = Lists.newArrayList(
+    List<Class<? extends CommandMarker>> classes = Lists.newArrayList(
       LensConnectionCommands.class,
       LensDatabaseCommands.class,
       LensStorageCommands.class,
@@ -55,8 +84,10 @@ public class TestGenerateCLIUserDoc {
       LensDimensionTableCommands.class,
       LensNativeTableCommands.class,
       LensQueryCommands.class,
-      LensLogResourceCommands.class
+      LensLogResourceCommands.class,
+      LensSchemaCommands.class
     );
+
     for (Class claz : classes) {
       UserDocumentation doc = (UserDocumentation) claz.getAnnotation(UserDocumentation.class);
       if (doc != null && StringUtils.isNotBlank(doc.title())) {
@@ -79,13 +110,13 @@ public class TestGenerateCLIUserDoc {
           log.info("Not adding " + method.getDeclaringClass().getSimpleName() + "#" + method.getName());
         }
       }
-
+      List<DocEntry> docEntries = Lists.newArrayList();
       for (Method method : methods) {
         CliCommand annot = method.getAnnotation(CliCommand.class);
-        sb.append("|");
+        StringBuilder commandBuilder = new StringBuilder();
         String sep = "";
         for (String value : annot.value()) {
-          sb.append(sep).append(value);
+          commandBuilder.append(sep).append(value);
           sep = "/";
         }
         for (Annotation[] annotations : method.getParameterAnnotations()) {
@@ -99,32 +130,39 @@ public class TestGenerateCLIUserDoc {
                 keys.remove("");
               }
               if (!keys.isEmpty()) {
-                sb.append(" ");
+                commandBuilder.append(" ");
                 if (!cliOption.mandatory()) {
-                  sb.append("[");
+                  commandBuilder.append("[");
                 }
                 if (optional) {
-                  sb.append("[");
+                  commandBuilder.append("[");
                 }
                 sep = "";
                 for (String key : keys) {
-                  sb.append(sep).append("--").append(key);
+                  commandBuilder.append(sep).append("--").append(key);
                   sep = "/";
                 }
                 if (optional) {
-                  sb.append("]");
+                  commandBuilder.append("]");
                 }
                 sep = "";
               }
-              sb.append(" ").append(cliOption.help().replaceAll("<", "\\\\<").replaceAll(">", "\\\\>"));
+              commandBuilder.append(" ").append(cliOption.help().replaceAll("<", "\\\\<").replaceAll(">", "\\\\>"));
               if (!cliOption.mandatory()) {
-                sb.append("]");
+                commandBuilder.append("]");
               }
             }
           }
         }
-        sb.append("|").append(annot.help().replaceAll("<", "<<<").replaceAll(">", ">>>")).append("|").append("\n")
-          .append("*--+--+\n");
+        docEntries.add(new DocEntry(commandBuilder.toString(),
+          annot.help().replaceAll("<", "<<<").replaceAll(">", ">>>")));
+      }
+      for (DocEntry entry: docEntries) {
+        for (int i = 0; i < entry.getHelp().length; i++) {
+          sb.append("|").append(i == 0 ? entry.getCommand() : entry.getCommand().replaceAll(".", " "))
+            .append("|").append(entry.getHelp()[i]).append("|").append("\n");
+        }
+        sb.append("*--+--+\n");
       }
       sb.append("  <<").append(getReadableName(claz.getSimpleName())).append(">>\n\n===\n\n");
     }

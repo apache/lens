@@ -41,7 +41,7 @@ public class TestLensSegmentationCommands extends LensCliApplicationTest {
   private static LensCubeCommands cubeCommands = null;
 
   private void createSampleCube() throws URISyntaxException {
-    URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
+    URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("schema/cubes/base/sample-cube.xml");
     String cubeList = getCubeCommand().showCubes();
     assertFalse(cubeList.contains("sample_cube"), cubeList);
     getCubeCommand().createCube(new File(cubeSpec.toURI()));
@@ -72,7 +72,7 @@ public class TestLensSegmentationCommands extends LensCliApplicationTest {
     String segList = command.showSegmentations(null);
     assertEquals(command.showSegmentations("sample_cube"), "No segmentation found for sample_cube");
     assertEquals(segList, "No segmentation found");
-    URL segSpec = TestLensSegmentationCommands.class.getClassLoader().getResource("seg1.xml");
+    URL segSpec = TestLensSegmentationCommands.class.getClassLoader().getResource("schema/segmentations/seg1.xml");
     try {
       command.createSegmentation(new File(segSpec.toURI()));
     } catch (Exception e) {
@@ -91,7 +91,7 @@ public class TestLensSegmentationCommands extends LensCliApplicationTest {
   public static void testUpdateSegmentation() {
     try {
       LensSegmentationCommands command = getCommand();
-      URL segSpec = TestLensSegmentationCommands.class.getClassLoader().getResource("seg1.xml");
+      URL segSpec = TestLensSegmentationCommands.class.getClassLoader().getResource("schema/segmentations/seg1.xml");
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(segSpec.getFile()));
       String s;

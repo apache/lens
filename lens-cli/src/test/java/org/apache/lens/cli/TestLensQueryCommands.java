@@ -416,10 +416,10 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     command.setClient(client);
 
     log.debug("Starting to test cube commands");
-    URL cubeSpec = TestLensQueryCommands.class.getClassLoader().getResource("sample-cube.xml");
+    URL cubeSpec = TestLensQueryCommands.class.getClassLoader().getResource("schema/cubes/base/sample-cube.xml");
     command.createCube(new File(cubeSpec.toURI()));
     TestLensDimensionCommands.createDimension();
-    TestLensDimensionTableCommands.addDim1Table("dim_table", "dim_table.xml", "local");
+    TestLensDimensionTableCommands.addDim1Table("dim_table", "schema/dimtables/dim_table.xml", "local");
 
     // Add partition
     URL dataDir = TestLensQueryCommands.class.getClassLoader().getResource("dim2-part");

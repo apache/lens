@@ -110,7 +110,8 @@ public class LensDimensionTableCommands extends LogicalTableCrudCommand<XDimensi
       + " By default <cascade> is false")
   public String dropDimensionTable(
     @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String name,
-    @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false", help = "<cascade>")
+    @CliOption(key = {"cascade"}, mandatory = false, specifiedDefaultValue = "true", unspecifiedDefaultValue = "false",
+      help = "<cascade>")
     boolean cascade) {
     return drop(name, cascade);
   }

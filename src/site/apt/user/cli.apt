@@ -97,29 +97,29 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|add file [--path] \<path-to-file-on-server-side\>|Adds a file resource to session|
+|add file [--path] \<path-to-file-on-server-side\>|Adds a file resource to session\ |
 *--+--+
-|add jar [--path] \<path-to-jar-on-server-side\>|Adds jar resource to the session|
+|add jar [--path] \<path-to-jar-on-server-side\>|Adds jar resource to the session\ |
 *--+--+
-|close/bye|Releases all resources of the server session and exits the shell|
+|close/bye|Releases all resources of the server session and exits the shell\ |
 *--+--+
-|debug [[--enable] ]|prints all class level logs and verbose logs on cli for debugging purpose. 'debug false' to turn off all class level logging and verbose level logging |
+|debug [[--enable] ]|prints all class level logs and verbose logs on cli for debugging purpose. 'debug false' to turn off all class level logging and verbose level logging \ |
 *--+--+
-|get [--key] \<key\>|Fetches and prints session parameter specified with name <<<key>>> from lens server|
+|get [--key] \<key\>|Fetches and prints session parameter specified with name <<<key>>> from lens server\ |
 *--+--+
-|list resources [[--type] \<resource-type\>]|list all resources from session. If type is provided,  lists resources of type <<<resource-type>>>. Valid values for type are jar and file.|
+|list resources [[--type] \<resource-type\>]|list all resources from session. If type is provided,  lists resources of type <<<resource-type>>>. Valid values for type are jar and file.\ |
 *--+--+
-|remove file [--path] \<path-to-file-on-server-side\>|removes a file resource from session|
+|remove file [--path] \<path-to-file-on-server-side\>|removes a file resource from session\ |
 *--+--+
-|remove jar [--path] \<path-to-jar-on-server-side\>|Removes a jar resource from session|
+|remove jar [--path] \<path-to-jar-on-server-side\>|Removes a jar resource from session\ |
 *--+--+
-|session|Print the current session handle|
+|session|Print the current session handle\ |
 *--+--+
-|set \<key\>=\<value\>|Assign <<<value>>> to session parameter specified with <<<key>>> on lens server|
+|set \<key\>=\<value\>|Assign <<<value>>> to session parameter specified with <<<key>>> on lens server\ |
 *--+--+
-|show params|Fetches and prints all session parameter from lens server|
+|show params|Fetches and prints all session parameter from lens server\ |
 *--+--+
-|verbose [[--enable] ]|Show cliLogger logs on cli. 'verbose false'  turns off the cliLogger logs on console|
+|verbose [[--enable] ]|Show cliLogger logs on cli. 'verbose false'  turns off the cliLogger logs on console\ |
 *--+--+
   <<Lens Connection Commands>>
 
@@ -132,13 +132,13 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|create database [--db] \<database-name\> [--ignoreIfExists \<ignore-if-exists\>]|create a database with specified name. if <<<ignore-if-exists>>> is true, create will not be tried if already exists. Default is false|
+|create database [--db] \<database-name\> [--ignoreIfExists \<ignore-if-exists\>]|create a database with specified name. if <<<ignore-if-exists>>> is true, create will not be tried if already exists. Default is false\ |
 *--+--+
-|drop database [--db] \<database-name\> [--cascade ]|drop a database with specified name|
+|drop database [--db] \<database-name\> [--cascade ]|drop a database with specified name\ |
 *--+--+
-|show databases|displays list of all databases|
+|show databases|displays list of all databases\ |
 *--+--+
-|use [--db] \<database-name\>|change to new database|
+|use [--db] \<database-name\>|change to new database\ |
 *--+--+
   <<Lens Database Commands>>
 
@@ -151,15 +151,15 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|create storage [--path] \<path-to-storage-spec\>|Create a new Storage from file <<<path-to-storage-spec>>>|
+|create storage [--path] \<path-to-storage-spec\>|Create a new Storage from file <<<path-to-storage-spec>>>\ |
 *--+--+
-|describe storage [--name] \<storage-name\>|describe storage <<<storage-name>>>|
+|describe storage [--name] \<storage-name\>|describe storage <<<storage-name>>>\ |
 *--+--+
-|drop storage [--name] \<storage-name\>|drop storage <<<storage-name>>>|
+|drop storage [--name] \<storage-name\>|drop storage <<<storage-name>>>\ |
 *--+--+
-|show storages|list all storages|
+|show storages|list all storages\ |
 *--+--+
-|update storage [--name] \<storage-name\> [--path] \<path-to-storage-spec\>|update storage <<<storage-name>>> with storage spec from <<<path-to-storage-spec>>>|
+|update storage [--name] \<storage-name\> [--path] \<path-to-storage-spec\>|update storage <<<storage-name>>> with storage spec from <<<path-to-storage-spec>>>\ |
 *--+--+
   <<Lens Storage Commands>>
 
@@ -172,21 +172,21 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|create cube [--path] \<path-to-cube-spec-file\>|Create a new Cube, taking spec from <<<path-to-cube-spec-file>>>|
+|create cube [--path] \<path-to-cube-spec-file\>|Create a new Cube, taking spec from <<<path-to-cube-spec-file>>>\ |
 *--+--+
-|cube latestdate [--name] \<cube_name\> [--time_dimension] \<time_dimension\>|get latest date of data available in cube <<<cube_name>>> for time dimension <<<time_dimension_name>>>.  Instead of time dimension, partition column can be directly passed as <<<time_dimension>>>|
+|cube latestdate [--name] \<cube_name\> [--time_dimension] \<time_dimension\>|get latest date of data available in cube <<<cube_name>>> for time dimension <<<time_dimension_name>>>.  Instead of time dimension, partition column can be directly passed as <<<time_dimension>>>\ |
 *--+--+
-|cube show fields [--name] \<cube_name\> [--flattened \<flattened\>]|Show queryable fields of the given cube <<<cube_name>>>. Optionally specify <<<flattened>>> to include chained fields|
+|cube show fields [--name] \<cube_name\> [--flattened \<flattened\>]|Show queryable fields of the given cube <<<cube_name>>>. Optionally specify <<<flattened>>> to include chained fields\ |
 *--+--+
-|cube show joinchains [--name] \<cube_name\>|Show joinchains of the given cube <<<cube_name>>>. |
+|cube show joinchains [--name] \<cube_name\>|Show joinchains of the given cube <<<cube_name>>>. \ |
 *--+--+
-|describe cube [--name] \<cube_name\>|describe cube with name <<<cube_name>>>|
+|describe cube [--name] \<cube_name\>|describe cube with name <<<cube_name>>>\ |
 *--+--+
-|drop cube [--name] \<cube_name\>|drop cube <<<cube_name>>>|
+|drop cube [--name] \<cube_name\>|drop cube <<<cube_name>>>\ |
 *--+--+
-|show cubes|show list of cubes in current database|
+|show cubes|show list of cubes in current database\ |
 *--+--+
-|update cube [--name] \<cube_name\> [--path] \<path-to-cube-spec-file\>|update cube <<<cube_name>>> with spec from <<<path-to-cube-spec-file>>>|
+|update cube [--name] \<cube_name\> [--path] \<path-to-cube-spec-file\>|update cube <<<cube_name>>> with spec from <<<path-to-cube-spec-file>>>\ |
 *--+--+
   <<Lens Cube Commands>>
 
@@ -199,19 +199,19 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|create dimension [--path] \<path-to-dimension-spec file\>|Create a new Dimension, taking spec from <<<path-to-dimension-spec file>>>|
+|create dimension [--path] \<path-to-dimension-spec file\>|Create a new Dimension, taking spec from <<<path-to-dimension-spec file>>>\ |
 *--+--+
-|describe dimension [--name] \<dimension_name\>|describe dimension <<<dimension_name>>>|
+|describe dimension [--name] \<dimension_name\>|describe dimension <<<dimension_name>>>\ |
 *--+--+
-|dimension show fields [--name] \<dimension_name\> [--flattened \<flattened\>]|Show queryable fields of the given dimension <<<dimension_name>>>. Optionally specify <<<flattened>>> to include chained fields|
+|dimension show fields [--name] \<dimension_name\> [--flattened \<flattened\>]|Show queryable fields of the given dimension <<<dimension_name>>>. Optionally specify <<<flattened>>> to include chained fields\ |
 *--+--+
-|dimension show joinchains [--name] \<dimension_name\>|Show joinchains of the given dimension <<<dimension_name>>>. |
+|dimension show joinchains [--name] \<dimension_name\>|Show joinchains of the given dimension <<<dimension_name>>>. \ |
 *--+--+
-|drop dimension [--name] \<dimension_name\>|drop dimension <<<dimension_name>>>|
+|drop dimension [--name] \<dimension_name\>|drop dimension <<<dimension_name>>>\ |
 *--+--+
-|show dimensions|show list of all dimensions in current database|
+|show dimensions|show list of all dimensions in current database\ |
 *--+--+
-|update dimension [--name] \<dimension_name\> [--path] \<path-to-dimension-spec-file\>|update dimension <<<dimension_name>>>, taking spec from <<<path-to-dimension-spec file>>>|
+|update dimension [--name] \<dimension_name\> [--path] \<path-to-dimension-spec-file\>|update dimension <<<dimension_name>>>, taking spec from <<<path-to-dimension-spec file>>>\ |
 *--+--+
   <<Lens Dimension Commands>>
 
@@ -224,39 +224,39 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|create fact [--path] \<path-to-fact-spec-file\>|create a fact table with spec from <<<path-to-fact-spec-file>>>|
+|create fact [--path] \<path-to-fact-spec-file\>|create a fact table with spec from <<<path-to-fact-spec-file>>>\ |
 *--+--+
-|describe fact [--fact_name] \<fact_name\>|describe fact <<<fact_name>>>|
+|describe fact [--fact_name] \<fact_name\>|describe fact <<<fact_name>>>\ |
 *--+--+
-|drop fact [--fact_name] \<fact_name\> [--cascade \<cascade\>]|drops fact <<<fact_name>>>. If <<<cascade>>> is true, all the storage tables associated with the fact <<<fact_name>>> are also dropped. By default <<<cascade>>> is false|
+|drop fact [--fact_name] \<fact_name\> [--cascade \<cascade\>]|drops fact <<<fact_name>>>. If <<<cascade>>> is true, all the storage tables associated with the fact <<<fact_name>>> are also dropped. By default <<<cascade>>> is false\ |
 *--+--+
-|fact add partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|add multiple partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>>|
+|fact add partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|add multiple partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>>\ |
 *--+--+
-|fact add single-partition [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|add single partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>>|
+|fact add single-partition [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|add single partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>>\ |
 *--+--+
-|fact add storage [--fact_name] \<fact_name\> [--path] \<path-to-storage-spec\>|adds a new storage to fact <<<fact_name>>>, taking storage spec from <<<path-to-storage-spec>>>|
+|fact add storage [--fact_name] \<fact_name\> [--path] \<path-to-storage-spec\>|adds a new storage to fact <<<fact_name>>>, taking storage spec from <<<path-to-storage-spec>>>\ |
 *--+--+
-|fact drop all storages [--fact_name] \<fact_name\>|drop all storages associated to fact <<<fact_name>>>|
+|fact drop all storages [--fact_name] \<fact_name\>|drop all storages associated to fact <<<fact_name>>>\ |
 *--+--+
-|fact drop partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|drop all partitions associated with fact <<<fact_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>|
+|fact drop partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|drop all partitions associated with fact <<<fact_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>\ |
 *--+--+
-|fact drop storage [--fact_name] \<fact_name\> [--storage_name] \<storage_name\>|drop storage <<<storage_name>>> from fact <<<fact_name>>>|
+|fact drop storage [--fact_name] \<fact_name\> [--storage_name] \<storage_name\>|drop storage <<<storage_name>>> from fact <<<fact_name>>>\ |
 *--+--+
-|fact get storage [--fact_name] \<fact_name\> [--storage_name] \<path-to-storage-spec\>|describe storage <<<storage_name>>> of fact <<<fact_name>>>|
+|fact get storage [--fact_name] \<fact_name\> [--storage_name] \<path-to-storage-spec\>|describe storage <<<storage_name>>> of fact <<<fact_name>>>\ |
 *--+--+
-|fact list partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|get all partitions associated with fact <<<fact_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>|
+|fact list partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|get all partitions associated with fact <<<fact_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>\ |
 *--+--+
-|fact list storage [--fact_name] \<fact_name\>|display list of storages associated to fact <<<fact_name>>>|
+|fact list storage [--fact_name] \<fact_name\>|display list of storages associated to fact <<<fact_name>>>\ |
 *--+--+
-|fact timelines [--fact_name] \<fact_name\> [--storage_name \<storage_name\>] [--update_period \<update_period\>] [--time_dimension \<time_dimension\>]|get timelines for fact. Can optionally specify storage, update period and time dimension to filter by. Instead of time dimension, partition column can be directly passed as <<<time_dimension>>>|
+|fact timelines [--fact_name] \<fact_name\> [--storage_name \<storage_name\>] [--update_period \<update_period\>] [--time_dimension \<time_dimension\>]|get timelines for fact. Can optionally specify storage, update period and time dimension to filter by. Instead of time dimension, partition column can be directly passed as <<<time_dimension>>>\ |
 *--+--+
-|fact update partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition of fact <<<fact_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>> The partitions have to exist to be eligible for updation.|
+|fact update partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition of fact <<<fact_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>> The partitions have to exist to be eligible for updation.\ |
 *--+--+
-|fact update single-partition [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>> The partition has to exist to be eligible for updation.|
+|fact update single-partition [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to fact <<<fact_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>> The partition has to exist to be eligible for updation.\ |
 *--+--+
-|show facts [[--cube_name] \<cube_name\>]|display list of fact tables in current database. If optional <<<cube_name>>> is supplied, only facts belonging to cube <<<cube_name>>> will be displayed|
+|show facts [[--cube_name] \<cube_name\>]|display list of fact tables in current database. If optional <<<cube_name>>> is supplied, only facts belonging to cube <<<cube_name>>> will be displayed\ |
 *--+--+
-|update fact [--fact_name] \<fact_name\> [--path] \<path-to-fact-spec\>|update fact <<<fact_name>>> taking spec from <<<path-to-fact-spec>>>|
+|update fact [--fact_name] \<fact_name\> [--path] \<path-to-fact-spec\>|update fact <<<fact_name>>> taking spec from <<<path-to-fact-spec>>>\ |
 *--+--+
   <<Lens Fact Commands>>
 
@@ -269,37 +269,37 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|create dimtable [--path] \<path-to-dimtable-spec-file\>|Create a new dimension table taking spec from <<<path-to-dimtable-spec-file>>>|
+|create dimtable [--path] \<path-to-dimtable-spec-file\>|Create a new dimension table taking spec from <<<path-to-dimtable-spec-file>>>\ |
 *--+--+
-|describe dimtable [--dimtable_name] \<dimtable_name\>|describe dimtable <<<dimtable_name>>>|
+|describe dimtable [--dimtable_name] \<dimtable_name\>|describe dimtable <<<dimtable_name>>>\ |
 *--+--+
-|dimtable add partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|add multiple partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>>|
+|dimtable add partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|add multiple partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>>\ |
 *--+--+
-|dimtable add single-partition [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|add single partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>>|
+|dimtable add single-partition [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|add single partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>>\ |
 *--+--+
-|dimtable add storage [--dimtable_name] \<dimtable_name\> [--path] \<path-to-storage-spec\>|adds a new storage to dimtable <<<dimtable_name>>>, taking storage spec from <<<path-to-storage-spec>>>|
+|dimtable add storage [--dimtable_name] \<dimtable_name\> [--path] \<path-to-storage-spec\>|adds a new storage to dimtable <<<dimtable_name>>>, taking storage spec from <<<path-to-storage-spec>>>\ |
 *--+--+
-|dimtable drop all storages [--dimtable_name] \<dimtable_name\>|drop all storages associated to dimension table|
+|dimtable drop all storages [--dimtable_name] \<dimtable_name\>|drop all storages associated to dimension table\ |
 *--+--+
-|dimtable drop partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|drop all partitions associated with dimtable <<<dimtable_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>|
+|dimtable drop partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|drop all partitions associated with dimtable <<<dimtable_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>\ |
 *--+--+
-|dimtable drop storage [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\>|drop storage <<<storage_name>>> from dimtable <<<dimtable_name>>>|
+|dimtable drop storage [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\>|drop storage <<<storage_name>>> from dimtable <<<dimtable_name>>>\ |
 *--+--+
-|dimtable get storage [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\>|describe storage <<<storage_name>>> of dimtable <<<dimtable_name>>>|
+|dimtable get storage [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\>|describe storage <<<storage_name>>> of dimtable <<<dimtable_name>>>\ |
 *--+--+
-|dimtable list partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|get all partitions associated with dimtable <<<dimtable_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>|
+|dimtable list partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|get all partitions associated with dimtable <<<dimtable_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>\ |
 *--+--+
-|dimtable list storages [--dimtable_name] \<dimtable_name\>|display list of storage associated to dimtable <<<dimtable_name>>>|
+|dimtable list storages [--dimtable_name] \<dimtable_name\>|display list of storage associated to dimtable <<<dimtable_name>>>\ |
 *--+--+
-|dimtable update partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>> The partitions have to exist to be eligible for updation.|
+|dimtable update partitions [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-list-spec-path\>|update multiple partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading partition list spec from <<<partition-list-spec-path>>> The partitions have to exist to be eligible for updation.\ |
 *--+--+
-|dimtable update single-partition [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>> The partition has to exist to be eligible for updation.|
+|dimtable update single-partition [--dimtable_name] \<dimtable_name\> [--storage_name] \<storage_name\> [--path] \<partition-spec-path\>|update single partition to dimtable <<<dimtable_name>>>'s storage <<<storage_name>>>, reading spec from <<<partition-spec-path>>> The partition has to exist to be eligible for updation.\ |
 *--+--+
-|drop dimtable [--dimtable_name] \<dimtable_name\> [--cascade \<cascade\>]|drop dimtable <<<dimtable_name>>>.  If <<<cascade>>> is true, all the storage tables associated with the dimtable <<<dimtable_name>>> are also dropped. By default <<<cascade>>> is false|
+|drop dimtable [--dimtable_name] \<dimtable_name\> [--cascade \<cascade\>]|drop dimtable <<<dimtable_name>>>.  If <<<cascade>>> is true, all the storage tables associated with the dimtable <<<dimtable_name>>> are also dropped. By default <<<cascade>>> is false\ |
 *--+--+
-|show dimtables [[--dimension_name] \<dimension_name\>]|display list of dimtables in current database. If optional <<<dimension_name>>> is supplied, only facts belonging to dimension <<<dimension_name>>> will be displayed|
+|show dimtables [[--dimension_name] \<dimension_name\>]|display list of dimtables in current database. If optional <<<dimension_name>>> is supplied, only facts belonging to dimension <<<dimension_name>>> will be displayed\ |
 *--+--+
-|update dimtable [--dimtable_name] \<dimtable_name\> [--path] \<path-to-dimtable-spec\>|update dimtable <<<dimtable_name>>> taking spec from <<<path-to-dimtable-spec>>>|
+|update dimtable [--dimtable_name] \<dimtable_name\> [--path] \<path-to-dimtable-spec\>|update dimtable <<<dimtable_name>>> taking spec from <<<path-to-dimtable-spec>>>\ |
 *--+--+
   <<Lens Dimension Table Commands>>
 
@@ -312,9 +312,9 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|describe nativetable [--name] \<native-table-name\>|describe nativetable named <<<native-table-name>>>|
+|describe nativetable [--name] \<native-table-name\>|describe nativetable named <<<native-table-name>>>\ |
 *--+--+
-|show nativetables|show list of native tables belonging to current database|
+|show nativetables|show list of native tables belonging to current database\ |
 *--+--+
   <<Lens Native Table Commands>>
 
@@ -335,35 +335,35 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|cube select \<query-string-without-cube-select\> [--async \<async\>] [--name \<query-name\>]|Execute cube query <<<cube select query-string-without-cube-select>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.|
+|cube select \<query-string-without-cube-select\> [--async \<async\>] [--name \<query-name\>]|Execute cube query <<<cube select query-string-without-cube-select>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.\ |
 *--+--+
-|prepQuery destroy [--prepare_handle] \<prepare_handle\>|Destroy prepared query with handle <<<prepare_handle>>>|
+|prepQuery destroy [--prepare_handle] \<prepare_handle\>|Destroy prepared query with handle <<<prepare_handle>>>\ |
 *--+--+
-|prepQuery details [--prepare_handle] \<prepare_handle\>|Get prepared query with handle <<<prepare_handle>>>|
+|prepQuery details [--prepare_handle] \<prepare_handle\>|Get prepared query with handle <<<prepare_handle>>>\ |
 *--+--+
-|prepQuery execute [--prepare_handle] Prepare handle to execute [--async \<async\>] [--name \<query-name\>]|Execute prepared query with handle <<<prepare_handle>>>. If <<<async>>> is supplied and is true, query is run in async manner and query handle is returned immediately. Optionally, <<<query-name>>> can be provided, though not required.|
+|prepQuery execute [--prepare_handle] Prepare handle to execute [--async \<async\>] [--name \<query-name\>]|Execute prepared query with handle <<<prepare_handle>>>. If <<<async>>> is supplied and is true, query is run in async manner and query handle is returned immediately. Optionally, <<<query-name>>> can be provided, though not required.\ |
 *--+--+
-|prepQuery explain [--query] \<query-string\> [--name \<query-name\>]|Explain and prepare query <<<query-string>>>. Can optionally provide <<<query-name>>>|
+|prepQuery explain [--query] \<query-string\> [--name \<query-name\>]|Explain and prepare query <<<query-string>>>. Can optionally provide <<<query-name>>>\ |
 *--+--+
-|prepQuery list [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all prepared queries. Various filters can be provided(optionally) as can be seen from command syntax|
+|prepQuery list [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all prepared queries. Various filters can be provided(optionally) as can be seen from command syntax\ |
 *--+--+
-|prepQuery prepare [--query] \<query-string\> [--name \<query-name\>]|Prepapre query <<<query-string>>> and return prepare handle. Can optionaly provide <<<query-name>>>|
+|prepQuery prepare [--query] \<query-string\> [--name \<query-name\>]|Prepapre query <<<query-string>>> and return prepare handle. Can optionaly provide <<<query-name>>>\ |
 *--+--+
-|query details [[--query_handle] \<query_handle\>]|Get query details of query with handle <<<query_handle>>>.If not provided, takes last query handle interacted with.|
+|query details [[--query_handle] \<query_handle\>]|Get query details of query with handle <<<query_handle>>>.If not provided, takes last query handle interacted with.\ |
 *--+--+
-|query execute [--query] \<query-string\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<query-string>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.|
+|query execute [--query] \<query-string\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<query-string>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.\ |
 *--+--+
-|query explain [--query] \<query-string\> [--save_location \<save_location\>]|Explain execution plan of query <<<query-string>>>. Can optionally save the plan to a file by providing <<<save_location>>>|
+|query explain [--query] \<query-string\> [--save_location \<save_location\>]|Explain execution plan of query <<<query-string>>>. Can optionally save the plan to a file by providing <<<save_location>>>\ |
 *--+--+
-|query kill [[--query_handle] \<query_handle\>]|Kill query with handle <<<query_handle>>>.If not provided, takes last query handle interacted with.|
+|query kill [[--query_handle] \<query_handle\>]|Kill query with handle <<<query_handle>>>.If not provided, takes last query handle interacted with.\ |
 *--+--+
-|query list [--state \<query-status\>] [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--driver \<driver-where-query-ran\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all queries. Various filter options can be provided(optionally),  as can be seen from the command syntax|
+|query list [--state \<query-status\>] [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--driver \<driver-where-query-ran\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all queries. Various filter options can be provided(optionally),  as can be seen from the command syntax\ |
 *--+--+
-|query results [[--query_handle] \<query_handle\>] [--save_location \<save_location\>] [--async \<async\>]|get results of query with query handle <<<query_handle>>>. If not provided, takes last query handle interacted with.If async is false then wait till the query execution is completed, it's by default true. Can optionally save the results to a file by providing <<<save_location>>>.|
+|query results [[--query_handle] \<query_handle\>] [--save_location \<save_location\>] [--async \<async\>]|get results of query with query handle <<<query_handle>>>. If not provided, takes last query handle interacted with.If async is false then wait till the query execution is completed, it's by default true. Can optionally save the results to a file by providing <<<save_location>>>.\ |
 *--+--+
-|query status [[--query_handle] \<query_handle\>]|Fetch status of executed query having query handle <<<query_handle>>>. If not provided, takes last query handle interacted with.|
+|query status [[--query_handle] \<query_handle\>]|Fetch status of executed query having query handle <<<query_handle>>>. If not provided, takes last query handle interacted with.\ |
 *--+--+
-|select \<query-string-without-select\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<select query-string-without-select>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.|
+|select \<query-string-without-select\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<select query-string-without-select>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required.\ |
 *--+--+
   <<Lens Query Commands>>
 
@@ -376,9 +376,63 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|show logs [[--log_handle] \<log_handle\>] [--save_location \<save_location\>]|show logs for the given handle <<<log_handle>>>. Handle can either be a query handle or request id. If not provided, takes last query handle interacted with. You can optionally provide a location to save the logs as <<<save_location>>>|
+|show logs [[--log_handle] \<log_handle\>] [--save_location \<save_location\>]|show logs for the given handle <<<log_handle>>>. Handle can either be a query handle or request id. If not provided, takes last query handle interacted with. You can optionally provide a location to save the logs as <<<save_location>>>\ |
 *--+--+
   <<Lens Log Resource Commands>>
+
+===
+
+** Creating schema with one command
+
+  
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|schema [--db] \<database-to-create-schema-in\> [--file] \<schema-directory\>|Parses the specified resource file and executes commands for creation/updation of schema                                       \ |
+|                                                                            |Expected\ structure\ is\                                                                                                       \ |
+|                                                                            |.                                                                                                                              \ |
+|                                                                            |\|--\ storages                                                                                                                 \ |
+|                                                                            |\|\ \ \|--\ storage1.xml                                                                                                       \ |
+|                                                                            |\|\ \ \|--\ storage2.xml                                                                                                       \ |
+|                                                                            |\|                                                                                                                             \ |
+|                                                                            |\|--\ dimensions                                                                                                               \ |
+|                                                                            |\|\ \ \|--\ dim1.xml                                                                                                           \ |
+|                                                                            |\|\ \ \|--\ dim2.xml                                                                                                           \ |
+|                                                                            |\|                                                                                                                             \ |
+|                                                                            |\|--\ cubes                                                                                                                    \ |
+|                                                                            |\|\ \ \|--\ base                                                                                                               \ |
+|                                                                            |\|\ \ \|\ \ \|--\ base_cube1.xml                                                                                               \ |
+|                                                                            |\|\ \ \|\ \ \|--\ base_cube2.xml                                                                                               \ |
+|                                                                            |\|\ \ \|                                                                                                                       \ |
+|                                                                            |\|\ \ \|--\ derived                                                                                                            \ |
+|                                                                            |\|\ \ \|\ \ \|--\ derived_cube1.xml                                                                                            \ |
+|                                                                            |\|\ \ \|\ \ \|--\ derived_cube2.xml                                                                                            \ |
+|                                                                            |\|\ \ \|                                                                                                                       \ |
+|                                                                            |\|\ \ \|--\ independent_cube1.xml                                                                                              \ |
+|                                                                            |\|\ \ \|--\ independent_cube2.xml                                                                                              \ |
+|                                                                            |\|                                                                                                                             \ |
+|                                                                            |\|--\ dimensiontables                                                                                                          \ |
+|                                                                            |\|\ \ \|--\ dimtable1.xml                                                                                                      \ |
+|                                                                            |\|\ \ \|--\ dimtable2.xml                                                                                                      \ |
+|                                                                            |\|                                                                                                                             \ |
+|                                                                            |\|--\ dimtables                                                                                                                \ |
+|                                                                            |\|\ \ \|--\ dimtable3.xml                                                                                                      \ |
+|                                                                            |\|\ \ \|--\ dimtable4.xml                                                                                                      \ |
+|                                                                            |\|                                                                                                                             \ |
+|                                                                            |\|--\ facts                                                                                                                    \ |
+|                                                                            |\ \ \ \|--\ fact1.xml                                                                                                          \ |
+|                                                                            |\ \ \ \|--\ fact2.xml                                                                                                          \ |
+|                                                                            |                                                                                                                               \ |
+|                                                                            |                                                                                                                               \ |
+|                                                                            |If\ your\ cubes\ are\ divided\ between\ base\ and\ derived\ cubes,                                                             \ |
+|                                                                            |it\ makes\ sense\ to\ seperate\ into\ two\ directories,\ since\ derived\ cubes\ can't\ be\ created\ unless\ base\ cube\ exists.\ |
+|                                                                            |In\ the\ other\ case\ you\ can\ keep\ them\ in\ the\ cubes\ directory\ itself.                                                 \ |
+|                                                                            |For\ dimtables,\ you\ can\ keep\ your\ schema\ files\ in\ a\ directory\ named\ either\ dimtables\ or\ dimensiontables.         \ |
+|                                                                            |Each\ of\ these\ directories\ is\ optional\ and\ the\ order\ of\ processing\ is\ top\ to\ bottom.                              \ |
+|                                                                            |CLI\ will\ let\ you\ know\ in\ case\ of\ any\ errors\ and\ proceed\ further\ without\ failing\ in\ between.                    \ |
+*--+--+
+  <<Lens Schema Commands>>
 
 ===
 

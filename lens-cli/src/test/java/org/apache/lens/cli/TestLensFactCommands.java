@@ -66,7 +66,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
   }
 
   private void createSampleCube() throws URISyntaxException {
-    URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
+    URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("schema/cubes/base/sample-cube.xml");
     String cubeList = getCubeCommand().showCubes();
     assertFalse(cubeList.contains("sample_cube"), cubeList);
     getCubeCommand().createCube(new File(cubeSpec.toURI()));
@@ -118,7 +118,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     assertEquals(factList, "No fact found", "Fact tables should not be found");
     // add local storage before adding fact table
     TestLensStorageCommands.addLocalStorage(FACT_LOCAL);
-    URL factSpec = TestLensFactCommands.class.getClassLoader().getResource("fact1.xml");
+    URL factSpec = TestLensFactCommands.class.getClassLoader().getResource("schema/facts/fact1.xml");
     try {
       command.createFact(new File(factSpec.toURI()));
     } catch (Exception e) {
@@ -147,7 +147,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
   public static void updateFact1Table() {
     try {
       LensFactCommands command = getCommand();
-      URL factSpec = TestLensFactCommands.class.getClassLoader().getResource("fact1.xml");
+      URL factSpec = TestLensFactCommands.class.getClassLoader().getResource("schema/facts/fact1.xml");
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(factSpec.getFile()));
       String s;

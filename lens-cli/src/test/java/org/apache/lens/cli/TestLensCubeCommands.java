@@ -55,13 +55,13 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
       LensDimensionCommands dimensionCommand = new LensDimensionCommands();
       dimensionCommand.setClient(client);
       dimensionCommand.createDimension(new File(
-          TestLensCubeCommands.class.getClassLoader().getResource("test-detail.xml").toURI()));
+          TestLensCubeCommands.class.getClassLoader().getResource("schema/dimensions/test-detail.xml").toURI()));
       dimensionCommand.createDimension(new File(
-          TestLensCubeCommands.class.getClassLoader().getResource("test-dimension.xml").toURI()));
+          TestLensCubeCommands.class.getClassLoader().getResource("schema/dimensions/test-dimension.xml").toURI()));
       LensCubeCommands command = new LensCubeCommands();
       command.setClient(client);
       LOG.debug("Starting to test cube commands");
-      URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
+      URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("schema/cubes/base/sample-cube.xml");
       String cubeList = command.showCubes();
       assertFalse(cubeList.contains("sample_cube"));
       command.createCube(new File(cubeSpec.toURI()));
