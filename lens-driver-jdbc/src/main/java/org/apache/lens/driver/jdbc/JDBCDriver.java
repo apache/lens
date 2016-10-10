@@ -292,11 +292,11 @@ public class JDBCDriver extends AbstractLensDriver {
             if (queryContext.getLensContext().getDriverStatus().isCanceled()) {
               return result;
             }
-            queryContext.getLensContext().getDriverStatus().setResultSetAvailable(isResultAvailable);
-            queryContext.getLensContext().setDriverStatus(DriverQueryState.SUCCESSFUL);
             if (isResultAvailable) {
               result.resultSet = stmt.getResultSet();
             }
+            queryContext.getLensContext().getDriverStatus().setResultSetAvailable(isResultAvailable);
+            queryContext.getLensContext().setDriverStatus(DriverQueryState.SUCCESSFUL);
           } catch (Exception e) {
             if (queryContext.getLensContext().getDriverStatus().isCanceled()) {
               return result;
@@ -887,7 +887,6 @@ public class JDBCDriver extends AbstractLensDriver {
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
     return new QueryCallable(queryContext, logSegregationContext).call();
-    // LOG.info("Execute " + context.getQueryHandle());
   }
 
   /**
@@ -930,51 +929,40 @@ public class JDBCDriver extends AbstractLensDriver {
       return;
     }
     if (ctx.getResultFuture().isCancelled()) {
-      context.getDriverStatus().setProgress(1.0);
-      context.getDriverStatus().setState(DriverQueryState.CANCELED);
-      context.getDriverStatus().setStatusMessage("Query Canceled");
+      if (!context.getDriverStatus().isCanceled()) {
+        context.getDriverStatus().setProgress(1.0);
+        context.getDriverStatus().setState(DriverQueryState.CANCELED);
+        context.getDriverStatus().setStatusMessage("Query Canceled");
+      }
     } else if (ctx.getResultFuture().isDone()) {
       context.getDriverStatus().setProgress(1.0);
       // Since future is already done, this call should not block
       if (ctx.getQueryResult() != null && ctx.getQueryResult().error != null) {
-        context.getDriverStatus().setState(DriverQueryState.FAILED);
-        context.getDriverStatus().setStatusMessage("Query execution failed!");
-        context.getDriverStatus().setErrorMessage(ctx.getQueryResult().error.getMessage());
+        if (!context.getDriverStatus().isFailed()) {
+          context.getDriverStatus().setState(DriverQueryState.FAILED);
+          context.getDriverStatus().setStatusMessage("Query execution failed!");
+          context.getDriverStatus().setErrorMessage(ctx.getQueryResult().error.getMessage());
+        }
       } else {
-        context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
-        context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " successful");
-        context.getDriverStatus().setResultSetAvailable(true);
+        if (!context.getDriverStatus().isFinished()) {
+          // assuming successful
+          context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
+          context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " successful");
+          context.getDriverStatus().setResultSetAvailable(true);
+        }
       }
     } else {
-      context.getDriverStatus().setState(DriverQueryState.RUNNING);
-      context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " is running");
+      if (!context.getDriverStatus().isRunning()) {
+        context.getDriverStatus().setState(DriverQueryState.RUNNING);
+        context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " is running");
+      }
     }
   }
 
   @Override
   protected LensResultSet createResultSet(QueryContext ctx) throws LensException {
     checkConfigured();
-    return getDriverResult(ctx);
-  }
-
-  private LensResultSet getDriverResult(QueryContext context) throws LensException {
-    JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
-    if (ctx.getLensContext().getDriverStatus().isCanceled()) {
-      throw new LensException("Result set not available for canceled query " + context.getQueryHandle());
-    }
-
-    Future<QueryResult> future = ctx.getResultFuture();
-    QueryHandle queryHandle = context.getQueryHandle();
-
-    try {
-      return future.get().getLensResultSet(true);
-    } catch (InterruptedException e) {
-      throw new LensException("Interrupted while getting resultset for query " + queryHandle.getHandleId(), e);
-    } catch (ExecutionException e) {
-      throw new LensException("Error while executing query " + queryHandle.getHandleId() + " in background", e);
-    } catch (CancellationException e) {
-      throw new LensException("Query was already canceled " + queryHandle.getHandleId(), e);
-    }
+    return getQueryContext(ctx.getQueryHandle()).getQueryResult().getLensResultSet(true);
   }
 
   /**

@@ -23,10 +23,7 @@ import static org.apache.lens.server.api.LensConfConstants.DEFAULT_PREFETCH_INME
 import static org.apache.lens.server.api.LensConfConstants.PREFETCH_INMEMORY_RESULTSET;
 import static org.apache.lens.server.api.LensConfConstants.PREFETCH_INMEMORY_RESULTSET_ROWS;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Future;
 
 import org.apache.lens.api.LensConf;
@@ -203,7 +200,7 @@ public class QueryContext extends AbstractQueryContext {
   @Getter
   @Setter
   private transient Future queryLauncher;
-  private List<QueryDriverStatusUpdateListener> driverStatusUpdateListener = Lists.newArrayList();
+  private final List<QueryDriverStatusUpdateListener> driverStatusUpdateListeners = Lists.newArrayList();
 
   /**
    * Creates context from query
@@ -469,6 +466,9 @@ public class QueryContext extends AbstractQueryContext {
   public boolean successful() {
     return this.status.successful();
   }
+  public boolean executed() {
+    return this.status.executed();
+  }
 
   public boolean launched() {
     return this.status.launched();
@@ -558,8 +558,10 @@ public class QueryContext extends AbstractQueryContext {
       getDriverStatus().setStatusMessage("Query " + getQueryHandleString() + " " + state.name().toLowerCase());
     }
     getDriverStatus().setState(state);
-    for (QueryDriverStatusUpdateListener listener: this.driverStatusUpdateListener) {
-      listener.onDriverStatusUpdated(getQueryHandle(), getDriverStatus());
+    synchronized (this.driverStatusUpdateListeners) {
+      for (QueryDriverStatusUpdateListener listener : this.driverStatusUpdateListeners) {
+        listener.onDriverStatusUpdated(getQueryHandle(), getDriverStatus());
+      }
     }
   }
 
@@ -573,6 +575,8 @@ public class QueryContext extends AbstractQueryContext {
 
 
   public void registerStatusUpdateListener(QueryDriverStatusUpdateListener driverStatusUpdateListener) {
-    this.driverStatusUpdateListener.add(driverStatusUpdateListener);
+    synchronized (this.driverStatusUpdateListeners) {
+      this.driverStatusUpdateListeners.add(driverStatusUpdateListener);
+    }
   }
 }

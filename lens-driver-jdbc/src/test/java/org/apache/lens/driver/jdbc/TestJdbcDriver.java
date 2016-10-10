@@ -496,6 +496,9 @@ public class TestJdbcDriver {
     QueryContext context = createQueryContext(query, conf);
     context.setExecuteTimeoutMillis(executeTimeoutMillis);
     driver.executeAsync(context);
+    while (!context.getDriverStatus().isFinished()) {
+      Thread.sleep(1000);
+    }
     LensResultSet resultSet = driver.fetchResultSet(context);
     assertNotNull(resultSet);
 

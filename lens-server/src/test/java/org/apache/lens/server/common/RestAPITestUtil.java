@@ -249,9 +249,13 @@ public class RestAPITestUtil {
 
   public static PersistentQueryResult getLensQueryResult(final WebTarget target,
     final LensSessionHandle lensSessionHandle, final QueryHandle handle, MediaType mt) throws InterruptedException {
+    return getLensQueryResult(target, lensSessionHandle, handle, PersistentQueryResult.class, mt);
+  }
+  public static <T> T getLensQueryResult(final WebTarget target, final LensSessionHandle lensSessionHandle,
+    final QueryHandle handle, Class<T> clazz, MediaType mt) throws InterruptedException {
     waitForQueryToFinish(target, lensSessionHandle, handle, QueryStatus.Status.SUCCESSFUL, mt);
     return target.path("queryapi/queries").path(handle.toString()).path("resultset")
-      .queryParam("sessionid", lensSessionHandle).request(mt).get(PersistentQueryResult.class);
+      .queryParam("sessionid", lensSessionHandle).request(mt).get(clazz);
   }
 
   public static Response getLensQueryHttpResult(final WebTarget target, final LensSessionHandle lensSessionHandle,
