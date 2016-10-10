@@ -360,7 +360,7 @@ public class DenormalizationResolver implements ContextRewriter {
         }
         if (cubeql.getCandidateFacts().size() == 0) {
           throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
-              cubeql.getColumnsQueried(cubeql.getCube().getName()).toString());
+              cubeql.getColumnsQueriedForTable(cubeql.getCube().getName()).toString());
         }
         cubeql.pruneCandidateFactSet(CandidateTablePruneCode.COLUMN_NOT_FOUND);
       }
@@ -382,7 +382,7 @@ public class DenormalizationResolver implements ContextRewriter {
 
           if (cubeql.getCandidateDimTables().get(dim).size() == 0) {
             throw new LensException(LensCubeErrorCode.NO_DIM_HAS_COLUMN.getLensErrorInfo(),
-              dim.toString(), cubeql.getColumnsQueried(dim.getName()).toString());
+              dim.toString(), cubeql.getColumnsQueriedForTable(dim.getName()).toString());
           }
         }
       }

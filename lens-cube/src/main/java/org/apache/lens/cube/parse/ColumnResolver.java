@@ -28,8 +28,11 @@ import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import com.google.common.base.Optional;
 
@@ -40,10 +43,11 @@ class ColumnResolver implements ContextRewriter {
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
+    checkForAllColumnsSelected(cubeql);
     extractColumns(cubeql);
   }
 
-  private void extractColumns(CubeQueryContext cubeql) throws LensException {
+  private void checkForAllColumnsSelected(CubeQueryContext cubeql) throws LensException {
     // Check if its 'select * from...'
     ASTNode selTree = cubeql.getSelectAST();
     if (selTree.getChildCount() == 1) {
@@ -59,12 +63,15 @@ class ColumnResolver implements ContextRewriter {
         }
       }
     }
+  }
+
+  private void extractColumns(CubeQueryContext cubeql) throws LensException {
     getColsForSelectTree(cubeql);
     getColsForWhereTree(cubeql);
-    getColsForTree(cubeql, cubeql.getJoinAST(), cubeql, true);
-    getColsForTree(cubeql, cubeql.getGroupByAST(), cubeql, true);
-    getColsForTree(cubeql, cubeql.getHavingAST(), cubeql, true);
-    getColsForTree(cubeql, cubeql.getOrderByAST(), cubeql, true);
+    getColsForAST(cubeql, cubeql.getJoinAST());
+    getColsForAST(cubeql, cubeql.getGroupByAST());
+    getColsForHavingAST(cubeql, cubeql.getHavingAST());
+    getColsForAST(cubeql, cubeql.getOrderByAST());
 
     // Update join dimension tables
     for (String table : cubeql.getTblAliasToColumns().keySet()) {
@@ -76,6 +83,38 @@ class ColumnResolver implements ContextRewriter {
     }
   }
 
+  private void getColsForAST(CubeQueryContext cubeql, ASTNode clause) throws LensException {
+    if (clause == null) {
+      return;
+    }
+    for (int i = 0; i < clause.getChildCount(); i++) {
+      ASTNode queriedExpr = (ASTNode) clause.getChild(i);
+      QueriedPhraseContext qur = new QueriedPhraseContext(queriedExpr);
+      getColsForTree(cubeql, queriedExpr, qur, true);
+      cubeql.addColumnsQueried(qur.getTblAliasToColumns());
+      cubeql.addQueriedPhrase(qur);
+    }
+  }
+
+  private void getColsForHavingAST(CubeQueryContext cubeql, ASTNode clause) throws LensException {
+    if (clause == null) {
+      return;
+    }
+
+    // split having clause phrases to be column level sothat having clause can be pushed to multiple facts if required.
+    if (HQLParser.isAggregateAST(clause) || clause.getType() == HiveParser.TOK_TABLE_OR_COL
+      || clause.getType() == HiveParser.DOT || clause.getChildCount() == 0) {
+      QueriedPhraseContext qur = new QueriedPhraseContext(clause);
+      qur.setAggregate(true);
+      getColsForTree(cubeql, clause, qur, true);
+      cubeql.addColumnsQueried(qur.getTblAliasToColumns());
+      cubeql.addQueriedPhrase(qur);
+    } else {
+      for (Node child : clause.getChildren()) {
+        getColsForHavingAST(cubeql, (ASTNode)child);
+      }
+    }
+  }
   // finds columns in AST passed.
   static void getColsForTree(final CubeQueryContext cubeql, ASTNode tree, final TrackQueriedColumns tqc,
     final boolean skipAliases)
@@ -99,7 +138,7 @@ class ColumnResolver implements ContextRewriter {
           // Take child ident.totext
           ASTNode ident = (ASTNode) node.getChild(0);
           String column = ident.getText().toLowerCase();
-          if (skipAliases && cubeql.getExprToAliasMap().values().contains(column)) {
+          if (skipAliases && cubeql.isColumnAnAlias(column)) {
             // column is an existing alias
             return;
           }
@@ -129,7 +168,13 @@ class ColumnResolver implements ContextRewriter {
     if (cubeql.getWhereAST() == null) {
       return;
     }
-    addColumnsForWhere(cubeql, cubeql.getWhereAST(), null);
+    for (int i = 0; i < cubeql.getWhereAST().getChildCount(); i++) {
+      ASTNode queriedExpr = (ASTNode) cubeql.getWhereAST().getChild(i);
+      QueriedPhraseContext qur = new QueriedPhraseContext(queriedExpr);
+      addColumnsForWhere(cubeql, qur, queriedExpr, cubeql.getWhereAST());
+      cubeql.addColumnsQueried(qur.getTblAliasToColumns());
+      cubeql.addQueriedPhrase(qur);
+    }
   }
 
   // Find all columns of select tree.
@@ -153,13 +198,13 @@ class ColumnResolver implements ContextRewriter {
       ASTNode selectExpr = (ASTNode) cubeql.getSelectAST().getChild(i);
       ASTNode selectExprChild = (ASTNode)selectExpr.getChild(0);
       Set<String> cols = new HashSet<>();
-      addColumnsForSelectExpr(cubeql, selectExpr, cubeql.getSelectAST(), cols);
-      ASTNode alias = HQLParser.findNodeByPath(selectExpr, Identifier);
+      SelectPhraseContext sel = new SelectPhraseContext(selectExpr);
+      addColumnsForSelectExpr(sel, selectExpr, cubeql.getSelectAST(), cols);
+      String alias = selectExpr.getChildCount() > 1 ? selectExpr.getChild(1).getText() : null;
       String selectAlias;
       String selectFinalAlias = null;
       if (alias != null) {
-        cubeql.addExprToAlias(selectExpr, alias);
-        selectFinalAlias = alias.getText();
+        selectFinalAlias = alias;
         selectAlias = SELECT_ALIAS_PREFIX + exprInd;
       } else if (cols.size() == 1 && (selectExprChild.getToken().getType() == TOK_TABLE_OR_COL
         || selectExprChild.getToken().getType() == DOT)) {
@@ -170,21 +215,26 @@ class ColumnResolver implements ContextRewriter {
         selectFinalAlias = HQLParser.getString(selectExprChild);
       }
       exprInd++;
-      cubeql.addSelectAlias(selectAlias, selectFinalAlias);
+      cubeql.addColumnsQueried(sel.getTblAliasToColumns());
+      sel.setSelectAlias(selectAlias);
+      sel.setFinalAlias(!StringUtils.isBlank(selectFinalAlias) ? "`" + selectFinalAlias + "`" : selectAlias);
+      sel.setActualAlias(alias != null ? alias.toLowerCase() : null);
+      cubeql.addSelectPhrase(sel);
     }
   }
 
-  private static void addColumnsForWhere(final CubeQueryContext cubeql, ASTNode node, ASTNode parent) {
+  private static void addColumnsForWhere(final CubeQueryContext cubeql, QueriedPhraseContext qur, ASTNode node,
+    ASTNode parent) {
     if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() != DOT)) {
       // Take child ident.totext
       ASTNode ident = (ASTNode) node.getChild(0);
       String column = ident.getText().toLowerCase();
-      if (cubeql.getExprToAliasMap().values().contains(column)) {
+      if (cubeql.isColumnAnAlias(column)) {
         // column is an existing alias
         return;
       }
 
-      addColumnQueriedWithTimeRangeFuncCheck(cubeql, parent, CubeQueryContext.DEFAULT_TABLE, column);
+      addColumnQueriedWithTimeRangeFuncCheck(cubeql, qur, parent, CubeQueryContext.DEFAULT_TABLE, column);
 
     } else if (node.getToken().getType() == DOT) {
       // This is for the case where column name is prefixed by table name
@@ -197,32 +247,31 @@ class ColumnResolver implements ContextRewriter {
       String column = colIdent.getText().toLowerCase();
       String table = tabident.getText().toLowerCase();
 
-      addColumnQueriedWithTimeRangeFuncCheck(cubeql, parent, table, column);
+      addColumnQueriedWithTimeRangeFuncCheck(cubeql, qur, parent, table, column);
 
     } else if (node.getToken().getType() == TOK_FUNCTION) {
       ASTNode fname = HQLParser.findNodeByPath(node, Identifier);
       if (fname != null && CubeQueryContext.TIME_RANGE_FUNC.equalsIgnoreCase(fname.getText())) {
-        addColumnsForWhere(cubeql, (ASTNode) node.getChild(1), node);
+        addColumnsForWhere(cubeql, qur, (ASTNode) node.getChild(1), node);
       } else {
         for (int i = 0; i < node.getChildCount(); i++) {
-          addColumnsForWhere(cubeql, (ASTNode) node.getChild(i), node);
+          addColumnsForWhere(cubeql, qur, (ASTNode) node.getChild(i), node);
         }
       }
     } else {
       for (int i = 0; i < node.getChildCount(); i++) {
-        addColumnsForWhere(cubeql, (ASTNode) node.getChild(i), node);
+        addColumnsForWhere(cubeql, qur, (ASTNode) node.getChild(i), node);
       }
     }
   }
 
-  private static void addColumnQueriedWithTimeRangeFuncCheck(final CubeQueryContext cubeql, final ASTNode parent,
-      final String table, final String column) {
-
+  private static void addColumnQueriedWithTimeRangeFuncCheck(final CubeQueryContext cubeql, QueriedPhraseContext qur,
+    final ASTNode parent, final String table, final String column) {
     if (isTimeRangeFunc(parent)) {
       cubeql.addQueriedTimeDimensionCols(column);
-      cubeql.addColumnsQueriedWithTimeDimCheck(CubeQueryContext.DEFAULT_TABLE, column);
+      cubeql.addColumnsQueriedWithTimeDimCheck(qur, CubeQueryContext.DEFAULT_TABLE, column);
     } else {
-      cubeql.addColumnsQueried(table, column);
+      qur.addColumnsQueried(table, column);
     }
   }
 
@@ -244,17 +293,14 @@ class ColumnResolver implements ContextRewriter {
     }
     return Optional.fromNullable(funcName);
   }
-  private static void addColumnsForSelectExpr(final CubeQueryContext cubeql, ASTNode node, ASTNode parent,
+
+  private static void addColumnsForSelectExpr(final TrackQueriedColumns sel, ASTNode node, ASTNode parent,
     Set<String> cols) {
     if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() != DOT)) {
       // Take child ident.totext
       ASTNode ident = (ASTNode) node.getChild(0);
       String column = ident.getText().toLowerCase();
-      if (cubeql.getExprToAliasMap().values().contains(column)) {
-        // column is an existing alias
-        return;
-      }
-      cubeql.addColumnsQueried(CubeQueryContext.DEFAULT_TABLE, column);
+      sel.addColumnsQueried(CubeQueryContext.DEFAULT_TABLE, column);
       cols.add(column);
     } else if (node.getToken().getType() == DOT) {
       // This is for the case where column name is prefixed by table name
@@ -266,11 +312,11 @@ class ColumnResolver implements ContextRewriter {
 
       String column = colIdent.getText().toLowerCase();
       String table = tabident.getText().toLowerCase();
-      cubeql.addColumnsQueried(table, column);
+      sel.addColumnsQueried(table, column);
       cols.add(column);
     } else {
       for (int i = 0; i < node.getChildCount(); i++) {
-        addColumnsForSelectExpr(cubeql, (ASTNode) node.getChild(i), node, cols);
+        addColumnsForSelectExpr(sel, (ASTNode) node.getChild(i), node, cols);
       }
     }
   }

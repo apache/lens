@@ -193,7 +193,7 @@ public class CandidateFact implements CandidateTable, QueryAST {
           dimFieldIndices.add(i);
         }
         ASTNode aliasNode = HQLParser.findNodeByPath(selectExpr, Identifier);
-        String alias = cubeql.getSelectAlias(i);
+        String alias = cubeql.getSelectPhrases().get(i).getSelectAlias();
         if (aliasNode != null) {
           String queryAlias = aliasNode.getText();
           if (!queryAlias.equals(alias)) {

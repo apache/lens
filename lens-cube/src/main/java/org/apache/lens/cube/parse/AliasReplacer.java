@@ -18,10 +18,6 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
-
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,7 +50,11 @@ class AliasReplacer implements ContextRewriter {
     Map<String, String> colToTableAlias = cubeql.getColToTableAlias();
 
     extractTabAliasForCol(cubeql);
-    findDimAttributesAndMeasures(cubeql);
+    // Resolve aliases in all queried phrases
+    for (QueriedPhraseContext qur : cubeql.getQueriedPhrases()) {
+      extractTabAliasForCol(colToTableAlias, qur);
+    }
+    findExpressionsAndMeasures(cubeql);
 
     if (colToTableAlias.isEmpty()) {
       return;
@@ -83,11 +83,6 @@ class AliasReplacer implements ContextRewriter {
 
     replaceAliases(cubeql.getJoinAST(), 0, colToTableAlias);
 
-    // Update the aggregate expression set
-    AggregateResolver.updateAggregates(cubeql.getSelectAST(), cubeql);
-    AggregateResolver.updateAggregates(cubeql.getHavingAST(), cubeql);
-    // Update alias map as well
-    updateAliasMap(cubeql.getSelectAST(), cubeql);
   }
 
   /**
@@ -95,27 +90,26 @@ class AliasReplacer implements ContextRewriter {
    * @param cubeql
    * @throws LensException
    */
-  private void findDimAttributesAndMeasures(CubeQueryContext cubeql) throws LensException {
+  private void findExpressionsAndMeasures(CubeQueryContext cubeql) throws LensException {
     CubeInterface cube = cubeql.getCube();
     if (cube != null) {
-      Set<String> cubeColsQueried = cubeql.getColumnsQueried(cube.getName());
-      Set<String> queriedDimAttrs = new HashSet<String>();
-      Set<String> queriedMsrs = new HashSet<String>();
-      Set<String> queriedExprs = new HashSet<String>();
-      if (cubeColsQueried != null && !cubeColsQueried.isEmpty()) {
-        for (String col : cubeColsQueried) {
-          if (cube.getMeasureNames().contains(col)) {
-            queriedMsrs.add(col);
-          } else if (cube.getDimAttributeNames().contains(col)) {
-            queriedDimAttrs.add(col);
-          } else if (cube.getExpressionNames().contains(col)) {
-            queriedExprs.add(col);
+      String cubeAlias = cubeql.getAliasForTableName(cube.getName());
+      for (QueriedPhraseContext qur : cubeql.getQueriedPhrases()) {
+        Set<String> cubeColsQueried = qur.getColumnsQueried(cubeAlias);
+        if (cubeColsQueried != null && !cubeColsQueried.isEmpty()) {
+          for (String col : cubeColsQueried) {
+            if (cube.getMeasureNames().contains(col)) {
+              qur.addQueriedMsr(col);
+            } else if (cube.getDimAttributeNames().contains(col)) {
+              qur.addQueriedDimAttr(col);
+            } else if (cube.getExpressionNames().contains(col)) {
+              qur.addQueriedExprColumn(col);
+            }
           }
         }
+        cubeql.addQueriedMsrs(qur.getQueriedMsrs());
+        cubeql.addQueriedExprs(qur.getQueriedExprColumns());
       }
-      cubeql.addQueriedDimAttrs(queriedDimAttrs);
-      cubeql.addQueriedMsrs(queriedMsrs);
-      cubeql.addQueriedExprs(queriedExprs);
     }
   }
 
@@ -164,6 +158,18 @@ class AliasReplacer implements ContextRewriter {
     }
   }
 
+  static void extractTabAliasForCol(Map<String, String> colToTableAlias, TrackQueriedColumns tqc) throws LensException {
+    Set<String> columns = tqc.getTblAliasToColumns().get(CubeQueryContext.DEFAULT_TABLE);
+    if (columns == null) {
+      return;
+    }
+    for (String col : columns) {
+      tqc.addColumnsQueried(colToTableAlias.get(col.toLowerCase()), col.toLowerCase());
+      if (colToTableAlias.get(col.toLowerCase()) == null) {
+        throw new LensException(LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo(), col);
+      }
+    }
+  }
   static ASTNode replaceAliases(ASTNode node, int nodePos, Map<String, String> colToTableAlias) {
     if (node == null) {
       return node;
@@ -211,23 +217,6 @@ class AliasReplacer implements ContextRewriter {
       }
     }
     return node;
-  }
-
-  static void updateAliasMap(ASTNode root, CubeQueryContext cubeql) {
-    if (root == null) {
-      return;
-    }
-
-    if (root.getToken().getType() == TOK_SELEXPR) {
-      ASTNode alias = HQLParser.findNodeByPath(root, Identifier);
-      if (alias != null) {
-        cubeql.addExprToAlias(root, alias);
-      }
-    } else {
-      for (int i = 0; i < root.getChildCount(); i++) {
-        updateAliasMap((ASTNode) root.getChild(i), cubeql);
-      }
-    }
   }
 
 }

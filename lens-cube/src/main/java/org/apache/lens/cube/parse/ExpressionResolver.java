@@ -59,8 +59,7 @@ class ExpressionResolver implements ContextRewriter {
     private Set<ExprSpecContext> allExprs = new LinkedHashSet<ExprSpecContext>();
     private Set<CandidateTable> directlyAvailableIn = new HashSet<CandidateTable>();
     @Getter
-    private Map<CandidateTable, Set<ExprSpecContext>> evaluableExpressions =
-      new HashMap<CandidateTable, Set<ExprSpecContext>>();
+    private Map<CandidateTable, Set<ExprSpecContext>> evaluableExpressions = new HashMap<>();
     private boolean hasMeasures = false;
 
     public boolean hasMeasures() {
@@ -197,16 +196,13 @@ class ExpressionResolver implements ContextRewriter {
     }
   }
 
-  static class ExprSpecContext implements TrackQueriedColumns {
+  static class ExprSpecContext extends TracksQueriedColumns {
     private Set<ExprSpec> exprSpecs = new LinkedHashSet<>();
     @Getter
     @Setter
     private ASTNode finalAST;
     @Getter
     private Set<Dimension> exprDims = new HashSet<>();
-    // for each expression store alias to columns queried
-    @Getter
-    private Map<String, Set<String>> tblAliasToColumns = new HashMap<>();
 
     ExprSpecContext(ExprSpec exprSpec, CubeQueryContext cubeql) throws LensException {
       // replaces table names in expression with aliases in the query
@@ -223,14 +219,6 @@ class ExpressionResolver implements ContextRewriter {
       throws LensException {
       AliasReplacer.extractTabAliasForCol(cubeql, this);
       finalAST = AliasReplacer.replaceAliases(finalAST, 0, cubeql.getColToTableAlias());
-    }
-    public void addColumnsQueried(String alias, String column) {
-      Set<String> cols = tblAliasToColumns.get(alias.toLowerCase());
-      if (cols == null) {
-        cols = new HashSet<String>();
-        tblAliasToColumns.put(alias.toLowerCase(), cols);
-      }
-      cols.add(column);
     }
 
     void resolveColumns(CubeQueryContext cubeql) throws LensException {

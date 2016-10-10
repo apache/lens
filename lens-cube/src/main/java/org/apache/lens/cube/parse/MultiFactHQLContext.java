@@ -111,17 +111,18 @@ class MultiFactHQLContext extends SimpleHQLContext {
       }
       if (selectToFactIndex.get(i).size() == 1) {
         select.append("mq").append(selectToFactIndex.get(i).get(0)).append(".")
-          .append(query.getSelectAlias(i)).append(" ");
+          .append(query.getSelectPhrases().get(i).getSelectAlias()).append(" ");
       } else {
         select.append("COALESCE(");
         String sep = "";
         for (Integer factIndex : selectToFactIndex.get(i)) {
-          select.append(sep).append("mq").append(factIndex).append(".").append(query.getSelectAlias(i));
+          select.append(sep).append("mq").append(factIndex).append(".").append(
+            query.getSelectPhrases().get(i).getSelectAlias());
           sep = ", ";
         }
         select.append(") ");
       }
-      select.append(query.getSelectFinalAlias(i));
+      select.append(query.getSelectPhrases().get(i).getFinalAlias());
       if (i != query.getSelectAST().getChildCount() - 1) {
         select.append(", ");
       }
@@ -152,7 +153,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
         fromBuilder.append(" on ");
         Iterator<Integer> dimIter = fact.getDimFieldIndices().iterator();
         while (dimIter.hasNext()) {
-          String dim = query.getSelectAlias(dimIter.next());
+          String dim = query.getSelectPhrases().get(dimIter.next()).getSelectAlias();
           fromBuilder.append(getMultiFactJoinCondition(aliasCount, dim));
           if (dimIter.hasNext()) {
             fromBuilder.append(" AND ");

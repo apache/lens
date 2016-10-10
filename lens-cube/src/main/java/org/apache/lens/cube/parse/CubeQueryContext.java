@@ -59,7 +59,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
+public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
   public static final String TIME_RANGE_FUNC = "time_range_in";
   public static final String NOW = "now";
   public static final String DEFAULT_TABLE = "_default_";
@@ -86,7 +86,6 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
   // Joinchains accessed in the query
   @Getter
   protected Map<String, JoinChain> joinchains = new HashMap<String, JoinChain>();
-  private final Set<String> queriedDimAttrs = new HashSet<String>();
 
   @Getter
   private final Set<String> queriedMsrs = new HashSet<String>();
@@ -112,20 +111,31 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
 
   // Alias to table object mapping of tables accessed in this query
   @Getter
-  private final Map<String, AbstractCubeTable> cubeTbls = new HashMap<String, AbstractCubeTable>();
-  // Alias name to fields queried
+  private final Map<String, AbstractCubeTable> cubeTbls = new HashMap<>();
+
+  void addSelectPhrase(SelectPhraseContext sel) {
+    selectPhrases.add(sel);
+    addQueriedPhrase(sel);
+  }
+
+  boolean isColumnAnAlias(String col) {
+    for (SelectPhraseContext sel : selectPhrases) {
+      if (col.equals(sel.getActualAlias())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void addQueriedPhrase(QueriedPhraseContext qur) {
+    queriedPhrases.add(qur);
+  }
   @Getter
-  private final Map<String, Set<String>> tblAliasToColumns = new HashMap<String, Set<String>>();
-  // Mapping of an expression to its column alias in the query
+  private final List<SelectPhraseContext> selectPhrases = new ArrayList<>();
+
   @Getter
-  private final Map<String, String> exprToAlias = new HashMap<String, String>();
-  @Getter
-  private final List<String> selectAliases = new ArrayList<String>();
-  @Getter
-  private final List<String> selectFinalAliases = new ArrayList<String>();
-  // All aggregate expressions in the query
-  @Getter
-  private final Set<String> aggregateExprs = new HashSet<String>();
+  private final List<QueriedPhraseContext> queriedPhrases = new ArrayList<>();
+
   // Join conditions used in all join expressions
   @Getter
   private final Map<QBJoinTree, String> joinConds = new HashMap<QBJoinTree, String>();
@@ -201,11 +211,6 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     }
     if (qb.getParseInfo().getSelForClause(clauseName) != null) {
       this.selectAST = qb.getParseInfo().getSelForClause(clauseName);
-    }
-
-    for (ASTNode aggrTree : qb.getParseInfo().getAggregationExprsForClause(clauseName).values()) {
-      String aggr = HQLParser.getString(aggrTree);
-      aggregateExprs.add(aggr);
     }
 
     extractMetaTables();
@@ -670,10 +675,6 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     return qb.getParseInfo().getJoinExpr();
   }
 
-  public QBJoinTree getQBJoinTree() {
-    return qb.getQbJoinTree();
-  }
-
   public String getOrderByString() {
     if (orderByAST != null) {
       return HQLParser.getString(orderByAST);
@@ -1037,25 +1038,15 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     return ParseUtils.findRootNonNullToken(tree);
   }
 
-  public Set<String> getColumnsQueried(String tblName) {
-    return tblAliasToColumns.get(getAliasForTableName(tblName));
+  public Set<String> getColumnsQueriedForTable(String tblName) {
+    return getColumnsQueried(getAliasForTableName(tblName));
   }
 
-  public void addColumnsQueriedWithTimeDimCheck(String alias, String timeDimColumn) {
+  public void addColumnsQueriedWithTimeDimCheck(QueriedPhraseContext qur, String alias, String timeDimColumn) {
 
     if (!shouldReplaceTimeDimWithPart()) {
-      addColumnsQueried(alias, timeDimColumn);
+      qur.addColumnsQueried(alias, timeDimColumn);
     }
-  }
-
-  public void addColumnsQueried(String alias, String column) {
-
-    Set<String> cols = tblAliasToColumns.get(alias.toLowerCase());
-    if (cols == null) {
-      cols = new LinkedHashSet<String>();
-      tblAliasToColumns.put(alias.toLowerCase(), cols);
-    }
-    cols.add(column);
   }
 
   public boolean isCubeMeasure(String col) {
@@ -1116,32 +1107,16 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     return isCubeMeasure(msrname);
   }
 
-  public boolean isAggregateExpr(String expr) {
-    return aggregateExprs.contains(expr == null ? null : expr.toLowerCase());
-  }
-
   public boolean hasAggregates() {
-    return !aggregateExprs.isEmpty() || getExprCtx().hasAggregates();
-  }
-
-  public String getAlias(String expr) {
-    return exprToAlias.get(expr);
-  }
-
-  public String getSelectAlias(int index) {
-    return selectAliases.get(index);
-  }
-
-  public String getSelectFinalAlias(int index) {
-    return selectFinalAliases.get(index);
-  }
-
-  public Map<String, String> getExprToAliasMap() {
-    return exprToAlias;
-  }
-
-  public void addAggregateExpr(String expr) {
-    aggregateExprs.add(expr);
+    if (getExprCtx().hasAggregates()) {
+      return true;
+    }
+    for (QueriedPhraseContext qur : queriedPhrases) {
+      if (qur.isAggregate()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public void setJoinCond(QBJoinTree qb, String cond) {
@@ -1166,19 +1141,6 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
       return "INSERT OVERWRITE" + HQLParser.getString(destTree);
     }
     return "";
-  }
-
-  public void addExprToAlias(ASTNode expr, ASTNode alias) {
-    exprToAlias.put(HQLParser.getString(expr).trim(), alias.getText().toLowerCase());
-  }
-
-  public void addSelectAlias(String alias, String spacedAlias) {
-    selectAliases.add(alias);
-    if (!StringUtils.isBlank(spacedAlias)) {
-      selectFinalAliases.add("`" + spacedAlias + "`");
-    } else {
-      selectFinalAliases.add(alias);
-    }
   }
 
   public Set<Aliased<Dimension>> getOptionalDimensions() {
@@ -1228,17 +1190,6 @@ public class CubeQueryContext implements TrackQueriedColumns, QueryAST {
     } else {
       return ((Cube) cube).getTimeDimOfPartitionColumn(partCol);
     }
-  }
-
-  /**
-   * @return the queriedDimAttrs
-   */
-  public Set<String> getQueriedDimAttrs() {
-    return queriedDimAttrs;
-  }
-
-  public void addQueriedDimAttrs(Set<String> dimAttrs) {
-    queriedDimAttrs.addAll(dimAttrs);
   }
 
   public void addQueriedMsrs(Set<String> msrs) {

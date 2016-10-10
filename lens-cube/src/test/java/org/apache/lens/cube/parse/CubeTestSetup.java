@@ -984,6 +984,7 @@ public class CubeTestSetup {
       "dim2chain", "id", null, null, null)); // used as key in the chains
     cubeDimensions2.add(new ReferencedDimAttribute(new FieldSchema("dim22", "int", "ref dim"), "Dim2 refer",
       "dim2chain", "id", null, null, null)); // not used as key in the chains
+    cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("dim13", "string", "basedim")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("userid", "int", "userid")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("xuserid", "int", "userid")));
     cubeDimensions2.add(new BaseDimAttribute(new FieldSchema("yuserid", "int", "userid")));
@@ -1232,6 +1233,7 @@ public class CubeTestSetup {
     dimensions.add("dim2big2");
     dimensions.add("dim2bignew");
     dimensions.add("dim11");
+    dimensions.add("dim13");
     dimensions.add("dim12");
     dimensions.add("dim22");
     dimensions.add("d_time");
@@ -1408,6 +1410,7 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
+    factColumns.add(new FieldSchema("dim13", "string", "base dim"));
     factColumns.add(new FieldSchema("dim12", "string", "base dim"));
     factColumns.add(new FieldSchema("dim22", "string", "base dim"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));

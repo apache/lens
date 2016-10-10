@@ -18,37 +18,49 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.Map;
 import java.util.Set;
 
-interface TrackQueriedColumns {
+interface TrackQueriedCubeFields {
 
   /**
-   * Get tblAlias to column
-   * @return map of tblAliasToColumns
-   */
-  Map<String, Set<String>> getTblAliasToColumns();
-
-  /**
-   * Get columns queried by tblAlias
+   * Get queried dim attributes
    *
-   * @param tblAlias tbl alias name
-   *
-   * @return set of column names
+   * @return set of dim attribute names
    */
-  Set<String> getColumnsQueried(String tblAlias);
+  Set<String> getQueriedDimAttrs();
 
   /**
-   * Add given table alias and column
-   * @param tblAlias Table alias
-   * @param column column
+   * Get queried measures
+   *
+   * @return set of measure names
    */
-  void addColumnsQueried(String tblAlias, String column);
+  Set<String> getQueriedMsrs();
 
   /**
-   * Add given map of tblAliasToColumns.
+   * Get queried expr columns
    *
-   * @param tblAliasToColumns map of tblAliasToColumns
+   * @return set of expr column names
    */
-  void addColumnsQueried(Map<String, Set<String>> tblAliasToColumns);
+  Set<String> getQueriedExprColumns();
+
+  /**
+   * Add queried dim attribute
+   *
+   * @param attrName attribute name
+   */
+  void addQueriedDimAttr(String attrName);
+
+  /**
+   * Add queried measure
+   *
+   * @param msrName measure name
+   */
+  void addQueriedMsr(String msrName);
+
+  /**
+   * Add queried expression column
+   *
+   * @param exprCol expression column name
+   */
+  void addQueriedExprColumn(String exprCol);
 }

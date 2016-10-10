@@ -139,13 +139,13 @@ public class TimeRangeChecker implements ContextRewriter {
 
   private void doColLifeValidation(CubeQueryContext cubeql) throws LensException,
       ColUnAvailableInTimeRangeException {
-    Set<String> cubeColumns = cubeql.getColumnsQueried(cubeql.getCube().getName());
+    Set<String> cubeColumns = cubeql.getColumnsQueriedForTable(cubeql.getCube().getName());
     if (cubeColumns == null || cubeColumns.isEmpty()) {
       // Query doesn't have any columns from cube
       return;
     }
 
-    for (String col : cubeql.getColumnsQueried(cubeql.getCube().getName())) {
+    for (String col : cubeql.getColumnsQueriedForTable(cubeql.getCube().getName())) {
       CubeColumn column = cubeql.getCube().getColumnByName(col);
       for (TimeRange range : cubeql.getTimeRanges()) {
         if (column == null) {
