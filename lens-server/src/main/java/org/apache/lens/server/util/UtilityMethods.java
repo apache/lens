@@ -148,7 +148,7 @@ public final class UtilityMethods {
     tmp.setPassword(conf.get(LensConfConstants.SERVER_DB_JDBC_PASS, LensConfConstants.DEFAULT_SERVER_DB_PASS));
     tmp.setValidationQuery(
         conf.get(LensConfConstants.SERVER_DB_VALIDATION_QUERY, LensConfConstants.DEFAULT_SERVER_DB_VALIDATION_QUERY));
-    tmp.setDefaultAutoCommit(false);
+    tmp.setDefaultAutoCommit(true);
     return tmp;
   }
 

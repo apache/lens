@@ -37,7 +37,6 @@ import org.apache.lens.server.util.UtilityMethods;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.BeanProcessor;
-import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.RowProcessor;
@@ -114,23 +113,16 @@ public class LensServerDAO {
     FinishedLensQuery alreadyExisting = getQuery(query.getHandle());
     if (alreadyExisting == null) {
       // The expected case
-      Connection conn = null;
       String sql = "insert into finished_queries (handle, userquery, submitter, priority, "
         + "starttime,endtime,result,status,metadata,rows,filesize,"
         + "errormessage,driverstarttime,driverendtime, drivername, queryname, submissiontime, driverquery, conf)"
         + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-      try {
-        conn = getConnection();
-        QueryRunner runner = new QueryRunner();
-        runner.update(conn, sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getPriority(),
-            query.getStartTime(), query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(),
-            query.getRows(), query.getFileSize(), query.getErrorMessage(), query.getDriverStartTime(),
-            query.getDriverEndTime(), query.getDriverName(), query.getQueryName(), query.getSubmissionTime(),
-            query.getDriverQuery(), serializeConf(query.getConf()));
-        conn.commit();
-      } finally {
-        DbUtils.closeQuietly(conn);
-      }
+      QueryRunner runner = new QueryRunner(ds);
+      runner.update(sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getPriority(),
+        query.getStartTime(), query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(),
+        query.getRows(), query.getFileSize(), query.getErrorMessage(), query.getDriverStartTime(),
+        query.getDriverEndTime(), query.getDriverName(), query.getQueryName(), query.getSubmissionTime(),
+        query.getDriverQuery(), serializeConf(query.getConf()));
     } else {
       log.warn("Re insert happening in purge: " + Thread.currentThread().getStackTrace());
       if (alreadyExisting.equals(query)) {
