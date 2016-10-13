@@ -119,7 +119,7 @@ class AggregateResolver implements ContextRewriter {
              cubeql.getExprCtx().getAllExprsQueried().get(expr).iterator(); itrContext.hasNext();) {
           for (Iterator<ExprColumn.ExprSpec> itrCol =
                itrContext.next().getExprCol().getExpressionSpecs().iterator(); itrCol.hasNext();) {
-            ASTNode exprAST = HQLParser.parseExpr(itrCol.next().getExpr());
+            ASTNode exprAST = HQLParser.parseExpr(itrCol.next().getExpr(), cubeql.getConf());
             if (HQLParser.isAggregateAST(exprAST)) {
               return true;
             }

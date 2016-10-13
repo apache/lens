@@ -71,7 +71,7 @@ class GroupbyResolver implements ContextRewriter {
         String expr = sel.getExprWithoutAlias();
         if (!groupByExprs.contains(expr)) {
           if (!sel.isAggregate()) {
-            ASTNode exprAST = HQLParser.parseExpr(expr);
+            ASTNode exprAST = HQLParser.parseExpr(expr, cubeql.getConf());
             ASTNode groupbyAST = cubeql.getGroupByAST();
             if (!isConstantsUsed(exprAST)) {
               if (groupbyAST != null) {
@@ -130,7 +130,7 @@ class GroupbyResolver implements ContextRewriter {
     int index = 0;
     for (String expr : groupByExprs) {
       if (!contains(selectExprs, expr)) {
-        ASTNode exprAST = HQLParser.parseExpr(expr);
+        ASTNode exprAST = HQLParser.parseExpr(expr, cubeql.getConf());
         addChildAtIndex(index, cubeql.getSelectAST(), exprAST);
         index++;
       }

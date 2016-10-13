@@ -886,10 +886,10 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
           String table = entry.getKey();
           String rangeWhere = entry.getValue();
           if (!StringUtils.isBlank(rangeWhere)) {
-            ASTNode rangeAST = HQLParser.parseExpr(rangeWhere);
+            ASTNode rangeAST = HQLParser.parseExpr(rangeWhere, conf);
             range.getParent().setChild(range.getChildIndex(), rangeAST);
           }
-          fact.getStorgeWhereClauseMap().put(table, HQLParser.parseExpr(getWhereString()));
+          fact.getStorgeWhereClauseMap().put(table, HQLParser.parseExpr(getWhereString(), conf));
         }
       }
     }

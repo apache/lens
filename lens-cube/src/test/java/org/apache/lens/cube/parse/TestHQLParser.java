@@ -494,15 +494,16 @@ public class TestHQLParser {
   @DataProvider
   public Object[][] exprDataProvider() {
     return new Object[][] {
-      {"a.b", true},
-      {"a.date", false},
+      {"a.b", null, true},
+      {"a.date", null, false},
+      {"a.date", conf, true},
     };
   }
 
   @Test(dataProvider = "exprDataProvider")
-  public void testParseExpr(String expr, boolean success) {
+  public void testParseExpr(String expr, HiveConf conf, boolean success) {
     try {
-      HQLParser.parseExpr(expr);
+      HQLParser.parseExpr(expr, conf);
       Assert.assertTrue(success);
     } catch (LensException e) {
       Assert.assertFalse(success);

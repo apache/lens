@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
@@ -38,6 +39,8 @@ import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.*;
 
 import org.antlr.runtime.CommonToken;
+import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.TokenRewriteStream;
 import org.antlr.runtime.tree.Tree;
 
 import com.google.common.base.Optional;
@@ -196,14 +199,31 @@ public final class HQLParser {
   }
 
   public static ASTNode parseExpr(String expr) throws LensException {
-    ParseDriver driver = new ParseDriver();
+    return parseExpr(expr, null);
+  }
+  public static ASTNode parseExpr(String expr, Configuration conf) throws LensException {
     ASTNode tree;
     try {
-      tree = driver.parseExpression(expr);
-    } catch (ParseException e) {
+      tree = parseExpression(expr, conf);
+    } catch (ParseException|RecognitionException e) {
       throw new LensException(COULD_NOT_PARSE_EXPRESSION.getLensErrorInfo(), e, expr);
     }
     return ParseUtils.findRootNonNullToken(tree);
+  }
+  public static ASTNode parseExpression(String command, Configuration conf)
+    throws ParseException, RecognitionException {
+    ParseDriver driver = new ParseDriver();
+    ParseDriver.HiveLexerX lexer = driver.new HiveLexerX(driver.new ANTLRNoCaseStringStream(command));
+    if (conf != null) {
+      lexer.setHiveConf(conf);
+    }
+    TokenRewriteStream tokens = new TokenRewriteStream(lexer);
+    HiveParser parser = new HiveParser(tokens);
+    if (conf != null) {
+      parser.setHiveConf(conf);
+    }
+    parser.setTreeAdaptor(ParseDriver.adaptor);
+    return (ASTNode)parser.expression().getTree();
   }
 
   public static void printAST(ASTNode node) {
