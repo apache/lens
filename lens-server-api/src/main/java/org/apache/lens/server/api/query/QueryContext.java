@@ -201,8 +201,7 @@ public class QueryContext extends AbstractQueryContext implements FailureContext
   @Getter
   @Setter
   private transient Future queryLauncher;
-
-  private final List<QueryDriverStatusUpdateListener> driverStatusUpdateListeners = Lists.newArrayList();
+  transient List<QueryDriverStatusUpdateListener> driverStatusUpdateListeners = Lists.newArrayList();
   @Getter
   @Setter
   List<FailedAttempt> failedAttempts = Lists.newArrayList();
@@ -310,6 +309,7 @@ public class QueryContext extends AbstractQueryContext implements FailureContext
   public void initTransientState() {
     super.initTransientState();
     statusUpdateFailures = new StatusUpdateFailureContext();
+    driverStatusUpdateListeners = Lists.newArrayList();
   }
 
   /**

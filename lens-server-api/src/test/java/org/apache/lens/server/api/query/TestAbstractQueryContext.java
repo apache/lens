@@ -73,26 +73,22 @@ public class TestAbstractQueryContext {
   public void testTransientState() throws LensException, IOException, ClassNotFoundException {
     MockQueryContext ctx = new MockQueryContext();
     ByteArrayOutputStream bios = new ByteArrayOutputStream();
-    ObjectOutputStream out = new ObjectOutputStream(bios);
-    byte[] ctxBytes = null;
-    try {
+    byte[] ctxBytes;
+    try (ObjectOutputStream out = new ObjectOutputStream(bios)) {
       out.writeObject(ctx);
       ctxBytes = bios.toByteArray();
-    } finally {
-      out.close();
     }
     ByteArrayInputStream bais = new ByteArrayInputStream(ctxBytes);
-    ObjectInputStream in = new ObjectInputStream(bais);
-    MockQueryContext ctxRead = null;
-    try {
+    MockQueryContext ctxRead;
+    try (ObjectInputStream in = new ObjectInputStream(bais)) {
       ctxRead = (MockQueryContext) in.readObject();
-    } finally {
-      in.close();
     }
     ctxRead.initTransientState();
     ctxRead.setConf(ctx.getConf());
     assertNotNull(ctxRead.getHiveConf());
     assertNotNull(ctxRead.statusUpdateFailures);
+    assertNotNull(ctxRead.driverStatusUpdateListeners);
+    assertEquals(ctxRead.driverStatusUpdateListeners.size(), 0);
   }
 
   @Test

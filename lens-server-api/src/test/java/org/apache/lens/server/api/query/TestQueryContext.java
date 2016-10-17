@@ -74,7 +74,7 @@ public class TestQueryContext {
   }
 
   @Test
-  public void testUpdateDriverStatusRetrieExhausts() throws LensException {
+  public void testUpdateDriverStatusRetriesExhaust() throws LensException {
     Configuration conf = new Configuration();
     List<LensDriver> drivers = MockQueryContext.getDrivers(conf);
     MockQueryContext ctx = new MockQueryContext("simulate status failure", new LensConf(), conf, drivers);
