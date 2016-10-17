@@ -147,11 +147,15 @@ public class YAMLToStringStrategyTest {
         return name.endsWith("xml");
       }
     })) {
-      Class<?> clazz = Class.forName(fn.substring(0, fn.length() - 4));
-      Object unmarshalled = clazz.cast(new LensJAXBContext(clazz)
-        .createUnmarshaller().unmarshal(getClass().getResourceAsStream("/toString/" + fn)));
-      String toString = readYAML("/toString/" + fn.replaceAll("xml$", "yaml"));
-      dataList.add(new ToStringTestData(fn, unmarshalled, toString));
+      try {
+        Class<?> clazz = Class.forName(fn.substring(0, fn.length() - 4));
+        Object unmarshalled = clazz.cast(new LensJAXBContext(clazz)
+          .createUnmarshaller().unmarshal(getClass().getResourceAsStream("/toString/" + fn)));
+        String toString = readYAML("/toString/" + fn.replaceAll("xml$", "yaml"));
+        dataList.add(new ToStringTestData(fn, unmarshalled, toString));
+      } catch (Throwable th) {
+        dataList.add(new ToStringTestData(fn, th));
+      }
     }
     return dataList;
   }

@@ -50,8 +50,8 @@ public class DriverSelectorQueryContext {
    */
   @Getter
   @Setter
-  protected Map<LensDriver, DriverQueryContext> driverQueryContextMap = new HashMap<LensDriver,
-    DriverQueryContext>();
+  protected Map<LensDriver, DriverQueryContext> driverQueryContextMap = new HashMap<>();
+  private Set<LensDriver> blackListedDrivers = Sets.newHashSet();
 
   public DriverSelectorQueryContext(final String userQuery, final Configuration queryConf,
     final Collection<LensDriver> drivers) {
@@ -75,6 +75,10 @@ public class DriverSelectorQueryContext {
       ctx.setQuery(userQuery);
       driverQueryContextMap.put(driver, ctx);
     }
+  }
+
+  public void blacklist(LensDriver selectedDriver) {
+    blackListedDrivers.add(selectedDriver);
   }
 
   public static class DriverQueryContext {
@@ -264,13 +268,16 @@ public class DriverSelectorQueryContext {
   public Collection<LensDriver> getDrivers() {
     return driverQueryContextMap.keySet();
   }
+  public Collection<LensDriver> getEligibleDrivers() {
+    return Sets.difference(driverQueryContextMap.keySet(), blackListedDrivers);
+  }
 
   public Collection<LensDriver> getDriversWithValidQueryCost() {
 
     final Set<LensDriver> eligibleDrivers = Sets.newLinkedHashSet();
-    for (Map.Entry<LensDriver, DriverQueryContext> driverToDriverContext : this.driverQueryContextMap.entrySet()) {
-      if (driverToDriverContext.getValue().driverCost != null) {
-        eligibleDrivers.add(driverToDriverContext.getKey());
+    for (LensDriver driver: getEligibleDrivers()) {
+      if (driverQueryContextMap.get(driver).driverCost != null) {
+        eligibleDrivers.add(driver);
       }
     }
     return Collections.unmodifiableCollection(eligibleDrivers);

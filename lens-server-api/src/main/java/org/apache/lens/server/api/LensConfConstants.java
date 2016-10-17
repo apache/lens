@@ -98,7 +98,7 @@ public final class LensConfConstants {
 
   public static final String MAX_SESSIONS_PER_USER = SERVER_PFX + "max.sessions.per.user";
 
-  public static final String QUERY_COMPARATOR_CLASS = SERVER_PFX + "query.comparator.class";
+  public static final String QUERY_COMPARATOR_CLASSES = SERVER_PFX + "query.comparator.classes";
 
   public static final Integer DEFAULT_MAX_SESSIONS_PER_USER = 10;
 
@@ -913,8 +913,9 @@ public final class LensConfConstants {
   /**
    * Key to get the implementations of query constraint factories.
    */
+  public static final String QUERY_LAUNCHING_CONSTRAINT_FACTORIES_SFX = "query.launching.constraint.factories";
   public static final String QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY = SERVER_PFX
-    + "query.launching.constraint.factories";
+    + QUERY_LAUNCHING_CONSTRAINT_FACTORIES_SFX;
 
   /**
    * Key to get the total query cost ceiling per user.
@@ -925,8 +926,10 @@ public final class LensConfConstants {
   /**
    * Key to get the implementations of waiting queries selection policy factories.
    */
+  public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_SFX =
+    "waiting.queries.selection.policy.factories";
   public static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY = SERVER_PFX
-      + "waiting.queries.selection.policy.factories";
+      + WAITING_QUERIES_SELECTION_POLICY_FACTORIES_SFX;
 
   /**
    * Key denoting the dialect class property of saved query service.
@@ -952,6 +955,18 @@ public final class LensConfConstants {
    * The driver weight property
    */
   public static final String DRIVER_WEIGHT = DRIVER_PFX + "weight";
+
+  /**
+   * Key for specifying Retry policy class
+   */
+  public static final String RETRY_POLICY_CLASSES_SFX = "query.retry.policy.classes";
+
+  public static final String QUERY_RETRY_POLICY_CLASSES = SERVER_PFX + RETRY_POLICY_CLASSES_SFX;
+
+  /**
+   * Driver hook property
+   */
+  public static final String DRIVER_HOOK_CLASS_SFX = "query.hook.class";
 
   /**
    * Default driver weight

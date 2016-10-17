@@ -42,8 +42,6 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
-import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
@@ -60,9 +58,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.Tree;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,7 +72,6 @@ public class ESDriver extends AbstractLensDriver {
   private static final double STREAMING_PARTITION_COST = 0;
   private static final QueryCost ES_DRIVER_COST = new FactPartitionBasedQueryCost(STREAMING_PARTITION_COST);
 
-  private Configuration conf;
   private ESClient esClient;
   private ExecutorService asyncQueryPool;
   private ESDriverConfig config;
@@ -87,11 +82,6 @@ public class ESDriver extends AbstractLensDriver {
   private final Map<String, ESQuery> rewrittenQueriesCache = Maps.newConcurrentMap();
   private final Map<QueryHandle, Future<LensResultSet>> resultSetMap = Maps.newConcurrentMap();
   private final Map<QueryHandle, QueryContext> handleContextMap = Maps.newConcurrentMap();
-
-  @Override
-  public Configuration getConf() {
-    return conf;
-  }
 
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) {
@@ -232,16 +222,6 @@ public class ESDriver extends AbstractLensDriver {
 
   }
 
-  @Override
-  public ImmutableSet<QueryLaunchingConstraint> getQueryConstraints() {
-    return ImmutableSet.copyOf(Sets.<QueryLaunchingConstraint>newHashSet());
-  }
-
-  @Override
-  public ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies() {
-    return ImmutableSet.copyOf(Sets.<WaitingQueriesSelectionPolicy>newHashSet());
-  }
-
   private ESQuery rewrite(AbstractQueryContext context) throws LensException {
     final String key = keyFor(context);
     if (rewrittenQueriesCache.containsKey(key)) {
@@ -299,18 +279,15 @@ public class ESDriver extends AbstractLensDriver {
   @Override
   public void configure(Configuration conf, String driverType, String driverName) throws LensException {
     super.configure(conf, driverType, driverName);
-    this.conf = new Configuration(conf);
-    this.conf.addResource("esdriver-default.xml");
-    this.conf.addResource(getDriverResourcePath("esdriver-site.xml"));
-    config = new ESDriverConfig(this.conf);
+    config = new ESDriverConfig(getConf());
     Class klass;
     try {
-      klass = Class.forName(this.conf.get(ESDriverConfig.CLIENT_CLASS_KEY));
+      klass = Class.forName(getConf().get(ESDriverConfig.CLIENT_CLASS_KEY));
       if (klass != null) {
         log.debug("Picked up class {}", klass);
         if (ESClient.class.isAssignableFrom(klass)) {
           final Constructor constructor = klass.getConstructor(ESDriverConfig.class, Configuration.class);
-          esClient = (ESClient) constructor.newInstance(config, this.conf);
+          esClient = (ESClient) constructor.newInstance(config, getConf());
           log.debug("Successfully instantiated es client of type {}", klass);
         }
       } else {

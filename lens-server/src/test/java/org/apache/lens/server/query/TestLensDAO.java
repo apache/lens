@@ -25,20 +25,21 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.ws.rs.core.Application;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.Priority;
+import org.apache.lens.api.query.FailedAttempt;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.driver.jdbc.JDBCResultSet;
+import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
-import org.apache.lens.server.api.query.DriverSelectorQueryContext;
-import org.apache.lens.server.api.query.FinishedLensQuery;
-import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryExecutionService;
+import org.apache.lens.server.api.query.*;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -54,7 +55,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Test(groups = "unit-test")
 @Slf4j
-public class TestLensDAO {
+public class TestLensDAO extends LensJerseyTest {
+
+  @Override
+  protected Application configure() {
+    return new TestQueryService.QueryServiceTestApp();
+  }
 
   /**
    * Test lens server dao.
@@ -89,6 +95,10 @@ public class TestLensDAO {
     finishedLensQuery.setStatus(QueryStatus.Status.SUCCESSFUL.name());
     finishedLensQuery.setPriority(Priority.NORMAL.toString());
 
+    finishedLensQuery.setFailedAttempts(Lists.newArrayList(
+      new FailedAttempt("driver1", 1.0, "progress full", "no error", 0L, 1L),
+      new FailedAttempt("driver2", 1.0, "progress also full", "no error at all", 2L, 3L)
+    ));
     // Validate JDBC driver RS Meta can be deserialized
 
     // Create a valid JDBCResultSet
@@ -145,7 +155,8 @@ public class TestLensDAO {
     Assert.assertEquals(Priority.valueOf(actual.getPriority()), Priority.NORMAL);
     Assert.assertEquals(actual.getDriverQuery(), driverQuery);
     // when driver list contains the selected driver, selected driver should get set correctly in context
-    QueryContext retrievedQueryContext = actual.toQueryContext(new Configuration(), Lists.newArrayList(mockDriver));
+    QueryContext retrievedQueryContext = actual.toQueryContext(new Configuration(),
+      Lists.newArrayList(mockDriver));
     Assert.assertEquals(retrievedQueryContext.getSelectedDriverQuery(), driverQuery);
 
     // Test find finished queries

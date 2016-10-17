@@ -19,10 +19,11 @@
 package org.apache.lens.server.api.query;
 
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.Priority;
+import org.apache.lens.api.query.FailedAttempt;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.driver.LensDriver;
@@ -46,7 +47,7 @@ import lombok.ToString;
  *
  * @see java.lang.Object#hashCode()
  */
-@EqualsAndHashCode(exclude = {"selectedDriver", "conf"})
+@EqualsAndHashCode(exclude = {"selectedDriver", "conf", "failedAttempts"})
 /*
  * (non-Javadoc)
  *
@@ -185,6 +186,10 @@ public class FinishedLensQuery {
   @Setter
   private String driverQuery;
 
+  @Getter
+  @Setter
+  private List<FailedAttempt> failedAttempts;
+
   /**
    * Instantiates a new finished lens query.
    */
@@ -222,6 +227,7 @@ public class FinishedLensQuery {
       this.priority = ctx.getPriority().toString();
     }
     this.conf = ctx.getLensConf();
+    this.failedAttempts = ctx.getFailedAttempts();
   }
 
   public QueryContext toQueryContext(Configuration conf, Collection<LensDriver> drivers) {
@@ -249,13 +255,12 @@ public class FinishedLensQuery {
     if (getPriority() != null) {
       qctx.setPriority(Priority.valueOf(getPriority()));
     }
+    qctx.setFailedAttempts(getFailedAttempts());
     return qctx;
   }
 
   private LensDriver getDriverFromName(Collection<LensDriver> drivers) {
-    Iterator<LensDriver> iterator = drivers.iterator();
-    while (iterator.hasNext()) {
-      LensDriver driver = iterator.next();
+    for (LensDriver driver : drivers) {
       if (driverName.equals(driver.getFullyQualifiedName())) {
         return driver;
       }

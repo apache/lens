@@ -25,9 +25,9 @@ import static java.lang.reflect.Modifier.isSynchronized;
 import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.comparators.QueryCostComparator;
+import org.apache.lens.server.api.query.comparators.QueryPriorityComparator;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
-import org.apache.lens.server.query.QueryCostComparator;
-import org.apache.lens.server.query.QueryPriorityComparator;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

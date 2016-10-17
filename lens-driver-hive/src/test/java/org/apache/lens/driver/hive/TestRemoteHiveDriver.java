@@ -148,7 +148,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     driverConf.addResource("drivers/hive/hive1/hivedriver-site.xml");
     driver = new HiveDriver();
     driverConf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
-    driverConf.setClass(HiveDriver.HIVE_QUERY_HOOK_CLASS, MockDriverQueryHook.class, DriverQueryHook.class);
+    driverConf.setClass(LensConfConstants.DRIVER_HOOK_CLASS_SFX, MockDriverQueryHook.class, DriverQueryHook.class);
     driver.configure(driverConf, "hive", "hive1");
     drivers = Lists.<LensDriver>newArrayList(driver);
     System.out.println("TestRemoteHiveDriver created");

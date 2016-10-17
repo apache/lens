@@ -372,7 +372,7 @@
           <environmentVariables>
             <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
           </environmentVariables>
-          <argLine>-Xms256m -Xmx512m -XX:PermSize=256m -XX:MaxPermSize=256m</argLine>
+          <argLine>-Xms256m -Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=256m</argLine>
         </configuration>
       </plugin>
       <plugin>

@@ -40,7 +40,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryEnded;
+import org.apache.lens.server.api.query.events.QueryEnded;
 import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.commons.lang3.StringUtils;

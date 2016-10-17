@@ -299,7 +299,7 @@ public final class RewriteUtil {
       Map<LensDriver, DriverRewriterRunnable> runnables = new LinkedHashMap<>();
       List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery, ctx.getHiveConf());
 
-      for (LensDriver driver : ctx.getDriverContext().getDrivers()) {
+      for (LensDriver driver : ctx.getDriverContext().getEligibleDrivers()) {
         runnables.put(driver, new DriverRewriterRunnable(driver, ctx, cubeQueries, replacedQuery));
       }
 

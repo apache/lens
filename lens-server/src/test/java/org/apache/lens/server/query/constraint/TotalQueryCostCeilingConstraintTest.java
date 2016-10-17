@@ -21,7 +21,8 @@ package org.apache.lens.server.query.constraint;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.collect.EstimatedImmutableQueryCollection;
@@ -42,7 +43,7 @@ public class TotalQueryCostCeilingConstraintTest {
   }
 
   @Test(dataProvider = "dpTestAllowsLaunchOfQuery")
-  public void testAllowsLaunchOfQuery(final double totalQueryCostForCurrentUser, final boolean expectedCanLaunchQuery) {
+  public void testAllowsLaunchOfQuery(final double totalQueryCostForCurrentUser, final boolean expectedCanLaunch) {
 
     final QueryCost totalQueryCostCeilingPerUser = new FactPartitionBasedQueryCost(90.0);
     final QueryLaunchingConstraint queryConstraint
@@ -56,8 +57,13 @@ public class TotalQueryCostCeilingConstraintTest {
     when(launchedQueries.getTotalQueryCost(mockUser))
       .thenReturn(new FactPartitionBasedQueryCost(totalQueryCostForCurrentUser));
 
-    boolean actualCanLaunchQuery = queryConstraint.allowsLaunchOf(query, launchedQueries);
-    assertEquals(actualCanLaunchQuery, expectedCanLaunchQuery);
+    String actualCanLaunch = queryConstraint.allowsLaunchOf(query, launchedQueries);
+
+    if (expectedCanLaunch) {
+      assertNull(actualCanLaunch);
+    } else {
+      assertNotNull(actualCanLaunch);
+    }
   }
 
   @Test
@@ -69,7 +75,7 @@ public class TotalQueryCostCeilingConstraintTest {
     final QueryContext query = mock(QueryContext.class);
     final EstimatedImmutableQueryCollection launchedQueries = mock(EstimatedImmutableQueryCollection.class);
 
-    boolean actualCanLaunchQuery = queryConstraint.allowsLaunchOf(query, launchedQueries);
-    assertEquals(actualCanLaunchQuery, true);
+    String actualCanLaunch = queryConstraint.allowsLaunchOf(query, launchedQueries);
+    assertNull(actualCanLaunch);
   }
 }

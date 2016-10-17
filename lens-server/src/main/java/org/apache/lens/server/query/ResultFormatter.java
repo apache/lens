@@ -28,6 +28,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.events.QueryExecuted;
 import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.hadoop.fs.FileSystem;

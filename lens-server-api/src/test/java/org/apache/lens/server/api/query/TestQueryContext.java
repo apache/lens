@@ -24,10 +24,11 @@ import static org.testng.Assert.*;
 import java.util.List;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.server.api.common.*;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.retry.BackOffRetryHandler;
+import org.apache.lens.server.api.retry.FibonacciExponentialBackOffRetryHandler;
 
 import org.apache.hadoop.conf.Configuration;
 

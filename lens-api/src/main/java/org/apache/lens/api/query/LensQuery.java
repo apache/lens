@@ -21,6 +21,8 @@
  */
 package org.apache.lens.api.query;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -214,6 +216,10 @@ public class LensQuery extends ToYAMLString {
   @XmlElement
   @Getter
   private String queryName;
+
+  @XmlElement
+  @Getter
+  private List<FailedAttempt> failedAttempts;
 
   /**
    * @return error code in case of query failures

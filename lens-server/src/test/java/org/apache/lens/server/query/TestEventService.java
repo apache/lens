@@ -39,7 +39,7 @@ import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.events.LensEventService;
-import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.query.events.*;
 import org.apache.lens.server.api.session.SessionClosed;
 import org.apache.lens.server.api.session.SessionExpired;
 import org.apache.lens.server.api.session.SessionOpened;

@@ -24,7 +24,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryEnded;
+import org.apache.lens.server.api.query.events.QueryEnded;
 import org.apache.lens.server.stats.event.query.QueryDriverStatistics;
 import org.apache.lens.server.stats.event.query.QueryExecutionStatistics;
 

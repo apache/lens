@@ -35,14 +35,18 @@ public class MaxJDBCConnectionCheckConstraint implements QueryLaunchingConstrain
   }
 
   @Override
-  public boolean allowsLaunchOf(final QueryContext candidateQuery,
+  public String allowsLaunchOf(final QueryContext candidateQuery,
                                 EstimatedImmutableQueryCollection launchedQueries) {
     final LensDriver selectedDriver = candidateQuery.getSelectedDriver();
-    final boolean canLaunch = (selectedDriver instanceof JDBCDriver)
-        && (((JDBCDriver) selectedDriver).getQueryContextMap().size() < poolMaxSize);
-
-    log.debug("canLaunch:{}", canLaunch);
-    return canLaunch;
+    if (!(selectedDriver instanceof JDBCDriver)) {
+      return "driver isn't jdbc driver";
+    }
+    int runningQueries = ((JDBCDriver) selectedDriver).getQueryContextMap().size();
+    if (runningQueries >= poolMaxSize) {
+      return runningQueries + "/" + poolMaxSize + " queries running on driver "
+        + candidateQuery.getSelectedDriver().getFullyQualifiedName();
+    }
+    return null;
   }
 }
 

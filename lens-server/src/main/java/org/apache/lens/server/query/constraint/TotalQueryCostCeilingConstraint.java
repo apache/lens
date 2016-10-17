@@ -57,18 +57,20 @@ public class TotalQueryCostCeilingConstraint implements QueryLaunchingConstraint
    * @return
    */
   @Override
-  public boolean allowsLaunchOf(
+  public String allowsLaunchOf(
     final QueryContext candidateQuery, final EstimatedImmutableQueryCollection launchedQueries) {
 
     if (!totalQueryCostCeilingPerUser.isPresent()) {
-      return true;
+      return null;
     }
 
     final String currentUser = candidateQuery.getSubmittedUser();
     QueryCost totalQueryCostForCurrentUser = launchedQueries.getTotalQueryCost(currentUser);
 
-    boolean canLaunch = (totalQueryCostForCurrentUser.compareTo(totalQueryCostCeilingPerUser.get()) <= 0);
-    log.debug("canLaunch:{}", canLaunch);
-    return canLaunch;
+    if (totalQueryCostForCurrentUser.compareTo(totalQueryCostCeilingPerUser.get()) > 0) {
+      return totalQueryCostForCurrentUser + "/" + totalQueryCostCeilingPerUser + " capacity utilized by "
+        + candidateQuery.getSubmittedUser();
+    }
+    return null;
   }
 }

@@ -19,7 +19,6 @@
 package org.apache.lens.driver.hive;
 
 import static org.apache.lens.server.api.error.LensDriverErrorCode.*;
-import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -45,8 +44,6 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
-import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.cost.QueryCostCalculator;
@@ -70,7 +67,6 @@ import org.apache.hive.service.rpc.thrift.TSessionHandle;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,8 +78,6 @@ public class HiveDriver extends AbstractLensDriver {
 
   /** The Constant HIVE_CONNECTION_CLASS. */
   public static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
-
-  public static final String HIVE_QUERY_HOOK_CLASS = "lens.driver.hive.query.hook.class";
 
   /** The Constant HS2_CONNECTION_EXPIRY_DELAY. */
   public static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hive.hs2.connection.expiry.delay";
@@ -100,15 +94,6 @@ public class HiveDriver extends AbstractLensDriver {
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
   public static final String HS2_PRIORITY_DEFAULT_RANGES = "VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW";
   public static final String SESSION_KEY_DELIMITER = ".";
-
-  public static final String QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY
-    = "lens.driver.hive.query.launching.constraint.factories";
-
-  private static final String WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY
-    = "lens.driver.hive.waiting.queries.selection.policy.factories";
-
-  /** The driver conf- which will merged with query conf */
-  private Configuration driverConf;
 
   /** The HiveConf - used for connecting to hive server and metastore */
   private HiveConf hiveConf;
@@ -153,16 +138,11 @@ public class HiveDriver extends AbstractLensDriver {
   QueryPriorityDecider queryPriorityDecider;
   // package-local. Test case can change.
   boolean whetherCalculatePriority;
-  private DriverQueryHook queryHook;
   private static final Map<String, String> SESSION_CONF = new HashMap<String, String>() {
     {
       put(HiveConf.ConfVars.HIVE_SERVER2_CLOSE_SESSION_ON_DISCONNECT.varname, "false");
     }
   };
-
-  @Getter
-  protected ImmutableSet<QueryLaunchingConstraint> queryConstraints;
-  private ImmutableSet<WaitingQueriesSelectionPolicy> selectionPolicies;
 
   private String sessionDbKey(String sessionHandle, String database) {
     return sessionHandle + SESSION_KEY_DELIMITER + database;
@@ -340,11 +320,6 @@ public class HiveDriver extends AbstractLensDriver {
     log.info("Hive driver inited");
   }
 
-  @Override
-  public Configuration getConf() {
-    return driverConf;
-  }
-
   /*
    * (non-Javadoc)
    *
@@ -353,23 +328,16 @@ public class HiveDriver extends AbstractLensDriver {
   @Override
   public void configure(Configuration conf, String driverType, String driverName) throws LensException {
     super.configure(conf, driverType, driverName);
-    this.driverConf = new Configuration(conf);
-    String driverConfPath = getDriverResourcePath("hivedriver-site.xml");
-    this.driverConf.addResource("hivedriver-default.xml");
-    this.driverConf.addResource(driverConfPath);
 
-    // resources have to be added separately on hiveConf again because new HiveConf() overrides hive.* properties
-    // from HiveConf
     this.hiveConf = new HiveConf(conf, HiveDriver.class);
-    this.hiveConf.addResource("hivedriver-default.xml");
-    this.hiveConf.addResource(driverConfPath);
+    this.hiveConf.addResource(getConf());
 
-    connectionClass = this.driverConf.getClass(HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class,
+    connectionClass = getConf().getClass(HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class,
       ThriftConnection.class);
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
-    connectionExpiryTimeout = this.driverConf.getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
-    whetherCalculatePriority = this.driverConf.getBoolean(HS2_CALCULATE_PRIORITY, true);
-    Class<? extends QueryCostCalculator> queryCostCalculatorClass = this.driverConf.getClass(HS2_COST_CALCULATOR,
+    connectionExpiryTimeout = getConf().getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
+    whetherCalculatePriority = getConf().getBoolean(HS2_CALCULATE_PRIORITY, true);
+    Class<? extends QueryCostCalculator> queryCostCalculatorClass = getConf().getClass(HS2_COST_CALCULATOR,
       FactPartitionBasedQueryCostCalculator.class, QueryCostCalculator.class);
     try {
       queryCostCalculator = queryCostCalculatorClass.newInstance();
@@ -377,18 +345,9 @@ public class HiveDriver extends AbstractLensDriver {
       throw new LensException("Can't instantiate query cost calculator of class: " + queryCostCalculatorClass, e);
     }
     queryPriorityDecider = new CostRangePriorityDecider(
-      new CostToPriorityRangeConf(driverConf.get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES))
+      new CostToPriorityRangeConf(getConf().get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES))
     );
-    try {
-      queryHook = driverConf.getClass(
-        HIVE_QUERY_HOOK_CLASS, NoOpDriverQueryHook.class, DriverQueryHook.class
-      ).newInstance();
-      queryHook.setDriver(this);
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
-    }
-    queryConstraints = getImplementations(QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY, driverConf);
-    selectionPolicies = getImplementations(WAITING_QUERIES_SELECTION_POLICY_FACTORIES_KEY, driverConf);
+
     log.info("Hive driver {} configured successfully", getFullyQualifiedName());
   }
 
@@ -806,11 +765,6 @@ public class HiveDriver extends AbstractLensDriver {
   @Override
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
     driverListeners.add(driverEventListener);
-  }
-
-  @Override
-  public ImmutableSet<WaitingQueriesSelectionPolicy> getWaitingQuerySelectionPolicies() {
-    return selectionPolicies;
   }
 
   @Override
@@ -1384,10 +1338,5 @@ public class HiveDriver extends AbstractLensDriver {
    */
   public boolean hasLensSession(LensSessionHandle session) {
     return lensToHiveSession.containsKey(session.getPublicId().toString());
-  }
-
-  @Override
-  public DriverQueryHook getQueryHook() {
-    return queryHook;
   }
 }

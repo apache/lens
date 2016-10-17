@@ -31,6 +31,7 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.QueryCost;
+import org.apache.lens.server.api.retry.RetryPolicyDecider;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -232,4 +233,6 @@ public interface LensDriver extends Externalizable {
    * @return The method of status update supported by this driver.
    */
   StatusUpdateMethod getStatusUpdateMethod();
+
+  RetryPolicyDecider<QueryContext> getRetryPolicyDecider();
 }

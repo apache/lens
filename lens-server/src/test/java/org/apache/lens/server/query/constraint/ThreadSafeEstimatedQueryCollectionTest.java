@@ -21,7 +21,8 @@ package org.apache.lens.server.query.constraint;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.query.QueryContext;
@@ -74,8 +75,12 @@ public class ThreadSafeEstimatedQueryCollectionTest {
     QueryContext mockCandidateQuery = mock(QueryContext.class);
     when(mockCandidateQuery.getSelectedDriver()).thenReturn(mockDriver);
     when(mockCandidateQuery.getSelectedDriverQueryCost()).thenReturn(COST);
-    boolean actualCanLaunch = constraint.allowsLaunchOf(mockCandidateQuery, col);
+    String actualCanLaunch = constraint.allowsLaunchOf(mockCandidateQuery, col);
 
-    assertEquals(actualCanLaunch, expectedCanLaunch);
+    if (expectedCanLaunch) {
+      assertNull(actualCanLaunch);
+    } else {
+      assertNotNull(actualCanLaunch);
+    }
   }
 }

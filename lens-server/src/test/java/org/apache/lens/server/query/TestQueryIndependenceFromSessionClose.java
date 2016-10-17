@@ -102,6 +102,7 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
    */
   @BeforeClass
   public void setUpClass() throws Exception {
+    restartLensServer(getServerConf());
     lensSessionId = getSession();
     createTable(TEST_TABLE);
     loadData(TEST_TABLE, TestResourceFile.TEST_DATA2_FILE.getValue());
@@ -109,6 +110,10 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
       QUERY_PERSISTENT_RESULT_SET, true,
       QUERY_PERSISTENT_RESULT_INDRIVER, true,
       QUERY_OUTPUT_FORMATTER, TestQueryService.DeferredPersistentResultFormatter.class.getName());
+  }
+  @AfterClass
+  public void restart() {
+    restartLensServer();
   }
 
   @Override

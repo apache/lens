@@ -58,7 +58,7 @@ public class MockDriver extends AbstractLensDriver {
   /**
    * The conf.
    */
-  Configuration conf;
+  protected Configuration conf;
 
   /**
    * The query.
@@ -99,7 +99,7 @@ public class MockDriver extends AbstractLensDriver {
     this.conf = conf;
     ioTestVal = conf.getInt("mock.driver.test.val", -1);
     this.conf.addResource(getDriverResourcePath("failing-query-driver-site.xml"));
-    getQueryHook().setDriver(this);
+    loadQueryHook();
   }
 
   @Override

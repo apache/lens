@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.ImmutableSet;
@@ -69,26 +70,23 @@ public final class LensUtil {
 
   public static boolean isSocketException(@NonNull Throwable e) {
     Throwable cause = getCause(e);
-    if (cause instanceof SocketException || cause instanceof SocketTimeoutException) {
-      return true;
-    }
-    return false;
+    return cause instanceof SocketException || cause instanceof SocketTimeoutException;
   }
-  public static <T> ImmutableSet<T> getImplementations(final String factoriesKey, final Configuration conf) {
-
+  public static <T> Set<T> getImplementationsMutable(final String factoriesKey, final Configuration conf) {
     Set<T> implSet = Sets.newLinkedHashSet();
     final String[] factoryNames = conf.getStrings(factoriesKey);
-
-    if (factoryNames == null) {
-      return ImmutableSet.copyOf(implSet);
-    }
-
-    for (String factoryName : factoryNames) {
-      if (StringUtils.isNotBlank(factoryName)) {
-        final T implementation = getImplementation(factoryName.trim(), conf);
-        implSet.add(implementation);
+    if (factoryNames != null) {
+      for (String factoryName : factoryNames) {
+        if (StringUtils.isNotBlank(factoryName)) {
+          final T implementation = getImplementation(factoryName.trim(), conf);
+          implSet.add(implementation);
+        }
       }
     }
+    return implSet;
+  }
+  public static <T> ImmutableSet<T> getImplementations(final String factoriesKey, final Configuration conf) {
+    Set<T> implSet = getImplementationsMutable(factoriesKey, conf);
     return ImmutableSet.copyOf(implSet);
   }
 
@@ -97,7 +95,11 @@ public final class LensUtil {
     try {
       ConfigBasedObjectCreationFactory<T> factory
         = (ConfigBasedObjectCreationFactory<T>) Class.forName(factoryName).newInstance();
-      return factory.create(conf);
+      T ret = factory.create(conf);
+      if (ret instanceof Configurable) {
+        ((Configurable) ret).setConf(conf);
+      }
+      return ret;
     } catch (final ReflectiveOperationException e) {
       throw new IllegalStateException(e);
     }

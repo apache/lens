@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
+import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.collect.EstimatedImmutableQueryCollection;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
@@ -45,24 +46,27 @@ public class DefaultQueryLaunchingConstraintsCheckerTest {
     final QueryLaunchingConstraint constraint2 = mock(QueryLaunchingConstraint.class);
     QueryLaunchingConstraintsChecker constraintsChecker
       = new DefaultQueryLaunchingConstraintsChecker(ImmutableSet.of(constraint1, constraint2));
-
+    QueryStatus status = QueryStatus.getQueuedStatus();
     final QueryLaunchingConstraint driverConstraint = mock(QueryLaunchingConstraint.class);
     when(mockCandidateQuery.getSelectedDriverQueryConstraints()).thenReturn(ImmutableSet.of(driverConstraint));
+    when(mockCandidateQuery.getStatus()).thenReturn(status);
 
     /* Constraint1 stubbed to pass */
-    when(constraint1.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(true);
+    when(constraint1.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(null);
 
     /* Constraint2 stubbed to fail */
-    when(constraint2.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(false);
+    when(constraint2.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn("constraint 2 failed");
 
     /* DriverConstraint stubbed to fail */
-    when(driverConstraint.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(false);
+    when(driverConstraint.allowsLaunchOf(mockCandidateQuery, mockRunningQueries))
+      .thenReturn("driver constraint failed");
 
     /* Execute test */
     boolean canLaunchQuery = constraintsChecker.canLaunch(mockCandidateQuery, mockRunningQueries);
 
     /* Verify */
     Assert.assertFalse(canLaunchQuery);
+    Assert.assertEquals(mockCandidateQuery.getStatus().getProgressMessage(), "constraint 2 failed");
   }
 
   @Test
@@ -81,9 +85,9 @@ public class DefaultQueryLaunchingConstraintsCheckerTest {
     when(mockCandidateQuery.getSelectedDriverQueryConstraints()).thenReturn(ImmutableSet.of(driverConstraint));
 
     /* all constraints stubbed to pass */
-    when(constraint1.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(true);
-    when(constraint2.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(true);
-    when(driverConstraint.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(true);
+    when(constraint1.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(null);
+    when(constraint2.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(null);
+    when(driverConstraint.allowsLaunchOf(mockCandidateQuery, mockRunningQueries)).thenReturn(null);
 
     /* Execute test */
     boolean canLaunchQuery = constraintsChecker.canLaunch(mockCandidateQuery, mockRunningQueries);

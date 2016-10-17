@@ -41,22 +41,50 @@ public class MaxConcurrentDriverQueriesConstraint implements QueryLaunchingConst
   private final int maxConcurrentLaunches;
 
   @Override
-  public boolean allowsLaunchOf(
+  public String allowsLaunchOf(
     final QueryContext candidateQuery, final EstimatedImmutableQueryCollection launchedQueries) {
 
     final LensDriver selectedDriver = candidateQuery.getSelectedDriver();
     final Set<QueryContext> driverLaunchedQueries = launchedQueries.getQueries(selectedDriver);
-    final boolean canLaunch = (launchedQueries.getQueriesCount(selectedDriver) < maxConcurrentQueries)
-      && (getIsLaunchingCount(driverLaunchedQueries) < maxConcurrentLaunches)
-      && canLaunchWithQueueConstraint(candidateQuery, driverLaunchedQueries)
-      && canLaunchWithPriorityConstraint(candidateQuery, driverLaunchedQueries);
-    log.debug("canLaunch:{}", canLaunch);
-    return canLaunch;
+
+    String maxConcurrentLimitation = canLaunchWithMaxConcurrentConstraint(candidateQuery,
+      launchedQueries.getQueriesCount(selectedDriver));
+    if (maxConcurrentLimitation != null) {
+      return maxConcurrentLimitation;
+    }
+    String maxLaunchingLimitation = canLaunchWithMaxLaunchingConstraint(driverLaunchedQueries);
+    if (maxLaunchingLimitation != null) {
+      return maxLaunchingLimitation;
+    }
+    String queueLimitation = canLaunchWithQueueConstraint(candidateQuery, driverLaunchedQueries);
+    if (queueLimitation != null) {
+      return queueLimitation;
+    }
+    String priorityLimitation = canLaunchWithPriorityConstraint(candidateQuery, driverLaunchedQueries);
+    if (priorityLimitation != null) {
+      return priorityLimitation;
+    }
+    return null;
   }
 
-  private boolean canLaunchWithQueueConstraint(QueryContext candidateQuery, Set<QueryContext> launchedQueries) {
+  private String canLaunchWithMaxLaunchingConstraint(Set<QueryContext> driverLaunchedQueries) {
+    int launchingCount = getIsLaunchingCount(driverLaunchedQueries);
+    if (launchingCount >= maxConcurrentLaunches) {
+      return launchingCount + "/" + maxConcurrentLaunches + " launches happening";
+    }
+    return null;
+  }
+
+  private String canLaunchWithMaxConcurrentConstraint(QueryContext candidateQuery, int concurrentLaunched) {
+    if (concurrentLaunched >= maxConcurrentQueries) {
+      return concurrentLaunched + "/" + maxConcurrentQueries + " queries running on "
+        + candidateQuery.getSelectedDriver().getFullyQualifiedName();
+    }
+    return null;
+  }
+  private String canLaunchWithQueueConstraint(QueryContext candidateQuery, Set<QueryContext> launchedQueries) {
     if (maxConcurrentQueriesPerQueue == null) {
-      return true;
+      return null;
     }
     String queue = candidateQuery.getQueue();
     Integer limit = maxConcurrentQueriesPerQueue.get(queue);
@@ -64,7 +92,7 @@ public class MaxConcurrentDriverQueriesConstraint implements QueryLaunchingConst
       if (defaultMaxConcurrentQueriesPerQueueLimit != null) { //Check if any default limit is enabled for all queues
         limit = defaultMaxConcurrentQueriesPerQueueLimit;
       } else {
-        return true;
+        return null;
       }
     }
     int launchedOnQueue = 0;
@@ -73,17 +101,20 @@ public class MaxConcurrentDriverQueriesConstraint implements QueryLaunchingConst
         launchedOnQueue++;
       }
     }
-    return launchedOnQueue < limit;
+    if (launchedOnQueue >= limit) {
+      return launchedOnQueue + "/" + limit + " queries running in Queue " + queue;
+    }
+    return null;
   }
 
-  private boolean canLaunchWithPriorityConstraint(QueryContext candidateQuery, Set<QueryContext> launchedQueries) {
+  private String canLaunchWithPriorityConstraint(QueryContext candidateQuery, Set<QueryContext> launchedQueries) {
     if (maxConcurrentQueriesPerPriority == null) {
-      return true;
+      return null;
     }
     Priority priority = candidateQuery.getPriority();
     Integer limit = maxConcurrentQueriesPerPriority.get(priority);
     if (limit == null) {
-      return true;
+      return null;
     }
     int launchedOnPriority = 0;
     for (QueryContext context : launchedQueries) {
@@ -91,7 +122,10 @@ public class MaxConcurrentDriverQueriesConstraint implements QueryLaunchingConst
         launchedOnPriority++;
       }
     }
-    return launchedOnPriority < limit;
+    if (launchedOnPriority >= limit) {
+      return launchedOnPriority + "/" + limit + " queries running with priority " + priority;
+    }
+    return null;
   }
 
   private int getIsLaunchingCount(final Set<QueryContext> launchedQueries) {

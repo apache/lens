@@ -202,7 +202,7 @@ public abstract class AbstractQueryContext implements Serializable {
   public Map<LensDriver, DriverEstimateRunnable> getDriverEstimateRunnables() throws LensException {
     Map<LensDriver, DriverEstimateRunnable> estimateRunnables = new HashMap<LensDriver, DriverEstimateRunnable>();
 
-    for (LensDriver driver : driverContext.getDrivers()) {
+    for (LensDriver driver : driverContext.getEligibleDrivers()) {
       estimateRunnables.put(driver, new DriverEstimateRunnable(this, driver));
     }
 

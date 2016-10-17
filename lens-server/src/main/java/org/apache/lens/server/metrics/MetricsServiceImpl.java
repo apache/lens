@@ -39,7 +39,7 @@ import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.api.metrics.*;
 import org.apache.lens.server.api.query.QueryExecutionService;
-import org.apache.lens.server.api.query.StatusChange;
+import org.apache.lens.server.api.query.events.StatusChange;
 import org.apache.lens.server.api.session.*;
 import org.apache.lens.server.healthcheck.LensServiceHealthCheck;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;

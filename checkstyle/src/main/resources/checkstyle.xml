@@ -62,7 +62,7 @@
     </module>
 
     <module name="FileLength">
-      <property name="max" value="3500"/>
+      <property name="max" value="4000"/>
     </module>
     <module name="FileTabCharacter"/>
 

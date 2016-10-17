@@ -33,8 +33,8 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.scheduler.*;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryEnded;
 import org.apache.lens.server.api.query.QueryExecutionService;
+import org.apache.lens.server.api.query.events.QueryEnded;
 import org.apache.lens.server.scheduler.SchedulerServiceImpl;
 
 import org.apache.hadoop.conf.Configuration;

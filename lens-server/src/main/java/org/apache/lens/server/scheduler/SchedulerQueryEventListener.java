@@ -25,7 +25,7 @@ import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.scheduler.*;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryEnded;
+import org.apache.lens.server.api.query.events.QueryEnded;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -18,15 +18,23 @@
  */
 package org.apache.lens.server.api.driver;
 
+import static org.apache.lens.server.api.LensConfConstants.*;
+import static org.apache.lens.server.api.util.LensUtil.getImplementations;
+
 import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy;
+import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
+import org.apache.lens.server.api.retry.ChainedRetryPolicyDecider;
+import org.apache.lens.server.api.retry.RetryPolicyDecider;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,15 +55,48 @@ public abstract class AbstractLensDriver implements LensDriver {
   @Getter
   private String fullyQualifiedName = null;
 
-  private DriverQueryHook noOpDriverQueryHook = new NoOpDriverQueryHook();
+  @Getter
+  private Configuration conf;
+
+  @Getter
+  private ImmutableSet<QueryLaunchingConstraint> queryConstraints;
+  @Getter
+  private ImmutableSet<WaitingQueriesSelectionPolicy> waitingQuerySelectionPolicies;
+  @Getter
+  RetryPolicyDecider<QueryContext> retryPolicyDecider;
+  @Getter
+  private DriverQueryHook queryHook;
 
   @Override
   public void configure(Configuration conf, String driverType, String driverName) throws LensException {
     if (StringUtils.isBlank(driverType) || StringUtils.isBlank(driverName)) {
       throw new LensException("Driver Type and Name can not be null or empty");
     }
-    fullyQualifiedName = new StringBuilder(driverType).append(SEPARATOR).append(driverName).toString();
-    noOpDriverQueryHook.setDriver(this);
+    fullyQualifiedName = driverType + SEPARATOR + driverName;
+    this.conf = new DriverConfiguration(conf, driverType, getClass());
+    this.conf.addResource(getClass().getSimpleName().toLowerCase() + "-default.xml");
+    this.conf.addResource(getDriverResourcePath(getClass().getSimpleName().toLowerCase() + "-site.xml"));
+
+    this.queryConstraints = getImplementations(QUERY_LAUNCHING_CONSTRAINT_FACTORIES_SFX, getConf());
+    this.waitingQuerySelectionPolicies = getImplementations(WAITING_QUERIES_SELECTION_POLICY_FACTORIES_SFX, getConf());
+
+    loadRetryPolicyDecider();
+    loadQueryHook();
+  }
+
+  protected void loadQueryHook() throws LensException {
+    try {
+      queryHook = getConf().getClass(
+        DRIVER_HOOK_CLASS_SFX, NoOpDriverQueryHook.class, DriverQueryHook.class
+      ).newInstance();
+      queryHook.setDriver(this);
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
+    }
+  }
+
+  protected void loadRetryPolicyDecider() throws LensException {
+    this.retryPolicyDecider = ChainedRetryPolicyDecider.from(getConf(), RETRY_POLICY_CLASSES_SFX);
   }
 
   /**
@@ -96,18 +137,13 @@ public abstract class AbstractLensDriver implements LensDriver {
    * @return
    */
   protected String getDriverResourcePath(String resourceName) {
-    return new StringBuilder(LensConfConstants.DRIVERS_BASE_DIR).append(SEPARATOR).append(getFullyQualifiedName())
-      .append(SEPARATOR).append(resourceName).toString();
+    return LensConfConstants.DRIVERS_BASE_DIR + SEPARATOR + getFullyQualifiedName()
+      + SEPARATOR + resourceName;
   }
 
   @Override
   public Priority decidePriority(AbstractQueryContext queryContext) {
     return Priority.NORMAL;
-  }
-
-  @Override
-  public DriverQueryHook getQueryHook() {
-    return noOpDriverQueryHook;
   }
 
   @Override

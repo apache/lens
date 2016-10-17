@@ -19,11 +19,13 @@
 
 package org.apache.lens.server.query.constraint;
 
+import java.util.Collections;
 import java.util.Set;
 
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.collect.EstimatedImmutableQueryCollection;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
+import org.apache.lens.server.api.retry.BackOffRetryHandler;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +46,7 @@ public class DefaultQueryLaunchingConstraintsChecker implements QueryLaunchingCo
   private final ImmutableSet<QueryLaunchingConstraint> lensQueryConstraints;
 
   public DefaultQueryLaunchingConstraintsChecker(
-      @NonNull final ImmutableSet<QueryLaunchingConstraint> lensQueryConstraints) {
+    @NonNull final ImmutableSet<QueryLaunchingConstraint> lensQueryConstraints) {
     this.lensQueryConstraints = lensQueryConstraints;
   }
 
@@ -54,8 +56,11 @@ public class DefaultQueryLaunchingConstraintsChecker implements QueryLaunchingCo
     Set<QueryLaunchingConstraint> allConstraints = prepareAllConstraints(candidateQuery);
 
     for (QueryLaunchingConstraint queryConstraint : allConstraints) {
-      if (!queryConstraint.allowsLaunchOf(candidateQuery, launchedQueries)) {
-        log.info("query {} not allowed to launch. Constraint failed: {}", candidateQuery, queryConstraint);
+      String launchRejectionMessage = queryConstraint.allowsLaunchOf(candidateQuery, launchedQueries);
+      if (launchRejectionMessage != null) {
+        log.info("query {} not allowed to launch. Constraint failed: {} with message: {}",
+          candidateQuery, queryConstraint, launchRejectionMessage);
+        candidateQuery.getStatus().setProgressMessage(launchRejectionMessage);
         return false;
       }
     }
@@ -66,6 +71,12 @@ public class DefaultQueryLaunchingConstraintsChecker implements QueryLaunchingCo
   Set<QueryLaunchingConstraint> prepareAllConstraints(final QueryContext candidateQuery) {
 
     ImmutableSet<QueryLaunchingConstraint> driverConstraints = candidateQuery.getSelectedDriverQueryConstraints();
-    return Sets.union(this.lensQueryConstraints, driverConstraints);
+    BackOffRetryHandler<QueryContext> retryPolicy = candidateQuery.getRetryPolicy();
+    Sets.SetView<QueryLaunchingConstraint> constraints = Sets.union(this.lensQueryConstraints, driverConstraints);
+    if (retryPolicy == null) {
+      return constraints;
+    } else {
+      return Sets.union(Collections.singleton(new RetryPolicyToConstraingAdapter(retryPolicy)), constraints);
+    }
   }
 }

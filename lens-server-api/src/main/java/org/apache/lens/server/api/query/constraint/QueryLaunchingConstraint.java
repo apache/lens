@@ -28,7 +28,7 @@ public interface QueryLaunchingConstraint {
    *
    * @param candidateQuery The query which is the next candidate to be launched.
    * @param launchedQueries Current launched queries
-   * @return
+   * @return null if allowed to launch, otherwise a String containing the reason to block launch
    */
-  boolean allowsLaunchOf(final QueryContext candidateQuery, final EstimatedImmutableQueryCollection launchedQueries);
+  String allowsLaunchOf(final QueryContext candidateQuery, final EstimatedImmutableQueryCollection launchedQueries);
 }

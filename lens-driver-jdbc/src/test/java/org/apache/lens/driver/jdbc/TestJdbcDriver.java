@@ -446,11 +446,11 @@ public class TestJdbcDriver {
 
     //new query shouldn't be allowed
     QueryContext newcontext = createQueryContext("SELECT 123 FROM max_connection_test");
-    assertFalse(constraint.allowsLaunchOf(newcontext, null));
+    assertNotNull(constraint.allowsLaunchOf(newcontext, null));
 
     //close one query and launch the previous query again
     driver.closeQuery(context.getQueryHandle());
-    assertTrue(constraint.allowsLaunchOf(newcontext, null));
+    assertNull(constraint.allowsLaunchOf(newcontext, null));
     close();
   }
 

@@ -34,11 +34,6 @@
     <status>RUNNING</status>
     <statusMessage>query running</statusMessage>
     <isResultSetAvailable>false</isResultSetAvailable>
-    <lensErrorTO>
-      <code>9999</code>
-      <message>error message</message>
-      <stackTrace>random stack trace</stackTrace>
-    </lensErrorTO>
     <errorMessage>error message</errorMessage>
     <progressMessage>progress message</progressMessage>
     <queueNumber>11</queueNumber>

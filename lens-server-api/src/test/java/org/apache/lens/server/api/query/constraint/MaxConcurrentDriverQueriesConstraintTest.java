@@ -24,7 +24,8 @@ import static org.apache.lens.server.api.LensServerAPITestUtil.getConfiguration;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -164,9 +165,13 @@ public class MaxConcurrentDriverQueriesConstraintTest {
     when(mockCandidateQuery.getSelectedDriver()).thenReturn(mockDriver);
     when(mockLaunchedQueries.getQueriesCount(mockDriver)).thenReturn(currentDriverLaunchedQueries);
 
-    boolean actualCanLaunch = constraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
+    String actualCanLaunch = constraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
 
-    assertEquals(actualCanLaunch, expectedCanLaunch);
+    if (expectedCanLaunch) {
+      assertNull(actualCanLaunch);
+    } else {
+      assertNotNull(actualCanLaunch);
+    }
   }
 
   @Test(dataProvider = "dpTestConcurrentLaunches")
@@ -186,9 +191,13 @@ public class MaxConcurrentDriverQueriesConstraintTest {
     when(mockLaunchedQueries.getQueriesCount(mockDriver)).thenReturn(currentDriverLaunchedQueries);
     when(mockLaunchedQueries.getQueries(mockDriver)).thenReturn(queries);
 
-    boolean actualCanLaunch = constraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
+    String actualCanLaunch = constraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
 
-    assertEquals(actualCanLaunch, expectedCanLaunch);
+    if (expectedCanLaunch) {
+      assertNull(actualCanLaunch);
+    } else {
+      assertNotNull(actualCanLaunch);
+    }
   }
 
   @Test(dataProvider = "dpTestPerQueueConstraints")
@@ -208,9 +217,13 @@ public class MaxConcurrentDriverQueriesConstraintTest {
     QueryContext mockCandidateQuery = mock(QueryContext.class);
     when(mockCandidateQuery.getQueue()).thenReturn(candidateQueue);
     when(mockCandidateQuery.getSelectedDriver()).thenReturn(mockDriver);
-    boolean actualCanLaunch = perQueueConstraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
+    String actualCanLaunch = perQueueConstraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
 
-    assertEquals(actualCanLaunch, expectedCanLaunch);
+    if (expectedCanLaunch) {
+      assertNull(actualCanLaunch);
+    } else {
+      assertNotNull(actualCanLaunch);
+    }
   }
 
   @Test(dataProvider = "dpTestPerPriorityConstraints")
@@ -230,9 +243,13 @@ public class MaxConcurrentDriverQueriesConstraintTest {
     QueryContext mockCandidateQuery = mock(QueryContext.class);
     when(mockCandidateQuery.getPriority()).thenReturn(candidatePriority);
     when(mockCandidateQuery.getSelectedDriver()).thenReturn(mockDriver);
-    boolean actualCanLaunch = perPriorityConstraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
+    String actualCanLaunch = perPriorityConstraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
 
-    assertEquals(actualCanLaunch, expectedCanLaunch);
+    if (expectedCanLaunch) {
+      assertNull(actualCanLaunch);
+    } else {
+      assertNotNull(actualCanLaunch);
+    }
   }
 
   @Test(dataProvider = "dpTestPerQueuePerPriorityConstraints")
@@ -254,8 +271,12 @@ public class MaxConcurrentDriverQueriesConstraintTest {
     when(mockCandidateQuery.getQueue()).thenReturn(candidateQueue);
     when(mockCandidateQuery.getPriority()).thenReturn(candidatePriority);
     when(mockCandidateQuery.getSelectedDriver()).thenReturn(mockDriver);
-    boolean actualCanLaunch = perQueueAndPerPriorityConstraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
+    String actualCanLaunch = perQueueAndPerPriorityConstraint.allowsLaunchOf(mockCandidateQuery, mockLaunchedQueries);
 
-    assertEquals(actualCanLaunch, expectedCanLaunch);
+    if (expectedCanLaunch) {
+      assertNull(actualCanLaunch);
+    } else {
+      assertNotNull(actualCanLaunch);
+    }
   }
 }

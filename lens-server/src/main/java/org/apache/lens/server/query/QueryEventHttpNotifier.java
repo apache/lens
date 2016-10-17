@@ -36,8 +36,8 @@ import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryEnded;
-import org.apache.lens.server.api.query.QueryEvent;
+import org.apache.lens.server.api.query.events.QueryEnded;
+import org.apache.lens.server.api.query.events.QueryEvent;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;

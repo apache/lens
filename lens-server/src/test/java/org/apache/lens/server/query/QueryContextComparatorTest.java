@@ -27,16 +27,26 @@ import java.util.Comparator;
 
 import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.comparators.ChainedComparator;
+import org.apache.lens.server.api.query.comparators.FIFOQueryComparator;
+import org.apache.lens.server.api.query.comparators.QueryCostComparator;
+import org.apache.lens.server.api.query.comparators.QueryPriorityComparator;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Lists;
+
 public class QueryContextComparatorTest {
 
   private final Comparator<QueryContext> priorityComparator = new QueryPriorityComparator();
   private final Comparator<QueryContext> costComparator = new QueryCostComparator();
-
+  private final Comparator<QueryContext> fifoComparator = new FIFOQueryComparator();
+  private final Comparator<QueryContext> priorityAndFifoComparator
+    = new ChainedComparator<>(Lists.newArrayList(priorityComparator, fifoComparator));
+  private final Comparator<QueryContext> costAndFifoComparator
+    = new ChainedComparator<>(Lists.newArrayList(costComparator, fifoComparator));
 
 
   @DataProvider
@@ -61,7 +71,7 @@ public class QueryContextComparatorTest {
     when(query2.getSelectedDriverQueryCost()).thenReturn(qcO2);
 
     when(qcO1.compareTo(qcO2)).thenReturn(resultOfQueryCostCompare);
-    assertEquals(costComparator.compare(query1, query2), expectedResult);
+    assertEquals(costAndFifoComparator.compare(query1, query2), expectedResult);
   }
 
   @Test
@@ -73,7 +83,7 @@ public class QueryContextComparatorTest {
     QueryContext query2 = mock(QueryContext.class);
     when(query2.getPriority()).thenReturn(Priority.LOW); // Ordinal = 3
 
-    assertEquals(priorityComparator.compare(query1, query2), -2);
+    assertEquals(priorityAndFifoComparator.compare(query1, query2), -2);
   }
 
 
@@ -114,8 +124,8 @@ public class QueryContextComparatorTest {
 
     // Cost and Priority both are same, hence the comparison should happen
     // on query submission time
-    assertEquals(priorityComparator.compare(query1, query2), expectedResult);
-    assertEquals(costComparator.compare(query1, query2), expectedResult);
+    assertEquals(priorityAndFifoComparator.compare(query1, query2), expectedResult);
+    assertEquals(costAndFifoComparator.compare(query1, query2), expectedResult);
 
   }
 }
