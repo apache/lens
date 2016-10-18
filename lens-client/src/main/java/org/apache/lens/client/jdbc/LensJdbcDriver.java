@@ -50,7 +50,7 @@ public class LensJdbcDriver implements Driver {
    */
   @Override
   public Connection connect(String s, Properties properties) throws SQLException {
-    return null;
+    return new LensJdbcConnection(s, properties);
   }
 
   /*

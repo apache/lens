@@ -65,7 +65,7 @@ public class LensJdbcConnection implements Connection {
    */
   @Override
   public PreparedStatement prepareStatement(String s) throws SQLException {
-    throw new SQLException("Operation not supported!!!");
+    return new LensJdbcPreparedStatement(this, s);
   }
 
   /*
