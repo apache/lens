@@ -64,7 +64,7 @@ Lens session configuration
 *--+--+---+--+
 |20|lens.query.http.notification.type.FINISHED|false|Setting this property to true will enable query FINISHED notifications which includes SUCCESSFUL, FAILED and CANCELLED queries. The notification will have eventtype = "FINISHED", eventtime = long event time and query = org.apache.lens.api.query.LensQuery instance. The mediatype for eventtype and eventtime will be TEXT/PLAIN and the mediatype for query will be based on property lens.query.http.notification.mediatype. Default value of this property is false.|
 *--+--+---+--+
-|21|lens.query.http.notification.urls| |These are the http end points for Query http notifications. Users can specify more than one comma separated end points for a query. If this property is not set, no http notification will be sent out by lens server for the query.|
+|21|lens.query.http.notification.urls| |These are the http end points for Query http notifications. Users can specify more than one comma separated end points for a query. Url parameter values that include special characters should be encoded. Please note that if this property is not set, no http notification will be sent out by lens server for the query.|
 *--+--+---+--+
 |22|lens.query.output.charset.encoding|UTF-8|The charset encoding for formatting query result. It supports all the encodings supported by java.io.OutputStreamWriter.|
 *--+--+---+--+

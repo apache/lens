@@ -263,7 +263,8 @@
     <name>lens.query.http.notification.urls</name>
     <value></value>
     <description>These are the http end points for Query http notifications. Users can specify more than one comma
-      separated end points for a query. If this property is not set, no http notification will be sent out by lens
+      separated end points for a query. Url parameter values that include special characters should be
+      encoded. Please note that if this property is not set, no http notification will be sent out by lens
       server for the query.</description>
   </property>
 

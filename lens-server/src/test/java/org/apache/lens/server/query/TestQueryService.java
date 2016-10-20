@@ -30,6 +30,7 @@ import static org.apache.lens.server.common.RestAPITestUtil.*;
 import static org.testng.Assert.*;
 
 import java.io.*;
+import java.net.URLEncoder;
 import java.sql.*;
 import java.util.*;
 
@@ -1919,14 +1920,20 @@ public class TestQueryService extends LensJerseyTest {
 
 
   @Test(dataProvider = "mediaTypeData")
-  public void testFinishedNotification(MediaType mt) throws LensException, InterruptedException {
+  public void testFinishedNotification(MediaType mt) throws Exception {
     try {
       String query = "select ID, IDSTR, count(*) from " + TEST_TABLE + " group by ID, IDSTR";
       String endpoint = getBaseUri() + "/queryapi/notifictaion/finished";
+      String encodedHttpEndPoint1 = endpoint + "?access_token=" + URLEncoder.encode("ABC123", "UTF-8");
+      System.out.println("encodedHttpEndPoint1 :" + encodedHttpEndPoint1);
+      String encodedHttpEndPoint2 = endpoint + "?access_token=" + URLEncoder.encode("ABC123", "UTF-8") + "&data="
+        + URLEncoder.encode("x<>yz,\"abc", "UTF-8");
+      System.out.println("encodedHttpEndPoint2 :" + encodedHttpEndPoint2);
       LensConf conf = new LensConf();
       conf.addProperty(LensConfConstants.QUERY_HTTP_NOTIFICATION_TYPE_FINISHED, "true");
       conf.addProperty(LensConfConstants.QUERY_HTTP_NOTIFICATION_MEDIATYPE, mt);
-      conf.addProperty(LensConfConstants.QUERY_HTTP_NOTIFICATION_URLS, endpoint + " , " + endpoint);
+      conf.addProperty(LensConfConstants.QUERY_HTTP_NOTIFICATION_URLS, encodedHttpEndPoint1 + " , "
+        + encodedHttpEndPoint2);
 
       //Test for SUCCESSFUL FINISH notification
       QueryHandle handle1 = queryService.executeAsync(lensSessionId, query, conf,
@@ -1946,7 +1953,7 @@ public class TestQueryService extends LensJerseyTest {
       for (QueryHandle handle : new QueryHandle[]{handle1, handle2, handle3}) {
         LensQuery lensQuery = queryService.getQuery(lensSessionId, handle);
         while (!lensQuery.getStatus().finished()) {
-          Thread.sleep(1000);
+          Thread.sleep(100);
           lensQuery = queryService.getQuery(lensSessionId, handle);
         }
         assertTrue(lensQuery.getQueryName().toUpperCase().contains(lensQuery.getStatus().getStatus().name()),
@@ -1959,6 +1966,8 @@ public class TestQueryService extends LensJerseyTest {
       assertEquals(TestQueryNotifictaionResource.getSuccessfulCount(), 2);
       assertEquals(TestQueryNotifictaionResource.getCancelledCount(), 2);
       assertEquals(TestQueryNotifictaionResource.getFailedCount(), 2);
+      assertEquals(TestQueryNotifictaionResource.getAccessTokenCount(), 6);
+      assertEquals(TestQueryNotifictaionResource.getDataCount(), 3);
     } finally {
       TestQueryNotifictaionResource.clearState();
     }

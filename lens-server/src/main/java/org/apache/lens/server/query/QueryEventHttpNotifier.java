@@ -146,7 +146,7 @@ public abstract class QueryEventHttpNotifier<T extends QueryEvent> extends Async
           queryContext.getQueryHandleString(), httpEndPoint, responseCode);
       } catch (LensException e) {
         log.error("Error while sending {} HTTP Notification for Query {} to {}", getNotificationType(),
-          queryContext.getQueryHandleString(), httpEndPoint, e);
+          queryContext.getQueryHandleString(), httpEndPoint, e); // continue to try other httpEndPoints..
       }
     }
   }
@@ -187,7 +187,6 @@ public abstract class QueryEventHttpNotifier<T extends QueryEvent> extends Async
    */
   private int notifyEvent(String httpEndPoint, Map<String, Object> eventDetails, MediaType mediaType)
     throws LensException {
-
     final WebTarget target = buildClient().target(httpEndPoint);
     FormDataMultiPart mp = new FormDataMultiPart();
     for (Map.Entry<String, Object> eventDetail : eventDetails.entrySet()) {
@@ -203,8 +202,9 @@ public abstract class QueryEventHttpNotifier<T extends QueryEvent> extends Async
     } catch (Exception e) {
       throw new LensException("Error while publishing Http notification", e);
     }
+
     //2XX = SUCCESS
-    if (!(response.getStatus() >= 200 && response.getStatus() < 300)) {
+    if (!response.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
       throw new LensException("Error while publishing Http notification. Response code " + response.getStatus());
     }
     return response.getStatus();
