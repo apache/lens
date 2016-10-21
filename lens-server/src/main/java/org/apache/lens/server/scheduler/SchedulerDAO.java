@@ -60,8 +60,9 @@ public class SchedulerDAO {
       this.store.createJobInstanceTable();
       this.store.createJobInstanceRunTable();
     } catch (SQLException e) {
+      // If tables are not created, the DAO operations will fail at runtime.
+      // The APIs will fail with Internal Server Error.
       log.error("Error creating job tables", e);
-      throw new LensException("Error creating job tables ", e);
     } catch (ClassNotFoundException e) {
       log.error("No class found ", e);
       throw new LensException("No class found ", e);
@@ -239,7 +240,7 @@ public class SchedulerDAO {
       return store.getAllJobInstances(id.getHandleIdString());
     } catch (SQLException e) {
       log.error("Error while getting instances of a job with id {}", id.getHandleIdString(), e);
-      return null;
+      return new ArrayList<>();
     }
   }
 
@@ -258,7 +259,7 @@ public class SchedulerDAO {
       return store.getJobs(username, jobStates == null ? new SchedulerJobState[] {} : jobStates, startTime, endTime);
     } catch (SQLException e) {
       log.error("Error while getting jobs ", e);
-      return null;
+      return new ArrayList<>();
     }
   }
 
@@ -273,7 +274,7 @@ public class SchedulerDAO {
       return store.getJobsByName(jobName);
     } catch (SQLException e) {
       log.error("Error while getting jobs ", e);
-      return null;
+      return new ArrayList<>();
     }
   }
 
@@ -288,7 +289,7 @@ public class SchedulerDAO {
       return store.getInstanceRuns(states);
     } catch (SQLException e) {
       log.error("Error while getting jobs ", e);
-      return null;
+      return new ArrayList<>();
     }
   }
 
