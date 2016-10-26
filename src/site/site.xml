@@ -55,7 +55,7 @@
     <menu name="User Documentation">
       <item name="Lens User Guide" href="./user/index.html" />
       <item name="OLAP data cube" href="./user/olap-cube.html" />
-      <item name="REST API" href="./rest.html" />
+      <item name="REST API" href="./resources.html" />
       <item name="Lens CLI" href="./user/cli.html" />
       <item name="Java Client Library" href="./user/java-client.html"/>
       <item name="JDBC Client" href="./user/jdbc-client.html"/>
