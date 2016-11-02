@@ -26,6 +26,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.error.InvalidStateTransitionException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.scheduler.*;
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
@@ -141,22 +142,45 @@ public class SchedulerEventListener extends AsyncEventListener<SchedulerAlarmEve
       } else {
         instance = schedulerDAO.getSchedulerJobInstanceInfo(instanceHandle);
       }
-      // Next run of the instance
-      long currentTime = System.currentTimeMillis();
-      run = new SchedulerJobInstanceRun(instanceHandle, instance.getInstanceRunList().size() + 1, null, currentTime, 0,
-        "N/A", null, SchedulerJobInstanceState.WAITING);
-      instance.getInstanceRunList().add(run);
-      if (schedulerDAO.storeJobInstanceRun(run) != 1) {
-        log.error("Exception occurred while storing the instance run for instance handle {} of job {}", instance,
-          jobHandle);
-        return;
-      }
-      run.setSessionHandle(sessionHandle);
       LensConf queryConf = getLensConf(job, instanceHandle, scheduledTime);
       // Query Launch
       String query = job.getExecution().getQuery().getQuery();
       String queryName = job.getName();
       queryName += "-" + scheduledTimeMillis;
+      // Fetch the latest run and if it is in waiting state then don't create a new run.
+      run = instance.getInstanceRunList().size() == 0
+            ? null
+            : instance.getInstanceRunList().get(instance.getInstanceRunList().size() - 1);
+      if (run == null || run.getInstanceState() != SchedulerJobInstanceState.LAUNCHING) {
+        // Next run of the instance
+        // If not true means run is in waiting state, so we don't need to create a new run.
+        long currentTime = System.currentTimeMillis();
+        run = new SchedulerJobInstanceRun(instanceHandle, instance.getInstanceRunList().size() + 1, null, currentTime,
+          currentTime, "N/A", null, SchedulerJobInstanceState.LAUNCHING);
+        instance.getInstanceRunList().add(run);
+        if (schedulerDAO.storeJobInstanceRun(run) != 1) {
+          log.error("Exception occurred while storing the instance run for instance handle {} of job {}", instance,
+            jobHandle);
+          return;
+        }
+      }
+      run.setSessionHandle(sessionHandle);
+      // Check for the data availability.
+      try {
+        queryService.estimate(LensServices.get().getLogSegregationContext().getLogSegragationId(), sessionHandle, query,
+          queryConf);
+      } catch (LensException e) {
+        if (e.getErrorCode() == LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode()) {
+          // This error code suggests that the data is not available.
+          run.setInstanceState(run.getInstanceState().nextTransition(SchedulerJobInstanceEvent.ON_CONDITIONS_NOT_MET));
+          run.setEndTime(System.currentTimeMillis());
+          schedulerDAO.updateJobInstanceRun(run);
+          return;
+        } else {
+          throw e;
+        }
+      }
+
       QueryHandle handle = queryService.executeAsync(sessionHandle, query, queryConf, queryName);
       log.info("Running instance {} of job {} with run {} with query handle {}", instanceHandle, jobHandle,
         run.getRunId(), handle);

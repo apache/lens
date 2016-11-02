@@ -172,7 +172,7 @@ public class SchedulerDAOTest {
     SchedulerJobInstanceHandle handle = instances.keySet().iterator().next();
     SchedulerJobInstanceInfo info = instances.get(handle);
     SchedulerJobInstanceRun run = info.getInstanceRunList().get(0);
-    run.setInstanceState(SchedulerJobInstanceState.LAUNCHED);
+    run.setInstanceState(SchedulerJobInstanceState.LAUNCHING);
     schedulerDAO.updateJobInstanceRun(run);
     // Get the instance
     Assert.assertEquals(schedulerDAO.getSchedulerJobInstanceInfo(handle), info);

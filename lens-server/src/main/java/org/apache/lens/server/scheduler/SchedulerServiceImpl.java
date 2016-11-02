@@ -18,8 +18,7 @@
  */
 package org.apache.lens.server.scheduler;
 
-import static org.apache.lens.api.scheduler.SchedulerJobInstanceEvent.ON_KILL;
-import static org.apache.lens.api.scheduler.SchedulerJobInstanceEvent.ON_RERUN;
+import static org.apache.lens.api.scheduler.SchedulerJobInstanceEvent.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,6 +38,7 @@ import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.LensErrorInfo;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.events.SchedulerAlarmEvent;
 import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.query.QueryExecutionService;
@@ -65,6 +65,9 @@ import lombok.extern.slf4j.Slf4j;
 public class SchedulerServiceImpl extends BaseLensService implements SchedulerService {
 
   @Getter
+  @VisibleForTesting
+  protected SchedulerDAO schedulerDAO;
+  @Getter
   @Setter
   @VisibleForTesting
   protected QueryExecutionService queryService;
@@ -75,10 +78,9 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
   @VisibleForTesting
   protected SchedulerQueryEventListener schedulerQueryEventListener;
   @Getter
-  @VisibleForTesting
-  protected SchedulerDAO schedulerDAO;
-  @Getter
   private AlarmService alarmService;
+  private Thread waitingInstanceThread;
+  private long waitingThreadInterval = LensConfConstants.DEFAULT_SCHEDULED_INSTANCE_WAITING_THREAD_INTERVAL_MILLIS;
 
   private int maxJobsPerUser = LensConfConstants.DEFAULT_MAX_SCHEDULED_JOB_PER_USER;
   private boolean healthy = true;
@@ -98,12 +100,16 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
     maxJobsPerUser = hiveConf.getInt(LensConfConstants.MAX_SCHEDULED_JOB_PER_USER, maxJobsPerUser);
     try {
       schedulerDAO = new SchedulerDAO(hiveConf);
+      waitingThreadInterval = hiveConf.getLong(LensConfConstants.SCHEDULED_INSTANCE_WAITING_THREAD_INTERVAL_MILLIS,
+        LensConfConstants.DEFAULT_SCHEDULED_INSTANCE_WAITING_THREAD_INTERVAL_MILLIS);
       alarmService = LensServices.get().getService(AlarmService.NAME);
       queryService = LensServices.get().getService(QueryExecutionService.NAME);
       this.schedulerEventListener = new SchedulerEventListener(schedulerDAO);
       this.schedulerQueryEventListener = new SchedulerQueryEventListener(schedulerDAO);
       getEventService().addListenerForType(schedulerEventListener, SchedulerAlarmEvent.class);
       getEventService().addListenerForType(schedulerQueryEventListener, QueryEnded.class);
+      this.waitingInstanceThread = new Thread(
+        new WaitingInstanceHandler(getEventService(), schedulerDAO, waitingThreadInterval));
     } catch (LensException e) {
       log.error("Error Initialising Scheduler-service", e);
       healthy = false;
@@ -129,15 +135,20 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
   @Override
   public synchronized void start() {
     List<SchedulerJobInstanceRun> instanceRuns = schedulerDAO
-      .getInstanceRuns(SchedulerJobInstanceState.WAITING, SchedulerJobInstanceState.LAUNCHED,
-        SchedulerJobInstanceState.RUNNING);
+      .getInstanceRuns(SchedulerJobInstanceState.WAITING, SchedulerJobInstanceState.LAUNCHING,
+        SchedulerJobInstanceState.LAUNCHED, SchedulerJobInstanceState.RUNNING);
     for (SchedulerJobInstanceRun run : instanceRuns) {
       LensSessionHandle sessionHandle = null;
       try {
         SchedulerJobInstanceInfo instanceInfo = schedulerDAO.getSchedulerJobInstanceInfo(run.getHandle());
+        if (instanceInfo == null) {
+          log.error("Instance info was not found for {}", run.getHandle());
+          continue;
+        }
         log.info("Recovering instance {} of job {} ", instanceInfo.getId(), instanceInfo.getJobId());
         switch (run.getInstanceState()) {
         case WAITING:
+        case LAUNCHING:
         case LAUNCHED:
           // Kill and rerun
           if (updateInstanceRun(run, SchedulerJobInstanceState.KILLED)) {
@@ -168,8 +179,19 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
       }
     }
     if (healthy) {
+      // Start thread
+      this.waitingInstanceThread.start();
       super.start();
     }
+  }
+
+  /**
+   *
+   */
+  @Override
+  public void stop() {
+    super.stop();
+    waitingInstanceThread.interrupt();
   }
 
   /**
@@ -545,5 +567,46 @@ public class SchedulerServiceImpl extends BaseLensService implements SchedulerSe
     getEventService().notifyEvent(
       new SchedulerAlarmEvent(instanceInfo.getJobId(), new DateTime(instanceInfo.getScheduleTime()),
         SchedulerAlarmEvent.EventType.SCHEDULE, instanceInfo.getId()));
+  }
+
+  public static class WaitingInstanceHandler implements Runnable {
+    private LensEventService eventService;
+    private SchedulerDAO schedulerDAO;
+    private long delay;
+
+    WaitingInstanceHandler(LensEventService eventService, SchedulerDAO schedulerDAO, long delay) {
+      this.eventService = eventService;
+      this.schedulerDAO = schedulerDAO;
+      this.delay = delay;
+    }
+
+    @Override
+    public void run() {
+      while (!Thread.currentThread().isInterrupted()) {
+        // Get all the instance runs which are waiting.
+        List<SchedulerJobInstanceRun> instanceRuns = schedulerDAO.getInstanceRuns(SchedulerJobInstanceState.WAITING);
+        for (SchedulerJobInstanceRun run : instanceRuns) {
+          SchedulerJobInstanceInfo instanceInfo = schedulerDAO.getSchedulerJobInstanceInfo(run.getHandle());
+          try {
+            run.setInstanceState(run.getInstanceState().nextTransition(ON_PREPARE));
+            run.setEndTime(System.currentTimeMillis());
+            schedulerDAO.updateJobInstanceRun(run);
+            eventService.notifyEvent(
+              new SchedulerAlarmEvent(instanceInfo.getJobId(), new DateTime(instanceInfo.getScheduleTime()),
+                SchedulerAlarmEvent.EventType.SCHEDULE, instanceInfo.getId()));
+          } catch (LensException e) {
+            log.error("Not able to notify schedule event for job {} and instanceId {}", instanceInfo.getJobId(),
+              instanceInfo.getId());
+          } catch (InvalidStateTransitionException e) {
+            log.error("Wrong state transition", e);
+          }
+        }
+      }
+      try {
+        Thread.sleep(delay);
+      } catch (InterruptedException e) {
+        log.warn("Thread WaitingInstanceHandler was inerrupted", e);
+      }
+    }
   }
 }

@@ -1185,14 +1185,23 @@ public final class LensConfConstants {
   public static final int DEFAULT_GRIZZLY_MAX_POOL_SIZE = 40;
 
   /**
-   * Maximum Scheduled job per user.
+   * Thread interval for checking the waiting instances
    */
-  public static final String MAX_SCHEDULED_JOB_PER_USER = SERVER_PFX + "scheduler.max.job.per.user";
+  public static final String SCHEDULED_INSTANCE_WAITING_THREAD_INTERVAL_MILLIS =
+    SERVER_PFX + "scheduler.instance.waiting.thread.interval";
 
   /**
-   * -1 represents that the default is unlimited
+   * Default waiting thread interval in milliseconds
    */
+  public static final long DEFAULT_SCHEDULED_INSTANCE_WAITING_THREAD_INTERVAL_MILLIS = 60 * 5 * 1000;
 
+  /**
+   * Default value is less than zero, that means an user can scheduler unlimited number of jobs.
+   */
   public static final int DEFAULT_MAX_SCHEDULED_JOB_PER_USER = -1;
 
+  /**
+   * Maximum number of scheduled job per user.
+   */
+  public static final String MAX_SCHEDULED_JOB_PER_USER  = SERVER_PFX + "scheduler.max.job.per.user";
 }

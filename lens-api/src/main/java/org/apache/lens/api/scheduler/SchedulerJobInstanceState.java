@@ -18,7 +18,7 @@
  */
 package org.apache.lens.api.scheduler;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.lens.api.error.InvalidStateTransitionException;
 
@@ -31,12 +31,34 @@ public enum SchedulerJobInstanceState
     public SchedulerJobInstanceState nextTransition(SchedulerJobInstanceEvent event)
       throws InvalidStateTransitionException {
       switch (event) {
-      case ON_CREATION:
-        return this;
-      case ON_CONDITIONS_MET:
-        return SchedulerJobInstanceState.LAUNCHED;
+      case ON_PREPARE:
+        return SchedulerJobInstanceState.LAUNCHING;
       case ON_TIME_OUT:
         return SchedulerJobInstanceState.TIMED_OUT;
+      case ON_RUN:
+        return SchedulerJobInstanceState.RUNNING;
+      case ON_SUCCESS:
+        return SchedulerJobInstanceState.SUCCEEDED;
+      case ON_FAILURE:
+        return SchedulerJobInstanceState.FAILED;
+      case ON_KILL:
+        return SchedulerJobInstanceState.KILLED;
+      default:
+        throw new InvalidStateTransitionException(
+            "SchedulerJobInstanceEvent: " + event.name() + " is not a valid event for state: " + this.name());
+      }
+    }
+  },
+
+  LAUNCHING {
+    @Override
+    public SchedulerJobInstanceState nextTransition(SchedulerJobInstanceEvent event)
+      throws InvalidStateTransitionException {
+      switch (event) {
+      case ON_CONDITIONS_MET:
+        return SchedulerJobInstanceState.LAUNCHED;
+      case ON_CONDITIONS_NOT_MET:
+        return SchedulerJobInstanceState.WAITING;
       case ON_RUN:
         return SchedulerJobInstanceState.RUNNING;
       case ON_SUCCESS:
@@ -57,8 +79,6 @@ public enum SchedulerJobInstanceState
     public SchedulerJobInstanceState nextTransition(SchedulerJobInstanceEvent event)
       throws InvalidStateTransitionException {
       switch (event) {
-      case ON_CONDITIONS_MET:
-        return this;
       case ON_RUN:
         return SchedulerJobInstanceState.RUNNING;
       case ON_SUCCESS:
@@ -73,7 +93,6 @@ public enum SchedulerJobInstanceState
       }
     }
   },
-
   RUNNING {
     @Override
     public SchedulerJobInstanceState nextTransition(SchedulerJobInstanceEvent event)
@@ -102,7 +121,7 @@ public enum SchedulerJobInstanceState
       case ON_FAILURE:
         return this;
       case ON_RERUN:
-        return SchedulerJobInstanceState.LAUNCHED;
+        return SchedulerJobInstanceState.LAUNCHING;
       default:
         throw new InvalidStateTransitionException(
             "SchedulerJobInstanceEvent: " + event.name() + " is not a valid event for state: " + this.name());
@@ -118,7 +137,7 @@ public enum SchedulerJobInstanceState
       case ON_SUCCESS:
         return this;
       case ON_RERUN:
-        return SchedulerJobInstanceState.LAUNCHED;
+        return SchedulerJobInstanceState.LAUNCHING;
       default:
         throw new InvalidStateTransitionException(
             "SchedulerJobInstanceEvent: " + event.name() + " is not a valid event for state: " + this.name());
@@ -150,7 +169,7 @@ public enum SchedulerJobInstanceState
       case ON_KILL:
         return this;
       case ON_RERUN:
-        return SchedulerJobInstanceState.LAUNCHED;
+        return SchedulerJobInstanceState.LAUNCHING;
       default:
         throw new InvalidStateTransitionException(
             "SchedulerJobInstanceEvent: " + event.name() + " is not a valid event for state: " + this.name());

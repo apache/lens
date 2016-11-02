@@ -573,8 +573,9 @@ public class SchedulerDAO {
       SchedulerJobInstanceHandle id = SchedulerJobInstanceHandle.fromString((String) instanceInfo[0]);
       SchedulerJobHandle jobId = SchedulerJobHandle.fromString((String) instanceInfo[1]);
       long createdOn = (Long) instanceInfo[2];
-      // Get the Runs
-      String fetchSQL = "SELECT * FROM " + JOB_INSTANCE_RUN_TABLE + " WHERE " + COLUMN_ID + "=?";
+      // Get the Runs sorted by run id to make sure the last on the list is the latest run.
+      String fetchSQL =
+        "SELECT * FROM " + JOB_INSTANCE_RUN_TABLE + " WHERE " + COLUMN_ID + "=? ORDER BY " + COLUMN_RUN_ID;
       List<Object[]> instanceRuns = runner.query(fetchSQL, multipleRowsHandler, (String) instanceInfo[0]);
       List<SchedulerJobInstanceRun> runList = processInstanceRun(instanceRuns);
       return new SchedulerJobInstanceInfo(id, jobId, createdOn, runList);

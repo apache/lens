@@ -22,18 +22,22 @@ import static org.apache.lens.server.scheduler.util.SchedulerTestUtils.getTestJo
 import static org.apache.lens.server.scheduler.util.SchedulerTestUtils.setupQueryService;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.scheduler.*;
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.LensMetricsUtil;
 import org.apache.lens.server.api.scheduler.SchedulerService;
 import org.apache.lens.server.model.LogSegregationContext;
@@ -78,6 +82,10 @@ public class SchedulerRestartTest {
     List<SchedulerJobInstanceInfo> instanceInfoList = scheduler.getJobInstances(jobHandle, 10L);
     Assert.assertEquals(instanceInfoList.size(), 1);
 
+    PowerMockito.when(
+      scheduler.getQueryService().estimate(anyString(), any(LensSessionHandle.class), anyString(), any(LensConf.class)))
+      .thenThrow(new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
+        "some name " + " does not have any facts"));
     // Store new instance
     SchedulerJobInstanceHandle instanceHandle = UtilityMethods.generateSchedulerJobInstanceHandle();
     SchedulerJobInstanceInfo instance = new SchedulerJobInstanceInfo(instanceHandle, jobHandle, currentTime,
@@ -98,6 +106,10 @@ public class SchedulerRestartTest {
     LensServices.get().init(LensServerConf.getHiveConf());
     scheduler = LensServices.get().getService(SchedulerService.NAME);
     setupQueryService(scheduler);
+    PowerMockito.when(
+      scheduler.getQueryService().estimate(anyString(), any(LensSessionHandle.class), anyString(), any(LensConf.class)))
+      .thenThrow(new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
+        "some name " + " does not have any facts"));
     LensQuery mockedQuery = PowerMockito.mock(LensQuery.class);
     QueryStatus mockStatus = PowerMockito.mock(QueryStatus.class);
     PowerMockito.when(mockStatus.getStatus()).thenReturn(QueryStatus.Status.SUCCESSFUL);

@@ -917,10 +917,16 @@
     <value>40</value>
     <description>Max pool size for lens grizzly server</description>
   </property>
-
+   <property>
+    <name>lens.server.scheduler.instance.waiting.thread.interval.millis</name>
+    <value>300000</value>
+    <description>Thread interval for checking the waiting instances in milliseconds</description>
+  </property>
   <property>
     <name>lens.server.scheduler.max.job.per.user</name>
     <value>-1</value>
-    <description>The maximum number of jobs per user which can be scheduled. -1 means unlimited jobs.</description>
+    <description>Maximum number of jobs that can be scheduled by a single user. If the number is less than zero,
+       then there is no restriction on the number of jobs scheduled.
+    </description>
   </property>
 </configuration>
