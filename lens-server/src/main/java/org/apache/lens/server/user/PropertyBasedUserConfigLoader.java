@@ -52,8 +52,8 @@ public class PropertyBasedUserConfigLoader implements UserConfigLoader {
       throw new UserConfigLoaderException("property file path not provided for property based resolver."
         + "Please set property " + LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME);
     }
-    try {
-      properties.load(new InputStreamReader(new FileInputStream(new File(filename)), "UTF-8"));
+    try (InputStreamReader reader = new InputStreamReader(new FileInputStream(new File(filename)), "UTF-8")) {
+      properties.load(reader);
     } catch (IOException e) {
       throw new UserConfigLoaderException("property file not found. Provided path was: " + filename);
     }
