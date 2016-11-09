@@ -44,10 +44,6 @@
         <value>org.apache.lens.driver.jdbc.DruidSQLRewriter</value>
     </property>
     <property>
-        <name>lens.driver.jdbc.validate.through.prepare</name>
-        <value>false</value>
-    </property>
-    <property>
         <name>lens.driver.jdbc.explain.keyword</name>
         <value>explain plan for </value>
     </property>
@@ -58,9 +54,5 @@
     <property>
         <name>lens.cube.query.partition.where.clause.format</name>
         <value>yyyy-MM-dd HH:mm:ss</value>
-    </property>
-    <property>
-        <name>lens.cube.query.between.only.time.range.writer</name>
-        <value>true</value>
     </property>
 </configuration>

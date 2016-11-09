@@ -35,10 +35,23 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.QB;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DruidSQLRewriter extends ColumnarSQLRewriter {
+
+  /**
+   * Is Having supported.
+   */
+  @Getter
+  protected boolean isHavingSupported;
+
+  /**
+   * Is OrderBy supported.
+   */
+  @Getter
+  protected boolean isOrderBySupported;
 
   /**
    * Whether to resolve native tables or not. In case the query has sub query, the outer query may not
@@ -79,20 +92,20 @@ public class DruidSQLRewriter extends ColumnarSQLRewriter {
       this.whereAST = qb.getParseInfo().getWhrForClause(clauseName);
     }
 
-    if (qb.getParseInfo().getHavingForClause(clauseName) != null) {
-      this.havingAST = qb.getParseInfo().getHavingForClause(clauseName);
-    }
-
-    if (qb.getParseInfo().getOrderByForClause(clauseName) != null) {
-      this.orderByAST = qb.getParseInfo().getOrderByForClause(clauseName);
-    }
-
     if (qb.getParseInfo().getGroupByForClause(clauseName) != null) {
       this.groupByAST = qb.getParseInfo().getGroupByForClause(clauseName);
     }
 
     if (qb.getParseInfo().getSelForClause(clauseName) != null) {
       this.selectAST = qb.getParseInfo().getSelForClause(clauseName);
+    }
+
+    if (qb.getParseInfo().getHavingForClause(clauseName) != null) {
+      this.havingAST = qb.getParseInfo().getHavingForClause(clauseName);
+    }
+
+    if (qb.getParseInfo().getOrderByForClause(clauseName) != null) {
+      this.orderByAST = qb.getParseInfo().getOrderByForClause(clauseName);
     }
 
     this.fromAST = HQLParser.findNodeByPath(ast, TOK_FROM);
@@ -116,11 +129,19 @@ public class DruidSQLRewriter extends ColumnarSQLRewriter {
     ArrayList<String> filters = new ArrayList<>();
     getWhereString(whereAST, filters);
 
+    String havingTree = null;
+    String orderbyTree = null;
+
+    if (isHavingSupported) {
+      havingTree = HQLParser.getString(havingAST, HQLParser.AppendMode.DEFAULT);
+    }
+
+    if (isOrderBySupported) {
+      orderbyTree = HQLParser.getString(orderByAST, HQLParser.AppendMode.DEFAULT);
+    }
     // construct query with fact sub query
     constructQuery(HQLParser.getString(selectAST, HQLParser.AppendMode.DEFAULT), filters,
-      HQLParser.getString(groupByAST, HQLParser.AppendMode.DEFAULT),
-      HQLParser.getString(havingAST, HQLParser.AppendMode.DEFAULT),
-      HQLParser.getString(orderByAST, HQLParser.AppendMode.DEFAULT), limit);
+      HQLParser.getString(groupByAST, HQLParser.AppendMode.DEFAULT), havingTree, orderbyTree, limit);
 
   }
 
@@ -163,20 +184,20 @@ public class DruidSQLRewriter extends ColumnarSQLRewriter {
   /**
    * Construct final query using all trees
    *
-   * @param selecttree   the selecttree
+   * @param selectTree   the selecttree
    * @param whereFilters the wheretree
-   * @param groupbytree  the groupbytree
-   * @param havingtree   the havingtree
-   * @param orderbytree  the orderbytree
+   * @param groupbyTree  the groupbytree
+   * @param havingTree   the havingtree
+   * @param orderbyTree  the orderbytree
    * @param limit        the limit
    */
   private void constructQuery(
-    String selecttree, ArrayList<String> whereFilters, String groupbytree,
-    String havingtree, String orderbytree, String limit) {
+    String selectTree, ArrayList<String> whereFilters, String groupbyTree, String
+    havingTree, String orderbyTree, String limit) {
 
     log.info("In construct query ..");
 
-    rewrittenQuery.append("select ").append(selecttree.replaceAll("`", "\"")).append(" from ");
+    rewrittenQuery.append("select ").append(selectTree.replaceAll("`", "\"")).append(" from ");
 
     String factNameAndAlias = getFactNameAlias(fromAST);
 
@@ -185,14 +206,14 @@ public class DruidSQLRewriter extends ColumnarSQLRewriter {
     if (!whereFilters.isEmpty()) {
       rewrittenQuery.append(" where ").append(StringUtils.join(whereFilters, " and "));
     }
-    if (StringUtils.isNotBlank(groupbytree)) {
-      rewrittenQuery.append(" group by ").append(groupbytree);
+    if (StringUtils.isNotBlank(groupbyTree)) {
+      rewrittenQuery.append(" group by ").append(groupbyTree);
     }
-    if (StringUtils.isNotBlank(havingtree)) {
-      rewrittenQuery.append(" having ").append(havingtree);
+    if (StringUtils.isNotBlank(havingTree)) {
+      rewrittenQuery.append(" having ").append(havingTree);
     }
-    if (StringUtils.isNotBlank(orderbytree)) {
-      rewrittenQuery.append(" order by ").append(orderbytree);
+    if (StringUtils.isNotBlank(orderbyTree)) {
+      rewrittenQuery.append(" order by ").append(orderbyTree);
     }
     if (StringUtils.isNotBlank(limit)) {
       rewrittenQuery.append(" limit ").append(limit);
@@ -222,6 +243,10 @@ public class DruidSQLRewriter extends ColumnarSQLRewriter {
     rewrittenQuery.setLength(0);
     reset();
     this.ast = currNode;
+    isHavingSupported = conf.getBoolean(JDBCDriverConfConstants.JDBC_IS_HAVING_SUPPORTED,
+      JDBCDriverConfConstants.DEFAULT_JDBC_IS_HAVING_SUPPORTED);
+    isOrderBySupported = conf.getBoolean(JDBCDriverConfConstants.JDBC_IS_ORDERBY_SUPPORTED,
+      JDBCDriverConfConstants.DEFAULT_JDBC_IS_ORDERBY_SUPPORTED);
 
     ASTNode fromNode = HQLParser.findNodeByPath(currNode, TOK_FROM);
     if (fromNode != null) {
@@ -237,6 +262,18 @@ public class DruidSQLRewriter extends ColumnarSQLRewriter {
     if (currNode.getToken().getType() == TOK_UNIONALL) {
       log.warn("Union queries are not supported by {} Query : {}", this, this.query);
       throw new LensException("Union queries are not supported by " + this + " Query : " + this.query);
+    }
+
+    if (!isHavingSupported
+      && HQLParser.findNodeByPath(currNode, HiveParser.TOK_INSERT, HiveParser.TOK_HAVING) != null) {
+      log.warn("Having queries are not supported by {} Query : {}", this, this.query);
+      throw new LensException("Having queries are not supported by " + this + " Query : " + this.query);
+    }
+
+    if (!isOrderBySupported
+      && HQLParser.findNodeByPath(currNode, HiveParser.TOK_INSERT, HiveParser.TOK_ORDERBY) != null) {
+      log.warn("Order by queries are not supported by {} Query : {}", this, this.query);
+      throw new LensException("Order by queries are not supported by " + this + " Query : " + this.query);
     }
 
     String rewritternQueryText = rewrittenQuery.toString();

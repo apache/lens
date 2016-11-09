@@ -25,6 +25,8 @@ import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.server.api.error.LensException;
 
+import com.google.common.collect.BoundType;
+
 
 /**
  * Writes partitions queried in timerange as between clause.
@@ -40,6 +42,12 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
     //Flag to check if only between range needs to be used
     boolean useBetweenOnly = cubeQueryContext.getConf().getBoolean(CubeQueryConfUtil.BETWEEN_ONLY_TIME_RANGE_WRITER,
       CubeQueryConfUtil.DEFAULT_BETWEEN_ONLY_TIME_RANGE_WRITER);
+
+    //Fetch the date start and end bounds from config
+    BoundType startBound = BoundType.valueOf(cubeQueryContext.getConf().get(CubeQueryConfUtil.START_DATE_BOUND_TYPE,
+      CubeQueryConfUtil.DEFAULT_START_BOUND_TYPE));
+    BoundType endBound = BoundType.valueOf(cubeQueryContext.getConf().get(CubeQueryConfUtil.END_DATE_BOUND_TYPE,
+      CubeQueryConfUtil.DEFAULT_END_BOUND_TYPE));
 
     StringBuilder partStr = new StringBuilder();
     if (!useBetweenOnly && rangeParts.size() == 1) {
@@ -74,6 +82,14 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
 
       FactPartition start = parts.first();
       FactPartition end = parts.last();
+
+      if (startBound.equals(BoundType.OPEN)) {
+        start = start.previous();
+      }
+
+      if (endBound.equals(BoundType.OPEN)) {
+        end = end.next();
+      }
 
       String partCol = start.getPartCol();
       if (cubeQueryContext != null && !cubeQueryContext.shouldReplaceTimeDimWithPart()) {

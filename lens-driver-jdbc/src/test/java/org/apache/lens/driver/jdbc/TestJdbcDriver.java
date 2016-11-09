@@ -664,6 +664,28 @@ public class TestJdbcDriver {
   }
 
   /**
+   * Test prepare skip warnings
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void testPrepareSkipWarnings() throws Exception {
+    createTable("prepare_test3");
+    createTable("prepare_test3", driver.getEstimateConnection());
+    insertData("prepare_test3");
+    insertData("prepare_test3", driver.getEstimateConnection());
+
+    final String query = "SELECT * from prepare_test3";
+
+    PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
+    pContext.getDriverConf(driver).setBoolean(JDBC_VALIDATE_SKIP_WARNINGS, true);
+    //run validate
+    driver.validate(pContext);
+    //run prepare
+    driver.prepare(pContext);
+  }
+
+  /**
    * Test execute async.
    *
    * @throws Exception the exception

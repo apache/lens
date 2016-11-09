@@ -98,6 +98,7 @@ public class JDBCDriver extends AbstractLensDriver {
   private LogSegregationContext logSegregationContext;
 
   private boolean isStatementCancelSupported;
+
   /**
    * Data related to a query submitted to JDBCDriver.
    */
@@ -728,7 +729,8 @@ public class JDBCDriver extends AbstractLensDriver {
     try {
       conn = calledForEstimate ? getEstimateConnection() : getConnection();
       stmt = conn.prepareStatement(rewrittenQuery);
-      if (stmt.getWarnings() != null) {
+      if (!pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_SKIP_WARNINGS,
+        DEFAULT_JDBC_VALIDATE_SKIP_WARNINGS) && stmt.getWarnings() != null) {
         throw new LensException(stmt.getWarnings());
       }
     } catch (SQLException sql) {
@@ -1045,6 +1047,7 @@ public class JDBCDriver extends AbstractLensDriver {
   public void writeExternal(ObjectOutput arg0) throws IOException {
     // TODO Auto-generated method stub
   }
+
   @Override
   public StatusUpdateMethod getStatusUpdateMethod() {
     return StatusUpdateMethod.PUSH;

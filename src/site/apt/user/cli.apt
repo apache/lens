@@ -134,7 +134,7 @@ User CLI Commands
 *--+--+
 |create database [--db] \<database-name\> [--ignoreIfExists \<ignore-if-exists\>]|create a database with specified name. if <<<ignore-if-exists>>> is true, create will not be tried if already exists. Default is false\ |
 *--+--+
-|drop database [--db] \<database-name\> [--cascade ]|drop a database with specified name\ |
+|drop database [--db/--database] \<database-name\> [--cascade ]|drop a database with specified name\ |
 *--+--+
 |show databases|displays list of all databases\ |
 *--+--+
@@ -389,48 +389,48 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-|schema [--db] \<database-to-create-schema-in\> [--file] \<schema-directory\>|Parses the specified resource file and executes commands for creation/updation of schema                                       \ |
-|                                                                            |Expected\ structure\ is\                                                                                                       \ |
-|                                                                            |.                                                                                                                              \ |
-|                                                                            |\|--\ storages                                                                                                                 \ |
-|                                                                            |\|\ \ \|--\ storage1.xml                                                                                                       \ |
-|                                                                            |\|\ \ \|--\ storage2.xml                                                                                                       \ |
-|                                                                            |\|                                                                                                                             \ |
-|                                                                            |\|--\ dimensions                                                                                                               \ |
-|                                                                            |\|\ \ \|--\ dim1.xml                                                                                                           \ |
-|                                                                            |\|\ \ \|--\ dim2.xml                                                                                                           \ |
-|                                                                            |\|                                                                                                                             \ |
-|                                                                            |\|--\ cubes                                                                                                                    \ |
-|                                                                            |\|\ \ \|--\ base                                                                                                               \ |
-|                                                                            |\|\ \ \|\ \ \|--\ base_cube1.xml                                                                                               \ |
-|                                                                            |\|\ \ \|\ \ \|--\ base_cube2.xml                                                                                               \ |
-|                                                                            |\|\ \ \|                                                                                                                       \ |
-|                                                                            |\|\ \ \|--\ derived                                                                                                            \ |
-|                                                                            |\|\ \ \|\ \ \|--\ derived_cube1.xml                                                                                            \ |
-|                                                                            |\|\ \ \|\ \ \|--\ derived_cube2.xml                                                                                            \ |
-|                                                                            |\|\ \ \|                                                                                                                       \ |
-|                                                                            |\|\ \ \|--\ independent_cube1.xml                                                                                              \ |
-|                                                                            |\|\ \ \|--\ independent_cube2.xml                                                                                              \ |
-|                                                                            |\|                                                                                                                             \ |
-|                                                                            |\|--\ dimensiontables                                                                                                          \ |
-|                                                                            |\|\ \ \|--\ dimtable1.xml                                                                                                      \ |
-|                                                                            |\|\ \ \|--\ dimtable2.xml                                                                                                      \ |
-|                                                                            |\|                                                                                                                             \ |
-|                                                                            |\|--\ dimtables                                                                                                                \ |
-|                                                                            |\|\ \ \|--\ dimtable3.xml                                                                                                      \ |
-|                                                                            |\|\ \ \|--\ dimtable4.xml                                                                                                      \ |
-|                                                                            |\|                                                                                                                             \ |
-|                                                                            |\|--\ facts                                                                                                                    \ |
-|                                                                            |\ \ \ \|--\ fact1.xml                                                                                                          \ |
-|                                                                            |\ \ \ \|--\ fact2.xml                                                                                                          \ |
-|                                                                            |                                                                                                                               \ |
-|                                                                            |                                                                                                                               \ |
-|                                                                            |If\ your\ cubes\ are\ divided\ between\ base\ and\ derived\ cubes,                                                             \ |
-|                                                                            |it\ makes\ sense\ to\ seperate\ into\ two\ directories,\ since\ derived\ cubes\ can't\ be\ created\ unless\ base\ cube\ exists.\ |
-|                                                                            |In\ the\ other\ case\ you\ can\ keep\ them\ in\ the\ cubes\ directory\ itself.                                                 \ |
-|                                                                            |For\ dimtables,\ you\ can\ keep\ your\ schema\ files\ in\ a\ directory\ named\ either\ dimtables\ or\ dimensiontables.         \ |
-|                                                                            |Each\ of\ these\ directories\ is\ optional\ and\ the\ order\ of\ processing\ is\ top\ to\ bottom.                              \ |
-|                                                                            |CLI\ will\ let\ you\ know\ in\ case\ of\ any\ errors\ and\ proceed\ further\ without\ failing\ in\ between.                    \ |
+|schema/create schema [--db] \<database-to-create-schema-in\> [--path/--file] \<schema-directory\>|Parses the specified resource file and executes commands for creation/updation of schema                                       \ |
+|                                                                                                 |Expected\ structure\ is\                                                                                                       \ |
+|                                                                                                 |.                                                                                                                              \ |
+|                                                                                                 |\|--\ storages                                                                                                                 \ |
+|                                                                                                 |\|\ \ \|--\ storage1.xml                                                                                                       \ |
+|                                                                                                 |\|\ \ \|--\ storage2.xml                                                                                                       \ |
+|                                                                                                 |\|                                                                                                                             \ |
+|                                                                                                 |\|--\ dimensions                                                                                                               \ |
+|                                                                                                 |\|\ \ \|--\ dim1.xml                                                                                                           \ |
+|                                                                                                 |\|\ \ \|--\ dim2.xml                                                                                                           \ |
+|                                                                                                 |\|                                                                                                                             \ |
+|                                                                                                 |\|--\ cubes                                                                                                                    \ |
+|                                                                                                 |\|\ \ \|--\ base                                                                                                               \ |
+|                                                                                                 |\|\ \ \|\ \ \|--\ base_cube1.xml                                                                                               \ |
+|                                                                                                 |\|\ \ \|\ \ \|--\ base_cube2.xml                                                                                               \ |
+|                                                                                                 |\|\ \ \|                                                                                                                       \ |
+|                                                                                                 |\|\ \ \|--\ derived                                                                                                            \ |
+|                                                                                                 |\|\ \ \|\ \ \|--\ derived_cube1.xml                                                                                            \ |
+|                                                                                                 |\|\ \ \|\ \ \|--\ derived_cube2.xml                                                                                            \ |
+|                                                                                                 |\|\ \ \|                                                                                                                       \ |
+|                                                                                                 |\|\ \ \|--\ independent_cube1.xml                                                                                              \ |
+|                                                                                                 |\|\ \ \|--\ independent_cube2.xml                                                                                              \ |
+|                                                                                                 |\|                                                                                                                             \ |
+|                                                                                                 |\|--\ dimensiontables                                                                                                          \ |
+|                                                                                                 |\|\ \ \|--\ dimtable1.xml                                                                                                      \ |
+|                                                                                                 |\|\ \ \|--\ dimtable2.xml                                                                                                      \ |
+|                                                                                                 |\|                                                                                                                             \ |
+|                                                                                                 |\|--\ dimtables                                                                                                                \ |
+|                                                                                                 |\|\ \ \|--\ dimtable3.xml                                                                                                      \ |
+|                                                                                                 |\|\ \ \|--\ dimtable4.xml                                                                                                      \ |
+|                                                                                                 |\|                                                                                                                             \ |
+|                                                                                                 |\|--\ facts                                                                                                                    \ |
+|                                                                                                 |\ \ \ \|--\ fact1.xml                                                                                                          \ |
+|                                                                                                 |\ \ \ \|--\ fact2.xml                                                                                                          \ |
+|                                                                                                 |                                                                                                                               \ |
+|                                                                                                 |                                                                                                                               \ |
+|                                                                                                 |If\ your\ cubes\ are\ divided\ between\ base\ and\ derived\ cubes,                                                             \ |
+|                                                                                                 |it\ makes\ sense\ to\ seperate\ into\ two\ directories,\ since\ derived\ cubes\ can't\ be\ created\ unless\ base\ cube\ exists.\ |
+|                                                                                                 |In\ the\ other\ case\ you\ can\ keep\ them\ in\ the\ cubes\ directory\ itself.                                                 \ |
+|                                                                                                 |For\ dimtables,\ you\ can\ keep\ your\ schema\ files\ in\ a\ directory\ named\ either\ dimtables\ or\ dimensiontables.         \ |
+|                                                                                                 |Each\ of\ these\ directories\ is\ optional\ and\ the\ order\ of\ processing\ is\ top\ to\ bottom.                              \ |
+|                                                                                                 |CLI\ will\ let\ you\ know\ in\ case\ of\ any\ errors\ and\ proceed\ further\ without\ failing\ in\ between.                    \ |
 *--+--+
   <<Lens Schema Commands>>
 
