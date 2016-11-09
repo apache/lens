@@ -128,6 +128,11 @@
   </property>
 
   <property>
+    <name>lens.server.query.expiry.check.interval.millis</name>
+    <value>10</value>
+  </property>
+
+  <property>
     <name>lens.server.db.jdbc.url</name>
     <value>jdbc:hsqldb:target/queries.db</value>
   </property>

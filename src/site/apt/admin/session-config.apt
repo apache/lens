@@ -104,12 +104,14 @@ Lens session configuration
 *--+--+---+--+
 |40|lens.query.result.split.multiple.maxrows|100000|The maximum number of rows allowed in each file, when splitting the result into multiple files is enabled.|
 *--+--+---+--+
-|41|lens.session.aux.jars| |List of comma separated jar paths, which will added to the session|
+|41|lens.query.timeout.millis|86400000|The runtime(millis) of the query after which query will be timedout and cancelled. Default is 1 day.|
 *--+--+---+--+
-|42|lens.session.cluster.user| |Session level config which will determine which cluster user will access hdfs|
+|42|lens.session.aux.jars| |List of comma separated jar paths, which will added to the session|
 *--+--+---+--+
-|43|lens.session.loggedin.user| |The username used to log in to lens. e.g. LDAP user|
+|43|lens.session.cluster.user| |Session level config which will determine which cluster user will access hdfs|
 *--+--+---+--+
-|44|lens.session.metastore.exclude.cubetables.from.nativetables|true|Exclude cube related tables when fetching native tables|
+|44|lens.session.loggedin.user| |The username used to log in to lens. e.g. LDAP user|
+*--+--+---+--+
+|45|lens.session.metastore.exclude.cubetables.from.nativetables|true|Exclude cube related tables when fetching native tables|
 *--+--+---+--+
 The configuration parameters and their default values

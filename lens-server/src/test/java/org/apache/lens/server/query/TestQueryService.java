@@ -2005,4 +2005,20 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertEquals(queryName.toString(), results.get(0).getQueryName());
     Assert.assertEquals(result.getQueryHandle(), results.get(0).getQueryHandle());
   }
+
+  @Test
+  public void testQueryTimeoutOnWaitingQuery() throws Exception {
+    String query = "select mock, fail, autocancel from " + TEST_TABLE;
+    LensConf lconf = new LensConf();
+    lconf.addProperty(LensConfConstants.QUERY_TIMEOUT_MILLIS, 300);
+    QueryHandle handle = executeAndGetHandle(target(), Optional.of(lensSessionId), Optional.of(query),
+      Optional.of(lconf), defaultMT);
+    // query should have been cancelled, as query timeout is 300 millis
+    waitForQueryToFinish(target(), lensSessionId, handle, Status.CANCELED, defaultMT);
+    LensQuery lensQuery = getLensQuery(target(), lensSessionId, handle, defaultMT);
+    assertTrue((lensQuery.getFinishTime() - lensQuery.getLaunchTime()) >= 300, "Query time is "
+      + (lensQuery.getFinishTime() - lensQuery.getLaunchTime()));
+    assertTrue((lensQuery.getFinishTime() - lensQuery.getLaunchTime()) < 400, "Query time is "
+      + (lensQuery.getFinishTime() - lensQuery.getLaunchTime()));
+  }
 }

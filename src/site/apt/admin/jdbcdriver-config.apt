@@ -91,4 +91,6 @@ Jdbc driver configuration
 *--+--+---+--+
 |33|lens.driver.jdbc.waiting.queries.selection.policy.factories|org.apache.lens.server.api.query.collect.DriverSpecificWaitingQueriesSelectionPolicyFactory|Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
 *--+--+---+--+
+|34|lens.query.timeout.millis|3600000|The runtime(millis) of the query after which query will be timedout and cancelled. Default is 1 hour for jdbc queries.|
+*--+--+---+--+
 The configuration parameters and their default values

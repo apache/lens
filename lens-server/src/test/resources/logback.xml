@@ -22,7 +22,7 @@
 <configuration>
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
+      <pattern>%d{dd MMM yyyy HH:mm:ss.SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
     </encoder>
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>INFO</level>
@@ -32,7 +32,7 @@
     <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
     <file>target/test.log</file>
     <encoder>
-      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} %X{logSegregationId} [%t] %-5p %c - %m%n</pattern>
+      <pattern>%d{dd MMM yyyy HH:mm:ss.SSS} %X{logSegregationId} [%t] %-5p %c - %m%n</pattern>
     </encoder>
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>INFO</level>

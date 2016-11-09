@@ -62,6 +62,11 @@ public class FailingQueryDriver extends MockDriver {
         // ignore interrupted exception
       }
     }
+    // simulate autocancel.
+    if (ctx.getUserQuery().contains("autocancel")) {
+      return;
+    }
     throw new LensException("Simulated Launch Failure");
   }
+
 }

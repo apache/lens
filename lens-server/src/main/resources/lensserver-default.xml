@@ -291,6 +291,14 @@
   </property>
 
   <property>
+    <name>lens.server.query.expiry.check.interval.millis</name>
+    <value>60000</value>
+    <description>The interval(milliseconds) with which query expiry will run periodically. Default is 1 minute. The
+      value needs to be much lower than lens.query.timeout.millis. If the final deployment values of query timeout
+      can be smaller, then reduce this value to be much lower.
+    </description>
+  </property>
+  <property>
     <name>lens.server.inmemory.resultset.ttl.secs</name>
     <value>300</value>
     <description>This property defines the TTL(time to live) in seconds for all result sets of type InMemoryResultSet

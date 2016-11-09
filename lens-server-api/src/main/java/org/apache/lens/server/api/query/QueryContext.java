@@ -18,10 +18,7 @@
  */
 package org.apache.lens.server.api.query;
 
-import static org.apache.lens.server.api.LensConfConstants.DEFAULT_PREFETCH_INMEMORY_RESULTSET;
-import static org.apache.lens.server.api.LensConfConstants.DEFAULT_PREFETCH_INMEMORY_RESULTSET_ROWS;
-import static org.apache.lens.server.api.LensConfConstants.PREFETCH_INMEMORY_RESULTSET;
-import static org.apache.lens.server.api.LensConfConstants.PREFETCH_INMEMORY_RESULTSET_ROWS;
+import static org.apache.lens.server.api.LensConfConstants.*;
 
 import java.util.*;
 import java.util.concurrent.Future;
@@ -618,5 +615,14 @@ public class QueryContext extends AbstractQueryContext implements FailureContext
       getDriverStatus().getProgressMessage(), getDriverStatus().getErrorMessage(),
       getDriverStatus().getDriverStartTime(), getDriverStatus().getDriverFinishTime()));
     getDriverStatus().clear();
+  }
+
+  public boolean hasTimedout() {
+    if (status.running()) {
+      long runtimeMillis = System.currentTimeMillis() - launchTime;
+      long timeoutMillis = getSelectedDriverConf().getInt(QUERY_TIMEOUT_MILLIS, DEFAULT_QUERY_TIMEOUT_MILLIS);
+      return runtimeMillis > timeoutMillis;
+    }
+    return false;
   }
 }

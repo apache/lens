@@ -38,4 +38,6 @@ ES driver configuration
 *--+--+---+--+
 |7|lens.driver.es.term.fetch.size|10000|Fetch (buffer) size for document look up queries|
 *--+--+---+--+
+|8|lens.query.timeout.millis|60000|The runtime(millis) of the query after which query will be timedout and cancelled. Default is 60 seconds for es queries.|
+*--+--+---+--+
 The configuration parameters and their default values

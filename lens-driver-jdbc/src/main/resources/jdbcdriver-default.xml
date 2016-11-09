@@ -209,6 +209,14 @@
   </property>
 
   <property>
+    <name>lens.query.timeout.millis</name>
+    <value>3600000</value>
+    <description>The runtime(millis) of the query after which query will be timedout and cancelled. Default is 1 hour
+      for jdbc queries.
+    </description>
+  </property>
+
+  <property>
     <name>lens.driver.jdbc.enable.resultset.streaming.retrieval</name>
     <value>false</value>
     <description>Flag to enable row by row retrieval of result set from the database server. This is used to enable

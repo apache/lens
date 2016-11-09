@@ -268,6 +268,13 @@
       server for the query.</description>
   </property>
 
+  <property>
+    <name>lens.query.timeout.millis</name>
+    <value>86400000</value>
+    <description>The runtime(millis) of the query after which query will be timedout and cancelled. Default is 1 day.
+    </description>
+  </property>
+
   <!--  properties for session -->
   <property>
     <name>lens.session.aux.jars</name>

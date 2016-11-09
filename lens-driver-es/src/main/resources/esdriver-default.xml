@@ -35,6 +35,13 @@
     <value>10000</value>
   </property>
   <property>
+    <name>lens.query.timeout.millis</name>
+      <value>60000</value>
+      <description>The runtime(millis) of the query after which query will be timedout and cancelled. Default is 60
+        seconds for es queries.
+      </description>
+  </property>
+  <property>
     <name>lens.driver.es.max.row.size</name>
     <description>max rows for es document look up queries, non existent or -1 refers no limit</description>
     <value>-1</value>

@@ -125,6 +125,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   public static final String QUERY_PURGER_COUNTER = "query-purger-errors";
 
+  public static final String QUERY_EXPIRY_FAILURE_COUNTER = "query-expiry-errors";
+
+  public static final String TOTAL_QUERIES_EXPIRED = "total-expired-queries";
+
   /**
    * The Constant PREPARED_QUERY_PURGER_COUNTER.
    */
@@ -207,6 +211,11 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * The query purger.
    */
   private final Thread queryPurger = new Thread(new QueryPurger(), "QueryPurger");
+
+  /**
+   * The query expiry thread which cancels timedout queries.
+   */
+  private ScheduledExecutorService queryExpirer;
 
   /**
    * The prepare query purger.
@@ -1420,6 +1429,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     if (null != queryResultPurger) {
       queryResultPurger.shutdown();
     }
+    // shutdown query expirer
+    queryExpirer.shutdownNow();
     // Soft shutdown right now, will await termination in this method itself, since cancellation pool
     // should be terminated before query state gets persisted.
     queryCancellationPool.shutdown();
@@ -1529,6 +1540,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     statusPoller.start();
     queryPurger.start();
     prepareQueryPurger.start();
+    startQueryExpirer();
 
     if (conf.getBoolean(RESULTSET_PURGE_ENABLED, DEFAULT_RESULTSET_PURGE_ENABLED)) {
       queryResultPurger = new QueryResultPurger();
@@ -1602,6 +1614,44 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       .build();
     //Using fixed values for pool . corePoolSize = maximumPoolSize = 3  and keepAliveTime = 60 secs
     queryCancellationPool = new ThreadPoolExecutor(3, 3, 60, TimeUnit.SECONDS, new LinkedBlockingQueue(), factory);
+  }
+
+  private void startQueryExpirer() {
+    ThreadFactory factory = new BasicThreadFactory.Builder()
+      .namingPattern("QueryExpirer-%d")
+      .daemon(true)
+      .priority(Thread.NORM_PRIORITY)
+      .build();
+    queryExpirer = Executors.newSingleThreadScheduledExecutor(factory);
+    long expiryRunInterval = conf.getLong(QUERY_EXPIRY_INTERVAL_MILLIS, DEFAULT_QUERY_EXPIRY_INTERVAL_MILLIS);
+    queryExpirer.scheduleWithFixedDelay(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          expireQueries();
+        } catch (Exception e) {
+          incrCounter(QUERY_EXPIRY_FAILURE_COUNTER);
+          log.error("Unable to expire queries", e);
+        }
+      }
+    }, expiryRunInterval, expiryRunInterval, TimeUnit.MILLISECONDS);
+    log.info("Enabled periodic exipry of queries at {} millis interval", expiryRunInterval);
+  }
+
+
+  private void expireQueries() {
+    for (QueryContext ctx : launchedQueries.getQueries()) {
+      try {
+        if (ctx.hasTimedout()) {
+          log.info("Query {} has timedout, thus cancelling it", ctx.getLogHandle());
+          queryCancellationPool.submit(new CancelQueryTask(ctx.getQueryHandle()));
+          incrCounter(TOTAL_QUERIES_EXPIRED);
+        }
+      } catch (Exception e) {
+        incrCounter(QUERY_EXPIRY_FAILURE_COUNTER);
+        log.error("Unable to expire queries", e);
+      }
+    }
   }
 
   @AllArgsConstructor
@@ -3204,6 +3254,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       details.append("Query Cancellation Pool is dead.");
     }
 
+    if (queryExpirer.isShutdown() || queryExpirer.isTerminated()) {
+      isHealthy = false;
+      details.append("Query Expiry thread is dead.");
+    }
 
     if (!isHealthy) {
       log.error(details.toString());
