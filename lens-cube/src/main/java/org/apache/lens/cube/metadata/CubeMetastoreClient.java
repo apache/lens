@@ -31,7 +31,9 @@ import org.apache.lens.cube.metadata.Storage.LatestInfo;
 import org.apache.lens.cube.metadata.Storage.LatestPartColumnInfo;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimelineFactory;
+import org.apache.lens.server.api.*;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.metastore.DataCompletenessChecker;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.commons.lang.StringUtils;
@@ -45,6 +47,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.thrift.TException;
 
 import com.google.common.collect.Lists;
@@ -92,6 +95,25 @@ public class CubeMetastoreClient {
   private static final Map<String, CubeMetastoreClient> CLIENT_MAPPING = Maps.newConcurrentMap();
   // Set of all storage table names for which latest partitions exist
   private final Set<String> latestLookupCache = Sets.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+  private DataCompletenessChecker completenessChecker;
+
+  private Boolean isDataCompletenessCheckEnabled;
+
+  public DataCompletenessChecker getCompletenessChecker() {
+    if (completenessChecker == null) {
+      completenessChecker = ReflectionUtils.newInstance(config.getClass(LensConfConstants.COMPLETENESS_CHECKER_CLASS,
+              LensConfConstants.DEFAULT_COMPLETENESS_CHECKER, DataCompletenessChecker.class), this.config);
+    }
+    return completenessChecker;
+  }
+
+  public boolean isDataCompletenessCheckEnabled() {
+    if (isDataCompletenessCheckEnabled == null) {
+      isDataCompletenessCheckEnabled = config.getBoolean(LensConfConstants.ENABLE_DATACOMPLETENESS_CHECK,
+              LensConfConstants.DEFAULT_ENABLE_DATACOMPLETENESS_CHECK);
+    }
+    return isDataCompletenessCheckEnabled;
+  }
 
   /** extract storage name from fact and storage table name. String operation */
   private String extractStorageName(CubeFactTable fact, String storageTableName) throws LensException {

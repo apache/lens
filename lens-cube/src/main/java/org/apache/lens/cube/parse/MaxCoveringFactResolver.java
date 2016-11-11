@@ -57,6 +57,13 @@ class MaxCoveringFactResolver implements ContextRewriter {
       // nothing to prune.
       return;
     }
+    resolveByTimeCovered(cubeql);
+    if (cubeql.getMetastoreClient() != null && cubeql.getMetastoreClient().isDataCompletenessCheckEnabled()) {
+      resolveByDataCompleteness(cubeql);
+    }
+  }
+
+  private void resolveByTimeCovered(CubeQueryContext cubeql) {
     // For each part column, which candidate fact sets are covering how much amount.
     // Later, we'll maximize coverage for each queried part column.
     Map<String, Map<Set<CandidateFact>, Long>> partCountsPerPartCol = Maps.newHashMap();
@@ -82,13 +89,59 @@ class MaxCoveringFactResolver implements ContextRewriter {
           }
           if (timeCoveredLong < maxTimeCovered) {
             log.info("Not considering facts:{} from candidate fact tables as it covers less time than the max"
-              + " for partition column: {} which is: {}", facts, partColQueried, timeCovered);
+                    + " for partition column: {} which is: {}", facts, partColQueried, timeCovered);
             iter.remove();
           }
         }
       }
     }
     cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.lessData(null));
+  }
+
+  private void resolveByDataCompleteness(CubeQueryContext cubeql) {
+    // From the list of  candidate fact sets, we calculate the maxDataCompletenessFactor.
+    float maxDataCompletenessFactor = 0f;
+    for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
+      float dataCompletenessFactor = computeDataCompletenessFactor(facts);
+      if (dataCompletenessFactor > maxDataCompletenessFactor) {
+        maxDataCompletenessFactor = dataCompletenessFactor;
+      }
+    }
+
+    if (maxDataCompletenessFactor == 0f) {
+      //there is nothing to prune
+      return;
+    }
+
+    // We prune those candidate fact set, whose dataCompletenessFactor is less than maxDataCompletenessFactor
+    Iterator<Set<CandidateFact>> iter = cubeql.getCandidateFactSets().iterator();
+    while (iter.hasNext()) {
+      Set<CandidateFact> facts = iter.next();
+      float dataCompletenessFactor = computeDataCompletenessFactor(facts);
+      if (dataCompletenessFactor < maxDataCompletenessFactor) {
+        log.info("Not considering facts:{} from candidate fact tables as the dataCompletenessFactor for this:{} is "
+                + "less than the max:{}", facts, dataCompletenessFactor, maxDataCompletenessFactor);
+        iter.remove();
+      }
+    }
+    cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.incompletePartitions(null));
+  }
+
+  private float computeDataCompletenessFactor(Set<CandidateFact> facts) {
+    float completenessFactor = 0f;
+    int numPartition = 0;
+    for (CandidateFact fact : facts) {
+      if (fact.getDataCompletenessMap() != null) {
+        Map<String, Map<String, Float>> completenessMap = fact.getDataCompletenessMap();
+        for (Map<String, Float> partitionCompleteness : completenessMap.values()) {
+          for (Float value : partitionCompleteness.values()) {
+            numPartition++;
+            completenessFactor += value;
+          }
+        }
+      }
+    }
+    return numPartition == 0 ? completenessFactor : completenessFactor/numPartition;
   }
 
   /**

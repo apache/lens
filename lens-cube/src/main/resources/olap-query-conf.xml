@@ -107,6 +107,19 @@
   </property>
 
   <property>
+    <name>lens.cube.query.completeness.check.partition.column</name>
+    <value></value>
+    <description>The Supported Partition Column for the Data Completeness check</description>
+  </property>
+
+  <property>
+    <name>lens.cube.query.completeness.threshold</name>
+    <value>100</value>
+    <description>The query will fail if data completeness is less than the set threshold given that the flag
+      "lens.cube.query.fail.if.data.partial" is set as true</description>
+  </property>
+
+  <property>
     <name>lens.cube.query.nonexisting.partitions</name>
     <value></value>
     <description>The list of comma separated non existing partitions, if query can run with partial data. The value will

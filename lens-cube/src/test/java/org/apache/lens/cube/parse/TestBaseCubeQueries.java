@@ -118,7 +118,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     boolean columnNotFound = false;
     List<String> testTimeDimFactTables = Arrays.asList("testfact3_base", "testfact1_raw_base", "testfact3_raw_base",
       "testfact5_base", "testfact6_base", "testfact4_raw_base");
-    List<String> factTablesForMeasures = Arrays.asList("testfact_deprecated", "testfact2_raw_base", "testfact2_base");
+    List<String> factTablesForMeasures = Arrays.asList("testfact_deprecated", "testfact2_raw_base", "testfact2_base",
+            "testfact5_raw_base");
     for (Map.Entry<String, List<CandidateTablePruneCause>> entry : pruneCauses.getDetails().entrySet()) {
       if (entry.getValue().contains(CandidateTablePruneCause.columnNotFound("test_time_dim"))) {
         columnNotFound = true;

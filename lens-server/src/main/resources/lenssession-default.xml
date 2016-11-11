@@ -374,6 +374,13 @@
   </property>
 
   <property>
+    <name>lens.cube.query.completeness.threshold</name>
+    <value>100</value>
+    <description>The query will fail if data completeness is less than the set threshold given that the flag
+      "lens.cube.query.fail.if.data.partial" is set as true</description>
+  </property>
+
+  <property>
     <name>lens.session.metastore.exclude.cubetables.from.nativetables</name>
     <value>true</value>
     <description>Exclude cube related tables when fetching native tables</description>

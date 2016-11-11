@@ -937,4 +937,16 @@
        then there is no restriction on the number of jobs scheduled.
     </description>
   </property>
+  <property>
+    <name>lens.cube.metastore.enable.datacompleteness.check</name>
+    <value>false</value>
+    <description>This property is to enable Data Completeness Checks while resolving partitions.</description>
+  </property>
+  <property>
+    <name>lens.cube.metastore.completeness.checker.class</name>
+    <value>org.apache.lens.server.api.metastore.DefaultChecker</value>
+    <description>The class that implements the DataCompletenessChecker Interface. This will take effect if the flag
+      "lens.cube.metastore.enable.datacompleteness.check" is set.
+    </description>
+  </property>
 </configuration>

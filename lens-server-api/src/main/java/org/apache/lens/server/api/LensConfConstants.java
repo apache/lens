@@ -21,6 +21,7 @@ package org.apache.lens.server.api;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.metastore.*;
 
 /**
  * The Class LensConfConstants.
@@ -1223,4 +1224,26 @@ public final class LensConfConstants {
    * Maximum number of scheduled job per user.
    */
   public static final String MAX_SCHEDULED_JOB_PER_USER  = SERVER_PFX + "scheduler.max.job.per.user";
+
+  /**
+   * The class that implements the DataCompletenessChecker Interface. This will take effect if the flag
+   * "lens.cube.metastore.enable.datacompleteness.check" is set.
+   */
+  public static final String COMPLETENESS_CHECKER_CLASS = "lens.cube.metastore.completeness.checker.class";
+
+  /**
+   * The default implementation of DataCompletenessChecker
+   */
+  public static final Class<? extends DataCompletenessChecker> DEFAULT_COMPLETENESS_CHECKER =
+          DefaultChecker.class.asSubclass(DataCompletenessChecker.class);
+
+  /**
+   * This property is to enable Data Completeness Checks while resolving partitions.
+   */
+  public static final String ENABLE_DATACOMPLETENESS_CHECK = "lens.cube.metastore.enable.datacompleteness.check";
+
+  /**
+   * Default Value of the config "lens.cube.metastore.enable.datacompleteness.check"
+   */
+  public static final boolean DEFAULT_ENABLE_DATACOMPLETENESS_CHECK = false;
 }

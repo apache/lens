@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.cube.parse;
+package org.apache.lens.server.api.metastore;
 
 import java.util.Date;
 import java.util.Map;

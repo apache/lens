@@ -314,6 +314,10 @@ public class CubeFactTable extends AbstractCubeTable {
     addCubeNames(getName(), getProperties(), cubeName);
   }
 
+  public String getDataCompletenessTag() {
+    return getProperties().get(MetastoreConstants.FACT_DATA_COMPLETENESS_TAG);
+  }
+
   public boolean isAggregated() {
     // It's aggregate table unless explicitly set to false
     return !"false".equalsIgnoreCase(getProperties().get(MetastoreConstants.FACT_AGGREGATED_PROPERTY));

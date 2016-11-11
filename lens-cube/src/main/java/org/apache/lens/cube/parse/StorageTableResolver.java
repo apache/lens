@@ -18,22 +18,24 @@
  */
 package org.apache.lens.cube.parse;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static org.apache.lens.cube.metadata.DateUtil.WSPACE;
 import static org.apache.lens.cube.metadata.MetastoreUtil.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode.*;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.*;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.metastore.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -42,6 +44,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -65,6 +68,8 @@ class StorageTableResolver implements ContextRewriter {
   private DateFormat partWhereClauseFormat = null;
   private PHASE phase;
   private HashMap<CubeFactTable, Map<String, SkipStorageCause>> skipStorageCausesPerFact;
+  private float completenessThreshold;
+  private String completenessPartCol;
 
   enum PHASE {
     FACT_TABLES, FACT_PARTITIONS, DIM_TABLE_AND_PARTITIONS;
@@ -104,6 +109,9 @@ class StorageTableResolver implements ContextRewriter {
       partWhereClauseFormat = new SimpleDateFormat(formatStr);
     }
     this.phase = PHASE.first();
+    completenessThreshold = conf.getFloat(CubeQueryConfUtil.COMPLETENESS_THRESHOLD,
+            CubeQueryConfUtil.DEFAULT_COMPLETENESS_THRESHOLD);
+    completenessPartCol = conf.get(CubeQueryConfUtil.COMPLETENESS_CHECK_PART_COL);
   }
 
   private List<String> getSupportedStorages(Configuration conf) {
@@ -138,6 +146,13 @@ class StorageTableResolver implements ContextRewriter {
         resolveFactStoragePartitions(cubeql);
       }
       cubeql.pruneCandidateFactSet(CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
+      if (client != null && client.isDataCompletenessCheckEnabled()) {
+        if (!cubeql.getCandidateFacts().isEmpty()) {
+          // resolve incomplete fact partition
+          resolveFactCompleteness(cubeql);
+        }
+        cubeql.pruneCandidateFactSet(CandidateTablePruneCode.INCOMPLETE_PARTITION);
+      }
       break;
     case DIM_TABLE_AND_PARTITIONS:
       resolveDimStorageTablesAndPartitions(cubeql);
@@ -499,6 +514,133 @@ class StorageTableResolver implements ContextRewriter {
     }
   }
 
+  private static boolean processCubeColForDataCompleteness(CubeQueryContext cubeql, String cubeCol, String alias,
+                                                        Set<String> measureTag,
+                                                        Map<String, String> tagToMeasureOrExprMap) {
+    CubeMeasure column = cubeql.getCube().getMeasureByName(cubeCol);
+    if (column != null && column.getTags() != null) {
+      String dataCompletenessTag = column.getTags().get(MetastoreConstants.MEASURE_DATACOMPLETENESS_TAG);
+      //Checking if dataCompletenessTag is set for queried measure
+      if (dataCompletenessTag != null) {
+        measureTag.add(dataCompletenessTag);
+        String value = tagToMeasureOrExprMap.get(dataCompletenessTag);
+        if (value == null) {
+          tagToMeasureOrExprMap.put(dataCompletenessTag, alias);
+        } else {
+          value = value.concat(",").concat(alias);
+          tagToMeasureOrExprMap.put(dataCompletenessTag, value);
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static void processMeasuresFromExprMeasures(CubeQueryContext cubeql, Set<String> measureTag,
+                                                             Map<String, String> tagToMeasureOrExprMap) {
+    boolean isExprProcessed;
+    String cubeAlias = cubeql.getAliasForTableName(cubeql.getCube().getName());
+    for (String expr : cubeql.getQueriedExprsWithMeasures()) {
+      isExprProcessed = false;
+      for (ExpressionResolver.ExprSpecContext esc : cubeql.getExprCtx().getExpressionContext(expr, cubeAlias)
+              .getAllExprs()) {
+        if (esc.getTblAliasToColumns().get(cubeAlias) != null) {
+          for (String cubeCol : esc.getTblAliasToColumns().get(cubeAlias)) {
+            if (processCubeColForDataCompleteness(cubeql, cubeCol, expr, measureTag, tagToMeasureOrExprMap)) {
+              /* This is done to associate the expression with one of the dataCompletenessTag for the measures.
+              So, even if the expression is composed of measures with different dataCompletenessTags, we will be
+              determining the dataCompleteness from one of the measure and this expression is grouped with the
+              other queried measures that have the same dataCompletenessTag. */
+              isExprProcessed = true;
+              break;
+            }
+          }
+        }
+        if (isExprProcessed) {
+          break;
+        }
+      }
+    }
+  }
+
+  private void resolveFactCompleteness(CubeQueryContext cubeql) throws LensException {
+    if (client == null || client.getCompletenessChecker() == null || completenessPartCol == null) {
+      return;
+    }
+    DataCompletenessChecker completenessChecker = client.getCompletenessChecker();
+    Set<String> measureTag = new HashSet<>();
+    Map<String, String> tagToMeasureOrExprMap = new HashMap<>();
+
+    processMeasuresFromExprMeasures(cubeql, measureTag, tagToMeasureOrExprMap);
+
+    Set<String> measures = cubeql.getQueriedMsrs();
+    if (measures == null) {
+      measures = new HashSet<>();
+    }
+    for (String measure : measures) {
+      processCubeColForDataCompleteness(cubeql, measure, measure, measureTag, tagToMeasureOrExprMap);
+    }
+    //Checking if dataCompletenessTag is set for the fact
+    if (measureTag.isEmpty()) {
+      log.info("No Queried measures with the dataCompletenessTag, hence skipping the availability check");
+      return;
+    }
+    Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator();
+    DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    while (i.hasNext()) {
+      CandidateFact cFact = i.next();
+      // Map from measure to the map from partition to %completeness
+      Map<String, Map<String, Float>> incompleteMeasureData = new HashMap<>();
+
+      String factDataCompletenessTag = cFact.fact.getDataCompletenessTag();
+      if (factDataCompletenessTag == null) {
+        log.info("Not checking completeness for the fact table:{} as the dataCompletenessTag is not set", cFact.fact);
+        continue;
+      }
+      boolean isFactDataIncomplete = false;
+      for (TimeRange range : cubeql.getTimeRanges()) {
+        if (!range.getPartitionColumn().equals(completenessPartCol)) {
+          log.info("Completeness check not available for partCol:{}", range.getPartitionColumn());
+          continue;
+        }
+        Date from = range.getFromDate();
+        Date to = range.getToDate();
+        Map<String, Map<Date, Float>> completenessMap =  completenessChecker.getCompleteness(factDataCompletenessTag,
+                from, to, measureTag);
+        if (completenessMap != null && !completenessMap.isEmpty()) {
+          for (Map.Entry<String, Map<Date, Float>> measureCompleteness : completenessMap.entrySet()) {
+            String tag = measureCompleteness.getKey();
+            for (Map.Entry<Date, Float> completenessResult : measureCompleteness.getValue().entrySet()) {
+              if (completenessResult.getValue() < completenessThreshold) {
+                log.info("Completeness for the measure_tag {} is {}, threshold: {}, for the hour {}", tag,
+                        completenessResult.getValue(), completenessThreshold,
+                        formatter.format(completenessResult.getKey()));
+                String measureorExprFromTag = tagToMeasureOrExprMap.get(tag);
+                Map<String, Float> incompletePartition = incompleteMeasureData.get(measureorExprFromTag);
+                if (incompletePartition == null) {
+                  incompletePartition = new HashMap<>();
+                  incompleteMeasureData.put(measureorExprFromTag, incompletePartition);
+                }
+                incompletePartition.put(formatter.format(completenessResult.getKey()), completenessResult.getValue());
+                isFactDataIncomplete = true;
+              }
+            }
+          }
+        }
+      }
+      if (isFactDataIncomplete) {
+        log.info("Fact table:{} has partitions with incomplete data: {} for given ranges: {}", cFact.fact,
+                incompleteMeasureData, cubeql.getTimeRanges());
+        if (failOnPartialData) {
+          i.remove();
+          cubeql.addFactPruningMsgs(cFact.fact, incompletePartitions(incompleteMeasureData));
+        } else {
+          cFact.setDataCompletenessMap(incompleteMeasureData);
+        }
+      }
+    }
+  }
 
   void addNonExistingParts(String name, Set<String> nonExistingParts) {
     nonExistingPartitions.put(name, nonExistingParts);

@@ -86,6 +86,9 @@ public class CandidateFact implements CandidateTable, QueryAST {
   private final Map<TimeRange, Map<String, LinkedHashSet<FactPartition>>> rangeToStoragePartMap = new HashMap<>();
   @Getter
   private final Map<TimeRange, Map<String, String>> rangeToStorageWhereMap = new HashMap<>();
+  @Getter
+  @Setter
+  private Map<String, Map<String, Float>> dataCompletenessMap;
 
   CandidateFact(CubeFactTable fact, CubeInterface cube) {
     this.fact = fact;

@@ -28,6 +28,7 @@ import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.ErrorCollectionFactory;
 import org.apache.lens.api.error.LensError;
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.server.api.*;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
@@ -63,7 +64,11 @@ public abstract class TestQueryRewrite {
 
   @BeforeSuite
   public static void setup() throws Exception {
+    hconf.setStrings(LensConfConstants.COMPLETENESS_CHECKER_CLASS,
+            "org.apache.lens.cube.parse.MockCompletenessChecker");
+    hconf.setBoolean(LensConfConstants.ENABLE_DATACOMPLETENESS_CHECK, true);
     SessionState.start(hconf);
+
     setup = new CubeTestSetup();
     setup.createSources(hconf, TestQueryRewrite.class.getSimpleName());
   }

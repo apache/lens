@@ -146,6 +146,18 @@ public class CandidateTablePruneCause {
         }
         return new String[]{missingPartitions.toString()};
       }
+    },
+    // incomplete data in the fact
+    INCOMPLETE_PARTITION("Data is incomplete. Details : %s") {
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        Set<Map<String, Map<String, Float>>> incompletePartitions = Sets.newHashSet();
+        for (CandidateTablePruneCause cause : causes) {
+          if (cause.getIncompletePartitions() != null) {
+            incompletePartitions.add(cause.getIncompletePartitions());
+          }
+        }
+        return new String[]{incompletePartitions.toString()};
+      }
     };
 
 
@@ -231,6 +243,8 @@ public class CandidateTablePruneCause {
 
   // populated only incase of missing partitions cause
   private Set<String> missingPartitions;
+  // populated only incase of incomplete partitions cause
+  private Map<String, Map<String, Float>> incompletePartitions;
   // populated only incase of missing update periods cause
   private List<String> missingUpdatePeriods;
   // populated in case of missing columns
@@ -297,6 +311,13 @@ public class CandidateTablePruneCause {
     CandidateTablePruneCause cause =
       new CandidateTablePruneCause(MISSING_PARTITIONS);
     cause.setMissingPartitions(nonExistingParts);
+    return cause;
+  }
+
+  public static CandidateTablePruneCause incompletePartitions(Map<String, Map<String, Float>> incompleteParts) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(INCOMPLETE_PARTITION);
+    //incompleteParts may be null when partial data is allowed.
+    cause.setIncompletePartitions(incompleteParts);
     return cause;
   }
 
