@@ -76,7 +76,7 @@
   </property>
 
   <property>
-    <name>lens.driver.hive.query.hook.class</name>
+    <name>lens.driver.hive.query.hook.classes</name>
     <value>org.apache.lens.server.api.user.MockDriverQueryHook</value>
     <description>The query hook class for hive driver.
     </description>

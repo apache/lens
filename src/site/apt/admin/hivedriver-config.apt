@@ -66,7 +66,7 @@ Hive driver configuration
 |  |                                |                                     |One use case in range tuning can be that you never want queries to run with VERY_HIGH, assuming no other changes, you'll modify the value of this param in hivedriver-site.xml to be HIGH,30.0,NORMAL,90,LOW\ |
 |  |                                |                                     |via the configs, you can tune both the ranges and partition weights. this would give the end user more control.                                                                                               |
 *--+--+---+--+
-|15|lens.driver.hive.query.hook.class|org.apache.lens.server.api.driver.NoOpDriverQueryHook|The query hook class for hive driver. By default hook is No op. To add a hook, you should look at the default implementation and from there it'll be easy to derive what value can be added through a new hook|
+|15|lens.driver.hive.query.hook.classes| |The query hook classes for hive driver. By default there are no hooks. To add a hook, you should look at the default implementation and from there it'll be easy to derive what value can be added through a new hook. Multiple hooks can be provided by providing comma seperated name of classes.|
 *--+--+---+--+
 |16|lens.driver.hive.query.launching.constraint.factories| |Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
 *--+--+---+--+

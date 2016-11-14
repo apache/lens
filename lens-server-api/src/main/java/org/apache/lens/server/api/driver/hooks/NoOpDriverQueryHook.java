@@ -19,8 +19,9 @@
 /*
  *
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.driver.hooks;
 
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
@@ -72,7 +73,7 @@ public class NoOpDriverQueryHook implements DriverQueryHook {
   }
 
   @Override
-  public void preLaunch(QueryContext ctx) {
+  public void preLaunch(QueryContext ctx) throws LensException {
     log.debug("Pre launch for user {}, user query: {}, driver {}, driver query: {}", ctx.getSubmittedUser(),
       ctx.getUserQuery(), ctx.getSelectedDriver().getFullyQualifiedName(), ctx.getSelectedDriverQuery());
   }

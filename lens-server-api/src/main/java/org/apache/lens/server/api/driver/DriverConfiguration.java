@@ -34,27 +34,31 @@ public class DriverConfiguration extends Configuration {
     this.driverClass = driverClass;
     this.driverClassType = driverClass.getSimpleName().toLowerCase().replaceAll("driver$", "");
   }
-
-  @Override
-  public String[] getStrings(String name) {
-    for (String key : new String[]{DRIVER_PFX + driverType + "." + name, DRIVER_PFX + driverClassType + "." + name,
-      DRIVER_PFX + name, name, }) {
-      String[] s = super.getStrings(key);
-      if (s != null) {
-        return s;
-      }
-    }
-    return null;
+  public DriverConfiguration(String driverType, Class<? extends AbstractLensDriver> driverClass) {
+    this.driverType = driverType;
+    this.driverClass = driverClass;
+    this.driverClassType = driverClass.getSimpleName().toLowerCase().replaceAll("driver$", "");
   }
 
   @Override
-  public <U> Class<? extends U> getClass(String name, Class<? extends U> defaultValue, Class<U> xface) {
-    for (String key : new String[]{DRIVER_PFX + driverType + "." + name, DRIVER_PFX + driverClassType + "." + name,
-      DRIVER_PFX + name, name, }) {
-      if (getTrimmed(key) != null) {
-        return super.getClass(key, defaultValue, xface);
+  public String get(String name) {
+    String[] prefixes = new String[]{DRIVER_PFX + driverType + ".", DRIVER_PFX + driverClassType + ".", DRIVER_PFX, };
+    for (String prefix : prefixes) {
+      if (name.startsWith(prefix)) {
+        return getInternal(name.substring(prefix.length()));
       }
     }
-    return defaultValue;
+    return getInternal(name);
+  }
+
+  public String getInternal(String name) {
+    for (String key : new String[]{DRIVER_PFX + driverType + "." + name, DRIVER_PFX + driverClassType + "." + name,
+      DRIVER_PFX + name, name, }) {
+      String val = super.get(key);
+      if (val != null) {
+        return val;
+      }
+    }
+    return null;
   }
 }

@@ -938,6 +938,11 @@
     </description>
   </property>
   <property>
+    <name>lens.server.query.cost.parser.class</name>
+    <value>org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost$Parser</value>
+    <description>The Query cost parser class. Default query cost class used is FactPartitionBasedQueryCost</description>
+  </property>
+  <property>
     <name>lens.cube.metastore.enable.datacompleteness.check</name>
     <value>false</value>
     <description>This property is to enable Data Completeness Checks while resolving partitions.</description>

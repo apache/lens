@@ -69,4 +69,12 @@ public class FactPartitionBasedQueryCost implements QueryCost<FactPartitionBased
   public String toString() {
     return getQueryCostType() + "(" + getEstimatedResourceUsage() + ")";
   }
+
+  public static class Parser implements org.apache.lens.api.parse.Parser<FactPartitionBasedQueryCost> {
+
+    @Override
+    public FactPartitionBasedQueryCost parse(String value) {
+      return new FactPartitionBasedQueryCost(Double.parseDouble(value));
+    }
+  }
 }

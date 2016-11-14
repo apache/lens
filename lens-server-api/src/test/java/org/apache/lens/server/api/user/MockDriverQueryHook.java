@@ -20,7 +20,7 @@ package org.apache.lens.server.api.user;
 
 import java.util.HashMap;
 
-import org.apache.lens.server.api.driver.NoOpDriverQueryHook;
+import org.apache.lens.server.api.driver.hooks.NoOpDriverQueryHook;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
@@ -40,7 +40,7 @@ public class MockDriverQueryHook extends NoOpDriverQueryHook {
   public static final String POST_ESTIMATE = "POST_ESTIMATE";
 
   @Override
-  public void preLaunch(QueryContext ctx) {
+  public void preLaunch(QueryContext ctx) throws LensException {
     super.preLaunch(ctx);
     ctx.getSelectedDriverConf().set(KEY_PRE_LAUNCH, VALUE_PRE_LAUNCH);
   }

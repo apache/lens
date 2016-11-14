@@ -20,8 +20,11 @@ package org.apache.lens.server.api;
 
 import javax.ws.rs.core.MediaType;
 
+import org.apache.lens.api.parse.Parser;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.*;
+import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
+import org.apache.lens.server.api.query.cost.QueryCost;
 
 /**
  * The Class LensConfConstants.
@@ -967,7 +970,7 @@ public final class LensConfConstants {
   /**
    * Driver hook property
    */
-  public static final String DRIVER_HOOK_CLASS_SFX = "query.hook.class";
+  public static final String DRIVER_HOOK_CLASSES_SFX = "query.hook.classes";
 
   /**
    * Default driver weight
@@ -1219,6 +1222,10 @@ public final class LensConfConstants {
    * Default value is less than zero, that means an user can scheduler unlimited number of jobs.
    */
   public static final int DEFAULT_MAX_SCHEDULED_JOB_PER_USER = -1;
+
+  public static final String QUERY_COST_PARSER = SERVER_PFX + "query.cost.parser.class";
+  public static final Class<? extends Parser<? extends QueryCost>> DEFAULT_QUERY_COST_PARSER
+    = FactPartitionBasedQueryCost.Parser.class;
 
   /**
    * Maximum number of scheduled job per user.

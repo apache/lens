@@ -19,8 +19,9 @@
 /*
  *
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.driver.hooks;
 
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
@@ -38,8 +39,8 @@ import org.apache.lens.server.api.query.QueryContext;
  * This interface is expected to evolve for some time as more needs for hook are discovered
  *
  * Note: Note if the hook updates any configuration, same should be reflected in QueryContext
- * via {@link AbstractQueryContext#updateConf(Map)} to ensure the modified configuration is persisted and is available
- * on server restarts and other bookkeeping needs.
+ * via {@link AbstractQueryContext#updateConf(java.util.Map)} to ensure the modified configuration is persisted and
+ * is available on server restarts and other bookkeeping needs.
  */
 public interface DriverQueryHook {
 

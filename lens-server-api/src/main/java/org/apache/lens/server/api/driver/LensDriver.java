@@ -23,6 +23,7 @@ import java.io.Externalizable;
 import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
+import org.apache.lens.server.api.driver.hooks.DriverQueryHook;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;

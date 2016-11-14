@@ -23,6 +23,8 @@ import static org.apache.lens.server.api.util.LensUtil.getImplementations;
 
 import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.hooks.ChainedDriverQueryHook;
+import org.apache.lens.server.api.driver.hooks.DriverQueryHook;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
@@ -85,14 +87,8 @@ public abstract class AbstractLensDriver implements LensDriver {
   }
 
   protected void loadQueryHook() throws LensException {
-    try {
-      queryHook = getConf().getClass(
-        DRIVER_HOOK_CLASS_SFX, NoOpDriverQueryHook.class, DriverQueryHook.class
-      ).newInstance();
-      queryHook.setDriver(this);
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new LensException("Can't instantiate driver query hook for hivedriver with given class", e);
-    }
+    this.queryHook = ChainedDriverQueryHook.from(getConf(), DRIVER_HOOK_CLASSES_SFX);
+    queryHook.setDriver(this);
   }
 
   protected void loadRetryPolicyDecider() throws LensException {

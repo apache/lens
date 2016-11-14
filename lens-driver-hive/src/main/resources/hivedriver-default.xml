@@ -35,10 +35,11 @@
   </property>
 
   <property>
-    <name>lens.driver.hive.query.hook.class</name>
-    <value>org.apache.lens.server.api.driver.NoOpDriverQueryHook</value>
-    <description>The query hook class for hive driver. By default hook is No op. To add a hook, you should look
-      at the default implementation and from there it'll be easy to derive what value can be added through a new hook
+    <name>lens.driver.hive.query.hook.classes</name>
+    <value></value>
+    <description>The query hook classes for hive driver. By default there are no hooks. To add a hook, you should look
+      at the default implementation and from there it'll be easy to derive what value can be added through a new hook.
+      Multiple hooks can be provided by providing comma seperated name of classes.
     </description>
   </property>
 
