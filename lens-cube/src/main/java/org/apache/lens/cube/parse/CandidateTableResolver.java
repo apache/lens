@@ -355,36 +355,43 @@ class CandidateTableResolver implements ContextRewriter {
     List<CandidateFact> cfacts = new ArrayList<>(cfactsPassed);
     for (Iterator<CandidateFact> i = cfacts.iterator(); i.hasNext();) {
       CandidateFact cfact = i.next();
-      i.remove();
       if (!checkForFactColumnExistsAndValidForRange(cfact, msrs, cubeql)) {
         // cfact does not contain any of msrs and none of exprsWithMeasures are evaluable.
         // ignore the fact
+        i.remove();
         continue;
       } else if (allEvaluable(cfact, msrs, cubeql)) {
         // return single set
         Set<CandidateFact> one = new LinkedHashSet<>();
         one.add(cfact);
         cfactset.add(one);
-      } else {
-        // find the remaining measures in other facts
-        if (i.hasNext()) {
-          Set<QueriedPhraseContext> remainingMsrs = new HashSet<>(msrs);
-          Set<QueriedPhraseContext> coveredMsrs  = coveredMeasures(cfact, msrs, cubeql);
-          remainingMsrs.removeAll(coveredMsrs);
+        i.remove();
+      }
+    }
+    // facts that contain all measures or no measures are removed from iteration.
+    // find other facts
+    for (Iterator<CandidateFact> i = cfacts.iterator(); i.hasNext();) {
+      CandidateFact cfact = i.next();
+      i.remove();
+      // find the remaining measures in other facts
+      if (i.hasNext()) {
+        Set<QueriedPhraseContext> remainingMsrs = new HashSet<>(msrs);
+        Set<QueriedPhraseContext> coveredMsrs  = coveredMeasures(cfact, msrs, cubeql);
+        remainingMsrs.removeAll(coveredMsrs);
 
-          Set<Set<CandidateFact>> coveringSets = findCoveringSets(cubeql, cfacts, remainingMsrs);
-          if (!coveringSets.isEmpty()) {
-            for (Set<CandidateFact> set : coveringSets) {
-              set.add(cfact);
-              cfactset.add(set);
-            }
-          } else {
-            log.info("Couldnt find any set containing remaining measures:{} {} in {}", remainingMsrs,
-              cfactsPassed);
+        Set<Set<CandidateFact>> coveringSets = findCoveringSets(cubeql, cfacts, remainingMsrs);
+        if (!coveringSets.isEmpty()) {
+          for (Set<CandidateFact> set : coveringSets) {
+            set.add(cfact);
+            cfactset.add(set);
           }
+        } else {
+          log.info("Couldnt find any set containing remaining measures:{} {} in {}", remainingMsrs,
+            cfactsPassed);
         }
       }
     }
+    log.info("Covering set {} for measures {} with factsPassed {}", cfactset, msrs, cfactsPassed);
     return cfactset;
   }
 
