@@ -38,7 +38,7 @@ public class CandidateDim implements CandidateTable {
   final CubeDimensionTable dimtable;
   @Getter
   @Setter
-  private String storageTable;
+  private String storageName;
   @Getter
   @Setter
   private String whereClause;
@@ -73,11 +73,11 @@ public class CandidateDim implements CandidateTable {
       String database = SessionState.get().getCurrentDatabase();
       // Add database name prefix for non default database
       if (StringUtils.isNotBlank(database) && !"default".equalsIgnoreCase(database)) {
-        storageTable = database + "." + storageTable;
+        storageName = database + "." + storageName;
       }
       dbResolved = true;
     }
-    return storageTable + " " + alias;
+    return storageName + " " + alias;
   }
 
   @Override
@@ -124,12 +124,7 @@ public class CandidateDim implements CandidateTable {
   }
 
   @Override
-  public Set<String> getStorageTables() {
-    return Collections.singleton(storageTable);
-  }
-
-  @Override
-  public Set<String> getPartsQueried() {
+  public Set<String> getParticipatingPartitions() {
     if (StringUtils.isBlank(whereClause)) {
       return Collections.emptySet();
     }

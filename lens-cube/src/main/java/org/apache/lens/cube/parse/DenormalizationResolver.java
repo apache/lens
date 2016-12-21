@@ -345,20 +345,27 @@ public class DenormalizationResolver implements ContextRewriter {
       // In the second iteration of denorm resolver
       // candidate tables which require denorm fields and the refernces are no
       // more valid will be pruned
-      if (cubeql.getCube() != null && !cubeql.getCandidateFacts().isEmpty()) {
-        for (Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator(); i.hasNext();) {
-          CandidateFact cfact = i.next();
-          if (denormCtx.tableToRefCols.containsKey(cfact.getName())) {
-            for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(cfact.getName())) {
-              if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
-                log.info("Not considering fact table:{} as column {} is not available", cfact, refcol.col);
-                cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(refcol.col.getName()));
-                i.remove();
+      if (cubeql.getCube() != null && !cubeql.getCandidates().isEmpty()) {
+        for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
+          Candidate cand = i.next();
+          //TODO union : is this happening in pahse 1 or 2 ?
+          //TODO Union : If phase 2, the below code will not work. Move to phase1 in that case
+          if (cand instanceof StorageCandidate) {
+            StorageCandidate sc = (StorageCandidate) cand;
+            if (denormCtx.tableToRefCols.containsKey(sc.getFact().getName())) {
+              for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(sc.getFact().getName())) {
+                if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
+                  log.info("Not considering storage candidate :{} as column {} is not available", sc, refcol.col);
+                  cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(refcol.col.getName()));
+                  i.remove();
+                }
               }
             }
+          } else {
+            throw new LensException("Not a storage candidate!!");
           }
         }
-        if (cubeql.getCandidateFacts().size() == 0) {
+        if (cubeql.getCandidates().size() == 0) {
           throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
               cubeql.getColumnsQueriedForTable(cubeql.getCube().getName()).toString());
         }

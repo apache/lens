@@ -71,20 +71,23 @@ class AggregateResolver implements ContextRewriter {
       || hasMeasuresNotInDefaultAggregates(cubeql, cubeql.getHavingAST(), null, aggregateResolverDisabled)
       || hasMeasures(cubeql, cubeql.getWhereAST()) || hasMeasures(cubeql, cubeql.getGroupByAST())
       || hasMeasures(cubeql, cubeql.getOrderByAST())) {
-      Iterator<CandidateFact> factItr = cubeql.getCandidateFacts().iterator();
-      while (factItr.hasNext()) {
-        CandidateFact candidate = factItr.next();
-        if (candidate.fact.isAggregated()) {
-          cubeql.addFactPruningMsgs(candidate.fact,
-            CandidateTablePruneCause.missingDefaultAggregate());
-          factItr.remove();
+      //TODO union : Note : Pending : cube segmentation design may change the above assumption and Set<Candidate> can contain and mix of StorageCandidate and UnionSegmentCandidate. This step can then ignore UnionSegmentCandidate
+      Iterator<Candidate> candItr = cubeql.getCandidates().iterator();
+      while (candItr.hasNext()) {
+        Candidate candidate = candItr.next();
+        if (candidate instanceof StorageCandidate) {
+          StorageCandidate sc = (StorageCandidate) candidate;
+          if (sc.getFact().isAggregated()) {
+            cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.missingDefaultAggregate());
+            candItr.remove();
+          }
+        } else {
+          throw new LensException("Not a storage candidate!!");
         }
       }
       nonDefaultAggregates = true;
       log.info("Query has non default aggregates, no aggregate resolution will be done");
     }
-
-    cubeql.pruneCandidateFactSet(CandidateTablePruneCode.MISSING_DEFAULT_AGGREGATE);
 
     if (nonDefaultAggregates || aggregateResolverDisabled) {
       return;

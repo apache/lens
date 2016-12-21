@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TimeRangeChecker implements ContextRewriter {
   public TimeRangeChecker(Configuration conf) {
+
   }
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
@@ -49,7 +50,6 @@ public class TimeRangeChecker implements ContextRewriter {
       return;
     }
     doColLifeValidation(cubeql);
-    doFactRangeValidation(cubeql);
   }
   private void extractTimeRange(CubeQueryContext cubeql) throws LensException {
     // get time range -
@@ -137,6 +137,7 @@ public class TimeRangeChecker implements ContextRewriter {
     cubeql.getTimeRanges().add(range);
   }
 
+  //TODO union: This can be executed before finding CoveringSets but after denormresolver and joinresolver
   private void doColLifeValidation(CubeQueryContext cubeql) throws LensException,
       ColUnAvailableInTimeRangeException {
     Set<String> cubeColumns = cubeql.getColumnsQueriedForTable(cubeql.getCube().getName());
@@ -222,7 +223,6 @@ public class TimeRangeChecker implements ContextRewriter {
     } // End column loop
   }
 
-
   private void throwException(CubeColumn column) throws ColUnAvailableInTimeRangeException {
 
     final Long availabilityStartTime = (column.getStartTimeMillisSinceEpoch().isPresent())
@@ -235,24 +235,5 @@ public class TimeRangeChecker implements ContextRewriter {
         availabilityEndTime);
 
     throw new ColUnAvailableInTimeRangeException(col);
-  }
-
-  private void doFactRangeValidation(CubeQueryContext cubeql) {
-    Iterator<CandidateFact> iter = cubeql.getCandidateFacts().iterator();
-    while (iter.hasNext()) {
-      CandidateFact cfact = iter.next();
-      List<TimeRange> invalidTimeRanges = Lists.newArrayList();
-      for (TimeRange timeRange : cubeql.getTimeRanges()) {
-        if (!cfact.isValidForTimeRange(timeRange)) {
-          invalidTimeRanges.add(timeRange);
-        }
-      }
-      if (!invalidTimeRanges.isEmpty()){
-        cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.factNotAvailableInRange(invalidTimeRanges));
-        log.info("Not considering {} as it's not available for time ranges: {}", cfact, invalidTimeRanges);
-        iter.remove();
-      }
-    }
-    cubeql.pruneCandidateFactSet(CandidateTablePruneCause.CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE);
   }
 }

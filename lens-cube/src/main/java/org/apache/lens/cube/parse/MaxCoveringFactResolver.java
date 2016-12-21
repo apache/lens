@@ -67,6 +67,8 @@ class MaxCoveringFactResolver implements ContextRewriter {
     // For each part column, which candidate fact sets are covering how much amount.
     // Later, we'll maximize coverage for each queried part column.
     Map<String, Map<Set<CandidateFact>, Long>> partCountsPerPartCol = Maps.newHashMap();
+    //TODO union: max covering set will be calculated based on List<Candidate>
+    //TODO union: Each candidate will provide Set<FactPartion> using {@link Candidate.getParticipatingPartitions}
     for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
       for (Map.Entry<String, Long> entry : getTimeCoveredForEachPartCol(facts).entrySet()) {
         if (!partCountsPerPartCol.containsKey(entry.getKey())) {
@@ -114,6 +116,7 @@ class MaxCoveringFactResolver implements ContextRewriter {
     }
 
     // We prune those candidate fact set, whose dataCompletenessFactor is less than maxDataCompletenessFactor
+    //TODO union : This needs to work on List<Candidate>
     Iterator<Set<CandidateFact>> iter = cubeql.getCandidateFactSets().iterator();
     while (iter.hasNext()) {
       Set<CandidateFact> facts = iter.next();
@@ -127,6 +130,7 @@ class MaxCoveringFactResolver implements ContextRewriter {
     cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.incompletePartitions(null));
   }
 
+  //TODO union : This needs to work on Candidate
   private float computeDataCompletenessFactor(Set<CandidateFact> facts) {
     float completenessFactor = 0f;
     int numPartition = 0;

@@ -39,6 +39,8 @@ public class FactPartition implements Comparable<FactPartition> {
   private final Set<String> storageTables = new LinkedHashSet<String>();
   @Getter
   private final UpdatePeriod period;
+
+  //TODO union : this is never set . Do we need this ?s
   @Getter
   @Setter
   private FactPartition containingPart;

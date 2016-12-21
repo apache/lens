@@ -38,6 +38,7 @@ import lombok.NoArgsConstructor;
 @JsonWriteNullProperties(false)
 @Data
 @NoArgsConstructor
+//TODO union: Since we are working on StoargeCandidates now, we might need some chnages here
 public class CandidateTablePruneCause {
 
   public enum CandidateTablePruneCode {
@@ -158,8 +159,25 @@ public class CandidateTablePruneCause {
         }
         return new String[]{incompletePartitions.toString()};
       }
-    };
+    },
 
+    // Moved from Stoarge causes
+    INVALID_STORAGE("Invalid Storage"),
+    // storage table does not exist
+    STOARGE_TABLE_DOES_NOT_EXIST("Storage table does not exist"),
+    // storage has no update periods queried
+    MISSING_UPDATE_PERIODS("Storage has no update periods"),
+    // no candidate update periods, update period cause will have why each
+    // update period is not a candidate
+    NO_CANDIDATE_UPDATE_PERIODS("Storage update periods are not candidate"),
+    // storage table has no partitions queried
+    NO_PARTITIONS("Storage table has no partitions"),
+    // partition column does not exist
+    PART_COL_DOES_NOT_EXIST("Partition column does not exist"),
+    // Range is not supported by this storage table
+    TIME_RANGE_NOT_ANSWERABLE("Range not answerable"),
+    // storage is not supported by execution engine
+    UNSUPPORTED_STORAGE("Unsupported Storage");
 
     String errorFormat;
 
@@ -180,6 +198,8 @@ public class CandidateTablePruneCause {
     }
   }
 
+  //TODO union : Remove this enum. All values moved to CandidateTablePruneCode
+  @Deprecated
   public enum SkipStorageCode {
     // invalid storage table
     INVALID,
@@ -210,16 +230,21 @@ public class CandidateTablePruneCause {
   @JsonWriteNullProperties(false)
   @Data
   @NoArgsConstructor
+  //TODO union:deprecate this sub class
+  @Deprecated
   public static class SkipStorageCause {
     private SkipStorageCode cause;
     // update period to skip cause
     private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
+
     private List<String> nonExistantPartCols;
 
+    @Deprecated
     public SkipStorageCause(SkipStorageCode cause) {
       this.cause = cause;
     }
 
+    @Deprecated
     public static SkipStorageCause partColDoesNotExist(String... partCols) {
       SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.PART_COL_DOES_NOT_EXIST);
       ret.nonExistantPartCols = new ArrayList<String>();
@@ -229,6 +254,7 @@ public class CandidateTablePruneCause {
       return ret;
     }
 
+    @Deprecated
     public static SkipStorageCause noCandidateUpdatePeriod(Map<String, SkipUpdatePeriodCode> causes) {
       SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.NO_CANDIDATE_PERIODS);
       ret.updatePeriodRejectionCause = causes;
@@ -262,6 +288,11 @@ public class CandidateTablePruneCause {
   private MaxCoveringFactResolver.TimeCovered maxTimeCovered;
   // ranges in which fact is invalid
   private List<TimeRange> invalidRanges;
+
+  private List<String> nonExistantPartCols;
+
+  private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
+
 
   public CandidateTablePruneCause(CandidateTablePruneCode cause) {
     this.cause = cause;
@@ -338,7 +369,9 @@ public class CandidateTablePruneCause {
     return cause;
   }
 
-  public static CandidateTablePruneCause noCandidateStorages(Map<String, SkipStorageCause> storageCauses) {
+ //TDOO union : Remove this method
+ @Deprecated
+ public static CandidateTablePruneCause noCandidateStorages(Map<String, SkipStorageCause> storageCauses) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(NO_CANDIDATE_STORAGES);
     cause.setStorageCauses(new HashMap<String, SkipStorageCause>());
     for (Map.Entry<String, SkipStorageCause> entry : storageCauses.entrySet()) {
@@ -352,6 +385,29 @@ public class CandidateTablePruneCause {
   public static CandidateTablePruneCause missingDefaultAggregate(String... names) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(MISSING_DEFAULT_AGGREGATE);
     cause.setColumnsMissingDefaultAggregate(Lists.newArrayList(names));
+    return cause;
+  }
+
+  /**
+   * Queried partition columns are not present in this Storage Candidate
+   * @param missingPartitionColumns
+   * @return
+   */
+  public static CandidateTablePruneCause partitionColumnsMissing(final List<String> missingPartitionColumns) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(PART_COL_DOES_NOT_EXIST);
+    cause.nonExistantPartCols = missingPartitionColumns;
+    return cause;
+  }
+
+  /**
+   * All update periods of this Stoarge Candidate are rejected.
+   * @param updatePeriodRejectionCause
+   * @return
+   */
+  public static CandidateTablePruneCause updatePeriodsRejected(
+    final Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(NO_CANDIDATE_UPDATE_PERIODS);
+    cause.updatePeriodRejectionCause = updatePeriodRejectionCause;
     return cause;
   }
 }

@@ -98,89 +98,93 @@ class QueriedPhraseContext extends TracksQueriedColumns implements TrackQueriedC
     return false;
   }
 
-  boolean isEvaluable(CubeQueryContext cubeQl, CandidateFact cfact) throws LensException {
+  /**
+   * TODO union: change CandidateFact to StorageCandidate. Let the callers typecast and send for now.
+   * @param cubeQl
+   * @param sc
+   * @return
+   * @throws LensException
+   */
+  public boolean isEvaluable(CubeQueryContext cubeQl, StorageCandidate sc) throws LensException {
     // all measures of the queried phrase should be present
     for (String msr : queriedMsrs) {
-      if (!checkForColumnExistsAndValidForRange(cfact, msr, cubeQl)) {
+      if (!checkForColumnExistsAndValidForRange(sc, msr, cubeQl)) {
         return false;
       }
     }
     // all expression columns should be evaluable
     for (String exprCol : queriedExprColumns) {
-      if (!cubeQl.getExprCtx().isEvaluable(exprCol, cfact)) {
-        log.info("expression {} is not evaluable in fact table:{}", expr, cfact);
+      if (!cubeQl.getExprCtx().isEvaluable(exprCol, sc)) {
+        log.info("expression {} is not evaluable in fact table:{}", expr, sc);
         return false;
       }
     }
     // all dim-attributes should be present.
     for (String col : queriedDimAttrs) {
-      if (!cfact.getColumns().contains(col.toLowerCase())) {
+      if (!sc.getColumns().contains(col.toLowerCase())) {
         // check if it available as reference
-        if (!cubeQl.getDeNormCtx().addRefUsage(cfact, col, cubeQl.getCube().getName())) {
-          log.info("column {} is not available in fact table:{} ", col, cfact);
+        if (!cubeQl.getDeNormCtx().addRefUsage(sc, col, cubeQl.getCube().getName())) {
+          log.info("column {} is not available in fact table:{} ", col, sc);
           return false;
         }
-      } else if (!isFactColumnValidForRange(cubeQl, cfact, col)) {
-        log.info("column {} is not available in range queried in fact {}", col, cfact);
+      } else if (!isFactColumnValidForRange(cubeQl, sc, col)) {
+        log.info("column {} is not available in range queried in fact {}", col, sc);
         return false;
       }
     }
     return true;
   }
 
-  public static boolean isColumnAvailableInRange(final TimeRange range, Date startTime, Date endTime) {
+  private static boolean isColumnAvailableInRange(final TimeRange range, Date startTime, Date endTime) {
     return (isColumnAvailableFrom(range.getFromDate(), startTime)
       && isColumnAvailableTill(range.getToDate(), endTime));
   }
 
-  public static boolean isColumnAvailableFrom(@NonNull final Date date, Date startTime) {
+  private static boolean isColumnAvailableFrom(@NonNull final Date date, Date startTime) {
     return (startTime == null) || date.equals(startTime) || date.after(startTime);
   }
 
-  public static boolean isColumnAvailableTill(@NonNull final Date date, Date endTime) {
+  private static boolean isColumnAvailableTill(@NonNull final Date date, Date endTime) {
     return (endTime == null) || date.equals(endTime) || date.before(endTime);
   }
 
-  public static boolean isFactColumnValidForRange(CubeQueryContext cubeql, CandidateTable cfact, String col) {
+  public static boolean isFactColumnValidForRange(CubeQueryContext cubeql, StorageCandidate sc, String col) {
     for(TimeRange range : cubeql.getTimeRanges()) {
-      if (!isColumnAvailableInRange(range, getFactColumnStartTime(cfact, col), getFactColumnEndTime(cfact, col))) {
+      if (!isColumnAvailableInRange(range, getFactColumnStartTime(sc, col), getFactColumnEndTime(sc, col))) {
         return false;
       }
     }
     return true;
   }
 
-  public static Date getFactColumnStartTime(CandidateTable table, String factCol) {
+  public static Date getFactColumnStartTime(StorageCandidate sc, String factCol) {
     Date startTime = null;
-    if (table instanceof CandidateFact) {
-      for (String key : ((CandidateFact) table).fact.getProperties().keySet()) {
+      for (String key : sc.getTable().getProperties().keySet()) {
         if (key.contains(MetastoreConstants.FACT_COL_START_TIME_PFX)) {
           String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_START_TIME_PFX);
           if (factCol.equals(propCol)) {
-            startTime = ((CandidateFact) table).fact.getDateFromProperty(key, false, true);
+            startTime = sc.getTable().getDateFromProperty(key, false, true);
           }
         }
       }
-    }
     return startTime;
   }
 
-  public static Date getFactColumnEndTime(CandidateTable table, String factCol) {
+  public static Date getFactColumnEndTime(StorageCandidate sc, String factCol) {
     Date endTime = null;
-    if (table instanceof CandidateFact) {
-      for (String key : ((CandidateFact) table).fact.getProperties().keySet()) {
+      for (String key : sc.getTable().getProperties().keySet()) {
         if (key.contains(MetastoreConstants.FACT_COL_END_TIME_PFX)) {
           String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_END_TIME_PFX);
           if (factCol.equals(propCol)) {
-            endTime = ((CandidateFact) table).fact.getDateFromProperty(key, false, true);
+            endTime = sc.getTable().getDateFromProperty(key, false, true);
           }
         }
       }
-    }
-    return endTime;
+  return endTime;
   }
 
-  static boolean checkForColumnExistsAndValidForRange(CandidateTable table, String column, CubeQueryContext cubeql) {
-    return (table.getColumns().contains(column) &&  isFactColumnValidForRange(cubeql, table, column));
+  static boolean checkForColumnExistsAndValidForRange(StorageCandidate sc, String column, CubeQueryContext cubeql) {
+    return (sc.getColumns().contains(column) &&  isFactColumnValidForRange(cubeql, sc, column));
   }
+
 }

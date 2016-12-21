@@ -102,8 +102,18 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
   // Mapping of a qualified column name to its table alias
   private final Map<String, String> colToTableAlias = new HashMap<>();
 
+  //TODO union: remove candidateFactSets and use
   @Getter
   private final Set<Set<CandidateFact>> candidateFactSets = new HashSet<>();
+
+  /**
+   * This is the set of working Candidates that gets updated during different phases of
+   * query resolution. Each {@link ContextRewriter} may add/remove/update Candiadtes in
+   * this working set and from the final set of Candidates single {@link #pickedCandidate}
+   * is chosen.
+   */
+  @Getter
+  private final Set<Candidate> candidates = new HashSet<>();
 
   @Getter
   // would be added through join chains and de-normalized resolver
@@ -177,9 +187,12 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
   @Getter
   @Setter
   private DenormalizationResolver.DenormalizationContext deNormCtx;
+  //TODO union : deprecate factPruningMsgs
   @Getter
-  private PruneCauses<CubeFactTable> factPruningMsgs =
-    new PruneCauses<CubeFactTable>();
+  @Deprecated
+  private PruneCauses<CubeFactTable> factPruningMsgs = new PruneCauses<>();
+  @Getter
+  private PruneCauses<StorageCandidate>  storagePruningMsgs = new PruneCauses<>();
   @Getter
   private Map<Dimension, PruneCauses<CubeDimensionTable>> dimPruningMsgs =
     new HashMap<Dimension, PruneCauses<CubeDimensionTable>>();
@@ -480,9 +493,36 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
     return candidateDims;
   }
 
+  /**
+   * TODO union : deprecate this method and use
+   * {@link #addFactPruningMsg(CubeInterface, CubeFactTable, CandidateTablePruneCause)}
+   * or
+   * {@link #addStoragePruningMsg(StorageCandidate, CandidateTablePruneCause)}
+   * */
+  @Deprecated
   public void addFactPruningMsgs(CubeFactTable fact, CandidateTablePruneCause factPruningMsg) {
+    throw new IllegalStateException("This method is deprecate");
+  }
+
+  //TODO union : not required as all the pruning happening at StorageCandidate
+  /*
+  public void addFactPruningMsg(CubeInterface cube, CubeFactTable fact, CandidateTablePruneCause factPruningMsg) {
     log.info("Pruning fact {} with cause: {}", fact, factPruningMsg);
-    factPruningMsgs.addPruningMsg(fact, factPruningMsg);
+    for (String storageName : fact.getStorages()) {
+      addStoragePruningMsg(new StorageCandidate(cube, fact, storageName), factPruningMsg);
+    }
+  }
+*/
+  public void addCandidatePruningMsg(Candidate cand, CandidateTablePruneCause factPruningMsg) {
+    Set<StorageCandidate> scs = CandidateUtil.getStorageCandidates(cand);
+    for (StorageCandidate sc : scs) {
+      addStoragePruningMsg(sc, factPruningMsg);
+    }
+  }
+
+  public void addStoragePruningMsg(StorageCandidate sc, CandidateTablePruneCause factPruningMsg) {
+    log.info("Pruning Storage {} with cause: {}", sc, factPruningMsg);
+    storagePruningMsgs.addPruningMsg(sc, factPruningMsg);
   }
 
   public void addDimPruningMsgs(Dimension dim, CubeDimensionTable dimtable, CandidateTablePruneCause msg) {
@@ -675,6 +715,11 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
     return qb.getParseInfo().getJoinExpr();
   }
 
+  @Override
+  public void setJoinAST(ASTNode node) {
+    //NO-OP
+  }
+
   public String getOrderByString() {
     if (orderByAST != null) {
       return HQLParser.getString(orderByAST);
@@ -769,6 +814,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
     }
   }
 
+  // TODO union : Reevaluate this method.
   void setNonexistingParts(Map<String, Set<String>> nonExistingParts) throws LensException {
     if (!nonExistingParts.isEmpty()) {
       ByteArrayOutputStream out = null;
@@ -873,8 +919,14 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
   }
 
   private HQLContextInterface hqlContext;
+
+  //TODO union : Delete this and use pickedCandidate
   @Getter
   private Collection<CandidateFact> pickedFacts;
+
+  @Getter
+  //TODO union : This will be the final Candidate . private Candidate pickedCandidate
+  private Candidate pickedCandidate;
   @Getter
   private Collection<CandidateDim> pickedDimTables;
 
@@ -1211,6 +1263,8 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
    *
    * @param pruneCause
    */
+  //TODO union : deprecated
+  @Deprecated
   public void pruneCandidateFactSet(CandidateTablePruneCode pruneCause) {
     // remove candidate fact sets that have missing facts
     for (Iterator<Set<CandidateFact>> i = candidateFactSets.iterator(); i.hasNext();) {
@@ -1237,6 +1291,8 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
     pruneCandidateFactWithCandidateSet(new CandidateTablePruneCause(pruneCause));
   }
 
+  //TODO union : deprecated
+  @Deprecated
   public void pruneCandidateFactWithCandidateSet(CandidateTablePruneCause pruneCause) {
     // remove candidate facts that are not part of any covering set
     Set<CandidateFact> allCoveringFacts = new HashSet<CandidateFact>();
@@ -1252,6 +1308,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
       }
     }
   }
+
 
   public void addQueriedTimeDimensionCols(final String timeDimColName) {
 

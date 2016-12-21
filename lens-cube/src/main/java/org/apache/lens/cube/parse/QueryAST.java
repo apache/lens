@@ -83,4 +83,6 @@ public interface QueryAST {
   ASTNode getOrderByAST();
 
   void setOrderByAST(ASTNode node);
+
+  void setJoinAST(ASTNode node);
 }

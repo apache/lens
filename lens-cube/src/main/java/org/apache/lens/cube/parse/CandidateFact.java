@@ -39,6 +39,7 @@ import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 
+//TODO union : delete this class and use Candidate and StorageCandidtae
 /**
  * Holds context of a candidate fact table.
  */
@@ -108,6 +109,11 @@ public class CandidateFact implements CandidateTable, QueryAST {
       }
     }
     return columns;
+  }
+
+  @Override
+  public Set<?> getParticipatingPartitions() {
+    return null;
   }
 
   public boolean isValidForTimeRange(TimeRange timeRange) {
@@ -239,6 +245,11 @@ public class CandidateFact implements CandidateTable, QueryAST {
   @Override
   public String getStorageString(String alias) {
     return StringUtils.join(storageTables, ",") + " " + alias;
+  }
+
+  @Override
+  public String getStorageName() {
+    return null;
   }
 
   public void setStorageTables(Set<String> storageTables) {

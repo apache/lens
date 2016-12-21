@@ -36,7 +36,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<CandidateTablePruneCause>> {
+public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
   @Getter(lazy = true)
   private final HashMap<CandidateTablePruneCause, List<T>> reversed = reverse();
   @Getter(lazy = true)
@@ -66,7 +66,7 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
     get(table).add(msg);
   }
 
-  public HashMap<CandidateTablePruneCause, List<T>> reverse() {
+  private HashMap<CandidateTablePruneCause, List<T>> reverse() {
     HashMap<CandidateTablePruneCause, List<T>> result = new HashMap<CandidateTablePruneCause, List<T>>();
     for (T key : keySet()) {
       for (CandidateTablePruneCause value : get(key)) {
@@ -103,7 +103,7 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
     Map<CandidateTablePruneCause, String> maxCauseMap = Maps.newHashMap();
     for (Map.Entry<CandidateTablePruneCause, List<T>> entry: getReversed().entrySet()) {
       if (entry.getKey().getCause().equals(maxCause)) {
-        maxCauseMap.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
+          maxCauseMap.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
       }
     }
     return maxCause.getBriefError(maxCauseMap.keySet());
