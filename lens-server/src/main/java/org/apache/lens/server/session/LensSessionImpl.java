@@ -62,9 +62,6 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
   /** The persist info. */
   private LensSessionPersistInfo persistInfo = new LensSessionPersistInfo();
 
-  /** The last access time. */
-  private long lastAccessTime = System.currentTimeMillis();
-
   /** The session timeout. */
   private long sessionTimeout;
   private static class IntegerThreadLocal extends ThreadLocal<Integer> {
@@ -116,7 +113,7 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
       getSessionHandle().getHandleIdentifier().getSecretId()));
     persistInfo.setUsername(getUserName());
     persistInfo.setPassword(getPassword());
-    persistInfo.setLastAccessTime(lastAccessTime);
+    persistInfo.setLastAccessTime(System.currentTimeMillis());
     persistInfo.setSessionConf(sessionConf);
     if (sessionConf != null) {
       for (Map.Entry<String, String> entry : sessionConf.entrySet()) {
@@ -280,12 +277,17 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
   }
 
   public boolean isActive() {
-    return System.currentTimeMillis() - lastAccessTime < sessionTimeout
-      && (!persistInfo.markedForClose|| activeOperationsPresent());
+    // session is active, if any active operations are present.
+    // If no active operations are present, session is active if timeout is not reached and session is not
+    // marked for close
+    return activeOperationsPresent() || ((System.currentTimeMillis() - persistInfo.lastAccessTime < sessionTimeout)
+      && !persistInfo.markedForClose);
   }
+
   public boolean isMarkedForClose() {
     return persistInfo.isMarkedForClose();
   }
+
   public synchronized void setActive() {
     setLastAccessTime(System.currentTimeMillis());
   }
@@ -468,12 +470,12 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
     return persistInfo;
   }
 
-  void setLastAccessTime(long lastAccessTime) {
-    this.lastAccessTime = lastAccessTime;
+  public void setLastAccessTime(long lastAccessTime) {
+    persistInfo.lastAccessTime = lastAccessTime;
   }
 
   public long getLastAccessTime() {
-    return lastAccessTime;
+    return persistInfo.lastAccessTime;
   }
 
   /**
