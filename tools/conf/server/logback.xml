@@ -41,7 +41,7 @@
       <maxHistory>30</maxHistory>
     </rollingPolicy>
     <encoder>
-      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
+      <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c %L - %m%n</pattern>
     </encoder>
   </appender>
 
@@ -107,7 +107,7 @@
         <file>${lens.log.dir}/${queryLogId}.log</file>
         <append>true</append>
         <layout class="ch.qos.logback.classic.PatternLayout">
-          <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c - %m%n</pattern>
+          <pattern>%d{dd MMM yyyy HH:mm:ss,SSS} [%X{logSegregationId}] [%t] %-5p %c %L - %m%n</pattern>
         </layout>
       </appender>
     </sift>

@@ -160,24 +160,6 @@ public class TimeRangeChecker implements ContextRewriter {
       }
     }
 
-    // Look at referenced columns through denormalization resolver
-    // and do column life validation
-    Map<String, Set<DenormalizationResolver.ReferencedQueriedColumn>> refCols =
-        cubeql.getDeNormCtx().getReferencedCols();
-    for (String col : refCols.keySet()) {
-      Iterator<DenormalizationResolver.ReferencedQueriedColumn> refColIter = refCols.get(col).iterator();
-      while (refColIter.hasNext()) {
-        DenormalizationResolver.ReferencedQueriedColumn refCol = refColIter.next();
-        for (TimeRange range : cubeql.getTimeRanges()) {
-          if (!refCol.col.isColumnAvailableInTimeRange(range)) {
-            log.debug("The refernced column: {} is not in the range queried", refCol.col.getName());
-            refColIter.remove();
-            break;
-          }
-        }
-      }
-    }
-
     // Remove join paths that have columns with invalid life span
     AutoJoinContext joinContext = cubeql.getAutoJoinCtx();
     if (joinContext == null) {

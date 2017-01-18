@@ -59,7 +59,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
+public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, TrackDenormContext {
   public static final String TIME_RANGE_FUNC = "time_range_in";
   public static final String NOW = "now";
   public static final String DEFAULT_TABLE = "_default_";
@@ -922,7 +922,8 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
     Set<Dimension> exprDimensions = new HashSet<>();
     if (cfacts != null) {
       for (CandidateFact cfact : cfacts) {
-        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(cfact, dimsToQuery, cfacts.size() > 1 ? cfact : this);
+        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(this, cfact, dimsToQuery,
+          cfacts.size() > 1 ? cfact : this);
         exprDimensions.addAll(factExprDimTables);
         if (cfacts.size() > 1) {
           factDimMap.get(cfact).addAll(factExprDimTables);
@@ -933,7 +934,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
       }
     } else {
       // dim only query
-      exprDimensions.addAll(exprCtx.rewriteExprCtx(null, dimsToQuery, this));
+      exprDimensions.addAll(exprCtx.rewriteExprCtx(this, null, dimsToQuery, this));
     }
     dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimensions));
     log.info("facts:{}, dimsToQuery: {}", cfacts, dimsToQuery);
@@ -942,14 +943,14 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
     Set<Dimension> denormTables = new HashSet<>();
     if (cfacts != null) {
       for (CandidateFact cfact : cfacts) {
-        Set<Dimension> factDenormTables = deNormCtx.rewriteDenormctx(cfact, dimsToQuery, cfacts.size() > 1);
+        Set<Dimension> factDenormTables = deNormCtx.rewriteDenormctx(this, cfact, dimsToQuery, cfacts.size() > 1);
         denormTables.addAll(factDenormTables);
         if (cfacts.size() > 1) {
           factDimMap.get(cfact).addAll(factDenormTables);
         }
       }
     } else {
-      denormTables.addAll(deNormCtx.rewriteDenormctx(null, dimsToQuery, false));
+      denormTables.addAll(deNormCtx.rewriteDenormctx(this, null, dimsToQuery, false));
     }
     dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables));
     log.info("facts:{}, dimsToQuery: {}", cfacts, dimsToQuery);

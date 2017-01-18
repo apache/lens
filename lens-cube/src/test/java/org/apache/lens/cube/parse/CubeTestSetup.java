@@ -578,6 +578,8 @@ public class CubeTestSetup {
       "dim3 refer", "dim3chain", "id", null, null, 0.0));
     cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("cityname", "string", "city name"),
       "city name", "cubecity", "name", null, null, 0.0));
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("statename_cube", "string", "state name"),
+      "state name", "cubestate", "name", null, null, 0.0));
     List<ChainRefCol> references = new ArrayList<>();
     references.add(new ChainRefCol("timedatechain1", "full_date"));
     references.add(new ChainRefCol("timehourchain1", "full_hour"));
@@ -592,6 +594,8 @@ public class CubeTestSetup {
       "City1", null, null, null));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("cityid2", "int", "id to city"),
       "City2", null, null, null));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("concatedcitystate", "string", "citystate"),
+      "CityState", null, null, null));
 
     Map<String, JoinChain> joinChains = new HashMap<>();
     addCubeChains(joinChains, TEST_CUBE_NAME);
@@ -653,7 +657,11 @@ public class CubeTestSetup {
     exprs.add(new ExprColumn(new FieldSchema("newexpr", "string", "expression which non existing colun"),
       "new measure expr", "myfun(newmeasure)"));
     exprs.add(new ExprColumn(new FieldSchema("cityAndState", "String", "city and state together"), "City and State",
-      "concat(cubecity.name, \":\", cubestate.name)"));
+      new ExprSpec("concat(cityname, \":\", statename_cube)", null, null),
+      new ExprSpec("substr(concatedcitystate, 10)", null, null)));
+    exprs.add(new ExprColumn(new FieldSchema("cityAndStateNew", "String", "city and state together"), "City and State",
+      new ExprSpec("concat(cityname, \":\", statename_cube)", null, TWO_MONTHS_BACK),
+      new ExprSpec("substr(concatedcitystate, 10)", null, null)));
     exprs.add(new ExprColumn(new FieldSchema("cityStateName", "String", "city state"), "City State",
       "concat('CityState:', cubecity.statename)"));
     exprs.add(new ExprColumn(new FieldSchema("isIndia", "String", "is indian city/state"), "Is Indian City/state",
@@ -1957,6 +1965,7 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("countryid", "int", "country id"));
     factColumns.add(new FieldSchema("dim1", "string", "dim1"));
     factColumns.add(new FieldSchema("dim2", "int", "dim2"));
+    factColumns.add(new FieldSchema("concatedCityState", "string", "citystate"));
 
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = new HashMap<String, Set<UpdatePeriod>>();
     Set<UpdatePeriod> updates = new HashSet<UpdatePeriod>();

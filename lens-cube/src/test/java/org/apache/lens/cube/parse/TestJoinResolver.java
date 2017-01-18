@@ -545,7 +545,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     Configuration conf = new Configuration(hconf);
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C3, C4");
     String failingQuery = "select testDim2.cityname, testDim2.cityStateCapital FROM testDim2 where " + TWO_DAYS_RANGE;
-    assertLensExceptionInRewrite(failingQuery, conf, LensCubeErrorCode.NO_REF_COL_AVAILABLE);
+    assertLensExceptionInRewrite(failingQuery, conf, LensCubeErrorCode.NO_DIM_HAS_COLUMN);
   }
 
   @Test

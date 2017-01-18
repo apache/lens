@@ -215,6 +215,21 @@ public class TestExpressionResolver extends TestQueryRewrite {
           + " group by concat(cubecity.name, \":\", cubestate.name)", null, getWhereForHourly2days("C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
+
+  @Test
+  public void testExpressionToExcludeJoin() throws Exception {
+    // expression which results in join
+    String hqlQuery =
+      rewrite("select cityAndStateNew, avgmsr from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'",
+        conf);
+
+    String expected =
+      getExpectedQuery(cubeName, "select substr(testcube.concatedcitystate, 10)"
+        + " avg(testcube.msr1 + testcube.msr2) FROM ", null, null, " and substr(testcube.dim1, 3) != 'XYZ'"
+        + " group by substr(testcube.concatedcitystate, 10)", null, getWhereForHourly2days("C1_testfact2_raw"));
+    TestCubeRewriter.compareQueries(hqlQuery, expected);
+  }
+
   @Test
   public void testExpressionInWhereWithJoinClausePassed() throws Exception {
     assertLensExceptionInRewrite("select cityAndState, avgmsr from testCube tc join citydim cd join statedim sd where "

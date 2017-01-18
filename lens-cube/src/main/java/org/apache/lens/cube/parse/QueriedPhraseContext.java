@@ -116,7 +116,7 @@ class QueriedPhraseContext extends TracksQueriedColumns implements TrackQueriedC
     for (String col : queriedDimAttrs) {
       if (!cfact.getColumns().contains(col.toLowerCase())) {
         // check if it available as reference
-        if (!cubeQl.getDeNormCtx().addRefUsage(cfact, col, cubeQl.getCube().getName())) {
+        if (!cubeQl.getDeNormCtx().addRefUsage(cubeQl, cfact, col, cubeQl.getCube().getName())) {
           log.info("column {} is not available in fact table:{} ", col, cfact);
           return false;
         }

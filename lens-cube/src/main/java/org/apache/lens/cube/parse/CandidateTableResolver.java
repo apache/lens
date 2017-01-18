@@ -697,7 +697,7 @@ class CandidateTableResolver implements ContextRewriter {
                     i.remove();
                     break;
                   }
-                } else if (!cubeql.getDeNormCtx().addRefUsage(cdim, col, dim.getName())) {
+                } else if (!cubeql.getDeNormCtx().addRefUsage(cubeql, cdim, col, dim.getName())) {
                   // check if it available as reference, if not remove the
                   // candidate
                   log.info("Not considering dimtable: {} as column {} is not available", cdim, col);
