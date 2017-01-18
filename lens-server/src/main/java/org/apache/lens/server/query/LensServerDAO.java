@@ -139,8 +139,10 @@ public class LensServerDAO {
             query.getDriverEndTime(), query.getDriverName(), query.getQueryName(), query.getSubmissionTime(),
             query.getDriverQuery(), serializeConf(query.getConf()),
             query.getFailedAttempts() == null ? 0 : query.getFailedAttempts().size());
-        for (int i = 0; i < query.getFailedAttempts().size(); i++) {
-          insertFailedAttempt(runner, conn, query.getHandle(), query.getFailedAttempts().get(i), i);
+        if (query.getFailedAttempts() != null) {
+          for (int i = 0; i < query.getFailedAttempts().size(); i++) {
+            insertFailedAttempt(runner, conn, query.getHandle(), query.getFailedAttempts().get(i), i);
+          }
         }
         conn.commit();
       } finally {
