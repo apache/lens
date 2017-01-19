@@ -942,6 +942,17 @@
     <value>org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost$Parser</value>
     <description>The Query cost parser class. Default query cost class used is FactPartitionBasedQueryCost</description>
   </property>
+
+  <property>
+    <name>lens.server.query.comparator.classes</name>
+    <value>org.apache.lens.server.api.query.comparators.MoreRetriesFirstComparator,org.apache.lens.server.api.query.comparators.QueryPriorityComparator,org.apache.lens.server.api.query.comparators.FIFOQueryComparator</value>
+    <description>The Query cost comparator chain. Queries are compared in this order. To compare queries q1 and q2,
+    first number of retries are considered. The one with more retries is placed first in the queue. If those are same,
+    then their priorities are considered, with higher priorities coming before lower ones. If those are also same,
+    then their submission times are considered. The query that was submitted first is placed first.
+    </description>
+  </property>
+
   <property>
     <name>lens.cube.metastore.enable.datacompleteness.check</name>
     <value>false</value>
