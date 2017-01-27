@@ -970,11 +970,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
     assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
-    /*Since the Flag FAIL_QUERY_ON_PARTIAL_DATA is set, and thhe queried fact has incomplete data, hence, we expect the
+    /*Since the Flag FAIL_QUERY_ON_PARTIAL_DATA is set, and the queried fact has incomplete data, hence, we expect the
     prune cause to be INCOMPLETE_PARTITION. The below check is to validate this.*/
-    assertEquals(pruneCauses.getBrief().substring(0, INCOMPLETE_PARTITION.errorFormat.length() - 3),
-            INCOMPLETE_PARTITION.errorFormat.substring(0,
-                    INCOMPLETE_PARTITION.errorFormat.length() - 3), pruneCauses.getBrief());
+    assertEquals(pruneCauses.getBrief(), String.format(INCOMPLETE_PARTITION.errorFormat, "[msr9]"));
   }
 
   @Test

@@ -148,15 +148,16 @@ public class CandidateTablePruneCause {
       }
     },
     // incomplete data in the fact
-    INCOMPLETE_PARTITION("Data is incomplete. Details : %s") {
+    INCOMPLETE_PARTITION("Data for the requested metrics is only partially complete. Partially complete metrics are:"
+            + " %s. Please try again later or rerun after removing incomplete metrics") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        Set<Map<String, Map<String, Float>>> incompletePartitions = Sets.newHashSet();
+        Set<String> incompleteMetrics = Sets.newHashSet();
         for (CandidateTablePruneCause cause : causes) {
           if (cause.getIncompletePartitions() != null) {
-            incompletePartitions.add(cause.getIncompletePartitions());
+            incompleteMetrics.addAll(cause.getIncompletePartitions().keySet());
           }
         }
-        return new String[]{incompletePartitions.toString()};
+        return new String[]{incompleteMetrics.toString()};
       }
     };
 
