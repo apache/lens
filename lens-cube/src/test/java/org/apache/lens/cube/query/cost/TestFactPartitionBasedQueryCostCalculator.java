@@ -25,6 +25,7 @@ import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.*;
 
 import java.util.HashMap;
 import java.util.Set;
@@ -43,12 +44,12 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import junit.framework.Assert;
 
 public class TestFactPartitionBasedQueryCostCalculator {
   AbstractQueryContext queryContext;
   FactPartitionBasedQueryCostCalculator calculator = new FactPartitionBasedQueryCostCalculator();
   LensDriver driver;
+  private static String latest = "latest";
 
   @BeforeTest
   public void setUp() {
@@ -68,6 +69,7 @@ public class TestFactPartitionBasedQueryCostCalculator {
     HashMap<String, Set<?>> partitions = new HashMap<>();
     partitions.put("st1", Sets.newHashSet(fp1, fp2));
     partitions.put("st2", Sets.newHashSet(fp3, fp4));
+    partitions.put("st3", Sets.newHashSet(latest));
     DriverQueryPlan plan = mock(DriverQueryPlan.class);
     when(queryContext.getDriverRewriterPlan(driver)).thenReturn(plan);
     when(plan.getPartitions()).thenReturn(partitions);
@@ -85,12 +87,21 @@ public class TestFactPartitionBasedQueryCostCalculator {
   @Test
   public void testCalculateCost() throws Exception {
     QueryCost cost = calculator.calculateCost(queryContext, driver);
-    Assert.assertTrue(cost.getEstimatedResourceUsage() > 18.0);
-    Assert.assertTrue(cost.getEstimatedResourceUsage() < 19.0);
+    assertTrue(cost.getEstimatedResourceUsage() > 19.0, "Estimated resource usage:" + cost.getEstimatedResourceUsage());
+    assertTrue(cost.getEstimatedResourceUsage() < 20.0, "Estimated resource usage:" + cost.getEstimatedResourceUsage());
   }
 
   @Test
-  public void testGetAllPartitions() throws Exception {
-
+  public void testDimensionCost() throws Exception {
+    AbstractQueryContext queryContext2 = mock(AbstractQueryContext.class);
+    HashMap<String, Set<?>> partitions = new HashMap<>();
+    partitions.put("st1", Sets.newHashSet(latest));
+    partitions.put("st2", Sets.newHashSet(latest));
+    DriverQueryPlan plan = mock(DriverQueryPlan.class);
+    when(queryContext2.getDriverRewriterPlan(driver)).thenReturn(plan);
+    when(plan.getPartitions()).thenReturn(partitions);
+    when(calculator.getAllPartitions(queryContext2, driver)).thenReturn(partitions);
+    QueryCost cost = calculator.calculateCost(queryContext2, driver);
+    assertTrue(cost.getEstimatedResourceUsage() == 2.0, "Estimated resource usage:" + cost.getEstimatedResourceUsage());
   }
 }
