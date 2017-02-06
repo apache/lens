@@ -28,8 +28,8 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 
-import org.apache.lens.api.APIResult;
 import org.apache.lens.api.ToXMLString;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.scheduler.*;
 import org.apache.lens.regression.core.type.MapBuilder;
 import org.apache.lens.regression.util.AssertUtil;
@@ -51,8 +51,7 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
     super(envFileName);
   }
 
-
-  public String submitJob(String action, XJob job, String sessionHandleString)
+  public Response submitJobReturnResponse(String action, XJob job, String sessionHandleString)
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
 
     MapBuilder map = new MapBuilder("sessionid", sessionHandleString);
@@ -64,19 +63,27 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
     GenericEntity<JAXBElement<XJob>> entry = new GenericEntity<JAXBElement<XJob>>(xmlJob){};
     Response response = this.exec("post", SCHEDULER_JOBS_URL, servLens, null, map, MediaType.APPLICATION_XML_TYPE,
         MediaType.APPLICATION_XML, entry);
+    return  response;
+  }
+
+  public String submitJob(String action, XJob job, String session)
+    throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
+
+    Response response = submitJobReturnResponse(action, job, session);
     AssertUtil.assertSucceededResponse(response);
-    SchedulerJobHandle handle =  response.readEntity(SchedulerJobHandle.class);
-    return handle.getHandleIdString();
+    LensAPIResult<SchedulerJobHandle> handle =  response.readEntity(
+        new GenericType<LensAPIResult<SchedulerJobHandle>>(){});
+    return handle.getData().getHandleIdString();
   }
 
-  public String submitJob(XJob job, String sessionHandleString)
+  public String submitJob(XJob job, String session)
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
-    return submitJob("submit", job, sessionHandleString);
+    return submitJob("SUBMIT", job, session);
   }
 
-  public String submitNScheduleJob(XJob job, String sessionHandleString)
+  public String submitNScheduleJob(XJob job, String session)
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
-    return submitJob("submit_and_schedule", job, sessionHandleString);
+    return submitJob("SUBMIT_AND_SCHEDULE", job, session);
   }
 
   public XJob getXJob(String name, String query, String db, String startTime, String endTime, XFrequencyEnum frequency)
@@ -148,27 +155,28 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
     return execution;
   }
 
-  public XJob getJobDefinition(String jobHandle, String sessionId, MediaType inputMedia, String outputMedia){
+  public LensAPIResult<XJob> getJobDefinition(String jobHandle, String sessionId, MediaType inputMedia,
+      String outputMedia){
     MapBuilder map = new MapBuilder("sessionid", sessionId);
     Response response = this.exec("get", SCHEDULER_JOBS_URL + "/" + jobHandle , servLens, null, map, inputMedia,
         outputMedia);
     AssertUtil.assertSucceededResponse(response);
-    return response.readEntity(XJob.class);
+    return response.readEntity(new GenericType<LensAPIResult<XJob>>(){});
   }
 
-  public XJob getJobDefinition(String jobHandle, String sessionId){
+  public LensAPIResult<XJob> getJobDefinition(String jobHandle, String sessionId){
     return getJobDefinition(jobHandle, sessionId, MediaType.APPLICATION_XML_TYPE, MediaType.APPLICATION_XML);
   }
 
-  public APIResult deleteJob(String jobHandle, String sessionId){
+  public LensAPIResult deleteJob(String jobHandle, String sessionId){
     MapBuilder map = new MapBuilder("sessionid", sessionId);
     Response response = this.exec("delete", SCHEDULER_JOBS_URL + "/" + jobHandle , servLens, null, map, null,
-        MediaType.APPLICATION_JSON);
+        MediaType.APPLICATION_XML);
     AssertUtil.assertSucceededResponse(response);
-    return response.readEntity(APIResult.class);
+    return response.readEntity(LensAPIResult.class);
   }
 
-  public APIResult updateJob(XJob job, String jobHandle, String sessionHandleString)
+  public LensAPIResult updateJob(XJob job, String jobHandle, String sessionHandleString)
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
 
     MapBuilder map = new MapBuilder("sessionid", sessionHandleString);
@@ -177,35 +185,35 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
     Response response = this.exec("put", SCHEDULER_JOBS_URL + "/" + jobHandle, servLens, null, map,
         MediaType.APPLICATION_XML_TYPE, MediaType.APPLICATION_XML, ToXMLString.toString(xmlJob));
     AssertUtil.assertSucceededResponse(response);
-    return response.readEntity(APIResult.class);
+    return response.readEntity(LensAPIResult.class);
   }
 
-  public APIResult updateJob(String jobHandle, String action, String sessionHandleString)
+  public LensAPIResult updateJob(String jobHandle, String action, String sessionHandleString)
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
 
     MapBuilder map = new MapBuilder("sessionid", sessionHandleString, "action", action);
     Response response = this.exec("post", SCHEDULER_JOBS_URL + "/" + jobHandle, servLens, null, map);
     AssertUtil.assertSucceededResponse(response);
-    return response.readEntity(APIResult.class);
+    return response.readEntity(LensAPIResult.class);
   }
 
-  public SchedulerJobInfo getJobDetails(String jobHandle, String sessionHandleString){
+  public LensAPIResult<SchedulerJobInfo> getJobDetails(String jobHandle, String sessionHandleString){
 
     MapBuilder map = new MapBuilder("sessionid", sessionHandleString);
     Response response = this.exec("get", SCHEDULER_JOBS_URL + "/" + jobHandle + "/info", servLens, null, map,
         MediaType.APPLICATION_XML_TYPE, MediaType.APPLICATION_XML);
     AssertUtil.assertSucceededResponse(response);
-    return response.readEntity(SchedulerJobInfo.class);
+    return response.readEntity(new GenericType<LensAPIResult<SchedulerJobInfo>>(){});
   }
 
 
   public SchedulerJobState getJobStatus(String jobHandle, String sessionHandleString){
-    SchedulerJobInfo jobInfo = getJobDetails(jobHandle, sessionHandleString);
+    SchedulerJobInfo jobInfo = getJobDetails(jobHandle, sessionHandleString).getData();
     return jobInfo.getJobState();
   }
 
   public SchedulerJobState getJobStatus(String jobHandle){
-    SchedulerJobInfo jobInfo = getJobDetails(jobHandle, sessionHandleString);
+    SchedulerJobInfo jobInfo = getJobDetails(jobHandle, sessionHandleString).getData();
     return jobInfo.getJobState();
   }
 
@@ -218,21 +226,21 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
     return response.readEntity(new GenericType<List<SchedulerJobInstanceInfo>>(){});
   }
 
-  public SchedulerJobInstanceInfo getInstanceDetails(String instanceHandle, String sessionId)
+  public LensAPIResult<SchedulerJobInstanceInfo> getInstanceDetails(String instanceHandle, String sessionId)
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
 
     MapBuilder map = new MapBuilder("sessionid", sessionId);
     Response response = this.exec("get", SCHEDULER_INSTANCES_URL + "/" + instanceHandle , servLens, null, map);
     AssertUtil.assertSucceededResponse(response);
-    return response.readEntity(SchedulerJobInstanceInfo.class);
+    return response.readEntity(new GenericType<LensAPIResult<SchedulerJobInstanceInfo>>(){});
   }
 
-  public APIResult updateInstance(String instanceHandle, String action, String sessionId)
+  public LensAPIResult<Boolean> updateInstance(String instanceHandle, String action, String sessionId)
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
 
     MapBuilder map = new MapBuilder("sessionid", sessionId, "action", action);
     Response response = this.exec("post", SCHEDULER_INSTANCES_URL + "/" + instanceHandle , servLens, null, map);
     AssertUtil.assertSucceededResponse(response);
-    return response.readEntity(APIResult.class);
+    return response.readEntity(new GenericType<LensAPIResult<Boolean>>(){});
   }
 }

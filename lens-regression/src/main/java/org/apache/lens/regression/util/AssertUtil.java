@@ -44,7 +44,6 @@ public class AssertUtil {
     Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
     APIResult result = response.readEntity(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-    Assert.assertNotNull(result.getMessage());
   }
 
   public static void assertSucceededResponse(Response response) {

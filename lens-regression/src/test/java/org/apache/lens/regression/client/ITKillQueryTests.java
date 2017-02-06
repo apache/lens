@@ -39,7 +39,7 @@ import org.testng.Assert;
 import org.testng.annotations.*;
 
 
-public class KillQueryTests extends BaseTestClass {
+public class ITKillQueryTests extends BaseTestClass {
 
   WebTarget servLens;
   private String sessionHandleString;
@@ -50,7 +50,7 @@ public class KillQueryTests extends BaseTestClass {
   private final String serverResourcePath = "/tmp/regression/resources";
   String sleepQuery = QueryInventory.getSleepQuery("5");
 
-  private static Logger logger = Logger.getLogger(KillQueryTests.class);
+  private static Logger logger = Logger.getLogger(ITKillQueryTests.class);
 
   @BeforeClass(alwaysRun = true)
   public void initialize() throws IOException, JAXBException, LensException, IllegalAccessException,
@@ -359,4 +359,3 @@ public class KillQueryTests extends BaseTestClass {
   }
 
 }
-

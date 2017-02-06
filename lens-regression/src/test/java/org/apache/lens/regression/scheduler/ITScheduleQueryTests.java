@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.lens.regression.client;
+package org.apache.lens.regression.scheduler;
 
 import java.lang.reflect.Method;
 import java.util.Calendar;
@@ -26,7 +26,7 @@ import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.lens.api.APIResult;
+import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.scheduler.*;
 import org.apache.lens.regression.core.constants.QueryInventory;
 import org.apache.lens.regression.core.helpers.ServiceManagerHelper;
@@ -36,11 +36,7 @@ import org.apache.lens.regression.util.Util;
 import org.apache.log4j.Logger;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
+import org.testng.annotations.*;
 
 
 public class ITScheduleQueryTests extends BaseTestClass {
@@ -51,6 +47,7 @@ public class ITScheduleQueryTests extends BaseTestClass {
   private static Logger logger = Logger.getLogger(ITScheduleQueryTests.class);
   private static String format = "yyyy-MM-dd HH:mm:ss";
   private static String currentDate = Util.getCurrentDate(format);
+  String lensSiteConf = lens.getServerDir() + "/conf/lens-site.xml";
 
   @BeforeClass(alwaysRun = true)
   public void initialize() throws Exception {
@@ -94,7 +91,7 @@ public class ITScheduleQueryTests extends BaseTestClass {
     Assert.assertNotNull(jobHandle);
     Assert.assertEquals(scheduleHelper.getJobStatus(jobHandle), SchedulerJobState.SCHEDULED);
 
-    SchedulerJobInfo jobInfo = scheduleHelper.getJobDetails(jobHandle, sessionHandleString);
+    SchedulerJobInfo jobInfo = scheduleHelper.getJobDetails(jobHandle, sessionHandleString).getData();
     Assert.assertNotNull(jobInfo);
     Assert.assertEquals(jobInfo.getJob().getName(), "job-submit-schedule");
   }
@@ -110,7 +107,7 @@ public class ITScheduleQueryTests extends BaseTestClass {
     Assert.assertNotNull(jobHandle);
 
     XJob job = scheduleHelper.getJobDefinition(jobHandle, sessionHandleString, MediaType.APPLICATION_XML_TYPE,
-        MediaType.APPLICATION_XML);
+        MediaType.APPLICATION_XML).getData();
     Assert.assertNotNull(job);
     Assert.assertEquals(job.getName(), "job-submit-schedule-cronExp");
   }
@@ -125,30 +122,26 @@ public class ITScheduleQueryTests extends BaseTestClass {
 
     //delete in submit state
     String jobHandle = scheduleHelper.submitJob(xJob, sessionHandleString);
-    APIResult res = scheduleHelper.deleteJob(jobHandle, sessionHandleString);
-//    Assert.assertEquals(res.getStatus(), APIResult.Status.SUCCEEDED);
+    scheduleHelper.deleteJob(jobHandle, sessionHandleString);
     Assert.assertEquals(scheduleHelper.getJobStatus(jobHandle), SchedulerJobState.DELETED);
 
     //delete in scheduled state
     jobHandle = scheduleHelper.submitNScheduleJob(xJob, sessionHandleString);
-    res = scheduleHelper.deleteJob(jobHandle, sessionHandleString);
-//    Assert.assertEquals(res.getStatus(), APIResult.Status.SUCCEEDED);
+    scheduleHelper.deleteJob(jobHandle, sessionHandleString);
     Assert.assertEquals(scheduleHelper.getJobStatus(jobHandle), SchedulerJobState.DELETED);
 
     //delete in suspended state
     jobHandle = scheduleHelper.submitNScheduleJob(xJob, sessionHandleString);
     scheduleHelper.updateJob(jobHandle, "SUSPEND", sessionHandleString);
     Assert.assertEquals(scheduleHelper.getJobStatus(jobHandle), SchedulerJobState.SUSPENDED);
-    res = scheduleHelper.deleteJob(jobHandle, sessionHandleString);
-//    Assert.assertEquals(res.getStatus(), APIResult.Status.SUCCEEDED);
+    scheduleHelper.deleteJob(jobHandle, sessionHandleString);
     Assert.assertEquals(scheduleHelper.getJobStatus(jobHandle), SchedulerJobState.DELETED);
 
     //delete in expired state
     jobHandle = scheduleHelper.submitNScheduleJob(xJob, sessionHandleString);
     scheduleHelper.updateJob(jobHandle, "EXPIRE", sessionHandleString);
     Assert.assertEquals(scheduleHelper.getJobStatus(jobHandle), SchedulerJobState.EXPIRED);
-    res = scheduleHelper.deleteJob(jobHandle, sessionHandleString);
-//    Assert.assertEquals(res.getStatus(), APIResult.Status.SUCCEEDED);
+    scheduleHelper.deleteJob(jobHandle, sessionHandleString);
     Assert.assertEquals(scheduleHelper.getJobStatus(jobHandle), SchedulerJobState.DELETED);
   }
 
@@ -160,14 +153,13 @@ public class ITScheduleQueryTests extends BaseTestClass {
         XFrequencyEnum.WEEKLY);
     String jobHandle = scheduleHelper.submitJob(job, sessionHandleString);
 
-    XJob tmp = scheduleHelper.getJobDefinition(jobHandle, sessionHandleString);
+    XJob tmp = scheduleHelper.getJobDefinition(jobHandle, sessionHandleString).getData();
     tmp.setName("modified-name");
     endDate = Util.modifyDate(currentDate, format, Calendar.DATE, 6);
     tmp.setEndTime(Util.getGregorianCalendar(endDate));
-    APIResult res = scheduleHelper.updateJob(tmp, jobHandle, sessionHandleString);
-    Assert.assertEquals(res.getStatus(), APIResult.Status.SUCCEEDED);
+    scheduleHelper.updateJob(tmp, jobHandle, sessionHandleString);
 
-    XJob modifiedJob = scheduleHelper.getJobDefinition(jobHandle, sessionHandleString);
+    XJob modifiedJob = scheduleHelper.getJobDefinition(jobHandle, sessionHandleString).getData();
     Assert.assertEquals(modifiedJob.getName(), "modified-name");
     String modifiedEndTime = Util.getDateStringFromGregorainCalender(modifiedJob.getEndTime(), format);
     Assert.assertEquals(modifiedEndTime, endDate);
@@ -228,12 +220,12 @@ public class ITScheduleQueryTests extends BaseTestClass {
 
     Thread.sleep(10000);
 
-    APIResult res = scheduleHelper.updateInstance(instanceList.get(0).getId().getHandleIdString(),
+    LensAPIResult res = scheduleHelper.updateInstance(instanceList.get(0).getId().getHandleIdString(),
         "RERUN", sessionHandleString);
-    Assert.assertEquals(res.getStatus(), APIResult.Status.SUCCEEDED);
+    Assert.assertTrue(res.getData().equals(true));
 
     SchedulerJobInstanceInfo instanceInfo = scheduleHelper.getInstanceDetails(instanceList.get(0).getId()
-        .getHandleIdString(), sessionHandleString);
+        .getHandleIdString(), sessionHandleString).getData();
     List<SchedulerJobInstanceRun> runList = instanceInfo.getInstanceRunList();
     Assert.assertEquals(runList.size(), 2);
     Assert.assertEquals(runList.get(1).getRunId(), 2);
@@ -281,4 +273,65 @@ public class ITScheduleQueryTests extends BaseTestClass {
       scheduleHelper.updateJob(jobHandle, "EXPIRE", sessionHandleString);
     }
   }
+
+
+  //LENS-1286
+  @Test
+  public void testRunningInstanceOnRestart() throws Exception {
+
+    String startDate = Util.modifyDate(Util.getCurrentDate(format), format, Calendar.SECOND, 2);
+    String endDate = Util.modifyDate(startDate, format, Calendar.SECOND, 15);
+    XJob xJob = scheduleHelper.getXJob("job-restart", QueryInventory.getSleepQuery("5"), null, startDate, endDate,
+        "0/10 * * * * ?");
+    String jobHandle = scheduleHelper.submitNScheduleJob(xJob, sessionHandleString);
+
+    Thread.sleep(10000);
+
+    List<SchedulerJobInstanceInfo> instanceList = scheduleHelper.getAllInstancesOfJob(jobHandle, "10",
+        sessionHandleString);
+
+    lens.restart();
+
+    SchedulerJobInstanceInfo instanceInfo = scheduleHelper.getInstanceDetails(instanceList.get(0).getId()
+        .getHandleIdString(), sessionHandleString).getData();
+
+    SchedulerJobInstanceRun instanceRun = instanceInfo.getInstanceRunList().get(0);
+    qHelper.waitForCompletion(instanceRun.getQueryHandle());
+    Assert.assertEquals(instanceRun.getInstanceState(), SchedulerJobInstanceState.SUCCEEDED);
+
+  }
+
+  @Test(enabled = false)
+  public void testQueryNotFoundCaseOnRestart() throws Exception {
+
+    String startDate = Util.modifyDate(Util.getCurrentDate(format), format, Calendar.SECOND, 2);
+    String endDate = Util.modifyDate(startDate, format, Calendar.SECOND, 15);
+    XJob xJob = scheduleHelper.getXJob("job-restart", QueryInventory.getSleepQuery("5"), null, startDate, endDate,
+        "0/10 * * * * ?");
+    String jobHandle = scheduleHelper.submitNScheduleJob(xJob, sessionHandleString);
+
+    Thread.sleep(10000);
+
+    List<SchedulerJobInstanceInfo> instanceList = scheduleHelper.getAllInstancesOfJob(jobHandle, "10",
+        sessionHandleString);
+
+    lens.stop();
+    Util.runRemoteCommand("hadoop dfs -rmr /tmp/lensserver/query.*");
+    lens.start();
+
+    Thread.sleep(15000); // wait till instance gets killed and new instance is spawned
+
+    String firstInstanceHandle = instanceList.get(0).getId().getHandleIdString();
+    SchedulerJobInstanceInfo instanceInfo = scheduleHelper.getInstanceDetails(firstInstanceHandle, sessionHandleString)
+        .getData();
+
+    Assert.assertEquals(instanceInfo.getInstanceRunList().get(0).getInstanceState(), SchedulerJobInstanceState.KILLED);
+    qHelper.waitForCompletion(instanceInfo.getInstanceRunList().get(1).getQueryHandle());
+    Thread.sleep(3000);
+
+    instanceInfo = scheduleHelper.getInstanceDetails(firstInstanceHandle, sessionHandleString).getData();
+    Assert.assertEquals(instanceInfo.getInstanceRunList().get(1).getInstanceState(),
+        SchedulerJobInstanceState.SUCCEEDED);
+  }
+
 }

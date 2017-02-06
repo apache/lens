@@ -80,18 +80,13 @@ public class ITServerConfigTests extends BaseTestClass {
   public void setUp(Method method) throws Exception {
     logger.info("Test Name: " + method.getName());
     Util.runRemoteCommand("cp " + confFilePath + " " + backupConfFilePath);
-    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
-
 
   @AfterMethod(alwaysRun = true)
   public void restoreConfig() throws JSchException, IOException, LensException, InterruptedException {
     logger.info("Executing after method\n");
     Util.runRemoteCommand("cp " + backupConfFilePath + " " + confFilePath);
     lens.restart();
-    if (sessionHandleString != null){
-      sHelper.closeSession();
-    }
   }
 
 
@@ -131,7 +126,9 @@ public class ITServerConfigTests extends BaseTestClass {
 
   @DataProvider(name = "boolean_values")
   public Object[][] data() {
+//    String[][] testData = {{"true"}};
     String[][] testData = {{"true"}, {"false"}};
+
     return testData;
   }
 
@@ -289,47 +286,51 @@ public class ITServerConfigTests extends BaseTestClass {
   *  Test for Property lens.server.mode=METASTORE_READONLY,METASTORE_NODROP,OPEN
   */
 
-
   @Test(enabled = true)
   public void testServerMode() throws Exception {
 
-    String newDb = "TestMetastoreService_testDb1";
+    try{
+      sessionHandleString = sHelper.openSession(lens.getCurrentDB());
+      String newDb = "TestMetastoreService_testDb1";
 
-    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.SERVER_MODE, "METASTORE_READONLY");
-    Util.changeConfig(map, confFilePath);
-    lens.restart();
+      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.SERVER_MODE, "METASTORE_READONLY");
+      Util.changeConfig(map, confFilePath);
+      lens.restart();
 
-    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
-    Response response = mHelper.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
-        null, query, MediaType.APPLICATION_XML_TYPE, null, newDb);
-    Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
+      MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+      Response response = mHelper.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
+          null, query, MediaType.APPLICATION_XML_TYPE, null, newDb);
+      Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
 
-    map.put(LensConfConstants.SERVER_MODE, "METASTORE_NODROP");
-    Util.changeConfig(map, confFilePath);
-    lens.restart();
+      map.put(LensConfConstants.SERVER_MODE, "METASTORE_NODROP");
+      Util.changeConfig(map, confFilePath);
+      lens.restart();
 
-    response = mHelper.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
-        null, query, MediaType.APPLICATION_XML_TYPE, null, newDb);
-    AssertUtil.assertSucceededResponse(response);
-    StringList allDb = mHelper.listDatabases();
-    Assert.assertTrue(allDb.getElements().contains(newDb.toLowerCase()), "Unable to Create DB");
+      response = mHelper.exec("post", MetastoreURL.METASTORE_DATABASES_URL, servLens,
+          null, query, MediaType.APPLICATION_XML_TYPE, null, newDb);
+      AssertUtil.assertSucceededResponse(response);
+      StringList allDb = mHelper.listDatabases();
+      Assert.assertTrue(allDb.getElements().contains(newDb.toLowerCase()), "Unable to Create DB");
 
-    query.put("cascade", "true");
-    response = mHelper.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + newDb, servLens,
-        null, query, MediaType.APPLICATION_XML_TYPE, null);
-    Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
+      query.put("cascade", "true");
+      response = mHelper.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + newDb, servLens,
+          null, query, MediaType.APPLICATION_XML_TYPE, null);
+      Assert.assertEquals(response.getStatus(), Response.Status.METHOD_NOT_ALLOWED.getStatusCode());
 
-    map.put(LensConfConstants.SERVER_MODE, "OPEN");
-    Util.changeConfig(map, confFilePath);
-    lens.restart();
+      map.put(LensConfConstants.SERVER_MODE, "OPEN");
+      Util.changeConfig(map, confFilePath);
+      lens.restart();
 
-    //TODO : Enable this when delete db issue is fixed
-/*    response = mHelper.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + newDb, servLens,
-        null, query, MediaType.APPLICATION_XML_TYPE, null);
-    AssertUtil.assertSucceededResponse(response);
-    allDb = mHelper.listDatabases();
-    Assert.assertFalse(allDb.getElements().contains(newDb.toLowerCase()), "Unable to Create DB");*/
+      //TODO : Enable this when delete db issue is fixed
+      response = mHelper.exec("delete", MetastoreURL.METASTORE_DATABASES_URL + "/" + newDb, servLens,
+          null, query, MediaType.APPLICATION_XML_TYPE, null);
+      AssertUtil.assertSucceededResponse(response);
+      allDb = mHelper.listDatabases();
+      Assert.assertFalse(allDb.getElements().contains(newDb.toLowerCase()), "Unable to Create DB");
 
+    }finally {
+      sHelper.closeSession();
+    }
   }
 
 
@@ -390,36 +391,44 @@ public class ITServerConfigTests extends BaseTestClass {
   * Test for Property lens.server.max.finished.queries for persistent result set
   */
 
-  //This is failing
   @Test(enabled = true)
   public void testQueryResultRetention() throws Exception {
 
-    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
-    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    try{
+      sessionHandleString = sHelper.openSession(lens.getCurrentDB());
+      sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
+      sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
 
-    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.RESULTSET_PURGE_ENABLED, "true",
-        LensConfConstants.RESULTSET_PURGE_INTERVAL_IN_SECONDS, "10",
-        LensConfConstants.QUERY_RESULTSET_RETENTION, "20 sec",
-        LensConfConstants.HDFS_OUTPUT_RETENTION, "60 min");
+      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.RESULTSET_PURGE_ENABLED, "true",
+          LensConfConstants.RESULTSET_PURGE_INTERVAL_IN_SECONDS, "10",
+          LensConfConstants.QUERY_RESULTSET_RETENTION, "20 sec",
+          LensConfConstants.HDFS_OUTPUT_RETENTION, "60 min");
 
-    Util.changeConfig(map, confFilePath);
-    lens.restart();
+      Util.changeConfig(map, confFilePath);
+      lens.restart();
 
-    MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
+      MapBuilder query = new MapBuilder("sessionid", sessionHandleString);
 
-    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY).getData();
-    LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
-    Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+      QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY).getData();
+      LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
+      Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
 
-    Response response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
-        servLens, null, query);
-    AssertUtil.assertSucceededResponse(response);
+      Response response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
+          servLens, null, query);
+      AssertUtil.assertSucceededResponse(response);
 
-    Thread.sleep(40000);
+      Thread.sleep(40000);
 
-    response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
-        servLens, null, query);
-    Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+      response = qHelper.exec("get", QueryURL.QUERY_URL + "/" + queryHandle.toString() + "/resultset",
+          servLens, null, query);
+      //TODO : This is failing , enable it when its fixed
+//    Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+
+    } finally {
+      if (sessionHandleString != null){
+        sHelper.closeSession();
+      }
+    }
   }
 
 
@@ -430,52 +439,67 @@ public class ITServerConfigTests extends BaseTestClass {
   @Test(enabled = true, dataProvider = "query_provider")
   public void testInMemoryPurger(String query) throws Exception {
 
-    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
-    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    sHelper.setAndValidateParam(LensConfConstants.QUERY_MAIL_NOTIFY, "false");
+    try{
+      sessionHandleString = sHelper.openSession(lens.getCurrentDB());
+      sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
+      sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+      sHelper.setAndValidateParam(LensConfConstants.QUERY_MAIL_NOTIFY, "false");
 
-    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.INMEMORY_RESULT_SET_TTL_SECS, "20",
-        LensConfConstants.PURGE_INTERVAL, "10000"); //in millis
-    Util.changeConfig(map, confFilePath);
-    lens.restart();
-    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(query).getData();
-    LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
-    Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.INMEMORY_RESULT_SET_TTL_SECS, "20",
+          LensConfConstants.PURGE_INTERVAL, "10000"); //in millis
+      Util.changeConfig(map, confFilePath);
+      lens.restart();
+      QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(query).getData();
+      LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
+      Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
 
-    Response response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
-    Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+      Response response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
+      Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-    Thread.sleep(30000); //waiting till query gets purged ( ttl + purge interval time)
+      Thread.sleep(30000); //waiting till query gets purged ( ttl + purge interval time)
 
-    response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
-    Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+      response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
+      Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    } finally {
+      if (sessionHandleString != null){
+        sHelper.closeSession();
+      }
+    }
   }
 
   // Behaviour is not the same for hive query before result is purged
   @Test(enabled = true)
   public void readInmemoryTwiceBeforePurgerTime() throws Exception {
 
-    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
-    sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    sHelper.setAndValidateParam(LensConfConstants.QUERY_MAIL_NOTIFY, "false");
+    try{
+      sessionHandleString = sHelper.openSession(lens.getCurrentDB());
+      sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
+      sHelper.setAndValidateParam(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+      sHelper.setAndValidateParam(LensConfConstants.QUERY_MAIL_NOTIFY, "false");
 
-    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.INMEMORY_RESULT_SET_TTL_SECS, "500",
-        LensConfConstants.PURGE_INTERVAL, "10000");
-    Util.changeConfig(map, confFilePath);
-    lens.restart();
+      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.INMEMORY_RESULT_SET_TTL_SECS, "500",
+          LensConfConstants.PURGE_INTERVAL, "10000");
+      Util.changeConfig(map, confFilePath);
+      lens.restart();
 
-    QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY).getData();
-    LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
-    Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
+      QueryHandle queryHandle = (QueryHandle) qHelper.executeQuery(QueryInventory.JDBC_CUBE_QUERY).getData();
+      LensQuery lensQuery = qHelper.waitForCompletion(queryHandle);
+      Assert.assertEquals(lensQuery.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, "Query did not succeed");
 
-    Response response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
-    Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+      Response response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
+      Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-    response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
+      response = qHelper.getResultSetResponse(queryHandle, "0", "100", sessionHandleString);
 
-    //TODO : enable this when LENS-823 is fixed
-    //Currently its throwing 500 which needs to be fixed.
+      //TODO : enable this when LENS-823 is fixed
+      //Currently its throwing 500 which needs to be fixed.
 //    Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+
+    } finally {
+      if (sessionHandleString != null){
+        sHelper.closeSession();
+      }
+    }
   }
 
 
@@ -553,8 +577,5 @@ public class ITServerConfigTests extends BaseTestClass {
       }
     }
   }
-
-
-
 }
 

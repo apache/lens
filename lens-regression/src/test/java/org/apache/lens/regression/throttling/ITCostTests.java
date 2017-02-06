@@ -19,7 +19,6 @@
 
 package org.apache.lens.regression.throttling;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -37,16 +36,12 @@ import org.apache.lens.regression.core.helpers.*;
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
 import org.apache.lens.regression.util.Util;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.log4j.Logger;
 
 import org.testng.Assert;
 import org.testng.annotations.*;
-
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.SftpException;
 
 public class ITCostTests extends BaseTestClass {
 
@@ -64,7 +59,7 @@ public class ITCostTests extends BaseTestClass {
   public static final String JDBC_QUERY1 = QueryInventory.getQueryFromInventory("JDBC.QUERY1");
 
   private static String hiveDriver = "hive/hive1";
-  private String hiveDriverSitePath  = lens.getServerDir() + "/conf/drivers/hive/hive1/hivedriver-site.xml";
+  private String lensSitePath  = lens.getServerDir() + "/conf/lens-site.xml";
   private static final long SECONDS_IN_A_MINUTE = 60;
 
   private static Logger logger = Logger.getLogger(ITCostTests.class);
@@ -75,6 +70,11 @@ public class ITCostTests extends BaseTestClass {
     logger.info("Creating a new Session");
     sessionHandleString = sHelper.openSession(lens.getCurrentDB());
     sHelper.setAndValidateParam(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "false");
+
+    HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.TOTAL_QUERY_COST_CEILING_PER_USER_KEY, "60",
+        LensConfConstants.QUERY_LAUNCHING_CONSTRAINT_FACTORIES_KEY, DriverConfig.USER_COST_CONSTRAINT_FACTORY);
+    Util.changeConfig(map, lensSitePath);
+    lens.restart();
   }
 
   @BeforeMethod(alwaysRun = true)
@@ -94,28 +94,9 @@ public class ITCostTests extends BaseTestClass {
   public void closeSession() throws Exception {
     logger.info("Closing Session");
     sHelper.closeSession();
-  }
-
-  @BeforeGroups("user-cost-ceiling")
-  public void setUserCeilingconfig() throws Exception {
-    try{
-      HashMap<String, String> map = LensUtil.getHashMap(LensConfConstants.TOTAL_QUERY_COST_CEILING_PER_USER_KEY, "60",
-          DriverConfig.HIVE_CONSTRAINT_FACTORIES,
-          DriverConfig.MAX_CONCURRENT_CONSTRAINT_FACTORY + "," + DriverConfig.USER_COST_CONSTRAINT_FACTORY,
-          DriverConfig.MAX_CONCURRENT_QUERIES, "10");
-      Util.changeConfig(map, hiveDriverSitePath);
-      lens.restart();
-    }catch (Exception e){
-      logger.info(e);
-    }
-  }
-
-  @AfterGroups("user-cost-ceiling")
-  public void restoreConfig() throws SftpException, JSchException, InterruptedException, LensException, IOException {
-    Util.changeConfig(hiveDriverSitePath);
+    Util.changeConfig(lensSitePath);
     lens.restart();
   }
-
 
   @Test(enabled = true, groups= "user-cost-ceiling")
   public void testUserCostCeiling() throws Exception {
@@ -292,149 +273,6 @@ public class ITCostTests extends BaseTestClass {
   }
 
   //TODO : Add queue level throttling along with user ceiling constraint
-
-  /*
-  * LENS-995 : Queue number shouldn't change with in the same prority
-  */
-
-  @Test(enabled = true)
-  public void queueNumberChangeWithInSamePriority() throws Exception {
-
-    String longRunningQuery = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_95"), "20");
-    HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "1");
-    String[] queries = {longRunningQuery, COST_5, COST_5, COST_3, COST_2};
-
-    try {
-      Util.changeConfig(map, hiveDriverSitePath);
-      lens.restart();
-
-      List<QueryHandle> handleList = new ArrayList<>();
-      for(String query : queries){
-        handleList.add((QueryHandle) qHelper.executeQuery(query).getData());
-      }
-
-      LensQuery lq1 = qHelper.getLensQuery(sessionHandleString, handleList.get(1));
-      LensQuery lq2 = qHelper.getLensQuery(sessionHandleString, handleList.get(2));
-      LensQuery lq3 = qHelper.getLensQuery(sessionHandleString, handleList.get(3));
-      LensQuery lq4 = qHelper.getLensQuery(sessionHandleString, handleList.get(4));
-
-      Assert.assertEquals(lq1.getStatus().getQueueNumber().intValue(), 1);
-      Assert.assertEquals(lq2.getStatus().getQueueNumber().intValue(), 2);
-      Assert.assertEquals(lq3.getStatus().getQueueNumber().intValue(), 3);
-      Assert.assertEquals(lq4.getStatus().getQueueNumber().intValue(), 4);
-
-      LensQuery lq0 = qHelper.waitForCompletion(handleList.get(0));
-
-      lq1 = qHelper.getLensQuery(sessionHandleString, handleList.get(1));
-      lq2 = qHelper.getLensQuery(sessionHandleString, handleList.get(2));
-      lq3 = qHelper.getLensQuery(sessionHandleString, handleList.get(3));
-      lq4 = qHelper.getLensQuery(sessionHandleString, handleList.get(4));
-
-      Assert.assertEquals(lq0.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-      Assert.assertEquals(lq2.getStatus().getQueueNumber().intValue(), 1);
-      Assert.assertEquals(lq3.getStatus().getQueueNumber().intValue(), 2);
-      Assert.assertEquals(lq4.getStatus().getQueueNumber().intValue(), 3);
-
-      lq1 = qHelper.waitForCompletion(handleList.get(1));
-
-      lq2 = qHelper.getLensQuery(sessionHandleString, handleList.get(2));
-      lq3 = qHelper.getLensQuery(sessionHandleString, handleList.get(3));
-      lq4 = qHelper.getLensQuery(sessionHandleString, handleList.get(4));
-
-      Assert.assertEquals(lq1.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-      Assert.assertEquals(lq3.getStatus().getQueueNumber().intValue(), 1);
-      Assert.assertEquals(lq4.getStatus().getQueueNumber().intValue(), 2);
-
-    }finally {
-      Util.changeConfig(hiveDriverSitePath);
-      lens.restart();
-    }
-  }
-
-
-  @Test(enabled = true)
-  public void queueNumberChangeDifferentPriority() throws Exception {
-
-    String longRunningQuery = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_95"), "20");
-    HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "1");
-    try {
-      Util.changeConfig(map, hiveDriverSitePath);
-      lens.restart();
-
-      QueryHandle q0 = (QueryHandle) qHelper.executeQuery(longRunningQuery).getData();
-      QueryHandle q1 = (QueryHandle) qHelper.executeQuery(COST_20).getData();
-      QueryHandle q2 = (QueryHandle) qHelper.executeQuery(COST_2).getData();
-
-      LensQuery normal1 = qHelper.getLensQuery(sessionHandleString, q1);
-      LensQuery high1 = qHelper.getLensQuery(sessionHandleString, q2);
-
-      Assert.assertEquals(normal1.getStatus().getQueueNumber().intValue(), 2);
-      Assert.assertEquals(high1.getStatus().getQueueNumber().intValue(), 1);
-
-      QueryHandle q3 = (QueryHandle) qHelper.executeQuery(COST_5).getData();
-
-      LensQuery high2 = qHelper.getLensQuery(sessionHandleString, q3);
-      high1 = qHelper.getLensQuery(sessionHandleString, q2);
-      normal1 = qHelper.getLensQuery(sessionHandleString, q1);
-
-      Assert.assertEquals(normal1.getStatus().getQueueNumber().intValue(), 3);
-      Assert.assertEquals(high1.getStatus().getQueueNumber().intValue(), 1);
-      Assert.assertEquals(high2.getStatus().getQueueNumber().intValue(), 2);
-
-      QueryHandle q4 = (QueryHandle) qHelper.executeQuery(COST_20).getData();
-
-      LensQuery normal2 = qHelper.getLensQuery(sessionHandleString, q4);
-      normal1 = qHelper.getLensQuery(sessionHandleString, q1);
-      high1 = qHelper.getLensQuery(sessionHandleString, q2);
-      high2 = qHelper.getLensQuery(sessionHandleString, q3);
-
-      Assert.assertEquals(high1.getStatus().getQueueNumber().intValue(), 1);
-      Assert.assertEquals(high2.getStatus().getQueueNumber().intValue(), 2);
-      Assert.assertEquals(normal1.getStatus().getQueueNumber().intValue(), 3);
-      Assert.assertEquals(normal2.getStatus().getQueueNumber().intValue(), 4);
-
-    }finally {
-      Util.changeConfig(hiveDriverSitePath);
-      lens.restart();
-    }
-  }
-
-
-  @Test(enabled = true)
-  public void queueNumberChangeDifferentPriorityWithJdbc() throws Exception {
-
-    String longRunningQuery = String.format(QueryInventory.getQueryFromInventory("HIVE.SLEEP_COST_95"), "20");
-    HashMap<String, String> map = LensUtil.getHashMap(DriverConfig.MAX_CONCURRENT_QUERIES, "1");
-    List<QueryHandle> handleList = new ArrayList<>();
-
-    try {
-      Util.changeConfig(map, hiveDriverSitePath);
-      lens.restart();
-
-      String[] queries = {COST_20, COST_2, COST_3, COST_60, COST_5, COST_10, COST_3};
-      // Queue order is determined from priority and order in which queries are fired.
-      int[] queueNo = {5, 1, 2, 7, 3, 6, 4};
-
-      qHelper.executeQuery(longRunningQuery);
-      for(String query : queries){
-        handleList.add((QueryHandle) qHelper.executeQuery(query).getData());
-        qHelper.executeQuery(JDBC_QUERY1).getData();
-      }
-
-      List<LensQuery> lqList = new ArrayList<>();
-      for(QueryHandle qh : handleList){
-        lqList.add(qHelper.getLensQuery(sessionHandleString, qh));
-      }
-
-      for(int i = 0; i < lqList.size(); i++) {
-        Assert.assertEquals(lqList.get(i).getStatus().getQueueNumber().intValue(), queueNo[i]);
-      }
-
-    }finally {
-      Util.changeConfig(hiveDriverSitePath);
-      lens.restart();
-    }
-  }
 
 }
 
