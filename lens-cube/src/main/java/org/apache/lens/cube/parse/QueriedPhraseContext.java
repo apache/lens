@@ -36,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 class QueriedPhraseContext extends TracksQueriedColumns implements TrackQueriedCubeFields {
+  // position in org.apache.lens.cube.parse.CubeQueryContext.queriedPhrases
+  private int position;
   private final ASTNode exprAST;
   private Boolean aggregate;
   private String expr;

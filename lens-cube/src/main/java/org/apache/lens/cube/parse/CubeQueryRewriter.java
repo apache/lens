@@ -150,13 +150,12 @@ public class CubeQueryRewriter {
     // Resolve candidate fact tables and dimension tables for columns queried
     rewriters.add(candidateTblResolver);
     // Resolve aggregations and generate base select tree
-    rewriters.add(new CandidateCoveringSetsResolver(conf));
-
-    //TODO union: Add CoveringSetResolver which creates UnionCandidates and JoinCandidates. Some code form candidateTblResolver(phase 2) to be moved to CoveringSetResolver
-    //TODO union: AggregateResolver,GroupbyResolver,FieldValidator before CoveringSetResolver
     rewriters.add(new AggregateResolver());
     rewriters.add(new GroupbyResolver(conf));
     rewriters.add(new FieldValidator());
+    rewriters.add(storageTableResolver);
+    //TODO union: Add CoveringSetResolver which creates UnionCandidates and JoinCandidates. Some code form candidateTblResolver(phase 2) to be moved to CoveringSetResolver
+    //TODO union: AggregateResolver,GroupbyResolver,FieldValidator before CoveringSetResolver
     // Resolve joins and generate base join tree
     rewriters.add(new JoinResolver(conf));
     // Do col life validation
@@ -165,10 +164,9 @@ public class CubeQueryRewriter {
     // in join and denorm resolvers
     //TODO union : this should be CoveringSetResolver now
     rewriters.add(candidateTblResolver);
-
+    rewriters.add(new CandidateCoveringSetsResolver(conf));
     // Phase 1: resolve fact tables.
     //TODO union: This phase 1 of storageTableResolver should happen before CoveringSetResolver
-    rewriters.add(storageTableResolver);
     if (lightFactFirst) {
       // Prune candidate tables for which denorm column references do not exist
       //TODO union: phase 2 of denormResolver needs to be moved before CoveringSetResolver

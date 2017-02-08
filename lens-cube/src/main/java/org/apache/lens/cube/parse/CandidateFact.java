@@ -43,6 +43,7 @@ import lombok.Setter;
 /**
  * Holds context of a candidate fact table.
  */
+@Deprecated
 public class CandidateFact implements CandidateTable, QueryAST {
   final CubeFactTable fact;
   @Getter
@@ -366,6 +367,7 @@ public class CandidateFact implements CandidateTable, QueryAST {
     return timePartDimensions;
   }
 
+  /*
   public void updateFromString(CubeQueryContext query, Set<Dimension> queryDims,
     Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     fromString = "%s"; // to update the storage alias later
@@ -375,4 +377,5 @@ public class CandidateFact implements CandidateTable, QueryAST {
           query, this);
     }
   }
+  */
 }

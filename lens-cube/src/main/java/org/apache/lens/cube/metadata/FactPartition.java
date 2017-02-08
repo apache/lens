@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @EqualsAndHashCode
+// TODO union : Change the class name To StoragePartition
 public class FactPartition implements Comparable<FactPartition> {
   @Getter
   private final String partCol;

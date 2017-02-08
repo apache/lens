@@ -79,6 +79,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     return cal.getTime();
   }
 
+  //TODO union : Wrong fact table picked. Check after MaxCoveringSetResolver
   @Test
   public void testCubeQueryContinuousUpdatePeriod() throws Exception {
     LensException th = null;
@@ -104,7 +105,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
       getDbName() + "c1_testfact",
       TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt",
         getDateWithOffset(DAILY, -2), getDateWithOffset(DAILY, 0), CONTINUOUS.format()));
-    String expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
+    String expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) as `sum(msr2)` FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
@@ -159,7 +160,8 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
       getUptoHour(getOneLess(NOW, UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.DB_FORMAT));
     System.out.println("HQL:" + hqlQuery);
     String expected =
-      getExpectedQuery(cubeName, "select timehourchain1.full_hour, sum(testcube.msr2) FROM ", " join " + getDbName()
+      getExpectedQuery(cubeName, "select timehourchain1.full_hour as `test_time_dim`, sum(testcube.msr2) as `msr2`"
+          + " FROM ", " join " + getDbName()
           + "c4_hourDimTbl timehourchain1 on testcube.test_time_dim_hour_id  = timehourchain1.id", null,
         " GROUP BY timehourchain1.full_hour", null, whereClauses);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
@@ -169,7 +171,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     hqlQuery = rewrite(query, tconf);
     System.out.println("HQL:" + hqlQuery);
     expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+      getExpectedQuery(cubeName, "select sum(testcube.msr2) as `msr2` FROM ", " join " + getDbName()
         + "c4_hourDimTbl timehourchain1 on testcube.test_time_dim_hour_id  = timehourchain1.id", null, null, null,
         whereClauses);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
@@ -179,7 +181,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     hqlQuery = rewrite(query, tconf);
     System.out.println("HQL:" + hqlQuery);
     expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+      getExpectedQuery(cubeName, "select sum(testcube.msr2) as `msr2` FROM ", " join " + getDbName()
           + "c4_hourDimTbl timehourchain1 on testcube.test_time_dim_hour_id  = timehourchain1.id",
         " testcube.cityid > 2 ",
         " and testcube.cityid != 5", null, whereClauses);
@@ -202,7 +204,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
         getUptoHour(getOneLess(BEFORE_4_DAYS, UpdatePeriod.HOURLY.calendarField())),
         TestTimeRangeWriter.DB_FORMAT));
     expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+      getExpectedQuery(cubeName, "select sum(testcube.msr2)  as `sum(msr2)` FROM ", " join " + getDbName()
         + "c4_hourDimTbl timehourchain1 on testcube.test_time_dim_hour_id  = timehourchain1.id", null, null, null,
         whereClauses);
     System.out.println("HQL:" + hqlQuery);
@@ -214,7 +216,8 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
           + " OR " + TWO_DAYS_RANGE_TTD_BEFORE_4_DAYS, tconf);
 
     expected =
-      getExpectedQuery(cubeName, "select to_date(timehourchain1.full_hour), sum(testcube.msr2) FROM ", " join "
+      getExpectedQuery(cubeName, "select to_date(timehourchain1.full_hour) as `to_date(test_time_dim)`, "
+          + "sum(testcube.msr2) as `sum(msr2)` FROM ", " join "
           + getDbName() + "c4_hourDimTbl timehourchain1 on testcube.test_time_dim_hour_id  = timehourchain1.id", null,
         " group by to_date(timehourchain1.full_hour)", null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
@@ -240,7 +243,8 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
       getUptoHour(getOneLess(NOW, UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.DB_FORMAT));
     System.out.println("HQL:" + hqlQuery);
     String expected =
-      getExpectedQuery(cubeName, "select timehourchain2.full_hour, sum(testcube.msr2) FROM ", " join " + getDbName()
+      getExpectedQuery(cubeName, "select timehourchain2.full_hour as `test_time_dim2`, sum(testcube.msr2) as `msr2` "
+          + "FROM ", " join " + getDbName()
           + "c4_hourDimTbl timehourchain2 on testcube.test_time_dim_hour_id2  = timehourchain2.id", null,
         " GROUP BY timehourchain2.full_hour", null, whereClauses);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
@@ -250,7 +254,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     hqlQuery = rewrite(query, tconf);
     System.out.println("HQL:" + hqlQuery);
     expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+      getExpectedQuery(cubeName, "select sum(testcube.msr2) as `msr2` FROM ", " join " + getDbName()
         + "c4_hourDimTbl timehourchain2 on testcube.test_time_dim_hour_id2  = timehourchain2.id", null, null, null,
         whereClauses);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
@@ -260,7 +264,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     hqlQuery = rewrite(query, tconf);
     System.out.println("HQL:" + hqlQuery);
     expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+      getExpectedQuery(cubeName, "select sum(testcube.msr2) as `msr2` FROM ", " join " + getDbName()
           + "c4_hourDimTbl timehourchain2 on testcube.test_time_dim_hour_id2  = timehourchain2.id",
           " testcube.cityid > 2 ", " and testcube.cityid != 5", null, whereClauses);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
@@ -282,7 +286,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
         getUptoHour(getOneLess(BEFORE_4_DAYS, UpdatePeriod.HOURLY.calendarField())),
         TestTimeRangeWriter.DB_FORMAT));
     expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+      getExpectedQuery(cubeName, "select sum(testcube.msr2)  as `sum(msr2)`FROM ", " join " + getDbName()
         + "c4_hourDimTbl timehourchain2 on testcube.test_time_dim_hour_id2  = timehourchain2.id", null, null, null,
         whereClauses);
     System.out.println("HQL:" + hqlQuery);
@@ -294,7 +298,8 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
           + " OR " +TWO_DAYS_RANGE_TTD2_BEFORE_4_DAYS, tconf);
 
     expected =
-      getExpectedQuery(cubeName, "select to_date(timehourchain2.full_hour), sum(testcube.msr2) FROM ", " join "
+      getExpectedQuery(cubeName, "select to_date(timehourchain2.full_hour) as `to_date(test_time_dim2)`, "
+          + "sum(testcube.msr2)  as `sum(msr2)` FROM ", " join "
           + getDbName() + "c4_hourDimTbl timehourchain2 on testcube.test_time_dim_hour_id2  = timehourchain2.id", null,
         " group by to_date(timehourchain2.full_hour)", null, whereClauses);
     System.out.println("HQL:" + hqlQuery);

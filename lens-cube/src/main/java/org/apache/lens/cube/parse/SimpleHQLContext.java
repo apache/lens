@@ -18,13 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.lens.server.api.error.LensException;
-
-import org.apache.commons.lang.StringUtils;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +44,7 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
   }
 
   SimpleHQLContext(String select, String from, String where, String groupby, String orderby, String having,
-    Integer limit) {
+                   Integer limit) {
     this.select = select;
     this.from = from;
     this.where = where;
@@ -73,6 +67,7 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
    * <p></p>
    * Leaving this empty implementation for the case of all expressions being passed in constructor. If other
    * constructors are used the missing expressions should be set here
+   *
    * @throws LensException
    */
   protected void setMissingExpressions() throws LensException {
@@ -80,57 +75,6 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
 
   public String toHQL() throws LensException {
     setMissingExpressions();
-    String qfmt = getQueryFormat();
-    Object[] queryTreeStrings = getQueryTreeStrings();
-    if (log.isDebugEnabled()) {
-      log.debug("qfmt: {} Query strings: {}", qfmt, Arrays.toString(queryTreeStrings));
-    }
-    String baseQuery = String.format(qfmt, queryTreeStrings);
-    return baseQuery;
-  }
-
-  private String[] getQueryTreeStrings() throws LensException {
-    List<String> qstrs = new ArrayList<String>();
-    qstrs.add(select);
-    qstrs.add(from);
-    if (!StringUtils.isBlank(where)) {
-      qstrs.add(where);
-    }
-    if (!StringUtils.isBlank(groupby)) {
-      qstrs.add(groupby);
-    }
-    if (!StringUtils.isBlank(having)) {
-      qstrs.add(having);
-    }
-    if (!StringUtils.isBlank(orderby)) {
-      qstrs.add(orderby);
-    }
-    if (limit != null) {
-      qstrs.add(String.valueOf(limit));
-    }
-    return qstrs.toArray(new String[0]);
-  }
-
-  private final String baseQueryFormat = "SELECT %s FROM %s";
-
-  private String getQueryFormat() {
-    StringBuilder queryFormat = new StringBuilder();
-    queryFormat.append(baseQueryFormat);
-    if (!StringUtils.isBlank(where)) {
-      queryFormat.append(" WHERE %s");
-    }
-    if (!StringUtils.isBlank(groupby)) {
-      queryFormat.append(" GROUP BY %s");
-    }
-    if (!StringUtils.isBlank(having)) {
-      queryFormat.append(" HAVING %s");
-    }
-    if (!StringUtils.isBlank(orderby)) {
-      queryFormat.append(" ORDER BY %s");
-    }
-    if (limit != null) {
-      queryFormat.append(" LIMIT %s");
-    }
-    return queryFormat.toString();
+    return CandidateUtil.buildHQLString(select, from, where, groupby, orderby, having, limit);
   }
 }

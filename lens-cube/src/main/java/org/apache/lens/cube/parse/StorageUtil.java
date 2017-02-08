@@ -166,6 +166,8 @@ public final class StorageUtil {
 
   /**
    * Get fallback range
+   * TODO union : Add method level comments
+   *
    * @param range
    * @param factName
    * @param cubeql
@@ -206,6 +208,7 @@ public final class StorageUtil {
   /**
    * Checks how much data is completed for a column.
    * See this: {@link org.apache.lens.server.api.metastore.DataCompletenessChecker}
+   *
    * @param cubeql
    * @param cubeCol
    * @param alias
@@ -235,12 +238,14 @@ public final class StorageUtil {
   }
 
   /**
-   * Extract the expression for the measure.
+   * This method extracts all the columns used in expressions (used in query) and evaluates each
+   * column separately for completeness
+   *
    * @param cubeql
    * @param measureTag
    * @param tagToMeasureOrExprMap
    */
-  public static void processMeasuresFromExprMeasures(CubeQueryContext cubeql, Set<String> measureTag,
+  public static void processExpressionsForCompleteness(CubeQueryContext cubeql, Set<String> measureTag,
     Map<String, String> tagToMeasureOrExprMap) {
     boolean isExprProcessed;
     String cubeAlias = cubeql.getAliasForTableName(cubeql.getCube().getName());

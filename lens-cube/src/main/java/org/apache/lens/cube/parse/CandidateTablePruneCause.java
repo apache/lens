@@ -56,6 +56,27 @@ public class CandidateTablePruneCause {
         };
       }
     },
+
+
+    // Moved from Stoarge causes .
+    //The storage is removed as its not set in property "lens.cube.query.valid.fact.<fact_name>.storagetables"
+    INVALID_STORAGE("Invalid Storage"),
+    // storage table does not exist. Commented as its not being used anywhere in master.
+    // STOARGE_TABLE_DOES_NOT_EXIST("Storage table does not exist"),
+    // storage has no update periods queried. Commented as its not being used anywhere in master.
+    // MISSING_UPDATE_PERIODS("Storage has no update periods"),
+    // no candidate update periods, update period cause will have why each
+    // update period is not a candidate
+    NO_CANDIDATE_UPDATE_PERIODS("Storage update periods are not candidate"),
+    // storage table has no partitions queried
+    NO_PARTITIONS("Storage table has no partitions"),
+    // partition column does not exist
+    PART_COL_DOES_NOT_EXIST("Partition column does not exist"),
+    // Range is not supported by this storage table
+    TIME_RANGE_NOT_ANSWERABLE("Range not answerable"),
+    // storage is not supported by execution engine/driver
+    UNSUPPORTED_STORAGE("Unsupported Storage"),
+    
     // least weight not satisfied
     MORE_WEIGHT("Picked table had more weight than minimum."),
     // partial data is enabled, another fact has more data.
@@ -77,8 +98,8 @@ public class CandidateTablePruneCause {
     // candidate table tries to get denormalized field from dimension and the
     // referred dimension is invalid.
     INVALID_DENORM_TABLE("Referred dimension is invalid in one of the candidate tables"),
-    // column not valid in cube table
-    COLUMN_NOT_VALID("Column not valid in cube table"),
+    // column not valid in cube table. Commented the below line as it's not being used in master.
+    //COLUMN_NOT_VALID("Column not valid in cube table"),
     // column not found in cube table
     COLUMN_NOT_FOUND("%s are not %s") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
@@ -159,25 +180,7 @@ public class CandidateTablePruneCause {
         }
         return new String[]{incompletePartitions.toString()};
       }
-    },
-
-    // Moved from Stoarge causes
-    INVALID_STORAGE("Invalid Storage"),
-    // storage table does not exist
-    STOARGE_TABLE_DOES_NOT_EXIST("Storage table does not exist"),
-    // storage has no update periods queried
-    MISSING_UPDATE_PERIODS("Storage has no update periods"),
-    // no candidate update periods, update period cause will have why each
-    // update period is not a candidate
-    NO_CANDIDATE_UPDATE_PERIODS("Storage update periods are not candidate"),
-    // storage table has no partitions queried
-    NO_PARTITIONS("Storage table has no partitions"),
-    // partition column does not exist
-    PART_COL_DOES_NOT_EXIST("Partition column does not exist"),
-    // Range is not supported by this storage table
-    TIME_RANGE_NOT_ANSWERABLE("Range not answerable"),
-    // storage is not supported by execution engine
-    UNSUPPORTED_STORAGE("Unsupported Storage");
+    };
 
     String errorFormat;
 
@@ -198,28 +201,6 @@ public class CandidateTablePruneCause {
     }
   }
 
-  //TODO union : Remove this enum. All values moved to CandidateTablePruneCode
-  @Deprecated
-  public enum SkipStorageCode {
-    // invalid storage table
-    INVALID,
-    // storage table does not exist
-    TABLE_NOT_EXIST,
-    // storage has no update periods queried
-    MISSING_UPDATE_PERIODS,
-    // no candidate update periods, update period cause will have why each
-    // update period is not a candidate
-    NO_CANDIDATE_PERIODS,
-    // storage table has no partitions queried
-    NO_PARTITIONS,
-    // partition column does not exist
-    PART_COL_DOES_NOT_EXIST,
-    // Range is not supported by this storage table
-    RANGE_NOT_ANSWERABLE,
-    // storage is not supported by execution engine
-    UNSUPPORTED
-  }
-
   public enum SkipUpdatePeriodCode {
     // invalid update period
     INVALID,
@@ -227,46 +208,12 @@ public class CandidateTablePruneCause {
     QUERY_INTERVAL_BIGGER
   }
 
-  @JsonWriteNullProperties(false)
-  @Data
-  @NoArgsConstructor
-  //TODO union:deprecate this sub class
-  @Deprecated
-  public static class SkipStorageCause {
-    private SkipStorageCode cause;
-    // update period to skip cause
-    private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
-
-    private List<String> nonExistantPartCols;
-
-    @Deprecated
-    public SkipStorageCause(SkipStorageCode cause) {
-      this.cause = cause;
-    }
-
-    @Deprecated
-    public static SkipStorageCause partColDoesNotExist(String... partCols) {
-      SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.PART_COL_DOES_NOT_EXIST);
-      ret.nonExistantPartCols = new ArrayList<String>();
-      for (String s : partCols) {
-        ret.nonExistantPartCols.add(s);
-      }
-      return ret;
-    }
-
-    @Deprecated
-    public static SkipStorageCause noCandidateUpdatePeriod(Map<String, SkipUpdatePeriodCode> causes) {
-      SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.NO_CANDIDATE_PERIODS);
-      ret.updatePeriodRejectionCause = causes;
-      return ret;
-    }
-  }
+  // Used for Test cases only.
+  // storage to skip storage cause for  dim table
+  private Map<String, CandidateTablePruneCode> dimStoragePruningCauses;
 
   // cause for cube table
   private CandidateTablePruneCode cause;
-  // storage to skip storage cause
-  private Map<String, SkipStorageCause> storageCauses;
-
   // populated only incase of missing partitions cause
   private Set<String> missingPartitions;
   // populated only incase of incomplete partitions cause
@@ -285,7 +232,8 @@ public class CandidateTablePruneCause {
   // the fact is not partitioned by part col of the time dim and time dim is not a dim attribute
   private Set<String> unsupportedTimeDims;
   // time covered
-  private MaxCoveringFactResolver.TimeCovered maxTimeCovered;
+  // TODO union : Fix this after MaxCoveringFactResolver chnaged wrt. Candidate
+  //private MaxCoveringFactResolver.TimeCovered maxTimeCovered;
   // ranges in which fact is invalid
   private List<TimeRange> invalidRanges;
 
@@ -352,12 +300,14 @@ public class CandidateTablePruneCause {
     return cause;
   }
 
+  // TODO union : uncomment the below method after MaxCoveringFactResolver is fixed wrt. Candidate
+  /*
   public static CandidateTablePruneCause lessData(MaxCoveringFactResolver.TimeCovered timeCovered) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(LESS_DATA);
     cause.setMaxTimeCovered(timeCovered);
     return cause;
   }
-
+*/
   public static CandidateTablePruneCause noColumnPartOfAJoinPath(final Collection<String> colSet) {
     CandidateTablePruneCause cause =
       new CandidateTablePruneCause(NO_COLUMN_PART_OF_A_JOIN_PATH);
@@ -369,22 +319,26 @@ public class CandidateTablePruneCause {
     return cause;
   }
 
- //TDOO union : Remove this method
- @Deprecated
- public static CandidateTablePruneCause noCandidateStorages(Map<String, SkipStorageCause> storageCauses) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(NO_CANDIDATE_STORAGES);
-    cause.setStorageCauses(new HashMap<String, SkipStorageCause>());
-    for (Map.Entry<String, SkipStorageCause> entry : storageCauses.entrySet()) {
-      String key = entry.getKey();
-      key = key.substring(0, (key.indexOf("_") + key.length() + 1) % (key.length() + 1)); // extract the storage part
-      cause.getStorageCauses().put(key.toLowerCase(), entry.getValue());
-    }
-    return cause;
-  }
-
   public static CandidateTablePruneCause missingDefaultAggregate(String... names) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(MISSING_DEFAULT_AGGREGATE);
     cause.setColumnsMissingDefaultAggregate(Lists.newArrayList(names));
+    return cause;
+  }
+
+  /**
+   * This factroy menthod can be used when a Dim Table is pruned because all its Storages are pruned.
+   * @param dimStoragePruningCauses
+   * @return
+   */
+  public static CandidateTablePruneCause noCandidateStoragesForDimtable(
+      Map<String, CandidateTablePruneCode> dimStoragePruningCauses) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(NO_CANDIDATE_STORAGES);
+    cause.setDimStoragePruningCauses(new HashMap<String, CandidateTablePruneCode>());
+    for (Map.Entry<String, CandidateTablePruneCode> entry : dimStoragePruningCauses.entrySet()) {
+      String key = entry.getKey();
+      key = key.substring(0, (key.indexOf("_") + key.length() + 1) % (key.length() + 1)); // extract the storage part
+      cause.getDimStoragePruningCauses().put(key.toLowerCase(), entry.getValue());
+    }
     return cause;
   }
 

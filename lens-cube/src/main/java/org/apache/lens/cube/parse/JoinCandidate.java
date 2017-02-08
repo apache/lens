@@ -1,15 +1,10 @@
 package org.apache.lens.cube.parse;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
-
-import lombok.Getter;
 
 /**
  * Represents a join of two candidates
@@ -22,46 +17,33 @@ public class JoinCandidate implements Candidate {
   private Candidate childCandidate1;
   private Candidate childCandidate2;
   private String toStr;
-  @Getter
-  private String alias;
+  private QueryAST queryAST;
+  private CubeQueryContext cubeql;
 
-  public JoinCandidate(Candidate childCandidate1, Candidate childCandidate2, String alias) {
+  public JoinCandidate(Candidate childCandidate1, Candidate childCandidate2, CubeQueryContext cubeql) {
     this.childCandidate1 = childCandidate1;
     this.childCandidate2 = childCandidate2;
-    this.alias = alias;
-  }
-
-  private String getJoinCondition() {
-    return null;
-  }
-
-  @Override
-  public String toHQL() {
-    return null;
-  }
-
-  @Override
-  public QueryAST getQueryAst() {
-    return null;
+    this.cubeql = cubeql;
   }
 
   @Override
   public Collection<String> getColumns() {
-    return null;
+    Set<String> columns = new HashSet<>();
+    columns.addAll(childCandidate1.getColumns());
+    columns.addAll(childCandidate2.getColumns());
+    return columns;
   }
 
   @Override
   public Date getStartTime() {
     return childCandidate1.getStartTime().after(childCandidate2.getStartTime())
-           ? childCandidate1.getStartTime()
-           : childCandidate2.getStartTime();
+        ? childCandidate1.getStartTime() : childCandidate2.getStartTime();
   }
 
   @Override
   public Date getEndTime() {
     return childCandidate1.getEndTime().before(childCandidate2.getEndTime())
-           ? childCandidate1.getEndTime()
-           : childCandidate2.getEndTime();
+        ? childCandidate1.getEndTime() : childCandidate2.getEndTime();
   }
 
   @Override
@@ -90,19 +72,35 @@ public class JoinCandidate implements Candidate {
    * @return
    */
   @Override
-  public boolean evaluateCompleteness(TimeRange timeRange, boolean failOnPartialData) throws LensException {
-    return this.childCandidate1.evaluateCompleteness(timeRange, failOnPartialData) && this.childCandidate2
-      .evaluateCompleteness(timeRange, failOnPartialData);
+  public boolean evaluateCompleteness(TimeRange timeRange, TimeRange parentTimeRange, boolean failOnPartialData)
+      throws LensException {
+    return this.childCandidate1.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData)
+        && this.childCandidate2.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData);
   }
 
+  /**
+   * @return all the partitions from the children
+   */
   @Override
   public Set<FactPartition> getParticipatingPartitions() {
-    return null;
+    Set<FactPartition> factPartitionsSet = new HashSet<>();
+    factPartitionsSet.addAll(childCandidate1.getParticipatingPartitions());
+    factPartitionsSet.addAll(childCandidate2.getParticipatingPartitions());
+    return factPartitionsSet;
   }
 
   @Override
   public boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expr) {
-    return childCandidate1.isExpressionEvaluable(expr) || childCandidate1.isExpressionEvaluable(expr);
+    return childCandidate1.isExpressionEvaluable(expr) || childCandidate2.isExpressionEvaluable(expr);
+  }
+
+  @Override
+  public Set<Integer> getAnswerableMeasurePhraseIndices() {
+    Set<Integer> mesureIndices = new HashSet<>();
+    for (Candidate cand : getChildren()) {
+      mesureIndices.addAll(cand.getAnswerableMeasurePhraseIndices());
+    }
+    return mesureIndices;
   }
 
   @Override

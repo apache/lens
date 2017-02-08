@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -21,7 +21,6 @@ package org.apache.lens.cube.parse;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
@@ -31,11 +30,10 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.Maps;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Prune candidate fact sets so that the facts except the ones that are covering maximum of range are pruned
+ * Prune candidates except the ones that are covering maximum of range are pruned
  */
 @Slf4j
 class MaxCoveringFactResolver implements ContextRewriter {
@@ -53,7 +51,7 @@ class MaxCoveringFactResolver implements ContextRewriter {
       // redundant computation.
       return;
     }
-    if (cubeql.getCube() == null || cubeql.getCandidateFactSets().size() <= 1) {
+    if (cubeql.getCube() == null || cubeql.getCandidates().size() <= 1) {
       // nothing to prune.
       return;
     }
@@ -66,15 +64,13 @@ class MaxCoveringFactResolver implements ContextRewriter {
   private void resolveByTimeCovered(CubeQueryContext cubeql) {
     // For each part column, which candidate fact sets are covering how much amount.
     // Later, we'll maximize coverage for each queried part column.
-    Map<String, Map<Set<CandidateFact>, Long>> partCountsPerPartCol = Maps.newHashMap();
-    //TODO union: max covering set will be calculated based on List<Candidate>
-    //TODO union: Each candidate will provide Set<FactPartion> using {@link Candidate.getParticipatingPartitions}
-    for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
-      for (Map.Entry<String, Long> entry : getTimeCoveredForEachPartCol(facts).entrySet()) {
+    Map<String, Map<Candidate, Long>> partCountsPerPartCol = Maps.newHashMap();
+    for (Candidate cand : cubeql.getCandidates()) {
+      for (Map.Entry<String, Long> entry : getTimeCoveredForEachPartCol(cand).entrySet()) {
         if (!partCountsPerPartCol.containsKey(entry.getKey())) {
-          partCountsPerPartCol.put(entry.getKey(), Maps.<Set<CandidateFact>, Long>newHashMap());
+          partCountsPerPartCol.put(entry.getKey(), Maps.<Candidate, Long>newHashMap());
         }
-        partCountsPerPartCol.get(entry.getKey()).put(facts, entry.getValue());
+        partCountsPerPartCol.get(entry.getKey()).put(cand, entry.getValue());
       }
     }
     // for each queried partition, prune fact sets that are covering less range than max
@@ -82,29 +78,32 @@ class MaxCoveringFactResolver implements ContextRewriter {
       if (partCountsPerPartCol.get(partColQueried) != null) {
         long maxTimeCovered = Collections.max(partCountsPerPartCol.get(partColQueried).values());
         TimeCovered timeCovered = new TimeCovered(maxTimeCovered);
-        Iterator<Set<CandidateFact>> iter = cubeql.getCandidateFactSets().iterator();
+        Iterator<Candidate> iter = cubeql.getCandidates().iterator();
         while (iter.hasNext()) {
-          Set<CandidateFact> facts = iter.next();
-          Long timeCoveredLong = partCountsPerPartCol.get(partColQueried).get(facts);
+          Candidate candidate = iter.next();
+          Long timeCoveredLong = partCountsPerPartCol.get(partColQueried).get(candidate);
           if (timeCoveredLong == null) {
             timeCoveredLong = 0L;
           }
           if (timeCoveredLong < maxTimeCovered) {
-            log.info("Not considering facts:{} from candidate fact tables as it covers less time than the max"
-                    + " for partition column: {} which is: {}", facts, partColQueried, timeCovered);
+            log.info("Not considering Candidate:{} from Candidate set as it covers less time than the max"
+              + " for partition column: {} which is: {}", candidate, partColQueried, timeCovered);
             iter.remove();
+            cubeql.addCandidatePruningMsg(candidate,
+              new CandidateTablePruneCause(CandidateTablePruneCause.CandidateTablePruneCode.LESS_DATA));
           }
         }
       }
     }
-    cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.lessData(null));
+    //  cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.lessData(null));
+
   }
 
   private void resolveByDataCompleteness(CubeQueryContext cubeql) {
     // From the list of  candidate fact sets, we calculate the maxDataCompletenessFactor.
     float maxDataCompletenessFactor = 0f;
-    for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
-      float dataCompletenessFactor = computeDataCompletenessFactor(facts);
+    for (Candidate cand : cubeql.getCandidates()) {
+      float dataCompletenessFactor = computeDataCompletenessFactor(cand);
       if (dataCompletenessFactor > maxDataCompletenessFactor) {
         maxDataCompletenessFactor = dataCompletenessFactor;
       }
@@ -116,27 +115,26 @@ class MaxCoveringFactResolver implements ContextRewriter {
     }
 
     // We prune those candidate fact set, whose dataCompletenessFactor is less than maxDataCompletenessFactor
-    //TODO union : This needs to work on List<Candidate>
-    Iterator<Set<CandidateFact>> iter = cubeql.getCandidateFactSets().iterator();
+    Iterator<Candidate> iter = cubeql.getCandidates().iterator();
     while (iter.hasNext()) {
-      Set<CandidateFact> facts = iter.next();
-      float dataCompletenessFactor = computeDataCompletenessFactor(facts);
+      Candidate cand = iter.next();
+      float dataCompletenessFactor = computeDataCompletenessFactor(cand);
       if (dataCompletenessFactor < maxDataCompletenessFactor) {
-        log.info("Not considering facts:{} from candidate fact tables as the dataCompletenessFactor for this:{} is "
-                + "less than the max:{}", facts, dataCompletenessFactor, maxDataCompletenessFactor);
+        log.info("Not considering Candidate :{} from the list as the dataCompletenessFactor for this:{} is "
+          + "less than the max:{}", cand, dataCompletenessFactor, maxDataCompletenessFactor);
         iter.remove();
+        cubeql.addCandidatePruningMsg(cand,
+          new CandidateTablePruneCause(CandidateTablePruneCause.CandidateTablePruneCode.INCOMPLETE_PARTITION));
       }
     }
-    cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.incompletePartitions(null));
   }
 
-  //TODO union : This needs to work on Candidate
-  private float computeDataCompletenessFactor(Set<CandidateFact> facts) {
+  private float computeDataCompletenessFactor(Candidate cand) {
     float completenessFactor = 0f;
     int numPartition = 0;
-    for (CandidateFact fact : facts) {
-      if (fact.getDataCompletenessMap() != null) {
-        Map<String, Map<String, Float>> completenessMap = fact.getDataCompletenessMap();
+    for (StorageCandidate sc : CandidateUtil.getStorageCandidates(cand)) {
+      if (sc.getDataCompletenessMap() != null) {
+        Map<String, Map<String, Float>> completenessMap = sc.getDataCompletenessMap();
         for (Map<String, Float> partitionCompleteness : completenessMap.values()) {
           for (Float value : partitionCompleteness.values()) {
             numPartition++;
@@ -145,33 +143,30 @@ class MaxCoveringFactResolver implements ContextRewriter {
         }
       }
     }
-    return numPartition == 0 ? completenessFactor : completenessFactor/numPartition;
+    return numPartition == 0 ? completenessFactor : completenessFactor / numPartition;
   }
 
   /**
    * Returns time covered by fact set for each part column.
-   * @param facts
+   *
+   * @param cand
    * @return
    */
-  private Map<String, Long> getTimeCoveredForEachPartCol(Set<CandidateFact> facts) {
+  private Map<String, Long> getTimeCoveredForEachPartCol(Candidate cand) {
     Map<String, Long> ret = Maps.newHashMap();
     UpdatePeriod smallest = UpdatePeriod.values()[UpdatePeriod.values().length - 1];
-    for (CandidateFact fact : facts) {
-      for (FactPartition part : fact.getPartsQueried()) {
-        if (part.getPeriod().compareTo(smallest) < 0) {
-          smallest = part.getPeriod();
-        }
+    for (FactPartition part : cand.getParticipatingPartitions()) {
+      if (part.getPeriod().compareTo(smallest) < 0) {
+        smallest = part.getPeriod();
       }
     }
     PartitionRangesForPartitionColumns partitionRangesForPartitionColumns = new PartitionRangesForPartitionColumns();
-    for (CandidateFact fact : facts) {
-      for (FactPartition part : fact.getPartsQueried()) {
-        if (part.isFound()) {
-          try {
-            partitionRangesForPartitionColumns.add(part);
-          } catch (LensException e) {
-            log.error("invalid partition: ", e);
-          }
+    for (FactPartition part : cand.getParticipatingPartitions()) {
+      if (part.isFound()) {
+        try {
+          partitionRangesForPartitionColumns.add(part);
+        } catch (LensException e) {
+          log.error("invalid partition: ", e);
         }
       }
     }
@@ -200,17 +195,9 @@ class MaxCoveringFactResolver implements ContextRewriter {
     }
 
     public String toString() {
-      return new StringBuilder()
-        .append(days)
-        .append(" days, ")
-        .append(hours)
-        .append(" hours, ")
-        .append(minutes)
-        .append(" minutes, ")
-        .append(seconds)
-        .append(" seconds, ")
-        .append(milliseconds)
-        .append(" milliseconds.").toString();
+      return new StringBuilder().append(days).append(" days, ").append(hours).append(" hours, ").append(minutes)
+        .append(" minutes, ").append(seconds).append(" seconds, ").append(milliseconds).append(" milliseconds.")
+        .toString();
     }
   }
 }

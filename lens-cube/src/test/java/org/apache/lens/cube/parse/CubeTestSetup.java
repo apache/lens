@@ -543,10 +543,8 @@ public class CubeTestSetup {
     cubeMeasures.add(new ColumnMeasure(new FieldSchema(prefix + "msr3", "int", prefix + "third measure")));
 
     cubeDimensions = new HashSet<CubeDimAttribute>();
-
-    cubeDimensions.add(new BaseDimAttribute(new FieldSchema(prefix + "d_time", "timestamp", "d time")));
-    cubeDimensions.add(new BaseDimAttribute(new FieldSchema(prefix + "cityid", "timestamp", "the cityid ")));
-    cubeDimensions.add(new BaseDimAttribute(new FieldSchema(prefix + "zipcode", "timestamp", "the zipcode")));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema(prefix + "cityid", "int", prefix + "the cityid ")));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema(prefix + "zipcode", "int", prefix + "the zipcode")));
 
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("d_time", "timestamp", "d time")));
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("processing_time", "timestamp", "processing time")));
@@ -587,6 +585,9 @@ public class CubeTestSetup {
       "dim3 refer", "dim3chain", "id", null, null, 0.0));
     cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema("cityname", "string", "city name"),
       "city name", "cubecity", "name", null, null, 0.0));
+    // union join context
+    cubeDimensions.add(new ReferencedDimAttribute(new FieldSchema(prefix + "cityname", "string", prefix + "city name"),
+        prefix + "city name", "cubeCityJoinUnionCtx", "name", null, null, 0.0));
     List<ChainRefCol> references = new ArrayList<>();
     references.add(new ChainRefCol("timedatechain1", "full_date"));
     references.add(new ChainRefCol("timehourchain1", "full_hour"));
@@ -677,6 +678,15 @@ public class CubeTestSetup {
         "Count of Distinct CityId Expr", "count(distinct(cityid))"));
     exprs.add(new ExprColumn(new FieldSchema("notnullcityid", "int", "Not null cityid"),
         "Not null cityid Expr", "case when cityid is null then 0 else cityid end"));
+    // union join context
+    exprs.add(new ExprColumn(new FieldSchema(prefix + "notnullcityid", "int", prefix + "Not null cityid"),
+        prefix + "Not null cityid Expr", "case when union_join_ctx_cityid is null then 0 else union_join_ctx_cityid end"));
+    exprs.add(new ExprColumn(new FieldSchema(prefix + "sum_msr1_msr2", "int", prefix + "sum of msr1 and msr2"),
+        prefix + "sum of msr1 and msr2", "sum(union_join_ctx_msr1) + sum(union_join_ctx_msr2)"));
+   exprs.add(new ExprColumn(new FieldSchema(prefix + "msr1_greater_than_100", "int", prefix + "msr1 greater than 100"),
+       prefix + "msr1 greater than 100", "case when sum(union_join_ctx_msr1) > 100 then \"high\" else \"low\" end"));
+    exprs.add(new ExprColumn(new FieldSchema(prefix + "non_zero_msr2_sum", "int", prefix + "non zero msr2 sum"),
+        prefix + "non zero msr2 sum", "sum(case when union_join_ctx_msr2 > 0 then union_join_ctx_msr2 else 0 end)"));
 
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(TEST_CUBE_NAME),
@@ -718,6 +728,7 @@ public class CubeTestSetup {
   }
 
   private void addCubeChains(Map<String, JoinChain> joinChains, final String cubeName) {
+    final String prefix = "union_join_ctx_";
     joinChains.put("timehourchain1", new JoinChain("timehourchain1", "time chain", "time dim thru hour dim") {
       {
         addPath(new ArrayList<TableReference>() {
@@ -776,6 +787,17 @@ public class CubeTestSetup {
         });
       }
     });
+    joinChains.put("cubeCityJoinUnionCtx", new JoinChain("cubeCityJoinUnionCtx", "cube-city", "city thru cube") {
+      {
+        // added for testing union join context
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, prefix + "cityid"));
+            add(new TableReference("citydim", "id"));
+          }
+        });
+      }
+    });
     joinChains.put("cubeCity1", new JoinChain("cubeCity1", "cube-city", "city thru cube") {
       {
         addPath(new ArrayList<TableReference>() {
@@ -806,11 +828,27 @@ public class CubeTestSetup {
         });
       }
     });
+    joinChains.put("cubeZip",  new JoinChain("cubeZipJoinUnionCtx", "cube-zip", "Zipcode thru cube") {
+      {
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, prefix + "zipcode"));
+            add(new TableReference("zipdim", "code"));
+          }
+        });
+      }
+    });
     joinChains.put("cubeZip",  new JoinChain("cubeZip", "cube-zip", "Zipcode thru cube") {
       {
         addPath(new ArrayList<TableReference>() {
           {
             add(new TableReference(cubeName, "zipcode"));
+            add(new TableReference("zipdim", "code"));
+          }
+        });
+        addPath(new ArrayList<TableReference>() {
+          {
+            add(new TableReference(cubeName, prefix + "zipcode"));
             add(new TableReference("zipdim", "code"));
           }
         });
@@ -1281,7 +1319,7 @@ public class CubeTestSetup {
     createUnionAndJoinContextFacts(client);
   }
 
-  private void createUnionAndJoinContextFacts(CubeMetastoreClient client)   throws HiveException, LensException {
+  private void createUnionAndJoinContextFacts(CubeMetastoreClient client) throws HiveException, LensException {
     String prefix = "union_join_ctx_";
     String derivedCubeName = prefix + "der1";
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = new HashMap<String, Set<UpdatePeriod>>();
@@ -1313,20 +1351,22 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema(prefix + "cityid", "int", "city id"));
     // add fact start and end time property
     Map<String, String> properties = Maps.newHashMap(factValidityProperties);
+    properties.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
     properties.put(MetastoreConstants.FACT_ABSOLUTE_START_TIME, DateUtil.relativeToAbsolute("now.day - 90 days"));
     properties.put(MetastoreConstants.FACT_ABSOLUTE_END_TIME, DateUtil.relativeToAbsolute("now.day - 30 days"));
-    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
-        properties, storageTables);
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, properties,
+      storageTables);
 
     // create fact2 with same schema, but it starts after fact1 ends
     factName = prefix + "fact2";
     properties.clear();
     //factColumns.add(new ColumnMeasure(new FieldSchema(prefix + "msr2", "int", "second measure")).getColumn());
     // add fact start and end time property
+    properties.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
     properties.put(MetastoreConstants.FACT_ABSOLUTE_START_TIME, DateUtil.relativeToAbsolute("now.day - 31 days"));
     properties.put(MetastoreConstants.FACT_ABSOLUTE_END_TIME, DateUtil.relativeToAbsolute("now.day + 7 days"));
-    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
-        properties, storageTables);
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, properties,
+      storageTables);
 
     // create fact3 (all dim attributes only msr2)
     factName = prefix + "fact3";
@@ -1337,20 +1377,23 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema(prefix + "cityid", "int", "city id"));
     properties.clear();
     // add fact start and end time property
+    properties.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
     properties.put(MetastoreConstants.FACT_ABSOLUTE_START_TIME, DateUtil.relativeToAbsolute("now.day - 90 days"));
     properties.put(MetastoreConstants.FACT_ABSOLUTE_END_TIME, DateUtil.relativeToAbsolute("now.day + 7 days"));
-    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
-        properties, storageTables);
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, properties,
+      storageTables);
 
+    /*
     // create fact4 will all all measures and entire timerange covered
     factName = prefix + "fact4";
     factColumns.add(new ColumnMeasure(new FieldSchema(prefix + "msr1", "int", "first measure")).getColumn());
     properties.clear();
+    properties.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
     properties.put(MetastoreConstants.FACT_ABSOLUTE_START_TIME, DateUtil.relativeToAbsolute("now.day - 90 days"));
     properties.put(MetastoreConstants.FACT_ABSOLUTE_END_TIME, DateUtil.relativeToAbsolute("now.day + 7 days"));
     client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
         properties, storageTables);
-
+     */
     // create fact5 and fact6 with msr3 and covering timerange as set
     factName = prefix + "fact5";
     factColumns.clear();
@@ -1359,17 +1402,19 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema(prefix + "cityid", "int", "city id"));
     factColumns.add(new ColumnMeasure(new FieldSchema(prefix + "msr3", "int", "third measure")).getColumn());
     properties.clear();
+    properties.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
     properties.put(MetastoreConstants.FACT_ABSOLUTE_START_TIME, DateUtil.relativeToAbsolute("now.day - 90 days"));
     properties.put(MetastoreConstants.FACT_ABSOLUTE_END_TIME, DateUtil.relativeToAbsolute("now.day -30 days"));
-    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
-        properties, storageTables);
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, properties,
+      storageTables);
 
     factName = prefix + "fact6";
     properties.clear();
+    properties.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
     properties.put(MetastoreConstants.FACT_ABSOLUTE_START_TIME, DateUtil.relativeToAbsolute("now.day -31 days"));
     properties.put(MetastoreConstants.FACT_ABSOLUTE_END_TIME, DateUtil.relativeToAbsolute("now.day + 7 days"));
-    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
-        properties, storageTables);
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, properties,
+      storageTables);
 
     // Create derived cube
     Map<String, String> derivedProperties = new HashMap<>();
@@ -1382,6 +1427,7 @@ public class CubeTestSetup {
     dimensions.add(prefix + "cityid");
     dimensions.add(prefix + "zipcode");
     dimensions.add("d_time");
+    dimensions.add(prefix + "cityname");
     client.createDerivedCube(BASE_CUBE_NAME, derivedCubeName, measures, dimensions, derivedProperties, 5L);
 
   }

@@ -419,13 +419,13 @@ class ExpressionResolver implements ContextRewriter {
       return true;
     }
 
-    public Set<Dimension> rewriteExprCtx(CandidateFact cfact, Map<Dimension, CandidateDim> dimsToQuery,
+    public Set<Dimension> rewriteExprCtx(StorageCandidate sc, Map<Dimension, CandidateDim> dimsToQuery,
       QueryAST queryAST) throws LensException {
       Set<Dimension> exprDims = new HashSet<Dimension>();
       if (!allExprsQueried.isEmpty()) {
         // pick expressions for fact
-        if (cfact != null) {
-          pickExpressionsForTable(cfact);
+        if (sc != null) {
+          pickExpressionsForTable(sc);
         }
         // pick expressions for dimensions
         if (dimsToQuery != null && !dimsToQuery.isEmpty()) {
@@ -434,7 +434,7 @@ class ExpressionResolver implements ContextRewriter {
           }
         }
         // Replace picked expressions in all the base trees
-        replacePickedExpressions(cfact, queryAST);
+        replacePickedExpressions(sc, queryAST);
         log.debug("Picked expressions: {}", pickedExpressions);
         for (Set<PickedExpression> peSet : pickedExpressions.values()) {
           for (PickedExpression pe : peSet) {
@@ -446,13 +446,11 @@ class ExpressionResolver implements ContextRewriter {
       return exprDims;
     }
 
-    private void replacePickedExpressions(CandidateFact cfact, QueryAST queryAST)
+    private void replacePickedExpressions(StorageCandidate sc, QueryAST queryAST)
       throws LensException {
       replaceAST(cubeql, queryAST.getSelectAST());
-      if (cfact != null) {
-        for (ASTNode storageWhereClauseAST : cfact.getStorgeWhereClauseMap().values()) {
-          replaceAST(cubeql, storageWhereClauseAST);
-        }
+      if (sc != null) {
+          replaceAST(cubeql, sc.getQueryAst().getWhereAST());
       } else {
         replaceAST(cubeql, queryAST.getWhereAST());
       }

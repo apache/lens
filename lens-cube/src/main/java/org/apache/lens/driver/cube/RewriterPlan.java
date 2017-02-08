@@ -59,7 +59,7 @@ public final class RewriterPlan extends DriverQueryPlan {
       //TODO union: updated code to work on picked Candidate
       if (ctx.getPickedCandidate() != null) {
         for (StorageCandidate sc : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
-          addTablesQueried(sc.getStorageName());
+          addTablesQueried(sc.getAliasForTable(""));
           Set<FactPartition> factParts = (Set<FactPartition>) partitions.get(sc.getName());
           if (factParts == null) {
             factParts = new HashSet<FactPartition>();
