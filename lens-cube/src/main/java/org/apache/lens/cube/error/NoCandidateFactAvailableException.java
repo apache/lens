@@ -18,7 +18,6 @@
  */
 package org.apache.lens.cube.error;
 
-import org.apache.lens.cube.metadata.CubeFactTable;
 import org.apache.lens.cube.parse.PruneCauses;
 import org.apache.lens.cube.parse.StorageCandidate;
 import org.apache.lens.server.api.error.LensException;
@@ -29,7 +28,11 @@ public class NoCandidateFactAvailableException extends LensException {
   private final PruneCauses<StorageCandidate> briefAndDetailedError;
 
   public NoCandidateFactAvailableException(PruneCauses<StorageCandidate> briefAndDetailedError) {
-    super(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(), briefAndDetailedError.getBriefCause());
+    this(briefAndDetailedError.getBriefCause(), briefAndDetailedError);
+  }
+
+  public NoCandidateFactAvailableException(String errMsg, PruneCauses<StorageCandidate> briefAndDetailedError) {
+    super(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(), errMsg);
     this.briefAndDetailedError = briefAndDetailedError;
   }
 

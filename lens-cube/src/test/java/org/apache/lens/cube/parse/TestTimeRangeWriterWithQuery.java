@@ -79,7 +79,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     return cal.getTime();
   }
 
-  //TODO union : Wrong fact table picked. Check after MaxCoveringSetResolver
+  //TODO union : Revisit Continuous update period.
   @Test
   public void testCubeQueryContinuousUpdatePeriod() throws Exception {
     LensException th = null;
@@ -102,10 +102,11 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + twoDaysInRangeClause, conf);
     Map<String, String> whereClauses = new HashMap<String, String>();
     whereClauses.put(
-      getDbName() + "c1_testfact",
+      getDbName() + "c2_testfact",
       TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt",
         getDateWithOffset(DAILY, -2), getDateWithOffset(DAILY, 0), CONTINUOUS.format()));
-    String expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) as `sum(msr2)` FROM ", null, null, whereClauses);
+    String expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) as `sum(msr2)` FROM ",
+        null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
@@ -119,13 +120,13 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
 
     whereClauses = new HashMap<String, String>();
     whereClauses.put(
-      getDbName() + "c1_testfact",
+      getDbName() + "c2_testfact",
       TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", getDateWithOffset(DAILY, -2),
         getDateWithOffset(DAILY, 0), CONTINUOUS.format())
         + " OR"
         + TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", getDateWithOffset(DAILY, -6),
         getDateWithOffset(DAILY, 0), CONTINUOUS.format()));
-    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
+    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) as `sum(msr2)` FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
 
@@ -133,10 +134,10 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     conf.set(CubeQueryConfUtil.PART_WHERE_CLAUSE_DATE_FORMAT, "yyyy-MM-dd HH:mm:ss");
     hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
     whereClauses = new HashMap<String, String>();
-    whereClauses.put(getDbName() + "c1_testfact", TestBetweenTimeRangeWriter.getBetweenClause(cubeName,
+    whereClauses.put(getDbName() + "c2_testfact", TestBetweenTimeRangeWriter.getBetweenClause(cubeName,
       "dt", getUptoHour(TWODAYS_BACK),
       getUptoHour(NOW), TestTimeRangeWriter.DB_FORMAT));
-    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
+    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) as `sum(msr2)` FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }

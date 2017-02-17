@@ -52,7 +52,7 @@ class LeastPartitionResolver implements ContextRewriter {
 
       double minPartitions = Collections.min(factPartCount.values());
 
-      for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext(); ) {
+      for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
         Candidate candidate = i.next();
         if (factPartCount.get(candidate) > minPartitions) {
           log.info("Not considering Candidate:{} as it requires more partitions to be" + " queried:{} minimum:{}",

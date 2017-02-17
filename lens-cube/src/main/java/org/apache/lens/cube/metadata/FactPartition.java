@@ -30,7 +30,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @EqualsAndHashCode
-// TODO union : Change the class name To StoragePartition
 public class FactPartition implements Comparable<FactPartition> {
   @Getter
   private final String partCol;
@@ -40,8 +39,6 @@ public class FactPartition implements Comparable<FactPartition> {
   private final Set<String> storageTables = new LinkedHashSet<String>();
   @Getter
   private final UpdatePeriod period;
-
-  //TODO union : this is never set . Do we need this ?s
   @Getter
   @Setter
   private FactPartition containingPart;

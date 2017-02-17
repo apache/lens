@@ -169,7 +169,6 @@ public class AutoJoinContext {
     joinPathFromColumns.remove(dim);
   }
 
-  //TODO union: use StaorgeCandidate
   public String getFromString(String fromTable, StorageCandidate sc, Set<Dimension> qdims,
     Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql, QueryAST ast) throws LensException {
     String fromString = fromTable;
@@ -348,7 +347,6 @@ public class AutoJoinContext {
     return allPaths;
   }
 
-  //TODO union: use Set<StorageCandidate>
   /**
    * Prunes the join chains defined in Cube whose starting column is not there in any of the candidate facts.
    * Same is done in case of join paths defined in Dimensions.

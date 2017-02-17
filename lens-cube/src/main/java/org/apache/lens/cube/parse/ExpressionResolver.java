@@ -25,7 +25,6 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 import org.apache.lens.server.api.error.LensException;
@@ -450,7 +449,7 @@ class ExpressionResolver implements ContextRewriter {
       throws LensException {
       replaceAST(cubeql, queryAST.getSelectAST());
       if (sc != null) {
-          replaceAST(cubeql, sc.getQueryAst().getWhereAST());
+        replaceAST(cubeql, sc.getQueryAst().getWhereAST());
       } else {
         replaceAST(cubeql, queryAST.getWhereAST());
       }
@@ -652,11 +651,13 @@ class ExpressionResolver implements ContextRewriter {
           for (ExpressionContext ec : ecSet) {
             if (ec.getSrcTable().getName().equals(cubeql.getCube().getName())) {
               if (cubeql.getQueriedExprsWithMeasures().contains(expr)) {
-                for (Iterator<Candidate> sItr = cubeql.getCandidates().iterator(); sItr.hasNext(); ) {
+                for (Iterator<Candidate> sItr = cubeql.getCandidates().iterator(); sItr.hasNext();) {
                   Candidate cand = sItr.next();
                   if (!cand.isExpressionEvaluable(ec)) {
                     log.info("Not considering Candidate :{} as {} is not evaluable", cand, ec.exprCol.getName());
                     sItr.remove();
+                    cubeql.addCandidatePruningMsg(cand,
+                        CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
                   }
                 }
               } else {
@@ -672,11 +673,11 @@ class ExpressionResolver implements ContextRewriter {
                         CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
                   }
                 }
+              }
             }
           }
         }
       }
-    }
       // prune candidate dims without any valid expressions
       if (cubeql.getDimensions() != null && !cubeql.getDimensions().isEmpty()) {
         for (Dimension dim : cubeql.getDimensions()) {

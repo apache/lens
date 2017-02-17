@@ -18,13 +18,11 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 import static org.apache.lens.cube.parse.ColumnResolver.addColumnsForSelectExpr;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
+
+import java.util.*;
 
 import org.apache.lens.cube.metadata.AbstractBaseTable;
 import org.apache.lens.server.api.error.LensException;

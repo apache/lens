@@ -240,13 +240,13 @@ public class DenormalizationResolver implements ContextRewriter {
     private void replaceReferencedColumns(StorageCandidate sc, boolean replaceFact) throws LensException {
       QueryAST ast = cubeql;
       boolean factRefExists = sc != null && tableToRefCols.get(sc.getName()) != null && !tableToRefCols.get(sc
-        .getName()).isEmpty();
+          .getName()).isEmpty();
       if (replaceFact && factRefExists) {
         ast = sc.getQueryAst();
       }
       resolveClause(cubeql, ast.getSelectAST());
       if (factRefExists) {
-          resolveClause(cubeql, sc.getQueryAst().getWhereAST());
+        resolveClause(cubeql, sc.getQueryAst().getWhereAST());
       } else {
         resolveClause(cubeql, ast.getWhereAST());
       }
@@ -347,18 +347,17 @@ public class DenormalizationResolver implements ContextRewriter {
         for (Iterator<StorageCandidate> i =
              CandidateUtil.getStorageCandidates(cubeql.getCandidates()).iterator(); i.hasNext();) {
           StorageCandidate sc = i.next();
-          //TODO union : is this happening in pahse 1 or 2 ?
-          //TODO union : If phase 2, the below code will not work. Move to phase1 in that case
-            if (denormCtx.tableToRefCols.containsKey(sc.getFact().getName())) {
-              for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(sc.getFact().getName())) {
-                if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
-                  log.info("Not considering storage candidate :{} as column {} is not available", sc, refcol.col);
-                  cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(refcol.col.getName()));
-                  Collection<Candidate> prunedCandidates = CandidateUtil.filterCandidates(cubeql.getCandidates(), sc);
-                  cubeql.addCandidatePruningMsg(prunedCandidates,
-                      new CandidateTablePruneCause(CandidateTablePruneCode.ELEMENT_IN_SET_PRUNED));
-                }
+          if (denormCtx.tableToRefCols.containsKey(sc.getFact().getName())) {
+            for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(sc.getFact().getName())) {
+              if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
+                log.info("Not considering storage candidate :{} as column {} is not available", sc, refcol.col);
+                cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
+                    CandidateTablePruneCode.DENORM_COLUMN_NOT_FOUND, refcol.col.getName()));
+                Collection<Candidate> prunedCandidates = CandidateUtil.filterCandidates(cubeql.getCandidates(), sc);
+                cubeql.addCandidatePruningMsg(prunedCandidates,
+                    new CandidateTablePruneCause(CandidateTablePruneCode.ELEMENT_IN_SET_PRUNED));
               }
+            }
           }
         }
         if (cubeql.getCandidates().size() == 0) {
@@ -376,7 +375,8 @@ public class DenormalizationResolver implements ContextRewriter {
                 if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
                   log.info("Not considering dim table:{} as column {} is not available", cdim, refcol.col);
                   cubeql.addDimPruningMsgs(dim, cdim.dimtable,
-                    CandidateTablePruneCause.columnNotFound(refcol.col.getName()));
+                    CandidateTablePruneCause.columnNotFound(CandidateTablePruneCode.DENORM_COLUMN_NOT_FOUND,
+                        refcol.col.getName()));
                   i.remove();
                 }
               }

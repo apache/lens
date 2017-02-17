@@ -27,7 +27,6 @@ import java.util.Iterator;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.CubeMeasure;
 import org.apache.lens.cube.metadata.ExprColumn;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 import org.apache.lens.server.api.error.LensException;
 
@@ -71,7 +70,6 @@ class AggregateResolver implements ContextRewriter {
       || hasMeasuresNotInDefaultAggregates(cubeql, cubeql.getHavingAST(), null, aggregateResolverDisabled)
       || hasMeasures(cubeql, cubeql.getWhereAST()) || hasMeasures(cubeql, cubeql.getGroupByAST())
       || hasMeasures(cubeql, cubeql.getOrderByAST())) {
-      //TODO union : Note : Pending : cube segmentation design may change the above assumption and Set<Candidate> can contain and mix of StorageCandidate and UnionSegmentCandidate. This step can then ignore UnionSegmentCandidate
       Iterator<Candidate> candItr = cubeql.getCandidates().iterator();
       while (candItr.hasNext()) {
         Candidate candidate = candItr.next();

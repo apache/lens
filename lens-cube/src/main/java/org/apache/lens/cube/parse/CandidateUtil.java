@@ -1,25 +1,41 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for theJoinCandidate.java
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.lens.cube.parse;
+
+import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 
 import java.util.*;
 
-import org.antlr.runtime.CommonToken;
-import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
-import org.apache.lens.cube.metadata.FactPartition;
-import org.apache.lens.cube.metadata.MetastoreUtil;
-import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
+
+import org.antlr.runtime.CommonToken;
 
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
-
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 
 /**
  * Placeholder for Util methods that will be required for {@link Candidate}
@@ -113,21 +129,12 @@ public class CandidateUtil {
   }
 
   public static Set<StorageCandidate> getStorageCandidates(final Candidate candidate) {
-    return getStorageCandidates(new HashSet<Candidate>(1) {{
-      add(candidate);
-    }});
+    return getStorageCandidates(new HashSet<Candidate>(1) {{ add(candidate); }});
   }
 
-  /**
-   *
-   * @param candSet
-   * @param msrs
-   * @param cubeql
-   * @return
-   * @throws LensException
-   */
+
   public static Set<QueriedPhraseContext> coveredMeasures(Candidate candSet, Collection<QueriedPhraseContext> msrs,
-    CubeQueryContext cubeql) throws LensException {
+      CubeQueryContext cubeql) throws LensException {
     Set<QueriedPhraseContext> coveringSet = new HashSet<>();
     for (QueriedPhraseContext msr : msrs) {
       if (candSet.getChildren() == null) {
@@ -136,12 +143,12 @@ public class CandidateUtil {
         }
       } else {
         // TODO union : all candidates should answer
-          for (Candidate cand : candSet.getChildren()) {
-            if (msr.isEvaluable(cubeql, (StorageCandidate) cand)) {
-              coveringSet.add(msr);
-            }
+        for (Candidate cand : candSet.getChildren()) {
+          if (msr.isEvaluable(cubeql, (StorageCandidate) cand)) {
+            coveringSet.add(msr);
           }
         }
+      }
     }
     return coveringSet;
   }
@@ -190,6 +197,7 @@ public class CandidateUtil {
 
   /**
    * Gets all the Storage Candidates that participate in the collection of passed candidates
+   *
    * @param candidates
    * @return
    */
@@ -211,7 +219,7 @@ public class CandidateUtil {
     }
   }
 
-  public static StorageCandidate cloneStorageCandidate(StorageCandidate sc) {
+  public static StorageCandidate cloneStorageCandidate(StorageCandidate sc) throws LensException{
     return new StorageCandidate(sc);
   }
 
@@ -222,11 +230,10 @@ public class CandidateUtil {
     }
   }
 
-  private static final String baseQueryFormat = "SELECT %s FROM %s";
+  private static final String BASE_QUERY_FORMAT = "SELECT %s FROM %s";
 
-  public static String buildHQLString(String select, String from, String where, String groupby, String orderby, String having,
-                                      Integer limit) {
-
+  public static String buildHQLString(String select, String from, String where,
+      String groupby, String orderby, String having, Integer limit) {
     List<String> qstrs = new ArrayList<String>();
     qstrs.add(select);
     qstrs.add(from);
@@ -247,7 +254,7 @@ public class CandidateUtil {
     }
 
     StringBuilder queryFormat = new StringBuilder();
-    queryFormat.append(baseQueryFormat);
+    queryFormat.append(BASE_QUERY_FORMAT);
     if (!StringUtils.isBlank(where)) {
       queryFormat.append(" WHERE %s");
     }
@@ -306,16 +313,5 @@ public class CandidateUtil {
       }
     }
     return false;
-  }
-
-
-  public static Set<String> getMissingPartitions(StorageCandidate sc) {
-    Set<String> missingParts = new HashSet<>();
-    for (FactPartition part : sc.getParticipatingPartitions()) {
-      if (!part.isFound()) {
-        missingParts.add(part.toString()); //TODOD union . add approprite partition String
-      }
-    }
-    return missingParts;
   }
 }

@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.lens.cube.parse;
 
 import java.util.*;
@@ -55,16 +73,17 @@ public class JoinCandidate implements Candidate {
   public boolean contains(Candidate candidate) {
     if (this.equals(candidate)) {
       return true;
-    } else
+    } else {
       return childCandidate1.contains(candidate) || childCandidate2.contains(candidate);
+    }
   }
 
   @Override
   public Collection<Candidate> getChildren() {
-    return new ArrayList() {{
-      add(childCandidate1);
-      add(childCandidate2);
-    }};
+    ArrayList<Candidate> joinCandidates = new ArrayList<>();
+    joinCandidates.add(childCandidate1);
+    joinCandidates.add(childCandidate2);
+    return joinCandidates;
   }
 
   /**
@@ -73,7 +92,7 @@ public class JoinCandidate implements Candidate {
    */
   @Override
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange parentTimeRange, boolean failOnPartialData)
-      throws LensException {
+    throws LensException {
     return this.childCandidate1.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData)
         && this.childCandidate2.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData);
   }

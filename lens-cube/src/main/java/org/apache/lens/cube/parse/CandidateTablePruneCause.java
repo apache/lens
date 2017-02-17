@@ -38,13 +38,53 @@ import lombok.NoArgsConstructor;
 @JsonWriteNullProperties(false)
 @Data
 @NoArgsConstructor
-//TODO union: Since we are working on StoargeCandidates now, we might need some chnages here
 public class CandidateTablePruneCause {
 
   public enum CandidateTablePruneCode {
     // other fact set element is removed
     ELEMENT_IN_SET_PRUNED("Other candidate from measure covering set is pruned"),
-    FACT_NOT_AVAILABLE_IN_RANGE("No facts available for all of these time ranges: %s") {
+
+    COLUMN_NOT_FOUND("%s are not %s") {
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        if (causes.size() == 1) {
+          return new String[]{
+            "Columns " + causes.iterator().next().getMissingColumns(),
+            "present in any table",
+          };
+        } else {
+          List<List<String>> columnSets = new ArrayList<List<String>>();
+          for (CandidateTablePruneCause cause : causes) {
+            columnSets.add(cause.getMissingColumns());
+          }
+          return new String[]{
+            "Column Sets: " + columnSets,
+            "queriable together",
+          };
+        }
+      }
+    },
+    // candidate table tries to get denormalized field from dimension and the
+    // referred dimension is invalid.
+    INVALID_DENORM_TABLE("Referred dimension is invalid in one of the candidate tables"),
+
+    // Moved from Stoarge causes .
+    //The storage is removed as its not set in property "lens.cube.query.valid.fact.<fact_name>.storagetables"
+    INVALID_STORAGE("Invalid Storage"),
+    // storage table does not exist. Commented as its not being used anywhere in master.
+    // STOARGE_TABLE_DOES_NOT_EXIST("Storage table does not exist"),
+    // storage has no update periods queried. Commented as its not being used anywhere in master.
+    // MISSING_UPDATE_PERIODS("Storage has no update periods"),
+
+    // storage table has no partitions queried
+    NO_PARTITIONS("Storage table has no partitions"),
+    // partition column does not exist
+    PART_COL_DOES_NOT_EXIST("Partition column does not exist"),
+    // Range is not supported by this storage table
+    TIME_RANGE_NOT_ANSWERABLE("Range not answerable"),
+    // storage is not supported by execution engine/driver
+    UNSUPPORTED_STORAGE("Unsupported Storage"),
+
+    STORAGE_NOT_AVAILABLE_IN_RANGE("No storages available for all of these time ranges: %s") {
       @Override
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         Set<TimeRange> allRanges = Sets.newHashSet();
@@ -57,26 +97,6 @@ public class CandidateTablePruneCause {
       }
     },
 
-
-    // Moved from Stoarge causes .
-    //The storage is removed as its not set in property "lens.cube.query.valid.fact.<fact_name>.storagetables"
-    INVALID_STORAGE("Invalid Storage"),
-    // storage table does not exist. Commented as its not being used anywhere in master.
-    // STOARGE_TABLE_DOES_NOT_EXIST("Storage table does not exist"),
-    // storage has no update periods queried. Commented as its not being used anywhere in master.
-    // MISSING_UPDATE_PERIODS("Storage has no update periods"),
-    // no candidate update periods, update period cause will have why each
-    // update period is not a candidate
-    NO_CANDIDATE_UPDATE_PERIODS("Storage update periods are not candidate"),
-    // storage table has no partitions queried
-    NO_PARTITIONS("Storage table has no partitions"),
-    // partition column does not exist
-    PART_COL_DOES_NOT_EXIST("Partition column does not exist"),
-    // Range is not supported by this storage table
-    TIME_RANGE_NOT_ANSWERABLE("Range not answerable"),
-    // storage is not supported by execution engine/driver
-    UNSUPPORTED_STORAGE("Unsupported Storage"),
-    
     // least weight not satisfied
     MORE_WEIGHT("Picked table had more weight than minimum."),
     // partial data is enabled, another fact has more data.
@@ -95,13 +115,10 @@ public class CandidateTablePruneCause {
         return new String[]{columns.toString()};
       }
     },
-    // candidate table tries to get denormalized field from dimension and the
-    // referred dimension is invalid.
-    INVALID_DENORM_TABLE("Referred dimension is invalid in one of the candidate tables"),
     // column not valid in cube table. Commented the below line as it's not being used in master.
     //COLUMN_NOT_VALID("Column not valid in cube table"),
     // column not found in cube table
-    COLUMN_NOT_FOUND("%s are not %s") {
+    DENORM_COLUMN_NOT_FOUND("%s are not %s") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         if (causes.size() == 1) {
           return new String[]{
@@ -138,7 +155,13 @@ public class CandidateTablePruneCause {
         };
       }
     },
-    NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
+    //Commented as its not used anymore.
+    //NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
+
+    // no candidate update periods, update period cause will have why each
+    // update period is not a candidate
+    NO_CANDIDATE_UPDATE_PERIODS("Storage update periods are not valid for given time range"),
+
     NO_COLUMN_PART_OF_A_JOIN_PATH("No column part of a join path. Join columns: [%s]") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         List<String> columns = new ArrayList<String>();
@@ -232,8 +255,6 @@ public class CandidateTablePruneCause {
   // the fact is not partitioned by part col of the time dim and time dim is not a dim attribute
   private Set<String> unsupportedTimeDims;
   // time covered
-  // TODO union : Fix this after MaxCoveringFactResolver chnaged wrt. Candidate
-  //private MaxCoveringFactResolver.TimeCovered maxTimeCovered;
   // ranges in which fact is invalid
   private List<TimeRange> invalidRanges;
 
@@ -247,8 +268,8 @@ public class CandidateTablePruneCause {
   }
 
   // Different static constructors for different causes.
-  public static CandidateTablePruneCause factNotAvailableInRange(List<TimeRange> ranges) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(FACT_NOT_AVAILABLE_IN_RANGE);
+  public static CandidateTablePruneCause storageNotAvailableInRange(List<TimeRange> ranges) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(STORAGE_NOT_AVAILABLE_IN_RANGE);
     cause.invalidRanges = ranges;
     return cause;
   }
@@ -258,22 +279,23 @@ public class CandidateTablePruneCause {
     return cause;
   }
 
-  public static CandidateTablePruneCause columnNotFound(Collection<String>... missingColumns) {
+  public static CandidateTablePruneCause columnNotFound(CandidateTablePruneCode pruneCode,
+      Collection<String>... missingColumns) {
     List<String> colList = new ArrayList<String>();
     for (Collection<String> missing : missingColumns) {
       colList.addAll(missing);
     }
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(COLUMN_NOT_FOUND);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(pruneCode);
     cause.setMissingColumns(colList);
     return cause;
   }
 
-  public static CandidateTablePruneCause columnNotFound(String... columns) {
+  public static CandidateTablePruneCause columnNotFound(CandidateTablePruneCode pruneCode, String... columns) {
     List<String> colList = new ArrayList<String>();
     for (String column : columns) {
       colList.add(column);
     }
-    return columnNotFound(colList);
+    return columnNotFound(pruneCode, colList);
   }
 
   public static CandidateTablePruneCause expressionNotEvaluable(String... exprs) {
@@ -300,14 +322,6 @@ public class CandidateTablePruneCause {
     return cause;
   }
 
-  // TODO union : uncomment the below method after MaxCoveringFactResolver is fixed wrt. Candidate
-  /*
-  public static CandidateTablePruneCause lessData(MaxCoveringFactResolver.TimeCovered timeCovered) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(LESS_DATA);
-    cause.setMaxTimeCovered(timeCovered);
-    return cause;
-  }
-*/
   public static CandidateTablePruneCause noColumnPartOfAJoinPath(final Collection<String> colSet) {
     CandidateTablePruneCause cause =
       new CandidateTablePruneCause(NO_COLUMN_PART_OF_A_JOIN_PATH);

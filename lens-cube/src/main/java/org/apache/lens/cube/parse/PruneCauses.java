@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 import org.apache.commons.lang.StringUtils;
@@ -101,9 +100,9 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
       }
     }
     Map<CandidateTablePruneCause, String> maxCauseMap = Maps.newHashMap();
-    for (Map.Entry<CandidateTablePruneCause, List<T>> entry: getReversed().entrySet()) {
+    for (Map.Entry<CandidateTablePruneCause, List<T>> entry : getReversed().entrySet()) {
       if (entry.getKey().getCause().equals(maxCause)) {
-          maxCauseMap.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
+        maxCauseMap.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
       }
     }
     return maxCause.getBriefError(maxCauseMap.keySet());

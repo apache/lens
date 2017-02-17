@@ -191,38 +191,44 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError error = ne.getJsonMessage();
-    Assert.assertEquals(error.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
+    Assert.assertEquals(error.getBrief(), CandidateTablePruneCode.UNSUPPORTED_STORAGE.errorFormat);
 
     HashMap<String, List<CandidateTablePruneCause>> details = error.getDetails();
 
     for (Map.Entry<String, List<CandidateTablePruneCause>> entry : details.entrySet()) {
-      if (entry.getValue().equals(Arrays.asList(CandidateTablePruneCause.columnNotFound("dim2big2")))) {
+      if (entry.getValue().equals(Arrays.asList(CandidateTablePruneCause.columnNotFound(
+          CandidateTablePruneCode.COLUMN_NOT_FOUND, "dim2big2")))) {
         Set<String> expectedKeySet =
-          Sets.newTreeSet(Splitter.on(',').split("summary1,cheapfact,testfactmonthly,testfact2,testfact"));
+          Sets.newTreeSet(Splitter.on(',').split("c1_summary1, c1_testfact,c1_testfact2"));
         Assert.assertTrue(expectedKeySet.equals(Sets.newTreeSet(Splitter.on(',').split(entry.getKey()))));
       }
 
       if (entry.getValue().equals(
         Arrays.asList(new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE)))) {
         Set<String> expectedKeySet =
-          Sets.newTreeSet(Splitter.on(',').split("summary2,testfact2_raw,summary3"));
+          Sets.newTreeSet(Splitter.on(',').split("c2_summary2, c2_summary3, c1_testfact2_raw, "
+              + "c3_testfact2_raw, c1_summary3,c1_summary2"));
         Assert.assertTrue(expectedKeySet.equals(Sets.newTreeSet(Splitter.on(',').split(entry.getKey()))));
       }
 
-      if (entry.getKey().equals("testfact_continuous")) {
+      if (entry.getKey().equals("c0_testfact_continuous")) {
         Assert.assertTrue(entry.getValue().equals(
-          Arrays.asList(CandidateTablePruneCause.columnNotFound("msr2", "msr3")))
-          || entry.getValue().equals(Arrays.asList(CandidateTablePruneCause.columnNotFound("msr3", "msr2"))));
+          Arrays.asList(CandidateTablePruneCause.columnNotFound(CandidateTablePruneCode.COLUMN_NOT_FOUND,
+              "msr2", "msr3")))
+          || entry.getValue().equals(Arrays.asList(CandidateTablePruneCause.columnNotFound(
+            CandidateTablePruneCode.COLUMN_NOT_FOUND, "msr3", "msr2"))));
       }
 
-      if (entry.getKey().equals("summary4")) {
+      if (entry.getKey().equals("c2_summary2, c2_summary3, c2_summary4, c4_testfact, c2_summary1, c3_testfact, "
+          + "c3_testfact2_raw, c4_testfact2, c99_cheapfact, c5_testfact, c0_cheapfact, "
+          + "c2_testfact, c2_testfactmonth, c0_testfact")) {
         List<CandidateTablePruneCause> expectedPruneCauses =
             Arrays.asList(CandidateTablePruneCause.noCandidateStoragesForDimtable(
-          new HashMap<String, CandidateTablePruneCode>() {
-            {
-              put("C2", CandidateTablePruneCode.UNSUPPORTED_STORAGE);
-            }
-          }));
+                new HashMap<String, CandidateTablePruneCode>() {
+                  {
+                    put("C2", CandidateTablePruneCode.UNSUPPORTED_STORAGE);
+                  }
+                }));
         Assert.assertTrue(entry.getValue().equals(expectedPruneCauses));
       }
     }
@@ -279,23 +285,21 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       "No dimension table has the queried columns " + "for citydim, columns: [name, statename, nocandidatecol]");
   }
 
-  // TODO union : Fix testcase after deleting CandidateFact
-  /*
   @Test
   public void testCubeQueryWithTwoRefCols() throws Exception {
     Configuration tConf = new Configuration(conf);
     tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
     CubeQueryContext cubeql = rewriteCtx("select dim2, test_time_dim2 from testcube where " + TWO_DAYS_RANGE, tConf);
-    Set<String> candidateFacts = new HashSet<String>();
-    for (CandidateFact cfact : cubeql.getCandidateFacts()) {
-      candidateFacts.add(cfact.getName().toLowerCase());
+    Set<String> candidates = new HashSet<String>();
+    for (Candidate cand : cubeql.getCandidates()) {
+      candidates.add(cand.toString());
     }
     // testfact contains test_time_dim_day_id, but not dim2 - it should have been removed.
-    Assert.assertFalse(candidateFacts.contains("testfact"));
+    Assert.assertFalse(candidates.contains("testfact"));
     // summary2 contains dim2, but not test_time_dim2 - it should have been removed.
-    Assert.assertFalse(candidateFacts.contains("summary2"));
+    Assert.assertFalse(candidates.contains("summary2"));
   }
-*/
+
   @Test
   public void testCubeQueryWithHourDimJoin() throws Exception {
     Configuration tConf = new Configuration(conf);
@@ -336,8 +340,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       + "c1_citytable citydim on basecube.cityid = citydim.id and (citydim.dt = 'latest') "
       + " join " + getDbName() + "c1_ziptable cityzip on citydim.zipcode = cityzip.code and (cityzip.dt = 'latest')";
     String expected =
-      getExpectedQuery("basecube", "SELECT (cityzip.code) as `code`, (basecube.dim22) as `dim22`, " +
-          "(basecube.msr11) as `msr11` FROM ", joinExpr, null, null, null,
+      getExpectedQuery("basecube", "SELECT (cityzip.code) as `code`, (basecube.dim22) as `dim22`, "
+          + "(basecube.msr11) as `msr11` FROM ", joinExpr, null, null, null,
         getWhereForHourly2days("basecube", "C1_testfact2_raw_base"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }

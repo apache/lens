@@ -21,15 +21,14 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.
+    CandidateTablePruneCode.STORAGE_NOT_AVAILABLE_IN_RANGE;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.UNSUPPORTED_STORAGE;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.TimeRange;
@@ -74,12 +73,14 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
         getConf());
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError causes = ne.getJsonMessage();
-    assertTrue(causes.getBrief().contains("Columns [msr2] are not present in any table"));
-    assertEquals(causes.getDetails().size(), 2);
+    assertTrue(causes.getBrief().contains("No storages available for all of these time ranges: "
+          + "[dt [2016-01-01-00:00:00,000 to 2017-01-01-00:00:00,000)]"));
+    assertEquals(causes.getDetails().size(), 3);
 
     Set<CandidateTablePruneCause.CandidateTablePruneCode> expectedPruneCodes = Sets.newTreeSet();
-    expectedPruneCodes.add(FACT_NOT_AVAILABLE_IN_RANGE);
     expectedPruneCodes.add(COLUMN_NOT_FOUND);
+    expectedPruneCodes.add(UNSUPPORTED_STORAGE);
+    expectedPruneCodes.add(STORAGE_NOT_AVAILABLE_IN_RANGE);
     Set<CandidateTablePruneCause.CandidateTablePruneCode> actualPruneCodes = Sets.newTreeSet();
     for (List<CandidateTablePruneCause> cause : causes.getDetails().values()) {
       assertEquals(cause.size(), 1);
@@ -93,13 +94,27 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     CubeQueryContext ctx =
       rewriteCtx("select msr12 from basecube where " + TWO_DAYS_RANGE + " or " + TWO_DAYS_RANGE_BEFORE_4_DAYS,
         getConf());
-    assertEquals(ctx.getFactPruningMsgs().get(ctx.getMetastoreClient().getCubeFact("testfact_deprecated")).size(), 1);
-    CandidateTablePruneCause pruningMsg =
-      ctx.getFactPruningMsgs().get(ctx.getMetastoreClient().getCubeFact("testfact_deprecated")).get(0);
+    List<CandidateTablePruneCause> causes = findPruningMessagesForStorage("c3_testfact_deprecated",
+      ctx.getStoragePruningMsgs());
+    assertEquals(causes.size(), 1);
+    assertEquals(causes.get(0).getCause(), UNSUPPORTED_STORAGE);
+
+    causes = findPruningMessagesForStorage("c4_testfact_deprecated", ctx.getStoragePruningMsgs());
+    assertEquals(causes.size(), 1);
+    assertEquals(causes.get(0).getCause(), UNSUPPORTED_STORAGE);
+
     // testfact_deprecated's validity should be in between of both ranges. So both ranges should be in the invalid list
     // That would prove that parsing of properties has gone through successfully
-    assertEquals(pruningMsg.getCause(), FACT_NOT_AVAILABLE_IN_RANGE);
-    assertTrue(pruningMsg.getInvalidRanges().containsAll(ctx.getTimeRanges()));
+
+    causes = findPruningMessagesForStorage("c1_testfact_deprecated", ctx.getStoragePruningMsgs());
+    assertEquals(causes.size(), 1);
+    assertEquals(causes.get(0).getCause(), STORAGE_NOT_AVAILABLE_IN_RANGE);
+    assertTrue(causes.get(0).getInvalidRanges().containsAll(ctx.getTimeRanges()));
+
+    causes = findPruningMessagesForStorage("c2_testfact_deprecated", ctx.getStoragePruningMsgs());
+    assertEquals(causes.size(), 1);
+    assertEquals(causes.get(0).getCause(), STORAGE_NOT_AVAILABLE_IN_RANGE);
+    assertTrue(causes.get(0).getInvalidRanges().containsAll(ctx.getTimeRanges()));
   }
 
   @Test
@@ -115,4 +130,21 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     assertEquals(timeRange.getFromDate(), from.getTime());
     assertEquals(timeRange.getToDate(), dt.toDate());
   }
+
+  /**
+   *
+   * @param stoargeName  storageName_factName
+   * @param allStoragePruningMsgs
+   * @return
+   */
+  private static List<CandidateTablePruneCause> findPruningMessagesForStorage(String stoargeName,
+    PruneCauses<StorageCandidate> allStoragePruningMsgs) {
+    for (StorageCandidate sc : allStoragePruningMsgs.keySet()) {
+      if (sc.getName().equals(stoargeName)) {
+        return allStoragePruningMsgs.get(sc);
+      }
+    }
+    return  new ArrayList<CandidateTablePruneCause>();
+  }
+
 }

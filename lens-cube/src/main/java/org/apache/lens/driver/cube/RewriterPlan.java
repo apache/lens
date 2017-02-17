@@ -56,7 +56,6 @@ public final class RewriterPlan extends DriverQueryPlan {
           }
         }
       }
-      //TODO union: updated code to work on picked Candidate
       if (ctx.getPickedCandidate() != null) {
         for (StorageCandidate sc : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
           addTablesQueried(sc.getAliasForTable(""));

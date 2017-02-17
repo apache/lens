@@ -142,6 +142,7 @@ public class CubeQueryRewriter {
     DenormalizationResolver denormResolver = new DenormalizationResolver(conf);
     CandidateTableResolver candidateTblResolver = new CandidateTableResolver(conf);
     StorageTableResolver storageTableResolver = new StorageTableResolver(conf);
+    // Resolve expressions
     rewriters.add(exprResolver);
     // De-normalized columns resolved
     rewriters.add(denormResolver);
@@ -154,7 +155,8 @@ public class CubeQueryRewriter {
     rewriters.add(new GroupbyResolver(conf));
     rewriters.add(new FieldValidator());
     rewriters.add(storageTableResolver);
-    //TODO union: Add CoveringSetResolver which creates UnionCandidates and JoinCandidates. Some code form candidateTblResolver(phase 2) to be moved to CoveringSetResolver
+    //TODO union: Add CoveringSetResolver which creates UnionCandidates and JoinCandidates.
+    //TODO union: Some code form candidateTblResolver(phase 2) to be moved to CoveringSetResolver
     //TODO union: AggregateResolver,GroupbyResolver,FieldValidator before CoveringSetResolver
     // Resolve joins and generate base join tree
     rewriters.add(new JoinResolver(conf));

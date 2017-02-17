@@ -334,7 +334,6 @@ public class TestUnionQueries extends TestQueryRewrite {
     }
   }
 
-  //TODO union : Revisit after MaxCoveringFactResolver
   @Test
   public void testCubeWhereQueryWithMultipleTables() throws Exception {
     Configuration conf = getConf();

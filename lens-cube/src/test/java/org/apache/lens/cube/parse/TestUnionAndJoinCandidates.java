@@ -107,8 +107,8 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
           + "sum(0.0) as `alias4` FROM TestQueryRewrite.c1_union_join_ctx_fact2";
       expectedInnerSelect3 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, (cubecityjoinunionctx.name) "
           + "as `alias1`, case  when (basecube.union_join_ctx_cityid) is null then 0 else "
-          + "(basecube.union_join_ctx_cityid) end as `alias2`, sum(0.0) as `alias3`, " +
-          "sum((basecube.union_join_ctx_msr2)) as `alias4` FROM TestQueryRewrite.c1_union_join_ctx_fact3";
+          + "(basecube.union_join_ctx_cityid) end as `alias2`, sum(0.0) as `alias3`, "
+          + "sum((basecube.union_join_ctx_msr2)) as `alias4` FROM TestQueryRewrite.c1_union_join_ctx_fact3";
       String outerGroupBy = "GROUP BY (basecube.alias0), (basecube.alias1), (basecube.alias2)";
       compareContains(outerSelect, rewrittenQuery);
       compareContains(expectedInnerSelect1, rewrittenQuery);
@@ -120,28 +120,25 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
       colsSelected = " union_join_ctx_cityid as `city id`, union_join_ctx_cityname, sum(union_join_ctx_msr1), "
           + "sum(union_join_ctx_msr2), union_join_ctx_non_zero_msr2_sum, union_join_ctx_msr1_greater_than_100, "
           + "sum(union_join_ctx_msr1) + 10 ";
-      //colsSelected = " union_join_ctx_cityid as `city id`, union_join_ctx_msr1_greater_than_100, union_join_ctx_non_zero_msr2_sum ";
       whereCond = " union_join_ctx_zipcode = 'a' and union_join_ctx_cityid = 'b' and "
           + "(" + TWO_MONTHS_RANGE_UPTO_DAYS + ")";
       rewrittenQuery = rewrite("select " + colsSelected + " from basecube where " + whereCond, conf);
       outerSelect = "SELECT (basecube.alias0) as `city id`, (basecube.alias1) as `union_join_ctx_cityname`, "
           + "sum((basecube.alias2)) as `sum(union_join_ctx_msr1)`, sum((basecube.alias3)) "
           + "as `sum(union_join_ctx_msr2)`, sum((basecube.alias4)) as `union_join_ctx_non_zero_msr2_sum`, "
-          + "case  when (sum((basecube.alias5)) > 100) then \"high\" else \"low\" end "
-          + "as `union_join_ctx_msr1_greater_than_100`, (sum((basecube.alias6)) + 10) "
+          + "case  when (sum((basecube.alias2)) > 100) then \"high\" else \"low\" end as "
+          + "`union_join_ctx_msr1_greater_than_100`, (sum((basecube.alias2)) + 10) "
           + "as `(sum(union_join_ctx_msr1) + 10)` FROM ";
       expectedInnerSelect1 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, "
           + "(cubecityjoinunionctx.name) as `alias1`, sum((basecube.union_join_ctx_msr1)) as `alias2`, "
-          + "sum(0.0) as `alias3`, sum(0.0) as `alias4`, sum((basecube.union_join_ctx_msr1)) as `alias5`, "
-          + "sum((basecube.union_join_ctx_msr1)) as `alias6`";
+          + "sum(0.0) as `alias3`, sum(0.0) as `alias4` FROM";
       expectedInnerSelect2 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, "
           + "(cubecityjoinunionctx.name) as `alias1`, sum((basecube.union_join_ctx_msr1)) as `alias2`, "
-          + "sum(0.0) as `alias3`, sum(0.0) as `alias4`, sum((basecube.union_join_ctx_msr1)) as `alias5`, "
-          + "sum((basecube.union_join_ctx_msr1)) as `alias6`";
-      expectedInnerSelect3 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, "
-          + "(cubecityjoinunionctx.name) as `alias1`, sum(0.0) as `alias2`, sum((basecube.union_join_ctx_msr2)) "
-          + "as `alias3`, sum(case  when ((basecube.union_join_ctx_msr2) > 0) then (basecube.union_join_ctx_msr2) "
-          + "else 0 end) as `alias4`, sum(0.0) as `alias5`, sum(0.0) as `alias6`";
+          + "sum(0.0) as `alias3`, sum(0.0) as `alias4` FROM";
+      expectedInnerSelect3 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, (cubecityjoinunionctx.name) "
+          + "as `alias1`, sum(0.0) as `alias2`, sum((basecube.union_join_ctx_msr2)) as `alias3`, "
+          + "sum(case  when ((basecube.union_join_ctx_msr2) > 0) then (basecube.union_join_ctx_msr2) else 0 end) "
+          + "as `alias4` FROM";
       String innerGroupBy = "GROUP BY (basecube.union_join_ctx_cityid), (cubecityjoinunionctx.name)";
       outerGroupBy = "GROUP BY (basecube.alias0), (basecube.alias1)";
 

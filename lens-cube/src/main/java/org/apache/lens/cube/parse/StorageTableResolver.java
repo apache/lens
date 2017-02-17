@@ -18,15 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
-//import static org.apache.lens.cube.metadata.MetastoreUtil.getFactOrDimtableStorageTableName;
-//import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE;
-//import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.INVALID;
-//import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.UNSUPPORTED_STORAGE;
-//import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.NO_PARTITIONS;
-//import static org.apache.lens.cube.parse.CandidateTablePruneCause.missingPartitions;
-//import static org.apache.lens.cube.parse.CandidateTablePruneCause.noCandidateStorages;
-//import static org.apache.lens.cube.parse.StorageUtil.getFallbackRange;
-
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.incompletePartitions;
 
 import java.util.*;
 
@@ -39,7 +31,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
 import lombok.extern.slf4j.Slf4j;
-
 /**
  * Resolve storages and partitions of all candidate tables and prunes candidate tables with missing storages or
  * partitions.
@@ -57,8 +48,6 @@ class StorageTableResolver implements ContextRewriter {
   private final Map<String, Set<String>> nonExistingPartitions = new HashMap<>();
   CubeMetastoreClient client;
   private PHASE phase;
-  // TODO union : we do not need this. Remove the storage candidate
-  //private HashMap<CubeFactTable, Map<String, SkipStorageCause>> skipStorageCausesPerFact;
   private float completenessThreshold;
   private String completenessPartCol;
 
@@ -136,15 +125,15 @@ class StorageTableResolver implements ContextRewriter {
       for (TimeRange range : cubeql.getTimeRanges()) {
         isComplete &= candidate.evaluateCompleteness(range, range, failOnPartialData);
       }
-      if (!isComplete) {
+      if (failOnPartialData &&  !isComplete) {
         candidateIterator.remove();
-
+        log.info("Not considering candidate:{} as its data is not is not complete", candidate);
         Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(candidate);
-        Set<String> missingPartitions;
         for (StorageCandidate sc : scSet) {
-          missingPartitions = CandidateUtil.getMissingPartitions(sc);
-          if (!missingPartitions.isEmpty()) {
-            cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.missingPartitions(missingPartitions));
+          if (!sc.getNonExistingPartitions().isEmpty()) {
+            cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.missingPartitions(sc.getNonExistingPartitions()));
+          } else if (!sc.getDataCompletenessMap().isEmpty()) {
+            cubeql.addStoragePruningMsg(sc, incompletePartitions(sc.getDataCompletenessMap()));
           }
         }
       }
@@ -179,10 +168,11 @@ class StorageTableResolver implements ContextRewriter {
         Map<String, CandidateTablePruneCode> skipStorageCauses = new HashMap<>();
         for (String storage : dimtable.getStorages()) {
           if (isStorageSupportedOnDriver(storage)) {
-            String tableName = MetastoreUtil.getFactOrDimtableStorageTableName(dimtable.getName(), storage).toLowerCase();
+            String tableName = MetastoreUtil.getFactOrDimtableStorageTableName(dimtable.getName(),
+                storage).toLowerCase();
             if (validDimTables != null && !validDimTables.contains(tableName)) {
               log.info("Not considering dim storage table:{} as it is not a valid dim storage", tableName);
-              skipStorageCauses.put(tableName,CandidateTablePruneCode.INVALID);
+              skipStorageCauses.put(tableName, CandidateTablePruneCode.INVALID);
               continue;
             }
 
@@ -278,21 +268,16 @@ class StorageTableResolver implements ContextRewriter {
         boolean partitionColumnExists = client.partColExists(storageTable, range.getPartitionColumn());
         valid = partitionColumnExists;
         if (!partitionColumnExists) {
-          //TODO union : handle prune cause below case.
           String timeDim = cubeql.getBaseCube().getTimeDimOfPartitionColumn(range.getPartitionColumn());
-          //          if (!sc.getFact().getColumns().contains(timeDim)) {
-          //           // Not a time dimension so no fallback required.
-          //          pruningCauses.add(TIMEDIM_NOT_SUPPORTED);
-          //        continue;
-          //       }
-          TimeRange fallBackRange = StorageUtil.getFallbackRange(range, sc.getFact().getCubeName(), cubeql);
+          TimeRange fallBackRange = StorageUtil.getFallbackRange(range, sc.getFact().getName(), cubeql);
           if (fallBackRange == null) {
             log.info("No partitions for range:{}. fallback range: {}", range, fallBackRange);
             pruningCauses.add(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
             continue;
           }
-          valid = client
-            .isStorageTableCandidateForRange(storageTable, fallBackRange.getFromDate(), fallBackRange.getToDate());
+          valid = client.partColExists(storageTable, fallBackRange.getPartitionColumn())
+              && client.isStorageTableCandidateForRange(storageTable, fallBackRange.getFromDate(),
+                  fallBackRange.getToDate());
           if (!valid) {
             pruningCauses.add(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
           }

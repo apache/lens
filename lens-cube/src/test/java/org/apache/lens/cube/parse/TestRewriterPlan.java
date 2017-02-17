@@ -63,7 +63,6 @@ public class TestRewriterPlan extends TestQueryRewrite {
     Assert.assertTrue(plan.getPartitions().get("c2_testfact").size() > 1);
   }
 
-  //TODO union : Wrong fact name picked. Check after MaxCoveringSetResolver changes.
   @Test
   public void testPlanExtractionForComplexQuery() throws Exception {
     // complex query
@@ -86,7 +85,6 @@ public class TestRewriterPlan extends TestQueryRewrite {
     Assert.assertEquals(plan.getPartitions().get("citytable").size(), 1);
   }
 
-  //TODO union : Wrong fact name picked. Check after MaxCoveringSetResolver changes.
   @Test
   public void testPlanExtractionForMultipleQueries() throws Exception {
     // simple query

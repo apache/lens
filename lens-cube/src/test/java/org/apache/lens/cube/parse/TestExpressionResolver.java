@@ -91,7 +91,8 @@ public class TestExpressionResolver extends TestQueryRewrite {
     String hqlQuery = rewrite("select msr2 from testCube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'",
       conf);
     String expected =
-      getExpectedQuery(cubeName, "select sum(testcube.msr2) as `msr2` FROM ", null, " and substr(testCube.dim1, 3) != 'XYZ'",
+      getExpectedQuery(cubeName, "select sum(testcube.msr2) as `msr2` FROM ", null,
+          " and substr(testCube.dim1, 3) != 'XYZ'",
         getWhereForDailyAndHourly2days(cubeName, "c1_summary1"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
@@ -252,10 +253,11 @@ public class TestExpressionResolver extends TestQueryRewrite {
         + " group by booleancut having msr6 > 100.0 order by booleancut", conf);
     String expected =
       getExpectedQuery(cubeName, "SELECT (((testcube.dim1) != 'x') and ((testcube.dim2) != 10)) as `booleancut`, "
-          + "avg(((testcube.msr1) + (testcube.msr2))) as `avgmsr` FROM ", null, " and substr(testCube.dim1, 3) != 'XYZ' "
+          + "avg(((testcube.msr1) + (testcube.msr2))) as `avgmsr` FROM ", null,
+          " and substr(testCube.dim1, 3) != 'XYZ' "
           + " group by testCube.dim1 != 'x' AND testCube.dim2 != 10"
           + " having (sum(testCube.msr2) + max(testCube.msr3))/ count(testcube.msr4) > 100.0"
-          + " order by testCube.dim1 != 'x' AND testCube.dim2 != 10 asc", getWhereForHourly2days("C1_testfact2_raw"));
+          + " order by booleancut asc", getWhereForHourly2days("C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
   @Test
@@ -287,8 +289,8 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testMultipleExpressionsPickingSecondExpression() throws Exception {
     String hqlQuery = rewrite("select equalsums from testCube where " + TWO_DAYS_RANGE, conf);
-    String expected = getExpectedQuery(cubeName, "select (max(testCube.msr3) + sum(testCube.msr2))/100 " +
-        "as `equalsums` FROM ", null, null, getWhereForHourly2days(cubeName, "C1_testfact2"));
+    String expected = getExpectedQuery(cubeName, "select (max(testCube.msr3) + sum(testCube.msr2))/100 "
+        + "as `equalsums` FROM ", null, null, getWhereForHourly2days(cubeName, "C1_testfact2"));
     TestCubeRewriter.compareQueries(hqlQuery, expected);
   }
 

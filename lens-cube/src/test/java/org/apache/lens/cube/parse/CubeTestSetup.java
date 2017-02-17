@@ -680,11 +680,12 @@ public class CubeTestSetup {
         "Not null cityid Expr", "case when cityid is null then 0 else cityid end"));
     // union join context
     exprs.add(new ExprColumn(new FieldSchema(prefix + "notnullcityid", "int", prefix + "Not null cityid"),
-        prefix + "Not null cityid Expr", "case when union_join_ctx_cityid is null then 0 else union_join_ctx_cityid end"));
+        prefix + "Not null cityid Expr", "case when union_join_ctx_cityid is null then 0 "
+        + "else union_join_ctx_cityid end"));
     exprs.add(new ExprColumn(new FieldSchema(prefix + "sum_msr1_msr2", "int", prefix + "sum of msr1 and msr2"),
         prefix + "sum of msr1 and msr2", "sum(union_join_ctx_msr1) + sum(union_join_ctx_msr2)"));
-   exprs.add(new ExprColumn(new FieldSchema(prefix + "msr1_greater_than_100", "int", prefix + "msr1 greater than 100"),
-       prefix + "msr1 greater than 100", "case when sum(union_join_ctx_msr1) > 100 then \"high\" else \"low\" end"));
+    exprs.add(new ExprColumn(new FieldSchema(prefix + "msr1_greater_than_100", "int", prefix + "msr1 greater than 100"),
+        prefix + "msr1 greater than 100", "case when sum(union_join_ctx_msr1) > 100 then \"high\" else \"low\" end"));
     exprs.add(new ExprColumn(new FieldSchema(prefix + "non_zero_msr2_sum", "int", prefix + "non zero msr2 sum"),
         prefix + "non zero msr2 sum", "sum(case when union_join_ctx_msr2 > 0 then union_join_ctx_msr2 else 0 end)"));
 

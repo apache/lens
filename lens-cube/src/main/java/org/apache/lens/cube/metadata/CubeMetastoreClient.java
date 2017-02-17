@@ -938,14 +938,14 @@ public class CubeMetastoreClient {
     }
   }
 
-  private Date getStorageTableStartDate(String storageTable, String factTableName)
+  public Date getStorageTableStartDate(String storageTable, String factTableName)
     throws LensException {
     List<Date> startDates = getStorageTimes(storageTable, MetastoreUtil.getStoragetableStartTimesKey());
     startDates.add(getFactTable(factTableName).getStartTime());
     return Collections.max(startDates);
   }
 
-  private Date getStorageTableEndDate(String storageTable, String factTableName)
+  public Date getStorageTableEndDate(String storageTable, String factTableName)
     throws LensException {
     List<Date> endDates = getStorageTimes(storageTable, MetastoreUtil.getStoragetableEndTimesKey());
     endDates.add(getFactTable(factTableName).getEndTime());
