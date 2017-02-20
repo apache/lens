@@ -394,6 +394,7 @@ public class UnionQueryWriter {
     for (int i = 0; i < cubeql.getSelectPhrases().size(); i++) {
       SelectPhraseContext phrase = cubeql.getSelectPhrases().get(i);
       ASTNode aliasNode = new ASTNode(new CommonToken(Identifier, phrase.getSelectAlias()));
+
       // Select phrase is dimension
       if (!phrase.hasMeasures(cubeql)) {
         for (StorageCandidate sc : storageCandidates) {
@@ -401,6 +402,7 @@ public class UnionQueryWriter {
           storageCandidateToSelectAstMap.get(sc.toString()).
               addChild(getSelectExpr(exprWithOutAlias, aliasNode, false));
         }
+
         // Select phrase is measure
       } else if (!phrase.getQueriedMsrs().isEmpty()) {
         for (StorageCandidate sc : storageCandidates) {
@@ -419,6 +421,7 @@ public class UnionQueryWriter {
                 addChild(getSelectExpr(resolvedExprNode, aliasNode, false));
           }
         }
+
         // Select phrase is expression
       } else {
         for (StorageCandidate sc : storageCandidates) {

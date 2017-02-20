@@ -195,20 +195,26 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
 
     HashMap<String, List<CandidateTablePruneCause>> details = error.getDetails();
 
+    int conditionsChecked = 0;
+
     for (Map.Entry<String, List<CandidateTablePruneCause>> entry : details.entrySet()) {
       if (entry.getValue().equals(Arrays.asList(CandidateTablePruneCause.columnNotFound(
           CandidateTablePruneCode.COLUMN_NOT_FOUND, "dim2big2")))) {
         Set<String> expectedKeySet =
-          Sets.newTreeSet(Splitter.on(',').split("c1_summary1, c1_testfact,c1_testfact2"));
+          Sets.newTreeSet(Splitter.on(',').split("c1_summary1,c1_testfact,c1_testfact2"));
         Assert.assertTrue(expectedKeySet.equals(Sets.newTreeSet(Splitter.on(',').split(entry.getKey()))));
+        conditionsChecked++;
+        continue;
       }
 
       if (entry.getValue().equals(
         Arrays.asList(new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE)))) {
         Set<String> expectedKeySet =
-          Sets.newTreeSet(Splitter.on(',').split("c2_summary2, c2_summary3, c1_testfact2_raw, "
-              + "c3_testfact2_raw, c1_summary3,c1_summary2"));
+          Sets.newTreeSet(Splitter.on(',').split("c2_summary2,c2_summary3,c1_testfact2_raw,"
+              + "c3_testfact2_raw,c1_summary3,c1_summary2"));
         Assert.assertTrue(expectedKeySet.equals(Sets.newTreeSet(Splitter.on(',').split(entry.getKey()))));
+        conditionsChecked++;
+        continue;
       }
 
       if (entry.getKey().equals("c0_testfact_continuous")) {
@@ -217,21 +223,22 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
               "msr2", "msr3")))
           || entry.getValue().equals(Arrays.asList(CandidateTablePruneCause.columnNotFound(
             CandidateTablePruneCode.COLUMN_NOT_FOUND, "msr3", "msr2"))));
+        conditionsChecked++;
+        continue;
       }
 
-      if (entry.getKey().equals("c2_summary2, c2_summary3, c2_summary4, c4_testfact, c2_summary1, c3_testfact, "
-          + "c3_testfact2_raw, c4_testfact2, c99_cheapfact, c5_testfact, c0_cheapfact, "
-          + "c2_testfact, c2_testfactmonth, c0_testfact")) {
-        List<CandidateTablePruneCause> expectedPruneCauses =
-            Arrays.asList(CandidateTablePruneCause.noCandidateStoragesForDimtable(
-                new HashMap<String, CandidateTablePruneCode>() {
-                  {
-                    put("C2", CandidateTablePruneCode.UNSUPPORTED_STORAGE);
-                  }
-                }));
-        Assert.assertTrue(entry.getValue().equals(expectedPruneCauses));
+      if (entry.getKey().equals("c2_summary2,c2_summary3,c2_summary4,c4_testfact,c2_summary1,c3_testfact,"
+        + "c3_testfact2_raw,c4_testfact2,c99_cheapfact,c5_testfact,c0_cheapfact,c2_testfact,c2_testfactmonthly,"
+        + "c0_testfact")) {
+        Assert.assertEquals(entry.getValue().size(), 1);
+        //Only storage C1 is supported.
+        Assert.assertTrue(entry.getValue().get(0).getCause().equals(CandidateTablePruneCode.UNSUPPORTED_STORAGE));
+        conditionsChecked++;
+        continue;
       }
     }
+
+    Assert.assertEquals(conditionsChecked, 4, "All prune causes not checked");
   }
 
   @Test
@@ -289,15 +296,10 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
   public void testCubeQueryWithTwoRefCols() throws Exception {
     Configuration tConf = new Configuration(conf);
     tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
-    CubeQueryContext cubeql = rewriteCtx("select dim2, test_time_dim2 from testcube where " + TWO_DAYS_RANGE, tConf);
-    Set<String> candidates = new HashSet<String>();
-    for (Candidate cand : cubeql.getCandidates()) {
-      candidates.add(cand.toString());
-    }
-    // testfact contains test_time_dim_day_id, but not dim2 - it should have been removed.
-    Assert.assertFalse(candidates.contains("testfact"));
-    // summary2 contains dim2, but not test_time_dim2 - it should have been removed.
-    Assert.assertFalse(candidates.contains("summary2"));
+    //test_time_dim2 and dim2 are not querable together
+    NoCandidateFactAvailableException e = (NoCandidateFactAvailableException)getLensExceptionInRewrite(
+      "select dim2, test_time_dim2 from testcube where " + TWO_DAYS_RANGE, tConf);
+    Assert.assertEquals(e.getJsonMessage().getBrief(), "Range not answerable");
   }
 
   @Test

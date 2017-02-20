@@ -888,7 +888,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST {
         }
         log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}",
             storagePruningMsgs.toJsonObject());
-        throw new NoCandidateFactAvailableException(storagePruningMsgs);
+        throw new NoCandidateFactAvailableException(this);
       }
     }
     return cand;

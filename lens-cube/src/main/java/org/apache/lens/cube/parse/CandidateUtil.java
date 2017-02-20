@@ -223,6 +223,15 @@ public class CandidateUtil {
     return new StorageCandidate(sc);
   }
 
+  public static boolean factHasColumn(CubeFactTable fact, String column) {
+    for (FieldSchema factField : fact.getColumns()) {
+      if (factField.getName().equals(column)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static class ChildrenSizeBasedCandidateComparator<T> implements Comparator<Candidate> {
     @Override
     public int compare(Candidate o1, Candidate o2) {

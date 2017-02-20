@@ -32,6 +32,7 @@ import org.apache.lens.server.api.metastore.DataCompletenessChecker;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.lib.Node;
+
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -488,9 +489,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
     throws LensException {
     // Check the measure tags.
     if (!evaluateMeasuresCompleteness(timeRange)) {
-      log
-        .info("Storage candidate:{} has partitions with incomplete data: {} for given ranges: {}", this,
-            dataCompletenessMap, cubeql.getTimeRanges());
+      log.info("Storage candidate:{} has partitions with incomplete data: {} for given ranges: {}", this,
+        dataCompletenessMap, cubeql.getTimeRanges());
       if (failOnPartialData) {
         return false;
       }
@@ -521,7 +521,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     String sep = "";
     while (rangeParts.isEmpty()) {
       String timeDim = cubeql.getBaseCube().getTimeDimOfPartitionColumn(partCol);
-      if (partColNotSupported && !getFact().getColumns().contains(timeDim)) {
+      if (partColNotSupported && !CandidateUtil.factHasColumn(getFact(), timeDim)) {
         unsupportedTimeDims.add(cubeql.getBaseCube().getTimeDimOfPartitionColumn(timeRange.getPartitionColumn()));
         break;
       }
