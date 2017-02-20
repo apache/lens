@@ -30,6 +30,8 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 /**
  * Resolve storages and partitions of all candidate tables and prunes candidate tables with missing storages or
@@ -46,7 +48,7 @@ class StorageTableResolver implements ContextRewriter {
   private final UpdatePeriod maxInterval;
   // TODO union : Remove this. All partitions are stored in the StorageCandidate.
   private final Map<String, Set<String>> nonExistingPartitions = new HashMap<>();
-  CubeMetastoreClient client;
+  private CubeMetastoreClient client;
   private PHASE phase;
   private float completenessThreshold;
   private String completenessPartCol;
@@ -268,7 +270,6 @@ class StorageTableResolver implements ContextRewriter {
         boolean partitionColumnExists = client.partColExists(storageTable, range.getPartitionColumn());
         valid = partitionColumnExists;
         if (!partitionColumnExists) {
-          String timeDim = cubeql.getBaseCube().getTimeDimOfPartitionColumn(range.getPartitionColumn());
           TimeRange fallBackRange = StorageUtil.getFallbackRange(range, sc.getFact().getName(), cubeql);
           if (fallBackRange == null) {
             log.info("No partitions for range:{}. fallback range: {}", range, fallBackRange);
@@ -299,17 +300,21 @@ class StorageTableResolver implements ContextRewriter {
       // Check for update period.
       for (UpdatePeriod updatePeriod : sc.getFact().getUpdatePeriods().get(sc.getStorageName())) {
         if (maxInterval != null && updatePeriod.compareTo(maxInterval) > 0) {
-          log.info("Skipping update period {} for fact {}", updatePeriod, sc.getFact());
-          skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.QUERY_INTERVAL_BIGGER);
-          continue;
-        }
-        if (validUpdatePeriods != null && !validUpdatePeriods.contains(updatePeriod.name().toLowerCase())) {
-          log.info("Skipping update period {} for fact {} for storage {}", updatePeriod, sc.getFact(), storageTable);
+          log.info("Skipping update period {} for fact {} since it's more than max interval supplied",
+            updatePeriod, sc.getFact());
+          skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.QUERY_INTERVAL_BIGGER_THAN_MAX);
+        } else if (validUpdatePeriods != null && !validUpdatePeriods.contains(updatePeriod.name().toLowerCase())) {
+          log.info("Skipping update period {} for fact {} for storage {} since it's invalid",
+            updatePeriod, sc.getFact(), storageTable);
           skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.INVALID);
-          continue;
+        } else if (cubeql.getTimeRanges().stream().noneMatch(timeRange -> timeRange.isCoverableBy(updatePeriod))) {
+          log.info("Skipping update period {} for fact {} for storage {} since it's bigger than query range",
+            updatePeriod, sc.getFact(), storageTable);
+          skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.QUERY_INTERVAL_SMALL);
+        } else {
+          isStorageAdded = true;
+          sc.addValidUpdatePeriod(updatePeriod);
         }
-        isStorageAdded = true;
-        sc.addValidUpdatePeriod(updatePeriod);
       }
       if (!isStorageAdded) {
         cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.updatePeriodsRejected(skipUpdatePeriodCauses));

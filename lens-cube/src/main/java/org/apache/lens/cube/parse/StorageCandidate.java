@@ -506,8 +506,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
     boolean partColNotSupported = rangeParts.isEmpty();
     String storageTableName = getName();
 
-    if (storagePruningMsgs.containsKey(storageTableName)) {
-      List<CandidateTablePruneCause> causes = storagePruningMsgs.get(storageTableName);
+    if (storagePruningMsgs.containsKey(this)) {
+      List<CandidateTablePruneCause> causes = storagePruningMsgs.get(this);
       // Find the PART_COL_DOES_NOT_EXISTS
       for (CandidateTablePruneCause cause : causes) {
         if (cause.getCause().equals(CandidateTablePruneCode.PART_COL_DOES_NOT_EXIST)) {
@@ -743,5 +743,12 @@ public class StorageCandidate implements Candidate, CandidateTable {
       ret = database + "." + ret;
     }
     return ret;
+  }
+
+  public boolean canCoverTimeRanges(CubeQueryContext cubeql) {
+    return cubeql.getTimeRanges().stream().allMatch(this::isTimeRangeCoverable);
+  }
+  public boolean isTimeRangeCoverable(TimeRange timeRange) {
+    return timeRange.isCoverableBy(getValidUpdatePeriods());
   }
 }
