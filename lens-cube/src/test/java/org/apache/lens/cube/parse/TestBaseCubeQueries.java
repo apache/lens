@@ -838,7 +838,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       getLensExceptionInRewrite("select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) exc;
     PruneCauses.BriefAndDetailedError pruneCause = ne.getJsonMessage();
-    assertTrue(pruneCause.getBrief().contains("Missing partitions"));
+    assertTrue(pruneCause.getBrief().contains("Missing partitions")); // error in this.
     assertEquals(pruneCause.getDetails().get("c4_testfact2_base").iterator().next().getCause(), MISSING_PARTITIONS);
     assertEquals(pruneCause.getDetails().get("c4_testfact2_base").iterator().next().getMissingPartitions().size(), 1);
     assertEquals(
