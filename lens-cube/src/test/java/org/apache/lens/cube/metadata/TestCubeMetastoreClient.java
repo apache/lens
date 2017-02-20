@@ -28,6 +28,7 @@ import static org.apache.lens.server.api.util.LensUtil.getHashMap;
 import static org.testng.Assert.*;
 
 import java.text.SimpleDateFormat;
+
 import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
@@ -45,7 +46,10 @@ import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
-import org.apache.hadoop.hive.ql.metadata.*;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
@@ -965,6 +969,132 @@ public class TestCubeMetastoreClient {
     assertTrue(client.getAllFacts(altered).isEmpty());
   }
 
+  @Test(priority = 1)
+  public void testUpdatePeriodTableDescriptions() throws LensException, HiveException {
+    List<FieldSchema> factColumns = new ArrayList<>(cubeMeasures.size());
+    String factName = "testFactWithUpdatePeriodTableDescriptions";
+
+    for (CubeMeasure measure : cubeMeasures) {
+      factColumns.add(measure.getColumn());
+    }
+    // add one dimension of the cube
+    factColumns.add(new FieldSchema("zipcode", "int", "zip"));
+    FieldSchema itPart = new FieldSchema("it", "string", "date part");
+    FieldSchema etPart = new FieldSchema("et", "string", "date part");
+    String[] partColNames = new String[] { getDatePartitionKey(), itPart.getName(), etPart.getName() };
+
+    StorageTableDesc s1 = new StorageTableDesc(TextInputFormat.class, HiveIgnoreKeyTextOutputFormat.class,
+      Lists.newArrayList(getDatePartition(), itPart, etPart),
+      Lists.newArrayList(getDatePartitionKey(), itPart.getName(), etPart.getName()));
+    StorageTableDesc s2 = new StorageTableDesc(TextInputFormat.class, HiveIgnoreKeyTextOutputFormat.class,
+      Lists.newArrayList(getDatePartition(), itPart, etPart),
+      Lists.newArrayList(getDatePartitionKey(), itPart.getName(), etPart.getName()));
+
+    Map<String, Set<UpdatePeriod>> updatePeriods = getHashMap(c1, hourlyAndDaily, c2, hourlyAndDaily);
+    Map<String, StorageTableDesc> storageTables = getHashMap(HOURLY + "_" + c1, s1, DAILY + "_" + c1, s2, c2, s2);
+    Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap = getHashMap(c1,
+      getHashMap(HOURLY, HOURLY + "_" + c1, DAILY, DAILY + "_" + c1), c2, getHashMap(HOURLY, c2, DAILY, c2));
+
+    CubeFactTable cubeFact = new CubeFactTable(CUBE_NAME, factName, factColumns, updatePeriods, 0L, null,
+      storageUpdatePeriodMap);
+    client.createCubeFactTable(CUBE_NAME, factName, factColumns, updatePeriods, 0L, null, storageTables,
+      storageUpdatePeriodMap);
+
+    assertTrue(client.tableExists(factName));
+    Table cubeTbl = client.getHiveTable(factName);
+    assertTrue(client.isFactTable(cubeTbl));
+    assertTrue(client.isFactTableForCube(cubeTbl, CUBE_NAME));
+
+    // Assert for storage tables
+    for (String entry : storageTables.keySet()) {
+      String storageTableName = getFactOrDimtableStorageTableName(factName, entry);
+      assertTrue(client.tableExists(storageTableName));
+    }
+
+    String c1TableNameHourly = getFactOrDimtableStorageTableName(cubeFact.getName(), HOURLY + "_" + c1);
+    String c2TableNameHourly = getFactOrDimtableStorageTableName(cubeFact.getName(), c2);
+
+    Table c1TableHourly = client.getHiveTable(c1TableNameHourly);
+    c1TableHourly.getParameters().put(getPartitionTimelineStorageClassKey(HOURLY, getDatePartitionKey()),
+      StoreAllPartitionTimeline.class.getCanonicalName());
+    c1TableHourly.getParameters().put(getPartitionTimelineStorageClassKey(HOURLY, itPart.getName()),
+      StoreAllPartitionTimeline.class.getCanonicalName());
+    c1TableHourly.getParameters().put(getPartitionTimelineStorageClassKey(HOURLY, etPart.getName()),
+      StoreAllPartitionTimeline.class.getCanonicalName());
+    client.pushHiveTable(c1TableHourly);
+
+    Table c2TableHourly = client.getHiveTable(c2TableNameHourly);
+    c2TableHourly.getParameters().put(getPartitionTimelineStorageClassKey(HOURLY, getDatePartitionKey()),
+      EndsAndHolesPartitionTimeline.class.getCanonicalName());
+    c2TableHourly.getParameters().put(getPartitionTimelineStorageClassKey(HOURLY, itPart.getName()),
+      EndsAndHolesPartitionTimeline.class.getCanonicalName());
+    c2TableHourly.getParameters().put(getPartitionTimelineStorageClassKey(HOURLY, etPart.getName()),
+      EndsAndHolesPartitionTimeline.class.getCanonicalName());
+    client.pushHiveTable(c2TableHourly);
+
+    assertSameTimelines(factName, new String[] { c1, c2 }, HOURLY, partColNames);
+
+    StoreAllPartitionTimeline timelineDtC1 = ((StoreAllPartitionTimeline) client.partitionTimelineCache
+      .get(factName, c1, HOURLY, getDatePartitionKey()));
+    StoreAllPartitionTimeline timelineItC1 = ((StoreAllPartitionTimeline) client.partitionTimelineCache
+      .get(factName, c1, HOURLY, itPart.getName()));
+    StoreAllPartitionTimeline timelineEtC1 = ((StoreAllPartitionTimeline) client.partitionTimelineCache
+      .get(factName, c1, HOURLY, etPart.getName()));
+    EndsAndHolesPartitionTimeline timelineDt = ((EndsAndHolesPartitionTimeline) client.partitionTimelineCache
+      .get(factName, c2, HOURLY, getDatePartitionKey()));
+    EndsAndHolesPartitionTimeline timelineIt = ((EndsAndHolesPartitionTimeline) client.partitionTimelineCache
+      .get(factName, c2, HOURLY, itPart.getName()));
+    EndsAndHolesPartitionTimeline timelineEt = ((EndsAndHolesPartitionTimeline) client.partitionTimelineCache
+      .get(factName, c2, HOURLY, etPart.getName()));
+
+    StoreAllPartitionTimeline timelineC1 = ((StoreAllPartitionTimeline) client.partitionTimelineCache
+      .get(factName, c1, HOURLY, getDatePartitionKey()));
+
+    Map<String, Date> timeParts1 = getTimePartitionByOffsets(getDatePartitionKey(), 0, itPart.getName(), 0,
+      etPart.getName(), 0);
+    StoragePartitionDesc partSpec1 = new StoragePartitionDesc(cubeFact.getName(), timeParts1, null, HOURLY);
+
+    Map<String, Date> timeParts2 = getTimePartitionByOffsets(getDatePartitionKey(), 0, etPart.getName(), 1);
+    Map<String, String> nonTimeSpec = getHashMap(itPart.getName(), "default");
+    final StoragePartitionDesc partSpec2 = new StoragePartitionDesc(cubeFact.getName(), timeParts2, nonTimeSpec,
+      HOURLY);
+
+    Map<String, Date> timeParts3 = getTimePartitionByOffsets(getDatePartitionKey(), 0, etPart.getName(), 0);
+    final StoragePartitionDesc partSpec3 = new StoragePartitionDesc(cubeFact.getName(), timeParts3, nonTimeSpec,
+      HOURLY);
+
+    client.addPartitions(Arrays.asList(partSpec1, partSpec2, partSpec3), c1, CubeTableType.FACT);
+    client.addPartitions(Arrays.asList(partSpec1, partSpec2, partSpec3), c2, CubeTableType.FACT);
+    PartitionTimeline timeline1Temp = client.partitionTimelineCache.get(factName, c1, HOURLY, getDatePartitionKey());
+    PartitionTimeline timeline2Temp = client.partitionTimelineCache.get(factName, c2, HOURLY, getDatePartitionKey());
+
+    assertEquals(timeline1Temp.getClass(), StoreAllPartitionTimeline.class);
+    assertEquals(timeline2Temp.getClass(), EndsAndHolesPartitionTimeline.class);
+
+    assertEquals(client.getAllParts(c1TableNameHourly).size(), 3);
+    assertEquals(client.getAllParts(c2TableNameHourly).size(), 3);
+
+    assertSameTimelines(factName, new String[] { c1, c2 }, HOURLY, partColNames);
+
+    assertTimeline(timelineDt, timelineDtC1, HOURLY, 0, 0);
+    assertTimeline(timelineEt, timelineEtC1, HOURLY, 0, 1);
+    assertTimeline(timelineIt, timelineItC1, HOURLY, 0, 0);
+
+    assertTrue(client.latestPartitionExists(cubeFact.getName(), c1, getDatePartitionKey()));
+    assertTrue(client.latestPartitionExists(cubeFact.getName(), c1, itPart.getName()));
+    assertTrue(client.latestPartitionExists(cubeFact.getName(), c2, etPart.getName()));
+
+    assertNoPartitionNamedLatest(c1TableNameHourly, partColNames);
+    assertNoPartitionNamedLatest(c2TableNameHourly, partColNames);
+
+    client.dropFact(factName, true);
+    assertFalse(client.tableExists(factName));
+    for (String entry : storageTables.keySet()) {
+      String storageTableName = getFactOrDimtableStorageTableName(factName, entry);
+      assertFalse(client.tableExists(storageTableName));
+    }
+  }
+
   @Test(priority = 2)
   public void testAlterDerivedCube() throws Exception {
     String name = "alter_derived_cube";
@@ -1238,7 +1368,10 @@ public class TestCubeMetastoreClient {
     s1.setFieldDelim(":");
     storageTables.put(c1, s1);
     storageTables.put(c4, s1);
-    factTable.addStorage(c4, hourlyAndDaily);
+    Map<UpdatePeriod, String> updatePeriodStoragePrefix = new HashMap<>();
+    updatePeriodStoragePrefix.put(HOURLY, c4);
+    updatePeriodStoragePrefix.put(DAILY, c4);
+    factTable.addStorage(c4, hourlyAndDaily, updatePeriodStoragePrefix);
     client.alterCubeFactTable(factName, factTable, storageTables, new HashMap<String, String>());
     CubeFactTable altered2 = client.getCubeFact(factName);
     assertTrue(client.tableExists(c1TableName));
@@ -1261,7 +1394,12 @@ public class TestCubeMetastoreClient {
     assertTrue(client.tableExists(c4TableName));
 
     // add storage
-    client.addStorage(altered2, c3, hourlyAndDaily, s1);
+    updatePeriodStoragePrefix.clear();
+    updatePeriodStoragePrefix.put(HOURLY, c3);
+    updatePeriodStoragePrefix.put(DAILY, c3);
+    Map<String, StorageTableDesc> storageTableDescMap = new HashMap<>();
+    storageTableDescMap.put(c3, s1);
+    client.addStorage(altered2, c3, hourlyAndDaily, storageTableDescMap, updatePeriodStoragePrefix);
     CubeFactTable altered3 = client.getCubeFact(factName);
     assertTrue(altered3.getStorages().contains("C3"));
     assertTrue(altered3.getUpdatePeriods().get("C3").equals(hourlyAndDaily));
@@ -1517,14 +1655,16 @@ public class TestCubeMetastoreClient {
     for (Partition partition : c1Parts) {
       partition.setLocation("blah");
       partition.setBucketCount(random.nextInt());
-      client.updatePartition(factName, c1, partition);
+      client.updatePartition(factName, c1, partition, HOURLY);
     }
     assertSamePartitions(client.getAllParts(c1TableName), c1Parts);
     for (Partition partition : c2Parts) {
       partition.setLocation("blah");
       partition.setBucketCount(random.nextInt());
     }
-    client.updatePartitions(factName, c2, c2Parts);
+    Map<UpdatePeriod, List<Partition>> partitionMap = new HashMap<>();
+    partitionMap.put(HOURLY, c2Parts);
+    client.updatePartitions(factName, c2, partitionMap);
     assertSamePartitions(client.getAllParts(c2TableName), c2Parts);
 
     assertSameTimelines(factName, storages, HOURLY, partColNames);
@@ -1998,7 +2138,6 @@ public class TestCubeMetastoreClient {
       timePartCols);
     Map<String, Set<UpdatePeriod>> updatePeriods = getHashMap(c1, updates);
     Map<String, StorageTableDesc> storageTables = getHashMap(c1, s1);
-
     CubeFactTable cubeFactWithParts = new CubeFactTable(CUBE_NAME, factNameWithPart, factColumns, updatePeriods);
 
     // create cube fact
