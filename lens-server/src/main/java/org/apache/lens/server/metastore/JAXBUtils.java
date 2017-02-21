@@ -857,7 +857,8 @@ public final class JAXBUtils {
     Map<String, StorageTableDesc> storageTablePrefixToDescMap = new HashMap<>();
     if (storageTables != null && !storageTables.getStorageTable().isEmpty()) {
       for (XStorageTableElement sTbl : storageTables.getStorageTable()) {
-        if (!sTbl.getUpdatePeriods().getUpdatePeriodTableDescriptor().isEmpty()) {
+        if (sTbl.getUpdatePeriods() != null && sTbl.getUpdatePeriods().getUpdatePeriodTableDescriptor() != null && !sTbl
+          .getUpdatePeriods().getUpdatePeriodTableDescriptor().isEmpty()) {
           for (XUpdatePeriodTableDescriptor updatePeriodTable : sTbl.getUpdatePeriods()
             .getUpdatePeriodTableDescriptor()) {
             // Get table name with update period as the prefix.
@@ -877,7 +878,8 @@ public final class JAXBUtils {
     if (storageTables != null && !storageTables.getStorageTable().isEmpty()) {
       for (XStorageTableElement sTbl : storageTables.getStorageTable()) {
         Map<UpdatePeriod, String> storageNameMap = new HashMap<>();
-        if (!sTbl.getUpdatePeriods().getUpdatePeriodTableDescriptor().isEmpty()) {
+        if (sTbl.getUpdatePeriods() != null && sTbl.getUpdatePeriods().getUpdatePeriodTableDescriptor() != null && !sTbl
+          .getUpdatePeriods().getUpdatePeriodTableDescriptor().isEmpty()) {
           for (XUpdatePeriodTableDescriptor updatePeriodTable : sTbl.getUpdatePeriods()
             .getUpdatePeriodTableDescriptor()) {
             // Get table name with update period as the prefix.
@@ -885,7 +887,7 @@ public final class JAXBUtils {
               updatePeriodTable.getUpdatePeriod() + "_" + sTbl.getStorageName());
           }
         } else {
-          for (XUpdatePeriod updatePeriod :sTbl.getUpdatePeriods().getUpdatePeriod()) {
+          for (XUpdatePeriod updatePeriod : sTbl.getUpdatePeriods().getUpdatePeriod()) {
             storageNameMap.put(UpdatePeriod.valueOf(updatePeriod.value()), sTbl.getStorageName());
           }
         }

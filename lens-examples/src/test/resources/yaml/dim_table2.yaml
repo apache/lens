@@ -21,7 +21,8 @@ properties:
   dim2.prop: d2
 storageTables:
   local:
-    updatePeriods: HOURLY
+    updatePeriods:
+      updatePeriod: HOURLY
     tableDesc:
       partCols:
         dt: type: STRING, comment: Time column

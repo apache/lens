@@ -25,7 +25,8 @@ properties:
   dimtable.product_table.part.cols: category
 storageTables:
   local:
-    updatePeriods: HOURLY
+    updatePeriods:
+      updatePeriod: HOURLY
     tableDesc:
       partCols:
         dt: type: STRING, comment: Time column

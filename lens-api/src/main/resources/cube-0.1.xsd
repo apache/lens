@@ -1024,11 +1024,11 @@
         of update_period_table_descriptor instead of a list of enums.
       </xs:documentation>
     </xs:annotation>
-    <xs:sequence>
-      <xs:element name="update_periods" type="x_update_periods" maxOccurs="1" minOccurs="1"/>
+    <xs:all>
+      <xs:element name="update_periods" type="x_update_periods" maxOccurs="1" minOccurs="0"/>
       <xs:element name="storage_name" type="xs:string"/>
       <xs:element type="x_storage_table_desc" name="table_desc" maxOccurs="1" minOccurs="0"/>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="x_storage_tables">
