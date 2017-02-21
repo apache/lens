@@ -47,9 +47,11 @@ import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.api.result.LensErrorTO;
 import org.apache.lens.api.util.MoxyJsonConfigurationContextResolver;
 import org.apache.lens.cube.error.ColUnAvailableInTimeRange;
+import org.apache.lens.cube.metadata.HDFSStorage;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensRequestLoggingFilter;
 import org.apache.lens.server.common.ErrorResponseExpectedData;
+import org.apache.lens.server.common.RestAPITestUtil;
 import org.apache.lens.server.error.GenericExceptionMapper;
 import org.apache.lens.server.error.LensJAXBValidationExceptionMapper;
 import org.apache.lens.server.metastore.MetastoreResource;
@@ -255,6 +257,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     final String testCube = getRandomCubeName();
     final String testDimensionField = getRandomDimensionField();
     final String testFact = getRandomFactName();
+    final String testStorage = getRandomStorageName();
 
     /* Setup: Begin */
     LensSessionHandle sessionId = openSession(target, "foo", "bar", new LensConf(), mt);
@@ -268,9 +271,21 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
       XCube xcube = createXCubeWithDummyMeasure(testCube, Optional.of("dt"), testXDim);
       createCubeFailFast(target, sessionId, xcube, mt);
 
+      /* Create Storage */
+      XStorage xs = new XStorage();
+      xs.setClassname(HDFSStorage.class.getCanonicalName());
+      xs.setName(testStorage);
+      RestAPITestUtil.createStorageFailFast(target, sessionId, xs, mt);
+
       /* Create a fact with test dimension field */
       XColumn xColumn = createXColumn(testDimensionField);
       XFactTable xFactTable = createXFactTableWithColumns(testFact, testCube, xColumn);
+
+      //Create a StorageTable
+      XStorageTables tables = new XStorageTables();
+      tables.getStorageTable().add(createStorageTblElement(testStorage,"DAILY"));
+      xFactTable.setStorageTables(tables);
+
       createFactFailFast(target, sessionId, xFactTable, mt);
 
       /* Setup: End */
@@ -343,6 +358,18 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
     } finally {
       closeSessionFailFast(target(), sessionId, mt);
     }
+  }
 
+  private XStorageTableElement createStorageTblElement(String storageName, String... updatePeriod) {
+    XStorageTableElement tbl = new XStorageTableElement();
+    tbl.setUpdatePeriods(new XUpdatePeriods());
+    tbl.setStorageName(storageName);
+    if (updatePeriod != null) {
+      for (String p : updatePeriod) {
+        tbl.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p));
+      }
+    }
+    tbl.setTableDesc(new XStorageTableDesc());
+    return tbl;
   }
 }

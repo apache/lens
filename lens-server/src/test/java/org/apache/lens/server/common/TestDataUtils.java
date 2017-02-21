@@ -50,6 +50,10 @@ public class TestDataUtils {
     return "db" + getRandomName();
   }
 
+  public static String getRandomStorageName() {
+    return "storage" + getRandomName();
+  }
+
   public static String getRandomCubeName() {
     return "cube" + getRandomName();
   }
