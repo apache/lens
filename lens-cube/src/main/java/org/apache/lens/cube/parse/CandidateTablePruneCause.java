@@ -227,8 +227,10 @@ public class CandidateTablePruneCause {
   public enum SkipUpdatePeriodCode {
     // invalid update period
     INVALID,
-    // Query max interval is more than update period
-    QUERY_INTERVAL_BIGGER
+    //TODO: add property name this update period is greater than the Query max interval as provided by user
+    QUERY_INTERVAL_BIGGER_THAN_MAX,
+    // Query range is too small to be answered by this update period. It can only be answered by smaller update periods.
+    QUERY_INTERVAL_SMALL
   }
 
   // Used for Test cases only.

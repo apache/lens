@@ -329,12 +329,10 @@ public final class DateUtil {
   }
 
   static boolean isCoverableBy(Date from, Date to, Set<UpdatePeriod> intervals) {
-    for (UpdatePeriod period : intervals) {
-      if (getCoveringInfo(from, to, period).isCoverable()) {
-        return true;
-      }
-    }
-    return false;
+    return intervals.stream().anyMatch(period->isCoverableBy(from, to, period));
+  }
+  static boolean isCoverableBy(Date from, Date to, UpdatePeriod period) {
+    return getCoveringInfo(from, to, period).isCoverable();
   }
 
   public static int getTimeDiff(Date fromDate, Date toDate, UpdatePeriod updatePeriod) {

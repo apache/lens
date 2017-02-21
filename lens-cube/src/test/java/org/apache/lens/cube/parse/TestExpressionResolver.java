@@ -446,7 +446,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testSingleColExpression() throws Exception {
     Configuration tconf = new Configuration(conf);
-    tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
+    tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2"); // time_range_in not translating
     CubeQueryContext rewrittenQuery =
       rewriteCtx("select singlecolmsr2expr from testCube where " + TWO_DAYS_RANGE, tconf);
     String expected =
@@ -547,7 +547,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testSingleColExpressionWithAlias() throws Exception {
     Configuration tconf = new Configuration(conf);
-    tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
+    tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2"); // time_range_in not getting translated
     CubeQueryContext rewrittenQuery =
       rewriteCtx("select singlecolmsr2expr as msr2 from testCube where " + TWO_DAYS_RANGE, tconf);
     String expected =
@@ -559,7 +559,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   @Test
   public void testSingleColQualifiedExpression() throws Exception {
     Configuration tconf = new Configuration(conf);
-    tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2");
+    tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C2"); // time_range_in not getting converted
     CubeQueryContext rewrittenQuery =
       rewriteCtx("select singlecolmsr2qualifiedexpr from testCube where " + TWO_DAYS_RANGE, tconf);
     String expected =

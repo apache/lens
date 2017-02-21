@@ -22,6 +22,7 @@ import static org.apache.lens.cube.metadata.DateUtil.ABSDATE_PARSER;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
@@ -48,10 +49,13 @@ public class TimeRange {
   private ASTNode parent;
   private int childIndex;
 
-  public boolean isCoverableBy(TreeSet<UpdatePeriod> updatePeriods) {
+  public boolean isCoverableBy(Set<UpdatePeriod> updatePeriods) {
     return DateUtil.isCoverableBy(fromDate, toDate, updatePeriods);
   }
 
+  public boolean isCoverableBy(UpdatePeriod updatePeriod) {
+    return DateUtil.isCoverableBy(fromDate, toDate, updatePeriod);
+  }
 
   public static class TimeRangeBuilder {
     private final TimeRange range;
