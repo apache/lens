@@ -39,6 +39,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.ObjectFactory;
 import org.apache.lens.api.metastore.XCube;
 import org.apache.lens.api.metastore.XFactTable;
+import org.apache.lens.api.metastore.XStorage;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
 
@@ -162,6 +163,16 @@ public class RestAPITestUtil {
       .request(mt).post(Entity.entity(
           new GenericEntity<JAXBElement<XFactTable>>(cubeObjectFactory.createXFactTable(factTable)) {
           }, mt),
+        APIResult.class);
+    checkResponse(result);
+  }
+
+  public static void createStorageFailFast(final WebTarget target, final LensSessionHandle sessionId,
+    final XStorage storage, MediaType mt) {
+    APIResult result = target.path("metastore").path("storages").queryParam("sessionid", sessionId)
+      .request(mt).post(Entity.entity(
+        new GenericEntity<JAXBElement<XStorage>>(cubeObjectFactory.createXStorage(storage)) {
+        }, mt),
         APIResult.class);
     checkResponse(result);
   }
