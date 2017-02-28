@@ -34,6 +34,7 @@ public class NoCandidateFactAvailableException extends LensException {
 
   @Getter
   private final CubeQueryContext cubeQueryContext;
+  @Getter
   private final PruneCauses<StorageCandidate> briefAndDetailedError;
 
   public NoCandidateFactAvailableException(CubeQueryContext cubeql) {

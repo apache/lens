@@ -64,7 +64,10 @@ public class FactPartition implements Comparable<FactPartition> {
       this.storageTables.addAll(storageTables);
     }
   }
-
+  public FactPartition withoutContaining() {
+    return new FactPartition(this.getPartCol(), this.getPartSpec(), this.getPeriod(), null, this
+      .getPartFormat(), this.getStorageTables());
+  }
   public FactPartition(String partCol, TimePartition timePartition) {
     this(partCol, timePartition, null, null);
   }

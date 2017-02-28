@@ -32,7 +32,8 @@ properties:
   cube.fact.relative.start.time: now.second - 2 days
 storageTables:
   mydb:
-    updatePeriods: CONTINUOUS
+    updatePeriods:
+      updatePeriod: CONTINUOUS
     tableDesc:
       tableParameters:
         lens.metastore.native.db.name: default

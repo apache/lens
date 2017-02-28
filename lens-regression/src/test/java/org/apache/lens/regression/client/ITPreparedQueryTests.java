@@ -70,18 +70,27 @@ public class ITPreparedQueryTests extends BaseTestClass {
   public void initialize() throws IOException, JAXBException, LensException {
     servLens = ServiceManagerHelper.init();
     logger.info("Creating a new Session");
-    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
   }
 
   @BeforeMethod(alwaysRun = true)
   public void setUp(Method method) throws Exception {
+    sessionHandleString = sHelper.openSession(lens.getCurrentDB());
     logger.info("Test Name: " + method.getName());
+  }
+
+
+  @AfterMethod(alwaysRun = true)
+  public void afterMethod(Method method) throws Exception {
+    logger.info("Test Name: " + method.getName());
+    if (sessionHandleString != null){
+      sHelper.closeSession();
+    }
+    sessionHandleString = null;
   }
 
   @AfterClass(alwaysRun = true)
   public void closeSession() throws Exception {
     logger.info("Closing Session");
-    sHelper.closeSession();
   }
 
   @Test

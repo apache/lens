@@ -18,8 +18,13 @@
  */
 package org.apache.lens.cube.parse;
 
+import static com.google.common.collect.Sets.newHashSet;
+import static java.util.stream.Collectors.toMap;
+
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -47,10 +52,7 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
     HashMap<String, List<CandidateTablePruneCause>> detailedMessage = Maps.newHashMap();
     for (Map.Entry<CandidateTablePruneCause, List<T>> entry : getReversed().entrySet()) {
       String key = StringUtils.join(entry.getValue(), ",");
-      if (detailedMessage.get(key) == null) {
-        detailedMessage.put(key, new ArrayList<CandidateTablePruneCause>());
-      }
-      detailedMessage.get(key).add(entry.getKey());
+      detailedMessage.computeIfAbsent(key, k -> new ArrayList<>()).add(entry.getKey());
     }
     return detailedMessage;
   }
@@ -69,10 +71,7 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
     HashMap<CandidateTablePruneCause, List<T>> result = new HashMap<CandidateTablePruneCause, List<T>>();
     for (T key : keySet()) {
       for (CandidateTablePruneCause value : get(key)) {
-        if (result.get(value) == null) {
-          result.put(value, new ArrayList<T>());
-        }
-        result.get(value).add(key);
+        result.computeIfAbsent(value, k -> new ArrayList<>()).add(key);
       }
     }
     return result;
@@ -93,12 +92,8 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
   }
 
   public String getBriefCause() {
-    CandidateTablePruneCode maxCause = CandidateTablePruneCode.values()[0];
-    for (CandidateTablePruneCause cause : getReversed().keySet()) {
-      if (cause.getCause().compareTo(maxCause) > 0) {
-        maxCause = cause.getCause();
-      }
-    }
+    CandidateTablePruneCode maxCause = getReversed().keySet().stream()
+      .map(CandidateTablePruneCause::getCause).max(Comparator.naturalOrder()).get();
     Map<CandidateTablePruneCause, String> maxCauseMap = Maps.newHashMap();
     for (Map.Entry<CandidateTablePruneCause, List<T>> entry : getReversed().entrySet()) {
       if (entry.getKey().getCause().equals(maxCause)) {
@@ -119,5 +114,11 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
   public static final class BriefAndDetailedError {
     private String brief;
     private HashMap<String, List<CandidateTablePruneCause>> details;
+
+    Map<HashSet<String>, List<CandidateTablePruneCause>> enhanced() {
+      return getDetails().entrySet().stream().collect(toMap(
+        o -> newHashSet(o.getKey().split(",")),
+        Map.Entry::getValue));
+    }
   }
 }

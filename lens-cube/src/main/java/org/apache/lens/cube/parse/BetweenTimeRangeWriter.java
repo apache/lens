@@ -92,7 +92,7 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
       }
 
       String partCol = start.getPartCol();
-      if (cubeQueryContext != null && !cubeQueryContext.shouldReplaceTimeDimWithPart()) {
+      if (!cubeQueryContext.shouldReplaceTimeDimWithPart()) {
         partCol = cubeQueryContext.getTimeDimOfPartitionColumn(partCol);
       }
 

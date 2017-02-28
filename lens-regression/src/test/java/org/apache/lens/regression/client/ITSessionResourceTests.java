@@ -58,7 +58,7 @@ import org.testng.annotations.*;
 
 import com.jcraft.jsch.JSchException;
 
-public class SessionResourceTests extends BaseTestClass {
+public class ITSessionResourceTests extends BaseTestClass {
 
   WebTarget servLens;
   private String sessionHandleString;
@@ -71,7 +71,7 @@ public class SessionResourceTests extends BaseTestClass {
   private static String newParamsKey = "datanucleus.autoCreateSchema";
   private static String newParamsValue = "false";
   private static String createSleepFunction = "CREATE TEMPORARY FUNCTION sleep AS 'SampleUdf'";
-  private static Logger logger = Logger.getLogger(SessionResourceTests.class);
+  private static Logger logger = Logger.getLogger(ITSessionResourceTests.class);
 
 
   @BeforeClass(alwaysRun = true)
@@ -272,8 +272,7 @@ public class SessionResourceTests extends BaseTestClass {
     String curDB = mHelper.getCurrentDatabase(newSession);
     Assert.assertEquals(curDB, newDb, "Could not open session with passed db");
     sHelper.closeSession(newSession);
-    //TODO : Enable when drop table is fixed
-//    mHelper.dropDatabase(newDb);
+    mHelper.dropDatabase(newDb);
   }
 
   @Test
@@ -310,9 +309,8 @@ public class SessionResourceTests extends BaseTestClass {
     Assert.assertEquals(curDB, newDb1, "Could not open session with passed db");
 
     sHelper.closeSession(newSession);
-    //TODO : Enable when drop table issue is fixed
-//    mHelper.dropDatabase(newDb);
-//    mHelper.dropDatabase(newDb1);
+    mHelper.dropDatabase(newDb);
+    mHelper.dropDatabase(newDb1);
   }
 
   //Fails as closeSession cannot take json as input,. (No API can take json as input)

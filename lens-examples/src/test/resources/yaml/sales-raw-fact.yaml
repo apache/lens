@@ -35,7 +35,8 @@ properties:
   cube.fact.is.aggregated: false
 storageTables:
   local:
-    updatePeriods: HOURLY
+    updatePeriods:
+      updatePeriod: HOURLY
     tableDesc:
       partCols:
         pt: type: STRING, comment: Process time partition

@@ -200,7 +200,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @throws SemanticException the semantic exception
    */
   public void analyzeInternal(Configuration conf, HiveConf hconf) throws SemanticException {
-    CubeSemanticAnalyzer c1 = new CubeSemanticAnalyzer(conf, hconf);
+    CubeSemanticAnalyzer c1 = new CubeSemanticAnalyzer(hconf);
 
     QB qb = new QB(null, null, false);
 

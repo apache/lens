@@ -166,7 +166,6 @@ public final class StorageUtil {
 
   /**
    * Get fallback range
-   * TODO union : Add method level comments
    *
    * @param range
    * @param factName

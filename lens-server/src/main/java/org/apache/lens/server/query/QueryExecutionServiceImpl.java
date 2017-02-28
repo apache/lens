@@ -404,8 +404,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   private void loadQueryComparator() throws LensException {
     try {
       Class<?>[] classes = conf.getClasses(QUERY_COMPARATOR_CLASSES,
-        MoreRetriesFirstComparator.class, QueryPriorityComparator.class,
-        FIFOQueryComparator.class, QueryCostComparator.class);
+        MoreRetriesFirstComparator.class, QueryPriorityComparator.class, FIFOQueryComparator.class);
       List<Comparator<QueryContext>> comparators = Lists.newArrayList();
       for (Class<?> clazz: classes) {
         comparators.add(clazz.asSubclass(QueryComparator.class).newInstance());

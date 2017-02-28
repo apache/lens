@@ -29,7 +29,8 @@ properties:
   cube.timedim.relation.order_time: delivery_time+[-2 hours,-1hour]
 storageTables:
   local:
-    updatePeriods: HOURLY, DAILY
+    updatePeriods:
+      updatePeriod: HOURLY, DAILY
     tableDesc:
       partCols:
         dt: type: STRING, comment: Delivery time partition
@@ -38,7 +39,8 @@ storageTables:
       tableLocation: /tmp/examples/aggrfact2
       fieldDelimiter: ,
   mydb:
-    updatePeriods: DAILY
+    updatePeriods:
+      updatePeriod: DAILY
     tableDesc:
       partCols:
         pt: type: STRING, comment: Process time partition

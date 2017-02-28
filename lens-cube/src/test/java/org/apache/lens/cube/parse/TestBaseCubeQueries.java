@@ -830,7 +830,6 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     expected = getExpectedQuery(BASE_CUBE_NAME, "select sum(basecube.msr12) as `msr12` FROM ", null, null,
       getWhereForDailyAndHourly2days(BASE_CUBE_NAME, "c1_testfact2_base"));
     compareQueries(hql, expected);
-
     // If going to fallback timedim, and partitions are missing, then error should be missing partition on that
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C4");
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
@@ -838,7 +837,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       getLensExceptionInRewrite("select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) exc;
     PruneCauses.BriefAndDetailedError pruneCause = ne.getJsonMessage();
-    assertTrue(pruneCause.getBrief().contains("Missing partitions"));
+    assertTrue(pruneCause.getBrief().contains("Missing partitions"), pruneCause.getBrief());
     assertEquals(pruneCause.getDetails().get("c4_testfact2_base").iterator().next().getCause(), MISSING_PARTITIONS);
     assertEquals(pruneCause.getDetails().get("c4_testfact2_base").iterator().next().getMissingPartitions().size(), 1);
     assertEquals(

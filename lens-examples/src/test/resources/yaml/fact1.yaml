@@ -28,7 +28,8 @@ properties:
   cube.fact.is.aggregated: true
 storageTables:
   local:
-    updatePeriods: HOURLY, DAILY
+    updatePeriods:
+      updatePeriod: HOURLY, DAILY
     tableDesc:
       partCols:
         dt: type: STRING, comment: Time column

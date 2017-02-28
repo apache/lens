@@ -45,7 +45,6 @@ import org.apache.hadoop.mapred.InputFormat;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -588,14 +587,22 @@ public final class JAXBUtils {
     return cols;
   }
 
-  public static Map<String, Set<UpdatePeriod>> getFactUpdatePeriodsFromStorageTables(
-    XStorageTables storageTables) {
+  public static Map<String, Set<UpdatePeriod>> getFactUpdatePeriodsFromStorageTables(XStorageTables storageTables) {
     if (storageTables != null && !storageTables.getStorageTable().isEmpty()) {
       Map<String, Set<UpdatePeriod>> factUpdatePeriods = new LinkedHashMap<String, Set<UpdatePeriod>>();
 
       for (XStorageTableElement ste : storageTables.getStorageTable()) {
-        Set<UpdatePeriod> updatePeriods = new TreeSet<UpdatePeriod>();
-        for (XUpdatePeriod upd : ste.getUpdatePeriods().getUpdatePeriod()) {
+        Set<UpdatePeriod> updatePeriods = new TreeSet<>();
+        // Check if the update period array is empty.
+        List<XUpdatePeriod> updatePeriodList = ste.getUpdatePeriods().getUpdatePeriod();
+        if (updatePeriodList.isEmpty()) {
+          List<XUpdatePeriodTableDescriptor> tableDescriptorList = ste.getUpdatePeriods()
+            .getUpdatePeriodTableDescriptor();
+          for (XUpdatePeriodTableDescriptor tableDescriptor : tableDescriptorList) {
+            updatePeriodList.add(tableDescriptor.getUpdatePeriod());
+          }
+        }
+        for (XUpdatePeriod upd : updatePeriodList) {
           updatePeriods.add(UpdatePeriod.valueOf(upd.name()));
         }
         factUpdatePeriods.put(ste.getStorageName(), updatePeriods);
@@ -706,13 +713,10 @@ public final class JAXBUtils {
 
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods = getFactUpdatePeriodsFromStorageTables(
       fact.getStorageTables());
-
-    return new CubeFactTable(fact.getCubeName(),
-      fact.getName(),
-      columns,
-      storageUpdatePeriods,
-      fact.getWeight(),
-      mapFromXProperties(fact.getProperties()));
+    Map<String, Map<UpdatePeriod, String>> storageTablePrefixMap = storageTablePrefixMapOfStorage(
+      fact.getStorageTables());
+    return new CubeFactTable(fact.getCubeName(), fact.getName(), columns, storageUpdatePeriods, fact.getWeight(),
+      mapFromXProperties(fact.getProperties()), storageTablePrefixMap);
   }
 
   public static Segmentation segmentationFromXSegmentation(XSegmentation seg) throws LensException {
@@ -849,11 +853,45 @@ public final class JAXBUtils {
     return tblDesc;
   }
 
-  public static Map<String, StorageTableDesc> storageTableMapFromXStorageTables(XStorageTables storageTables) {
-    Map<String, StorageTableDesc> storageTableMap = new HashMap<String, StorageTableDesc>();
+  public static Map<String, StorageTableDesc> tableDescPrefixMapFromXStorageTables(XStorageTables storageTables) {
+    Map<String, StorageTableDesc> storageTablePrefixToDescMap = new HashMap<>();
     if (storageTables != null && !storageTables.getStorageTable().isEmpty()) {
       for (XStorageTableElement sTbl : storageTables.getStorageTable()) {
-        storageTableMap.put(sTbl.getStorageName(), storageTableDescFromXStorageTableElement(sTbl));
+        if (sTbl.getUpdatePeriods() != null && sTbl.getUpdatePeriods().getUpdatePeriodTableDescriptor() != null && !sTbl
+          .getUpdatePeriods().getUpdatePeriodTableDescriptor().isEmpty()) {
+          for (XUpdatePeriodTableDescriptor updatePeriodTable : sTbl.getUpdatePeriods()
+            .getUpdatePeriodTableDescriptor()) {
+            // Get table name with update period as the prefix.
+            storageTablePrefixToDescMap.put(updatePeriodTable.getUpdatePeriod() + "_" + sTbl.getStorageName(),
+              storageTableDescFromXStorageTableDesc(updatePeriodTable.getTableDesc()));
+          }
+        } else {
+          storageTablePrefixToDescMap.put(sTbl.getStorageName(), storageTableDescFromXStorageTableElement(sTbl));
+        }
+      }
+    }
+    return storageTablePrefixToDescMap;
+  }
+
+  public static Map<String, Map<UpdatePeriod, String>> storageTablePrefixMapOfStorage(XStorageTables storageTables) {
+    Map<String, Map<UpdatePeriod, String>> storageTableMap = new HashMap<>();
+    if (storageTables != null && !storageTables.getStorageTable().isEmpty()) {
+      for (XStorageTableElement sTbl : storageTables.getStorageTable()) {
+        Map<UpdatePeriod, String> storageNameMap = new HashMap<>();
+        if (sTbl.getUpdatePeriods() != null && sTbl.getUpdatePeriods().getUpdatePeriodTableDescriptor() != null && !sTbl
+          .getUpdatePeriods().getUpdatePeriodTableDescriptor().isEmpty()) {
+          for (XUpdatePeriodTableDescriptor updatePeriodTable : sTbl.getUpdatePeriods()
+            .getUpdatePeriodTableDescriptor()) {
+            // Get table name with update period as the prefix.
+            storageNameMap.put(UpdatePeriod.valueOf(updatePeriodTable.getUpdatePeriod().value()),
+              updatePeriodTable.getUpdatePeriod() + "_" + sTbl.getStorageName());
+          }
+        } else {
+          for (XUpdatePeriod updatePeriod : sTbl.getUpdatePeriods().getUpdatePeriod()) {
+            storageNameMap.put(UpdatePeriod.valueOf(updatePeriod.value()), sTbl.getStorageName());
+          }
+        }
+        storageTableMap.put(sTbl.getStorageName(), storageNameMap);
       }
     }
     return storageTableMap;

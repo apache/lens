@@ -18,21 +18,44 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
-import static org.apache.lens.cube.parse.StorageUtil.*;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipUpdatePeriodCode;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.timeDimNotSupported;
+import static org.apache.lens.cube.parse.StorageUtil.getFallbackRange;
+import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
+import static org.apache.lens.cube.parse.StorageUtil.processCubeColForDataCompleteness;
+import static org.apache.lens.cube.parse.StorageUtil.processExpressionsForCompleteness;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.TreeSet;
 
-import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.AbstractCubeTable;
+import org.apache.lens.cube.metadata.CubeFactTable;
+import org.apache.lens.cube.metadata.CubeInterface;
+import org.apache.lens.cube.metadata.CubeMetastoreClient;
+import org.apache.lens.cube.metadata.DateUtil;
+import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.cube.metadata.MetastoreUtil;
+import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.DataCompletenessChecker;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.lib.Node;
-
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -67,6 +90,9 @@ public class StorageCandidate implements Candidate, CandidateTable {
    */
   @Getter
   private TreeSet<UpdatePeriod> validUpdatePeriods = new TreeSet<>();
+  @Getter
+  @Setter
+  Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
   private Configuration conf = null;
 
   /**
@@ -86,7 +112,6 @@ public class StorageCandidate implements Candidate, CandidateTable {
   @Getter
   @Setter
   private QueryAST queryAst;
-  private Map<Dimension, CandidateDim> dimensions;
   @Getter
   private Map<TimeRange, String> rangeToWhere = new LinkedHashMap<>();
   @Getter
@@ -153,17 +178,15 @@ public class StorageCandidate implements Candidate, CandidateTable {
   public StorageCandidate(StorageCandidate sc) throws LensException {
     this(sc.getCube(), sc.getFact(), sc.getStorageName(), sc.getCubeql());
     // Copy update periods.
-    for (UpdatePeriod updatePeriod : sc.getValidUpdatePeriods()) {
-      this.validUpdatePeriods.add(updatePeriod);
-    }
+    this.validUpdatePeriods.addAll(sc.getValidUpdatePeriods());
   }
 
   private void setMissingExpressions(Set<Dimension> queriedDims) throws LensException {
     setFromString(String.format("%s", getFromTable()));
     setWhereString(joinWithAnd(
-        genWhereClauseWithDimPartitions(whereString, queriedDims), cubeql.getConf().getBoolean(
-            CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
-            ? getPostSelectionWhereClause() : null));
+      genWhereClauseWithDimPartitions(whereString, queriedDims), cubeql.getConf().getBoolean(
+        CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
+        ? getPostSelectionWhereClause() : null));
     if (cubeql.getHavingAST() != null) {
       queryAst.setHavingAST(MetastoreUtil.copyAST(cubeql.getHavingAST()));
     }
@@ -195,7 +218,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     return whereBuf.toString();
   }
 
-  static void appendWhereClause(StringBuilder filterCondition, String whereClause, boolean hasMore) {
+  private static void appendWhereClause(StringBuilder filterCondition, String whereClause, boolean hasMore) {
     // Make sure we add AND only when there are already some conditions in where
     // clause
     if (hasMore && !filterCondition.toString().isEmpty() && !StringUtils.isBlank(whereClause)) {
@@ -209,11 +232,11 @@ public class StorageCandidate implements Candidate, CandidateTable {
     }
   }
 
-  protected String getPostSelectionWhereClause() throws LensException {
+  private String getPostSelectionWhereClause() throws LensException {
     return null;
   }
 
-  public void setAnswerableMeasurePhraseIndices(int index) {
+  void setAnswerableMeasurePhraseIndices(int index) {
     answerableMeasurePhraseIndices.add(index);
   }
 
@@ -233,20 +256,20 @@ public class StorageCandidate implements Candidate, CandidateTable {
   /**
    * Update Orderby children with final alias used in select
    *
-   * @param orderby
-   * @param select
+   * @param orderby Order by AST
+   * @param select  Select AST
    */
   private void updateOrderByWithFinalAlias(ASTNode orderby, ASTNode select) {
     if (orderby == null) {
       return;
     }
-    for(Node orderbyNode : orderby.getChildren()) {
+    for (Node orderbyNode : orderby.getChildren()) {
       ASTNode orderBychild = (ASTNode) orderbyNode;
-      for(Node selectNode : select.getChildren()) {
+      for (Node selectNode : select.getChildren()) {
         ASTNode selectChild = (ASTNode) selectNode;
         if (selectChild.getChildCount() == 2) {
           if (HQLParser.getString((ASTNode) selectChild.getChild(0))
-              .equals(HQLParser.getString((ASTNode) orderBychild.getChild(0)))) {
+            .equals(HQLParser.getString((ASTNode) orderBychild.getChild(0)))) {
             ASTNode alias = new ASTNode((ASTNode) selectChild.getChild(1));
             orderBychild.replaceChildren(0, 0, alias);
             break;
@@ -356,7 +379,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
     if (!client.isStorageTableCandidateForRange(name, fromDate, toDate)) {
       cubeql.addStoragePruningMsg(this,
-          new CandidateTablePruneCause(CandidateTablePruneCause.CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE));
+        new CandidateTablePruneCause(CandidateTablePruneCause.CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE));
       return false;
     } else if (!client.partColExists(name, partCol)) {
       log.info("{} does not exist in {}", partCol, name);
@@ -370,7 +393,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     Date floorToDate = DateUtil.getFloorDate(toDate, interval);
 
     int lookAheadNumParts = conf
-        .getInt(CubeQueryConfUtil.getLookAheadPTPartsKey(interval), CubeQueryConfUtil.DEFAULT_LOOK_AHEAD_PT_PARTS);
+      .getInt(CubeQueryConfUtil.getLookAheadPTPartsKey(interval), CubeQueryConfUtil.DEFAULT_LOOK_AHEAD_PT_PARTS);
 
     TimeRange.Iterable.Iterator iter = TimeRange.iterable(ceilFromDate, floorToDate, interval, 1).iterator();
     // add partitions from ceilFrom to floorTo
@@ -400,12 +423,12 @@ public class StorageCandidate implements Candidate, CandidateTable {
           // look-ahead
           // process time are present
           TimeRange.Iterable.Iterator processTimeIter = TimeRange.iterable(nextDt, lookAheadNumParts, interval, 1)
-              .iterator();
+            .iterator();
           while (processTimeIter.hasNext()) {
             Date pdt = processTimeIter.next();
             Date nextPdt = processTimeIter.peekNext();
             FactPartition processTimePartition = new FactPartition(processTimePartCol, pdt, interval, null,
-                partWhereClauseFormat);
+              partWhereClauseFormat);
             updatePartitionStorage(processTimePartition);
             if (processTimePartition.isFound()) {
               log.debug("Finer parts not required for look-ahead partition :{}", part);
@@ -419,15 +442,15 @@ public class StorageCandidate implements Candidate, CandidateTable {
                 // Get partitions for look ahead process time
                 log.debug("Looking for process time partitions between {} and {}", pdt, nextPdt);
                 Set<FactPartition> processTimeParts = getPartitions(
-                    TimeRange.getBuilder().fromDate(pdt).toDate(nextPdt).partitionColumn(processTimePartCol).build(),
-                    newset, true, failOnPartialData, missingPartitions);
+                  TimeRange.getBuilder().fromDate(pdt).toDate(nextPdt).partitionColumn(processTimePartCol).build(),
+                  newset, true, failOnPartialData, missingPartitions);
                 log.debug("Look ahead partitions: {}", processTimeParts);
                 TimeRange timeRange = TimeRange.getBuilder().fromDate(dt).toDate(nextDt).build();
                 for (FactPartition pPart : processTimeParts) {
                   log.debug("Looking for finer partitions in pPart: {}", pPart);
                   for (Date date : timeRange.iterable(pPart.getPeriod(), 1)) {
                     FactPartition innerPart = new FactPartition(partCol, date, pPart.getPeriod(), pPart,
-                        partWhereClauseFormat);
+                      partWhereClauseFormat);
                     updatePartitionStorage(innerPart);
                     innerPart.setFound(pPart.isFound());
                     if (innerPart.isFound()) {
@@ -468,10 +491,10 @@ public class StorageCandidate implements Candidate, CandidateTable {
       }
     }
     return
-        getPartitions(fromDate, ceilFromDate, partCol, partitions, updatePeriods,
-            addNonExistingParts, failOnPartialData, missingPartitions)
-            && getPartitions(floorToDate, toDate, partCol, partitions, updatePeriods,
-              addNonExistingParts, failOnPartialData, missingPartitions);
+      getPartitions(fromDate, ceilFromDate, partCol, partitions, updatePeriods,
+        addNonExistingParts, failOnPartialData, missingPartitions)
+        && getPartitions(floorToDate, toDate, partCol, partitions, updatePeriods,
+        addNonExistingParts, failOnPartialData, missingPartitions);
   }
 
   /**
@@ -506,8 +529,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
     boolean partColNotSupported = rangeParts.isEmpty();
     String storageTableName = getName();
 
-    if (storagePruningMsgs.containsKey(storageTableName)) {
-      List<CandidateTablePruneCause> causes = storagePruningMsgs.get(storageTableName);
+    if (storagePruningMsgs.containsKey(this)) {
+      List<CandidateTablePruneCause> causes = storagePruningMsgs.get(this);
       // Find the PART_COL_DOES_NOT_EXISTS
       for (CandidateTablePruneCause cause : causes) {
         if (cause.getCause().equals(CandidateTablePruneCode.PART_COL_DOES_NOT_EXIST)) {
@@ -709,11 +732,11 @@ public class StorageCandidate implements Candidate, CandidateTable {
     return getName();
   }
 
-  public void addValidUpdatePeriod(UpdatePeriod updatePeriod) {
+  void addValidUpdatePeriod(UpdatePeriod updatePeriod) {
     this.validUpdatePeriods.add(updatePeriod);
   }
 
-  public void updateFromString(CubeQueryContext query, Set<Dimension> queryDims,
+  void updateFromString(CubeQueryContext query, Set<Dimension> queryDims,
     Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     this.dimsToQuery = dimsToQuery;
     String alias = cubeql.getAliasForTableName(cubeql.getCube().getName());
@@ -743,5 +766,58 @@ public class StorageCandidate implements Candidate, CandidateTable {
       ret = database + "." + ret;
     }
     return ret;
+  }
+
+  Set<UpdatePeriod> getAllUpdatePeriods() {
+    return getFact().getUpdatePeriods().get(getStorageName());
+  }
+  // TODO: move them to upper interfaces for complex candidates. Right now it's unused, so keeping it just here
+  public boolean isTimeRangeCoverable(TimeRange timeRange) {
+    return isTimeRangeCoverable(timeRange.getFromDate(), timeRange.getToDate(), getValidUpdatePeriods());
+  }
+
+  /**
+   * Is the time range coverable by given update periods.
+   * Extracts the max update period, then extracts maximum amount of range from the middle that this update
+   * period can cover. Then recurses on the ramaining ranges on the left and right side of the extracted chunk
+   * using one less update period.
+   * //TODO: add tests if the function is useful. Till then it's untested and unverified.
+   * @param fromDate  From date
+   * @param toDate    To date
+   * @param periods   Update periods to check
+   * @return          Whether time range is coverable by provided update periods or not.
+   */
+  private boolean isTimeRangeCoverable(Date fromDate, Date toDate, Set<UpdatePeriod> periods) {
+    UpdatePeriod interval = CubeFactTable.maxIntervalInRange(fromDate, toDate, periods);
+    if (fromDate.equals(toDate)) {
+      return true;
+    } else if (periods.isEmpty()) {
+      return false;
+    } else {
+      Set<UpdatePeriod> remaining = Sets.difference(periods, Sets.newHashSet(interval));
+      return interval != null
+        && isTimeRangeCoverable(fromDate, DateUtil.getCeilDate(fromDate, interval), remaining)
+        && isTimeRangeCoverable(DateUtil.getFloorDate(toDate, interval), toDate, remaining);
+    }
+  }
+
+  boolean isUpdatePeriodUseful(UpdatePeriod updatePeriod) {
+    return cubeql.getTimeRanges().stream().anyMatch(timeRange -> isUpdatePeriodUseful(timeRange, updatePeriod));
+  }
+
+  /**
+   * Is the update period useful for this time range. e.g. for a time range of hours and days, monthly
+   * and yearly update periods are useless. DAILY and HOURLY are useful
+   * @param timeRange       The time range
+   * @param updatePeriod    Update period
+   * @return                Whether it's useless
+   */
+  private boolean isUpdatePeriodUseful(TimeRange timeRange, UpdatePeriod updatePeriod) {
+    try {
+      timeRange.truncate(updatePeriod);
+      return true;
+    } catch (LensException e) {
+      return false;
+    }
   }
 }

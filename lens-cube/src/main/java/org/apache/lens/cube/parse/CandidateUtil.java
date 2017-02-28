@@ -43,20 +43,6 @@ import com.google.common.collect.TreeRangeSet;
 public class CandidateUtil {
 
   /**
-   * Is calculated measure expression answerable by the Candidate
-   * @param exprNode
-   * @param candidate
-   * @param context
-   * @return
-   * @throws LensException
-   */
-  public static boolean isMeasureExpressionAnswerable(ASTNode exprNode, Candidate candidate, CubeQueryContext context)
-    throws LensException {
-    return candidate.getColumns().containsAll(HQLParser.getColsInExpr(
-      context.getAliasForTableName(context.getCube()), exprNode));
-  }
-
-  /**
    * Returns true if the Candidate is valid for all the timeranges based on its start and end times.
    * @param candidate
    * @param timeRanges
@@ -72,39 +58,10 @@ public class CandidateUtil {
     return true;
   }
 
-  public static boolean isPartiallyValidForTimeRanges(Candidate cand, List<TimeRange> timeRanges) {
-    for (TimeRange timeRange : timeRanges) {
-      if ((cand.getStartTime().before(timeRange.getFromDate()) && cand.getEndTime().after(timeRange.getFromDate()))
-          || (cand.getStartTime().before(timeRange.getToDate()) && cand.getEndTime().after(timeRange.getToDate()))) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Gets the time partition columns for a storage candidate
-   * TODO decide is this needs to be supported for all Candidate types.
-   *
-   * @param candidate : Stoarge Candidate
-   * @param metastoreClient : Cube metastore client
-   * @return
-   * @throws LensException
-   */
-  public Set<String> getTimePartitionCols(StorageCandidate candidate, CubeMetastoreClient metastoreClient)
-    throws LensException {
-    Set<String> cubeTimeDimensions = candidate.getCube().getTimedDimensions();
-    Set<String> timePartDimensions = new HashSet<String>();
-    String singleStorageTable = candidate.getStorageName();
-    List<FieldSchema> partitionKeys = null;
-    partitionKeys = metastoreClient.getTable(singleStorageTable).getPartitionKeys();
-    for (FieldSchema fs : partitionKeys) {
-      if (cubeTimeDimensions.contains(CubeQueryContext.getTimeDimOfPartitionColumn(candidate.getCube(),
-        fs.getName()))) {
-        timePartDimensions.add(fs.getName());
-      }
-    }
-    return timePartDimensions;
+  static boolean isPartiallyValidForTimeRanges(Candidate cand, List<TimeRange> timeRanges) {
+    return timeRanges.stream().anyMatch(timeRange ->
+      (cand.getStartTime().before(timeRange.getFromDate()) && cand.getEndTime().after(timeRange.getFromDate()))
+      || (cand.getStartTime().before(timeRange.getToDate()) && cand.getEndTime().after(timeRange.getToDate())));
   }
 
   /**
@@ -114,7 +71,7 @@ public class CandidateUtil {
    * @param targetAst
    * @throws LensException
    */
-  public static void copyASTs(QueryAST sourceAst, QueryAST targetAst) throws LensException {
+  static void copyASTs(QueryAST sourceAst, QueryAST targetAst) throws LensException {
     targetAst.setSelectAST(MetastoreUtil.copyAST(sourceAst.getSelectAST()));
     targetAst.setWhereAST(MetastoreUtil.copyAST(sourceAst.getWhereAST()));
     if (sourceAst.getJoinAST() != null) {
@@ -132,9 +89,10 @@ public class CandidateUtil {
     return getStorageCandidates(new HashSet<Candidate>(1) {{ add(candidate); }});
   }
 
-
-  public static Set<QueriedPhraseContext> coveredMeasures(Candidate candSet, Collection<QueriedPhraseContext> msrs,
-      CubeQueryContext cubeql) throws LensException {
+  // this function should only be used for union candidates and never for join candidates.
+  // future scope of improvement: move the data model to use polymorphism
+  static Set<QueriedPhraseContext> coveredMeasures(Candidate candSet, Collection<QueriedPhraseContext> msrs,
+    CubeQueryContext cubeql) throws LensException {
     Set<QueriedPhraseContext> coveringSet = new HashSet<>();
     for (QueriedPhraseContext msr : msrs) {
       if (candSet.getChildren() == null) {
@@ -142,11 +100,15 @@ public class CandidateUtil {
           coveringSet.add(msr);
         }
       } else {
-        // TODO union : all candidates should answer
+        boolean allCanAnswer = true;
         for (Candidate cand : candSet.getChildren()) {
-          if (msr.isEvaluable(cubeql, (StorageCandidate) cand)) {
-            coveringSet.add(msr);
+          if (!msr.isEvaluable(cubeql, (StorageCandidate) cand)) {
+            allCanAnswer = false;
+            break;
           }
+        }
+        if (allCanAnswer) {
+          coveringSet.add(msr);
         }
       }
     }
@@ -235,7 +197,7 @@ public class CandidateUtil {
   public static class ChildrenSizeBasedCandidateComparator<T> implements Comparator<Candidate> {
     @Override
     public int compare(Candidate o1, Candidate o2) {
-      return Integer.valueOf(o1.getChildren().size() - o2.getChildren().size());
+      return o1.getChildren().size() - o2.getChildren().size();
     }
   }
 
@@ -279,7 +241,7 @@ public class CandidateUtil {
     if (limit != null) {
       queryFormat.append(" LIMIT %s");
     }
-    return String.format(queryFormat.toString(), qstrs.toArray(new String[0]));
+    return String.format(queryFormat.toString(), qstrs.toArray(new String[qstrs.size()]));
   }
 
   /**
@@ -312,15 +274,4 @@ public class CandidateUtil {
     }
   }
 
-  public static boolean containsAny(Set<String> srcSet, Set<String> colSet) {
-    if (colSet == null || colSet.isEmpty()) {
-      return true;
-    }
-    for (String column : colSet) {
-      if (srcSet.contains(column)) {
-        return true;
-      }
-    }
-    return false;
-  }
 }

@@ -45,7 +45,7 @@ import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.*;
 
-public class Throttling extends BaseTestClass {
+public class ITThrottlingTests extends BaseTestClass {
 
   WebTarget servLens;
   String sessionHandleString;
@@ -68,7 +68,7 @@ public class Throttling extends BaseTestClass {
   //TODO : Read queue names from property file
   private static String queue1 = "dwh", queue2 = "reports";
 
-  private static Logger logger = Logger.getLogger(Throttling.class);
+  private static Logger logger = Logger.getLogger(ITThrottlingTests.class);
 
   @BeforeClass(alwaysRun = true)
   public void initialize() throws Exception {
@@ -105,7 +105,7 @@ public class Throttling extends BaseTestClass {
     Util.runRemoteCommand("cp " + backupConfFilePath + " " + hiveDriverConf);
   }
 
-  @AfterClass(alwaysRun = false)
+  @AfterClass(alwaysRun = true)
   public void closeSession() throws Exception {
     lens.restart();
   }
@@ -418,7 +418,8 @@ public class Throttling extends BaseTestClass {
       if (running.isEmpty() && queued.isEmpty()) {
         break;
       }
-      Assert.assertTrue(running.size() <= maxConcurrent);
+      Assert.assertTrue(running.size() <= maxConcurrent, "running query count is not less than max concurrent set"
+          + "running-count : " + running.size() + ", max-count : " + maxConcurrent);
 
       int queue1Count = 0, queue2Count = 0;
       for (QueryHandle qh : running) {

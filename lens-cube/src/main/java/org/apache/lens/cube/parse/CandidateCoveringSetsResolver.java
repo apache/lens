@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,11 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CandidateCoveringSetsResolver implements ContextRewriter {
-
-  private final Configuration conf;
-  public CandidateCoveringSetsResolver(Configuration conf) {
-    this.conf = conf;
-  }
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
@@ -99,8 +94,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
   private void updateFinalCandidates(List<List<Candidate>> joinCandidates, CubeQueryContext cubeql) {
     List<Candidate> finalCandidates = new ArrayList<>();
 
-    for (Iterator<List<Candidate>> itr = joinCandidates.iterator(); itr.hasNext();) {
-      List<Candidate> joinCandidate = itr.next();
+    for (List<Candidate> joinCandidate : joinCandidates) {
       if (joinCandidate.size() == 1) {
         finalCandidates.add(joinCandidate.iterator().next());
       } else {
@@ -112,8 +106,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
   }
 
   private boolean isCandidateCoveringTimeRanges(UnionCandidate uc, List<TimeRange> ranges) {
-    for (Iterator<TimeRange> itr = ranges.iterator(); itr.hasNext();) {
-      TimeRange range = itr.next();
+    for (TimeRange range : ranges) {
       if (!CandidateUtil.isTimeRangeCovered(uc.getChildren(), range.getFromDate(), range.getToDate())) {
         return false;
       }
@@ -134,7 +127,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
   private List<Candidate> resolveTimeRangeCoveringFactSet(CubeQueryContext cubeql,
       Set<QueriedPhraseContext> queriedMsrs, List<QueriedPhraseContext> qpcList) throws LensException {
     // All Candidates
-    List<Candidate> allCandidates = new ArrayList<Candidate>(cubeql.getCandidates());
+    List<Candidate> allCandidates = new ArrayList<>(cubeql.getCandidates());
     // Partially valid candidates
     List<Candidate> allCandidatesPartiallyValid = new ArrayList<>();
     List<Candidate> candidateSet = new ArrayList<>();
@@ -144,7 +137,6 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
         StorageCandidate sc = (StorageCandidate) cand;
         if (CandidateUtil.isValidForTimeRanges(sc, cubeql.getTimeRanges())) {
           candidateSet.add(CandidateUtil.cloneStorageCandidate(sc));
-          continue;
         } else if (CandidateUtil.isPartiallyValidForTimeRanges(sc, cubeql.getTimeRanges())) {
           allCandidatesPartiallyValid.add(CandidateUtil.cloneStorageCandidate(sc));
         } else {
@@ -157,9 +149,9 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     }
     // Get all covering fact sets
     List<UnionCandidate> unionCoveringSet =
-        getCombinations(new ArrayList<Candidate>(allCandidatesPartiallyValid), cubeql);
+        getCombinations(new ArrayList<>(allCandidatesPartiallyValid), cubeql);
     // Sort the Collection based on no of elements
-    Collections.sort(unionCoveringSet, new CandidateUtil.ChildrenSizeBasedCandidateComparator<UnionCandidate>());
+    unionCoveringSet.sort(new CandidateUtil.ChildrenSizeBasedCandidateComparator<UnionCandidate>());
     // prune non covering sets
     pruneUnionCandidatesNotCoveringAllRanges(unionCoveringSet, cubeql);
     // prune candidate set which doesn't contain any common measure i
@@ -218,14 +210,13 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     }
   }
 
-  public List<UnionCandidate> getCombinations(final List<Candidate> candidates, CubeQueryContext cubeql) {
-    int aliasCounter = 0;
-    List<UnionCandidate> combinations = new LinkedList<UnionCandidate>();
+  private List<UnionCandidate> getCombinations(final List<Candidate> candidates, CubeQueryContext cubeql) {
+    List<UnionCandidate> combinations = new LinkedList<>();
     int size = candidates.size();
     int threshold = Double.valueOf(Math.pow(2, size)).intValue() - 1;
 
     for (int i = 1; i <= threshold; ++i) {
-      LinkedList<Candidate> individualCombinationList = new LinkedList<Candidate>();
+      LinkedList<Candidate> individualCombinationList = new LinkedList<>();
       int count = size - 1;
       int clonedI = i;
       while (count >= 0) {
@@ -249,7 +240,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       boolean evaluable = false;
       Candidate uc = i.next();
       for (QueriedPhraseContext msr : msrs) {
-        evaluable = isMeasureAnswerablebyUnionCandidate(msr, uc, cubeql) ? true : false;
+        evaluable = isMeasureAnswerablebyUnionCandidate(msr, uc, cubeql);
         if (!evaluable) {
           break;
         }
@@ -265,18 +256,18 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     // Sets that contain all measures or no measures are removed from iteration.
     // find other facts
     for (Iterator<Candidate> i = ucSet.iterator(); i.hasNext();) {
-      Candidate uc = i.next();
+      Candidate candidate = i.next();
       i.remove();
       // find the remaining measures in other facts
       if (i.hasNext()) {
         Set<QueriedPhraseContext> remainingMsrs = new HashSet<>(msrs);
-        Set<QueriedPhraseContext> coveredMsrs = CandidateUtil.coveredMeasures(uc, msrs, cubeql);
+        Set<QueriedPhraseContext> coveredMsrs = CandidateUtil.coveredMeasures(candidate, msrs, cubeql);
         remainingMsrs.removeAll(coveredMsrs);
 
         List<List<Candidate>> coveringSets = resolveJoinCandidates(ucSet, remainingMsrs, cubeql);
         if (!coveringSets.isEmpty()) {
           for (List<Candidate> candSet : coveringSets) {
-            candSet.add(uc);
+            candSet.add(candidate);
             msrCoveringSets.add(candSet);
           }
         } else {

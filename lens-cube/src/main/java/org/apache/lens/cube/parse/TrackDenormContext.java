@@ -18,19 +18,20 @@
  */
 package org.apache.lens.cube.parse;
 
-import org.apache.lens.server.api.error.LensException;
+interface TrackDenormContext {
 
-import org.apache.hadoop.conf.Configuration;
+  /**
+   * Get denormalization context
+   *
+   * @return DenormalizationContext
+   */
+  DenormalizationResolver.DenormalizationContext getDeNormCtx();
 
-public class CheckTableNames extends ValidationRule {
-
-  public CheckTableNames(Configuration conf) {
-    super(conf);
-  }
-
-  @Override
-  public boolean validate(CubeQueryContext ctx) throws LensException {
-    return true;
-  }
+  /**
+   * Set denormalization context
+   *
+   * @param deNormCtx DenormalizationContext
+   */
+  void setDeNormCtx(DenormalizationResolver.DenormalizationContext deNormCtx);
 
 }

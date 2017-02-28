@@ -67,6 +67,9 @@ public class FactPartitionBasedQueryCostCalculator implements QueryCostCalculato
           }
           cost += allTableWeights * getNormalizedUpdatePeriodCost(partition.getPeriod(), driver);
         }
+      } else {
+        // increase cost for every dimtable partition
+        cost += 1.0;
       }
     }
     return cost;

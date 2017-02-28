@@ -182,7 +182,7 @@ class MaxCoveringFactResolver implements ContextRewriter {
     private final long seconds;
     private final long milliseconds;
 
-    public TimeCovered(long ms) {
+    TimeCovered(long ms) {
       milliseconds = ms % (24 * 60 * 60 * 1000);
       long seconds = ms / (24 * 60 * 60 * 1000);
       this.seconds = seconds % (24 * 60 * 60);
@@ -194,9 +194,8 @@ class MaxCoveringFactResolver implements ContextRewriter {
     }
 
     public String toString() {
-      return new StringBuilder().append(days).append(" days, ").append(hours).append(" hours, ").append(minutes)
-        .append(" minutes, ").append(seconds).append(" seconds, ").append(milliseconds).append(" milliseconds.")
-        .toString();
+      return String.valueOf(days) + " days, " + hours + " hours, " + minutes +
+        " minutes, " + seconds + " seconds, " + milliseconds + " milliseconds.";
     }
   }
 }

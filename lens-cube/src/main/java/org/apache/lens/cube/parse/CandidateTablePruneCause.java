@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,9 +18,13 @@
  */
 package org.apache.lens.cube.parse;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.partition;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import org.apache.lens.cube.metadata.TimeRange;
 
@@ -52,12 +56,8 @@ public class CandidateTablePruneCause {
             "present in any table",
           };
         } else {
-          List<List<String>> columnSets = new ArrayList<List<String>>();
-          for (CandidateTablePruneCause cause : causes) {
-            columnSets.add(cause.getMissingColumns());
-          }
           return new String[]{
-            "Column Sets: " + columnSets,
+            "Column Sets: " + causes.stream().map(CandidateTablePruneCause::getMissingColumns).collect(toSet()),
             "queriable together",
           };
         }
@@ -87,12 +87,9 @@ public class CandidateTablePruneCause {
     STORAGE_NOT_AVAILABLE_IN_RANGE("No storages available for all of these time ranges: %s") {
       @Override
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        Set<TimeRange> allRanges = Sets.newHashSet();
-        for (CandidateTablePruneCause cause : causes) {
-          allRanges.addAll(cause.getInvalidRanges());
-        }
         return new Object[]{
-          allRanges.toString(),
+          causes.stream().map(CandidateTablePruneCause::getInvalidRanges).flatMap(Collection::stream)
+            .collect(toSet()).toString(),
         };
       }
     },
@@ -108,11 +105,10 @@ public class CandidateTablePruneCause {
     // expression is not evaluable in the candidate
     EXPRESSION_NOT_EVALUABLE("%s expressions not evaluable") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        List<String> columns = new ArrayList<String>();
-        for (CandidateTablePruneCause cause : causes) {
-          columns.addAll(cause.getMissingExpressions());
-        }
-        return new String[]{columns.toString()};
+        return new String[]{
+          causes.stream().map(CandidateTablePruneCause::getMissingExpressions).flatMap(Collection::stream)
+            .collect(toSet()).toString()
+        };
       }
     },
     // column not valid in cube table. Commented the below line as it's not being used in master.
@@ -126,12 +122,8 @@ public class CandidateTablePruneCause {
             "present in any table",
           };
         } else {
-          List<List<String>> columnSets = new ArrayList<List<String>>();
-          for (CandidateTablePruneCause cause : causes) {
-            columnSets.add(cause.getMissingColumns());
-          }
           return new String[]{
-            "Column Sets: " + columnSets,
+            "Column Sets: " + causes.stream().map(CandidateTablePruneCause::getMissingColumns).collect(toSet()),
             "queriable together",
           };
         }
@@ -146,17 +138,13 @@ public class CandidateTablePruneCause {
     TIMEDIM_NOT_SUPPORTED("Queried data not available for time dimensions: %s") {
       @Override
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        Set<String> dims = Sets.newHashSet();
-        for(CandidateTablePruneCause cause: causes){
-          dims.addAll(cause.getUnsupportedTimeDims());
-        }
         return new Object[]{
-          dims.toString(),
+          causes.stream().map(CandidateTablePruneCause::getUnsupportedTimeDims).flatMap(Collection::stream)
+            .collect(toSet()).toString(),
         };
       }
     },
-    //Commented as its not used anymore.
-    //NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
+    NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
 
     // no candidate update periods, update period cause will have why each
     // update period is not a candidate
@@ -164,44 +152,37 @@ public class CandidateTablePruneCause {
 
     NO_COLUMN_PART_OF_A_JOIN_PATH("No column part of a join path. Join columns: [%s]") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        List<String> columns = new ArrayList<String>();
-        for (CandidateTablePruneCause cause : causes) {
-          columns.addAll(cause.getJoinColumns());
-        }
-        return new String[]{columns.toString()};
+        return new String[]{
+          causes.stream().map(CandidateTablePruneCause::getJoinColumns).flatMap(Collection::stream)
+            .collect(toSet()).toString()
+        };
       }
     },
     // cube table is an aggregated fact and queried column is not under default
     // aggregate
     MISSING_DEFAULT_AGGREGATE("Columns: [%s] are missing default aggregate") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        List<String> columns = new ArrayList<String>();
-        for (CandidateTablePruneCause cause : causes) {
-          columns.addAll(cause.getColumnsMissingDefaultAggregate());
-        }
-        return new String[]{columns.toString()};
+        return new String[]{
+          causes.stream().map(CandidateTablePruneCause::getColumnsMissingDefaultAggregate).flatMap(Collection::stream)
+            .collect(toSet()).toString()
+        };
       }
     },
     // missing partitions for cube table
     MISSING_PARTITIONS("Missing partitions for the cube table: %s") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        Set<Set<String>> missingPartitions = Sets.newHashSet();
-        for (CandidateTablePruneCause cause : causes) {
-          missingPartitions.add(cause.getMissingPartitions());
-        }
-        return new String[]{missingPartitions.toString()};
+        return new String[]{
+          causes.stream().map(CandidateTablePruneCause::getMissingPartitions).collect(toSet()).toString()
+        };
       }
     },
     // incomplete data in the fact
-    INCOMPLETE_PARTITION("Data is incomplete. Details : %s") {
+    INCOMPLETE_PARTITION("Data for the requested metrics is only partially complete. Partially complete metrics are:"
+            + " %s. Please try again later or rerun after removing incomplete metrics") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        Set<Map<String, Map<String, Float>>> incompletePartitions = Sets.newHashSet();
-        for (CandidateTablePruneCause cause : causes) {
-          if (cause.getIncompletePartitions() != null) {
-            incompletePartitions.add(cause.getIncompletePartitions());
-          }
-        }
-        return new String[]{incompletePartitions.toString()};
+        return new String[]{
+          causes.stream().map(CandidateTablePruneCause::getIncompletePartitions).collect(toSet()).toString()
+        };
       }
     };
 
@@ -227,8 +208,9 @@ public class CandidateTablePruneCause {
   public enum SkipUpdatePeriodCode {
     // invalid update period
     INVALID,
-    // Query max interval is more than update period
-    QUERY_INTERVAL_BIGGER
+    //this update period is greater than the Query max interval as provided by user with lens.cube.query.max.interval
+    UPDATE_PERIOD_BIGGER_THAN_MAX,
+    QUERY_INTERVAL_SMALLER_THAN_UPDATE_PERIOD
   }
 
   // Used for Test cases only.
@@ -244,11 +226,11 @@ public class CandidateTablePruneCause {
   // populated only incase of missing update periods cause
   private List<String> missingUpdatePeriods;
   // populated in case of missing columns
-  private List<String> missingColumns;
+  private Set<String> missingColumns;
   // populated in case of expressions not evaluable
   private List<String> missingExpressions;
   // populated in case of no column part of a join path
-  private List<String> joinColumns;
+  private Collection<String> joinColumns;
   // the columns that are missing default aggregate. only set in case of MISSING_DEFAULT_AGGREGATE
   private List<String> columnsMissingDefaultAggregate;
   // if a time dim is not supported by the fact. Would be set if and only if
@@ -268,54 +250,46 @@ public class CandidateTablePruneCause {
   }
 
   // Different static constructors for different causes.
-  public static CandidateTablePruneCause storageNotAvailableInRange(List<TimeRange> ranges) {
+  static CandidateTablePruneCause storageNotAvailableInRange(List<TimeRange> ranges) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(STORAGE_NOT_AVAILABLE_IN_RANGE);
     cause.invalidRanges = ranges;
     return cause;
   }
-  public static CandidateTablePruneCause timeDimNotSupported(Set<String> unsupportedTimeDims) {
+  static CandidateTablePruneCause timeDimNotSupported(Set<String> unsupportedTimeDims) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(TIMEDIM_NOT_SUPPORTED);
     cause.unsupportedTimeDims = unsupportedTimeDims;
     return cause;
   }
 
-  public static CandidateTablePruneCause columnNotFound(CandidateTablePruneCode pruneCode,
-      Collection<String>... missingColumns) {
-    List<String> colList = new ArrayList<String>();
-    for (Collection<String> missing : missingColumns) {
-      colList.addAll(missing);
-    }
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(pruneCode);
-    cause.setMissingColumns(colList);
+  static CandidateTablePruneCause columnNotFound(Collection<String> missingColumns) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(COLUMN_NOT_FOUND);
+    cause.setMissingColumns(Sets.newHashSet(missingColumns));
+    return cause;
+  }
+  static CandidateTablePruneCause denormColumnNotFound(Collection<String> missingColumns) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(DENORM_COLUMN_NOT_FOUND);
+    cause.setMissingColumns(Sets.newHashSet(missingColumns));
     return cause;
   }
 
-  public static CandidateTablePruneCause columnNotFound(CandidateTablePruneCode pruneCode, String... columns) {
-    List<String> colList = new ArrayList<String>();
-    for (String column : columns) {
-      colList.add(column);
-    }
-    return columnNotFound(pruneCode, colList);
+  static CandidateTablePruneCause columnNotFound(String... columns) {
+    return columnNotFound(newArrayList(columns));
   }
 
-  public static CandidateTablePruneCause expressionNotEvaluable(String... exprs) {
-    List<String> colList = new ArrayList<String>();
-    for (String column : exprs) {
-      colList.add(column);
-    }
+  static CandidateTablePruneCause expressionNotEvaluable(String... exprs) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(EXPRESSION_NOT_EVALUABLE);
-    cause.setMissingExpressions(colList);
+    cause.setMissingExpressions(newArrayList(exprs));
     return cause;
   }
 
-  public static CandidateTablePruneCause missingPartitions(Set<String> nonExistingParts) {
+  static CandidateTablePruneCause missingPartitions(Set<String> nonExistingParts) {
     CandidateTablePruneCause cause =
       new CandidateTablePruneCause(MISSING_PARTITIONS);
     cause.setMissingPartitions(nonExistingParts);
     return cause;
   }
 
-  public static CandidateTablePruneCause incompletePartitions(Map<String, Map<String, Float>> incompleteParts) {
+  static CandidateTablePruneCause incompletePartitions(Map<String, Map<String, Float>> incompleteParts) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(INCOMPLETE_PARTITION);
     //incompleteParts may be null when partial data is allowed.
     cause.setIncompletePartitions(incompleteParts);
@@ -325,17 +299,13 @@ public class CandidateTablePruneCause {
   public static CandidateTablePruneCause noColumnPartOfAJoinPath(final Collection<String> colSet) {
     CandidateTablePruneCause cause =
       new CandidateTablePruneCause(NO_COLUMN_PART_OF_A_JOIN_PATH);
-    cause.setJoinColumns(new ArrayList<String>() {
-      {
-        addAll(colSet);
-      }
-    });
+    cause.setJoinColumns(colSet);
     return cause;
   }
 
-  public static CandidateTablePruneCause missingDefaultAggregate(String... names) {
+  static CandidateTablePruneCause missingDefaultAggregate(String... names) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(MISSING_DEFAULT_AGGREGATE);
-    cause.setColumnsMissingDefaultAggregate(Lists.newArrayList(names));
+    cause.setColumnsMissingDefaultAggregate(newArrayList(names));
     return cause;
   }
 
@@ -344,8 +314,8 @@ public class CandidateTablePruneCause {
    * @param dimStoragePruningCauses
    * @return
    */
-  public static CandidateTablePruneCause noCandidateStoragesForDimtable(
-      Map<String, CandidateTablePruneCode> dimStoragePruningCauses) {
+  static CandidateTablePruneCause noCandidateStoragesForDimtable(
+    Map<String, CandidateTablePruneCode> dimStoragePruningCauses) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(NO_CANDIDATE_STORAGES);
     cause.setDimStoragePruningCauses(new HashMap<String, CandidateTablePruneCode>());
     for (Map.Entry<String, CandidateTablePruneCode> entry : dimStoragePruningCauses.entrySet()) {
@@ -361,6 +331,9 @@ public class CandidateTablePruneCause {
    * @param missingPartitionColumns
    * @return
    */
+  public static CandidateTablePruneCause partitionColumnsMissing(final String... missingPartitionColumns) {
+    return partitionColumnsMissing(Lists.newArrayList(missingPartitionColumns));
+  }
   public static CandidateTablePruneCause partitionColumnsMissing(final List<String> missingPartitionColumns) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(PART_COL_DOES_NOT_EXIST);
     cause.nonExistantPartCols = missingPartitionColumns;
@@ -372,7 +345,7 @@ public class CandidateTablePruneCause {
    * @param updatePeriodRejectionCause
    * @return
    */
-  public static CandidateTablePruneCause updatePeriodsRejected(
+  static CandidateTablePruneCause updatePeriodsRejected(
     final Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(NO_CANDIDATE_UPDATE_PERIODS);
     cause.updatePeriodRejectionCause = updatePeriodRejectionCause;

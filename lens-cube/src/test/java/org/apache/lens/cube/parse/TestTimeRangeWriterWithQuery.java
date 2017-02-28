@@ -79,7 +79,6 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     return cal.getTime();
   }
 
-  //TODO union : Revisit Continuous update period.
   @Test
   public void testCubeQueryContinuousUpdatePeriod() throws Exception {
     LensException th = null;

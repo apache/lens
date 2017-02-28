@@ -50,13 +50,11 @@ public class UnionQueryWriter {
   private Map<HQLParser.HashableASTNode, ASTNode> innerToOuterHavingASTs = new HashMap<>();
   private Map<String, ASTNode> storageCandidateToSelectAstMap = new HashMap<>();
   private AliasDecider aliasDecider = new DefaultAliasDecider();
-  private Candidate cand;
   private CubeQueryContext cubeql;
   Set<StorageCandidate> storageCandidates;
   public static final String DEFAULT_MEASURE = "0.0";
 
   public UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
-    this.cand = cand;
     this.cubeql = cubeql;
     storageCandidates = CandidateUtil.getStorageCandidates(cand);
   }

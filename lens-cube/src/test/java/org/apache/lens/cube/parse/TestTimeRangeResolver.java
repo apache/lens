@@ -19,16 +19,20 @@
 
 package org.apache.lens.cube.parse;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.PART_COL_DOES_NOT_EXIST;
 import static
   org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.STORAGE_NOT_AVAILABLE_IN_RANGE;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.UNSUPPORTED_STORAGE;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.TimeRange;
@@ -74,19 +78,10 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError causes = ne.getJsonMessage();
     assertTrue(causes.getBrief().contains("No storages available for all of these time ranges: "
-          + "[dt [2016-01-01-00:00:00,000 to 2017-01-01-00:00:00,000)]"));
-    assertEquals(causes.getDetails().size(), 3);
-
-    Set<CandidateTablePruneCause.CandidateTablePruneCode> expectedPruneCodes = Sets.newTreeSet();
-    expectedPruneCodes.add(COLUMN_NOT_FOUND);
-    expectedPruneCodes.add(UNSUPPORTED_STORAGE);
-    expectedPruneCodes.add(STORAGE_NOT_AVAILABLE_IN_RANGE);
-    Set<CandidateTablePruneCause.CandidateTablePruneCode> actualPruneCodes = Sets.newTreeSet();
-    for (List<CandidateTablePruneCause> cause : causes.getDetails().values()) {
-      assertEquals(cause.size(), 1);
-      actualPruneCodes.add(cause.iterator().next().getCause());
-    }
-    assertEquals(actualPruneCodes, expectedPruneCodes);
+          + "[dt [2016-01-01-00:00:00,000 to 2017-01-01-00:00:00,000)]"), causes.getBrief());
+    assertEquals(causes.getDetails().values().stream().flatMap(Collection::stream)
+        .map(CandidateTablePruneCause::getCause).collect(Collectors.toSet()), newHashSet(COLUMN_NOT_FOUND,
+      PART_COL_DOES_NOT_EXIST, UNSUPPORTED_STORAGE, STORAGE_NOT_AVAILABLE_IN_RANGE));
   }
 
   @Test

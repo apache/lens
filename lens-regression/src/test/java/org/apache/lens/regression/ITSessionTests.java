@@ -52,12 +52,12 @@ import org.testng.annotations.*;
 import com.jcraft.jsch.JSchException;
 
 
-public class SessionTests extends BaseTestClass {
+public class ITSessionTests extends BaseTestClass {
 
   private WebTarget servLens;
   private String sessionHandleString;
 
-  private static Logger logger = Logger.getLogger(SessionTests.class);
+  private static Logger logger = Logger.getLogger(ITSessionTests.class);
 
   @BeforeClass(alwaysRun = true)
   public void initialize() throws IOException, JSchException, JAXBException, LensException {

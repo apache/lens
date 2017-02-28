@@ -62,7 +62,6 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 
 import org.glassfish.jersey.test.TestProperties;
-
 import org.testng.Assert;
 import org.testng.annotations.*;
 
@@ -974,7 +973,29 @@ public class TestMetastoreService extends LensJerseyTest {
     final String[] timePartColNames = {"dt"};
     return createStorageTblElement(storageName, table, timePartColNames, updatePeriod);
   }
+  private XStorageTableElement createStorageTblWithMultipleTableDescriptors(String storageName, String[] tables,
+     String [] updatePeriods) {
+    String [][] timePartColNames  = new String[updatePeriods.length][];
+    for (int i = 0; i < updatePeriods.length; i++) {
+      timePartColNames[i] = new String[]{ "dt" };
+    }
+    return createStorageTblWithMultipleTableDescriptors(storageName, tables, timePartColNames, updatePeriods);
+  }
 
+  private XStorageTableElement createStorageTblWithMultipleTableDescriptors(String storageName, String[] tables,
+    String[][] timePartColNames, String [] updatePeriods) {
+    XStorageTableElement tbl = cubeObjectFactory.createXStorageTableElement();
+    tbl.setStorageName(storageName);
+    XUpdatePeriods xUpdatePeriods = new XUpdatePeriods();
+    tbl.setUpdatePeriods(xUpdatePeriods);
+    for (int i = 0; i < updatePeriods.length; i++) {
+      XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
+      updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(updatePeriods[i]));
+      updatePeriodTableDescriptor.setTableDesc(createStorageTableDesc(tables[i], timePartColNames[i]));
+      xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
+    }
+    return tbl;
+  }
   private XStorageTableElement createStorageTblElement(String storageName, String table,
     final String[] timePartColNames, String... updatePeriod) {
     XStorageTableElement tbl = cubeObjectFactory.createXStorageTableElement();
@@ -1833,6 +1854,169 @@ public class TestMetastoreService extends LensJerseyTest {
     Map<String, String> properties = LensUtil.getHashMap("foo", "bar");
     f.getProperties().getProperty().addAll(JAXBUtils.xPropertiesFromMap(properties));
     return f;
+  }
+
+  @Test(dataProvider = "mediaTypeData")
+  public void testCreateFactTableWithMultipleUpdatePeriods(MediaType mediaType) throws Exception {
+
+    final String table = "testCreateFactTableWithMultipleUpdatePeriods";
+    String prevDb = getCurrentDatabase(mediaType);
+    final String DB = dbPFX + "testCreateFactTableWithMultipleUpdatePeriods_DB" + mediaType.getSubtype();
+    createDatabase(DB, mediaType);
+    setCurrentDatabase(DB, mediaType);
+    createStorage("S1", mediaType);
+    try {
+      final XCube cube = createTestCube("testCube");
+      target().path("metastore").path("cubes").queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.entity(new GenericEntity<JAXBElement<XCube>>(cubeObjectFactory.createXCube(cube)) {
+        }, mediaType), APIResult.class);
+      XFactTable f = createFactTable(table);
+      String[] tables = new String[] { "testTable1", "testTable2", "testTable3" };
+      String[] updatePeriods = new String[] { "HOURLY", "DAILY", "MONTHLY" };
+      f.getStorageTables().getStorageTable()
+        .add(createStorageTblWithMultipleTableDescriptors("S1", tables, updatePeriods));
+      APIResult result = target().path("metastore").path("facts").queryParam("sessionid", lensSessionId)
+        .request(mediaType)
+        .post(Entity.entity(new GenericEntity<JAXBElement<XFactTable>>(cubeObjectFactory.createXFactTable(f)) {
+        }, mediaType), APIResult.class);
+      assertSuccess(result);
+
+      StringList factNames = target().path("metastore/facts").queryParam("sessionid", lensSessionId).request(mediaType)
+        .get(StringList.class);
+      assertTrue(factNames.getElements().contains(table.toLowerCase()));
+
+      // Get the created tables
+      JAXBElement<XFactTable> gotFactElement = target().path("metastore/facts").path(table)
+        .queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XFactTable>>() {
+        });
+      XFactTable gotFact = gotFactElement.getValue();
+      assertTrue(gotFact.getName().equalsIgnoreCase(table));
+      assertEquals(gotFact.getWeight(), 10.0);
+
+      // Check for the created tables per update period.
+      List<XUpdatePeriodTableDescriptor> updatePeriodTableDescriptor = gotFact.getStorageTables().getStorageTable()
+        .get(0).getUpdatePeriods().getUpdatePeriodTableDescriptor();
+      assertEquals(updatePeriodTableDescriptor.size(), 3);
+
+      CubeFactTable cf = JAXBUtils.cubeFactFromFactTable(gotFact);
+
+      Map<UpdatePeriod, String> updatePeriodTablePrefixMap = cf.getStoragePrefixUpdatePeriodMap().get("S1");
+      for (Map.Entry entry : updatePeriodTablePrefixMap.entrySet()) {
+        assertEquals(entry.getValue(), entry.getKey() + "_S1");
+      }
+      // Do some changes to test update
+      cf.alterWeight(20.0);
+      cf.alterColumn(new FieldSchema("c2", "double", "changed to double"));
+
+      XFactTable update = JAXBUtils.factTableFromCubeFactTable(cf);
+      XStorageTableElement s1Tbl = createStorageTblWithMultipleTableDescriptors("S1",
+        new String[] { tables[0], tables[1] }, new String[] { updatePeriods[0], updatePeriods[1] });
+      update.getStorageTables().getStorageTable().add(s1Tbl);
+      // Update
+      result = target().path("metastore").path("facts").path(table).queryParam("sessionid", lensSessionId)
+        .request(mediaType)
+        .put(Entity.entity(new GenericEntity<JAXBElement<XFactTable>>(cubeObjectFactory.createXFactTable(update)) {
+        }, mediaType), APIResult.class);
+      assertSuccess(result);
+
+      // Get the updated table
+      gotFactElement = target().path("metastore/facts").path(table).queryParam("sessionid", lensSessionId)
+        .request(mediaType).get(new GenericType<JAXBElement<XFactTable>>() {
+        });
+      gotFact = gotFactElement.getValue();
+      CubeFactTable ucf = JAXBUtils.cubeFactFromFactTable(gotFact);
+      assertEquals(ucf.weight(), 20.0);
+      assertTrue(ucf.getUpdatePeriods().get("S1").contains(HOURLY));
+      assertTrue(ucf.getUpdatePeriods().get("S1").contains(DAILY));
+      assertFalse(ucf.getUpdatePeriods().get("S1").contains(MONTHLY));
+
+      // Add partitions
+      final Date partDate = new Date();
+      XPartition xp = createPartition(table, partDate);
+      APIResult partAddResult = target().path("metastore/facts/").path(table).path("storages/S1/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.entity(new GenericEntity<JAXBElement<XPartition>>(cubeObjectFactory.createXPartition(xp)) {
+        }, mediaType), APIResult.class);
+      assertSuccess(partAddResult);
+
+      // add same should fail
+      partAddResult = target().path("metastore/facts/").path(table).path("storages/S1/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .post(Entity.entity(new GenericEntity<JAXBElement<XPartition>>(cubeObjectFactory.createXPartition(xp)) {
+        }, mediaType), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.FAILED);
+
+      xp.setLocation(xp.getLocation() + "/a/b/c");
+      APIResult partUpdateResult = target().path("metastore/facts/").path(table).path("storages/S1/partition")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .put(Entity.entity(new GenericEntity<JAXBElement<XPartition>>(cubeObjectFactory.createXPartition(xp)) {
+        }, mediaType), APIResult.class);
+      assertSuccess(partUpdateResult);
+
+      JAXBElement<XPartitionList> partitionsElement = target().path("metastore/facts").path(table)
+        .path("storages/S1/partitions").queryParam("sessionid", lensSessionId).request(mediaType)
+        .get(new GenericType<JAXBElement<XPartitionList>>() {
+        });
+
+      XPartitionList partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getPartition().size(), 1);
+      XPartition readPartition = partitions.getPartition().get(0);
+      assertEquals(readPartition.getLocation(), xp.getLocation());
+      assertEquals(readPartition.getTimePartitionSpec(), xp.getTimePartitionSpec());
+      assertEquals(readPartition.getNonTimePartitionSpec(), xp.getNonTimePartitionSpec());
+      assertNotNull(readPartition.getFullPartitionSpec());
+      XTimePartSpecElement timePartSpec = readPartition.getTimePartitionSpec().getPartSpecElement().iterator().next();
+      XPartSpecElement fullPartSpec = readPartition.getFullPartitionSpec().getPartSpecElement().iterator().next();
+      assertEquals(timePartSpec.getKey(), fullPartSpec.getKey());
+      assertEquals(
+        UpdatePeriod.valueOf(xp.getUpdatePeriod().name()).format(JAXBUtils.getDateFromXML(timePartSpec.getValue())),
+        fullPartSpec.getValue());
+      DateTime date = target().path("metastore/cubes").path("testCube").path("latestdate")
+        .queryParam("timeDimension", "dt").queryParam("sessionid", lensSessionId).request(mediaType)
+        .get(DateTime.class);
+
+      partDate.setMinutes(0);
+      partDate.setSeconds(0);
+      partDate.setTime(partDate.getTime() - partDate.getTime() % 1000);
+      assertEquals(date.getDate(), partDate);
+      // add two partitions, one of them already added. result should be partial
+      XPartitionList parts = new XPartitionList();
+      parts.getPartition().add(xp);
+      parts.getPartition().add(createPartition(table, DateUtils.addHours(partDate, 1)));
+      partAddResult = target().path("metastore/facts/").path(table).path("storages/S1/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType).post(
+          Entity.entity(new GenericEntity<JAXBElement<XPartitionList>>(cubeObjectFactory.createXPartitionList(parts)) {
+          }, mediaType), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.PARTIAL);
+
+      // Drop the partitions
+      APIResult dropResult = target().path("metastore/facts").path(table).path("storages/S1/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType).delete(APIResult.class);
+
+      assertSuccess(dropResult);
+
+      // Verify partition was dropped
+      partitionsElement = target().path("metastore/facts").path(table).path("storages/S1/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XPartitionList>>() {
+        });
+
+      partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getPartition().size(), 0);
+      // add null in batch
+      Response resp = target().path("metastore/facts/").path(table).path("storages/S1/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType).post(null);
+      Assert.assertEquals(resp.getStatus(), 400);
+
+      // Drop the cube
+      WebTarget target = target().path("metastore").path("cubes").path("testCube");
+      result = target.queryParam("sessionid", lensSessionId).request(mediaType).delete(APIResult.class);
+      assertSuccess(result);
+    } finally {
+      setCurrentDatabase(prevDb, mediaType);
+      dropDatabase(DB, mediaType);
+    }
   }
 
   @Test(dataProvider = "mediaTypeData")

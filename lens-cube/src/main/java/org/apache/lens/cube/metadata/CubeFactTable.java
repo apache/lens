@@ -29,10 +29,14 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Lists;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CubeFactTable extends AbstractCubeTable {
+  @Getter
+  // Map<StorageName, Map<update_period, storage_table_prefix>>
+  private final Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap;
   private String cubeName;
   private final Map<String, Set<UpdatePeriod>> storageUpdatePeriods;
 
@@ -40,7 +44,9 @@ public class CubeFactTable extends AbstractCubeTable {
     super(hiveTable);
     this.storageUpdatePeriods = getUpdatePeriods(getName(), getProperties());
     this.cubeName = getCubeName(getName(), getProperties());
+    this.storagePrefixUpdatePeriodMap = getUpdatePeriodMap(getName(), getProperties());
   }
+
 
   public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods) {
@@ -54,9 +60,18 @@ public class CubeFactTable extends AbstractCubeTable {
 
   public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight, Map<String, String> properties) {
+    this(cubeName, factName, columns, storageUpdatePeriods, weight, properties,
+      new HashMap<String, Map<UpdatePeriod, String>>());
+
+  }
+
+  public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
+    Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight, Map<String, String> properties,
+    Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap) {
     super(factName, columns, properties, weight);
     this.cubeName = cubeName;
     this.storageUpdatePeriods = storageUpdatePeriods;
+    this.storagePrefixUpdatePeriodMap = storagePrefixUpdatePeriodMap;
     addProperties();
   }
 
@@ -65,6 +80,18 @@ public class CubeFactTable extends AbstractCubeTable {
     super.addProperties();
     addCubeNames(getName(), getProperties(), cubeName);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
+    addStorageTableProperties(getName(), getProperties(), storagePrefixUpdatePeriodMap);
+  }
+
+  private void addStorageTableProperties(String name, Map<String, String> properties,
+    Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap) {
+    for (String storageName : storageUpdatePeriodMap.keySet()) {
+      String prefix = MetastoreUtil.getFactKeyPrefix(name) + "." + storageName;
+      for (Map.Entry updatePeriodEntry : storageUpdatePeriodMap.get(storageName).entrySet()) {
+        String updatePeriod = ((UpdatePeriod) updatePeriodEntry.getKey()).getName();
+        properties.put(prefix + "." + updatePeriod, (String) updatePeriodEntry.getValue());
+      }
+    }
   }
 
   private static void addUpdatePeriodProperies(String name, Map<String, String> props,
@@ -82,7 +109,29 @@ public class CubeFactTable extends AbstractCubeTable {
     props.put(MetastoreUtil.getFactCubeNameKey(factName), cubeName);
   }
 
-  private static Map<String, Set<UpdatePeriod>> getUpdatePeriods(String name, Map<String, String> props) {
+  private Map<String, Map<UpdatePeriod, String>> getUpdatePeriodMap(String factName, Map<String, String> props) {
+    Map<String, Map<UpdatePeriod, String>> ret = new HashMap<>();
+    for (Map.Entry entry : storageUpdatePeriods.entrySet()) {
+      String storage = (String) entry.getKey();
+      for (UpdatePeriod period : (Set<UpdatePeriod>) entry.getValue()) {
+        String storagePrefixKey = MetastoreUtil
+          .getUpdatePeriodStoragePrefixKey(factName.trim(), storage, period.getName());
+        String storageTableNamePrefix = props.get(storagePrefixKey);
+        if (storageTableNamePrefix == null) {
+          storageTableNamePrefix = storage;
+        }
+        Map<UpdatePeriod, String> mapOfUpdatePeriods = ret.get(storage);
+        if (mapOfUpdatePeriods == null) {
+          mapOfUpdatePeriods = new HashMap<>();
+          ret.put(storage, mapOfUpdatePeriods);
+        }
+        mapOfUpdatePeriods.put(period, storageTableNamePrefix);
+      }
+    }
+    return ret;
+  }
+
+  private Map<String, Set<UpdatePeriod>> getUpdatePeriods(String name, Map<String, String> props) {
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods = new HashMap<>();
     String storagesStr = props.get(MetastoreUtil.getFactStorageListKey(name));
     if (!StringUtils.isBlank(storagesStr)) {
@@ -273,13 +322,16 @@ public class CubeFactTable extends AbstractCubeTable {
 
   /**
    * Add a storage with specified update periods
-   *
    * @param storage
    * @param updatePeriods
+   * @param updatePeriodStoragePrefix
    */
-  void addStorage(String storage, Set<UpdatePeriod> updatePeriods) {
+  void addStorage(String storage, Set<UpdatePeriod> updatePeriods,
+    Map<UpdatePeriod, String> updatePeriodStoragePrefix) {
     storageUpdatePeriods.put(storage, updatePeriods);
+    storagePrefixUpdatePeriodMap.put(storage, updatePeriodStoragePrefix);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
+    addStorageTableProperties(getName(), getProperties(), storagePrefixUpdatePeriodMap);
   }
 
   /**
@@ -289,6 +341,12 @@ public class CubeFactTable extends AbstractCubeTable {
    */
   void dropStorage(String storage) {
     storageUpdatePeriods.remove(storage);
+    String prefix = MetastoreUtil.getFactKeyPrefix(getName()) + "." + storage;
+    for (Map.Entry updatePeriodEntry : storagePrefixUpdatePeriodMap.get(storage).entrySet()) {
+      String updatePeriod = ((UpdatePeriod)updatePeriodEntry.getKey()).getName();
+      getProperties().remove(prefix + "." + updatePeriod);
+    }
+    storagePrefixUpdatePeriodMap.remove(storage);
     getProperties().remove(MetastoreUtil.getFactUpdatePeriodKey(getName(), storage));
     String newStorages = StringUtils.join(storageUpdatePeriods.keySet(), ",");
     getProperties().put(MetastoreUtil.getFactStorageListKey(getName()), newStorages);
@@ -351,5 +409,7 @@ public class CubeFactTable extends AbstractCubeTable {
     return Collections.min(Lists.newArrayList(getRelativeEndTime(), getAbsoluteEndTime()));
   }
 
-
+  public String getTablePrefix(String storage, UpdatePeriod updatePeriod) {
+    return storagePrefixUpdatePeriodMap.get(storage).get(updatePeriod);
+  }
 }

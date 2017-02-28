@@ -73,6 +73,5 @@ public interface CandidateTable {
   /**
    * Get partitions queried
    */
-  //TODO union: Name changed
   Set<?> getParticipatingPartitions();
 }

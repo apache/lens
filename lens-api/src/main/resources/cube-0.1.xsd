@@ -681,8 +681,27 @@
   </xs:complexType>
 
   <xs:complexType name="x_update_periods">
-    <xs:sequence>
+    <xs:annotation>
+      <xs:documentation>
+        A list of update_period which contains either update period table descriptor or list of update_peroid enum.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="1" minOccurs="0">
+      <xs:element name="update_period_table_descriptor" type="x_update_period_table_descriptor" maxOccurs="unbounded"
+                  minOccurs="0"/>
       <xs:element name="update_period" type="x_update_period" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="x_update_period_table_descriptor">
+    <xs:annotation>
+      <xs:documentation>
+        An update period descriptor keeps an enum of update period and a storage table descriptor.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="update_period" type="x_update_period" maxOccurs="1" minOccurs="1"/>
+      <xs:element name="table_desc" type="x_storage_table_desc" maxOccurs="1" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -1001,14 +1020,15 @@
   <xs:complexType name="x_storage_table_element">
     <xs:annotation>
       <xs:documentation>
-        Storage and storage table description and update periods
+        Storage and storage table description and update periods. table_desc is invalid when update_periods has a list
+        of update_period_table_descriptor instead of a list of enums.
       </xs:documentation>
     </xs:annotation>
-    <xs:sequence>
+    <xs:all>
       <xs:element name="update_periods" type="x_update_periods" maxOccurs="1" minOccurs="0"/>
       <xs:element name="storage_name" type="xs:string"/>
-      <xs:element type="x_storage_table_desc" name="table_desc"/>
-    </xs:sequence>
+      <xs:element type="x_storage_table_desc" name="table_desc" maxOccurs="1" minOccurs="0"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="x_storage_tables">

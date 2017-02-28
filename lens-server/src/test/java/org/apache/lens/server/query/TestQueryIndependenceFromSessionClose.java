@@ -22,10 +22,7 @@ import static org.apache.lens.server.api.LensConfConstants.*;
 
 import static org.testng.Assert.*;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -33,6 +30,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.result.LensAPIResult;
@@ -41,6 +39,7 @@ import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerTestUtil;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
@@ -51,6 +50,9 @@ import org.apache.lens.server.common.RestAPITestUtil;
 import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.error.LensServerErrorCode;
 import org.apache.lens.server.session.HiveSessionService;
+import org.apache.lens.server.session.LensSessionImpl;
+
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.glassfish.jersey.test.TestProperties;
 import org.testng.annotations.*;
@@ -111,10 +113,6 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
       QUERY_PERSISTENT_RESULT_INDRIVER, true,
       QUERY_OUTPUT_FORMATTER, TestQueryService.DeferredPersistentResultFormatter.class.getName());
   }
-  @AfterClass
-  public void restart() {
-    restartLensServer();
-  }
 
   @Override
   public Map<String, String> getServerConfOverWrites() {
@@ -150,10 +148,17 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
 
   private void customRestartLensServer() {
     queryService = null;
-    super.restartLensServer(getServerConf(), false);
+    super.restartLensServer(getServerConf());
     getQueryService();
   }
 
+  private void restartLensServerWithLowerExpiry() {
+    sessionService = null;
+    HiveConf hconf = new HiveConf(getServerConf());
+    hconf.setLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
+    super.restartLensServer(hconf);
+    getSessionService();
+  }
   /*
      * (non-Javadoc)
      *
@@ -277,6 +282,54 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
     return sessions;
   }
 
+  @Test
+  public void testSessionExpiryWithActiveOperation() throws Exception {
+    LensSessionHandle oldSession = getSession();
+    assertTrue(sessionService.getSession(oldSession).isActive());
+    restartLensServerWithLowerExpiry();
+    assertFalse(sessionService.getSession(oldSession).isActive());
+    // create a new session and launch a query
+    LensSessionHandle sessionHandle = getSession();
+    LensSessionImpl session = sessionService.getSession(sessionHandle);
+    QueryHandle handle = RestAPITestUtil.executeAndGetHandle(target(),
+      Optional.of(sessionHandle), Optional.of("select * from " + TEST_TABLE), Optional.of(conf), defaultMT);
+    assertTrue(session.isActive());
+    session.setLastAccessTime(
+      session.getLastAccessTime() - 2000 * getServerConf().getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
+        LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
+    assertTrue(session.isActive());
+    assertFalse(session.isMarkedForClose());
+
+    LensSessionHandle sessionHandle2 = getSession();
+    LensQuery ctx = RestAPITestUtil.getLensQuery(target(), sessionHandle2, handle, defaultMT);
+    while (!ctx.getStatus().finished()) {
+      ctx = RestAPITestUtil.getLensQuery(target(), sessionHandle2, handle, defaultMT);
+      Thread.sleep(1000);
+      sessionHandle2 = getSession();
+    }
+    assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL, String.valueOf(ctx));
+    assertFalse(session.isActive());
+    assertFalse(session.isMarkedForClose());
+
+    // run the expiry thread
+    sessionService.getSessionExpiryRunnable().run();
+    try {
+      sessionService.getSession(sessionHandle);
+      // should throw exception since session should be expired by now
+      fail("Expected get session to fail for session " + sessionHandle.getPublicId());
+    } catch (Exception e) {
+      // pass
+    }
+    try {
+      sessionService.getSession(oldSession);
+      // should throw exception since session should be expired by now
+      fail("Expected get session to fail for session " + oldSession.getPublicId());
+    } catch (Exception e) {
+      // pass
+    }
+    restartLensServer();
+    lensSessionId = getSession();
+  }
   @AfterMethod
   private void waitForPurge() throws InterruptedException {
     waitForPurge(0, getQueryService().finishedQueries);

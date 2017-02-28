@@ -124,14 +124,18 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
   /**
    * Get the storage table descriptor for the given parent table.
    *
+   * @param storageTableNamePrefix  Storage table prefix based on update period
    * @param client The metastore client
    * @param parent Is either Fact or Dimension table
    * @param crtTbl Create table info
    * @return Table describing the storage table
    * @throws HiveException
    */
-  public Table getStorageTable(Hive client, Table parent, StorageTableDesc crtTbl) throws HiveException {
-    String storageTableName = MetastoreUtil.getStorageTableName(parent.getTableName(), this.getPrefix());
+  public static Table getStorageTable(String storageTableNamePrefix, Hive client, Table parent, StorageTableDesc crtTbl)
+    throws HiveException {
+    // Change it to the appropriate storage table name.
+    String storageTableName = MetastoreUtil
+      .getStorageTableName(parent.getTableName(), Storage.getPrefix(storageTableNamePrefix));
     Table tbl = client.getTable(storageTableName, false);
     if (tbl == null) {
       tbl = client.newTable(storageTableName);
@@ -235,21 +239,6 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
   }
 
   /**
-   * Add single partition to storage. Just calls #addPartitions.
-   * @param client
-   * @param addPartitionDesc
-   * @param latestInfo
-   * @throws HiveException
-   */
-  public List<Partition> addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
-    throws HiveException {
-    Map<Map<String, String>, LatestInfo> latestInfos = Maps.newHashMap();
-    latestInfos.put(addPartitionDesc.getNonTimePartSpec(), latestInfo);
-    return addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
-      Collections.singletonList(addPartitionDesc), latestInfos);
-  }
-
-  /**
    * Add given partitions in the underlying hive table and update latest partition links
    *
    * @param client                hive client instance
@@ -262,12 +251,11 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    */
   public List<Partition> addPartitions(Hive client, String factOrDimTable, UpdatePeriod updatePeriod,
     List<StoragePartitionDesc> storagePartitionDescs,
-    Map<Map<String, String>, LatestInfo> latestInfos) throws HiveException {
+    Map<Map<String, String>, LatestInfo> latestInfos, String tableName) throws HiveException {
     preAddPartitions(storagePartitionDescs);
     Map<Map<String, String>, Map<String, Integer>> latestPartIndexForPartCols = Maps.newHashMap();
     boolean success = false;
     try {
-      String tableName = MetastoreUtil.getStorageTableName(factOrDimTable, this.getPrefix());
       String dbName = SessionState.get().getCurrentDatabase();
       AddPartitionDesc addParts = new AddPartitionDesc(dbName, tableName, true);
       Table storageTbl = client.getTable(dbName, tableName);
@@ -383,11 +371,11 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    * @throws InvalidOperationException
    * @throws HiveException
    */
-  public void updatePartitions(Hive client, String fact, List<Partition> partitions)
+  public void updatePartitions(String storageTable, Hive client, String fact, List<Partition> partitions)
     throws InvalidOperationException, HiveException {
     boolean success = false;
     try {
-      client.alterPartitions(MetastoreUtil.getFactOrDimtableStorageTableName(fact, getName()), partitions, null);
+      client.alterPartitions(storageTable, partitions, null);
       success = true;
     } finally {
       if (success) {

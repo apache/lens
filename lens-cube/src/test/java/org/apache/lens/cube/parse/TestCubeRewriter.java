@@ -30,6 +30,7 @@ import static org.testng.Assert.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Stream;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.error.NoCandidateDimAvailableException;
@@ -78,7 +79,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
   @Test
   public void testQueryWithNow() throws Exception {
-    LensException e = getLensExceptionInRewrite(
+    LensException e = getLensExceptionInRewrite( // rewrites with original time_range_in
       "select SUM(msr2) from testCube where " + getTimeRangeString("NOW - 2DAYS", "NOW"), getConf());
     assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
   }
@@ -88,7 +89,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Configuration conf = getConf();
     conf.set(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "true");
     conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS, BetweenTimeRangeWriter.class, TimeRangeWriter.class);
-
+    conf.setBoolean(REPLACE_TIMEDIM_WITH_PART_COL, false);
     DateFormat qFmt = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
     String timeRangeString;
     timeRangeString = getTimeRangeString(DAILY, -2, 0, qFmt);
@@ -99,12 +100,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     String expected = "select SUM((testCube.msr15))  as `sum(msr15)` from "
         + "TestQueryRewrite.c0_testFact_CONTINUOUS testcube"
-        + " WHERE ((( testcube . dt ) between  '" + from + "'  and  '" + to + "' ))";
+        + " WHERE ((( testcube . d_time ) between  '" + from + "'  and  '" + to + "' ))";
     System.out.println("rewrittenQuery.toHQL() " + rewrittenQuery.toHQL());
     System.out.println("expected " + expected);
     compareQueries(rewrittenQuery.toHQL(), expected);
 
     //test with msr2 on different fact
+    conf.setBoolean(REPLACE_TIMEDIM_WITH_PART_COL, true);
     rewrittenQuery = rewriteCtx("select SUM(msr2) from testCube where " + timeRangeString, conf);
     expected = "select SUM((testCube.msr2)) as `sum(msr2)` from TestQueryRewrite.c2_testfact testcube"
       + " WHERE ((( testcube . dt ) between  '" + from + "'  and  '" + to + "' ))";
@@ -153,14 +155,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     CubeQueryContext cubeQueryContext =
       rewriteCtx("select SUM(msr2) from testCube where " + THIS_YEAR_RANGE, conf);
     PruneCauses<StorageCandidate> pruneCause = cubeQueryContext.getStoragePruningMsgs();
-    int lessDataCauses = 0;
-    for (Map.Entry<StorageCandidate, List<CandidateTablePruneCause>> entry : pruneCause.entrySet()) {
-      for (CandidateTablePruneCause cause : entry.getValue()) {
-        if (cause.getCause().equals(LESS_DATA)) {
-          lessDataCauses++;
-        }
-      }
-    }
+    long lessDataCauses = pruneCause.values().stream()
+      .flatMap(Collection::stream).map(CandidateTablePruneCause::getCause).filter(LESS_DATA::equals).count();
     assertTrue(lessDataCauses > 0);
   }
 
@@ -991,11 +987,11 @@ public class TestCubeRewriter extends TestQueryRewrite {
     assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
-    /*Since the Flag FAIL_QUERY_ON_PARTIAL_DATA is set, and thhe queried fact has incomplete data, hence, we expect the
+    /*Since the Flag FAIL_QUERY_ON_PARTIAL_DATA is set, and the queried fact has incomplete data, hence, we expect the
     prune cause to be INCOMPLETE_PARTITION. The below check is to validate this.*/
-    assertEquals(pruneCauses.getBrief().substring(0, INCOMPLETE_PARTITION.errorFormat.length() - 3),
-        INCOMPLETE_PARTITION.errorFormat.substring(0,
-            INCOMPLETE_PARTITION.errorFormat.length() - 3), pruneCauses.getBrief());
+    for(String part: INCOMPLETE_PARTITION.errorFormat.split("%s")) {
+      assertTrue(pruneCauses.getBrief().contains(part), pruneCauses.getBrief());
+    }
   }
 
   @Test
@@ -1013,21 +1009,12 @@ public class TestCubeRewriter extends TestQueryRewrite {
       pruneCauses.getBrief().substring(0, MISSING_PARTITIONS.errorFormat.length() - 3),
       MISSING_PARTITIONS.errorFormat.substring(0,
         MISSING_PARTITIONS.errorFormat.length() - 3), pruneCauses.getBrief());
-
-    Set<String> expectedSet =
-      Sets.newTreeSet(Arrays.asList("c1_testfact2_raw", "c1_summary3", "c1_summary2",
-          "c1_summary1", "c2_testfact", "c1_testfact"));
-    boolean missingPartitionCause = false;
-    for (String key : pruneCauses.getDetails().keySet()) {
-      Set<String> actualKeySet = Sets.newTreeSet(Splitter.on(',').split(key));
-      if (expectedSet.equals(actualKeySet)) {
-        assertEquals(pruneCauses.getDetails().get(key).iterator()
-          .next().getCause(), MISSING_PARTITIONS);
-        missingPartitionCause = true;
-      }
-    }
-    assertTrue(missingPartitionCause, MISSING_PARTITIONS + " error does not occur for facttables set " + expectedSet
-      + " Details :" + pruneCauses.getDetails());
+    List<CandidateTablePruneCause> missingPartitionCauses = pruneCauses.enhanced().get(
+      Sets.newHashSet("c1_testfact2_raw", "c1_summary3", "c1_summary2",
+      "c1_summary1", "c2_testfact", "c1_testfact"));
+    assertEquals(missingPartitionCauses.size(), 1);
+    CandidateTablePruneCause missingPartitionCause = missingPartitionCauses.iterator().next();
+    assertEquals(missingPartitionCause.getCause(), MISSING_PARTITIONS);
     assertEquals(pruneCauses.getDetails().get("c1_testfact2").iterator().next().getCause(),
       MISSING_PARTITIONS);
     /*
@@ -1061,10 +1048,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
   public void testNoCandidateDimAvailableExceptionCompare() throws Exception {
 
     //Max cause COLUMN_NOT_FOUND, Ordinal 2
-    PruneCauses<CubeDimensionTable> pr1 = new PruneCauses<CubeDimensionTable>();
+    PruneCauses<CubeDimensionTable> pr1 = new PruneCauses<>();
     pr1.addPruningMsg(new CubeDimensionTable(new Table("test", "citydim")),
             CandidateTablePruneCause.columnNotFound(
-                CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND, "test1", "test2", "test3"));
+              "test1", "test2", "test3"));
     NoCandidateDimAvailableException ne1 = new NoCandidateDimAvailableException(pr1);
 
     //Max cause EXPRESSION_NOT_EVALUABLE, Ordinal 14

@@ -28,7 +28,7 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.query.*;
 import org.apache.lens.cube.parse.CubeQueryConfUtil;
-import org.apache.lens.regression.client.SessionResourceTests;
+import org.apache.lens.regression.client.ITSessionResourceTests;
 import org.apache.lens.regression.core.constants.QueryInventory;
 import org.apache.lens.regression.core.helpers.ServiceManagerHelper;
 import org.apache.lens.regression.core.testHelper.BaseTestClass;
@@ -52,7 +52,7 @@ public class ITSessionConfigTests extends BaseTestClass{
   private static String queryResultParentDirPath = "/tmp/lensreports";
   private String lensConfFilePath = lens.getServerDir() + "/conf/lens-site.xml";
 
-  private static Logger logger = Logger.getLogger(SessionResourceTests.class);
+  private static Logger logger = Logger.getLogger(ITSessionResourceTests.class);
 
   @BeforeClass(alwaysRun = true)
   public void initialize() throws IOException, JSchException, JAXBException, LensException {

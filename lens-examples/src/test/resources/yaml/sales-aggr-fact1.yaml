@@ -31,7 +31,8 @@ properties:
   cube.fact.is.aggregated: true
 storageTables:
   local:
-    updatePeriods: HOURLY, DAILY
+    updatePeriods:
+      updatePeriod: HOURLY, DAILY
     tableDesc:
       partCols:
         pt: type: STRING, comment: Process time partition
@@ -42,7 +43,8 @@ storageTables:
       tableLocation: /tmp/examples/aggrfact1
       fieldDelimiter: ,
   mydb:
-    updatePeriods: DAILY
+    updatePeriods:
+      updatePeriod: DAILY
     tableDesc:
       partCols:
         pt: type: STRING, comment: Process time partition
