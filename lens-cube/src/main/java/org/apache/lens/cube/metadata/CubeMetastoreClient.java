@@ -20,12 +20,20 @@
 package org.apache.lens.cube.metadata;
 
 import static org.apache.lens.cube.metadata.DateUtil.resolveDate;
+import static org.apache.lens.cube.metadata.JAXBUtils.segmentationFromXSegmentation;
 import static org.apache.lens.cube.metadata.MetastoreUtil.*;
 
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.lens.api.metastore.XCube;
+import org.apache.lens.api.metastore.XDerivedCube;
+import org.apache.lens.api.metastore.XDimension;
+import org.apache.lens.api.metastore.XDimensionTable;
+import org.apache.lens.api.metastore.XFactTable;
+import org.apache.lens.api.metastore.XSegmentation;
+import org.apache.lens.api.metastore.XStorage;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Storage.LatestInfo;
 import org.apache.lens.cube.metadata.Storage.LatestPartColumnInfo;
@@ -49,6 +57,10 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.thrift.TException;
+
+import org.jvnet.jaxb2_commons.lang.Equals;
+import org.jvnet.jaxb2_commons.lang.HashCode;
+import org.jvnet.jaxb2_commons.lang.ToString;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -290,6 +302,61 @@ public class CubeMetastoreClient {
     }
   }
 
+
+  public <T extends Equals & HashCode & ToString> void createEntity(T entity) throws LensException {
+    if (entity instanceof XStorage) {
+      createStorage((XStorage) entity);
+    } else if  (entity instanceof XCube) {
+      createCube((XCube)entity);
+    } else if (entity instanceof XDimension) {
+      createDimension((XDimension) entity);
+    } else if (entity instanceof XFactTable) {
+      createCubeFactTable((XFactTable) entity);
+    } else if (entity instanceof XDimensionTable) {
+      createCubeDimensionTable((XDimensionTable) entity);
+    } else if (entity instanceof XSegmentation) {
+      createSegmentation((XSegmentation) entity);
+    } else {
+      throw new LensException("Unable to create entity " + entity + " as it's unrecognizable: "+ entity.getClass());
+    }
+  }
+
+  public <T extends Equals & HashCode & ToString> void updateEntity(String name, T entity)
+    throws LensException, HiveException {
+    if (entity instanceof XStorage) {
+      alterStorage((XStorage) entity);
+    } else if  (entity instanceof XCube) {
+      alterCube((XCube)entity);
+    } else if (entity instanceof XDimension) {
+      alterDimension((XDimension) entity);
+    } else if (entity instanceof XFactTable) {
+      alterCubeFactTable((XFactTable) entity);
+    } else if (entity instanceof XDimensionTable) {
+      alterCubeDimensionTable((XDimensionTable) entity);
+    } else if (entity instanceof XSegmentation) {
+      alterSegmentation((XSegmentation) entity);
+    } else {
+      throw new LensException("Unable to alter entity " + entity + " as it's unrecognizable: " + entity.getClass());
+    }
+  }
+
+
+  public static Map<String, String> addFactColStartTimePropertyToFactProperties(XFactTable fact) {
+    Map<String, String> props = new HashMap<String, String>();
+    props.putAll(JAXBUtils.mapFromXProperties(fact.getProperties()));
+    props.putAll(JAXBUtils.columnStartAndEndTimeFromXColumns(fact.getColumns()));
+    return props;
+  }
+  public void createCubeFactTable(XFactTable fact) throws LensException {
+    createCubeFactTable(fact.getCubeName(),
+      fact.getName(),
+      JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()),
+      JAXBUtils.getFactUpdatePeriodsFromStorageTables(fact.getStorageTables()),
+      fact.getWeight(),
+      addFactColStartTimePropertyToFactProperties(fact),
+      JAXBUtils.tableDescPrefixMapFromXStorageTables(fact.getStorageTables()),
+      JAXBUtils.storageTablePrefixMapOfStorage(fact.getStorageTables()));
+  }
   public void createCubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods, double weight, Map<String, String> properties,
     Map<String, StorageTableDesc> storageTableDescs, Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap)
@@ -301,6 +368,7 @@ public class CubeMetastoreClient {
     getCubeFact(factName);
 
   }
+
 
   /**
    * In-memory storage of {@link PartitionTimeline} objects for each valid
@@ -619,10 +687,20 @@ public class CubeMetastoreClient {
     }
   }
 
+  public void createStorage(XStorage storage) throws LensException {
+    createStorage(JAXBUtils.storageFromXStorage(storage));
+  }
+
   public void createStorage(Storage storage) throws LensException {
     createCubeHiveTable(storage);
     // do a get to update cache
     getStorage(storage.getName());
+  }
+
+  public void createCube(XCube cube) throws LensException {
+    Cube parent = cube instanceof XDerivedCube ? (Cube) getCube(
+      ((XDerivedCube) cube).getParent()) : null;
+    createCube(JAXBUtils.hiveCubeFromXCube(cube, parent));
   }
 
   /**
@@ -714,6 +792,9 @@ public class CubeMetastoreClient {
     createDimension(dim);
   }
 
+  public void createDimension(XDimension dim) throws LensException {
+    createDimension(JAXBUtils.dimensionFromXDimension(dim));
+  }
   /**
    * Create dimension in metastore defined by {@link Dimension} object
    *
@@ -783,6 +864,18 @@ public class CubeMetastoreClient {
     getSegmentation(segmentationName);
   }
 
+  public void createCubeDimensionTable(XDimensionTable xDimTable) throws LensException {
+    List<FieldSchema> columns = JAXBUtils.fieldSchemaListFromColumns(xDimTable.getColumns());
+    Map<String, UpdatePeriod> updatePeriodMap =
+      JAXBUtils.dumpPeriodsFromStorageTables(xDimTable.getStorageTables());
+
+    Map<String, String> properties = JAXBUtils.mapFromXProperties(xDimTable.getProperties());
+    Map<String, StorageTableDesc> storageDesc = JAXBUtils.tableDescPrefixMapFromXStorageTables(
+      xDimTable.getStorageTables());
+    log.info("# Columns: " + columns);
+    createCubeDimensionTable(xDimTable.getDimensionName(), xDimTable.getTableName(), columns, xDimTable.getWeight(),
+      updatePeriodMap, properties, storageDesc);
+  }
   /**
    * Create a cube dimension table
    *
@@ -846,6 +939,14 @@ public class CubeMetastoreClient {
     }
   }
 
+  public void createSegmentation(XSegmentation cubeSeg) throws LensException {
+    createSegmentation(
+      cubeSeg.getCubeName(),
+      cubeSeg.getName(),
+      JAXBUtils.segmentsFromXSegments(cubeSeg.getSegements()),
+      cubeSeg.getWeight(),
+      JAXBUtils.mapFromXProperties(cubeSeg.getProperties()));
+  }
   public void createSegmentation(Segmentation cubeSeg)
     throws LensException {
     // create virtual cube table in metastore
@@ -2144,6 +2245,11 @@ public class CubeMetastoreClient {
     }
   }
 
+  public void alterCube(XCube cube) throws HiveException, LensException {
+    Cube parent = cube instanceof XDerivedCube ? (Cube) getCube(
+      ((XDerivedCube) cube).getParent()) : null;
+    alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube, parent));
+  }
   /**
    * Alter cube specified by the name to new definition
    *
@@ -2166,6 +2272,10 @@ public class CubeMetastoreClient {
    * @param newDim  The new dimension definition
    * @throws HiveException
    */
+  public void alterDimension(XDimension newDim) throws HiveException, LensException {
+    alterDimension(newDim.getName(), JAXBUtils.dimensionFromXDimension(newDim));
+  }
+
   public void alterDimension(String dimName, Dimension newDim) throws HiveException, LensException {
     Table tbl = getTableWithTypeFailFast(dimName, CubeTableType.DIMENSION);
     alterCubeTable(dimName, tbl, newDim);
@@ -2181,6 +2291,9 @@ public class CubeMetastoreClient {
    * @param storage     The new storage definition
    * @throws LensException
    */
+  public void alterStorage(XStorage storage) throws LensException, HiveException {
+    alterStorage(storage.getName(), JAXBUtils.storageFromXStorage(storage));
+  }
   public void alterStorage(String storageName, Storage storage) throws LensException, HiveException {
     Table storageTbl = getTableWithTypeFailFast(storageName, CubeTableType.STORAGE);
     alterCubeTable(storageName, storageTbl, storage);
@@ -2333,7 +2446,11 @@ public class CubeMetastoreClient {
     dropHiveTable(dimTblName);
     allDimTables.remove(dimTblName.trim().toLowerCase());
   }
-
+  public void alterCubeFactTable(XFactTable fact) throws LensException, HiveException {
+    alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(fact),
+      JAXBUtils.tableDescPrefixMapFromXStorageTables(fact.getStorageTables()),
+      JAXBUtils.columnStartAndEndTimeFromXColumns(fact.getColumns()));
+  }
   /**
    * Alter a cubefact with new definition and alter underlying storage tables as well.
    *
@@ -2361,6 +2478,9 @@ public class CubeMetastoreClient {
     updateFactCache(factTableName);
   }
 
+  public void alterSegmentation(XSegmentation cubeSeg) throws LensException, HiveException {
+    alterSegmentation(cubeSeg.getName(), segmentationFromXSegmentation(cubeSeg));
+  }
   public void alterSegmentation(String segName, Segmentation seg)
     throws HiveException, LensException {
     getTableWithTypeFailFast(segName, CubeTableType.SEGMENTATION);
@@ -2388,7 +2508,11 @@ public class CubeMetastoreClient {
       allDimTables.put(dimTblName.trim().toLowerCase(), getDimensionTable(refreshTable(dimTblName)));
     }
   }
-
+  public void alterCubeDimensionTable(XDimensionTable dimensionTable) throws LensException, HiveException {
+    alterCubeDimensionTable(dimensionTable.getTableName(),
+      JAXBUtils.cubeDimTableFromDimTable(dimensionTable),
+      JAXBUtils.tableDescPrefixMapFromXStorageTables(dimensionTable.getStorageTables()));
+  }
   /**
    * Alter dimension table with new dimension definition and underlying storage tables as well
    *

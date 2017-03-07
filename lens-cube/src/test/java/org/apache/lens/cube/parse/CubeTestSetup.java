@@ -27,8 +27,17 @@ import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 
 import static org.testng.Assert.*;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
+import javax.xml.bind.JAXBException;
+
+import org.apache.lens.api.ToXMLString;
+import org.apache.lens.api.jaxb.LensJAXBContext;
+import org.apache.lens.api.metastore.SchemaTraverser;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.cube.metadata.ReferencedDimAttribute.ChainRefCol;
@@ -3130,9 +3139,36 @@ public class CubeTestSetup {
       createUserTable(client);
       createSports(client);
       createUserInterests(client);
+
+      createFromXML(client);
+      dump(client);
     } catch (Exception exc) {
       log.error("Exception while creating sources.", exc);
       throw exc;
+    }
+  }
+
+  private void createFromXML(CubeMetastoreClient client) {
+    SchemaTraverser.SchemaEntityProcessor processor = (file, aClass) -> {
+      try {
+        client.createEntity(LensJAXBContext.unmarshallFromFile(file.getAbsolutePath()));
+      } catch (LensException | JAXBException | IOException e) {
+        throw new RuntimeException(e);
+      }
+    };
+    new SchemaTraverser(new File(getClass().getResource("/schema").getFile()), processor).run();
+  }
+
+  private void dump(CubeMetastoreClient client) throws LensException, IOException {
+    for (CubeInterface cubeInterface : client.getAllCubes()) {
+      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/").getPath()+"/"+cubeInterface.getName()+".xml"))) {
+        bw.write(ToXMLString.toString(JAXBUtils.xCubeFromHiveCube(cubeInterface)));
+      }
+    }
+    for (CubeFactTable cubeFactTable : client.getAllFacts()) {
+      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/").getPath()+"/"+cubeFactTable.getName()+".xml"))) {
+        bw.write(ToXMLString.toString(JAXBUtils.factTableFromCubeFactTable(cubeFactTable)));
+      }
     }
   }
 

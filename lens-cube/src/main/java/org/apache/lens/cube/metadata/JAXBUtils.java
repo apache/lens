@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.metastore;
+package org.apache.lens.cube.metadata;
 
 import java.lang.reflect.Constructor;
 import java.text.ParseException;
@@ -28,7 +28,6 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.lens.api.metastore.*;
-import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.cube.metadata.ReferencedDimAttribute.ChainRefCol;
 import org.apache.lens.server.api.error.LensException;
@@ -743,7 +742,6 @@ public final class JAXBUtils {
     fact.setColumns(new XColumns());
     fact.setProperties(new XProperties());
     fact.setStorageTables(new XStorageTables());
-
     fact.getProperties().getProperty().addAll(xPropertiesFromMap(cFact.getProperties()));
     fact.getColumns().getColumn().addAll(columnsFromFieldSchemaList(cFact.getColumns()));
     fact.setWeight(cFact.weight());
