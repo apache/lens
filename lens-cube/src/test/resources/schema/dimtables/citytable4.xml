@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_dimension_table dimension_name="citydim" table_name="citytable4" weight="0.0" xmlns="uri:lens:cube:0.1">
+  <columns>
+    <column name="id" _type="int" comment="code"/>
+  </columns>
+  <properties>
+    <property name="cube.table.citytable4.weight" value="0.0"/>
+    <property name="dimension.citydim.timed.dimension" value="dt"/>
+    <property name="dimtble.citytable4.dim.name" value="citydim"/>
+    <property name="dimtble.citytable4.storages" value="C4"/>
+    <property name="transient_lastDdlTime" value="1488970812"/>
+    <property name="cube.table.type" value="DIM_TABLE"/>
+  </properties>
+  <storage_tables>
+    <storage_table>
+      <update_periods/>
+      <storage_name>C4</storage_name>
+      <table_desc external="false"
+                  input_format="org.apache.hadoop.mapred.TextInputFormat"
+                  output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+                  serde_class_name="org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe" storage_handler_name=""
+                  num_buckets="0" compressed="false">
+        <part_cols/>
+        <table_parameters>
+          <property name="transient_lastDdlTime" value="1488970812"/>
+          <property name="totalSize" value="0"/>
+          <property name="numFiles" value="0"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_dimension_table>

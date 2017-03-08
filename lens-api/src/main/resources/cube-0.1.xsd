@@ -390,7 +390,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_expr_column" name="expression" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="x_expr_column" name="expression" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -707,7 +707,7 @@
 
   <xs:complexType name="x_columns">
     <xs:sequence>
-      <xs:element name="column" type="x_column" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element name="column" type="x_column" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

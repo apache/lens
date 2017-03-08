@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_dimension name="sports" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="string" name="name" description="name">
+      <tags/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="id" description="id">
+      <tags/>
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains/>
+  <properties>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="dimension.sports.attributes.list.size" value="1"/>
+    <property name="dimension.sports.attributes.list0" value="name,id"/>
+    <property name="cube.table.sports.weight" value="0.0"/>
+    <property name="transient_lastDdlTime" value="1488895874"/>
+    <property name="cube.col.id.description" value="id"/>
+    <property name="cube.dimension.name.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="base.sports.expressions.list.size" value="0"/>
+    <property name="cube.col.name.description" value="name"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.name.type" value="string"/>
+    <property name="dimension.sports.timed.dimension" value="dt"/>
+    <property name="cube.table.type" value="DIMENSION"/>
+    <property name="dimension.sports.joinchains.list.size" value="0"/>
+  </properties>
+</x_dimension>

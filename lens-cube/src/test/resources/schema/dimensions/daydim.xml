@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_dimension name="daydim" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="boolean" name="is_weekend" description="is weekend?">
+      <tags/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="day_number_of_year" description="day number in year">
+      <tags/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="id" description="code">
+      <tags/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="full_date" description="full date">
+      <tags/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="calendar_quarter" description="quarter id">
+      <tags/>
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains/>
+  <properties>
+    <property name="cube.col.is_weekend.description" value="is weekend?"/>
+    <property name="cube.dimension.calendar_quarter.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="cube.table.daydim.weight" value="0.0"/>
+    <property name="cube.col.calendar_quarter.description" value="quarter id"/>
+    <property name="base.daydim.expressions.list.size" value="0"/>
+    <property name="dimension.daydim.attributes.list.size" value="1"/>
+    <property name="transient_lastDdlTime" value="1488895852"/>
+    <property name="cube.dimension.day_number_of_year.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.day_number_of_year.type" value="int"/>
+    <property name="cube.dimension.is_weekend.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.col.full_date.description" value="full date"/>
+    <property name="cube.col.id.description" value="code"/>
+    <property name="dimension.daydim.timed.dimension" value="dt"/>
+    <property name="cube.dimension.is_weekend.type" value="boolean"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.full_date.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.full_date.type" value="string"/>
+    <property name="cube.table.type" value="DIMENSION"/>
+    <property name="cube.col.day_number_of_year.description" value="day number in year"/>
+    <property name="cube.dimension.calendar_quarter.type" value="int"/>
+    <property name="dimension.daydim.attributes.list0"
+              value="is_weekend,day_number_of_year,id,full_date,calendar_quarter"/>
+    <property name="dimension.daydim.joinchains.list.size" value="0"/>
+  </properties>
+</x_dimension>

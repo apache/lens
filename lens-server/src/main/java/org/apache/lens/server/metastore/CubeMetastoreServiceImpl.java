@@ -245,22 +245,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   @Override
   public XDimensionTable getDimensionTable(LensSessionHandle sessionid, String dimTblName) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      CubeMetastoreClient msClient = getClient(sessionid);
-      CubeDimensionTable dimTable = msClient.getDimensionTable(dimTblName);
-      XDimensionTable dt = JAXBUtils.dimTableFromCubeDimTable(dimTable);
-      if (dimTable.getStorages() != null && !dimTable.getStorages().isEmpty()) {
-        for (String storageName : dimTable.getStorages()) {
-          XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-            msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(dimTblName, storageName)));
-          tblElement.setStorageName(storageName);
-          UpdatePeriod p = dimTable.getSnapshotDumpPeriods().get(storageName);
-          if (p != null) {
-            tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
-          }
-          dt.getStorageTables().getStorageTable().add(tblElement);
-        }
-      }
-      return dt;
+      return getClient(sessionid).getXDimensionTable(dimTblName);
     }
   }
 
@@ -373,43 +358,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   @Override
   public XFactTable getFactTable(LensSessionHandle sessionid, String fact) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      CubeMetastoreClient msClient = getClient(sessionid);
-      CubeFactTable cft = msClient.getFactTable(fact);
-      XFactTable factTable = JAXBUtils.factTableFromCubeFactTable(cft);
-      Map<String, Map<UpdatePeriod, String>> storageMap = cft.getStoragePrefixUpdatePeriodMap();
-      for (String storageName : cft.getStorages()) {
-        Set<UpdatePeriod> updatePeriods = cft.getUpdatePeriods().get(storageName);
-        // This map tells if there are different tables for different update period.
-        Map<UpdatePeriod, String> updatePeriodToTableMap = storageMap.get(storageName);
-        Set<String> tableNames = new HashSet<>();
-        for (UpdatePeriod updatePeriod : updatePeriods) {
-          tableNames.add(updatePeriodToTableMap.get(updatePeriod));
-        }
-        if (tableNames.size() <= 1) {
-          XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-            msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(fact, storageName)));
-          tblElement.setStorageName(storageName);
-          for (UpdatePeriod p : updatePeriods) {
-            tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
-          }
-          factTable.getStorageTables().getStorageTable().add(tblElement);
-        } else {
-          // Multiple storage tables.
-          XStorageTableElement tblElement = new XStorageTableElement();
-          tblElement.setStorageName(storageName);
-          XUpdatePeriods xUpdatePeriods = new XUpdatePeriods();
-          tblElement.setUpdatePeriods(xUpdatePeriods);
-          for (Map.Entry entry : updatePeriodToTableMap.entrySet()) {
-            XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
-            updatePeriodTableDescriptor.setTableDesc(getStorageTableDescFromHiveTable(
-              msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(fact, (String) entry.getValue()))));
-            updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(((UpdatePeriod)entry.getKey()).name()));
-            xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
-          }
-          factTable.getStorageTables().getStorageTable().add(tblElement);
-        }
-      }
-      return factTable;
+      return getClient(sessionid).getXFactTable(fact);
     }
   }
 

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_fact_table name="testfact_continuous" cube_name="testCube" weight="100.0" xmlns="uri:lens:cube:0.1">
+  <columns>
+    <column name="msr11" _type="double" comment="third measure"/>
+    <column name="msr15" _type="int" comment="fifteenth measure"/>
+    <column name="d_time" _type="timestamp" comment="event time"/>
+    <column name="processing_time" _type="timestamp" comment="processing time"/>
+    <column name="dim1" _type="string" comment="base dim"/>
+    <column name="dim11" _type="string" comment="base dim"/>
+    <column name="dim12" _type="string" comment="base dim"/>
+  </columns>
+  <properties>
+    <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
+    <property name="cube.table.testfact_continuous.weight" value="100.0"/>
+    <property name="cube.fact.testfact_continuous.storages" value="C0"/>
+    <property name="cube.fact.absolute.start.time" value="$absolute{now.day-3days}"/>
+    <property name="transient_lastDdlTime" value="1488970762"/>
+    <property name="cube.fact.testfact_continuous.c0.updateperiods" value="CONTINUOUS"/>
+    <property name="cube.fact.testfact_continuous.cubename" value="testCube"/>
+    <property name="cube.table.type" value="FACT"/>
+  </properties>
+  <storage_tables>
+    <storage_table>
+      <update_periods>
+        <update_period>CONTINUOUS</update_period>
+      </update_periods>
+      <storage_name>C0</storage_name>
+      <table_desc external="false"
+                  input_format="org.apache.hadoop.mapred.TextInputFormat"
+                  output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+                  serde_class_name="org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe" storage_handler_name=""
+                  num_buckets="0" compressed="false">
+        <part_cols/>
+        <table_parameters>
+          <property name="transient_lastDdlTime" value="1488970762"/>
+          <property name="totalSize" value="0"/>
+          <property name="numFiles" value="0"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_fact_table>

@@ -20,6 +20,7 @@
 package org.apache.lens.cube.metadata;
 
 import static org.apache.lens.cube.metadata.DateUtil.resolveDate;
+import static org.apache.lens.cube.metadata.JAXBUtils.getStorageTableDescFromHiveTable;
 import static org.apache.lens.cube.metadata.JAXBUtils.segmentationFromXSegmentation;
 import static org.apache.lens.cube.metadata.MetastoreUtil.*;
 
@@ -34,6 +35,10 @@ import org.apache.lens.api.metastore.XDimensionTable;
 import org.apache.lens.api.metastore.XFactTable;
 import org.apache.lens.api.metastore.XSegmentation;
 import org.apache.lens.api.metastore.XStorage;
+import org.apache.lens.api.metastore.XStorageTableElement;
+import org.apache.lens.api.metastore.XUpdatePeriod;
+import org.apache.lens.api.metastore.XUpdatePeriodTableDescriptor;
+import org.apache.lens.api.metastore.XUpdatePeriods;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Storage.LatestInfo;
 import org.apache.lens.cube.metadata.Storage.LatestPartColumnInfo;
@@ -1719,6 +1724,47 @@ public class CubeMetastoreClient {
     return CubeTableType.DIMENSION.name().equals(tableType);
   }
 
+  public XFactTable getXFactTable(String tableName) throws LensException {
+    return getXFactTable(getFactTable(tableName));
+  }
+  public XFactTable getXFactTable(CubeFactTable cft) throws LensException {
+
+    XFactTable factTable = JAXBUtils.factTableFromCubeFactTable(cft);
+    Map<String, Map<UpdatePeriod, String>> storageMap = cft.getStoragePrefixUpdatePeriodMap();
+    for (String storageName : cft.getStorages()) {
+      Set<UpdatePeriod> updatePeriods = cft.getUpdatePeriods().get(storageName);
+      // This map tells if there are different tables for different update period.
+      Map<UpdatePeriod, String> updatePeriodToTableMap = storageMap.get(storageName);
+      Set<String> tableNames = new HashSet<>();
+      for (UpdatePeriod updatePeriod : updatePeriods) {
+        tableNames.add(updatePeriodToTableMap.get(updatePeriod));
+      }
+      if (tableNames.size() <= 1) {
+        XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
+          getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(), storageName)));
+        tblElement.setStorageName(storageName);
+        for (UpdatePeriod p : updatePeriods) {
+          tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
+        }
+        factTable.getStorageTables().getStorageTable().add(tblElement);
+      } else {
+        // Multiple storage tables.
+        XStorageTableElement tblElement = new XStorageTableElement();
+        tblElement.setStorageName(storageName);
+        XUpdatePeriods xUpdatePeriods = new XUpdatePeriods();
+        tblElement.setUpdatePeriods(xUpdatePeriods);
+        for (Map.Entry entry : updatePeriodToTableMap.entrySet()) {
+          XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
+          updatePeriodTableDescriptor.setTableDesc(getStorageTableDescFromHiveTable(
+            this.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(), (String) entry.getValue()))));
+          updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(((UpdatePeriod)entry.getKey()).name()));
+          xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
+        }
+        factTable.getStorageTables().getStorageTable().add(tblElement);
+      }
+    }
+    return factTable;
+  }
   /**
    * Get {@link CubeFactTable} object corresponding to the name
    *
@@ -1735,6 +1781,25 @@ public class CubeMetastoreClient {
     return new Segmentation(getTableWithTypeFailFast(tableName, CubeTableType.SEGMENTATION));
   }
 
+  public XDimensionTable getXDimensionTable(String dimTable) throws LensException {
+    return getXDimensionTable(getDimensionTable(dimTable));
+  }
+  public XDimensionTable getXDimensionTable(CubeDimensionTable dimTable) throws LensException {
+    XDimensionTable dt = JAXBUtils.dimTableFromCubeDimTable(dimTable);
+    if (!dimTable.getStorages().isEmpty()) {
+      for (String storageName : dimTable.getStorages()) {
+        XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
+          this.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(dimTable.getName(), storageName)));
+        tblElement.setStorageName(storageName);
+        UpdatePeriod p = dimTable.getSnapshotDumpPeriods().get(storageName);
+        if (p != null) {
+          tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
+        }
+        dt.getStorageTables().getStorageTable().add(tblElement);
+      }
+    }
+    return dt;
+  }
   /**
    * Get {@link CubeDimensionTable} object corresponding to the name
    *
@@ -2268,7 +2333,6 @@ public class CubeMetastoreClient {
   /**
    * Alter dimension specified by the dimension name to new definition
    *
-   * @param dimName The cube name to be altered
    * @param newDim  The new dimension definition
    * @throws HiveException
    */
@@ -2287,7 +2351,6 @@ public class CubeMetastoreClient {
   /**
    * Alter storage specified by the name to new definition
    *
-   * @param storageName The storage name to be altered
    * @param storage     The new storage definition
    * @throws LensException
    */
