@@ -9,8 +9,6 @@
   <properties>
     <property name="dimtble.testdim2tbl3.c3.dumpperiod" value="HOURLY"/>
     <property name="dimtble.testdim2tbl3.c1.dumpperiod" value="HOURLY"/>
-    <property name="transient_lastDdlTime" value="1488970813"/>
-    <property name="cube.table.type" value="DIM_TABLE"/>
     <property name="cube.table.testdim2tbl3.weight" value="20.0"/>
     <property name="dimension.testdim2.timed.dimension" value="dt"/>
     <property name="dimtble.testdim2tbl3.storages" value="C3,C1,C2"/>
@@ -31,7 +29,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970813"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>
@@ -54,7 +51,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970813"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>
@@ -73,7 +69,6 @@
                   num_buckets="0" compressed="false">
         <part_cols/>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970813"/>
           <property name="totalSize" value="0"/>
           <property name="numFiles" value="0"/>
         </table_parameters>

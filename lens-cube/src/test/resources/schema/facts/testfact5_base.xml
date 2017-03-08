@@ -22,12 +22,10 @@
   <properties>
     <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
     <property name="cube.fact.testfact5_base.c3.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
-    <property name="transient_lastDdlTime" value="1488970746"/>
     <property name="cube.fact.testfact5_base.c1.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact5_base.c4.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact5_base.storages" value="C3,C4,C1,C2"/>
     <property name="cube.table.testfact5_base.weight" value="150.0"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.testfact5_base.c2.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact5_base.cubename" value="baseCube"/>
   </properties>
@@ -51,7 +49,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970746"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>
@@ -80,7 +77,6 @@
           <column name="ttd2" _type="string" comment="test date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970746"/>
           <property name="cube.storagetable.time.partcols" value="ttd,ttd2"/>
         </table_parameters>
         <serde_parameters>
@@ -109,7 +105,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970746"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>
@@ -137,7 +132,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970746"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

@@ -24,10 +24,8 @@
   <properties>
     <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
     <property name="cube.fact.summary1.cubename" value="testCube"/>
-    <property name="transient_lastDdlTime" value="1488970819"/>
     <property name="cube.table.summary1.weight" value="10.0"/>
     <property name="cube.fact.summary1.c2.updateperiods" value="HOURLY,MINUTELY,DAILY"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.summary1.storages" value="C1,C2"/>
     <property name="cube.fact.summary1.c1.updateperiods" value="HOURLY,MINUTELY,DAILY"/>
     <property name="cube.fact.summary1.valid.columns"

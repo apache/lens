@@ -29,11 +29,9 @@
               value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,dim2big1,dim2big2,cityid"/>
     <property name="cube.fact.summary3.valid.columns"
               value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,dim2,cityid,stateid"/>
-    <property name="transient_lastDdlTime" value="1488970844"/>
     <property name="cube.fact.summary4.cubename" value="testCube"/>
     <property name="cube.fact.summary2.valid.columns"
               value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,dim2"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.summary1.valid.columns"
               value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,testdim3id"/>
     <property name="cube.fact.summary4.c2.updateperiods" value="HOURLY,MINUTELY,DAILY"/>

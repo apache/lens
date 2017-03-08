@@ -11,9 +11,7 @@
     <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
     <property name="cube.fact.testfact5_raw_base.cubename" value="baseCube"/>
     <property name="cube.fact.testfact5_raw_base.c1.updateperiods" value="HOURLY"/>
-    <property name="transient_lastDdlTime" value="1488970748"/>
     <property name="cube.fact.testfact5_raw_base.storages" value="C1"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.table.testfact5_raw_base.weight" value="100.0"/>
     <property name="cube.fact.is.aggregated" value="false"/>
   </properties>

@@ -12,8 +12,6 @@
     <property name="dimension.user_interests.timed.dimension" value="dt"/>
     <property name="dimtble.user_interests_tbl.dim.name" value="user_interests"/>
     <property name="cube.table.user_interests_tbl.weight" value="0.0"/>
-    <property name="transient_lastDdlTime" value="1488970854"/>
-    <property name="cube.table.type" value="DIM_TABLE"/>
   </properties>
   <storage_tables>
     <storage_table>
@@ -26,7 +24,6 @@
                   num_buckets="0" compressed="false">
         <part_cols/>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970854"/>
           <property name="totalSize" value="0"/>
           <property name="numFiles" value="0"/>
         </table_parameters>
@@ -49,7 +46,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970854"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

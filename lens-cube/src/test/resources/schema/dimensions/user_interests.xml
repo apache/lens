@@ -19,7 +19,6 @@
     <property name="cube.table.user_interests.weight" value="0.0"/>
     <property name="cube.dimension.user_id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="dimension.user_interests.attributes.list.size" value="1"/>
-    <property name="transient_lastDdlTime" value="1488895875"/>
     <property name="cube.dimension.sport_id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.col.sport_id.description" value="sport id"/>
     <property name="cube.col.id.description" value="id"/>
@@ -29,7 +28,6 @@
     <property name="base.user_interests.expressions.list.size" value="0"/>
     <property name="dimension.user_interests.timed.dimension" value="dt"/>
     <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="cube.dimension.sport_id.type" value="int"/>
   </properties>
 </x_dimension>

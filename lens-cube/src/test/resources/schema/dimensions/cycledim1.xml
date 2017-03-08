@@ -47,7 +47,6 @@
     <property name="dimension.joinchain.cycledim2chain.description" value="cycledim2chain"/>
     <property name="cube.dimension.cyledim2id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.name.type" value="string"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="cube.dimension.cyledim2id.type" value="string"/>
     <property name="dimension.joinchain.cycledim2chain.fullchain.0"
               value="cycledim1.cyledim2id.false,cycledim2.id.false"/>

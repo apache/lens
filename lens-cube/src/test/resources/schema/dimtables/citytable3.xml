@@ -8,8 +8,6 @@
     <property name="dimension.citydim.timed.dimension" value="dt"/>
     <property name="dimtble.citytable3.dim.name" value="citydim"/>
     <property name="cube.table.citytable3.weight" value="0.0"/>
-    <property name="transient_lastDdlTime" value="1488970812"/>
-    <property name="cube.table.type" value="DIM_TABLE"/>
     <property name="dimtble.citytable3.storages" value="C4"/>
   </properties>
   <storage_tables>
@@ -19,11 +17,9 @@
       <table_desc external="false"
                   input_format="org.apache.hadoop.mapred.TextInputFormat"
                   output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-                  serde_class_name="org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe" storage_handler_name=""
                   num_buckets="0" compressed="false">
         <part_cols/>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970812"/>
           <property name="totalSize" value="0"/>
           <property name="numFiles" value="0"/>
         </table_parameters>

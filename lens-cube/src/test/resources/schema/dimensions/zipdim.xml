@@ -16,7 +16,6 @@
   <properties>
     <property name="dimension.zipdim.attributes.list0" value="f2,code,f1"/>
     <property name="cube.dimension.code.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
-    <property name="transient_lastDdlTime" value="1488895853"/>
     <property name="cube.col.code.description" value="code"/>
     <property name="cube.dimension.f1.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="dimension.zipdim.joinchains.list.size" value="0"/>
@@ -30,6 +29,5 @@
     <property name="cube.dimension.f2.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.code.type" value="int"/>
     <property name="dimension.zipdim.attributes.list.size" value="1"/>
-    <property name="cube.table.type" value="DIMENSION"/>
   </properties>
 </x_dimension>

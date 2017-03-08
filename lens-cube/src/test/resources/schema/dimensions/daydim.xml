@@ -27,7 +27,6 @@
     <property name="cube.col.calendar_quarter.description" value="quarter id"/>
     <property name="base.daydim.expressions.list.size" value="0"/>
     <property name="dimension.daydim.attributes.list.size" value="1"/>
-    <property name="transient_lastDdlTime" value="1488895852"/>
     <property name="cube.dimension.day_number_of_year.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.day_number_of_year.type" value="int"/>
     <property name="cube.dimension.is_weekend.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
@@ -38,7 +37,6 @@
     <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.full_date.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.full_date.type" value="string"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="cube.col.day_number_of_year.description" value="day number in year"/>
     <property name="cube.dimension.calendar_quarter.type" value="int"/>
     <property name="dimension.daydim.attributes.list0"

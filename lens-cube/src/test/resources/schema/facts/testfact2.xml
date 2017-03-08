@@ -26,8 +26,6 @@
     <property name="cube.fact.testfact2.c4.updateperiods" value="HOURLY"/>
     <property name="cube.fact.testfact2.c1.updateperiods" value="HOURLY"/>
     <property name="cube.fact.testfact2.cubename" value="testCube"/>
-    <property name="transient_lastDdlTime" value="1488970780"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.table.testfact2.weight" value="10.0"/>
   </properties>
   <storage_tables>

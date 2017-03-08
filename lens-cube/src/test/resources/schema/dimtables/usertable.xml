@@ -12,10 +12,8 @@
     <property name="dimtble.usertable.dim.name" value="userdim"/>
     <property name="dimension.userdim.timed.dimension" value="dt"/>
     <property name="dimtble.usertable.storages" value="C1,C2"/>
-    <property name="transient_lastDdlTime" value="1488970853"/>
     <property name="cube.table.usertable.weight" value="0.0"/>
     <property name="dimtble.usertable.c2.dumpperiod" value="HOURLY"/>
-    <property name="cube.table.type" value="DIM_TABLE"/>
   </properties>
   <storage_tables>
     <storage_table>
@@ -28,7 +26,6 @@
                   num_buckets="0" compressed="false">
         <part_cols/>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970853"/>
           <property name="totalSize" value="0"/>
           <property name="numFiles" value="0"/>
         </table_parameters>
@@ -51,7 +48,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970853"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

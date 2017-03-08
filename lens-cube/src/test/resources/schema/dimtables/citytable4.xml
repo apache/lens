@@ -8,8 +8,6 @@
     <property name="dimension.citydim.timed.dimension" value="dt"/>
     <property name="dimtble.citytable4.dim.name" value="citydim"/>
     <property name="dimtble.citytable4.storages" value="C4"/>
-    <property name="transient_lastDdlTime" value="1488970812"/>
-    <property name="cube.table.type" value="DIM_TABLE"/>
   </properties>
   <storage_tables>
     <storage_table>
@@ -22,7 +20,6 @@
                   num_buckets="0" compressed="false">
         <part_cols/>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970812"/>
           <property name="totalSize" value="0"/>
           <property name="numFiles" value="0"/>
         </table_parameters>

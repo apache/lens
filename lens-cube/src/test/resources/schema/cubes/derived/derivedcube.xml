@@ -4,9 +4,7 @@
     <property name="cube.derivedcube.measures.list0" value="msr3,msr1,msr2,msr9"/>
     <property name="cube.derivedcube.measures.list.size" value="1"/>
     <property name="cube.derivedcube.dimensions.list0" value="dim2,dim1,dim2big2,dim2bignew,dim2big1"/>
-    <property name="transient_lastDdlTime" value="1488896043"/>
     <property name="cube.derivedcube.dimensions.list.size" value="1"/>
-    <property name="cube.table.type" value="CUBE"/>
     <property name="cube.derivedcube.parent.cube" value="testcube"/>
     <property name="cube.table.derivedcube.weight" value="5.0"/>
   </properties>

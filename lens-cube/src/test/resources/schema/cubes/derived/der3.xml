@@ -7,9 +7,7 @@
     <property name="cube.allfields.queriable" value="true"/>
     <property name="cube.der3.measures.list.size" value="1"/>
     <property name="cube.der3.dimensions.list.size" value="1"/>
-    <property name="transient_lastDdlTime" value="1488896050"/>
     <property name="cube.table.der3.weight" value="20.0"/>
-    <property name="cube.table.type" value="CUBE"/>
     <property name="cube.der3.parent.cube" value="basecube"/>
   </properties>
   <measure_names>

@@ -7,9 +7,7 @@
   </columns>
   <properties>
     <property name="dimtble.cycledim2tbl.storages" value="C1,C2"/>
-    <property name="transient_lastDdlTime" value="1488970818"/>
     <property name="dimtble.cycledim2tbl.dim.name" value="cycleDim2"/>
-    <property name="cube.table.type" value="DIM_TABLE"/>
     <property name="dimtble.cycledim2tbl.c1.dumpperiod" value="HOURLY"/>
     <property name="dimension.cycledim2.timed.dimension" value="dt"/>
     <property name="cube.table.cycledim2tbl.weight" value="0.0"/>
@@ -29,7 +27,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970818"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>
@@ -48,7 +45,6 @@
                   num_buckets="0" compressed="false">
         <part_cols/>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970818"/>
           <property name="totalSize" value="0"/>
           <property name="numFiles" value="0"/>
         </table_parameters>

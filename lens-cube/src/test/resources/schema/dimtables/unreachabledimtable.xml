@@ -8,9 +8,7 @@
   <properties>
     <property name="dimension.unreachabledim.timed.dimension" value="dt"/>
     <property name="cube.table.unreachabledimtable.weight" value="0.0"/>
-    <property name="transient_lastDdlTime" value="1488970852"/>
     <property name="dimtble.unreachabledimtable.dim.name" value="unreachableDim"/>
-    <property name="cube.table.type" value="DIM_TABLE"/>
     <property name="dimtble.unreachabledimtable.storages" value="C1"/>
     <property name="dimtble.unreachabledimtable.c1.dumpperiod" value="HOURLY"/>
   </properties>
@@ -29,7 +27,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970852"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

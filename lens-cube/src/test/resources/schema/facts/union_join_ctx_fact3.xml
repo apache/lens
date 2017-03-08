@@ -10,8 +10,6 @@
     <property name="cube.fact.union_join_ctx_fact3.cubename" value="baseCube"/>
     <property name="cube.fact.absolute.start.time" value="$absolute{now.day - 90 days}"/>
     <property name="cube.fact.union_join_ctx_fact3.c1.updateperiods" value="DAILY"/>
-    <property name="transient_lastDdlTime" value="1488970758"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.absolute.end.time" value="$absolute{now.day + 7 days}"/>
     <property name="cube.fact.is.aggregated" value="false"/>
     <property name="cube.fact.union_join_ctx_fact3.storages" value="C1"/>
@@ -32,7 +30,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970759"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

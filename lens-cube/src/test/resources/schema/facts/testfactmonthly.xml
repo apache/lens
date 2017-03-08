@@ -19,8 +19,6 @@
   <properties>
     <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
     <property name="cube.fact.testfactmonthly.storages" value="C2"/>
-    <property name="transient_lastDdlTime" value="1488970818"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.testfactmonthly.cubename" value="testCube"/>
     <property name="cube.table.testfactmonthly.weight" value="5.0"/>
     <property name="cube.fact.testfactmonthly.c2.updateperiods" value="MONTHLY"/>
@@ -40,7 +38,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970818"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

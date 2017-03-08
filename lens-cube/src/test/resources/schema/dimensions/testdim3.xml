@@ -33,7 +33,6 @@
     <property name="dimension.testdim3.timed.dimension" value="dt"/>
     <property name="cube.dimension.testdim4id.type" value="string"/>
     <property name="dimension.testdim3.attributes.list.size" value="1"/>
-    <property name="transient_lastDdlTime" value="1488895852"/>
     <property name="dimension.joinchain.dim4chain.fullchain.0" value="testdim3.testdim4id.false,testdim4.id.false"/>
     <property name="cube.table.testdim3.weight" value="0.0"/>
     <property name="dimension.joinchain.dim4chain.description" value="dim4 thru dim3"/>
@@ -47,7 +46,6 @@
     <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.name.type" value="string"/>
     <property name="cube.col.testdim4id.description" value="f-key to testdim4"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="dimension.joinchain.dim4chain.displaystring" value="dim4-chain"/>
   </properties>
 </x_dimension>

@@ -20,7 +20,6 @@
     <property name="cube.table.testfact2_raw_base.weight" value="100.0"/>
     <property name="transient_lastDdlTime" value="1488970748"/>
     <property name="cube.fact.testfact2_raw_base.cubename" value="baseCube"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.is.aggregated" value="false"/>
     <property name="cube.fact.testfact2_raw_base.storages" value="C1"/>
   </properties>
@@ -39,7 +38,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970748"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

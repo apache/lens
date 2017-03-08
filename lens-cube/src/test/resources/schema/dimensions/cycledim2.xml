@@ -35,7 +35,6 @@
     <property name="dimension.joinchain.cycledim1chain.displaystring" value="cycledim1chain"/>
     <property name="cube.table.cycledim2.weight" value="0.0"/>
     <property name="dimension.cycledim2.attributes.list0" value="id,name,cyledim1id"/>
-    <property name="transient_lastDdlTime" value="1488895853"/>
     <property name="dimension.joinchain.cycledim1chain.description" value="cycledim1chain"/>
     <property name="cube.col.id.description" value="code"/>
     <property name="cube.dimension.name.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
@@ -46,7 +45,6 @@
     <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.name.type" value="string"/>
     <property name="base.cycledim2.expressions.list.size" value="0"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="dimension.cycledim2.joinchains.list0" value="cycledim1chain"/>
     <property name="dimension.cycledim2.timed.dimension" value="dt"/>
     <property name="cube.dimension.cyledim1id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>

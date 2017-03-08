@@ -13,7 +13,6 @@
   <properties>
     <property name="cube.dimension.id.type" value="int"/>
     <property name="dimension.hourdim.timed.dimension" value="dt"/>
-    <property name="transient_lastDdlTime" value="1488895852"/>
     <property name="base.hourdim.expressions.list.size" value="0"/>
     <property name="cube.dimension.full_hour.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.col.id.description" value="code"/>
@@ -23,7 +22,6 @@
     <property name="cube.col.full_hour.description" value="full date"/>
     <property name="dimension.hourdim.attributes.list.size" value="1"/>
     <property name="dimension.hourdim.joinchains.list.size" value="0"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="cube.dimension.full_hour.type" value="string"/>
   </properties>
 </x_dimension>

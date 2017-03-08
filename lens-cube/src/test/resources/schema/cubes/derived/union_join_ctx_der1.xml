@@ -10,8 +10,6 @@
     <property name="cube.union_join_ctx_der1.dimensions.list0"
               value="union_join_ctx_cityname,d_time,union_join_ctx_zipcode,union_join_ctx_cityid"/>
     <property name="cube.union_join_ctx_der1.parent.cube" value="basecube"/>
-    <property name="transient_lastDdlTime" value="1488896066"/>
-    <property name="cube.table.type" value="CUBE"/>
   </properties>
   <measure_names>
     <measure_name>union_join_ctx_msr2</measure_name>

@@ -35,7 +35,6 @@
   </join_chains>
   <properties>
     <property name="cube.dimension.age.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
-    <property name="transient_lastDdlTime" value="1488895874"/>
     <property name="dimension.joinchain.usersports.numchains" value="1"/>
     <property name="dimension.userdim.joinchains.list.size" value="1"/>
     <property name="cube.col.id.description" value="id"/>
@@ -46,7 +45,6 @@
     <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.name.type" value="string"/>
     <property name="cube.table.userdim.weight" value="0.0"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="dimension.userdim.joinchains.list0" value="usersports"/>
     <property name="dimension.userdim.attributes.list0" value="name,age,gender,id"/>
     <property name="cube.dimension.gender.type" value="string"/>

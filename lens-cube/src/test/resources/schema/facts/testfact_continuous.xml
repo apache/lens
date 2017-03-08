@@ -14,10 +14,8 @@
     <property name="cube.table.testfact_continuous.weight" value="100.0"/>
     <property name="cube.fact.testfact_continuous.storages" value="C0"/>
     <property name="cube.fact.absolute.start.time" value="$absolute{now.day-3days}"/>
-    <property name="transient_lastDdlTime" value="1488970762"/>
     <property name="cube.fact.testfact_continuous.c0.updateperiods" value="CONTINUOUS"/>
     <property name="cube.fact.testfact_continuous.cubename" value="testCube"/>
-    <property name="cube.table.type" value="FACT"/>
   </properties>
   <storage_tables>
     <storage_table>
@@ -32,7 +30,6 @@
                   num_buckets="0" compressed="false">
         <part_cols/>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970762"/>
           <property name="totalSize" value="0"/>
           <property name="numFiles" value="0"/>
         </table_parameters>

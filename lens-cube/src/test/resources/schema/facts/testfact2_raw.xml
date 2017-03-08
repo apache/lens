@@ -30,8 +30,6 @@
     <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
     <property name="cube.fact.testfact2_raw.c3.updateperiods" value="HOURLY"/>
     <property name="cube.fact.testfact2_raw.c1.updateperiods" value="HOURLY"/>
-    <property name="transient_lastDdlTime" value="1488970803"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.table.testfact2_raw.weight" value="100.0"/>
     <property name="cube.fact.is.aggregated" value="false"/>
     <property name="cube.fact.testfact2_raw.cubename" value="testCube"/>
@@ -73,7 +71,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970803"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

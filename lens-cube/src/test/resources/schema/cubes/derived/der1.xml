@@ -7,9 +7,7 @@
     <property name="cube.der1.measures.list.size" value="1"/>
     <property name="cube.der1.dimensions.list0" value="d_time,dim1,dim11"/>
     <property name="cube.der1.parent.cube" value="basecube"/>
-    <property name="transient_lastDdlTime" value="1488896049"/>
     <property name="cube.der1.dimensions.list.size" value="1"/>
-    <property name="cube.table.type" value="CUBE"/>
   </properties>
   <measure_names>
     <measure_name>msr1</measure_name>

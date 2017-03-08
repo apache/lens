@@ -12,7 +12,6 @@
   <join_chains/>
   <properties>
     <property name="cube.dimension.id.type" value="int"/>
-    <property name="transient_lastDdlTime" value="1488895852"/>
     <property name="dimension.testdim4.attributes.list.size" value="1"/>
     <property name="dimension.testdim4.timed.dimension" value="dt"/>
     <property name="base.testdim4.expressions.list.size" value="0"/>
@@ -24,6 +23,5 @@
     <property name="cube.col.name.description" value="name"/>
     <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.name.type" value="string"/>
-    <property name="cube.table.type" value="DIMENSION"/>
   </properties>
 </x_dimension>

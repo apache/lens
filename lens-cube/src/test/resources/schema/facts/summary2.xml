@@ -30,7 +30,6 @@
     <property name="cube.table.summary2.weight" value="20.0"/>
     <property name="cube.fact.summary2.valid.columns"
               value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,dim2"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.summary2.c1.updateperiods" value="HOURLY,MINUTELY,DAILY"/>
     <property name="cube.fact.summary1.valid.columns"
               value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,testdim3id"/>
@@ -52,7 +51,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970827"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

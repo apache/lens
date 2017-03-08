@@ -30,9 +30,7 @@
     <property name="cube.table.testfact1_raw_base.weight" value="100.0"/>
     <property name="cube.fact.testfact1_raw_base.storages" value="C3,C1"/>
     <property name="cube.fact.testfact1_raw_base.c1.updateperiods" value="HOURLY"/>
-    <property name="transient_lastDdlTime" value="1488970803"/>
     <property name="cube.fact.testfact1_raw_base.c3.updateperiods" value="HOURLY"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.is.aggregated" value="false"/>
     <property name="cube.fact.testfact1_raw_base.cubename" value="baseCube"/>
   </properties>
@@ -51,7 +49,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970803"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>
@@ -74,7 +71,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970803"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

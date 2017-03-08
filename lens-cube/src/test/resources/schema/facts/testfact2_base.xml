@@ -17,10 +17,8 @@
     <property name="cube.fact.testfact2_base.c3.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact2_base.c1.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact2_base.c4.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
-    <property name="transient_lastDdlTime" value="1488970746"/>
     <property name="cube.fact.testfact2_base.cubename" value="baseCube"/>
     <property name="cube.fact.testfact2_base.storages" value="C3,C4,C1,C2"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.table.testfact2_base.weight" value="5.0"/>
   </properties>
   <storage_tables>
@@ -43,7 +41,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970746"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>
@@ -72,7 +69,6 @@
           <column name="ttd2" _type="string" comment="test date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970746"/>
           <property name="cube.storagetable.time.partcols" value="ttd,ttd2"/>
         </table_parameters>
         <serde_parameters>
@@ -101,7 +97,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970746"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>
@@ -129,7 +124,6 @@
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
         <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970746"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
         </table_parameters>
         <serde_parameters>

@@ -23,7 +23,6 @@
     <column name="ambigdim1" _type="string" comment="used in testColumnAmbiguity"/>
   </columns>
   <properties>
-    <property name="transient_lastDdlTime" value="1488970759"/>
     <property name="cube.fact.testfact.c5.updateperiods"
               value="MONTHLY,HOURLY,YEARLY,CONTINUOUS,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact.cubename" value="testCube"/>
@@ -36,7 +35,6 @@
     <property name="cube.fact.testfact.c2.updateperiods"
               value="MONTHLY,HOURLY,YEARLY,CONTINUOUS,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact.storages" value="C3,C4,C5,C0,C1,C2"/>
-    <property name="cube.table.type" value="FACT"/>
     <property name="cube.fact.testfact.c0.updateperiods"
               value="MONTHLY,HOURLY,YEARLY,CONTINUOUS,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact.c1.updateperiods"
@@ -64,7 +62,6 @@
         </part_cols>
         <table_parameters>
           <property name="cube.storagetable.end.times" value="now.day - 10 days"/>
-          <property name="transient_lastDdlTime" value="1488970759"/>
           <property name="cube.storagetable.time.partcols" value="dt"/>
           <property name="cube.storagetable.start.times" value="now.day - 90 days"/>
         </table_parameters>

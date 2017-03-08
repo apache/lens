@@ -13,8 +13,6 @@
     <property name="dimtble.countrytable_partitioned.c3.dumpperiod" value="HOURLY"/>
     <property name="cube.table.countrytable_partitioned.weight" value="0.0"/>
     <property name="dimension.countrydim.timed.dimension" value="dt"/>
-    <property name="transient_lastDdlTime" value="1488970819"/>
-    <property name="cube.table.type" value="DIM_TABLE"/>
     <property name="dimtable.countrytable_partitioned.part.cols" value="region"/>
   </properties>
   <storage_tables>
@@ -31,9 +29,7 @@
         <part_cols>
           <column name="region" _type="string" comment="region name"/>
         </part_cols>
-        <table_parameters>
-          <property name="transient_lastDdlTime" value="1488970819"/>
-        </table_parameters>
+        <table_parameters/>
         <serde_parameters>
           <property name="serialization.format" value="1"/>
         </serde_parameters>

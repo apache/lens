@@ -146,7 +146,6 @@
     <property name="cube.col.testdim3id.description" value="f-key to testdim3"/>
     <property name="cube.dimension.cityname.class" value="org.apache.lens.cube.metadata.ReferencedDimAttribute"/>
     <property name="dimension.joinchain.dim2city.fullchain.0" value="testdim2.cityid.false,citydim.id.false"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="cube.col.bigidnew.description" value="big id"/>
     <property name="dimension.joinchain.unreachabledim_chain.description" value="unreachableDim thru dim2"/>
     <property name="cube.col.cityname.displaystring" value="cityname"/>
@@ -173,7 +172,6 @@
     <property name="cube.dimension.testdim3id.type" value="string"/>
     <property name="dimension.joinchain.citystate.numchains" value="2"/>
     <property name="dimension.joinchain.dim3chain.description" value="dim3 thru dim2"/>
-    <property name="transient_lastDdlTime" value="1488895851"/>
     <property name="dimension.joinchain.dim4chain.fullchain.0"
               value="testdim2.testdim3id.false,testdim3.id.false,testdim3.testdim4id.false,testdim4.id.false"/>
     <property name="cube.col.cityname.cost" value="0.0"/>

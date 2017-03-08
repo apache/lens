@@ -31,7 +31,6 @@
   </join_chains>
   <properties>
     <property name="dimension.joinchain.countrychain.displaystring" value="countrychain"/>
-    <property name="transient_lastDdlTime" value="1488895853"/>
     <property name="cube.col.id.description" value="code"/>
     <property name="cube.col.capital.description" value="field2"/>
     <property name="cube.dimension.name.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
@@ -42,7 +41,6 @@
     <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="dimension.statedim.attributes.list.size" value="1"/>
     <property name="cube.dimension.name.type" value="string"/>
-    <property name="cube.table.type" value="DIMENSION"/>
     <property name="cube.dimension.capital.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
     <property name="cube.dimension.id.type" value="int"/>
     <property name="dimension.statedim.timed.dimension" value="dt"/>

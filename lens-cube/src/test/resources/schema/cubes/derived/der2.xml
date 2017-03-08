@@ -7,10 +7,8 @@
     <property name="cube.der2.dimensions.list0"
               value="dim22,test_time_dim_day_id,dim13,dim12,test_time_dim2,test_time_dim_day_id2,test_time_dim_hour_id2,yuserid,d_time,dim2bignew,test_time_dim,dim2big1,dim11,dim2,cityid,dim1,dim2big2,stateid,test_time_dim_hour_id,userid,xuserid"/>
     <property name="cube.der2.measures.list0" value="msr2,msr12,msr14,msr13,directmsr"/>
-    <property name="transient_lastDdlTime" value="1488896049"/>
     <property name="cube.der2.dimensions.list.size" value="1"/>
     <property name="cube.table.der2.weight" value="10.0"/>
-    <property name="cube.table.type" value="CUBE"/>
   </properties>
   <measure_names>
     <measure_name>directmsr</measure_name>
