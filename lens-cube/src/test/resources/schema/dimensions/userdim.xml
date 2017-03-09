@@ -2,16 +2,12 @@
 <x_dimension name="userdim" xmlns="uri:lens:cube:0.1">
   <attributes>
     <dim_attribute _type="string" name="name" description="name">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="age" description="age">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="gender" description="gender">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="id" description="id">
-      <tags/>
     </dim_attribute>
   </attributes>
   <expressions/>

@@ -2,19 +2,14 @@
 <x_dimension name="daydim" xmlns="uri:lens:cube:0.1">
   <attributes>
     <dim_attribute _type="boolean" name="is_weekend" description="is weekend?">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="day_number_of_year" description="day number in year">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="id" description="code">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="full_date" description="full date">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="calendar_quarter" description="quarter id">
-      <tags/>
     </dim_attribute>
   </attributes>
   <expressions/>

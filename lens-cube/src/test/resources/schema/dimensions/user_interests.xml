@@ -2,13 +2,10 @@
 <x_dimension name="user_interests" xmlns="uri:lens:cube:0.1">
   <attributes>
     <dim_attribute _type="int" name="user_id" description="user id">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="id" description="id">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="sport_id" description="sport id">
-      <tags/>
     </dim_attribute>
   </attributes>
   <expressions/>

@@ -2,41 +2,30 @@
 <x_dimension name="testdim2" xmlns="uri:lens:cube:0.1">
   <attributes>
     <dim_attribute _type="bigint" name="bigidnew" description="big id">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="id" description="code">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="name" description="name">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="unreachablename" display_string="urdim name" description="">
-      <tags/>
       <chain_ref_column chain_name="unreachabledim_chain" ref_col="name" dest_table="unreachabledim"/>
     </dim_attribute>
     <dim_attribute _type="string" name="cityname" display_string="cityname" description="name">
-      <tags/>
       <chain_ref_column chain_name="dim2city" ref_col="name" dest_table="citydim"/>
     </dim_attribute>
     <dim_attribute _type="string" name="testdim3id" display_string="dim3 refer" description="f-key to testdim3">
-      <tags/>
       <chain_ref_column chain_name="dim3chain" ref_col="id" dest_table="testdim3"/>
     </dim_attribute>
     <dim_attribute _type="int" name="urdimid" display_string="urdim refer" description="ref dim">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="bigint" name="bigid1" description="big id">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="bigint" name="bigid2" description="big id">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="cityid" description="f-key to citydim">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="citystatecapital" display_string="State's capital thru city"
                    description="State's capital thru city">
-      <tags/>
       <chain_ref_column chain_name="citystate" ref_col="capital" dest_table="statedim"/>
     </dim_attribute>
   </attributes>
