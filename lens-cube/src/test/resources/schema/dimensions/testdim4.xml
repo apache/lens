@@ -2,10 +2,8 @@
 <x_dimension name="testdim4" xmlns="uri:lens:cube:0.1">
   <attributes>
     <dim_attribute _type="int" name="id" description="code">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="name" description="name">
-      <tags/>
     </dim_attribute>
   </attributes>
   <expressions/>

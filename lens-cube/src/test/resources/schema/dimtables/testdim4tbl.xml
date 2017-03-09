@@ -17,11 +17,7 @@
         <update_period>HOURLY</update_period>
       </update_periods>
       <storage_name>C1</storage_name>
-      <table_desc external="false"
-                  input_format="org.apache.hadoop.mapred.TextInputFormat"
-                  output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-                  serde_class_name="org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe" storage_handler_name=""
-                  num_buckets="0" compressed="false">
+      <table_desc external="false">
         <part_cols>
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
@@ -37,11 +33,7 @@
     <storage_table>
       <update_periods/>
       <storage_name>C2</storage_name>
-      <table_desc external="false"
-                  input_format="org.apache.hadoop.mapred.TextInputFormat"
-                  output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
-                  serde_class_name="org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe" storage_handler_name=""
-                  num_buckets="0" compressed="false">
+      <table_desc external="false">
         <part_cols/>
         <table_parameters>
           <property name="totalSize" value="0"/>

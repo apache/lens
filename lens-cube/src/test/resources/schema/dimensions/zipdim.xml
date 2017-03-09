@@ -2,13 +2,10 @@
 <x_dimension name="zipdim" xmlns="uri:lens:cube:0.1">
   <attributes>
     <dim_attribute _type="string" name="f2" description="name">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="code" description="code">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="f1" description="name">
-      <tags/>
     </dim_attribute>
   </attributes>
   <expressions/>

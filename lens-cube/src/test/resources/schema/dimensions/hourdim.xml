@@ -2,10 +2,8 @@
 <x_dimension name="hourdim" xmlns="uri:lens:cube:0.1">
   <attributes>
     <dim_attribute _type="string" name="full_hour" description="full date">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="id" description="code">
-      <tags/>
     </dim_attribute>
   </attributes>
   <expressions/>

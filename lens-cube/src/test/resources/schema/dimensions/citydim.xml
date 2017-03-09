@@ -2,45 +2,34 @@
 <x_dimension name="citydim" xmlns="uri:lens:cube:0.1">
   <attributes>
     <dim_attribute _type="int" name="stateid" description="state id">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="zipcode" description="zip code">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="int" name="id" description="code">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="statename" display_string="State name" description="state name">
-      <tags/>
       <chain_ref_column chain_name="citystate" ref_col="name" dest_table="statedim"/>
     </dim_attribute>
     <dim_attribute _type="string" name="nocandidatecol" description="used in testing no candidate available">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="name" description="city name">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="ambigdim1" description="used in testColumnAmbiguity">
-      <tags/>
     </dim_attribute>
     <dim_attribute _type="string" name="ambigdim2" description="used in testColumnAmbiguity">
-      <tags/>
     </dim_attribute>
   </attributes>
   <expressions>
     <expression _type="string" name="citystate" display_string="City State" description="city's state">
-      <tags/>
       <expr_spec expr="concat(citydim.name, &quot;:&quot;, citydim.statename)"/>
     </expression>
     <expression _type="string" name="cityaddress" display_string="City Address"
                 description="city with state and city and zip">
-      <tags/>
       <expr_spec
         expr="concat(citydim.name, &quot;:&quot;, citystate.name, &quot;:&quot;, citycountry.name, &quot;:&quot;, cityzip.code)"/>
       <expr_spec expr="concat(citydim.name, &quot;:&quot;, citystate.name)"/>
     </expression>
     <expression _type="int" name="aggrexpr" display_string="city count" description="count(name)">
-      <tags/>
       <expr_spec expr="count(name)"/>
     </expression>
   </expressions>
