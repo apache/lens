@@ -10,13 +10,12 @@
     <property name="cube.timedim.relation.d_time" value="processing_time+[-5 days,5 days]"/>
     <property name="cube.timedim.partition.test_time_dim2" value="ttd2"/>
     <property name="cube.basecube.timed.dimensions.list" value="d_time,pt,it,et,test_time_dim,test_time_dim2"/>
-    <property name="cube.allfields.queriable" value="false"/>
+    <property name="cube.allfields.queriable" value="true"/>
     <property name="cube.table.basecube.weight" value="0.0"/>
   </properties>
   <measures>
     <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr21" display_string="Measure22"
              description="second measure">
-      <tags/>
     </measure>
     <measure _type="BIGINT" default_aggr="COUNT" name="msr4" display_string="Measure4" description="fourth measure">
       <tags/>
@@ -82,8 +81,6 @@
     </measure>
   </measures>
   <dim_attributes>
-    <dim_attribute _type="string" name="business" display_string="business unit"
-                   description="Business unit name for segmentation" />
     <dim_attribute _type="string" name="union_join_ctx_cityname" display_string="union_join_ctx_city name"
                    description="union_join_ctx_city name">
       <tags/>
