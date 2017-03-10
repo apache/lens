@@ -101,6 +101,9 @@ class CandidateTableResolver implements ContextRewriter {
         }
       }
       log.info("Populated storage candidates: {}", cubeql.getCandidates());
+      for (Segmentation segmentation : cubeql.getMetastoreClient().getAllSegmentations(cubeql.getCube())) {
+        cubeql.getCandidates().add(new SegmentationCandidate(cubeql, segmentation));
+      }
     }
 
     if (cubeql.getDimensions().size() != 0) {

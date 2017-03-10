@@ -181,10 +181,6 @@ public class CandidateUtil {
     }
   }
 
-  public static StorageCandidate cloneStorageCandidate(StorageCandidate sc) throws LensException{
-    return new StorageCandidate(sc);
-  }
-
   public static boolean factHasColumn(CubeFactTable fact, String column) {
     for (FieldSchema factField : fact.getColumns()) {
       if (factField.getName().equals(column)) {

@@ -38,9 +38,6 @@ import com.google.common.base.Optional;
 
 class ColumnResolver implements ContextRewriter {
 
-  public ColumnResolver(Configuration conf) {
-  }
-
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     checkForAllColumnsSelected(cubeql);

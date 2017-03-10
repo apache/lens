@@ -135,7 +135,7 @@ public class CubeQueryRewriter {
    */
   private void setupRewriters() {
     // Resolve columns - the column alias and table alias
-    rewriters.add(new ColumnResolver(conf));
+    rewriters.add(new ColumnResolver());
     // Rewrite base trees (groupby, having, orderby, limit) using aliases
     rewriters.add(new AliasReplacer(conf));
 

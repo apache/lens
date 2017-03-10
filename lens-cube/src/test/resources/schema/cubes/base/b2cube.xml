@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<x_base_cube name="b1cube" xmlns="uri:lens:cube:0.1">
+<x_base_cube name="b2cube" xmlns="uri:lens:cube:0.1">
   <properties>
     <property name="cube.timedim.partition.et" value="et"/>
     <property name="cube.timedim.partition.it" value="it"/>

@@ -80,7 +80,9 @@ class AggregateResolver implements ContextRewriter {
             candItr.remove();
           }
         } else {
-          throw new LensException("Not a storage candidate!!");
+          System.out.println(candidate);
+          //TODO add what to do in case of seg candidate
+          //throw new LensException("Not a storage candidate!!");
         }
       }
       nonDefaultAggregates = true;

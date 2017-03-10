@@ -294,6 +294,10 @@ public class StorageCandidate implements Candidate, CandidateTable {
     return (AbstractCubeTable) cube;
   }
 
+  public Candidate copy() throws LensException {
+    return new StorageCandidate(this);
+  }
+
   @Override
   public Collection<String> getColumns() {
     if (factColumns == null) {

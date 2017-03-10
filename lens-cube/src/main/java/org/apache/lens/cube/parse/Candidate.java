@@ -36,7 +36,7 @@ import org.apache.lens.server.api.error.LensException;
  * Different Re-writers will work on applicable candidates to produce a final candidate which will be used
  * for generating the re-written query.
  */
-public interface Candidate {
+public interface Candidate extends Cloneable {
 
   /**
    * Returns all the fact columns
@@ -121,4 +121,7 @@ public interface Candidate {
    */
   Set<Integer> getAnswerableMeasurePhraseIndices();
 
+  default Candidate copy() throws LensException {
+    throw new LensException("Candidate " + this + " doesn't support copy");
+  }
 }

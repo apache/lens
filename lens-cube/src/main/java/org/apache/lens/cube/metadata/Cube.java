@@ -24,6 +24,7 @@ import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -376,6 +377,14 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     fieldNames.addAll(getDimAttributeNames());
     fieldNames.addAll(getTimedDimensions());
     return fieldNames;
+  }
+
+  public Set<CubeColumn> getAllFields() {
+    Set<CubeColumn> columns = Sets.newHashSet();
+    columns.addAll(getMeasures());
+    columns.addAll(getDimAttributes());
+    columns.addAll(getExpressions());
+    return columns;
   }
 
   /**
