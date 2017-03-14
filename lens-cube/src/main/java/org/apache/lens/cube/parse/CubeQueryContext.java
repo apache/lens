@@ -96,12 +96,15 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   static final String TIME_RANGE_FUNC = "time_range_in";
   public static final String NOW = "now";
   static final String DEFAULT_TABLE = "_default_";
+  @Getter
   private final ASTNode ast;
   @Getter
   private final QB qb;
   private String clauseName = null;
   @Getter
   private final Configuration conf;
+  @Getter
+  private HiveConf metastoreConf;
 
   @Getter
   private final List<TimeRange> timeRanges;
@@ -220,6 +223,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     this.ast = ast;
     this.qb = qb;
     this.conf = queryConf;
+    this.metastoreConf = metastoreConf;
     this.clauseName = getClause();
     this.timeRanges = new ArrayList<>();
     try {
@@ -848,7 +852,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return dimsToQuery;
   }
 
-  private Candidate pickCandidateToQuery() throws LensException {
+  public Candidate pickCandidateToQuery() throws LensException {
     Candidate cand = null;
     if (hasCubeInQuery()) {
       if (candidates.size() > 0) {

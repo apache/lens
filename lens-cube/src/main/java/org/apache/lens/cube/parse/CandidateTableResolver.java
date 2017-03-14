@@ -101,9 +101,6 @@ class CandidateTableResolver implements ContextRewriter {
         }
       }
       log.info("Populated storage candidates: {}", cubeql.getCandidates());
-      for (Segmentation segmentation : cubeql.getMetastoreClient().getAllSegmentations(cubeql.getCube())) {
-        cubeql.getCandidates().add(new SegmentationCandidate(cubeql, segmentation));
-      }
     }
 
     if (cubeql.getDimensions().size() != 0) {
@@ -187,11 +184,11 @@ class CandidateTableResolver implements ContextRewriter {
   }
 
   private static boolean isColumnAvailableFrom(@NonNull final Date date, Date startTime) {
-    return (startTime == null) ? true : date.equals(startTime) || date.after(startTime);
+    return (startTime == null) || (date.equals(startTime) || date.after(startTime));
   }
 
   private static boolean isColumnAvailableTill(@NonNull final Date date, Date endTime) {
-    return (endTime == null) ? true : date.equals(endTime) || date.before(endTime);
+    return (endTime == null) || (date.equals(endTime) || date.before(endTime));
   }
 
   private static boolean isFactColumnValidForRange(CubeQueryContext cubeql, CandidateTable cfact, String col) {
@@ -318,10 +315,10 @@ class CandidateTableResolver implements ContextRewriter {
           throw new LensException("Not a storage candidate!!");
         }
       }
-      if (cubeql.getCandidates().size() == 0) {
-        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
-            getColumns(cubeql.getQueriedPhrases()).toString());
-      }
+//      if (cubeql.getCandidates().size() == 0) {
+//        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
+//          getColumns(cubeql.getQueriedPhrases()).toString());
+//      }
     }
   }
 

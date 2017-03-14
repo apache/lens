@@ -24,6 +24,7 @@ import static org.apache.lens.cube.metadata.MetastoreConstants.*;
 
 import java.text.ParseException;
 import java.util.*;
+import java.util.function.Function;
 
 import org.apache.lens.server.api.error.LensException;
 
@@ -31,8 +32,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
+
+import org.antlr.runtime.CommonToken;
 
 import com.google.common.collect.Sets;
 
@@ -579,12 +583,18 @@ public class MetastoreUtil {
   }
 
   public static ASTNode copyAST(ASTNode original) {
-
-    ASTNode copy = new ASTNode(original); // Leverage constructor
-
+    return copyAST(original, Function.identity());
+  }
+  public static ASTNode copyAST(ASTNode original, Function<String, String> replacer) {
+    ASTNode copy;
+    if ((original.getType() == HiveParser.Identifier)) {
+      copy = new ASTNode(new CommonToken(HiveParser.Identifier, replacer.apply(original.getText()))); // Leverage constructor
+    } else {
+      copy = new ASTNode(original);
+    }
     if (original.getChildren() != null) {
       for (Object o : original.getChildren()) {
-        ASTNode childCopy = copyAST((ASTNode) o);
+        ASTNode childCopy = copyAST((ASTNode) o, replacer);
         copy.addChild(childCopy);
       }
     }

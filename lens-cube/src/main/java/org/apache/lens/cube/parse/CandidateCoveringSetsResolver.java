@@ -133,8 +133,8 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     List<Candidate> candidateSet = new ArrayList<>();
     for (Candidate cand : allCandidates) {
       // Assuming initial list of candidates populated are StorageCandidate
-      if (cand instanceof StorageCandidate) {
-        Candidate sc = (StorageCandidate) cand;
+      if (cand instanceof StorageCandidate || cand instanceof SegmentationCandidate) {
+        Candidate sc = cand;
         if (CandidateUtil.isValidForTimeRanges(sc, cubeql.getTimeRanges())) {
           candidateSet.add(sc.copy());
         } else if (CandidateUtil.isPartiallyValidForTimeRanges(sc, cubeql.getTimeRanges())) {
@@ -144,7 +144,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
             cubeql.getTimeRanges()));
         }
       } else {
-        throw new LensException("Not a StorageCandidate!!");
+        throw new LensException("Not a StorageCandidate or a segmentation candidate!!");
       }
     }
     // Get all covering fact sets
@@ -163,7 +163,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     updateQueriableMeasures(candidateSet, qpcList, cubeql);
     return candidateSet;
   }
-
+  //TODO move this to Candidate interface
   private boolean isMeasureAnswerablebyUnionCandidate(QueriedPhraseContext msr, Candidate uc,
       CubeQueryContext cubeql) throws LensException {
     // Candidate is a single StorageCandidate
@@ -231,10 +231,10 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     return combinations;
   }
 
-  private List<List<Candidate>> resolveJoinCandidates(List<Candidate> unionCandidates,
+  private List<List<Candidate>> resolveJoinCandidates(List<Candidate> candidates,
       Set<QueriedPhraseContext> msrs, CubeQueryContext cubeql) throws LensException {
     List<List<Candidate>> msrCoveringSets = new ArrayList<>();
-    List<Candidate> ucSet = new ArrayList<>(unionCandidates);
+    List<Candidate> ucSet = new ArrayList<>(candidates);
     // Check if a single set can answer all the measures and exprsWithMeasures
     for (Iterator<Candidate> i = ucSet.iterator(); i.hasNext();) {
       boolean evaluable = false;

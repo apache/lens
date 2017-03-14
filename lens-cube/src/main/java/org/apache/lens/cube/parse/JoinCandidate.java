@@ -18,11 +18,19 @@
  */
 package org.apache.lens.cube.parse;
 
+import static java.lang.Long.MAX_VALUE;
+import static java.lang.Long.MIN_VALUE;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
+
+import com.google.common.collect.Lists;
 
 /**
  * Represents a join of two candidates
@@ -32,58 +40,48 @@ public class JoinCandidate implements Candidate {
   /**
    * Child candidates that will participate in the join
    */
-  private Candidate childCandidate1;
-  private Candidate childCandidate2;
+  private List<Candidate> children;
   private String toStr;
   private QueryAST queryAST;
   private CubeQueryContext cubeql;
 
   public JoinCandidate(Candidate childCandidate1, Candidate childCandidate2, CubeQueryContext cubeql) {
-    this.childCandidate1 = childCandidate1;
-    this.childCandidate2 = childCandidate2;
+    children = Lists.newArrayList(childCandidate1, childCandidate2);
     this.cubeql = cubeql;
   }
 
   @Override
   public Collection<String> getColumns() {
     Set<String> columns = new HashSet<>();
-    columns.addAll(childCandidate1.getColumns());
-    columns.addAll(childCandidate2.getColumns());
+    for (Candidate child : children) {
+      columns.addAll(child.getColumns());
+    }
     return columns;
   }
 
   @Override
   public Date getStartTime() {
-    return childCandidate1.getStartTime().after(childCandidate2.getStartTime())
-        ? childCandidate1.getStartTime() : childCandidate2.getStartTime();
+    return children.stream().map(Candidate::getStartTime).max(Comparator.naturalOrder()).orElse(new Date(MIN_VALUE));
   }
 
   @Override
   public Date getEndTime() {
-    return childCandidate1.getEndTime().before(childCandidate2.getEndTime())
-        ? childCandidate1.getEndTime() : childCandidate2.getEndTime();
+    return children.stream().map(Candidate::getEndTime).min(Comparator.naturalOrder()).orElse(new Date(MAX_VALUE));
   }
 
   @Override
   public double getCost() {
-    return childCandidate1.getCost() + childCandidate2.getCost();
+    return children.stream().mapToDouble(Candidate::getCost).sum();
   }
 
   @Override
-  public boolean contains(Candidate candidate) {
-    if (this.equals(candidate)) {
-      return true;
-    } else {
-      return childCandidate1.contains(candidate) || childCandidate2.contains(candidate);
-    }
+  public boolean contains(final Candidate candidate) {
+    return this.equals(candidate) || children.stream().anyMatch(c -> c.contains(candidate));
   }
 
   @Override
   public Collection<Candidate> getChildren() {
-    ArrayList<Candidate> joinCandidates = new ArrayList<>();
-    joinCandidates.add(childCandidate1);
-    joinCandidates.add(childCandidate2);
-    return joinCandidates;
+    return Lists.newArrayList(children);
   }
 
   /**
@@ -93,8 +91,12 @@ public class JoinCandidate implements Candidate {
   @Override
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange parentTimeRange, boolean failOnPartialData)
     throws LensException {
-    return this.childCandidate1.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData)
-        && this.childCandidate2.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData);
+    for (Candidate child : children) {
+      if (!child.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -102,24 +104,18 @@ public class JoinCandidate implements Candidate {
    */
   @Override
   public Set<FactPartition> getParticipatingPartitions() {
-    Set<FactPartition> factPartitionsSet = new HashSet<>();
-    factPartitionsSet.addAll(childCandidate1.getParticipatingPartitions());
-    factPartitionsSet.addAll(childCandidate2.getParticipatingPartitions());
-    return factPartitionsSet;
+    return children.stream().map(Candidate::getParticipatingPartitions).flatMap(Collection::stream).collect(toSet());
   }
 
   @Override
   public boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expr) {
-    return childCandidate1.isExpressionEvaluable(expr) || childCandidate2.isExpressionEvaluable(expr);
+    return children.stream().anyMatch(x->x.isExpressionEvaluable(expr));
   }
 
   @Override
   public Set<Integer> getAnswerableMeasurePhraseIndices() {
-    Set<Integer> mesureIndices = new HashSet<>();
-    for (Candidate cand : getChildren()) {
-      mesureIndices.addAll(cand.getAnswerableMeasurePhraseIndices());
-    }
-    return mesureIndices;
+    return children.stream().map(Candidate::getAnswerableMeasurePhraseIndices)
+      .flatMap(Collection::stream).collect(toSet());
   }
 
   @Override
@@ -131,6 +127,6 @@ public class JoinCandidate implements Candidate {
   }
 
   private String getToString() {
-    return this.toStr = "JOIN[" + childCandidate1.toString() + ", " + childCandidate2.toString() + "]";
+    return children.stream().map(Object::toString).collect(joining(",", "JOIN[", "]"));
   }
 }

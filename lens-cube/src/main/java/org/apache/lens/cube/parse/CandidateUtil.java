@@ -172,12 +172,25 @@ public class CandidateUtil {
   private static void getStorageCandidates(Collection<Candidate> candidates,
     Set<StorageCandidate> storageCandidateSet) {
     for (Candidate candidate : candidates) {
-      if (candidate.getChildren() == null) {
-        //Expecting this to be a StorageCandidate as it has no children.
-        storageCandidateSet.add((StorageCandidate)candidate);
-      } else {
-        getStorageCandidates(candidate.getChildren(), storageCandidateSet);
+      getStorageCandidates(candidate, storageCandidateSet);
+    }
+  }
+  private static void getStorageCandidates(Candidate candidate,
+    Set<StorageCandidate> storageCandidateSet) {
+    if (candidate.getChildren() == null) {
+      //Expecting this to be a StorageCandidate as it has no children.
+      if (candidate instanceof StorageCandidate) {
+        storageCandidateSet.add((StorageCandidate) candidate);
+      } else if (candidate instanceof SegmentationCandidate) {
+        SegmentationCandidate segC = (SegmentationCandidate) candidate;
+        for (CubeQueryContext cubeQueryContext : segC.cubeQueryContextMap.values()) {
+          if (cubeQueryContext.getPickedCandidate() != null) {
+            getStorageCandidates(cubeQueryContext.getPickedCandidate(), storageCandidateSet);
+          }
+        }
       }
+    } else {
+      getStorageCandidates(candidate.getChildren(), storageCandidateSet);
     }
   }
 

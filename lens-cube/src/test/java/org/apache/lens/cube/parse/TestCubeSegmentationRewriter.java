@@ -133,5 +133,6 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     CubeQueryContext ctx = rewriteCtx("select cityid, segmsr1 from testcube where " + DateFactory.TWO_DAYS_RANGE,
       getConf());
     System.out.println(ctx);
+    System.out.println(ctx.toHQL());
   }
 }

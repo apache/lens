@@ -721,11 +721,6 @@ public final class HQLParser {
     }
   }
 
-  public static void main(String[] args) throws Exception {
-    ASTNode ast = parseHQL("select * from default_table ", new HiveConf());
-
-    printAST(getHiveTokenMapping(), ast, 0, 0);
-  }
 
   public static String getString(ASTNode tree, AppendMode appendMode) {
     StringBuilder buf = new StringBuilder();

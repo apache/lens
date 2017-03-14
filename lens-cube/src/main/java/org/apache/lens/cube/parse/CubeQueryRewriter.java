@@ -168,6 +168,7 @@ public class CubeQueryRewriter {
     rewriters.add(candidateTblResolver);
     // Find Union and Join combinations over Storage Candidates that can answer the queried time range(s) and all
     // queried measures
+    rewriters.add(new CandidateSegmentResolver(conf, hconf));
     rewriters.add(new CandidateCoveringSetsResolver());
 
     // If lightest fact first option is enabled for this driver (via lens.cube.query.pick.lightest.fact.first = true),

@@ -124,4 +124,6 @@ public interface Candidate extends Cloneable {
   default Candidate copy() throws LensException {
     throw new LensException("Candidate " + this + " doesn't support copy");
   }
+
+
 }
