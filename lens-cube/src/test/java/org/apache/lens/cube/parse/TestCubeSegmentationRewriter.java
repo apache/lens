@@ -130,7 +130,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
 
   @Test
   public void test() throws ParseException, LensException {
-    CubeQueryContext ctx = rewriteCtx("select cityid, segmsr1 from testcube where " + DateFactory.TWO_DAYS_RANGE,
+    CubeQueryContext ctx = rewriteCtx("select cityid, segmsr1 from testcube where " + TWO_DAYS_RANGE,
       getConf());
     System.out.println(ctx);
     System.out.println(ctx.toHQL());

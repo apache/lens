@@ -35,6 +35,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /**
@@ -42,6 +43,7 @@ import lombok.Getter;
  */
 @JsonIgnoreProperties({"astNode", "parent"})
 @Data
+@EqualsAndHashCode(of = {"partitionColumn", "fromDate", "toDate"})
 public class TimeRange {
   private String partitionColumn;
   private Date toDate;

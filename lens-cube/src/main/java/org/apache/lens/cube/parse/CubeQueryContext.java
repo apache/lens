@@ -915,8 +915,8 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       // Set the default queryAST for StorageCandidate and copy child ASTs from cubeql.
       // Later in the rewrite flow each Storage candidate will modify them accordingly.
       for (StorageCandidate sc : scSet) {
-        sc.setQueryAst(DefaultQueryAST.fromStorageCandidate(sc, this));
-        CandidateUtil.copyASTs(this, sc.getQueryAst());
+        sc.setQueryAst(DefaultQueryAST.fromStorageCandidate(sc, sc.getCubeql()));
+        CandidateUtil.copyASTs(sc.getCubeql(), sc.getQueryAst());
         factDimMap.put(sc, new HashSet<>(dimsToQuery.keySet()));
       }
       for (StorageCandidate sc : scSet) {
@@ -928,7 +928,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     Set<Dimension> exprDimensions = new HashSet<>();
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(this, sc, dimsToQuery, sc.getQueryAst());
+        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(sc.getCubeql(), sc, dimsToQuery, sc.getQueryAst());
         exprDimensions.addAll(factExprDimTables);
         factDimMap.get(sc).addAll(factExprDimTables);
       }
@@ -943,7 +943,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     Set<Dimension> denormTables = new HashSet<>();
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        Set<Dimension> factDenormTables = deNormCtx.rewriteDenormctx(this, sc, dimsToQuery, !scSet.isEmpty());
+        Set<Dimension> factDenormTables = deNormCtx.rewriteDenormctx(sc.getCubeql(), sc, dimsToQuery, !scSet.isEmpty());
         denormTables.addAll(factDenormTables);
         factDimMap.get(sc).addAll(factDenormTables);
       }
@@ -962,7 +962,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       Set<Dimension> joiningTables = new HashSet<>();
       if (scSet != null && scSet.size() > 1) {
         for (StorageCandidate sc : scSet) {
-          Set<Dimension> factJoiningTables = autoJoinCtx.pickOptionalTables(sc, factDimMap.get(sc), this);
+          Set<Dimension> factJoiningTables = autoJoinCtx.pickOptionalTables(sc, factDimMap.get(sc), sc.getCubeql());
           factDimMap.get(sc).addAll(factJoiningTables);
           joiningTables.addAll(factJoiningTables);
         }
@@ -976,7 +976,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     pickedCandidate = cand;
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        sc.updateFromString(this, factDimMap.get(sc), dimsToQuery);
+        sc.updateFromString(sc.getCubeql(), factDimMap.get(sc), dimsToQuery);
       }
     } else {
       updateFromString(null, dimsToQuery);
