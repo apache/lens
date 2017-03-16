@@ -19,6 +19,7 @@
 
 package org.apache.lens.cube.parse;
 
+import static java.util.stream.Collectors.joining;
 import static org.apache.lens.cube.parse.HQLParser.*;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
@@ -32,7 +33,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.util.StringUtils;
 
 import org.antlr.runtime.CommonToken;
 
@@ -51,10 +51,10 @@ public class UnionQueryWriter {
   private Map<String, ASTNode> storageCandidateToSelectAstMap = new HashMap<>();
   private AliasDecider aliasDecider = new DefaultAliasDecider();
   private CubeQueryContext cubeql;
-  Set<StorageCandidate> storageCandidates;
-  public static final String DEFAULT_MEASURE = "0.0";
+  private Set<StorageCandidate> storageCandidates;
+  private static final String DEFAULT_MEASURE = "0.0";
 
-  public UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
+  UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
     this.cubeql = cubeql;
     storageCandidates = CandidateUtil.getStorageCandidates(cand);
   }
@@ -423,7 +423,7 @@ public class UnionQueryWriter {
         // Select phrase is expression
       } else {
         for (StorageCandidate sc : storageCandidates) {
-          if (phrase.isEvaluable(cubeql, sc)
+          if (phrase.isEvaluable(sc)
               || sc.getAnswerableMeasurePhraseIndices().contains(phrase.getPosition())) {
             ASTNode exprWithOutAlias = (ASTNode) sc.getQueryAst().getSelectAST().getChild(i).getChild(0);
             storageCandidateToSelectAstMap.get(sc.toString()).
@@ -689,15 +689,12 @@ public class UnionQueryWriter {
    * @throws LensException
    */
   private String getFromString(Map<StorageCandidate, Set<Dimension>> factDimMap) throws LensException {
-    StringBuilder from = new StringBuilder();
     List<String> hqlQueries = new ArrayList<>();
     for (StorageCandidate sc : storageCandidates) {
       Set<Dimension> queriedDims = factDimMap.get(sc);
-      hqlQueries.add(sc.toHQL(queriedDims));
+      hqlQueries.add(sc.toHQL(queriedDims, cubeql));
     }
-    return from.append(" ( ")
-        .append(StringUtils.join(" UNION ALL ", hqlQueries))
-        .append(" ) as " + cubeql.getBaseCube()).toString();
+    return hqlQueries.stream().collect(joining(" UNION ALL ", "(", ") as " + cubeql.getBaseCube()));
   }
 
 }

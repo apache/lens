@@ -103,7 +103,6 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   private String clauseName = null;
   @Getter
   private final Configuration conf;
-  @Getter
   private HiveConf metastoreConf;
 
   @Getter
@@ -912,11 +911,11 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
 
     Map<StorageCandidate, Set<Dimension>> factDimMap = new HashMap<>();
     if (cand != null) {
-      // Set the default queryAST for StorageCandidate and copy child ASTs from cubeql.
+      // Set the default queryAST for StorageCandidate and copy child ASTs from cubeQueryContext.
       // Later in the rewrite flow each Storage candidate will modify them accordingly.
       for (StorageCandidate sc : scSet) {
-        sc.setQueryAst(DefaultQueryAST.fromStorageCandidate(sc, sc.getCubeql()));
-        CandidateUtil.copyASTs(sc.getCubeql(), sc.getQueryAst());
+        sc.setQueryAst(DefaultQueryAST.fromStorageCandidate(sc, sc.getCubeQueryContext()));
+        CandidateUtil.copyASTs(sc.getCubeQueryContext(), sc.getQueryAst());
         factDimMap.put(sc, new HashSet<>(dimsToQuery.keySet()));
       }
       for (StorageCandidate sc : scSet) {
@@ -928,7 +927,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     Set<Dimension> exprDimensions = new HashSet<>();
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(sc.getCubeql(), sc, dimsToQuery, sc.getQueryAst());
+        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(sc.getCubeQueryContext(), sc, dimsToQuery, sc.getQueryAst());
         exprDimensions.addAll(factExprDimTables);
         factDimMap.get(sc).addAll(factExprDimTables);
       }
@@ -943,7 +942,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     Set<Dimension> denormTables = new HashSet<>();
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        Set<Dimension> factDenormTables = deNormCtx.rewriteDenormctx(sc.getCubeql(), sc, dimsToQuery, !scSet.isEmpty());
+        Set<Dimension> factDenormTables = deNormCtx.rewriteDenormctx(sc.getCubeQueryContext(), sc, dimsToQuery, !scSet.isEmpty());
         denormTables.addAll(factDenormTables);
         factDimMap.get(sc).addAll(factDenormTables);
       }
@@ -962,7 +961,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       Set<Dimension> joiningTables = new HashSet<>();
       if (scSet != null && scSet.size() > 1) {
         for (StorageCandidate sc : scSet) {
-          Set<Dimension> factJoiningTables = autoJoinCtx.pickOptionalTables(sc, factDimMap.get(sc), sc.getCubeql());
+          Set<Dimension> factJoiningTables = autoJoinCtx.pickOptionalTables(sc, factDimMap.get(sc), sc.getCubeQueryContext());
           factDimMap.get(sc).addAll(factJoiningTables);
           joiningTables.addAll(factJoiningTables);
         }
@@ -976,7 +975,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     pickedCandidate = cand;
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        sc.updateFromString(sc.getCubeql(), factDimMap.get(sc), dimsToQuery);
+        sc.updateFromString(sc.getCubeQueryContext(), factDimMap.get(sc), dimsToQuery);
       }
     } else {
       updateFromString(null, dimsToQuery);
@@ -1001,7 +1000,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     } else if (cand instanceof StorageCandidate) {
       StorageCandidate sc = (StorageCandidate) cand;
       sc.updateAnswerableSelectColumns(this);
-      return getInsertClause() + sc.toHQL(factDimMap.get(sc));
+      return getInsertClause() + sc.toHQL(factDimMap.get(sc), this);
     } else {
       UnionQueryWriter uqc = new UnionQueryWriter(cand, this);
       return getInsertClause() + uqc.toHQL(factDimMap);

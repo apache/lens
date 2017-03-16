@@ -20,16 +20,12 @@ package org.apache.lens.cube.parse;
 
 import java.util.*;
 
-import org.apache.lens.cube.metadata.MetastoreConstants;
-import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Data
@@ -101,91 +97,37 @@ class QueriedPhraseContext extends TracksQueriedColumns implements TrackQueriedC
   }
 
   /**
-   * @param cubeQl
-   * @param sc
+   * @param candidate
    * @return
    * @throws LensException
    */
-  public boolean isEvaluable(CubeQueryContext cubeQl, StorageCandidate sc) throws LensException {
+  public boolean isEvaluable(Candidate candidate) throws LensException {
     // all measures of the queried phrase should be present
     for (String msr : queriedMsrs) {
-      if (!checkForColumnExistsAndValidForRange(sc, msr, cubeQl)) {
+      if (!candidate.isColumnPresentAndValidForRange(msr)) {
         return false;
       }
     }
     // all expression columns should be evaluable
     for (String exprCol : queriedExprColumns) {
-      if (!cubeQl.getExprCtx().isEvaluable(exprCol, sc)) {
-        log.info("expression {} is not evaluable in fact table:{}", expr, sc);
+      if (!candidate.isExpressionEvaluable(exprCol)) {
+        log.info("expression {} is not evaluable in fact table:{}", expr, candidate);
         return false;
       }
     }
     // all dim-attributes should be present.
     for (String col : queriedDimAttrs) {
-      if (!sc.getColumns().contains(col.toLowerCase())) {
+      if (!candidate.getColumns().contains(col.toLowerCase())) {
         // check if it available as reference
-        if (!cubeQl.getDeNormCtx().addRefUsage(cubeQl, sc, col, cubeQl.getCube().getName())) {
-          log.info("column {} is not available in fact table:{} ", col, sc);
+        if (!candidate.isDimAttributeEvaluable(col)) {
+          log.info("column {} is not available in fact table:{} ", col, candidate);
           return false;
         }
-      } else if (!isFactColumnValidForRange(cubeQl, sc, col)) {
-        log.info("column {} is not available in range queried in fact {}", col, sc);
+      } else if (!candidate.isColumnValidForRange(col)) {
+        log.info("column {} is not available in range queried in fact {}", col, candidate);
         return false;
       }
     }
     return true;
   }
-
-  private static boolean isColumnAvailableInRange(final TimeRange range, Date startTime, Date endTime) {
-    return (isColumnAvailableFrom(range.getFromDate(), startTime)
-        && isColumnAvailableTill(range.getToDate(), endTime));
-  }
-
-  private static boolean isColumnAvailableFrom(@NonNull final Date date, Date startTime) {
-    return (startTime == null) || date.equals(startTime) || date.after(startTime);
-  }
-
-  private static boolean isColumnAvailableTill(@NonNull final Date date, Date endTime) {
-    return (endTime == null) || date.equals(endTime) || date.before(endTime);
-  }
-
-  public static boolean isFactColumnValidForRange(CubeQueryContext cubeql, StorageCandidate sc, String col) {
-    for (TimeRange range : cubeql.getTimeRanges()) {
-      if (!isColumnAvailableInRange(range, getFactColumnStartTime(sc, col), getFactColumnEndTime(sc, col))) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  public static Date getFactColumnStartTime(StorageCandidate sc, String factCol) {
-    Date startTime = null;
-    for (String key : sc.getTable().getProperties().keySet()) {
-      if (key.contains(MetastoreConstants.FACT_COL_START_TIME_PFX)) {
-        String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_START_TIME_PFX);
-        if (factCol.equals(propCol)) {
-          startTime = sc.getTable().getDateFromProperty(key, false, true);
-        }
-      }
-    }
-    return startTime;
-  }
-
-  public static Date getFactColumnEndTime(StorageCandidate sc, String factCol) {
-    Date endTime = null;
-    for (String key : sc.getTable().getProperties().keySet()) {
-      if (key.contains(MetastoreConstants.FACT_COL_END_TIME_PFX)) {
-        String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_END_TIME_PFX);
-        if (factCol.equals(propCol)) {
-          endTime = sc.getTable().getDateFromProperty(key, false, true);
-        }
-      }
-    }
-    return endTime;
-  }
-
-  static boolean checkForColumnExistsAndValidForRange(StorageCandidate sc, String column, CubeQueryContext cubeql) {
-    return (sc.getColumns().contains(column) && isFactColumnValidForRange(cubeql, sc, column));
-  }
-
 }

@@ -19,92 +19,34 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.metadata.DateFactory.BEFORE_4_DAYS;
-import static org.apache.lens.cube.metadata.DateFactory.BEFORE_6_DAYS;
-import static org.apache.lens.cube.metadata.DateFactory.LAST_HOUR_TIME_RANGE;
 import static org.apache.lens.cube.metadata.DateFactory.NOW;
-import static org.apache.lens.cube.metadata.DateFactory.THIS_YEAR_RANGE;
-import static org.apache.lens.cube.metadata.DateFactory.TWODAYS_BACK;
 import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE;
-import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE_BEFORE_4_DAYS;
-import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE_IT;
-import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE_TTD;
-import static org.apache.lens.cube.metadata.DateFactory.TWO_MONTHS_RANGE_UPTO_HOURS;
-import static org.apache.lens.cube.metadata.DateFactory.TWO_MONTHS_RANGE_UPTO_MONTH;
-import static org.apache.lens.cube.metadata.DateFactory.getDateStringWithOffset;
+import static org.apache.lens.cube.metadata.DateFactory.TWO_MONTHS_RANGE_UPTO_DAYS;
 import static org.apache.lens.cube.metadata.DateFactory.getDateWithOffset;
-import static org.apache.lens.cube.metadata.DateFactory.getTimeRangeString;
-import static org.apache.lens.cube.metadata.UpdatePeriod.CONTINUOUS;
-import static org.apache.lens.cube.metadata.UpdatePeriod.DAILY;
-import static org.apache.lens.cube.metadata.UpdatePeriod.HOURLY;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.INCOMPLETE_PARTITION;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.LESS_DATA;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.MISSING_PARTITIONS;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.NO_CANDIDATE_STORAGES;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AUTO_JOINS;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.REWRITE_DIM_FILTER_TO_FACT_FILTER;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.getValidStorageTablesKey;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.getValidUpdatePeriodsKey;
-import static org.apache.lens.cube.parse.CubeTestSetup.DERIVED_CUBE_NAME;
-import static org.apache.lens.cube.parse.CubeTestSetup.TEST_CUBE_NAME;
-import static org.apache.lens.cube.parse.CubeTestSetup.getDateUptoHours;
-import static org.apache.lens.cube.parse.CubeTestSetup.getDbName;
 import static org.apache.lens.cube.parse.CubeTestSetup.getExpectedQuery;
 import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2days;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2daysWithTimeDim;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForHourly2days;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForMonthly2months;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForMonthlyDailyAndHourly2months;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForUpdatePeriods;
+import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
 
-import org.apache.lens.cube.error.LensCubeErrorCode;
-import org.apache.lens.cube.error.NoCandidateDimAvailableException;
-import org.apache.lens.cube.error.NoCandidateFactAvailableException;
-import org.apache.lens.cube.metadata.BaseDimAttribute;
-import org.apache.lens.cube.metadata.Cube;
-import org.apache.lens.cube.metadata.CubeDimensionTable;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
-import org.apache.lens.cube.metadata.DateFactory;
-import org.apache.lens.cube.metadata.FactPartition;
-import org.apache.lens.cube.metadata.TimePartition;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.Driver;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 
@@ -128,11 +70,77 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     return new Configuration(conf);
   }
 
+  private static String extractTableName(String query) {
+    String l = query.toLowerCase();
+    int fromIndex = l.indexOf("from");
+    int toIndex = l.indexOf(" ", fromIndex + 5);
+    return l.substring(fromIndex + 5, toIndex);
+  }
+
+  private static void compareUnionQuery(CubeQueryContext cubeql, String begin, String end, List<String> queries) throws LensException {
+    final String actualLower = cubeql.toHQL().toLowerCase();
+    queries.sort(Comparator.comparing(s -> actualLower.indexOf(extractTableName(s))));
+    String expected = queries.stream().collect(Collectors.joining(" UNION ALL ", begin, end));
+    compareQueries(actualLower, expected);
+  }
+
   @Test
-  public void test() throws ParseException, LensException {
+  public void testSegmentRewrite() throws Exception {
     CubeQueryContext ctx = rewriteCtx("select cityid, segmsr1 from testcube where " + TWO_DAYS_RANGE,
       getConf());
-    System.out.println(ctx);
-    System.out.println(ctx.toHQL());
+    String query1 = getExpectedQuery("b1cube",
+      "select b1cube.cityid as alias0, sum(b1cube.segmsr1) as alias1 FROM ", null,
+      "group by b1cube.cityid",
+      getWhereForDailyAndHourly2days("b1cube", "c0_b1fact1"));
+    String query2 = getExpectedQuery("b2cube",
+      "select b2cube.cityid as alias0, sum(b2cube.segmsr1) as alias1 FROM ", null,
+      "group by b2cube.cityid",
+      getWhereForDailyAndHourly2days("b2cube", "c0_b2fact1"));
+    compareUnionQuery(ctx,
+      "SELECT (testcube.alias0) as `cityid`, sum((testcube.alias1)) as `segmsr1` FROM (",
+      " ) as testcube GROUP BY (testcube.alias0)", Lists.newArrayList(query1, query2));
+  }
+
+  @Test
+  public void testSegmentRewriteWithDifferentStartTimes() throws Exception {
+
+  }
+
+  @Test
+  public void testFactUnionSegmentWithInnerUnion() throws Exception {
+    CubeQueryContext ctx = rewriteCtx("select cityid, segmsr1 from testcube where " + TWO_MONTHS_RANGE_UPTO_DAYS,
+      getConf());
+    String query1;
+    String query2;
+    String query3;
+    query1 = getExpectedQuery("b1cube", "select b1cube.cityid as alias0, sum(b1cube.segmsr1) as alias1 from ",
+      null, "group by b1cube.cityid",
+      getWhereForUpdatePeriods("b1cube", "c0_b1fact1",
+        getDateWithOffset(UpdatePeriod.DAILY, -31), NOW,
+        Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
+    query2 = getExpectedQuery("b2cube", "select b2cube.cityid as alias0, sum(b2cube.segmsr1) as alias1 from ",
+      null, "group by b2cube.cityid",
+      getWhereForUpdatePeriods("b2cube", "c0_b2fact1",
+        getDateWithOffset(UpdatePeriod.DAILY, -31), NOW,
+        Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
+    query3 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
+      null, "group by testcube.cityid",
+      getWhereForUpdatePeriods("testcube", "c0_b1b2fact1",
+        getDateWithOffset(UpdatePeriod.DAILY, -60), getDateWithOffset(UpdatePeriod.DAILY, -30),
+        Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
+    compareUnionQuery(ctx, "select testcube.alias0 as cityid, sum(testcube.alias1) as segmsr1 from (",
+      ") AS testcube GROUP BY (testcube.alias0)", Lists.newArrayList(query1, query2, query3));
+  }
+
+  @Test
+  public void testFactUnionSegmentWithMultipleInnerUnions() throws Exception {
+  }
+
+  @Test
+  public void testFactJoinSegmentWithInnerUnion() throws Exception {
+  }
+
+  @Test
+  public void testFactJoinSegmentWithInnerUnionAndJoin() throws Exception {
   }
 }

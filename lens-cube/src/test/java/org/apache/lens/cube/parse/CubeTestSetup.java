@@ -21,11 +21,20 @@ package org.apache.lens.cube.parse;
 
 import static java.util.Calendar.DAY_OF_MONTH;
 import static java.util.Calendar.HOUR_OF_DAY;
-
-import static org.apache.lens.cube.metadata.DateFactory.*;
-import static org.apache.lens.cube.metadata.UpdatePeriod.*;
-
-import static org.testng.Assert.*;
+import static org.apache.lens.cube.metadata.DateFactory.BEFORE_4_DAYS;
+import static org.apache.lens.cube.metadata.DateFactory.BEFORE_6_DAYS;
+import static org.apache.lens.cube.metadata.DateFactory.NOW;
+import static org.apache.lens.cube.metadata.DateFactory.TWODAYS_BACK;
+import static org.apache.lens.cube.metadata.DateFactory.TWO_MONTHS_BACK;
+import static org.apache.lens.cube.metadata.DateFactory.isZerothHour;
+import static org.apache.lens.cube.metadata.UpdatePeriod.DAILY;
+import static org.apache.lens.cube.metadata.UpdatePeriod.HOURLY;
+import static org.apache.lens.cube.metadata.UpdatePeriod.MINUTELY;
+import static org.apache.lens.cube.metadata.UpdatePeriod.MONTHLY;
+import static org.apache.lens.cube.metadata.UpdatePeriod.QUARTERLY;
+import static org.apache.lens.cube.metadata.UpdatePeriod.YEARLY;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,7 +43,20 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
@@ -42,7 +64,24 @@ import javax.xml.bind.JAXBException;
 import org.apache.lens.api.ToXMLString;
 import org.apache.lens.api.jaxb.LensJAXBContext;
 import org.apache.lens.api.metastore.SchemaTraverser;
-import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.CubeDimAttribute;
+import org.apache.lens.cube.metadata.CubeDimensionTable;
+import org.apache.lens.cube.metadata.CubeFactTable;
+import org.apache.lens.cube.metadata.CubeMeasure;
+import org.apache.lens.cube.metadata.CubeMetastoreClient;
+import org.apache.lens.cube.metadata.CubeTableType;
+import org.apache.lens.cube.metadata.DateUtil;
+import org.apache.lens.cube.metadata.ExprColumn;
+import org.apache.lens.cube.metadata.JAXBUtils;
+import org.apache.lens.cube.metadata.MetastoreConstants;
+import org.apache.lens.cube.metadata.MetastoreUtil;
+import org.apache.lens.cube.metadata.Storage;
+import org.apache.lens.cube.metadata.StorageConstants;
+import org.apache.lens.cube.metadata.StoragePartitionDesc;
+import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
+import org.apache.lens.cube.metadata.TimePartition;
+import org.apache.lens.cube.metadata.TimePartitionRange;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
@@ -110,6 +149,7 @@ public class CubeTestSetup {
   private static Map<String, String> factValidityProperties = Maps.newHashMap();
   @Getter
   private static Map<String, List<UpdatePeriod>> storageToUpdatePeriodMap = new LinkedHashMap<>();
+
   static {
     factValidityProperties.put(MetastoreConstants.FACT_RELATIVE_START_TIME, "now.year - 90 days");
   }
@@ -144,6 +184,7 @@ public class CubeTestSetup {
     return sb.append(") ").append(cubeName).append(" ").append(outerWhere == null ? "" : outerWhere)
       .append(" ").append(outerPostWhere == null ? "" : outerPostWhere).toString();
   }
+
   public static String getExpectedUnionQuery(String cubeName, List<String> storages, StoragePartitionProvider provider,
     String outerSelectPart, String outerWhere, String outerPostWhere, String innerQuerySelectPart,
     String innerWhere, String innerPostWhere) {
@@ -452,6 +493,17 @@ public class CubeTestSetup {
       StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts));
     return storageTableToWhereClause;
   }
+
+  public static Map<String, String> getWhereForUpdatePeriods(String cubeName, String table, Date start, Date end,
+    Set<UpdatePeriod> updatePeriods) {
+    Map<String, String> storageTableToWhereClause = new LinkedHashMap<>();
+    List<String> parts = new ArrayList<>();
+    addParts(parts, updatePeriods, start, end);
+    storageTableToWhereClause.put(getDbName() + table,
+      StorageUtil.getWherePartClause("dt", cubeName, parts));
+    return storageTableToWhereClause;
+  }
+
   public static Map<String, String> getWhereForHourly2days(String hourlyTable) {
     return getWhereForHourly2days(TEST_CUBE_NAME, hourlyTable);
   }
@@ -465,14 +517,35 @@ public class CubeTestSetup {
   }
 
   public static void addParts(Collection<String> partitions, UpdatePeriod updatePeriod, Date from, Date to) {
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(from);
-    Date dt = cal.getTime();
-    while (dt.before(to)) {
-      String part = updatePeriod.format(dt);
-      cal.add(updatePeriod.calendarField(), 1);
-      partitions.add(part);
-      dt = cal.getTime();
+//    Calendar cal = Calendar.getInstance();
+//    cal.setTime(from);
+//    Date dt = cal.getTime();
+//    while (dt.before(to)) {
+//      String part = updatePeriod.format(dt);
+//      cal.add(updatePeriod.calendarField(), 1);
+//      partitions.add(part);
+//      dt = cal.getTime();
+//    }
+    try {
+      for (TimePartition timePartition : TimePartitionRange.between(from, to, updatePeriod)) {
+        partitions.add(timePartition.toString());
+      }
+    } catch (LensException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  public static void addParts(Collection<String> partitions, Set<UpdatePeriod> updatePeriods, Date from, Date to) {
+    if (updatePeriods.size() != 0) {
+      UpdatePeriod max = CubeFactTable.maxIntervalInRange(from, to, updatePeriods);
+      if (max != null) {
+        updatePeriods.remove(max);
+        Date ceilFromDate = DateUtil.getCeilDate(from, max);
+        Date floorToDate = DateUtil.getFloorDate(to, max);
+        addParts(partitions, updatePeriods, from, ceilFromDate);
+        addParts(partitions, max, ceilFromDate, floorToDate);
+        addParts(partitions, updatePeriods, floorToDate, to);
+      }
     }
   }
 
@@ -733,6 +806,7 @@ public class CubeTestSetup {
       throw exc;
     }
   }
+
   StrSubstitutor substitutor = new StrSubstitutor(new StrLookup<String>() {
     @Override
     public String lookup(String s) {
@@ -753,11 +827,12 @@ public class CubeTestSetup {
       }
     }
   }, "$absolute{", "}", '$');
+
   private void createFromXML(CubeMetastoreClient client) {
     SchemaTraverser.SchemaEntityProcessor processor = (file, aClass) -> {
       try {
         BufferedReader br = new BufferedReader(new FileReader(file));
-        String replaced = br.lines().map(s->substitutor2.replace(substitutor.replace(s)))
+        String replaced = br.lines().map(s -> substitutor2.replace(substitutor.replace(s)))
           .collect(Collectors.joining("\n"));
         StringReader sr = new StringReader(replaced);
         client.createEntity(LensJAXBContext.unmarshall(sr));
@@ -776,7 +851,7 @@ public class CubeTestSetup {
 //      }
 //    }
     for (CubeFactTable cubeFactTable : client.getAllFacts()) {
-      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/facts").getPath()+"/"+cubeFactTable.getName()+".xml"))) {
+      try (BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/facts").getPath() + "/" + cubeFactTable.getName() + ".xml"))) {
         bw.write(ToXMLString.toString(client.getXFactTable(cubeFactTable)));
       }
     }
@@ -786,7 +861,7 @@ public class CubeTestSetup {
 //      }
 //    }
     for (CubeDimensionTable dim : client.getAllDimensionTables()) {
-      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/dimtables").getPath()+"/"+dim.getName()+".xml"))) {
+      try (BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/dimtables").getPath() + "/" + dim.getName() + ".xml"))) {
         bw.write(ToXMLString.toString(client.getXDimensionTable(dim)));
       }
     }
@@ -820,6 +895,7 @@ public class CubeTestSetup {
     CubeFactTable fact4 = client.getFactTable(factName);
     createPIEParts(client, fact4, c2);
   }
+
   private void createBaseCubeFactPartitions(CubeMetastoreClient client) throws HiveException, LensException {
     String factName = "testFact5_RAW_BASE";
     CubeFactTable fact = client.getFactTable(factName);

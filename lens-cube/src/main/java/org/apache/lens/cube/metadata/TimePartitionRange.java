@@ -20,6 +20,8 @@ package org.apache.lens.cube.metadata;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.lens.server.api.error.LensException;
 
@@ -134,5 +136,9 @@ public class TimePartitionRange implements Iterable<TimePartition>, Named {
 
   public boolean isValidAndNonEmpty() {
     return begin.before(end);
+  }
+
+  Stream<TimePartition> stream() {
+    return StreamSupport.stream(spliterator(), false);
   }
 }

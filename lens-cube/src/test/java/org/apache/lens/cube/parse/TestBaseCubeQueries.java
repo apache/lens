@@ -85,7 +85,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     e = getLensExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     e.buildLensErrorResponse(new ErrorCollectionFactory().createErrorCollection(), null, "testid");
     assertEquals(e.getErrorCode(),
-      LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo().getErrorCode());
+      LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
     assertTrue(e.getMessage().contains("msr11"), e.getMessage());
     assertTrue(e.getMessage().contains("msr2"), e.getMessage());
     // no fact has the all the dimensions queried

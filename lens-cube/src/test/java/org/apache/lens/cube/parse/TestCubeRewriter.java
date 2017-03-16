@@ -30,7 +30,7 @@ import static org.testng.Assert.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.error.NoCandidateDimAvailableException;
@@ -52,7 +52,6 @@ import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;

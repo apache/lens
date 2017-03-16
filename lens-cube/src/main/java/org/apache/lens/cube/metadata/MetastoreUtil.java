@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -583,10 +583,14 @@ public class MetastoreUtil {
   }
 
   public static ASTNode copyAST(ASTNode original) {
-    return copyAST(original, Function.identity());
+    return copyAST(original, Function.identity(), x->null);
   }
-  public static ASTNode copyAST(ASTNode original, Function<String, String> replacer) {
-    ASTNode copy;
+  public static ASTNode copyAST(ASTNode original,
+    Function<String, String> replacer, Function<ASTNode, ASTNode> overrideCopyFunction) {
+    ASTNode copy = overrideCopyFunction.apply(original);
+    if (copy != null) {
+      return copy;
+    }
     if ((original.getType() == HiveParser.Identifier)) {
       copy = new ASTNode(new CommonToken(HiveParser.Identifier, replacer.apply(original.getText()))); // Leverage constructor
     } else {
@@ -594,7 +598,7 @@ public class MetastoreUtil {
     }
     if (original.getChildren() != null) {
       for (Object o : original.getChildren()) {
-        ASTNode childCopy = copyAST((ASTNode) o, replacer);
+        ASTNode childCopy = copyAST((ASTNode) o, replacer, overrideCopyFunction);
         copy.addChild(childCopy);
       }
     }

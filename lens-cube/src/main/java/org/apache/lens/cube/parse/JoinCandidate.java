@@ -24,13 +24,13 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
 import com.google.common.collect.Lists;
+import lombok.Getter;
 
 /**
  * Represents a join of two candidates
@@ -43,11 +43,12 @@ public class JoinCandidate implements Candidate {
   private List<Candidate> children;
   private String toStr;
   private QueryAST queryAST;
-  private CubeQueryContext cubeql;
+  @Getter
+  private CubeQueryContext cubeQueryContext;
 
   public JoinCandidate(Candidate childCandidate1, Candidate childCandidate2, CubeQueryContext cubeql) {
     children = Lists.newArrayList(childCandidate1, childCandidate2);
-    this.cubeql = cubeql;
+    this.cubeQueryContext = cubeql;
   }
 
   @Override
@@ -109,13 +110,51 @@ public class JoinCandidate implements Candidate {
 
   @Override
   public boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expr) {
+    // implied that expression always has measure
     return children.stream().anyMatch(x->x.isExpressionEvaluable(expr));
+  }
+
+  @Override
+  public boolean isExpressionEvaluable(String expr) {
+    return children.stream().anyMatch(x->x.isExpressionEvaluable(expr));
+  }
+
+  @Override
+  public boolean isDimAttributeEvaluable(String dim) throws LensException {
+    for (Candidate childCandidate : children) {
+      if (childCandidate.isDimAttributeEvaluable(dim)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
   public Set<Integer> getAnswerableMeasurePhraseIndices() {
     return children.stream().map(Candidate::getAnswerableMeasurePhraseIndices)
       .flatMap(Collection::stream).collect(toSet());
+  }
+
+  @Override
+  public boolean isMeasureAnswerable(QueriedPhraseContext phrase) throws LensException {
+    for (Candidate cand : getChildren()) {
+      if (!cand.isMeasureAnswerable(phrase)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public Optional<Date> getColumnStartTime(String column) {
+    return children.stream().map(x->x.getColumnStartTime(column)).filter(Optional::isPresent).map(Optional::get)
+      .max(Comparator.naturalOrder());
+  }
+
+  @Override
+  public Optional<Date> getColumnEndTime(String column) {
+    return children.stream().map(x->x.getColumnEndTime(column)).filter(Optional::isPresent).map(Optional::get)
+      .min(Comparator.naturalOrder());
   }
 
   @Override

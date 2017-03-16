@@ -97,6 +97,12 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   public Set<CubeMeasure> getMeasures() {
     return measures;
   }
+  public Optional<Date> getColumnStartTime(String column) {
+    return Optional.ofNullable(getColumnByName(column)).map(CubeColumn::getStartTime);
+  }
+  public Optional<Date> getColumnEndTime(String column) {
+    return Optional.ofNullable(getColumnByName(column)).map(CubeColumn::getEndTime);
+  }
 
   public Set<CubeDimAttribute> getDimAttributes() {
     return dimensions;
@@ -364,10 +370,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   @Override
   public boolean allFieldsQueriable() {
     String canBeQueried = getProperties().get(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE);
-    if (canBeQueried != null) {
-      return Boolean.parseBoolean(canBeQueried);
-    }
-    return true;
+    return canBeQueried == null || Boolean.parseBoolean(canBeQueried.toLowerCase());
   }
 
   @Override

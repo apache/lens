@@ -95,7 +95,7 @@ class MaxCoveringFactResolver implements ContextRewriter {
         }
       }
     }
-    //cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.lessData(null));
+    //cubeQueryContext.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.lessData(null));
   }
 
   private void resolveByDataCompleteness(CubeQueryContext cubeql) {

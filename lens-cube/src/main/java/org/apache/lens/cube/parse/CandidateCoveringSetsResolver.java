@@ -27,8 +27,6 @@ import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.hadoop.conf.Configuration;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -134,13 +132,12 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     for (Candidate cand : allCandidates) {
       // Assuming initial list of candidates populated are StorageCandidate
       if (cand instanceof StorageCandidate || cand instanceof SegmentationCandidate) {
-        Candidate sc = cand;
-        if (CandidateUtil.isValidForTimeRanges(sc, cubeql.getTimeRanges())) {
-          candidateSet.add(sc.copy());
-        } else if (CandidateUtil.isPartiallyValidForTimeRanges(sc, cubeql.getTimeRanges())) {
-          allCandidatesPartiallyValid.add(sc.copy());
+        if (CandidateUtil.isValidForTimeRanges(cand, cubeql.getTimeRanges())) {
+          candidateSet.add(cand.copy());
+        } else if (CandidateUtil.isPartiallyValidForTimeRanges(cand, cubeql.getTimeRanges())) {
+          allCandidatesPartiallyValid.add(cand.copy());
         } else {
-          cubeql.addCandidatePruningMsg(sc, CandidateTablePruneCause.storageNotAvailableInRange(
+          cubeql.addCandidatePruningMsg(cand, CandidateTablePruneCause.storageNotAvailableInRange(
             cubeql.getTimeRanges()));
         }
       } else {
@@ -155,7 +152,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     // prune non covering sets
     pruneUnionCandidatesNotCoveringAllRanges(unionCoveringSet, cubeql);
     // prune candidate set which doesn't contain any common measure i
-    pruneUnionCoveringSetWithoutAnyCommonMeasure(unionCoveringSet, queriedMsrs, cubeql);
+    pruneUnionCoveringSetWithoutAnyCommonMeasure(unionCoveringSet, queriedMsrs);
     // prune redundant covering sets
     pruneRedundantUnionCoveringSets(unionCoveringSet);
     // pruing done in the previous steps, now create union candidates
@@ -163,30 +160,13 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     updateQueriableMeasures(candidateSet, qpcList, cubeql);
     return candidateSet;
   }
-  //TODO move this to Candidate interface
-  private boolean isMeasureAnswerablebyUnionCandidate(QueriedPhraseContext msr, Candidate uc,
-      CubeQueryContext cubeql) throws LensException {
-    // Candidate is a single StorageCandidate
-    if ((uc instanceof StorageCandidate) && !msr.isEvaluable(cubeql, (StorageCandidate) uc)) {
-      return false;
-    } else if ((uc instanceof UnionCandidate)){
-      for (Candidate cand : uc.getChildren()) {
-        if (!msr.isEvaluable(cubeql, (StorageCandidate) cand)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
   private void pruneUnionCoveringSetWithoutAnyCommonMeasure(List<UnionCandidate> ucs,
-      Set<QueriedPhraseContext> queriedMsrs,
-      CubeQueryContext cubeql) throws LensException {
+    Set<QueriedPhraseContext> queriedMsrs) throws LensException {
     for (ListIterator<UnionCandidate> itr = ucs.listIterator(); itr.hasNext();) {
       boolean toRemove = true;
       UnionCandidate uc = itr.next();
       for (QueriedPhraseContext msr : queriedMsrs) {
-        if (isMeasureAnswerablebyUnionCandidate(msr, uc, cubeql)) {
+        if (uc.isMeasureAnswerable(msr)) {
           toRemove = false;
           break;
         }
@@ -240,7 +220,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       boolean evaluable = false;
       Candidate uc = i.next();
       for (QueriedPhraseContext msr : msrs) {
-        evaluable = isMeasureAnswerablebyUnionCandidate(msr, uc, cubeql);
+        evaluable = uc.isMeasureAnswerable(msr);
         if (!evaluable) {
           break;
         }
@@ -261,7 +241,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       // find the remaining measures in other facts
       if (i.hasNext()) {
         Set<QueriedPhraseContext> remainingMsrs = new HashSet<>(msrs);
-        Set<QueriedPhraseContext> coveredMsrs = CandidateUtil.coveredMeasures(candidate, msrs, cubeql);
+        Set<QueriedPhraseContext> coveredMsrs = CandidateUtil.coveredMeasures(candidate, msrs);
         remainingMsrs.removeAll(coveredMsrs);
 
         List<List<Candidate>> coveringSets = resolveJoinCandidates(ucSet, remainingMsrs, cubeql);
@@ -300,13 +280,12 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       }
 
       msrPhrase = qpcList.get(index);
-      if (unionCandidate instanceof StorageCandidate && msrPhrase.isEvaluable(cubeql,
-          (StorageCandidate) unionCandidate)) {
-        ((StorageCandidate) unionCandidate).setAnswerableMeasurePhraseIndices(index);
+      if (unionCandidate instanceof StorageCandidate && msrPhrase.isEvaluable(unionCandidate)) {
+        ((StorageCandidate) unionCandidate).addAnswerableMeasurePhraseIndices(index);
       } else if (unionCandidate instanceof UnionCandidate) {
         isEvaluable = true;
         for (Candidate childCandidate : unionCandidate.getChildren()) {
-          if (!msrPhrase.isEvaluable(cubeql, (StorageCandidate) childCandidate)) {
+          if (!msrPhrase.isEvaluable(childCandidate)) {
             isEvaluable = false;
             break;
           }
@@ -314,7 +293,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
         if (isEvaluable) {
           //Set the index for all the children in this case
           for (Candidate childCandidate : unionCandidate.getChildren()) {
-            ((StorageCandidate) childCandidate).setAnswerableMeasurePhraseIndices(index);
+            childCandidate.addAnswerableMeasurePhraseIndices(index);
           }
         }
       }

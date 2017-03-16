@@ -24,7 +24,7 @@
   <properties>
     <property name="seg1.prop" value="s1"/>
     <!--TODO use and test this property-->
-    <property name="cube.segmentation.relative.start.time" value="now.year -1year"/>
+    <property name="cube.segmentation.relative.start.time" value="now.day -30days"/>
   </properties>
   <segements>
     <segment cube_name="b1cube">

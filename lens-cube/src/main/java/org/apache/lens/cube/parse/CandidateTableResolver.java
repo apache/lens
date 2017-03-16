@@ -25,12 +25,10 @@ import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.CubeQueryContext.OptionalDimCtx;
 import org.apache.lens.cube.parse.CubeQueryContext.QueriedExprColumn;
-import org.apache.lens.cube.parse.ExpressionResolver.ExprSpecContext;
 import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.Sets;
 import lombok.NonNull;
@@ -271,7 +269,7 @@ class CandidateTableResolver implements ContextRewriter {
           // one measure
           boolean toRemove = false;
           for (QueriedPhraseContext qur : dimExprs) {
-            if (!qur.isEvaluable(cubeql, sc)) {
+            if (!qur.isEvaluable(sc)) {
               log.info("Not considering storage candidate:{} as columns {} are not available", sc, qur.getColumns());
               cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
                 qur.getColumns()));
@@ -283,7 +281,7 @@ class CandidateTableResolver implements ContextRewriter {
           // check if the candidate fact has atleast one measure queried
           // if expression has measures, they should be considered along with other measures and see if the fact can be
           // part of measure covering set
-          if (!checkForFactColumnExistsAndValidForRange(sc, queriedMsrs, cubeql)) {
+          if (!checkForFactColumnExistsAndValidForRange(sc, queriedMsrs)) {
             Set<String> columns = getColumns(queriedMsrs);
             log.info("Not considering storage candidate:{} as columns {} is not available", sc, columns);
             cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
@@ -315,9 +313,9 @@ class CandidateTableResolver implements ContextRewriter {
           throw new LensException("Not a storage candidate!!");
         }
       }
-//      if (cubeql.getCandidates().size() == 0) {
+//      if (cubeQueryContext.getCandidates().size() == 0) {
 //        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
-//          getColumns(cubeql.getQueriedPhrases()).toString());
+//          getColumns(cubeQueryContext.getQueriedPhrases()).toString());
 //      }
     }
   }
@@ -569,13 +567,7 @@ class CandidateTableResolver implements ContextRewriter {
             // check if evaluable expressions of this candidate are no more evaluable because dimension is not reachable
             // if no evaluable expressions exist, then remove the candidate
             if (ec.getEvaluableExpressions().get(candidate) != null) {
-              Iterator<ExprSpecContext> escIter = ec.getEvaluableExpressions().get(candidate).iterator();
-              while (escIter.hasNext()) {
-                ExprSpecContext esc = escIter.next();
-                if (esc.getExprDims().contains(dim.getObject())) {
-                  escIter.remove();
-                }
-              }
+              ec.getEvaluableExpressions().get(candidate).removeIf(esc -> esc.getExprDims().contains(dim.getObject()));
             }
             if (cubeql.getExprCtx().isEvaluable(col.getExprCol(), candidate)) {
               // candidate has other evaluable expressions
@@ -674,13 +666,12 @@ class CandidateTableResolver implements ContextRewriter {
 
 
   private static boolean checkForFactColumnExistsAndValidForRange(StorageCandidate sc,
-                                                                  Collection<QueriedPhraseContext> colSet,
-                                                                  CubeQueryContext cubeql) throws LensException {
+    Collection<QueriedPhraseContext> colSet) throws LensException {
     if (colSet == null || colSet.isEmpty()) {
       return true;
     }
     for (QueriedPhraseContext qur : colSet) {
-      if (qur.isEvaluable(cubeql, sc)) {
+      if (qur.isEvaluable(sc)) {
         return true;
       }
     }

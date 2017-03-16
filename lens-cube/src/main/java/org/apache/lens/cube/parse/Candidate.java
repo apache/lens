@@ -20,6 +20,7 @@ package org.apache.lens.cube.parse;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.FactPartition;
@@ -36,7 +37,7 @@ import org.apache.lens.server.api.error.LensException;
  * Different Re-writers will work on applicable candidates to produce a final candidate which will be used
  * for generating the re-written query.
  */
-public interface Candidate extends Cloneable {
+public interface Candidate {
 
   /**
    * Returns all the fact columns
@@ -44,6 +45,9 @@ public interface Candidate extends Cloneable {
    * @return
    */
   Collection<String> getColumns();
+  default boolean hasColumn(String column) {
+    return getColumns().contains(column);
+  }
 
   /**
    * Start Time for this candidate (calculated based on schema)
@@ -113,7 +117,9 @@ public interface Candidate extends Cloneable {
    * @param expr     :Expression need to be evaluated for Candidate
    * @return
    */
-  boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expr);
+  boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expressionContext);
+  boolean isExpressionEvaluable(String expr);
+  boolean isDimAttributeEvaluable(String dim) throws LensException;
 
   /**
    * Gets the index positions of answerable measure phrases in CubeQueryContext#selectPhrases
@@ -125,5 +131,25 @@ public interface Candidate extends Cloneable {
     throw new LensException("Candidate " + this + " doesn't support copy");
   }
 
+  boolean isMeasureAnswerable(QueriedPhraseContext phrase) throws LensException;
+  default boolean isColumnPresentAndValidForRange(String column) throws LensException {
+    return getColumns().contains(column) && isColumnValidForRange(column);
+  }
+  // todo: split into two methods
+  // todo: override in union candidate since column times might not be contiguous in children
+  default boolean isColumnValidForRange(String column) {
+    Optional<Date> start = getColumnStartTime(column);
+    Optional<Date> end = getColumnEndTime(column);
+    return (!start.isPresent()
+      || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getFromDate().before(start.get())))
+      && (!end.isPresent()
+      || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getToDate().after(end.get())));
+  }
+  Optional<Date> getColumnStartTime(String column);
+  Optional<Date> getColumnEndTime(String column);
+  CubeQueryContext getCubeQueryContext();
 
+  default void addAnswerableMeasurePhraseIndices(int index) {
+    throw new UnsupportedOperationException("Can't add answerable measure index");
+  }
 }

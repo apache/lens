@@ -11,7 +11,6 @@
     <column name="segmsr1" _type="int" comment="seg msr 1"/>
   </columns>
   <properties>
-    <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
     <property name="cube.table.b1fact1.weight" value="5.0"/>
   </properties>
   <storage_tables>

@@ -91,18 +91,17 @@ public class CandidateUtil {
 
   // this function should only be used for union candidates and never for join candidates.
   // future scope of improvement: move the data model to use polymorphism
-  static Set<QueriedPhraseContext> coveredMeasures(Candidate candSet, Collection<QueriedPhraseContext> msrs,
-    CubeQueryContext cubeql) throws LensException {
+  static Set<QueriedPhraseContext> coveredMeasures(Candidate candSet, Collection<QueriedPhraseContext> msrs) throws LensException {
     Set<QueriedPhraseContext> coveringSet = new HashSet<>();
     for (QueriedPhraseContext msr : msrs) {
       if (candSet.getChildren() == null) {
-        if (msr.isEvaluable(cubeql, (StorageCandidate) candSet)) {
+        if (msr.isEvaluable((StorageCandidate) candSet)) {
           coveringSet.add(msr);
         }
       } else {
         boolean allCanAnswer = true;
         for (Candidate cand : candSet.getChildren()) {
-          if (!msr.isEvaluable(cubeql, (StorageCandidate) cand)) {
+          if (!msr.isEvaluable((StorageCandidate) cand)) {
             allCanAnswer = false;
             break;
           }
@@ -178,7 +177,7 @@ public class CandidateUtil {
   private static void getStorageCandidates(Candidate candidate,
     Set<StorageCandidate> storageCandidateSet) {
     if (candidate.getChildren() == null) {
-      //Expecting this to be a StorageCandidate as it has no children.
+      // Expecting this to be a StorageCandidate as it has no children.
       if (candidate instanceof StorageCandidate) {
         storageCandidateSet.add((StorageCandidate) candidate);
       } else if (candidate instanceof SegmentationCandidate) {
@@ -250,7 +249,7 @@ public class CandidateUtil {
     if (limit != null) {
       queryFormat.append(" LIMIT %s");
     }
-    return String.format(queryFormat.toString(), qstrs.toArray(new String[qstrs.size()]));
+    return String.format(queryFormat.toString(), qstrs.toArray(new Object[qstrs.size()]));
   }
 
   /**
