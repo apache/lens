@@ -27,6 +27,8 @@ import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
+import com.google.common.collect.Sets;
+
 /**
  * This interface represents candidates that are involved in different phases of query rewriting.
  * At the lowest level, Candidate is represented by a StorageCandidate that has a fact on a storage
@@ -131,7 +133,7 @@ public interface Candidate {
     throw new LensException("Candidate " + this + " doesn't support copy");
   }
 
-  boolean isMeasureAnswerable(QueriedPhraseContext phrase) throws LensException;
+  boolean isPhraseAnswerable(QueriedPhraseContext phrase) throws LensException;
   default boolean isColumnPresentAndValidForRange(String column) throws LensException {
     return getColumns().contains(column) && isColumnValidForRange(column);
   }
@@ -151,5 +153,15 @@ public interface Candidate {
 
   default void addAnswerableMeasurePhraseIndices(int index) {
     throw new UnsupportedOperationException("Can't add answerable measure index");
+  }
+
+  default Set<QueriedPhraseContext> coveredMeasures(Set<QueriedPhraseContext> msrs) throws LensException {
+    Set<QueriedPhraseContext> covered = Sets.newHashSet();
+    for (QueriedPhraseContext msr : msrs) {
+      if (isPhraseAnswerable(msr)) {
+        covered.add(msr);
+      }
+    }
+    return covered;
   }
 }

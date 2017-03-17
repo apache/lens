@@ -301,7 +301,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
   }
 
   @Override
-  public boolean isMeasureAnswerable(QueriedPhraseContext phrase) throws LensException {
+  public boolean isPhraseAnswerable(QueriedPhraseContext phrase) throws LensException {
     return phrase.isEvaluable(this);
   }
 

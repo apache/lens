@@ -53,6 +53,14 @@ public class UnionQueryWriter {
   private CubeQueryContext cubeql;
   private Set<StorageCandidate> storageCandidates;
   private static final String DEFAULT_MEASURE = "0.0";
+  public static final ASTNode DEFAULT_MEASURE_AST;
+  static {
+    try {
+      DEFAULT_MEASURE_AST = HQLParser.parseExpr(DEFAULT_MEASURE);
+    } catch (LensException e) {
+      throw new RuntimeException("default measure not parsable");
+    }
+  }
 
   UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
     this.cubeql = cubeql;

@@ -136,9 +136,9 @@ public class JoinCandidate implements Candidate {
   }
 
   @Override
-  public boolean isMeasureAnswerable(QueriedPhraseContext phrase) throws LensException {
+  public boolean isPhraseAnswerable(QueriedPhraseContext phrase) throws LensException {
     for (Candidate cand : getChildren()) {
-      if (!cand.isMeasureAnswerable(phrase)) {
+      if (!cand.isPhraseAnswerable(phrase)) {
         return false;
       }
     }

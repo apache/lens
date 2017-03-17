@@ -89,31 +89,6 @@ public class CandidateUtil {
     return getStorageCandidates(new HashSet<Candidate>(1) {{ add(candidate); }});
   }
 
-  // this function should only be used for union candidates and never for join candidates.
-  // future scope of improvement: move the data model to use polymorphism
-  static Set<QueriedPhraseContext> coveredMeasures(Candidate candSet, Collection<QueriedPhraseContext> msrs) throws LensException {
-    Set<QueriedPhraseContext> coveringSet = new HashSet<>();
-    for (QueriedPhraseContext msr : msrs) {
-      if (candSet.getChildren() == null) {
-        if (msr.isEvaluable((StorageCandidate) candSet)) {
-          coveringSet.add(msr);
-        }
-      } else {
-        boolean allCanAnswer = true;
-        for (Candidate cand : candSet.getChildren()) {
-          if (!msr.isEvaluable((StorageCandidate) cand)) {
-            allCanAnswer = false;
-            break;
-          }
-        }
-        if (allCanAnswer) {
-          coveringSet.add(msr);
-        }
-      }
-    }
-    return coveringSet;
-  }
-
   /**
    * Returns true is the Candidates cover the entire time range.
    * @param candidates

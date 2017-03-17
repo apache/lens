@@ -1,6 +1,8 @@
 package org.apache.lens.cube.parse;
 
+import static java.util.stream.Collectors.joining;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.StringLiteral;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
 import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
 
 import java.util.Collection;
@@ -10,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,7 +43,7 @@ public class SegmentationCandidate implements Candidate {
 
   Collection<String> columns;
   @Getter
-  private CubeQueryContext cubeQueryContext;
+  private final CubeQueryContext cubeQueryContext;
   private Segmentation segmentation;
   private final Configuration conf;
   private final HiveConf hconf;
@@ -75,7 +78,9 @@ public class SegmentationCandidate implements Candidate {
     for (Segment segment : segmentation.getSegments()) {
       // assuming only base cubes in segmentation
       cubesOfSegmentation.put(segment.getName(), (Cube) cubeQueryContext.getMetastoreClient().getCube(segment.getName()));
+      Set<QueriedPhraseContext> notAnswerable = cubeQueryContext.getQueriedPhrases().stream().filter((phrase) -> !isPhraseAnswerable(phrase)).collect(Collectors.toSet());
       // create ast
+      // todo: drop order by, having, limit
       ASTNode ast = MetastoreUtil.copyAST(cubeQueryContext.getAst(),
         s -> cube == null ? s : s.replaceAll(cube.getName(), segment.getName()),
         astNode -> {
@@ -84,6 +89,12 @@ public class SegmentationCandidate implements Candidate {
               return new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate())));
             } else if (astNode.getChildIndex() == 3) {
               return new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getToDate())));
+            }
+          }
+          QueriedPhraseContext queriedPhraseContext = null;
+          for (QueriedPhraseContext phraseContext : notAnswerable) {
+            if (astNode.getParent() == phraseContext.getExprAST()) {
+              return MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST);
             }
           }
           return null;
@@ -211,7 +222,7 @@ public class SegmentationCandidate implements Candidate {
   }
 
   @Override
-  public boolean isMeasureAnswerable(QueriedPhraseContext phrase) throws LensException {
+  public boolean isPhraseAnswerable(QueriedPhraseContext phrase) {
     // TODO consider measure start time etc
     return getColumns().containsAll(phrase.getQueriedMsrs());
   }
@@ -250,5 +261,14 @@ public class SegmentationCandidate implements Candidate {
 
   public void addAnswerableMeasurePhraseIndices(int index) {
     answerableMeasurePhraseIndices.add(index);
+  }
+
+  public String toString() {
+    Collector<CharSequence, ?, String> collector = joining(", ", "SEG[", "]");
+    if (areCandidatesPicked()) {
+      return cubeQueryContextMap.values().stream().map(CubeQueryContext::getPickedCandidate).map(Candidate::toString).collect(collector);
+    } else {
+      return cubesOfSegmentation.values().stream().map(Cube::getName).collect(collector);
+    }
   }
 }

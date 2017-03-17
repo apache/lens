@@ -166,7 +166,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       boolean toRemove = true;
       UnionCandidate uc = itr.next();
       for (QueriedPhraseContext msr : queriedMsrs) {
-        if (uc.isMeasureAnswerable(msr)) {
+        if (uc.isPhraseAnswerable(msr)) {
           toRemove = false;
           break;
         }
@@ -220,7 +220,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       boolean evaluable = false;
       Candidate uc = i.next();
       for (QueriedPhraseContext msr : msrs) {
-        evaluable = uc.isMeasureAnswerable(msr);
+        evaluable = uc.isPhraseAnswerable(msr);
         if (!evaluable) {
           break;
         }
@@ -241,7 +241,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       // find the remaining measures in other facts
       if (i.hasNext()) {
         Set<QueriedPhraseContext> remainingMsrs = new HashSet<>(msrs);
-        Set<QueriedPhraseContext> coveredMsrs = CandidateUtil.coveredMeasures(candidate, msrs);
+        Set<QueriedPhraseContext> coveredMsrs = candidate.coveredMeasures(msrs);
         remainingMsrs.removeAll(coveredMsrs);
 
         List<List<Candidate>> coveringSets = resolveJoinCandidates(ucSet, remainingMsrs, cubeql);
@@ -281,7 +281,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
 
       msrPhrase = qpcList.get(index);
       if (unionCandidate instanceof StorageCandidate && msrPhrase.isEvaluable(unionCandidate)) {
-        ((StorageCandidate) unionCandidate).addAnswerableMeasurePhraseIndices(index);
+        unionCandidate.addAnswerableMeasurePhraseIndices(index);
       } else if (unionCandidate instanceof UnionCandidate) {
         isEvaluable = true;
         for (Candidate childCandidate : unionCandidate.getChildren()) {
