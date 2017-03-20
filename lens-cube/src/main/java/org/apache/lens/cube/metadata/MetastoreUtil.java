@@ -26,17 +26,15 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.function.Function;
 
+import org.apache.lens.api.ds.Tuple2;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
-
-import org.antlr.runtime.CommonToken;
 
 import com.google.common.collect.Sets;
 
@@ -583,23 +581,18 @@ public class MetastoreUtil {
   }
 
   public static ASTNode copyAST(ASTNode original) {
-    return copyAST(original, Function.identity(), x->null);
+    return copyAST(original, x-> Tuple2.of(new ASTNode(x), true));
   }
   public static ASTNode copyAST(ASTNode original,
-    Function<String, String> replacer, Function<ASTNode, ASTNode> overrideCopyFunction) {
-    ASTNode copy = overrideCopyFunction.apply(original);
-    if (copy != null) {
-      return copy;
-    }
-    if ((original.getType() == HiveParser.Identifier)) {
-      copy = new ASTNode(new CommonToken(HiveParser.Identifier, replacer.apply(original.getText()))); // Leverage constructor
-    } else {
-      copy = new ASTNode(original);
-    }
-    if (original.getChildren() != null) {
-      for (Object o : original.getChildren()) {
-        ASTNode childCopy = copyAST((ASTNode) o, replacer, overrideCopyFunction);
-        copy.addChild(childCopy);
+    Function<ASTNode, Tuple2<ASTNode, Boolean>> overrideCopyFunction) {
+    Tuple2<ASTNode, Boolean> copy1 = overrideCopyFunction.apply(original);
+    ASTNode copy = copy1.get_1();
+    if (copy1.get_2()) {
+      if (original.getChildren() != null) {
+        for (Object o : original.getChildren()) {
+          ASTNode childCopy = copyAST((ASTNode) o, overrideCopyFunction);
+          copy.addChild(childCopy);
+        }
       }
     }
     return copy;

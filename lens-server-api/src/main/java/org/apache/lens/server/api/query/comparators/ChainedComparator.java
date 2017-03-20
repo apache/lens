@@ -26,11 +26,11 @@ import lombok.Data;
 
 @Data
 public class ChainedComparator<T> implements Comparator<T> {
-  private final List<Comparator<T>> comparators;
+  private final List<Comparator<? super T>> comparators;
 
   @Override
   public int compare(T o1, T o2) {
-    for (Comparator<T> comparator : comparators) {
+    for (Comparator<? super T> comparator : comparators) {
       int cmp = comparator.compare(o1, o2);
       if (cmp != 0) {
         return cmp;

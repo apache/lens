@@ -158,7 +158,7 @@ public class CubeQueryRewriter {
     //validate fields queryability (in case of derived cubes setup)
     rewriters.add(new FieldValidator());
     // Resolve joins and generate base join tree
-    rewriters.add(new JoinResolver(conf));
+    rewriters.add(new JoinResolver());
     // Do col life validation for the time range(s) queried
     rewriters.add(new ColumnLifetimeChecker());
     // Phase 1 of storageTableResolver: Validate and prune candidate storages

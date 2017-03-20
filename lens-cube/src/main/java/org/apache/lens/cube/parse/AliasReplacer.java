@@ -158,7 +158,7 @@ class AliasReplacer implements ContextRewriter {
     }
   }
 
-  static void extractTabAliasForCol(Map<String, String> colToTableAlias, TrackQueriedColumns tqc) throws LensException {
+  private static void extractTabAliasForCol(Map<String, String> colToTableAlias, TrackQueriedColumns tqc) throws LensException {
     Set<String> columns = tqc.getTblAliasToColumns().get(CubeQueryContext.DEFAULT_TABLE);
     if (columns == null) {
       return;

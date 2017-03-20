@@ -43,6 +43,7 @@ import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -60,7 +61,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
   public void setupDriver() throws Exception {
     conf = LensServerAPITestUtil.getConfiguration(
       DRIVER_SUPPORTED_STORAGES, "C0,C1",
-      DISABLE_AUTO_JOINS, true,
+      DISABLE_AUTO_JOINS, false,
       ENABLE_SELECT_TO_GROUPBY, true,
       ENABLE_GROUP_BY_TO_SELECT, true,
       DISABLE_AGGREGATE_RESOLVER, false);
@@ -163,10 +164,17 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       "select testcube.alias0 as cityid, sum(testcube.alias1) as msr2, sum(testcube.alias2) as segmsr1 from ( ",
       ") as testcube group by testcube.alias0", Lists.newArrayList(query1, query2, query3));
   }
-
   @Test
-  public void testExpressionBreakdown() throws Exception {
-    CubeQueryContext ctx = rewriteCtx("select cityid, msr2 + segmsr1 from testcube where " + TWO_DAYS_RANGE,
+  public void testFieldWithDifferentDescriptions() throws ParseException, LensException {
+    CubeQueryContext ctx = rewriteCtx("select invmsr1 from testcube where " + TWO_DAYS_RANGE, getConf());
+    System.out.println(ctx);
+  }
+  @Test
+  public void testExpressions() throws Exception {
+    CubeQueryContext innerCtx = rewriteCtx("select singlecolchainfield, segmsr1 from b1cube where " + TWO_DAYS_RANGE,
+      getConf());
+    System.out.println(innerCtx.toHQL());
+    CubeQueryContext ctx = rewriteCtx("select singlecolchainfield, segmsr1 from testcube where " + TWO_DAYS_RANGE,
       getConf());
 
     System.out.println(ctx.toHQL());

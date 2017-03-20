@@ -1,8 +1,8 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.StringLiteral;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
 import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
 
 import java.util.Collection;
@@ -12,10 +12,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.lens.api.ds.Tuple2;
 import org.apache.lens.cube.metadata.Cube;
 import org.apache.lens.cube.metadata.CubeColumn;
 import org.apache.lens.cube.metadata.CubeInterface;
@@ -82,22 +84,29 @@ public class SegmentationCandidate implements Candidate {
       // create ast
       // todo: drop order by, having, limit
       ASTNode ast = MetastoreUtil.copyAST(cubeQueryContext.getAst(),
-        s -> cube == null ? s : s.replaceAll(cube.getName(), segment.getName()),
         astNode -> {
+          // replace time range
           if (astNode.getParent() == timeRange.getAstNode()) {
             if (astNode.getChildIndex() == 2) {
-              return new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate())));
+              return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate()))), false);
             } else if (astNode.getChildIndex() == 3) {
-              return new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getToDate())));
+              return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getToDate()))), false);
             }
           }
-          QueriedPhraseContext queriedPhraseContext = null;
+          // else, replace unanswerable measures
           for (QueriedPhraseContext phraseContext : notAnswerable) {
             if (astNode.getParent() == phraseContext.getExprAST()) {
-              return MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST);
+              return Tuple2.of(MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST), false);
             }
           }
-          return null;
+          // else, copy token replacing cube name and ask for recursion on child nodes
+          // this is hard copy. Default is soft copy, which is new ASTNode(astNode)
+          // Soft copy retains the token object inside it, hard copy copies token object
+          ASTNode copy = new ASTNode(new CommonToken(astNode.getToken()));
+          if (copy.getType() == Identifier) {
+            copy.getToken().setText(copy.getToken().getText().replaceAll("(?i)"+cube.getName(), segment.getName()));
+          }
+          return Tuple2.of(copy, true);
         });
       // TODO modify time ranges. Nothing for now
       CubeQueryRewriter rewriter = new CubeQueryRewriter(conf, hconf);
@@ -120,7 +129,7 @@ public class SegmentationCandidate implements Candidate {
   @Override
   public Collection<String> getColumns() {
     if (columns == null) {
-      columns = cubesOfSegmentation.values().stream().map(Cube::getAllFields)
+      columns = cubeStream().map(Cube::getAllFields)
         .reduce(Sets::intersection).orElseGet(Sets::newHashSet)
         .stream().map(CubeColumn::getName).collect(Collectors.toSet());
     }
@@ -157,7 +166,11 @@ public class SegmentationCandidate implements Candidate {
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange queriedTimeRange, boolean failOnPartialData) throws LensException {
     //TODO implement this
     if (!areCandidatesPicked()) {
-      explode(timeRange, queriedTimeRange);
+      try {
+        explode(timeRange, queriedTimeRange);
+      } catch (LensException e) {
+        return false;
+      }
     }
     return true;
   }
@@ -177,23 +190,30 @@ public class SegmentationCandidate implements Candidate {
   @Override
   public boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expr) {
     if (areCandidatesPicked()) {
-      return childStream().allMatch(cand -> cand.isExpressionEvaluable(expr));
+      return candidateStream().allMatch(cand -> cand.isExpressionEvaluable(expr));
+    } else {
+      return cubeStream()
+        .map(cube -> cube.getExpressionByName(expr.getExprCol().getName()))
+        .allMatch(Predicate.isEqual(expr.getExprCol()));
     }
-    throw new IllegalAccessError("I don't know");
   }
 
-  private boolean areCandidatesPicked() {
-    return childStream().count() == cubesOfSegmentation.size();
+  public boolean areCandidatesPicked() {
+    return candidateStream().count() == cubesOfSegmentation.size();
   }
 
-  private Stream<Candidate> childStream() {
+  private Stream<Candidate> candidateStream() {
     return cubeQueryContextMap.values().stream().map(CubeQueryContext::getPickedCandidate);
+  }
+
+  private Stream<Cube> cubeStream() {
+    return cubesOfSegmentation.values().stream();
   }
 
   @Override
   public boolean isExpressionEvaluable(String expr) {
     if (areCandidatesPicked()) {
-      return childStream().allMatch(cand -> cand.isExpressionEvaluable(expr));
+      return candidateStream().allMatch(cand -> cand.isExpressionEvaluable(expr));
     }
     throw new IllegalAccessError("I don't know");
   }
@@ -201,7 +221,7 @@ public class SegmentationCandidate implements Candidate {
   @Override
   public boolean isDimAttributeEvaluable(String dim) throws LensException {
     if (areCandidatesPicked()) {
-      for (Candidate childCandidate : (Iterable<Candidate>) childStream()::iterator) {
+      for (Candidate childCandidate : (Iterable<Candidate>) candidateStream()::iterator) {
         if (!childCandidate.isDimAttributeEvaluable(dim)) {
           return false;
         }
@@ -209,11 +229,6 @@ public class SegmentationCandidate implements Candidate {
       return true;
     }
     throw new IllegalAccessError("I don't know");
-  }
-
-  @Override
-  public Set<Integer> getAnswerableMeasurePhraseIndices() {
-    return null;
   }
 
   @Override
@@ -230,13 +245,13 @@ public class SegmentationCandidate implements Candidate {
   @Override
   public Optional<Date> getColumnStartTime(String column) {
     if (areCandidatesPicked()) {
-      return childStream()
+      return candidateStream()
         .map(c -> c.getColumnStartTime(column))
         .filter(Optional::isPresent)
         .map(Optional::get)
         .min(Comparator.naturalOrder()); // TODO recheck min
     } else {
-      return cubesOfSegmentation.values().stream()
+      return cubeStream()
         .map(cube -> cube.getColumnByName(column))
         .map(CubeColumn::getStartTime).filter(Objects::nonNull)
         .min(Comparator.naturalOrder()); // todo recheck min
@@ -246,13 +261,13 @@ public class SegmentationCandidate implements Candidate {
   @Override
   public Optional<Date> getColumnEndTime(String column) {
     if (areCandidatesPicked()) {
-      return childStream()
+      return candidateStream()
         .map(c -> c.getColumnEndTime(column))
         .filter(Optional::isPresent)
         .map(Optional::get)
         .max(Comparator.naturalOrder()); // TODO recheck max
     } else {
-      return cubesOfSegmentation.values().stream()
+      return cubeStream()
         .map(cube -> cube.getColumnByName(column))
         .map(CubeColumn::getEndTime).filter(Objects::nonNull)
         .max(Comparator.naturalOrder()); // todo recheck max
@@ -266,9 +281,9 @@ public class SegmentationCandidate implements Candidate {
   public String toString() {
     Collector<CharSequence, ?, String> collector = joining(", ", "SEG[", "]");
     if (areCandidatesPicked()) {
-      return cubeQueryContextMap.values().stream().map(CubeQueryContext::getPickedCandidate).map(Candidate::toString).collect(collector);
+      return candidateStream().map(Candidate::toString).collect(collector);
     } else {
-      return cubesOfSegmentation.values().stream().map(Cube::getName).collect(collector);
+      return cubeStream().map(Cube::getName).collect(collector);
     }
   }
 }
