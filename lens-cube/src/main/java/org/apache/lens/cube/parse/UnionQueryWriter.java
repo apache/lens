@@ -78,6 +78,11 @@ public class UnionQueryWriter {
     processGroupByAST();
     processOrderByAST();
     CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), cubeql);
+//    for (StorageCandidate storageCandidate : factDimMap.keySet()) {
+//      if (storageCandidate.getCubeQueryContext() != cubeql) {
+//        CandidateUtil.updateFinalAlias(storageCandidate.getCubeQueryContext().getSelectAST(), cubeql);
+//      }
+//    }
     return CandidateUtil.buildHQLString(queryAst.getSelectString(), getFromString(factDimMap), null,
         queryAst.getGroupByString(), queryAst.getOrderByString(),
         queryAst.getHavingString(), queryAst.getLimitValue());
@@ -700,7 +705,7 @@ public class UnionQueryWriter {
     List<String> hqlQueries = new ArrayList<>();
     for (StorageCandidate sc : storageCandidates) {
       Set<Dimension> queriedDims = factDimMap.get(sc);
-      hqlQueries.add(sc.toHQL(queriedDims, cubeql));
+      hqlQueries.add(sc.toHQL(queriedDims, sc.getCubeQueryContext())); // todo remove arg2 by pushing inside function
     }
     return hqlQueries.stream().collect(joining(" UNION ALL ", "(", ") as " + cubeql.getBaseCube()));
   }
