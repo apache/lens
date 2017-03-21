@@ -29,7 +29,9 @@ from lens.client.models import WrappedJson
 from requests.exceptions import HTTPError
 
 from lens.client import LensClient
-
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level="DEBUG")
 
 def check_output(command):
     output = subprocess.check_output(command.split())
@@ -85,11 +87,14 @@ class TestLensClient(object):
         cls.base_path = glob.glob(joined)[0]
         with cwd(cls.base_path):
             with cwd('server'):
+                logger.info("Inside server directory")
                 server_start_output = check_output("bin/lens-ctl restart")
                 assert "Started lens server" in server_start_output
                 assert os.path.exists('logs/server.pid')
+                logger.info("started lens server")
                 time.sleep(1)
                 while not os.path.exists('logs/lensserver.log'):
+                    logger.info("waiting for lensserver.log to be created")
                     error = get_error()
                     if has_error(error):
                         # Assert again with complete error
@@ -97,9 +102,11 @@ class TestLensClient(object):
                     time.sleep(1)
                 error = get_error()
                 if has_error(error):
+                    logger.error(error)
                     assert False, error
-
+            logger.info("finished setting up server environment. Will setup client now")
             with cwd('client'):
+                logger.info("Inside client directory")
                 cls.candidate_query = select_query('examples/resources/cube-queries.sql')
                 with open('check_connection.sql', 'w') as f:
                     f.write('show databases')
@@ -160,7 +167,7 @@ class TestLensClient(object):
             handle = client.queries.submit(self.candidate_query, query_name="Candidate Query")
             finished_query = client.queries.wait_till_finish(handle)
             assert client.queries[handle] == finished_query
-            queries = client.queries(state='SUCCESSFUL', fromDate=finished_query.submission_time - 1,
+            queries = client.queries(state='successful,failed', fromDate=finished_query.submission_time - 1,
                                      toDate=finished_query.submission_time + 1)
             assert handle in queries
 
