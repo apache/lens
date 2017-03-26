@@ -795,25 +795,13 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
 
   void setNonexistingParts(Map<String, Set<String>> nonExistingParts) throws LensException {
     if (!nonExistingParts.isEmpty()) {
-      ByteArrayOutputStream out = null;
-      String partsStr;
-      try {
-        ObjectMapper mapper = new ObjectMapper();
-        out = new ByteArrayOutputStream();
+      ObjectMapper mapper = new ObjectMapper();
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream();){
         mapper.writeValue(out, nonExistingParts);
-        partsStr = out.toString("UTF-8");
+        conf.set(NON_EXISTING_PARTITIONS, out.toString("UTF-8"));
       } catch (Exception e) {
         throw new LensException("Error writing non existing parts", e);
-      } finally {
-        if (out != null) {
-          try {
-            out.close();
-          } catch (IOException e) {
-            throw new LensException(e);
-          }
-        }
       }
-      conf.set(NON_EXISTING_PARTITIONS, partsStr);
     } else {
       conf.unset(NON_EXISTING_PARTITIONS);
     }
@@ -823,7 +811,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return conf.get(NON_EXISTING_PARTITIONS);
   }
 
-  private Map<Dimension, CandidateDim> pickCandidateDimsToQuery(Set<Dimension> dimensions) throws LensException {
+  Map<Dimension, CandidateDim> pickCandidateDimsToQuery(Set<Dimension> dimensions) throws LensException {
     Map<Dimension, CandidateDim> dimsToQuery = new HashMap<Dimension, CandidateDim>();
     if (!dimensions.isEmpty()) {
       for (Dimension dim : dimensions) {
@@ -852,27 +840,30 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   }
 
   public Candidate pickCandidateToQuery() throws LensException {
-    Candidate cand = null;
-    if (hasCubeInQuery()) {
-      if (candidates.size() > 0) {
-        cand = candidates.iterator().next();
-        log.info("Available Candidates:{}, picking up Candaidate: {} for querying", candidates, cand);
-      } else {
-        if (!storagePruningMsgs.isEmpty()) {
-          try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(out, storagePruningMsgs.getJsonObject());
-            log.info("No candidate found because: {}", out.toString("UTF-8"));
-          } catch (Exception e) {
-            throw new LensException("Error writing fact pruning messages", e);
+    if (pickedCandidate == null) {
+      Candidate cand = null;
+      if (hasCubeInQuery()) {
+        if (candidates.size() > 0) {
+          cand = candidates.iterator().next();
+          log.info("Available Candidates:{}, picking up Candaidate: {} for querying", candidates, cand);
+        } else {
+          if (!storagePruningMsgs.isEmpty()) {
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+              ObjectMapper mapper = new ObjectMapper();
+              mapper.writeValue(out, storagePruningMsgs.getJsonObject());
+              log.info("No candidate found because: {}", out.toString("UTF-8"));
+            } catch (Exception e) {
+              throw new LensException("Error writing fact pruning messages", e);
+            }
           }
-        }
-        log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}",
+          log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}",
             storagePruningMsgs.toJsonObject());
-        throw new NoCandidateFactAvailableException(this);
+          throw new NoCandidateFactAvailableException(this);
+        }
       }
+      pickedCandidate = cand;
     }
-    return cand;
+    return pickedCandidate;
   }
 
   private HQLContextInterface hqlContext;
@@ -909,101 +900,81 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       autoJoinCtx.pruneAllPaths(cube, scSet, dimsToQuery);
     }
 
-    Map<StorageCandidate, Set<Dimension>> factDimMap = new HashMap<>();
     if (cand != null) {
       // Set the default queryAST for StorageCandidate and copy child ASTs from cubeQueryContext.
       // Later in the rewrite flow each Storage candidate will modify them accordingly.
       for (StorageCandidate sc : scSet) {
-        sc.setQueryAst(DefaultQueryAST.fromStorageCandidate(sc, sc.getCubeQueryContext()));
+        sc.setQueryAst(DefaultQueryAST.fromStorageCandidate(sc, sc.getCubeQueryContext())); // todo remove two arguments
         CandidateUtil.copyASTs(sc.getCubeQueryContext(), sc.getQueryAst());
-        factDimMap.put(sc, new HashSet<>(dimsToQuery.keySet()));
+        sc.addQueriedDims(dimsToQuery.keySet());
+        sc.getDimsToQuery().putAll(dimsToQuery); //todo move inside candidate
       }
-      for (StorageCandidate sc : scSet) {
-        addRangeClauses(sc);
+      for (StorageCandidate sc : scSet) { // todo merge the two loops
+        sc.getCubeQueryContext().addRangeClauses(sc); // todo check whether this should use sc.getcubeql.
       }
     }
 
     // pick dimension tables required during expression expansion for the picked fact and dimensions
     Set<Dimension> exprDimensions = new HashSet<>();
-    if (!scSet.isEmpty()) {
-      for (StorageCandidate sc : scSet) {
-        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(sc.getCubeQueryContext(), sc, dimsToQuery, sc.getQueryAst());
-        exprDimensions.addAll(factExprDimTables);
-        factDimMap.get(sc).addAll(factExprDimTables);
-      }
+    if (cand != null) {
+      cand.addExpressionDims();
     } else {
       // dim only query
       exprDimensions.addAll(exprCtx.rewriteExprCtx(this, null, dimsToQuery, this));
     }
-    dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimensions));
+    dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimensions)); // todo move inside else above. since it'll be empty otherwise
     log.info("StorageCandidates: {}, DimsToQuery: {}", scSet, dimsToQuery);
 
     // pick denorm tables for the picked fact and dimensions
     Set<Dimension> denormTables = new HashSet<>();
-    if (!scSet.isEmpty()) {
-      for (StorageCandidate sc : scSet) {
-        Set<Dimension> factDenormTables = deNormCtx.rewriteDenormctx(sc.getCubeQueryContext(), sc, dimsToQuery, !scSet.isEmpty());
-        denormTables.addAll(factDenormTables);
-        factDimMap.get(sc).addAll(factDenormTables);
-      }
+    if (cand != null) {
+      cand.addDenormDims();
     } else {
       denormTables.addAll(deNormCtx.rewriteDenormctx(this, null, dimsToQuery, false));
     }
-    dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables));
+    dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables)); // todo move inside else above
     log.info("StorageCandidates: {}, DimsToQuery: {}", scSet, dimsToQuery);
+    Set<Dimension> autoJoinDimensions = new HashSet<>();
     // Prune join paths once denorm tables are picked
     if (autoJoinCtx != null) {
       // prune join paths for picked fact and dimensions
       autoJoinCtx.pruneAllPaths(cube, scSet, dimsToQuery);
     }
-    if (autoJoinCtx != null) {
-      // add optional dims from Join resolver
-      Set<Dimension> joiningTables = new HashSet<>();
-      if (scSet != null && scSet.size() > 1) {
-        for (StorageCandidate sc : scSet) {
-          Set<Dimension> factJoiningTables = autoJoinCtx.pickOptionalTables(sc, factDimMap.get(sc), sc.getCubeQueryContext());
-          factDimMap.get(sc).addAll(factJoiningTables);
-          joiningTables.addAll(factJoiningTables);
-        }
-      } else {
-        joiningTables.addAll(autoJoinCtx.pickOptionalTables(null, dimsToQuery.keySet(), this));
+    if (cand != null) {
+      cand.addAutoJoinDims();
+    } else {
+      if (isAutoJoinResolved()) {
+        autoJoinDimensions.addAll(autoJoinCtx.pickOptionalTables(null, dimsToQuery.keySet(), this));
       }
-      dimsToQuery.putAll(pickCandidateDimsToQuery(joiningTables));
     }
+    dimsToQuery.putAll(pickCandidateDimsToQuery(autoJoinDimensions));
     log.info("Picked StorageCandidates: {} DimsToQuery: {}", scSet, dimsToQuery);
     pickedDimTables = dimsToQuery.values();
     pickedCandidate = cand;
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        sc.updateFromString(sc.getCubeQueryContext(), factDimMap.get(sc), dimsToQuery);
+        sc.updateFromString(sc.getCubeQueryContext(), sc.getDimsToQuery()); // todo move inside
       }
     } else {
       updateFromString(null, dimsToQuery);
     }
     //update dim filter with fact filter
-    if (scSet.size() > 0) {
-      for (StorageCandidate sc : scSet) {
-        if (!sc.getStorageName().isEmpty()) {
-          String qualifiedStorageTable = sc.getStorageName();
-          String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1);
-          String where = getWhere(sc, autoJoinCtx,
-              sc.getQueryAst().getWhereAST(), getAliasForTableName(sc.getBaseTable().getName()),
-              shouldReplaceDimFilterWithFactFilter(), storageTable, dimsToQuery);
-          sc.setWhereString(where);
-        }
-      }
+    if (cand != null) { // todo merge with next block after f2f completion
+      cand.updateDimFilterWithFactFilter();
     }
-
+    // todo move this all to inheritence
+    // query writer context
+    // which has dim only context, single candidate context and union writer context
     if (cand == null) {
       hqlContext = new DimOnlyHQLContext(dimsToQuery, this, this);
       return hqlContext.toHQL();
     } else if (cand instanceof StorageCandidate) {
       StorageCandidate sc = (StorageCandidate) cand;
       sc.updateAnswerableSelectColumns(this);
-      return getInsertClause() + sc.toHQL(factDimMap.get(sc), this);
+      return getInsertClause() + sc.toHQL();
     } else {
       UnionQueryWriter uqc = new UnionQueryWriter(cand, this);
-      return getInsertClause() + uqc.toHQL(factDimMap);
+      return getInsertClause() + uqc.toHQL();
     }
   }
 
@@ -1141,7 +1112,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return getConf().getBoolean(REPLACE_TIMEDIM_WITH_PART_COL, DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL);
   }
 
-  private boolean shouldReplaceDimFilterWithFactFilter() {
+  boolean shouldReplaceDimFilterWithFactFilter() {
     return getConf().getBoolean(REWRITE_DIM_FILTER_TO_FACT_FILTER, DEFAULT_REWRITE_DIM_FILTER_TO_FACT_FILTER);
   }
 
@@ -1197,10 +1168,10 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return ImmutableSet.copyOf(this.queriedTimeDimCols);
   }
 
-  private String getWhere(StorageCandidate sc, AutoJoinContext autoJoinCtx,
-                          ASTNode node, String cubeAlias,
-                          boolean shouldReplaceDimFilter, String storageTable,
-                          Map<Dimension, CandidateDim> dimToQuery) throws LensException {
+  String getWhere(StorageCandidate sc, AutoJoinContext autoJoinCtx,
+    ASTNode node, String cubeAlias,
+    boolean shouldReplaceDimFilter, String storageTable,
+    Map<Dimension, CandidateDim> dimToQuery) throws LensException {
     String whereString;
     if (autoJoinCtx != null && shouldReplaceDimFilter) {
       List<String> allfilters = new ArrayList<>();

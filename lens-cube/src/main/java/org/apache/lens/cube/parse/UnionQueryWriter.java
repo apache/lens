@@ -26,7 +26,6 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
 
-import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
 
@@ -65,9 +64,12 @@ public class UnionQueryWriter {
   UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
     this.cubeql = cubeql;
     storageCandidates = CandidateUtil.getStorageCandidates(cand);
+    for (StorageCandidate storageCandidate : storageCandidates) {
+      storageCandidate.setRootCubeQueryContext(cubeql); // todo remove and cleanup
+    }
   }
 
-  public String toHQL(Map<StorageCandidate, Set<Dimension>> factDimMap) throws LensException {
+  public String toHQL() throws LensException {
     StorageCandidate firstCandidate = storageCandidates.iterator().next();
     // Set the default queryAST for the outer query
     queryAst = DefaultQueryAST.fromStorageCandidate(firstCandidate,
@@ -83,7 +85,7 @@ public class UnionQueryWriter {
 //        CandidateUtil.updateFinalAlias(storageCandidate.getCubeQueryContext().getSelectAST(), cubeql);
 //      }
 //    }
-    return CandidateUtil.buildHQLString(queryAst.getSelectString(), getFromString(factDimMap), null,
+    return CandidateUtil.buildHQLString(queryAst.getSelectString(), getFromString(), null,
         queryAst.getGroupByString(), queryAst.getOrderByString(),
         queryAst.getHavingString(), queryAst.getLimitValue());
   }
@@ -95,7 +97,7 @@ public class UnionQueryWriter {
   private void updateAsts() {
     for (StorageCandidate sc : storageCandidates) {
       storageCandidateToSelectAstMap.put(sc.toString(),
-          new ASTNode(new CommonToken(TOK_SELECT, "TOK_SELECT")));
+          new ASTNode(new CommonToken(TOK_SELECT, "TOK_SELECT"))); // todo remove three ifs
       if (sc.getQueryAst().getHavingAST() != null) {
         sc.getQueryAst().setHavingAST(null);
       }
@@ -262,7 +264,7 @@ public class UnionQueryWriter {
    * @param node
    * @return
    */
-  private boolean isNodeAnswerableForStorageCandidate(StorageCandidate sc, ASTNode node) {
+  private boolean isNodeAnswerableForStorageCandidate(StorageCandidate sc, ASTNode node) { // todo change function name to not answerable
     Set<String> cols = new LinkedHashSet<>();
     getAllColumnsOfNode(node, cols);
     if (!sc.getColumns().containsAll(cols)) {
@@ -310,7 +312,7 @@ public class UnionQueryWriter {
   private List<ASTNode> getProjectedNonDefaultPhrases() {
     List<ASTNode> phrases = new ArrayList<>();
     int selectPhraseCount = cubeql.getSelectPhrases().size();
-    for (int i = 0; i < selectPhraseCount; i++) {
+    for (int i = 0; i < storageCandidates.iterator().next().getQueryAst().getSelectAST().getChildCount(); i++) {
       for (StorageCandidate sc : storageCandidates) {
         ASTNode selectAST = sc.getQueryAst().getSelectAST();
         if (isNodeDefault((ASTNode) selectAST.getChild(i))) {
@@ -582,7 +584,7 @@ public class UnionQueryWriter {
           return outerAST;
         } else {
           ASTNode outerAST = getDotAST(cubeql.getCube().getName(), alias);
-          if (isSelectAst) {
+          if (isSelectAst) { // todo remove if-else
             innerToOuterSelectASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
           } else {
             innerToOuterHavingASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
@@ -701,11 +703,10 @@ public class UnionQueryWriter {
    * @return
    * @throws LensException
    */
-  private String getFromString(Map<StorageCandidate, Set<Dimension>> factDimMap) throws LensException {
+  private String getFromString() throws LensException {
     List<String> hqlQueries = new ArrayList<>();
     for (StorageCandidate sc : storageCandidates) {
-      Set<Dimension> queriedDims = factDimMap.get(sc);
-      hqlQueries.add(sc.toHQL(queriedDims, sc.getCubeQueryContext())); // todo remove arg2 by pushing inside function
+      hqlQueries.add(sc.toHQL()); // todo remove arg2 by pushing inside function
     }
     return hqlQueries.stream().collect(joining(" UNION ALL ", "(", ") as " + cubeql.getBaseCube()));
   }

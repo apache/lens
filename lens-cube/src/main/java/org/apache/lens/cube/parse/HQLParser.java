@@ -28,6 +28,8 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import org.apache.lens.api.ds.Tuple2;
+import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -909,7 +911,13 @@ public final class HQLParser {
     private boolean hashCodeComputed = false;
 
     public HashableASTNode(ASTNode ast) {
-      this.ast = ast;
+      this.ast = MetastoreUtil.copyAST(ast, astNode -> {
+        ASTNode copy = new ASTNode(new CommonToken(astNode.getToken()));
+        if (copy.getType() == Identifier) {
+          copy.getToken().setText(copy.getToken().getText().replaceAll("^.*$", "_"));
+        }
+        return Tuple2.of(copy, true);
+      });
     }
 
     public void setAST(ASTNode ast) {

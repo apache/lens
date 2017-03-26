@@ -31,6 +31,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
@@ -99,6 +100,9 @@ public class SegmentationCandidate implements Candidate {
               return Tuple2.of(MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST), false);
             }
           }
+          if (astNode.getType() == HiveParser.TOK_HAVING) { // remove having tree completely
+            return Tuple2.of(null, false);
+          }
           // else, copy token replacing cube name and ask for recursion on child nodes
           // this is hard copy. Default is soft copy, which is new ASTNode(astNode)
           // Soft copy retains the token object inside it, hard copy copies token object
@@ -159,17 +163,25 @@ public class SegmentationCandidate implements Candidate {
 
   @Override
   public Collection<Candidate> getChildren() {
-    return null;
+    return candidateStream().collect(Collectors.toSet());
   }
 
   @Override
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange queriedTimeRange, boolean failOnPartialData) throws LensException {
     //TODO implement this
     if (!areCandidatesPicked()) {
+      LensException exception = null;
       try {
         explode(timeRange, queriedTimeRange);
       } catch (LensException e) {
-        return false;
+        exception = e;
+      }
+      if (candidateStream().count() != cubeStream().count()) {
+        if (exception != null) {
+          throw exception;
+        } else {
+          throw new LensException("Not all cubes able to answer");
+        }
       }
     }
     return true;
@@ -276,6 +288,13 @@ public class SegmentationCandidate implements Candidate {
 
   public void addAnswerableMeasurePhraseIndices(int index) {
     answerableMeasurePhraseIndices.add(index);
+  }
+
+  @Override
+  public void addAutoJoinDims() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.addAutoJoinDims();
+    }
   }
 
   public String toString() {

@@ -66,7 +66,9 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import org.antlr.runtime.CommonToken;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +82,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
   // TODO union : Put comments on member variables.
   @Getter
   private final CubeQueryContext cubeQueryContext;
+  @Setter(AccessLevel.PACKAGE)
+  private CubeQueryContext rootCubeQueryContext;
   private final TimeRangeWriter rangeWriter;
   private final String processTimePartCol;
   private final CubeMetastoreClient client;
@@ -95,6 +99,11 @@ public class StorageCandidate implements Candidate, CandidateTable {
   @Getter
   @Setter
   Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
+  @Getter
+  Set<Dimension> queriedDims = Sets.newHashSet();
+  void addQueriedDims(Collection<Dimension> dims) {
+    queriedDims.addAll(dims);
+  }
   private Configuration conf = null;
 
   /**
@@ -127,7 +136,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
   @Getter
   private CubeInterface cube;
   @Getter
-  private Map<Dimension, CandidateDim> dimsToQuery;
+  private Map<Dimension, CandidateDim> dimsToQuery = Maps.newHashMap();
   @Getter
   private Date startTime;
   @Getter
@@ -242,12 +251,47 @@ public class StorageCandidate implements Candidate, CandidateTable {
     answerableMeasurePhraseIndices.add(index);
   }
 
-  public String toHQL(Set<Dimension> queriedDims, CubeQueryContext cubeql) throws LensException {
+  @Override
+  public void addAutoJoinDims() throws LensException {
+    if (getCubeQueryContext().isAutoJoinResolved()) {
+      Set<Dimension> factJoiningTables = getCubeQueryContext().getAutoJoinCtx().pickOptionalTables(this, getQueriedDims(), getCubeQueryContext());
+      addQueriedDims(factJoiningTables);
+      dimsToQuery.putAll(cubeQueryContext.pickCandidateDimsToQuery(factJoiningTables));
+    }
+  }
+
+  @Override
+  public void addExpressionDims() throws LensException {
+    Set<Dimension> factExprDimTables = getCubeQueryContext().getExprCtx().rewriteExprCtx(getCubeQueryContext(), this, dimsToQuery, getQueryAst());
+    addQueriedDims(factExprDimTables);
+    dimsToQuery.putAll(cubeQueryContext.pickCandidateDimsToQuery(factExprDimTables));
+  }
+
+  @Override
+  public void addDenormDims() throws LensException {
+    Set<Dimension> factDenormTables = getCubeQueryContext().getDeNormCtx().rewriteDenormctx(getCubeQueryContext(), this, dimsToQuery, true);
+    addQueriedDims(factDenormTables);
+    dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(factDenormTables));
+  }
+
+  @Override
+  public void updateDimFilterWithFactFilter() throws LensException {
+    if (!getStorageName().isEmpty()) {
+      String qualifiedStorageTable = getStorageName();
+      String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1);
+      String where = cubeQueryContext.getWhere(this, cubeQueryContext.getAutoJoinCtx(),
+        getQueryAst().getWhereAST(), cubeQueryContext.getAliasForTableName(getBaseTable().getName()),
+        cubeQueryContext.shouldReplaceDimFilterWithFactFilter(), storageTable, dimsToQuery);
+      setWhereString(where);
+    }
+  }
+
+  public String toHQL() throws LensException {
     setMissingExpressions(queriedDims);
     // Check if the picked candidate is a StorageCandidate and in that case
     // update the selectAST with final alias.
-    if (this == cubeql.getPickedCandidate()) {
-      CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), cubeql);
+    if (rootCubeQueryContext == cubeQueryContext && this == cubeQueryContext.getPickedCandidate()) {
+      CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), cubeQueryContext);
       updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
     }
     return CandidateUtil
@@ -733,6 +777,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
    */
 
   public void updateAnswerableSelectColumns(CubeQueryContext cubeql) throws LensException {
+    rootCubeQueryContext = cubeql; // todo remove this and clean up
     // update select AST with selected fields
     int currentChild = 0;
     for (int i = 0; i < cubeql.getSelectAST().getChildCount(); i++) {
@@ -793,13 +838,12 @@ public class StorageCandidate implements Candidate, CandidateTable {
     this.validUpdatePeriods.add(updatePeriod);
   }
 
-  void updateFromString(CubeQueryContext query, Set<Dimension> queryDims,
-    Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
-    this.dimsToQuery = dimsToQuery;
+  void updateFromString(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
+    this.dimsToQuery.putAll(dimsToQuery);
     String alias = cubeQueryContext.getAliasForTableName(cubeQueryContext.getCube().getName());
     fromString = getAliasForTable(alias);
     if (query.isAutoJoinResolved()) {
-      fromString = query.getAutoJoinCtx().getFromString(fromString, this, queryDims, dimsToQuery, query, cubeQueryContext);
+      fromString = query.getAutoJoinCtx().getFromString(fromString, this, this.queriedDims, this.dimsToQuery, query, cubeQueryContext);
     }
   }
 

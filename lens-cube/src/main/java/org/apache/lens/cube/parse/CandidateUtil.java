@@ -256,5 +256,4 @@ public class CandidateUtil {
       }
     }
   }
-
 }

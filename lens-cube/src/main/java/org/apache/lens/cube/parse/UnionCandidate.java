@@ -20,8 +20,10 @@ package org.apache.lens.cube.parse;
 
 import java.util.*;
 
+import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.cube.parse.join.AutoJoinContext;
 import org.apache.lens.server.api.error.LensException;
 
 import lombok.Getter;
@@ -88,6 +90,13 @@ public class UnionCandidate implements Candidate {
       .filter(Optional::isPresent)
       .map(Optional::get)
       .max(Comparator.naturalOrder());
+  }
+
+  @Override
+  public void addAutoJoinDims() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.addAutoJoinDims();
+    }
   }
 
   @Override

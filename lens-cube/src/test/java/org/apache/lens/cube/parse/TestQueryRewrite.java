@@ -110,7 +110,7 @@ public abstract class TestQueryRewrite {
     }
   }
 
-  protected LensException getLensExceptionInRewrite(String query, Configuration conf)
+  protected <T extends LensException> T getLensExceptionInRewrite(String query, Configuration conf)
     throws LensException, ParseException {
     try {
       String hql = rewrite(query, conf);
@@ -119,7 +119,7 @@ public abstract class TestQueryRewrite {
       return null;
     } catch (LensException e) {
       log.error("Lens exception in Rewrite.", e);
-      return e;
+      return (T) e;
     }
   }
 

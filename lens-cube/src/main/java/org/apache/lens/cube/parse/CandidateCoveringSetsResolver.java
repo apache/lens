@@ -274,10 +274,10 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     boolean isEvaluable;
     for (int index = 0; index < qpcList.size(); index++) {
 
-      if (!qpcList.get(index).hasMeasures(cubeql)) {
-        //Not a measure phrase. Skip it
-        continue;
-      }
+//      if (!qpcList.get(index).hasMeasures(cubeql)) {
+//        //Not a measure phrase. Skip it
+//        continue;
+//      }
 
       msrPhrase = qpcList.get(index);
       if (unionCandidate instanceof StorageCandidate && msrPhrase.isEvaluable(unionCandidate)) {

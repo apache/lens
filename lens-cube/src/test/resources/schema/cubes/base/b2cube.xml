@@ -27,7 +27,7 @@
       <chain_ref_column chain_name="cubecityjoinunionctx" ref_col="name" dest_table="citydim"/>
     </dim_attribute>
     <dim_attribute _type="string" name="cityname" display_string="city name" description="city name">
-      <chain_ref_column chain_name="cubecity" ref_col="name" dest_table="citydim"/>
+      <chain_ref_column chain_name="cubecity2" ref_col="name" dest_table="citydim"/>
     </dim_attribute>
     <dim_attribute _type="string" name="citycountry" display_string="city country" description="">
       <chain_ref_column chain_name="cubecitystatecountry" ref_col="name" dest_table="countrydim"/>

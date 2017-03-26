@@ -158,6 +158,13 @@ public class JoinCandidate implements Candidate {
   }
 
   @Override
+  public void addAutoJoinDims() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.addAutoJoinDims();
+    }
+  }
+
+  @Override
   public String toString() {
     if (this.toStr == null) {
       this.toStr = getToString();

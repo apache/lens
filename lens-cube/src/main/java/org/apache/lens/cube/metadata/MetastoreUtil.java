@@ -591,7 +591,9 @@ public class MetastoreUtil {
       if (original.getChildren() != null) {
         for (Object o : original.getChildren()) {
           ASTNode childCopy = copyAST((ASTNode) o, overrideCopyFunction);
-          copy.addChild(childCopy);
+          if (childCopy != null) {
+            copy.addChild(childCopy);
+          }
         }
       }
     }

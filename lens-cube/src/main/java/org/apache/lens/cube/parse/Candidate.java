@@ -20,9 +20,11 @@ package org.apache.lens.cube.parse;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
@@ -163,5 +165,27 @@ public interface Candidate {
       }
     }
     return covered;
+  }
+
+  default void addAutoJoinDims() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.addAutoJoinDims();
+    }
+  }
+  default void addExpressionDims() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.addExpressionDims();
+    }
+  }
+  default void addDenormDims() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.addDenormDims();
+    }
+  }
+
+  default void updateDimFilterWithFactFilter() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.updateDimFilterWithFactFilter();
+    }
   }
 }

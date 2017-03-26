@@ -5,6 +5,9 @@
     <column name="cityid" _type="int" comment="city id"/>
     <column name="cityid1" _type="int" comment="city id"/>
     <column name="stateid" _type="int" comment="city id"/>
+    <column name="userid" _type="int" comment="user id"/>
+    <column name="xuserid" _type="int" comment="user id"/>
+    <column name="yuserid" _type="int" comment="user id"/>
     <column name="test_time_dim_day_id" _type="int" comment="time id"/>
     <column name="test_time_dim_day_id2" _type="int" comment="time id"/>
     <column name="ambigdim1" _type="string" comment="used in testColumnAmbiguity"/>

@@ -144,22 +144,11 @@ public class AutoJoinContext {
       for (TableRelationship edge : path.getEdges()) {
         AbstractCubeTable fromTable = edge.getFromTable();
         String fromColumn = edge.getFromColumn();
-        List<String> columnsOfFromTable = fromPathColumns.get(fromTable);
-        if (columnsOfFromTable == null) {
-          columnsOfFromTable = new ArrayList<>();
-          fromPathColumns.put(fromTable, columnsOfFromTable);
-        }
-        columnsOfFromTable.add(fromColumn);
-
+        fromPathColumns.computeIfAbsent(fromTable, k -> new ArrayList<>()).add(fromColumn);
         // Similarly populate for the 'to' table
         AbstractCubeTable toTable = edge.getToTable();
         String toColumn = edge.getToColumn();
-        List<String> columnsOfToTable = toPathColumns.get(toTable);
-        if (columnsOfToTable == null) {
-          columnsOfToTable = new ArrayList<>();
-          toPathColumns.put(toTable, columnsOfToTable);
-        }
-        columnsOfToTable.add(toColumn);
+        toPathColumns.computeIfAbsent(toTable, k -> new ArrayList<>()).add(toColumn);
       }
     }
   }
@@ -356,14 +345,14 @@ public class AutoJoinContext {
    * @param dimsToQuery
    * @throws LensException
    */
-  public void pruneAllPaths(CubeInterface cube, Set<StorageCandidate> scSet,
+  public void pruneAllPaths(CubeInterface cube, Collection<? extends Candidate> scSet,
     final Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     // Remove join paths which cannot be satisfied by the resolved candidate
     // fact and dimension tables
     if (scSet != null) {
       // include columns from picked candidate
       Set<String> candColumns = new HashSet<>();
-      for (StorageCandidate sc : scSet) {
+      for (Candidate sc : scSet) {
         candColumns.addAll(sc.getColumns());
       }
       for (List<JoinPath> paths : allPaths.values()) {
@@ -442,7 +431,7 @@ public class AutoJoinContext {
 
   private Map<Aliased<Dimension>, List<JoinPath>> pruneFactPaths(CubeInterface cube,
     final StorageCandidate sc) throws LensException {
-    Map<Aliased<Dimension>, List<JoinPath>> prunedPaths = new HashMap<>();
+    Map<Aliased<Dimension>, List<JoinPath>> prunedPaths = new LinkedHashMap<>();
     // Remove join paths which cannot be satisfied by the candidate fact
     for (Map.Entry<Aliased<Dimension>, List<JoinPath>> ppaths : allPaths.entrySet()) {
       prunedPaths.put(ppaths.getKey(), new ArrayList<>(ppaths.getValue()));
@@ -604,7 +593,7 @@ public class AutoJoinContext {
     }
 
     log.info("Fact: {} minCostClause:{}", sc, minCostClause);
-    if (sc != null) {
+    if (sc != null) { // todo remove cubeql.getAutoJoinCtx since `this` is autojoinctx
       cubeql.getAutoJoinCtx().getFactClauses().put(sc, minCostClause);
     } else {
       cubeql.getAutoJoinCtx().setMinCostClause(minCostClause);

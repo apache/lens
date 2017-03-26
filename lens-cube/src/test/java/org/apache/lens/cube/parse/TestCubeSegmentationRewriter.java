@@ -19,6 +19,7 @@
 
 package org.apache.lens.cube.parse;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.lens.cube.metadata.DateFactory.NOW;
 import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE;
 import static org.apache.lens.cube.metadata.DateFactory.TWO_MONTHS_RANGE_UPTO_DAYS;
@@ -28,16 +29,19 @@ import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AUTO_JOINS;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY;
+import static org.apache.lens.cube.parse.CubeTestSetup.getDbName;
 import static org.apache.lens.cube.parse.CubeTestSetup.getExpectedQuery;
 import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2days;
 import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForHourly2days;
 import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForUpdatePeriods;
 import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
+import static org.testng.Assert.assertEquals;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
@@ -45,6 +49,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -100,7 +105,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       getWhereForDailyAndHourly2days("b2cube", "c0_b2fact1"));
     compareUnionQuery(ctx,
       "SELECT (testcube.alias0) as `cityid`, sum((testcube.alias1)) as `segmsr1` FROM (",
-      " ) as testcube GROUP BY (testcube.alias0)", Lists.newArrayList(query1, query2));
+      " ) as testcube GROUP BY (testcube.alias0)", newArrayList(query1, query2));
   }
   // TODO in the end after running other tests
   @Test
@@ -140,7 +145,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
         getDateWithOffset(UpdatePeriod.DAILY, -60), getDateWithOffset(UpdatePeriod.DAILY, -30),
         Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
     compareUnionQuery(ctx, "select testcube.alias0 as cityid, sum(testcube.alias1) as segmsr1 from (",
-      ") AS testcube GROUP BY (testcube.alias0)", Lists.newArrayList(query1, query2, query3, query4));
+      ") AS testcube GROUP BY (testcube.alias0)", newArrayList(query1, query2, query3, query4));
   }
 
   @Test
@@ -162,21 +167,41 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       getWhereForHourly2days("testcube", "c1_testfact2"));
     compareUnionQuery(ctx,
       "select testcube.alias0 as cityid, sum(testcube.alias1) as msr2, sum(testcube.alias2) as segmsr1 from ( ",
-      ") as testcube group by testcube.alias0", Lists.newArrayList(query1, query2, query3));
+      ") as testcube group by testcube.alias0", newArrayList(query1, query2, query3));
   }
   @Test
   public void testFieldWithDifferentDescriptions() throws ParseException, LensException {
-    CubeQueryContext ctx = rewriteCtx("select invmsr1 from testcube where " + TWO_DAYS_RANGE, getConf());
-    System.out.println(ctx);
+    NoCandidateFactAvailableException e = getLensExceptionInRewrite("select invmsr1 from testcube where " + TWO_DAYS_RANGE, getConf());
+    assertEquals(e.getJsonMessage(), "Columns [invmsr1] are not present in any table");
+    //todo descriptive error
   }
   @Test
   public void testExpressions() throws Exception {
-    CubeQueryContext innerCtx = rewriteCtx("select singlecolchainfield, segmsr1 from b1cube where " + TWO_DAYS_RANGE,
-      getConf());
-    System.out.println(innerCtx.toHQL());
-    CubeQueryContext ctx = rewriteCtx("select singlecolchainfield, segmsr1 from testcube where " + TWO_DAYS_RANGE,
-      getConf());
-
+      CubeQueryContext ctx = rewriteCtx("select singlecolchainfield, segmsr1 from testcube where " + TWO_DAYS_RANGE,
+        getConf());
+      System.out.println(ctx.toHQL());
+    String query1, query2;
+    query1 = getExpectedQuery("b1cube", "SELECT (cubecity.name) AS `alias0`, sum((b1cube.segmsr1)) AS `alias1` from",
+      " JOIN " + getDbName() + "c1_citytable cubecity ON b1cube.cityid = cubecity.id AND (cubecity.dt = 'latest')",
+      null, "group by cubecity.name", null, getWhereForDailyAndHourly2days("b1cube", "c1_b1fact1"));
+    query2 = getExpectedQuery("b2cube", "SELECT (cubecity.name) AS `alias0`, sum((b2cube.segmsr1)) AS `alias1` from",
+      " JOIN " + getDbName() + "c1_citytable cubecity ON b2cube.cityid = cubecity.id AND (cubecity.dt = 'latest')",
+      null, "group by cubecity.name", null, getWhereForDailyAndHourly2days("b2cube", "c0_b2fact1"));
+    compareUnionQuery(ctx, "SELECT (testcube.alias0) AS `singlecolchainfield`, sum((testcube.alias1)) AS `segmsr1` from (",
+      "as testcube group by testcube.alias0", newArrayList(query1, query2));
+  }
+  @Test(invocationCount = 10)
+  public void testQueryWithWhereHavingGroupby() throws Exception {
+    String userQuery = "select cityid, msr2, segmsr1 from testcube where cityname='blah' and " + TWO_DAYS_RANGE + " group by cityid having segmsr1 > 1 and msr2 > 2";
+    CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
     System.out.println(ctx.toHQL());
+    //todo write asserts. check why having is coming in inner as well
+  }
+  @Test //todo add asserts
+  public void testQueryWithManyToMany() throws ParseException, LensException {
+    String userQuery = "select usersports.name, xusersports.name, yusersports.name, segmsr1, msr2 from testcube where " + TWO_DAYS_RANGE;
+    CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
+    String hql = ctx.toHQL();
+    System.out.println(hql);
   }
 }
