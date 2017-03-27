@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
@@ -806,7 +807,7 @@ public class CubeTestSetup {
       throw exc;
     }
   }
-  StrSubstitutor substitutor = new StrSubstitutor(new StrLookup<String>() {
+  private static final StrSubstitutor GREGORIAN_SUBSTITUTOR = new StrSubstitutor(new StrLookup<String>() {
     @Override
     public String lookup(String s) {
       try {
@@ -816,7 +817,7 @@ public class CubeTestSetup {
       }
     }
   }, "$gregorian{", "}", '$');
-  StrSubstitutor substitutor2 = new StrSubstitutor(new StrLookup<String>() {
+  private final StrSubstitutor ABSOLUTE_SUBSTITUTOR = new StrSubstitutor(new StrLookup<String>() {
     @Override
     public String lookup(String s) {
       try {
@@ -828,10 +829,11 @@ public class CubeTestSetup {
   }, "$absolute{", "}", '$');
   private void createFromXML(CubeMetastoreClient client) {
     SchemaTraverser.SchemaEntityProcessor processor = (file, aClass) -> {
+      Function<String, String> f = GREGORIAN_SUBSTITUTOR::replace;
+      Function<String, String> g = ABSOLUTE_SUBSTITUTOR::replace;
       try {
         BufferedReader br = new BufferedReader(new FileReader(file));
-        String replaced = br.lines().map(s->substitutor2.replace(substitutor.replace(s)))
-          .collect(Collectors.joining("\n"));
+        String replaced = br.lines().map(f.andThen(g)).collect(Collectors.joining("\n"));
         StringReader sr = new StringReader(replaced);
         client.createEntity(LensJAXBContext.unmarshall(sr));
       } catch (LensException | JAXBException | IOException e) {
@@ -870,70 +872,6 @@ public class CubeTestSetup {
 //    }
   }
 
-  StrSubstitutor substitutor = new StrSubstitutor(new StrLookup<String>() {
-    @Override
-    public String lookup(String s) {
-      try {
-        return JAXBUtils.getXMLGregorianCalendar(DateUtil.resolveDate(s, NOW)).toString();
-      } catch (LensException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }, "$gregorian{", "}", '$');
-  StrSubstitutor substitutor2 = new StrSubstitutor(new StrLookup<String>() {
-    @Override
-    public String lookup(String s) {
-      try {
-        return DateUtil.relativeToAbsolute(s, NOW);
-      } catch (LensException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }, "$absolute{", "}", '$');
-
-  private void createFromXML(CubeMetastoreClient client) {
-    SchemaTraverser.SchemaEntityProcessor processor = (file, aClass) -> {
-      try {
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String replaced = br.lines().map(s -> substitutor2.replace(substitutor.replace(s)))
-          .collect(Collectors.joining("\n"));
-        StringReader sr = new StringReader(replaced);
-        client.createEntity(LensJAXBContext.unmarshall(sr));
-      } catch (LensException | JAXBException | IOException e) {
-        throw new RuntimeException(e);
-      }
-    };
-    new SchemaTraverser(new File(getClass().getResource("/schema").getFile()), processor).run();
-  }
-
-  private void dump(CubeMetastoreClient client) throws LensException, IOException {
-//    for (CubeInterface cubeInterface : client.getAllCubes()) {
-//      String path = getClass().getResource("/schema/cubes/" + ((cubeInterface instanceof Cube) ? "base" : "derived")).getPath() + "/" + cubeInterface.getName() + ".xml";
-//      try(BufferedWriter bw = new BufferedWriter(new FileWriter(path))) {
-//        bw.write(ToXMLString.toString(JAXBUtils.xCubeFromHiveCube(cubeInterface)));
-//      }
-//    }
-    for (CubeFactTable cubeFactTable : client.getAllFacts()) {
-      try (BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/facts").getPath() + "/" + cubeFactTable.getName() + ".xml"))) {
-        bw.write(ToXMLString.toString(client.getXFactTable(cubeFactTable)));
-      }
-    }
-//    for (Dimension dim : client.getAllDimensions()) {
-//      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/dimensions").getPath()+"/"+dim.getName()+".xml"))) {
-//        bw.write(ToXMLString.toString(JAXBUtils.xdimensionFromDimension(dim)));
-//      }
-//    }
-    for (CubeDimensionTable dim : client.getAllDimensionTables()) {
-      try (BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/dimtables").getPath() + "/" + dim.getName() + ".xml"))) {
-        bw.write(ToXMLString.toString(client.getXDimensionTable(dim)));
-      }
-    }
-//    for (Storage storage : client.getAllStorages()) {
-//      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/storages").getPath()+"/"+storage.getName()+".xml"))) {
-//        bw.write(ToXMLString.toString(JAXBUtils.xstorageFromStorage(storage)));
-//      }
-//    }
-  }
 
   public void dropSources(HiveConf conf, String dbName) throws Exception {
     Hive metastore = Hive.get(conf);
@@ -957,22 +895,6 @@ public class CubeTestSetup {
     factName = "summary4";
     CubeFactTable fact4 = client.getFactTable(factName);
     createPIEParts(client, fact4, c2);
-  }
-  private void createBaseCubeFactPartitions(CubeMetastoreClient client) throws HiveException, LensException {
-    String factName = "testFact5_RAW_BASE";
-    CubeFactTable fact = client.getFactTable(factName);
-    // Add all hourly partitions for two days
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(TWODAYS_BACK);
-    Date temp = cal.getTime();
-    while (!(temp.after(NOW))) {
-      Map<String, Date> timeParts = new HashMap<String, Date>();
-      timeParts.put("dt", temp);
-      StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, c1, CubeTableType.FACT);
-      cal.add(HOUR_OF_DAY, 1);
-      temp = cal.getTime();
-    }
   }
 
   private void createBaseCubeFactPartitions(CubeMetastoreClient client) throws HiveException, LensException {
