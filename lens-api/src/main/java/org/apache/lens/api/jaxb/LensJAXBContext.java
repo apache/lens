@@ -24,6 +24,7 @@ package org.apache.lens.api.jaxb;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.*;
@@ -114,17 +115,26 @@ public class LensJAXBContext extends JAXBContext {
     return UNMARSHALLER;
   }
 
+  public static <T> T unmarshall(File file) throws JAXBException, IOException {
+    return ((JAXBElement<T>) UNMARSHALLER.unmarshal(file)).getValue();
+  }
+  public static <T> T unmarshall(InputStream inputStream) throws JAXBException, IOException {
+    return ((JAXBElement<T>) UNMARSHALLER.unmarshal(inputStream)).getValue();
+  }
+  public static <T> T unmarshall(Reader reader) throws JAXBException, IOException {
+    return ((JAXBElement<T>) UNMARSHALLER.unmarshal(reader)).getValue();
+  }
   public static <T> T unmarshallFromFile(String filename) throws JAXBException, IOException {
     File file = new File(filename);
     if (file.exists()) {
-      return ((JAXBElement<T>) UNMARSHALLER.unmarshal(file)).getValue();
+      return unmarshall(file);
     } else {
       // load from classpath
       InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
       if (stream == null) {
         throw new IOException("File not found:" + filename);
       }
-      return ((JAXBElement<T>) UNMARSHALLER.unmarshal(stream)).getValue();
+      return unmarshall(stream);
     }
   }
 }

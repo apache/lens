@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_dimension name="user_interests" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="int" name="user_id" description="user id">
+    </dim_attribute>
+    <dim_attribute _type="int" name="id" description="id">
+    </dim_attribute>
+    <dim_attribute _type="int" name="sport_id" description="sport id">
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains/>
+  <properties>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="cube.dimension.user_id.type" value="int"/>
+    <property name="cube.table.user_interests.weight" value="0.0"/>
+    <property name="cube.dimension.user_id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.user_interests.attributes.list.size" value="1"/>
+    <property name="cube.dimension.sport_id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.col.sport_id.description" value="sport id"/>
+    <property name="cube.col.id.description" value="id"/>
+    <property name="dimension.user_interests.attributes.list0" value="user_id,id,sport_id"/>
+    <property name="dimension.user_interests.joinchains.list.size" value="0"/>
+    <property name="cube.col.user_id.description" value="user id"/>
+    <property name="base.user_interests.expressions.list.size" value="0"/>
+    <property name="dimension.user_interests.timed.dimension" value="dt"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.sport_id.type" value="int"/>
+  </properties>
+</x_dimension>

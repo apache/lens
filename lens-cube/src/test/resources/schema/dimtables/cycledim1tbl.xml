@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_dimension_table dimension_name="cycleDim1" table_name="cycledim1tbl" weight="0.0" xmlns="uri:lens:cube:0.1">
+  <columns>
+    <column name="id" _type="int" comment="code"/>
+    <column name="name" _type="string" comment="field1"/>
+    <column name="cyledim2id" _type="string" comment="link to cyclic dim 2"/>
+  </columns>
+  <properties>
+    <property name="dimension.cycledim1.timed.dimension" value="dt"/>
+    <property name="dimtble.cycledim1tbl.c1.dumpperiod" value="HOURLY"/>
+    <property name="cube.table.cycledim1tbl.weight" value="0.0"/>
+    <property name="dimtble.cycledim1tbl.storages" value="C1,C2"/>
+    <property name="dimtble.cycledim1tbl.dim.name" value="cycleDim1"/>
+  </properties>
+  <storage_tables>
+    <storage_table>
+      <update_periods>
+        <update_period>HOURLY</update_period>
+      </update_periods>
+      <storage_name>C1</storage_name>
+      <table_desc external="false">
+        <part_cols>
+          <column name="dt" _type="string" comment="date partition"/>
+        </part_cols>
+        <table_parameters>
+          <property name="cube.storagetable.time.partcols" value="dt"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
+    <storage_table>
+      <update_periods/>
+      <storage_name>C2</storage_name>
+      <table_desc external="false">
+        <part_cols/>
+        <table_parameters>
+          <property name="totalSize" value="0"/>
+          <property name="numFiles" value="0"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_dimension_table>

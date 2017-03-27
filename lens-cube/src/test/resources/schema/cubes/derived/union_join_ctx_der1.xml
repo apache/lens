@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_derived_cube parent="basecube" name="union_join_ctx_der1" xmlns="uri:lens:cube:0.1">
+  <properties>
+    <property name="cube.allfields.queriable" value="true"/>
+    <property name="cube.table.union_join_ctx_der1.weight" value="5.0"/>
+    <property name="cube.union_join_ctx_der1.measures.list.size" value="1"/>
+    <property name="cube.union_join_ctx_der1.measures.list0"
+              value="union_join_ctx_msr1,union_join_ctx_msr2,union_join_ctx_msr3"/>
+    <property name="cube.union_join_ctx_der1.dimensions.list.size" value="1"/>
+    <property name="cube.union_join_ctx_der1.dimensions.list0"
+              value="union_join_ctx_cityname,d_time,union_join_ctx_zipcode,union_join_ctx_cityid"/>
+    <property name="cube.union_join_ctx_der1.parent.cube" value="basecube"/>
+  </properties>
+  <measure_names>
+    <measure_name>union_join_ctx_msr2</measure_name>
+    <measure_name>union_join_ctx_msr1</measure_name>
+    <measure_name>union_join_ctx_msr3</measure_name>
+  </measure_names>
+  <dim_attr_names>
+    <attr_name>union_join_ctx_zipcode</attr_name>
+    <attr_name>union_join_ctx_cityname</attr_name>
+    <attr_name>d_time</attr_name>
+    <attr_name>union_join_ctx_cityid</attr_name>
+  </dim_attr_names>
+</x_derived_cube>

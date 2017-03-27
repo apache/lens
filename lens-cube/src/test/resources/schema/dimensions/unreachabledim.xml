@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_dimension name="unreachabledim" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="int" name="id" description="code">
+    </dim_attribute>
+    <dim_attribute _type="int" name="name" description="code">
+    </dim_attribute>
+  </attributes>
+  <join_chains/>
+  <properties>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="dimension.unreachabledim.attributes.list.size" value="1"/>
+    <property name="dimension.unreachabledim.attributes.list0" value="id,name"/>
+    <property name="base.unreachabledim.expressions.list.size" value="0"/>
+    <property name="dimension.unreachabledim.joinchains.list.size" value="0"/>
+    <property name="cube.col.id.description" value="code"/>
+    <property name="cube.dimension.name.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.unreachabledim.timed.dimension" value="dt"/>
+    <property name="cube.col.name.description" value="code"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.name.type" value="int"/>
+    <property name="cube.table.unreachabledim.weight" value="0.0"/>
+  </properties>
+</x_dimension>

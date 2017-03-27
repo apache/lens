@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_dimension name="countrydim" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="string" name="captial" description="field2">
+    </dim_attribute>
+    <dim_attribute _type="string" name="region" description="region name">
+    </dim_attribute>
+    <dim_attribute _type="int" name="id" description="code">
+    </dim_attribute>
+    <dim_attribute _type="string" name="name" description="name">
+    </dim_attribute>
+    <dim_attribute _type="string" name="ambigdim2" description="used in testColumnAmbiguity">
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains/>
+  <properties>
+    <property name="cube.table.countrydim.weight" value="0.0"/>
+    <property name="dimension.countrydim.timed.dimension" value="dt"/>
+  </properties>
+</x_dimension>

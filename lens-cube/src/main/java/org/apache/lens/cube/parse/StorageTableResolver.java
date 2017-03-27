@@ -59,7 +59,7 @@ class StorageTableResolver implements ContextRewriter {
     validDimTables = StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
     String maxIntervalStr = conf.get(CubeQueryConfUtil.QUERY_MAX_INTERVAL);
     if (maxIntervalStr != null) {
-      this.maxInterval = UpdatePeriod.valueOf(maxIntervalStr);
+      this.maxInterval = UpdatePeriod.valueOf(maxIntervalStr.toUpperCase());
     } else {
       this.maxInterval = null;
     }

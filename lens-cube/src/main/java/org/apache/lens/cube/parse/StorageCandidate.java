@@ -635,12 +635,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
             log.info("Completeness for the measure_tag {} is {}, threshold: {}, for the hour {}", tag,
               completenessResult.getValue(), completenessThreshold, formatter.format(completenessResult.getKey()));
             String measureorExprFromTag = tagToMeasureOrExprMap.get(tag);
-            Map<String, Float> incompletePartition = dataCompletenessMap.get(measureorExprFromTag);
-            if (incompletePartition == null) {
-              incompletePartition = new HashMap<>();
-              dataCompletenessMap.put(measureorExprFromTag, incompletePartition);
-            }
-            incompletePartition.put(formatter.format(completenessResult.getKey()), completenessResult.getValue());
+            dataCompletenessMap.computeIfAbsent(measureorExprFromTag, k -> new HashMap<>())
+              .put(formatter.format(completenessResult.getKey()), completenessResult.getValue());
             isDataComplete = false;
           }
         }

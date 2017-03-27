@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_storage name="c4" classname="org.apache.lens.cube.metadata.HDFSStorage" xmlns="uri:lens:cube:0.1">
+  <properties>
+    <property name="cube.table.c4.weight" value="0.0"/>
+  </properties>
+</x_storage>
