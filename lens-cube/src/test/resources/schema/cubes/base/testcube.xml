@@ -41,11 +41,16 @@
     <measure _type="BIGINT" name="noAggrMsr" display_string="No aggregateMsr"
              description="measure without a default aggregate">
     </measure>
+<<<<<<< HEAD
     <measure _type="INT" name="union_join_ctx_msr1" description="union_join_ctx_first measure"/>
     <measure _type="INT" name="segmsr1" default_aggr="SUM" description="segmentation measure 1"
              display_string="segmentation measure 1"/>
     <measure _type="INT" name="invmsr1" default_aggr="SUM" description="invalid measure seg"
              display_string="seg invalid measure 1"/>
+=======
+    <measure _type="INT" name="union_join_ctx_msr1" description="union_join_ctx_first measure">
+    </measure>
+>>>>>>> apache/lens-1381
   </measures>
   <dim_attributes>
     <dim_attribute _type="string" name="union_join_ctx_cityname" display_string="union_join_ctx_city name"
@@ -129,9 +134,12 @@
     </dim_attribute>
     <dim_attribute _type="int" name="test_time_dim_day_id" display_string="Timedim reference" description="ref dim">
     </dim_attribute>
+<<<<<<< HEAD
     <dim_attribute _type="int" name="xuserid" description="userid" />
     <dim_attribute _type="int" name="yuserid" description="userid" />
     <dim_attribute _type="int" name="userid" description="userid" />
+=======
+>>>>>>> apache/lens-1381
   </dim_attributes>
   <expressions>
     <expression _type="string" name="singlecolchainfield" display_string="cubecityname" description="cubecity.name">
@@ -642,6 +650,7 @@
         </path>
       </paths>
     </join_chain>
+<<<<<<< HEAD
     <join_chain dest_table="sports" name="xusersports" display_string="xuser-sports" description="xuser sports">
       <paths>
         <path>
@@ -702,5 +711,7 @@
         </path>
       </paths>
     </join_chain>
+=======
+>>>>>>> apache/lens-1381
   </join_chains>
 </x_base_cube>

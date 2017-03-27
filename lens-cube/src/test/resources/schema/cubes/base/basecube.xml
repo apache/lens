@@ -66,8 +66,11 @@
     </measure>
   </measures>
   <dim_attributes>
+<<<<<<< HEAD
     <dim_attribute _type="string" name="business" display_string="business unit"
                    description="Business unit name for segmentation" />
+=======
+>>>>>>> apache/lens-1381
     <dim_attribute _type="string" name="union_join_ctx_cityname" display_string="union_join_ctx_city name"
                    description="union_join_ctx_city name">
       <chain_ref_column chain_name="cubecityjoinunionctx" ref_col="name" dest_table="citydim"/>
