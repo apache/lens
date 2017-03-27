@@ -190,7 +190,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     compareUnionQuery(ctx, "SELECT (testcube.alias0) AS `singlecolchainfield`, sum((testcube.alias1)) AS `segmsr1` from (",
       "as testcube group by testcube.alias0", newArrayList(query1, query2));
   }
-  @Test(invocationCount = 10)
+  @Test
   public void testQueryWithWhereHavingGroupby() throws Exception {
     String userQuery = "select cityid, msr2, segmsr1 from testcube where cityname='blah' and " + TWO_DAYS_RANGE + " group by cityid having segmsr1 > 1 and msr2 > 2";
     CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
