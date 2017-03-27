@@ -23,7 +23,6 @@
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <properties>
     <property name="seg1.prop" value="s1"/>
-<<<<<<< HEAD
     <!--TODO use and test this property-->
     <property name="cube.segmentation.relative.start.time" value="now.day -30days"/>
   </properties>
@@ -35,28 +34,9 @@
       </segment_parameters>
     </segment>
     <segment cube_name="b2cube">
-=======
-    <property name="cube.segmentation.relative.start.time" value="now -10days"/>
-  </properties>
-  <segements>
-    <segment cube_name="cube11">
-      <segment_parameters>
-        <property name="lens.metastore.cube.column.mapping" value="foo=bar"/>
-      </segment_parameters>
-    </segment>
-    <segment cube_name="cube22">
->>>>>>> apache/lens-1381
       <segment_parameters>
         <property name="lens.metastore.cube.column.mapping" value="foo1=bar1"/>
       </segment_parameters>
     </segment>
-<<<<<<< HEAD
-=======
-    <segment cube_name="cube33">
-      <segment_parameters>
-        <property name="lens.metastore.cube.column.mapping" value="foo2=bar2"/>
-      </segment_parameters>
-    </segment>
->>>>>>> apache/lens-1381
   </segements>
 </x_segmentation>

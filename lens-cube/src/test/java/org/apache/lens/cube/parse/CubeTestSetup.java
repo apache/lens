@@ -21,7 +21,6 @@ package org.apache.lens.cube.parse;
 
 import static java.util.Calendar.DAY_OF_MONTH;
 import static java.util.Calendar.HOUR_OF_DAY;
-<<<<<<< HEAD
 import static org.apache.lens.cube.metadata.DateFactory.BEFORE_4_DAYS;
 import static org.apache.lens.cube.metadata.DateFactory.BEFORE_6_DAYS;
 import static org.apache.lens.cube.metadata.DateFactory.NOW;
@@ -36,13 +35,6 @@ import static org.apache.lens.cube.metadata.UpdatePeriod.QUARTERLY;
 import static org.apache.lens.cube.metadata.UpdatePeriod.YEARLY;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-=======
-
-import static org.apache.lens.cube.metadata.DateFactory.*;
-import static org.apache.lens.cube.metadata.UpdatePeriod.*;
-
-import static org.testng.Assert.*;
->>>>>>> apache/lens-1381
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -51,7 +43,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
-<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -66,9 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-=======
-import java.util.*;
->>>>>>> apache/lens-1381
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
@@ -76,7 +64,6 @@ import javax.xml.bind.JAXBException;
 import org.apache.lens.api.ToXMLString;
 import org.apache.lens.api.jaxb.LensJAXBContext;
 import org.apache.lens.api.metastore.SchemaTraverser;
-<<<<<<< HEAD
 import org.apache.lens.cube.metadata.CubeDimAttribute;
 import org.apache.lens.cube.metadata.CubeDimensionTable;
 import org.apache.lens.cube.metadata.CubeFactTable;
@@ -95,9 +82,6 @@ import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.TimePartitionRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
-=======
-import org.apache.lens.cube.metadata.*;
->>>>>>> apache/lens-1381
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
