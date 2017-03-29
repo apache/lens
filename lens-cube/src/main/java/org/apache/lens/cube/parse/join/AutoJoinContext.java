@@ -356,7 +356,7 @@ public class AutoJoinContext {
    * @param dimsToQuery
    * @throws LensException
    */
-  public void pruneAllPaths(CubeInterface cube, Set<StorageCandidate> scSet,
+  public void pruneAllPaths(CubeInterface cube, Collection<StorageCandidate> scSet,
     final Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     // Remove join paths which cannot be satisfied by the resolved candidate
     // fact and dimension tables

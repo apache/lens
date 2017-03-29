@@ -85,4 +85,8 @@ public interface QueryAST {
   void setOrderByAST(ASTNode node);
 
   void setJoinAST(ASTNode node);
+
+  void setFromString(String fromString);
+  void setWhereString(String whereString);
+
 }

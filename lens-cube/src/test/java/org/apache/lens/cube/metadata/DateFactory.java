@@ -65,11 +65,16 @@ public class DateFactory {
   }
 
   public static class GeneralDateOffsetProvider extends HashMap<UpdatePeriod, DateOffsetProvider> {
+    boolean truncate;
+    public GeneralDateOffsetProvider(boolean truncate) {
+      this.truncate = truncate;
+    }
+
     @Override
     public DateOffsetProvider get(Object key) {
       if (!containsKey(key) && key instanceof UpdatePeriod) {
         UpdatePeriod up = (UpdatePeriod) key;
-        put(up, new DateOffsetProvider(up));
+        put(up, new DateOffsetProvider(up, truncate));
       }
       return super.get(key);
     }
@@ -79,11 +84,17 @@ public class DateFactory {
     }
   }
 
-  public static final GeneralDateOffsetProvider GENERAL_DATE_OFFSET_PROVIDER = new GeneralDateOffsetProvider();
+  public static final GeneralDateOffsetProvider GENERAL_DATE_OFFSET_PROVIDER = new GeneralDateOffsetProvider(false);
+  public static final GeneralDateOffsetProvider GENERAL_TRUNCATED_DATE_OFFSET_PROVIDER
+    = new GeneralDateOffsetProvider(true);
 
 
   public static Date getDateWithOffset(UpdatePeriod up, int offset) {
     return GENERAL_DATE_OFFSET_PROVIDER.get(up, offset);
+  }
+
+  public static Date getTruncatedDateWithOffset(UpdatePeriod up, int offset) {
+    return GENERAL_TRUNCATED_DATE_OFFSET_PROVIDER.get(up, offset);
   }
 
   public static String getDateStringWithOffset(UpdatePeriod up, int offset) {
@@ -141,6 +152,10 @@ public class DateFactory {
   public static final Date NOW;
   public static final Date TWODAYS_BACK;
   public static final Date TWO_MONTHS_BACK;
+  public static final Date THIS_MONTH_TRUNCATED;
+  public static final Date ONE_MONTH_BACK_TRUNCATED;
+  public static final Date TWO_MONTHS_BACK_TRUNCATED;
+  public static final Date THREE_MONTHS_BACK_TRUNCATED;
   public static final Date BEFORE_6_DAYS;
   public static final Date BEFORE_4_DAYS;
 
@@ -159,6 +174,8 @@ public class DateFactory {
   public static final String TWO_MONTHS_RANGE_UPTO_DAYS;
   public static final String TWO_MONTHS_RANGE_UPTO_HOURS;
   public static final String TWO_DAYS_RANGE_BEFORE_4_DAYS;
+  public static final String THREE_MONTHS_RANGE_UPTO_DAYS;
+  public static final String THREE_MONTHS_RANGE_UPTO_MONTH;
   private static boolean zerothHour;
 
 
@@ -179,6 +196,12 @@ public class DateFactory {
     TWO_MONTHS_BACK = getDateWithOffset(MONTHLY, -2);
     System.out.println("Test TWO_MONTHS_BACK:" + TWO_MONTHS_BACK);
 
+    THIS_MONTH_TRUNCATED = getTruncatedDateWithOffset(MONTHLY, 0);
+    ONE_MONTH_BACK_TRUNCATED  = getTruncatedDateWithOffset(MONTHLY, -1);
+    TWO_MONTHS_BACK_TRUNCATED  = getTruncatedDateWithOffset(MONTHLY, -2);
+    THREE_MONTHS_BACK_TRUNCATED  = getTruncatedDateWithOffset(MONTHLY, -3);
+
+
     // Before 4days
     BEFORE_4_DAYS = getDateWithOffset(DAILY, -4);
     BEFORE_6_DAYS = getDateWithOffset(DAILY, -6);
@@ -196,6 +219,8 @@ public class DateFactory {
     TWO_MONTHS_RANGE_UPTO_MONTH = getTimeRangeString(MONTHLY, -2, 0);
     TWO_MONTHS_RANGE_UPTO_DAYS = getTimeRangeString(MONTHLY, -2, 0, DAILY);
     TWO_MONTHS_RANGE_UPTO_HOURS = getTimeRangeString(MONTHLY, -2, 0, HOURLY);
+    THREE_MONTHS_RANGE_UPTO_DAYS = getTimeRangeString(MONTHLY, -3, 0, DAILY);
+    THREE_MONTHS_RANGE_UPTO_MONTH = getTimeRangeString(MONTHLY, -3, 0, MONTHLY);
 
     // calculate LAST_HOUR_TIME_RANGE
     LAST_HOUR_TIME_RANGE = getTimeRangeString(HOURLY, -1, 0);

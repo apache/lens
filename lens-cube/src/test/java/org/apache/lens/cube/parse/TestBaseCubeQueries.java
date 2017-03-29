@@ -873,17 +873,18 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertEquals(ctx.getCandidates().size(), 1);
     assertEquals(CandidateUtil.getStorageCandidates(ctx.getCandidates().iterator().next()).size(), 1);
     StorageCandidate sc = CandidateUtil.getStorageCandidates(ctx.getCandidates().iterator().next()).iterator().next();
-    assertEquals(sc.getRangeToWhere().size(), 2);
-    for(Map.Entry<TimeRange, String> entry: sc.getRangeToWhere().entrySet()) {
-      if (entry.getKey().getPartitionColumn().equals("dt")) {
-        ASTNode parsed = HQLParser.parseExpr(entry.getValue());
+    assertEquals(sc.getRangeToPartitions().size(), 2);
+    for(TimeRange range: sc.getRangeToPartitions().keySet()) {
+      String rangeWhere = CandidateUtil.getTimeRangeWhereClasue(ctx.getRangeWriter(), sc, range);
+      if (range.getPartitionColumn().equals("dt")) {
+        ASTNode parsed = HQLParser.parseExpr(rangeWhere);
         assertEquals(parsed.getToken().getType(), KW_AND);
-        assertTrue(entry.getValue().substring(((CommonToken) parsed.getToken()).getStopIndex() + 1)
+        assertTrue(rangeWhere.substring(((CommonToken) parsed.getToken()).getStopIndex() + 1)
           .toLowerCase().contains(dTimeWhereClause));
-        assertFalse(entry.getValue().substring(0, ((CommonToken) parsed.getToken()).getStartIndex())
+        assertFalse(rangeWhere.substring(0, ((CommonToken) parsed.getToken()).getStartIndex())
           .toLowerCase().contains("and"));
-      } else if (entry.getKey().getPartitionColumn().equals("ttd")) {
-        assertFalse(entry.getValue().toLowerCase().contains("and"));
+      } else if (range.getPartitionColumn().equals("ttd")) {
+        assertFalse(rangeWhere.toLowerCase().contains("and"));
       } else {
         throw new LensException("Unexpected");
       }

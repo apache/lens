@@ -2261,15 +2261,35 @@ public class CubeMetastoreClient {
     return dimTables;
   }
 
-  public boolean partColExists(String tableName, String partCol) throws LensException {
-    Table tbl = getTable(tableName);
-    for (FieldSchema f : tbl.getPartCols()) {
-      if (f.getName().equalsIgnoreCase(partCol)) {
-        return true;
+  public boolean partColExists(String fact, String storage, String partCol) throws LensException {
+    for (String storageTable : getStorageTables(fact, storage)) {
+      for (FieldSchema f : getTable(storageTable).getPartCols()) {
+        if (f.getName().equalsIgnoreCase(partCol)) {
+          return true;
+        }
       }
     }
     return false;
   }
+
+  /**
+   * Returns storage table names for a storage.
+   * Note: If each update period in the storage has a different storage table, this method will return N Storage Tables
+   * where N is the number of update periods in the storage (LENS-1386)
+   *
+   * @param fact
+   * @param storage
+   * @return
+   * @throws LensException
+   */
+  public Set<String> getStorageTables(String fact, String storage) throws LensException {
+    Set<String> uniqueStorageTables = new HashSet<>();
+    for (UpdatePeriod updatePeriod : getFactTable(fact).getUpdatePeriods().get(storage)) {
+      uniqueStorageTables.add(getStorageTableName(fact, storage, updatePeriod));
+    }
+    return uniqueStorageTables;
+  }
+
 
   /**
    *

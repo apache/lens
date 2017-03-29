@@ -83,6 +83,22 @@ public interface Candidate {
   Collection<Candidate> getChildren();
 
   /**
+   * Is time range coverable based on start and end times configured in schema for the composing storage candidates
+   * and valid update periods.
+   *
+   * Note: This method is different from {@link #evaluateCompleteness(TimeRange, TimeRange, boolean)} .
+   * isTimeRangeCoverable checks the the possibility of covering time range from schema perspective by using valid
+   * storages/update periods while evaluateCompleteness checks if a time range can be covered based on
+   * registered partitions. So isTimeRangeCoverable = false implies evaluateCompleteness = false but vice versa is
+   * not true.
+   *
+   * @param timeRange
+   * @return
+   * @throws LensException
+   */
+  boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException;
+
+  /**
    * Calculates if this candidate can answer the query for given time range based on actual data registered with
    * the underlying candidate storages. This method will also update any internal candidate data structures that are
    * required for writing the re-written query and to answer {@link #getParticipatingPartitions()}.
@@ -120,5 +136,4 @@ public interface Candidate {
    * @return
    */
   Set<Integer> getAnswerableMeasurePhraseIndices();
-
 }

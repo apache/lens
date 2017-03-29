@@ -23,11 +23,8 @@ import static org.apache.lens.cube.parse.CandidateUtil.getColumns;
 import java.util.*;
 
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
-
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
-
-import org.apache.hadoop.conf.Configuration;
 
 import lombok.extern.slf4j.Slf4j;
 

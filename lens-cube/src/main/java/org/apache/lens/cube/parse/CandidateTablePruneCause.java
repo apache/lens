@@ -101,7 +101,7 @@ public class CandidateTablePruneCause {
     // cube table has more partitions
     MORE_PARTITIONS("Picked table has more partitions than minimum"),
     // invalid cube table
-    INVALID("Invalid cube table provided in query"),
+    INVALID("Invalid cube table provided in query"), //TODO move up. This does not make sense here.
     // expression is not evaluable in the candidate
     EXPRESSION_NOT_EVALUABLE("%s expressions not evaluable") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
@@ -210,7 +210,7 @@ public class CandidateTablePruneCause {
     INVALID,
     //this update period is greater than the Query max interval as provided by user with lens.cube.query.max.interval
     UPDATE_PERIOD_BIGGER_THAN_MAX,
-    QUERY_INTERVAL_SMALLER_THAN_UPDATE_PERIOD
+    TIME_RANGE_NOT_ANSWERABLE_BY_UPDATE_PERIOD
   }
 
   // Used for Test cases only.

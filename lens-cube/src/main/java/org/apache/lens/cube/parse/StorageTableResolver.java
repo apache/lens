@@ -31,6 +31,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 /**
  * Resolve storages and partitions of all candidate tables and prunes candidate tables with missing storages or
@@ -120,10 +121,21 @@ class StorageTableResolver implements ContextRewriter {
     while (candidateIterator.hasNext()) {
       Candidate candidate = candidateIterator.next();
       boolean isComplete = true;
+      boolean isTimeRangeAnswerableByThisCandidate = true;
       for (TimeRange range : cubeql.getTimeRanges()) {
+        if (!candidate.isTimeRangeCoverable(range)) {
+          isTimeRangeAnswerableByThisCandidate = false;
+          log.info("Not considering candidate:{} as it can not cover time range {}", candidate, range);
+          cubeql.addCandidatePruningMsg(candidate,
+            CandidateTablePruneCause.storageNotAvailableInRange(Lists.newArrayList(range)));
+          break;
+        }
         isComplete &= candidate.evaluateCompleteness(range, range, failOnPartialData);
       }
-      if (failOnPartialData && !isComplete) {
+      if (!isTimeRangeAnswerableByThisCandidate) {
+        candidateIterator.remove();
+      }
+      else if (failOnPartialData && !isComplete) {
         candidateIterator.remove();
         log.info("Not considering candidate:{} as its data is not is not complete", candidate);
         Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(candidate);
@@ -143,7 +155,6 @@ class StorageTableResolver implements ContextRewriter {
       }
     }
   }
-
 
   private void resolveDimStorageTablesAndPartitions(CubeQueryContext cubeql) throws LensException {
     Set<Dimension> allDims = new HashSet<>(cubeql.getDimensions());
@@ -261,10 +272,17 @@ class StorageTableResolver implements ContextRewriter {
       }
       List<String> validUpdatePeriods = CubeQueryConfUtil
         .getStringList(conf, CubeQueryConfUtil.getValidUpdatePeriodsKey(sc.getFact().getName(), sc.getStorageName()));
-      boolean isStorageAdded = false;
+      boolean isUpdatePeriodForStorageAdded = false;
       Map<String, SkipUpdatePeriodCode> skipUpdatePeriodCauses = new HashMap<>();
 
-      // Populate valid update periods.
+      if (cubeql.getTimeRanges().stream().noneMatch(range -> CandidateUtil.isPartiallyValidForTimeRange(sc, range))) {
+        cubeql.addStoragePruningMsg(sc,
+          new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE));
+        it.remove();
+        continue;
+      }
+
+      // Populate valid update periods abd check validity at update period level
       for (UpdatePeriod updatePeriod : sc.getFact().getUpdatePeriods().get(sc.getStorageName())) {
         if (maxInterval != null && updatePeriod.compareTo(maxInterval) > 0) {
           // if user supplied max interval, all intervals larger than that are useless.
@@ -279,20 +297,20 @@ class StorageTableResolver implements ContextRewriter {
         } else if (!sc.isUpdatePeriodUseful(updatePeriod)) {
           // if the storage candidate finds this update useful to keep looking at the time ranges queried
           skipUpdatePeriodCauses.put(updatePeriod.toString(),
-            SkipUpdatePeriodCode.QUERY_INTERVAL_SMALLER_THAN_UPDATE_PERIOD);
+            SkipUpdatePeriodCode.TIME_RANGE_NOT_ANSWERABLE_BY_UPDATE_PERIOD);
         } else {
-          isStorageAdded = true;
+          isUpdatePeriodForStorageAdded = true;
           sc.addValidUpdatePeriod(updatePeriod);
         }
       }
-      // this is just for documentation/debugging, so we can see why some update periods are skipped.
+      // For DEBUG purpose only to see why some update periods are skipped.
       if (!skipUpdatePeriodCauses.isEmpty()) {
         sc.setUpdatePeriodRejectionCause(skipUpdatePeriodCauses);
       }
       // if no update periods were added in previous section, we skip this storage candidate
-      if (!isStorageAdded) {
+      if (!isUpdatePeriodForStorageAdded) {
         if (skipUpdatePeriodCauses.values().stream().allMatch(
-          SkipUpdatePeriodCode.QUERY_INTERVAL_SMALLER_THAN_UPDATE_PERIOD::equals)) {
+          SkipUpdatePeriodCode.TIME_RANGE_NOT_ANSWERABLE_BY_UPDATE_PERIOD::equals)) {
           // all update periods bigger than query range, it means time range not answerable.
           cubeql.addStoragePruningMsg(sc,
             new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE));
@@ -301,27 +319,30 @@ class StorageTableResolver implements ContextRewriter {
         }
         it.remove();
       } else {
-        Set<CandidateTablePruneCause> allPruningCauses = new HashSet<>(2);
+        //set the dates again as they can change based on ValidUpdatePeriod
+        sc.setStorageStartAndEndDate();
+        Set<CandidateTablePruneCause> allPruningCauses = new HashSet<>(cubeql.getTimeRanges().size());
         for (TimeRange range : cubeql.getTimeRanges()) {
           CandidateTablePruneCause pruningCauseForThisTimeRange = null;
-          if (!client.isStorageTableCandidateForRange(storageTable, range.getFromDate(), range.getToDate())) {
+          if (!CandidateUtil.isPartiallyValidForTimeRange(sc, range)) {
             //This is the prune cause
             pruningCauseForThisTimeRange =
               new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
           }
           //Check partition (or fallback) column existence
+          //TODO Shouldn't we check atleast once for the existence of part column
           else if (cubeql.shouldReplaceTimeDimWithPart()) {
-            if (!client.partColExists(storageTable, range.getPartitionColumn())) {
+            if (!client.partColExists(sc.getFact().getName(), sc.getStorageName(), range.getPartitionColumn())) {
               pruningCauseForThisTimeRange = partitionColumnsMissing(range.getPartitionColumn());
               TimeRange fallBackRange = StorageUtil.getFallbackRange(range, sc.getFact().getName(), cubeql);
               while (fallBackRange != null) {
                 pruningCauseForThisTimeRange = null;
-                if (!client.partColExists(storageTable, fallBackRange.getPartitionColumn())) {
+                if (!client.partColExists(sc.getFact().getName(), sc.getStorageName(),
+                  fallBackRange.getPartitionColumn())) {
                   pruningCauseForThisTimeRange = partitionColumnsMissing(fallBackRange.getPartitionColumn());
                   fallBackRange = StorageUtil.getFallbackRange(fallBackRange, sc.getFact().getName(), cubeql);
                 } else {
-                  if (!client.isStorageTableCandidateForRange(storageTable, fallBackRange.getFromDate(),
-                    fallBackRange.getToDate())) {
+                  if (!CandidateUtil.isPartiallyValidForTimeRange(sc, fallBackRange)) {
                     pruningCauseForThisTimeRange =
                       new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
                   }
@@ -336,6 +357,7 @@ class StorageTableResolver implements ContextRewriter {
           }
         }
         if (!allPruningCauses.isEmpty()) {
+          // TODO if this storage can answer atleast one time range , why prune it ?
           it.remove();
           cubeql.addStoragePruningMsg(sc, allPruningCauses.toArray(new CandidateTablePruneCause[0]));
         }

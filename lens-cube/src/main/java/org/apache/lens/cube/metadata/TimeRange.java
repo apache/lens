@@ -23,7 +23,6 @@ import static org.apache.lens.cube.metadata.DateUtil.ABSDATE_PARSER;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.server.api.error.LensException;
@@ -33,7 +32,6 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 

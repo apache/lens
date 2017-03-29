@@ -21,9 +21,7 @@ package org.apache.lens.cube.parse;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DEFAULT_REWRITE_DIM_FILTER_TO_FACT_FILTER;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.NON_EXISTING_PARTITIONS;
@@ -47,16 +45,7 @@ import java.util.function.Predicate;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.error.NoCandidateDimAvailableException;
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
-import org.apache.lens.cube.metadata.AbstractCubeTable;
-import org.apache.lens.cube.metadata.Cube;
-import org.apache.lens.cube.metadata.CubeDimensionTable;
-import org.apache.lens.cube.metadata.CubeInterface;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
-import org.apache.lens.cube.metadata.DerivedCube;
-import org.apache.lens.cube.metadata.Dimension;
-import org.apache.lens.cube.metadata.JoinChain;
-import org.apache.lens.cube.metadata.Named;
-import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.join.TableRelationship;
 import org.apache.lens.cube.parse.join.AutoJoinContext;
 import org.apache.lens.cube.parse.join.JoinClause;
@@ -68,6 +57,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
+import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -78,6 +68,7 @@ import org.apache.hadoop.hive.ql.parse.ParseUtils;
 import org.apache.hadoop.hive.ql.parse.QB;
 import org.apache.hadoop.hive.ql.parse.QBJoinTree;
 import org.apache.hadoop.hive.ql.parse.QBParseInfo;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -213,8 +204,11 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   @Getter
   private Map<Dimension, PruneCauses<CubeDimensionTable>> dimPruningMsgs =
     new HashMap<Dimension, PruneCauses<CubeDimensionTable>>();
+  @Setter
   @Getter
   private String fromString;
+  @Getter
+  private TimeRangeWriter rangeWriter = null;
   public CubeQueryContext(ASTNode ast, QB qb, Configuration queryConf, HiveConf metastoreConf)
     throws LensException {
     this.ast = ast;
@@ -242,8 +236,10 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     if (qb.getParseInfo().getSelForClause(clauseName) != null) {
       this.selectAST = qb.getParseInfo().getSelForClause(clauseName);
     }
-
     extractMetaTables();
+
+    this.rangeWriter = ReflectionUtils.newInstance(conf.getClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS,
+      CubeQueryConfUtil.DEFAULT_TIME_RANGE_WRITER, TimeRangeWriter.class), conf);
   }
 
   boolean hasCubeInQuery() {
@@ -664,6 +660,11 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return HQLParser.getString(selectAST);
   }
 
+
+  public void setWhereString(String whereString) {
+    //NO OP
+  }
+
   public String getWhereString() {
     if (whereAST != null) {
       return HQLParser.getString(whereAST);
@@ -883,23 +884,65 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     if (sc != null) {
       // resolve timerange positions and replace it by corresponding where clause
       for (TimeRange range : getTimeRanges()) {
-        String rangeWhere = sc.getRangeToWhere().get(range);
+        String rangeWhere = CandidateUtil.getTimeRangeWhereClasue(rangeWriter, sc, range);
         if (!StringUtils.isBlank(rangeWhere)) {
-          ASTNode rangeAST = HQLParser.parseExpr(rangeWhere, conf);
-          range.getParent().setChild(range.getChildIndex(), rangeAST);
+          ASTNode updatedRangeAST = HQLParser.parseExpr(rangeWhere, conf);
+          updateTimeRangeNode(sc.getQueryAst().getWhereAST(), range.getAstNode(), updatedRangeAST);
         }
-        sc.getQueryAst().setWhereAST(HQLParser.parseExpr(getWhereString(), conf));
       }
     }
   }
 
+
+  /**
+   * Find the appropriate time range node in the AST and update it with "updatedTimeRange".
+   * Time Range node looks like this
+   * time_range_in(dt, '2017', '2018') ->
+   * TOK_FUNCTION [TOK_FUNCTION] (l5c2p37) {
+   * time_range_in [Identifier] (l6c1p37)$
+   * TOK_TABLE_OR_COL [TOK_TABLE_OR_COL] (l6c2p51) {
+   * dt [Identifier] (l7c1p51)$
+   * }
+   * '2017' [StringLiteral] (l6c3p55)$
+   * '2018' [StringLiteral] (l6c4p63)$
+   }
+   * @param root
+   * @param timeRangeFuncNode
+   * @param updatedTimeRange
+   */
+  private void updateTimeRangeNode(ASTNode root, ASTNode timeRangeFuncNode, ASTNode updatedTimeRange) {
+    ASTNode childNode;
+    if (root.getChildCount() == 0) {
+      return;
+    }
+    for (Node child : root.getChildren()) {
+      childNode = (ASTNode) child;
+      if (childNode.getType() == timeRangeFuncNode.getType()
+        && childNode.getChildCount() == timeRangeFuncNode.getChildCount()
+        && childNode.getChild(0).getText().equalsIgnoreCase(timeRangeFuncNode.getChild(0).getText())) {
+        //Found the "time_range_in" function node. Check the details further as there can be more than one time ranges
+        if (HQLParser.getString(timeRangeFuncNode).equalsIgnoreCase(HQLParser.getString(childNode))) {
+          //This is the correct time range node . Replace it with "updatedTimeRange"
+          childNode.getParent().setChild(childNode.getChildIndex(), updatedTimeRange);
+          return;
+        }
+      }
+      updateTimeRangeNode(childNode, timeRangeFuncNode, updatedTimeRange);
+    }
+  }
+
+
   public String toHQL() throws LensException {
     Candidate cand = pickCandidateToQuery();
     Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
-    Set<StorageCandidate> scSet = new HashSet<>();
+    Collection<StorageCandidate> scSet = new HashSet<>();
     if (cand != null) {
       scSet.addAll(CandidateUtil.getStorageCandidates(cand));
     }
+
+    //Expand and get update period specific storage candidates if required.
+    scSet = expandStorageCandidates(scSet);
+
     log.info("Candidate: {}, DimsToQuery: {}", cand, dimsToQuery);
     if (autoJoinCtx != null) {
       // prune join paths for picked fact and dimensions
@@ -924,9 +967,9 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     Set<Dimension> exprDimensions = new HashSet<>();
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        Set<Dimension> factExprDimTables = exprCtx.rewriteExprCtx(this, sc, dimsToQuery, sc.getQueryAst());
-        exprDimensions.addAll(factExprDimTables);
-        factDimMap.get(sc).addAll(factExprDimTables);
+        Set<Dimension> scExprDimTables = exprCtx.rewriteExprCtx(this, sc, dimsToQuery, sc.getQueryAst());
+        exprDimensions.addAll(scExprDimTables);
+        factDimMap.get(sc).addAll(scExprDimTables);
       }
     } else {
       // dim only query
@@ -939,9 +982,9 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     Set<Dimension> denormTables = new HashSet<>();
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
-        Set<Dimension> factDenormTables = deNormCtx.rewriteDenormctx(this, sc, dimsToQuery, !scSet.isEmpty());
-        denormTables.addAll(factDenormTables);
-        factDimMap.get(sc).addAll(factDenormTables);
+        Set<Dimension> scDenormTables = deNormCtx.rewriteDenormctx(this, sc, dimsToQuery, !scSet.isEmpty());
+        denormTables.addAll(scDenormTables);
+        factDimMap.get(sc).addAll(scDenormTables);
       }
     } else {
       denormTables.addAll(deNormCtx.rewriteDenormctx(this, null, dimsToQuery, false));
@@ -958,9 +1001,9 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       Set<Dimension> joiningTables = new HashSet<>();
       if (scSet != null && scSet.size() > 1) {
         for (StorageCandidate sc : scSet) {
-          Set<Dimension> factJoiningTables = autoJoinCtx.pickOptionalTables(sc, factDimMap.get(sc), this);
-          factDimMap.get(sc).addAll(factJoiningTables);
-          joiningTables.addAll(factJoiningTables);
+          Set<Dimension> scJoiningTables = autoJoinCtx.pickOptionalTables(sc, factDimMap.get(sc), this);
+          factDimMap.get(sc).addAll(scJoiningTables);
+          joiningTables.addAll(scJoiningTables);
         }
       } else {
         joiningTables.addAll(autoJoinCtx.pickOptionalTables(null, dimsToQuery.keySet(), this));
@@ -970,6 +1013,8 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     log.info("Picked StorageCandidates: {} DimsToQuery: {}", scSet, dimsToQuery);
     pickedDimTables = dimsToQuery.values();
     pickedCandidate = cand;
+
+    //Set From string and time range clause
     if (!scSet.isEmpty()) {
       for (StorageCandidate sc : scSet) {
         sc.updateFromString(this, factDimMap.get(sc), dimsToQuery);
@@ -977,31 +1022,39 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     } else {
       updateFromString(null, dimsToQuery);
     }
-    //update dim filter with fact filter
+
+    //update dim filter with fact filter, set where string in sc
     if (scSet.size() > 0) {
       for (StorageCandidate sc : scSet) {
-        if (!sc.getStorageName().isEmpty()) {
-          String qualifiedStorageTable = sc.getStorageName();
-          String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1);
-          String where = getWhere(sc, autoJoinCtx,
-              sc.getQueryAst().getWhereAST(), getAliasForTableName(sc.getBaseTable().getName()),
-              shouldReplaceDimFilterWithFactFilter(), storageTable, dimsToQuery);
-          sc.setWhereString(where);
-        }
+        String qualifiedStorageTable = sc.getStorageName();
+        String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1); //TODO this looks useless
+        String where = getWhere(sc, autoJoinCtx,
+          sc.getQueryAst().getWhereAST(), getAliasForTableName(sc.getBaseTable().getName()),
+          shouldReplaceDimFilterWithFactFilter(), storageTable, dimsToQuery);
+        sc.setWhereString(where);
       }
     }
 
     if (cand == null) {
       hqlContext = new DimOnlyHQLContext(dimsToQuery, this, this);
       return hqlContext.toHQL();
-    } else if (cand instanceof StorageCandidate) {
-      StorageCandidate sc = (StorageCandidate) cand;
+    } else if (scSet.size() == 1) {
+      StorageCandidate sc = (StorageCandidate) scSet.iterator().next();
       sc.updateAnswerableSelectColumns(this);
       return getInsertClause() + sc.toHQL(factDimMap.get(sc));
     } else {
-      UnionQueryWriter uqc = new UnionQueryWriter(cand, this);
+      UnionQueryWriter uqc = new UnionQueryWriter(scSet, this);
       return getInsertClause() + uqc.toHQL(factDimMap);
     }
+  }
+
+  private Collection<StorageCandidate> expandStorageCandidates(Collection<StorageCandidate> scSet)
+    throws LensException {
+    Collection<StorageCandidate> expandedList = new ArrayList<StorageCandidate>();
+    for (StorageCandidate sc : scSet) {
+      expandedList.addAll(sc.splitAtUpdatePeriodLevelIfReq());
+    }
+    return  expandedList;
   }
 
   public ASTNode toAST(Context ctx) throws LensException {

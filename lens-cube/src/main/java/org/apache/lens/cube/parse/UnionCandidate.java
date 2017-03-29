@@ -55,6 +55,17 @@ public class UnionCandidate implements Candidate {
   }
 
   @Override
+  public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
+    Map<Candidate, TimeRange> candidateRange = splitTimeRangeForChildren(timeRange);
+    for (Map.Entry<Candidate, TimeRange> entry : candidateRange.entrySet()) {
+      if (!entry.getKey().isTimeRangeCoverable(entry.getValue())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
   public Collection<String> getColumns() {
     // In UnionCandidate all columns are same, return the columns
     // of first child

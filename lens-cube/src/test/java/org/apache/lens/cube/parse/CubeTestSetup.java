@@ -452,6 +452,16 @@ public class CubeTestSetup {
       StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts));
     return storageTableToWhereClause;
   }
+
+  public static Map<String, String> getWhereForMonthly(String monthlyTable, Date startMonth, Date endMonth) {
+    Map<String, String> storageTableToWhereClause = new LinkedHashMap<String, String>();
+    List<String> parts = new ArrayList<String>();
+    addParts(parts, MONTHLY, startMonth, endMonth);
+    storageTableToWhereClause.put(getDbName() + monthlyTable,
+      StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts));
+    return storageTableToWhereClause;
+  }
+
   public static Map<String, String> getWhereForHourly2days(String hourlyTable) {
     return getWhereForHourly2days(TEST_CUBE_NAME, hourlyTable);
   }

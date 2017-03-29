@@ -30,7 +30,6 @@ import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.Sets;
 import lombok.NonNull;

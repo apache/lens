@@ -51,12 +51,15 @@ public class UnionQueryWriter {
   private Map<String, ASTNode> storageCandidateToSelectAstMap = new HashMap<>();
   private AliasDecider aliasDecider = new DefaultAliasDecider();
   private CubeQueryContext cubeql;
-  Set<StorageCandidate> storageCandidates;
+  Collection<StorageCandidate> storageCandidates;
   public static final String DEFAULT_MEASURE = "0.0";
 
-  public UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
+  public UnionQueryWriter(Collection<StorageCandidate> storageCandidates, CubeQueryContext cubeql) {
+    if (storageCandidates == null || storageCandidates.size()<=1) {
+      throw new IllegalArgumentException("There should be atleast two storage candidates to write a union query");
+    }
     this.cubeql = cubeql;
-    storageCandidates = CandidateUtil.getStorageCandidates(cand);
+    this.storageCandidates = storageCandidates;
   }
 
   public String toHQL(Map<StorageCandidate, Set<Dimension>> factDimMap) throws LensException {
