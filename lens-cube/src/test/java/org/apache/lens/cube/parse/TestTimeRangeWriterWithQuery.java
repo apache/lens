@@ -79,10 +79,11 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
     return cal.getTime();
   }
 
-  @Test
+  @Test(invocationCount = 1)
   public void testCubeQueryContinuousUpdatePeriod() throws Exception {
     LensException th = null;
     try {
+      conf.set("lens.cube.query.valid.testcube.facttables", "summary3");
       rewrite("select" + " SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
     } catch (LensException e) {
       th = e;
@@ -93,6 +94,7 @@ public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
       Assert
       .assertEquals(th.getErrorCode(), CANNOT_USE_TIMERANGE_WRITER.getLensErrorInfo().getErrorCode());
     }
+    conf.unset("lens.cube.query.valid.testcube.facttables");
     // hourly partitions for two days
     conf.setBoolean(FAIL_QUERY_ON_PARTIAL_DATA, true);
     DateFormat qFmt = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");

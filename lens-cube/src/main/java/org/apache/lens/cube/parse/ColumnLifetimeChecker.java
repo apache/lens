@@ -28,13 +28,7 @@ import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.join.JoinPath;
 import org.apache.lens.cube.parse.join.AutoJoinContext;
-import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.plan.PlanUtils;
 
 import lombok.extern.slf4j.Slf4j;
 

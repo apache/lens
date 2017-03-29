@@ -194,8 +194,8 @@ class MaxCoveringFactResolver implements ContextRewriter {
     }
 
     public String toString() {
-      return String.valueOf(days) + " days, " + hours + " hours, " + minutes +
-        " minutes, " + seconds + " seconds, " + milliseconds + " milliseconds.";
+      return String.valueOf(days) + " days, " + hours + " hours, " + minutes
+        + " minutes, " + seconds + " seconds, " + milliseconds + " milliseconds.";
     }
   }
 }

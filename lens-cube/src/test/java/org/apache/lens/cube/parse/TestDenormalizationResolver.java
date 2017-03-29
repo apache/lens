@@ -21,7 +21,7 @@ package org.apache.lens.cube.parse;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
-import static java.util.stream.Collectors.toMap;
+
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.columnNotFound;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
@@ -193,21 +193,21 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     LensException e = getLensExceptionInRewrite(
       "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
-    PruneCauses.BriefAndDetailedError error = ne.getJsonMessage(); // Storage update periods are not valid for given time range
+    PruneCauses.BriefAndDetailedError error = ne.getJsonMessage();
     Assert.assertEquals(error.getBrief(), CandidateTablePruneCode.UNSUPPORTED_STORAGE.errorFormat);
 
     Map<HashSet<String>, List<CandidateTablePruneCause>> enhanced = error.enhanced();
     Map<Set<String>, List<CandidateTablePruneCause>> expected = Maps.newHashMap();
-    expected.put(newHashSet("c1_summary1","c1_testfact","c1_testfact2"),
+    expected.put(newHashSet("c1_summary1", "c1_testfact", "c1_testfact2"),
       newArrayList(columnNotFound("dim2big2")));
-    expected.put(newHashSet("c2_summary2","c2_summary3","c1_testfact2_raw",""
-      + "c3_testfact2_raw","c1_summary3","c1_summary2"),
+    expected.put(newHashSet("c2_summary2", "c2_summary3", "c1_testfact2_raw", ""
+        + "c3_testfact2_raw", "c1_summary3", "c1_summary2"),
       newArrayList(new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE)));
     expected.put(newHashSet("c0_b1b2fact1", "c0_testfact_continuous"), newArrayList(columnNotFound(
       "msr2", "msr3")));
-    expected.put(newHashSet("c2_summary2","c2_summary3","c2_summary4","c4_testfact","c2_summary1",
-      "c3_testfact","c3_testfact2_raw","c4_testfact2","c5_testfact","c99_cheapfact","c2_testfact","c0_cheapfact",
-      "c2_testfactmonthly","c0_testfact"),
+    expected.put(newHashSet("c2_summary2", "c2_summary3", "c2_summary4", "c4_testfact", "c2_summary1",
+      "c3_testfact", "c3_testfact2_raw", "c6_testfact", "c4_testfact2", "c5_testfact", "c99_cheapfact",
+      "c2_testfact", "c0_cheapfact", "c2_testfactmonthly", "c0_testfact"),
       newArrayList(new CandidateTablePruneCause(CandidateTablePruneCode.UNSUPPORTED_STORAGE)));
 
     Assert.assertEquals(enhanced, expected);

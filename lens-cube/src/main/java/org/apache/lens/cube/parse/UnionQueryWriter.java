@@ -50,9 +50,8 @@ public class UnionQueryWriter {
   private Map<String, ASTNode> storageCandidateToSelectAstMap = new HashMap<>();
   private AliasDecider aliasDecider = new DefaultAliasDecider();
   private CubeQueryContext cubeql;
-  private Set<StorageCandidate> storageCandidates;
-  private static final String DEFAULT_MEASURE = "0.0";
   public static final ASTNode DEFAULT_MEASURE_AST;
+  public static final String DEFAULT_MEASURE = "0.0";
   static {
     try {
       DEFAULT_MEASURE_AST = HQLParser.parseExpr(DEFAULT_MEASURE);
@@ -60,13 +59,14 @@ public class UnionQueryWriter {
       throw new RuntimeException("default measure not parsable");
     }
   }
+  Collection<StorageCandidate> storageCandidates;
 
-  UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
-    this.cubeql = cubeql;
-    storageCandidates = CandidateUtil.getStorageCandidates(cand);
-    for (StorageCandidate storageCandidate : storageCandidates) {
-      storageCandidate.setRootCubeQueryContext(cubeql); // todo remove and cleanup
+  public UnionQueryWriter(Collection<StorageCandidate> storageCandidates, CubeQueryContext cubeql) {
+    if (storageCandidates == null || storageCandidates.size()<=1) {
+      throw new IllegalArgumentException("There should be atleast two storage candidates to write a union query");
     }
+    this.cubeql = cubeql;
+    this.storageCandidates = storageCandidates;
   }
 
   public String toHQL() throws LensException {
@@ -398,7 +398,7 @@ public class UnionQueryWriter {
     }
     for (int i = 0; i < node.getChildCount(); i++) {
       ASTNode child = (ASTNode) node.getChild(i);
-      updateOuterSelectDuplicateAliases(child, aliasMap);
+      updateOuterASTDuplicateAliases(child, aliasMap);
     }
   }
 

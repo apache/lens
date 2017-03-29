@@ -28,8 +28,11 @@ import static org.apache.lens.cube.parse.TestCubeRewriter.*;
 import static org.testng.Assert.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateDimAvailableException;
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
 
@@ -457,5 +460,46 @@ public class TestUnionQueries extends TestQueryRewrite {
       "select count(testcube.msr4) as `alias0` from ", null, null
     );
     compareQueries(hqlQuery, expected);
+  }
+
+
+  @Test
+  public void testSingleFactSingleStorageWithMultipleTableDescriptions() throws Exception {
+    Configuration conf = LensServerAPITestUtil.getConfigurationWithParams(getConf(),
+      CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C6",
+      getValidFactTablesKey("testcube"), "testfact",
+      FAIL_QUERY_ON_PARTIAL_DATA, false);
+
+    //If not beginning of month. Expecting this to pass at beginning of every month (example April 01 00:00)
+    if (!THREE_MONTHS_RANGE_UPTO_DAYS.equals(THREE_MONTHS_RANGE_UPTO_MONTH)) {
+      LensException e = getLensExceptionInRewrite("select count(msr4) from testCube where " + THREE_MONTHS_RANGE_UPTO_DAYS, conf);
+      assertTrue(e instanceof NoCandidateFactAvailableException);
+      Set<Map.Entry<StorageCandidate, List<CandidateTablePruneCause>>> causes = ((NoCandidateFactAvailableException) e).getBriefAndDetailedError().entrySet().stream().filter(x -> x.getKey().getName().equalsIgnoreCase("c6_testfact")).collect(Collectors.toSet());
+      assertEquals(causes.size(), 1);
+      List<CandidateTablePruneCause> pruneCauses = causes.iterator().next().getValue();
+      assertEquals(pruneCauses.size(), 1);
+      assertEquals(pruneCauses.get(0).getCause(), CandidateTablePruneCause.CandidateTablePruneCode.STORAGE_NOT_AVAILABLE_IN_RANGE);
+    }
+
+    String hqlQuery2 = rewrite("select count(msr4) from testCube where " + THREE_MONTHS_RANGE_UPTO_MONTH, conf);
+    System.out.println(hqlQuery2);
+
+    ArrayList<String> storages = Lists.newArrayList("daily_c6_testfact", "monthly_c6_testfact");
+    StoragePartitionProvider provider = new StoragePartitionProvider() {
+      @Override
+      public Map<String, String> providePartitionsForStorage(String storage) {
+        if (storage.contains("daily_c6_testfact")) {
+          return getWhereForDays(storage, ONE_MONTH_BACK_TRUNCATED, getTruncatedDateWithOffset(MONTHLY, 0));
+        } else if (storage.contains("monthly_c6_testfact")) {
+          return getWhereForMonthly(storage, THREE_MONTHS_BACK_TRUNCATED, ONE_MONTH_BACK_TRUNCATED);
+        }
+        return null;
+      }
+    };
+    String expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
+      "select count(testcube.alias0) AS `count(msr4)`", null, null,
+      "select count((testcube.msr4)) AS `alias0` from ", null, null
+    );
+    compareQueries(hqlQuery2, expected);
   }
 }

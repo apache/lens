@@ -24,9 +24,11 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class DefaultQueryAST implements QueryAST {
   private ASTNode selectAST, whereAST, groupByAST, havingAST, joinAST, orderByAST;
   private Integer limitValue;

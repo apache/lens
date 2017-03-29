@@ -69,6 +69,16 @@ public class UnionCandidate implements Candidate {
     return true;
   }
 
+  public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
+    Map<Candidate, TimeRange> candidateRange = splitTimeRangeForChildren(timeRange);
+    for (Map.Entry<Candidate, TimeRange> entry : candidateRange.entrySet()) {
+      if (!entry.getKey().isTimeRangeCoverable(entry.getValue())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @Override
   public boolean isColumnValidForRange(String column) {
     return false;

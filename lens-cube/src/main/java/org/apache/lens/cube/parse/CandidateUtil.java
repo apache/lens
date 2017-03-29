@@ -58,10 +58,25 @@ public class CandidateUtil {
     return true;
   }
 
+  static boolean isCandidatePartiallyValidForTimeRange(Date candidateStartTime, Date candidateEndTime,
+    Date timeRangeStart, Date timeRangeEnd) {
+    Date start  = candidateStartTime.after(timeRangeStart) ? candidateStartTime : timeRangeStart;
+    Date end = candidateEndTime.before(timeRangeEnd) ? candidateEndTime : timeRangeEnd;
+    if (end.after(start)) {
+      return true;
+    }
+    return false;
+  }
+
+
+  static boolean isPartiallyValidForTimeRange(Candidate cand, TimeRange timeRange) {
+    return isPartiallyValidForTimeRanges(cand, Arrays.asList(timeRange));
+  }
+
   static boolean isPartiallyValidForTimeRanges(Candidate cand, List<TimeRange> timeRanges) {
     return timeRanges.stream().anyMatch(timeRange ->
-      (cand.getStartTime().before(timeRange.getFromDate()) && cand.getEndTime().after(timeRange.getFromDate()))
-      || (cand.getStartTime().before(timeRange.getToDate()) && cand.getEndTime().after(timeRange.getToDate())));
+      isCandidatePartiallyValidForTimeRange(cand.getStartTime(), cand.getEndTime(),
+        timeRange.getFromDate(), timeRange.getToDate()));
   }
 
   /**
@@ -72,6 +87,7 @@ public class CandidateUtil {
    * @throws LensException
    */
   static void copyASTs(QueryAST sourceAst, QueryAST targetAst) throws LensException {
+
     targetAst.setSelectAST(MetastoreUtil.copyAST(sourceAst.getSelectAST()));
     targetAst.setWhereAST(MetastoreUtil.copyAST(sourceAst.getWhereAST()));
     if (sourceAst.getJoinAST() != null) {
@@ -83,6 +99,13 @@ public class CandidateUtil {
     if (sourceAst.getHavingAST() != null) {
       targetAst.setHavingAST(MetastoreUtil.copyAST(sourceAst.getHavingAST()));
     }
+    if (sourceAst.getOrderByAST() != null) {
+      targetAst.setOrderByAST(MetastoreUtil.copyAST(sourceAst.getOrderByAST()));
+    }
+
+    targetAst.setLimitValue(sourceAst.getLimitValue());
+    targetAst.setFromString(sourceAst.getFromString());
+    targetAst.setWhereString(sourceAst.getWhereString());
   }
 
   public static Set<StorageCandidate> getStorageCandidates(final Candidate candidate) {
@@ -175,6 +198,15 @@ public class CandidateUtil {
       }
     }
     return false;
+  }
+
+  public static String getTimeRangeWhereClasue(TimeRangeWriter rangeWriter, StorageCandidate sc, TimeRange range) throws LensException {
+    String rangeWhere = rangeWriter.getTimeRangeWhereClause(sc.getCubeQueryContext(), sc.getCubeQueryContext().getAliasForTableName(sc.getCube().getName()),
+      sc.getRangeToPartitions().get(range));
+    if(sc.getRangeToExtraWhereFallBack().containsKey(range)){
+      rangeWhere =  "((" + rangeWhere + ") and  (" + sc.getRangeToExtraWhereFallBack().get(range) + "))";
+    }
+    return rangeWhere;
   }
 
   public static class ChildrenSizeBasedCandidateComparator<T> implements Comparator<Candidate> {
