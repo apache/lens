@@ -374,13 +374,13 @@ public class UnionQueryWriter {
         }
       }
     }
-    updateOuterSelectDuplicateAliases(queryAst.getSelectAST(), aliasMap);
+    updateOuterASTDuplicateAliases(queryAst.getSelectAST(), aliasMap);
     if (queryAst.getHavingAST() != null) {
-      updateOuterSelectDuplicateAliases(queryAst.getHavingAST(), aliasMap);
+      updateOuterASTDuplicateAliases(queryAst.getHavingAST(), aliasMap);
     }
   }
 
-  public void updateOuterSelectDuplicateAliases(ASTNode node, //todo rename to updateOuterASTDuplicateAliases
+  public void updateOuterASTDuplicateAliases(ASTNode node, //todo rename to updateOuterASTDuplicateAliases
       Map<String, List<String>> aliasMap) {
     if (node.getToken().getType() == HiveParser.DOT) {
       String table = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).toString();
@@ -712,6 +712,7 @@ public class UnionQueryWriter {
   private String getFromString() throws LensException {
     List<String> hqlQueries = new ArrayList<>();
     for (StorageCandidate sc : storageCandidates) {
+      sc.setRootCubeQueryContext(cubeql);
       hqlQueries.add(sc.toHQL()); // todo remove arg2 by pushing inside function
     }
     return hqlQueries.stream().collect(joining(" UNION ALL ", "(", ") as " + cubeql.getBaseCube()));

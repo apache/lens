@@ -147,7 +147,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     List<UnionCandidate> unionCoveringSet =
         getCombinations(new ArrayList<>(allCandidatesPartiallyValid), cubeql);
     // Sort the Collection based on no of elements
-    unionCoveringSet.sort(new CandidateUtil.ChildrenSizeBasedCandidateComparator<UnionCandidate>());
+    unionCoveringSet.sort(Comparator.comparing(Candidate::getChildrenCount));
     // prune non covering sets
     pruneUnionCandidatesNotCoveringAllRanges(unionCoveringSet, cubeql);
     // prune candidate set which doesn't contain any common measure i

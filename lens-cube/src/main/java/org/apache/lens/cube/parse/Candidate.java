@@ -89,7 +89,9 @@ public interface Candidate {
    * @return
    */
   Collection<Candidate> getChildren();
-
+  default int getChildrenCount() {
+    return Optional.of(getChildren()).map(Collection::size).orElse(0);
+  }
   /**
    * Is time range coverable based on start and end times configured in schema for the composing storage candidates
    * and valid update periods.

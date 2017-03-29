@@ -203,8 +203,9 @@ public class CandidateUtil {
   public static String getTimeRangeWhereClasue(TimeRangeWriter rangeWriter, StorageCandidate sc, TimeRange range) throws LensException {
     String rangeWhere = rangeWriter.getTimeRangeWhereClause(sc.getCubeQueryContext(), sc.getCubeQueryContext().getAliasForTableName(sc.getCube().getName()),
       sc.getRangeToPartitions().get(range));
-    if(sc.getRangeToExtraWhereFallBack().containsKey(range)){
-      rangeWhere =  "((" + rangeWhere + ") and  (" + sc.getRangeToExtraWhereFallBack().get(range) + "))";
+    String fallback = sc.getRangeToExtraWhereFallBack().get(range);
+    if(StringUtils.isNotBlank(fallback)){
+      rangeWhere =  "((" + rangeWhere + ") and  (" + fallback + "))";
     }
     return rangeWhere;
   }

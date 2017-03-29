@@ -122,12 +122,19 @@ public class SegmentationCandidate implements Candidate {
       CubeQueryContext ctx = rewriter.rewrite(ast);
       // so that exception comes early
       // TODO: optimize
-      ctx.toHQL();
+      String hql = ctx.toHQL();
       for (StorageCandidate storageCandidate : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
         for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
           TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
           TimeRange queriedTimeRange = timeRangeTimeRangeEntry.getValue();
-          storageCandidate.getRangeToWhere().put(queriedTimeRange, storageCandidate.getRangeToWhere().get(timeRange));
+          Set<FactPartition> rangeToPartition = storageCandidate.getRangeToPartitions().get(timeRange);
+          if (rangeToPartition != null) {
+            storageCandidate.getRangeToPartitions().put(queriedTimeRange, rangeToPartition);
+          }
+          String extraWhere = storageCandidate.getRangeToExtraWhereFallBack().get(timeRange);
+          if (extraWhere!=null) {
+            storageCandidate.getRangeToExtraWhereFallBack().put(queriedTimeRange, extraWhere);
+          }
         }
       }
       cubeQueryContextMap.put(segment.getName(), ctx);
@@ -173,6 +180,11 @@ public class SegmentationCandidate implements Candidate {
   @Override
   public Collection<Candidate> getChildren() {
     return candidateStream().collect(Collectors.toSet());
+  }
+
+  @Override
+  public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
+    return true; //todo check with puneet
   }
 
   @Override

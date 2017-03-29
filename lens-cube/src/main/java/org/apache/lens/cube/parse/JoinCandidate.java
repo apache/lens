@@ -166,8 +166,12 @@ public class JoinCandidate implements Candidate {
 
   @Override
   public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
-    return this.childCandidate1.isTimeRangeCoverable(timeRange)
-      && this.childCandidate2.isTimeRangeCoverable(timeRange);
+    for (Candidate candidate : getChildren()) {
+      if (!candidate.isTimeRangeCoverable(timeRange)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override

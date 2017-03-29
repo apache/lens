@@ -232,8 +232,14 @@ public class StorageCandidate implements Candidate, CandidateTable {
     completenessThreshold = conf
       .getFloat(CubeQueryConfUtil.COMPLETENESS_THRESHOLD, CubeQueryConfUtil.DEFAULT_COMPLETENESS_THRESHOLD);
     client = cubeQueryContext.getMetastoreClient();
-    startTime = client.getStorageTableStartDate(name, fact.getName());
-    endTime = client.getStorageTableEndDate(name, fact.getName());
+    Set<String> storageTblNames = client.getStorageTables(fact.getName(), storageName);
+    if (storageTblNames.size() > 1) {
+      isStorageTblsAtUpdatePeriodLevel = true;
+    } else {
+      //if this.name is equal to the storage table name it implies isStorageTblsAtUpdatePeriodLevel is false
+      isStorageTblsAtUpdatePeriodLevel = !storageTblNames.iterator().next().equalsIgnoreCase(name);
+    }
+    setStorageStartAndEndDate();
   }
 
   /**
@@ -985,7 +991,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
   }
 
   boolean isUpdatePeriodUseful(UpdatePeriod updatePeriod) {
-    return cubeql.getTimeRanges().stream().anyMatch(timeRange -> isUpdatePeriodUseful(timeRange, updatePeriod));
+    return getCubeQueryContext().getTimeRanges().stream().anyMatch(timeRange -> isUpdatePeriodUseful(timeRange, updatePeriod));
   }
 
   /**
@@ -1055,7 +1061,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     }
 
     if (maxInterval == UpdatePeriod.CONTINUOUS
-      && cubeql.getRangeWriter().getClass().equals(BetweenTimeRangeWriter.class)) {
+      && getCubeQueryContext().getRangeWriter().getClass().equals(BetweenTimeRangeWriter.class)) {
       return true;
     }
 
