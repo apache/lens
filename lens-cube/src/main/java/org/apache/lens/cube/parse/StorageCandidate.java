@@ -198,8 +198,10 @@ public class StorageCandidate implements Candidate, CandidateTable {
       genWhereClauseWithDimPartitions(whereString, queriedDims), cubeQueryContext.getConf().getBoolean(
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
         ? getPostSelectionWhereClause() : null));
-    if (cubeQueryContext.getHavingAST() != null) {
-      queryAst.setHavingAST(MetastoreUtil.copyAST(cubeQueryContext.getHavingAST()));
+    if (rootCubeQueryContext == cubeQueryContext && this == cubeQueryContext.getPickedCandidate()) {
+      if (cubeQueryContext.getHavingAST() != null) {
+        queryAst.setHavingAST(MetastoreUtil.copyAST(cubeQueryContext.getHavingAST()));
+      }
     }
   }
 

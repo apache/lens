@@ -29,6 +29,7 @@ import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AUTO_JOINS;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY;
+import static org.apache.lens.cube.parse.CubeQueryConfUtil.RESOLVE_SEGMENTATIONS;
 import static org.apache.lens.cube.parse.CubeTestSetup.getDbName;
 import static org.apache.lens.cube.parse.CubeTestSetup.getExpectedQuery;
 import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2days;
@@ -69,6 +70,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       DISABLE_AUTO_JOINS, false,
       ENABLE_SELECT_TO_GROUPBY, true,
       ENABLE_GROUP_BY_TO_SELECT, true,
+      RESOLVE_SEGMENTATIONS, true,
       DISABLE_AGGREGATE_RESOLVER, false);
   }
 

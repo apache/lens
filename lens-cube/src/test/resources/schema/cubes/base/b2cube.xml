@@ -50,14 +50,13 @@
       <chain_ref_column chain_name="cubestate" ref_col="countrycapital" dest_table="statedim"/>
       <chain_ref_column chain_name="cubecitystatecountry" ref_col="capital" dest_table="countrydim"/>
     </dim_attribute>
-    <dim_attribute _type="int" name="cityid1" display_string="City1" description="id to city">
-    </dim_attribute>
+    <dim_attribute _type="int" name="cityid" display_string="City1" description="id to city"/>
+    <dim_attribute _type="int" name="cityid1" display_string="City1" description="id to city"/>
+    <dim_attribute _type="int" name="cityid2" display_string="City2" description="id to city"/>
     <dim_attribute _type="int" name="dim12" display_string="Dim2 refer" description="ref dim">
       <chain_ref_column chain_name="dim2chain" ref_col="id" dest_table="testdim2"/>
     </dim_attribute>
     <dim_attribute _type="int" name="xuserid" description="userid">
-    </dim_attribute>
-    <dim_attribute _type="int" name="cityid2" display_string="City2" description="id to city">
     </dim_attribute>
     <dim_attribute _type="string" name="dim11" description="basedim">
     </dim_attribute>

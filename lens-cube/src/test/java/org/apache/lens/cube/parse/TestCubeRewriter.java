@@ -115,9 +115,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     //from date 6 days back
     timeRangeString = getTimeRangeString(DAILY, -6, 0, qFmt);
-    LensException th = getLensExceptionInRewrite("select SUM(msr15) from testCube where "
+    NoCandidateFactAvailableException th = getLensExceptionInRewrite("select SUM(msr15) from testCube where "
       + timeRangeString, getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -179,10 +178,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     conf.setBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, true);
 
-    LensException th = getLensExceptionInRewrite(
+    NoCandidateFactAvailableException ne = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
-    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) th;
     PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
     int endIndex = MISSING_PARTITIONS.errorFormat.length() - 3;
     assertEquals(
@@ -998,10 +995,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Configuration conf = getConf();
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
 
-    LensException e = getLensExceptionInRewrite(
+    NoCandidateFactAvailableException ne = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
-    assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
-    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
 
     assertEquals(

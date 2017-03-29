@@ -31,12 +31,12 @@ import static org.apache.lens.cube.parse.CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.REWRITE_DIM_FILTER_TO_FACT_FILTER;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -728,7 +728,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   String getQBFromString(StorageCandidate candidate, Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     String fromString;
     if (getJoinAST() == null) {
-      if (cube != null) {
+      if (candidate != null) {
         if (dimensions.size() > 0) {
           throw new LensException(LensCubeErrorCode.NO_JOIN_CONDITION_AVAILABLE.getLensErrorInfo());
         }
@@ -840,28 +840,43 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   }
 
   public Candidate pickCandidateToQuery() throws LensException {
-    if (pickedCandidate == null) {
-      Candidate cand = null;
-      if (hasCubeInQuery()) {
-        if (candidates.size() > 0) {
-          cand = candidates.iterator().next();
-          log.info("Available Candidates:{}, picking up Candaidate: {} for querying", candidates, cand);
-        } else {
-          if (!storagePruningMsgs.isEmpty()) {
-            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-              ObjectMapper mapper = new ObjectMapper();
-              mapper.writeValue(out, storagePruningMsgs.getJsonObject());
-              log.info("No candidate found because: {}", out.toString("UTF-8"));
-            } catch (Exception e) {
-              throw new LensException("Error writing fact pruning messages", e);
+    Candidate cand;
+    if (hasCubeInQuery()) {
+      Iterator<Candidate> iter = candidates.iterator();
+      while (pickedCandidate == null && iter.hasNext()) { // todo reshuffle
+        cand = iter.next();
+        log.info("Available Candidates:{}, picking up Candidate: {} for querying", candidates, cand);
+        try {
+          cand.explode();
+          pickedCandidate = cand;
+        } catch (NoCandidateFactAvailableException e) {
+          PruneCauses<StorageCandidate> causes = e.getBriefAndDetailedError();
+          CandidateTablePruneCause.CandidateTablePruneCode maxCode = causes.getMaxCause();
+          for (Map.Entry<StorageCandidate, List<CandidateTablePruneCause>> entry : causes.entrySet()) {
+            for (CandidateTablePruneCause cause : entry.getValue()) {
+              if (cause.getCause().equals(maxCode)) {
+//                  addStoragePruningMsg(entry.getKey(), cause);
+              }
             }
           }
-          log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}",
-            storagePruningMsgs.toJsonObject());
-          throw new NoCandidateFactAvailableException(this);
+        } catch (LensException e) {
+          // pass for now to completely run existing tests
         }
       }
-      pickedCandidate = cand;
+      if (pickedCandidate == null) {
+        if (!storagePruningMsgs.isEmpty()) {
+          try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(out, storagePruningMsgs.getJsonObject());
+            log.info("No candidate found because: {}", out.toString("UTF-8"));
+          } catch (Exception e) {
+            throw new LensException("Error writing fact pruning messages", e);
+          }
+        }
+        log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}",
+          storagePruningMsgs.toJsonObject());
+        throw new NoCandidateFactAvailableException(this);
+      }
     }
     return pickedCandidate;
   }

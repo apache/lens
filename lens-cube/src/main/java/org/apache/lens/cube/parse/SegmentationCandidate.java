@@ -55,7 +55,7 @@ public class SegmentationCandidate implements Candidate {
   @Getter
   private final Set<Integer> answerableMeasurePhraseIndices = Sets.newHashSet();
   private static final String IGNORE_KEY = "segmentations.to.ignore";
-
+  private Map<TimeRange, TimeRange> queriedRangeToMyRange = Maps.newHashMap();
   public SegmentationCandidate(CubeQueryContext cubeQueryContext, Segmentation segmentation, Configuration conf, HiveConf hconf) throws LensException {
     this.cubeQueryContext = cubeQueryContext;
     this.segmentation = segmentation;
@@ -69,13 +69,13 @@ public class SegmentationCandidate implements Candidate {
     }
   }
 
-  public void explode(TimeRange timeRange, TimeRange queriedTimeRange) throws LensException {
+  public void explode() throws LensException {
     Collection<String> toIgnore = conf.getStringCollection(IGNORE_KEY); //TODO remove this, this is only a hack to avoid infinite loop and stack overflow
     if (toIgnore.contains(segmentation.getName())) {
       throw new LensException("Segmentation to be ignored");
     } else {
       toIgnore.add(segmentation.getName());
-      conf.setStrings(IGNORE_KEY, toIgnore.toArray(new String[toIgnore.size()]));
+//      conf.setStrings(IGNORE_KEY, toIgnore.toArray(new String[toIgnore.size()]));
     }
     CubeInterface cube = cubeQueryContext.getCube();
     for (Segment segment : segmentation.getSegments()) {
@@ -87,11 +87,16 @@ public class SegmentationCandidate implements Candidate {
       ASTNode ast = MetastoreUtil.copyAST(cubeQueryContext.getAst(),
         astNode -> {
           // replace time range
-          if (astNode.getParent() == timeRange.getAstNode()) {
-            if (astNode.getChildIndex() == 2) {
-              return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate()))), false);
-            } else if (astNode.getChildIndex() == 3) {
-              return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getToDate()))), false);
+          for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
+            TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
+            TimeRange queriedTimeRange = timeRangeTimeRangeEntry.getValue();
+            if (astNode.getParent() == queriedTimeRange.getAstNode()) {
+              if (astNode.getChildIndex() == 2) {
+                return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate()))), false);
+              } else if (astNode.getChildIndex() == 3) {
+                return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getToDate()))), false);
+              }
+              break;
             }
           }
           // else, replace unanswerable measures
@@ -119,7 +124,11 @@ public class SegmentationCandidate implements Candidate {
       // TODO: optimize
       ctx.toHQL();
       for (StorageCandidate storageCandidate : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
-        storageCandidate.getRangeToWhere().put(queriedTimeRange, storageCandidate.getRangeToWhere().get(timeRange));
+        for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
+          TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
+          TimeRange queriedTimeRange = timeRangeTimeRangeEntry.getValue();
+          storageCandidate.getRangeToWhere().put(queriedTimeRange, storageCandidate.getRangeToWhere().get(timeRange));
+        }
       }
       cubeQueryContextMap.put(segment.getName(), ctx);
     }
@@ -168,22 +177,7 @@ public class SegmentationCandidate implements Candidate {
 
   @Override
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange queriedTimeRange, boolean failOnPartialData) throws LensException {
-    //TODO implement this
-    if (!areCandidatesPicked()) {
-      LensException exception = null;
-      try {
-        explode(timeRange, queriedTimeRange);
-      } catch (LensException e) {
-        exception = e;
-      }
-      if (candidateStream().count() != cubeStream().count()) {
-        if (exception != null) {
-          throw exception;
-        } else {
-          throw new LensException("Not all cubes able to answer");
-        }
-      }
-    }
+    queriedRangeToMyRange.put(queriedTimeRange, timeRange);
     return true;
   }
 
@@ -240,7 +234,7 @@ public class SegmentationCandidate implements Candidate {
       }
       return true;
     }
-    throw new IllegalAccessError("I don't know");
+    return hasColumn(dim);
   }
 
   @Override

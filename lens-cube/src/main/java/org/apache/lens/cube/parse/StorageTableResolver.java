@@ -142,7 +142,7 @@ class StorageTableResolver implements ContextRewriter {
             new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE));
         } else if (candidate instanceof SegmentationCandidate) {
           if (!((SegmentationCandidate) candidate).areCandidatesPicked()) {
-            candidateIterator.remove();
+//            candidateIterator.remove();
             //todo think about pruning message
             log.info("removing segment candidate {}", candidate);
           }

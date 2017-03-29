@@ -46,7 +46,7 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
   @Getter(lazy = true)
   private final HashMap<String, List<CandidateTablePruneCause>> compact = computeCompact();
   @Getter(lazy = true)
-  private final CandidateTablePruneCode maxCause  = computeMaxCause();
+  private final CandidateTablePruneCode maxCause = computeMaxCause();
 
   private HashMap<String, List<CandidateTablePruneCause>> computeCompact() {
     HashMap<String, List<CandidateTablePruneCause>> detailedMessage = Maps.newHashMap();
@@ -61,10 +61,7 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
   private final BriefAndDetailedError jsonObject = toJsonObject();
 
   public void addPruningMsg(T table, CandidateTablePruneCause msg) {
-    if (get(table) == null) {
-      put(table, new ArrayList<CandidateTablePruneCause>());
-    }
-    get(table).add(msg);
+    computeIfAbsent(table, x -> new ArrayList()).add(msg);
   }
 
   private HashMap<CandidateTablePruneCause, List<T>> reverse() {

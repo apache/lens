@@ -154,7 +154,11 @@ public class UnionQueryWriter {
         ASTNode expr = innerToOuterSelectASTs.containsKey(new HQLParser.HashableASTNode(node))
             ? innerToOuterSelectASTs.get(new HQLParser.HashableASTNode(node))
             : innerToOuterHavingASTs.get(new HQLParser.HashableASTNode(node));
-        node.getParent().setChild(0, expr);
+        if (node.getChildCount() > 1) {
+          node.replaceChildren(1, 1, expr.getChild(1));
+        } else {
+          node.replaceChildren(0, 0, expr);
+        }
       }
     }
     for (int i = 0; i < node.getChildCount(); i++) {
@@ -203,7 +207,7 @@ public class UnionQueryWriter {
       ASTNode outerOrderby = new ASTNode(child);
       ASTNode tokNullsChild = (ASTNode) child.getChild(0);
       ASTNode outerTokNullsChild = new ASTNode(tokNullsChild);
-      outerTokNullsChild.addChild(getOuterAST((ASTNode) tokNullsChild.getChild(0), null, aliasDecider, null, true, cubeql.getBaseCube().getDimAttributeNames()));
+      outerTokNullsChild.addChild(innerToOuterSelectASTs.get(new HQLParser.HashableASTNode((ASTNode) tokNullsChild)));
       outerOrderby.addChild(outerTokNullsChild);
       outerExpression.addChild(outerOrderby);
     }
@@ -311,7 +315,6 @@ public class UnionQueryWriter {
 
   private List<ASTNode> getProjectedNonDefaultPhrases() {
     List<ASTNode> phrases = new ArrayList<>();
-    int selectPhraseCount = cubeql.getSelectPhrases().size();
     for (int i = 0; i < storageCandidates.iterator().next().getQueryAst().getSelectAST().getChildCount(); i++) {
       for (StorageCandidate sc : storageCandidates) {
         ASTNode selectAST = sc.getQueryAst().getSelectAST();
@@ -372,9 +375,12 @@ public class UnionQueryWriter {
       }
     }
     updateOuterSelectDuplicateAliases(queryAst.getSelectAST(), aliasMap);
+    if (queryAst.getHavingAST() != null) {
+      updateOuterSelectDuplicateAliases(queryAst.getHavingAST(), aliasMap);
+    }
   }
 
-  public void updateOuterSelectDuplicateAliases(ASTNode node,
+  public void updateOuterSelectDuplicateAliases(ASTNode node, //todo rename to updateOuterASTDuplicateAliases
       Map<String, List<String>> aliasMap) {
     if (node.getToken().getType() == HiveParser.DOT) {
       String table = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).toString();

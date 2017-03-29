@@ -188,4 +188,11 @@ public interface Candidate {
       candidate.updateDimFilterWithFactFilter();
     }
   }
+  default void explode() throws LensException {
+    if (getChildren() != null) {
+      for (Candidate candidate : getChildren()) {
+        candidate.explode();
+      }
+    }
+  }
 }
