@@ -122,6 +122,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
   Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
   @Getter
   Set<Dimension> queriedDims = Sets.newHashSet();
+  private Collection<StorageCandidate> periodSpecificStorageCandidates;
+
   void addQueriedDims(Collection<Dimension> dims) {
     queriedDims.addAll(dims);
   }
@@ -391,6 +393,15 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   @Override
   public void updateDimFilterWithFactFilter() throws LensException {
+    if (isStorageTblsAtUpdatePeriodLevel) {
+      Collection<StorageCandidate> periodSpecific = getPeriodSpecificStorageCandidates();
+      if (!periodSpecific.isEmpty()) {
+        for (StorageCandidate storageCandidate : periodSpecific) {
+          storageCandidate.updateDimFilterWithFactFilter();
+        }
+        return;
+      }
+    }
     if (!getStorageName().isEmpty()) {
       String qualifiedStorageTable = getStorageName();
       String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1);
@@ -1121,7 +1132,6 @@ public class StorageCandidate implements Candidate, CandidateTable {
    *
    * @return
    * @throws LensException
->>>>>>> d45c5384ccab119aa263e3bc4b2c3a6c78f8c993
    */
   public Collection<StorageCandidate> splitAtUpdatePeriodLevelIfReq() throws LensException {
     if (!isStorageTblsAtUpdatePeriodLevel) {
@@ -1131,16 +1141,19 @@ public class StorageCandidate implements Candidate, CandidateTable {
   }
 
   private Collection<StorageCandidate> getPeriodSpecificStorageCandidates() throws LensException {
-    List<StorageCandidate> periodSpecificScList = new ArrayList<>(participatingUpdatePeriods.size());
-    StorageCandidate updatePeriodSpecificSc;
-    for (UpdatePeriod period : participatingUpdatePeriods) {
-      updatePeriodSpecificSc = new StorageCandidate(this);
-      updatePeriodSpecificSc.truncatePartitions(period);
-      updatePeriodSpecificSc.setResolvedName(client.getStorageTableName(fact.getName(),
-        storageName, period));
-      periodSpecificScList.add(updatePeriodSpecificSc);
+    if (periodSpecificStorageCandidates == null) {
+      List<StorageCandidate> periodSpecificScList = new ArrayList<>(participatingUpdatePeriods.size());
+      StorageCandidate updatePeriodSpecificSc;
+      for (UpdatePeriod period : participatingUpdatePeriods) {
+        updatePeriodSpecificSc = new StorageCandidate(this);
+        updatePeriodSpecificSc.truncatePartitions(period);
+        updatePeriodSpecificSc.setResolvedName(client.getStorageTableName(fact.getName(),
+          storageName, period));
+        periodSpecificScList.add(updatePeriodSpecificSc);
+      }
+      periodSpecificStorageCandidates = periodSpecificScList;
     }
-    return periodSpecificScList;
+    return periodSpecificStorageCandidates ;
   }
 
   /**
@@ -1152,12 +1165,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     Iterator<Map.Entry<TimeRange, Set<FactPartition>>> rangeItr = rangeToPartitions.entrySet().iterator();
     while (rangeItr.hasNext()) {
       Map.Entry<TimeRange, Set<FactPartition>> rangeEntry = rangeItr.next();
-      Iterator<FactPartition> partitionItr = rangeEntry.getValue().iterator();
-      while (partitionItr.hasNext()) {
-        if (!partitionItr.next().getPeriod().equals(updatePeriod)) {
-          partitionItr.remove();
-        }
-      }
+      rangeEntry.getValue().removeIf(factPartition -> !factPartition.getPeriod().equals(updatePeriod));
       if (rangeEntry.getValue().isEmpty()) {
         rangeItr.remove();
       }
