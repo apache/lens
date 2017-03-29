@@ -25,6 +25,8 @@ import static org.apache.lens.cube.parse.TestCubeRewriter.compareContains;
 
 import static org.testng.Assert.*;
 
+import jodd.util.StringUtil;
+import org.apache.hadoop.util.StringUtils;
 import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
 
@@ -36,38 +38,47 @@ import org.testng.annotations.Test;
 
 public class TestUnionAndJoinCandidates extends TestQueryRewrite {
 
-  private Configuration testConf;
+  private Configuration conf;
 
   @BeforeTest
   public void setupDriver() throws Exception {
-    testConf = LensServerAPITestUtil.getConfiguration(
-        DISABLE_AUTO_JOINS, false,
-        ENABLE_SELECT_TO_GROUPBY, true,
-        ENABLE_GROUP_BY_TO_SELECT, true,
-        DISABLE_AGGREGATE_RESOLVER, false,
-        ENABLE_STORAGES_UNION, true);
+    conf = LensServerAPITestUtil.getConfigurationWithParams(getConf(),
+        //Supported storage
+        CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1",
+        // Storage tables
+        getValidStorageTablesKey("union_join_ctx_fact1"), "C1_union_join_ctx_fact1",
+        getValidStorageTablesKey("union_join_ctx_fact2"), "C1_union_join_ctx_fact2",
+        getValidStorageTablesKey("union_join_ctx_fact3"), "C1_union_join_ctx_fact3",
+        // Update periods
+        getValidUpdatePeriodsKey("union_join_ctx_fact1", "C1"), "DAILY",
+        getValidUpdatePeriodsKey("union_join_ctx_fact2", "C1"), "DAILY",
+        getValidUpdatePeriodsKey("union_join_ctx_fact3", "C1"), "DAILY");
+    conf.setBoolean(DISABLE_AUTO_JOINS, false);
+    conf.setBoolean(ENABLE_SELECT_TO_GROUPBY, true);
+    conf.setBoolean(ENABLE_GROUP_BY_TO_SELECT, true);
+    conf.setBoolean(DISABLE_AGGREGATE_RESOLVER, false);
+    conf.setBoolean(ENABLE_STORAGES_UNION, true);
   }
 
   @Override
   public Configuration getConf() {
-    return new Configuration(testConf);
+    return new Configuration();
   }
 
   @Test
+  public void testDuplicateProjectedFieldExclusion() throws ParseException, LensException {
+    String colsSelected = " union_join_ctx_cityid , union_join_ctx_msr1_greater_than_100, "
+        + " sum(union_join_ctx_msr1) ";
+    String whereCond = " union_join_ctx_zipcode = 'a' and union_join_ctx_cityid = 'b' and "
+        + "(" + TWO_MONTHS_RANGE_UPTO_DAYS + ")";
+    String rewrittenQuery = rewrite("select " + colsSelected + " from basecube where " + whereCond, conf);
+    assertTrue(rewrittenQuery.contains("UNION ALL"));
+    assertEquals(StringUtil.count(rewrittenQuery, "sum((basecube.union_join_ctx_msr1))"), 2);
+  }
+
+    @Test
   public void testFinalCandidateRewrittenQuery() throws ParseException, LensException {
     try {
-      Configuration conf = LensServerAPITestUtil.getConfigurationWithParams(getConf(),
-          //Supported storage
-          CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1",
-          // Storage tables
-          getValidStorageTablesKey("union_join_ctx_fact1"), "C1_union_join_ctx_fact1",
-          getValidStorageTablesKey("union_join_ctx_fact2"), "C1_union_join_ctx_fact2",
-          getValidStorageTablesKey("union_join_ctx_fact3"), "C1_union_join_ctx_fact3",
-          // Update periods
-          getValidUpdatePeriodsKey("union_join_ctx_fact1", "C1"), "DAILY",
-          getValidUpdatePeriodsKey("union_join_ctx_fact2", "C1"), "DAILY",
-          getValidUpdatePeriodsKey("union_join_ctx_fact3", "C1"), "DAILY");
-
       // Query with non projected measure in having clause.
       String colsSelected = "union_join_ctx_cityid, sum(union_join_ctx_msr2) ";
       String having = " having sum(union_join_ctx_msr1) > 100";
@@ -153,4 +164,6 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
       getStorageToUpdatePeriodMap().clear();
     }
   }
+
+
 }

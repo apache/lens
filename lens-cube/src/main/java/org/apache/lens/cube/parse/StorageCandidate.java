@@ -340,6 +340,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
     if (this == cubeql.getPickedCandidate()) {
       CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), cubeql);
       updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
+    } else {
+      queryAst.setHavingAST(null);
     }
     return CandidateUtil
       .buildHQLString(queryAst.getSelectString(), fromString, whereString, queryAst.getGroupByString(),
