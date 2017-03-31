@@ -138,7 +138,7 @@ class StorageTableResolver implements ContextRewriter {
       else if (failOnPartialData && !isComplete) {
         candidateIterator.remove();
         log.info("Not considering candidate:{} as its data is not is not complete", candidate);
-        Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(candidate);
+        Collection<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(candidate);
         for (StorageCandidate sc : scSet) {
           if (!sc.getNonExistingPartitions().isEmpty()) {
             cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.missingPartitions(sc.getNonExistingPartitions()));

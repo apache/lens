@@ -637,7 +637,7 @@ class ExpressionResolver implements ContextRewriter {
                 }
               } else {
                 // prune dimension only expressions
-                Set<StorageCandidate> storageCandidates = CandidateUtil.getStorageCandidates(cubeql.getCandidates());
+                Collection<StorageCandidate> storageCandidates = CandidateUtil.getStorageCandidates(cubeql.getCandidates());
                 for (StorageCandidate sc : storageCandidates) {
                   if (!sc.isExpressionEvaluable(ec)) {
                     Collection<Candidate> prunedCandidates =

@@ -78,7 +78,7 @@ import lombok.extern.slf4j.Slf4j;
  * Represents a fact on a storage table and the dimensions it needs to be joined with to answer the query
  */
 @Slf4j
-public class StorageCandidate implements Candidate, CandidateTable {
+public class StorageCandidate extends DimHQLContext implements Candidate, CandidateTable {
 
   // TODO union : Put comments on member variables.
   @Getter
@@ -122,7 +122,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
   Set<Dimension> queriedDims = Sets.newHashSet();
   private Collection<StorageCandidate> periodSpecificStorageCandidates;
 
-  void addQueriedDims(Collection<Dimension> dims) {
+  private void addQueriedDims(Collection<Dimension> dims) {
     queriedDims.addAll(dims);
   }
   private Configuration conf = null;
@@ -205,6 +205,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   public StorageCandidate(CubeInterface cube, CubeFactTable fact, String storageName, CubeQueryContext cubeQueryContext)
     throws LensException {
+    super(cubeQueryContext, dimsToQuery, queriedDims, queryAst);
     if ((cube == null) || (fact == null) || (storageName == null)) {
       throw new IllegalArgumentException("Cube,fact and storageName should be non null");
     }
@@ -330,7 +331,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     return whereBuf.toString();
   }
 
-  private static void appendWhereClause(StringBuilder filterCondition, String whereClause, boolean hasMore) {
+  public static void appendWhereClause(StringBuilder filterCondition, String whereClause, boolean hasMore) {
     // Make sure we add AND only when there are already some conditions in where
     // clause
     if (hasMore && !filterCondition.toString().isEmpty() && !StringUtils.isBlank(whereClause)) {
@@ -344,7 +345,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     }
   }
 
-  private String getPostSelectionWhereClause() throws LensException {
+  public String getPostSelectionWhereClause() throws LensException {
     return null;
   }
 
@@ -394,8 +395,12 @@ public class StorageCandidate implements Candidate, CandidateTable {
   }
 
   @Override
-  public UnionCandidate explode() throws LensException {
-    return new UnionCandidate(splitAtUpdatePeriodLevelIfReq(), getCubeQueryContext());
+  public Candidate explode() throws LensException {
+    if (splitAtUpdatePeriodLevelIfReq().size() > 1) {
+      return new UnionCandidate(splitAtUpdatePeriodLevelIfReq(), getCubeQueryContext());
+    } else {
+      return splitAtUpdatePeriodLevelIfReq().iterator().next();
+    }
   }
 
   public String toHQL() throws LensException {
@@ -965,7 +970,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     }
   }
 
-  private String getFromTable() throws LensException {
+  public String getFromTable() throws LensException {
     if (cubeQueryContext.isAutoJoinResolved()) {
       return fromString;
     } else {
@@ -1169,5 +1174,10 @@ public class StorageCandidate implements Candidate, CandidateTable {
   @Override
   public void addRangeClauses() throws LensException {
     getCubeQueryContext().addRangeClauses(this); // todo check whether this should use sc.getcubeql.
+  }
+
+  @Override
+  public void updateFromString() throws LensException {
+    updateFromString(getCubeQueryContext(), getDimsToQuery());
   }
 }

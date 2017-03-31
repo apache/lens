@@ -109,7 +109,7 @@ public class CandidateUtil {
     targetAst.setWhereString(sourceAst.getWhereString());
   }
 
-  public static Set<StorageCandidate> getStorageCandidates(final Candidate candidate) {
+  public static Collection<StorageCandidate> getStorageCandidates(final Candidate candidate) {
     return getStorageCandidates(new HashSet<Candidate>(1) {{ add(candidate); }});
   }
 
@@ -173,7 +173,7 @@ public class CandidateUtil {
       getStorageCandidates(candidate, storageCandidateSet);
     }
   }
-  private static void getStorageCandidates(Candidate candidate,
+  static void getStorageCandidates(Candidate candidate,
     Collection<StorageCandidate> storageCandidateSet) {
     if (candidate.getChildren() == null) {
       // Expecting this to be a StorageCandidate as it has no children.

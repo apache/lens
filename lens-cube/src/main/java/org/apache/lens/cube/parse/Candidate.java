@@ -224,4 +224,10 @@ public interface Candidate {
       candidate.addRangeClauses();
     }
   }
+
+  default void updateFromString() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.updateFromString();
+    }
+  }
 }

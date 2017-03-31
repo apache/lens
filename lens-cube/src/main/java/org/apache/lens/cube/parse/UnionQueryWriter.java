@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -61,7 +62,9 @@ public class UnionQueryWriter {
   }
   Collection<StorageCandidate> storageCandidates;
 
-  public UnionQueryWriter(Collection<StorageCandidate> storageCandidates, CubeQueryContext cubeql) {
+  public UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
+    storageCandidates = Lists.newArrayList();
+    CandidateUtil.getStorageCandidates(cand, storageCandidates);
     if (storageCandidates == null || storageCandidates.size()<=1) {
       throw new IllegalArgumentException("There should be atleast two storage candidates to write a union query");
     }

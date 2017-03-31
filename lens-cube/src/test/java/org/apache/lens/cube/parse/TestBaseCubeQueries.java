@@ -193,7 +193,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testMultiFactQueryWithNoDimensionsSelected() throws Exception {
     CubeQueryContext ctx = rewriteCtx("select roundedmsr2, msr12 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     Set<String> storageCandidates = new HashSet<String>();
-    Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(ctx.getCandidates());
+    Collection<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(ctx.getCandidates());
     for (StorageCandidate sc : scSet) {
       storageCandidates.add(sc.getName());
     }
@@ -219,7 +219,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     CubeQueryContext ctx = rewriteCtx("select roundedmsr2, msr14, msr12 from basecube" + " where " + TWO_DAYS_RANGE,
       conf);
     Set<String> storageCandidates = new HashSet<String>();
-    Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(ctx.getCandidates());
+    Collection<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(ctx.getCandidates());
     for (StorageCandidate sc : scSet) {
       storageCandidates.add(sc.getName());
     }
