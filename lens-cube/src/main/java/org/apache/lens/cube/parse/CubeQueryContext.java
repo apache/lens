@@ -848,7 +848,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
         cand = iter.next();
         log.info("Available Candidates:{}, picking up Candidate: {} for querying", candidates, cand);
         try {
-          cand.explode();
+          cand = cand.explode();
           pickedCandidate = cand;
         } catch (NoCandidateFactAvailableException e) {
           PruneCauses<StorageCandidate> causes = e.getBriefAndDetailedError();
@@ -889,7 +889,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   @Getter
   private Collection<CandidateDim> pickedDimTables;
 
-  private void addRangeClauses(StorageCandidate sc) throws LensException {
+  void addRangeClauses(StorageCandidate sc) throws LensException {
     if (sc != null) {
       // resolve timerange positions and replace it by corresponding where clause
       for (TimeRange range : getTimeRanges()) {
@@ -944,32 +944,25 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   public String toHQL() throws LensException {
     Candidate cand = pickCandidateToQuery();
     Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
-    Collection<StorageCandidate> scSet = new HashSet<>();
+    Collection<StorageCandidate> scSet = new ArrayList<>();
     if (cand != null) {
       scSet.addAll(CandidateUtil.getStorageCandidates(cand));
     }
 
     //Expand and get update period specific storage candidates if required.
-    scSet = expandStorageCandidates(scSet);
+//    scSet = expandStorageCandidates(scSet);
 
     log.info("Candidate: {}, DimsToQuery: {}", cand, dimsToQuery);
-    if (autoJoinCtx != null) {
+    if (cand != null && autoJoinCtx != null) {
       // prune join paths for picked fact and dimensions
-      autoJoinCtx.pruneAllPaths(cube, scSet, dimsToQuery);
+      autoJoinCtx.pruneAllPaths(cube, cand.getColumns(), dimsToQuery);
     }
 
     if (cand != null) {
       // Set the default queryAST for StorageCandidate and copy child ASTs from cubeQueryContext.
       // Later in the rewrite flow each Storage candidate will modify them accordingly.
-      for (StorageCandidate sc : scSet) {
-        sc.setQueryAst(DefaultQueryAST.fromStorageCandidate(sc, sc.getCubeQueryContext())); // todo remove two arguments
-        CandidateUtil.copyASTs(sc.getCubeQueryContext(), sc.getQueryAst());
-        sc.addQueriedDims(dimsToQuery.keySet());
-        sc.getDimsToQuery().putAll(dimsToQuery); //todo move inside candidate
-      }
-      for (StorageCandidate sc : scSet) { // todo merge the two loops
-        sc.getCubeQueryContext().addRangeClauses(sc); // todo check whether this should use sc.getcubeql.
-      }
+      cand.prepareASTs(dimsToQuery);
+      cand.addRangeClauses();
     }
 
     // pick dimension tables required during expression expansion for the picked fact and dimensions
@@ -994,9 +987,9 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     log.info("StorageCandidates: {}, DimsToQuery: {}", scSet, dimsToQuery);
     Set<Dimension> autoJoinDimensions = new HashSet<>();
     // Prune join paths once denorm tables are picked
-    if (autoJoinCtx != null) {
+    if (cand != null && autoJoinCtx != null) {
       // prune join paths for picked fact and dimensions
-      autoJoinCtx.pruneAllPaths(cube, scSet, dimsToQuery);
+      autoJoinCtx.pruneAllPaths(cube, cand.getColumns(), dimsToQuery);
     }
     if (cand != null) {
       cand.addAutoJoinDims();

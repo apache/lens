@@ -69,7 +69,7 @@ public class SegmentationCandidate implements Candidate {
     }
   }
 
-  public void explode() throws LensException {
+  public SegmentationCandidate explode() throws LensException {
     Collection<String> toIgnore = conf.getStringCollection(IGNORE_KEY); //TODO remove this, this is only a hack to avoid infinite loop and stack overflow
     if (toIgnore.contains(segmentation.getName())) {
       throw new LensException("Segmentation to be ignored");
@@ -139,6 +139,7 @@ public class SegmentationCandidate implements Candidate {
       }
       cubeQueryContextMap.put(segment.getName(), ctx);
     }
+    return this;
   }
 
   public SegmentationCandidate(SegmentationCandidate segmentationCandidate) throws LensException {

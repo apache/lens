@@ -99,7 +99,7 @@ class StorageTableResolver implements ContextRewriter {
       if (cubeql.getAutoJoinCtx() != null) {
         // After all candidates are pruned after storage resolver, prune join paths.
         cubeql.getAutoJoinCtx()
-          .pruneAllPaths(cubeql.getCube(), CandidateUtil.getStorageCandidates(cubeql.getCandidates()), null);
+          .pruneAllPaths(cubeql.getCube(), CandidateUtil.getColumnsFromCandidates(cubeql.getCandidates()), null);
         cubeql.getAutoJoinCtx().pruneAllPathsForCandidateDims(cubeql.getCandidateDimTables());
         cubeql.getAutoJoinCtx().refreshJoinPathColumns();
       }

@@ -174,7 +174,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
   @Test
   public void testFieldWithDifferentDescriptions() throws ParseException, LensException {
     NoCandidateFactAvailableException e = getLensExceptionInRewrite("select invmsr1 from testcube where " + TWO_DAYS_RANGE, getConf());
-    assertEquals(e.getJsonMessage(), "Columns [invmsr1] are not present in any table");
+    assertEquals(e.getJsonMessage().getBrief(), "Columns [invmsr1] are not present in any table");
     //todo descriptive error
   }
   @Test

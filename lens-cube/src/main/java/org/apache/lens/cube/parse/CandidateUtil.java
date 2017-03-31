@@ -21,6 +21,7 @@ package org.apache.lens.cube.parse;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.server.api.error.LensException;
@@ -160,20 +161,20 @@ public class CandidateUtil {
    * @param candidates
    * @return
    */
-  public static Set<StorageCandidate> getStorageCandidates(Collection<Candidate> candidates) {
-    Set<StorageCandidate> storageCandidateSet = new HashSet<>();
+  public static Collection<StorageCandidate> getStorageCandidates(Collection<? extends Candidate> candidates) {
+    Collection<StorageCandidate> storageCandidateSet = new HashSet<>();
     getStorageCandidates(candidates, storageCandidateSet);
     return storageCandidateSet;
   }
 
-  private static void getStorageCandidates(Collection<Candidate> candidates,
-    Set<StorageCandidate> storageCandidateSet) {
+  private static void getStorageCandidates(Collection<? extends Candidate> candidates,
+    Collection<StorageCandidate> storageCandidateSet) {
     for (Candidate candidate : candidates) {
       getStorageCandidates(candidate, storageCandidateSet);
     }
   }
   private static void getStorageCandidates(Candidate candidate,
-    Set<StorageCandidate> storageCandidateSet) {
+    Collection<StorageCandidate> storageCandidateSet) {
     if (candidate.getChildren() == null) {
       // Expecting this to be a StorageCandidate as it has no children.
       if (candidate instanceof StorageCandidate) {
@@ -288,5 +289,8 @@ public class CandidateUtil {
         selectAST.getChild(i).addChild(newAliasNode);
       }
     }
+  }
+  public static Set<String> getColumnsFromCandidates(Collection<? extends Candidate> scSet) {
+    return scSet.stream().map(Candidate::getColumns).flatMap(Collection::stream).collect(Collectors.toSet());
   }
 }

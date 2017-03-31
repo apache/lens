@@ -40,6 +40,7 @@ public class JoinCandidate implements Candidate {
   /**
    * Child candidates that will participate in the join
    */
+  @Getter
   private List<Candidate> children;
   private String toStr;
   private QueryAST queryAST;
@@ -78,11 +79,6 @@ public class JoinCandidate implements Candidate {
   @Override
   public boolean contains(final Candidate candidate) {
     return this.equals(candidate) || children.stream().anyMatch(c -> c.contains(candidate));
-  }
-
-  @Override
-  public Collection<Candidate> getChildren() {
-    return Lists.newArrayList(children);
   }
 
   /**
@@ -180,6 +176,13 @@ public class JoinCandidate implements Candidate {
       this.toStr = getToString();
     }
     return this.toStr;
+  }
+  public JoinCandidate explode() throws LensException {
+    ListIterator<Candidate> i = children.listIterator();
+    while(i.hasNext()) {
+      i.set(i.next().explode());
+    }
+    return this;
   }
 
   private String getToString() {

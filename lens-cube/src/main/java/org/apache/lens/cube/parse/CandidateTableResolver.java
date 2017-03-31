@@ -69,7 +69,7 @@ class CandidateTableResolver implements ContextRewriter {
         // Before checking for candidate table columns, prune join paths containing non existing columns
         // in populated candidate tables
         cubeql.getAutoJoinCtx().pruneAllPaths(cubeql.getCube(),
-            CandidateUtil.getStorageCandidates(cubeql.getCandidates()), null);
+            CandidateUtil.getColumnsFromCandidates(cubeql.getCandidates()), null);
         cubeql.getAutoJoinCtx().pruneAllPathsForCandidateDims(cubeql.getCandidateDimTables());
         cubeql.getAutoJoinCtx().refreshJoinPathColumns();
       }

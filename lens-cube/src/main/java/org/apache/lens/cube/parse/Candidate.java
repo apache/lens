@@ -88,9 +88,9 @@ public interface Candidate {
    *
    * @return
    */
-  Collection<Candidate> getChildren();
+  Collection<? extends Candidate> getChildren();
   default int getChildrenCount() {
-    return Optional.of(getChildren()).map(Collection::size).orElse(0);
+    return Optional.ofNullable(getChildren()).map(Collection::size).orElse(0);
   }
   /**
    * Is time range coverable based on start and end times configured in schema for the composing storage candidates
@@ -206,11 +206,22 @@ public interface Candidate {
       candidate.updateDimFilterWithFactFilter();
     }
   }
-  default void explode() throws LensException {
+  default Candidate explode() throws LensException {
     if (getChildren() != null) {
       for (Candidate candidate : getChildren()) {
         candidate.explode();
       }
+    }
+    return this;
+  }
+  default void prepareASTs(Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.prepareASTs(dimsToQuery);
+    }
+  }
+  default void addRangeClauses() throws LensException {
+    for (Candidate candidate : getChildren()) {
+      candidate.addRangeClauses();
     }
   }
 }

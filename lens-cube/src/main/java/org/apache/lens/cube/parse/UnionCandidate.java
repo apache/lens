@@ -26,6 +26,7 @@ import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.cube.parse.join.AutoJoinContext;
 import org.apache.lens.server.api.error.LensException;
 
+import com.google.common.collect.Lists;
 import lombok.Getter;
 
 /**
@@ -48,8 +49,8 @@ public class UnionCandidate implements Candidate {
   private List<Candidate> children;
   private QueryAST queryAst;
 
-  public UnionCandidate(List<Candidate> childCandidates, CubeQueryContext cubeQueryContext) {
-    this.children = childCandidates;
+  public UnionCandidate(Collection<? extends Candidate> childCandidates, CubeQueryContext cubeQueryContext) {
+    this.children = Lists.newArrayList(childCandidates);
     this.cubeQueryContext = cubeQueryContext;
   }
 
@@ -204,6 +205,13 @@ public class UnionCandidate implements Candidate {
       }
     }
     return true;
+  }
+  public UnionCandidate explode() throws LensException {
+    ListIterator<Candidate> i = children.listIterator();
+    while(i.hasNext()) {
+      i.set(i.next().explode());
+    }
+    return this;
   }
 
   @Override
