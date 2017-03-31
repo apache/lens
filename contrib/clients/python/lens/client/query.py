@@ -15,21 +15,26 @@
 # limitations under the License.
 #
 import codecs
+import csv
+import logging
 import time
 import zipfile
 
 import requests
-from six import string_types, BytesIO, StringIO, PY2, PY3
+from requests.exceptions import HTTPError
+from six import string_types, BytesIO, PY2, PY3
+
 from .models import WrappedJson
 from .utils import conf_to_xml
-import csv
 
+logger = logging.getLogger(__name__)
 long_type = int
 
 if PY3:
     from collections.abc import Iterable as Iterable
 elif PY2:
     from collections import Iterable as Iterable
+
     long_type = long
 
 
@@ -70,6 +75,7 @@ type_mappings = {'BOOLEAN': bool,
                  }
 default_mapping = lambda x: x
 
+
 class LensQueryResult(Iterable):
     def __init__(self, custom_mappings=None):
         if custom_mappings is None:
@@ -93,6 +99,7 @@ class LensInMemoryResult(LensQueryResult):
         for row in self.rows:
             yield list(self._mapping(value.type)(value.value) if value else None for value in row['values'])
 
+
 class LensPersistentResult(LensQueryResult):
     def __init__(self, header, response, encoding=None, is_header_present=True, delimiter=",",
                  custom_mappings=None):
@@ -107,6 +114,11 @@ class LensPersistentResult(LensQueryResult):
     def _parse_line(self, line):
         return list(self._mapping(self.header.columns[index].type)(line[index]) for index in range(len(line)))
 
+    def get_csv_reader(self, file):
+        if PY3:
+            file = codecs.iterdecode(file, 'utf-8')
+        return csv.reader(file, delimiter=self.delimiter)
+
     def __iter__(self):
         if self.is_zipped:
             byte_stream = BytesIO(self.response.content)
@@ -114,7 +126,7 @@ class LensPersistentResult(LensQueryResult):
                 for name in self.zipfile.namelist():
                     with self.zipfile.open(name) as single_file:
                         if name[-3:] == 'csv':
-                            reader = csv.reader(single_file, delimiter=self.delimiter)
+                            reader = self.get_csv_reader(single_file)
                         else:
                             reader = single_file
                         reader_iterator = iter(reader)
@@ -142,7 +154,8 @@ class LensQueryClient(object):
         self.launched_queries = []
         self.finished_queries = {}
         self.query_confs = {}
-        self.is_header_present_in_result = self._session['lens.query.output.write.header'].lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup']
+        self.is_header_present_in_result = self._session['lens.query.output.write.header'].lower() \
+                                           in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup']
 
     def __call__(self, **filters):
         filters['sessionid'] = self._session._sessionid
@@ -183,6 +196,7 @@ class LensQueryClient(object):
         payload.append(('conf', conf_to_xml(conf)))
         resp = requests.post(self.base_url + "queries/", files=payload, headers={'accept': 'application/json'})
         query = self.sanitize_response(resp)
+        logger.info("Submitted query %s", query)
         if conf:
             self.query_confs[str(query)] = conf
         if fetch_result:
@@ -216,7 +230,8 @@ class LensQueryClient(object):
                 return LensPersistentResult(metadata, resp, is_header_present=is_header_present, *args, **kwargs)
             else:
                 response = requests.get(self.base_url + "queries/" + handle + "/resultset",
-                                    params={'sessionid': self._session._sessionid}, headers={'accept': 'application/json'})
+                                        params={'sessionid': self._session._sessionid},
+                                        headers={'accept': 'application/json'})
                 resp = self.sanitize_response(response)
                 # If it has in memory result, return inmemory result iterator
                 if resp._is_wrapper and resp._wrapped_key == u'inMemoryQueryResult':
@@ -228,13 +243,18 @@ class LensQueryClient(object):
             raise Exception("Result set not available")
 
     def sanitize_response(self, resp):
-        resp.raise_for_status()
         try:
             resp_json = resp.json(object_hook=WrappedJson)
+        except:
+            resp_json = resp.json()
+        if resp_json is not None:
             if 'lensAPIResult' in resp_json:
                 resp_json = resp_json.lens_a_p_i_result
                 if 'error' in resp_json:
-                    raise Exception(resp_json['error'])
+                    error = resp_json['error']
+                    if "stackTrace" in error:
+                        logger.error(error['stackTrace'])
+                    raise HTTPError(error, request=resp.request, response=resp)
                 if 'data' in resp_json:
                     data = resp_json.data
                     if len(data) == 2 and 'type' in data:
@@ -242,6 +262,9 @@ class LensQueryClient(object):
                         keys.remove('type')
                         return WrappedJson({data['type']: data[keys[0]]})
                     return data
-        except:
-            resp_json = resp.json()
-        return resp_json
+        if resp_json is not None:
+            return resp_json
+        else:
+            resp.raise_for_status()
+        logger.error(resp.text)
+        raise Exception("Unknown error with response", resp)

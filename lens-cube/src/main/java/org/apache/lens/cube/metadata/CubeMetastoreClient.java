@@ -307,6 +307,17 @@ public class CubeMetastoreClient {
     }
   }
 
+  public void createCubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
+    Map<String, Set<UpdatePeriod>> storageAggregatePeriods, double weight, Map<String, String> properties,
+    Map<String, StorageTableDesc> storageTableDescs, Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap)
+    throws LensException {
+    CubeFactTable factTable = new CubeFactTable(cubeName, factName, columns, storageAggregatePeriods, weight,
+      properties, storageUpdatePeriodMap);
+    createCubeTable(factTable, storageTableDescs);
+    // do a get to update cache
+    getCubeFact(factName);
+
+  }
 
   public <T extends Equals & HashCode & ToString> void createEntity(T entity) throws LensException {
     if (entity instanceof XStorage) {
@@ -361,17 +372,6 @@ public class CubeMetastoreClient {
       addFactColStartTimePropertyToFactProperties(fact),
       JAXBUtils.tableDescPrefixMapFromXStorageTables(fact.getStorageTables()),
       JAXBUtils.storageTablePrefixMapOfStorage(fact.getStorageTables()));
-  }
-  public void createCubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
-    Map<String, Set<UpdatePeriod>> storageAggregatePeriods, double weight, Map<String, String> properties,
-    Map<String, StorageTableDesc> storageTableDescs, Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap)
-    throws LensException {
-    CubeFactTable factTable = new CubeFactTable(cubeName, factName, columns, storageAggregatePeriods, weight,
-      properties, storageUpdatePeriodMap);
-    createCubeTable(factTable, storageTableDescs);
-    // do a get to update cache
-    getCubeFact(factName);
-
   }
 
 
