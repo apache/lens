@@ -598,8 +598,6 @@ public class CubeTestSetup {
     return expected.toString();
   }
 
-  private Set<ExprColumn> exprs;
-
   private void assertTestFactTimelineClass(CubeMetastoreClient client) throws Exception {
     String factName = "testFact";
 

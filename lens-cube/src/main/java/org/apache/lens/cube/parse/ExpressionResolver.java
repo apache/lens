@@ -393,7 +393,7 @@ class ExpressionResolver implements ContextRewriter {
             pickExpressionsForTable(cdim);
           }
         }
-        log.debug("Picked expressions: {}", pickedExpressions);
+        log.info("Picked expressions: {}", pickedExpressions);
         for (Set<PickedExpression> peSet : pickedExpressions.values()) {
           for (PickedExpression pe : peSet) {
             exprDims.addAll(pe.pickedCtx.exprDims);

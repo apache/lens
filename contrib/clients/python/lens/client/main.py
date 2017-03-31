@@ -21,10 +21,12 @@ from .log import LensLogClient
 from .session import LensSessionClient
 from .query import LensQueryClient
 from .utils import xml_file_to_conf
-
+import logging
+logger = logging.getLogger(__name__)
 
 class LensClient(object):
-    def __init__(self, base_url=None, username="", password="", database=None, conf=None):
+    def __init__(self, base_url=None, username="", password="", database=None, conf=None, logging_level=logging.INFO):
+        logging.basicConfig(level=logging_level)
         if conf and isinstance(conf, string_types) and os.path.exists(conf):
             if os.path.isdir(conf):
                 conf = os.path.join(conf, 'lens-client-site.xml')
@@ -35,6 +37,7 @@ class LensClient(object):
         self.base_url = base_url or conf.get('lens.server.base.url', "http://0.0.0.0:9999/lensapi")
         if self.base_url[-1] != '/':
             self.base_url += "/"
+        logger.debug("Using conf %s", conf)
         username = username or conf.get('lens.client.user.name', "anonymous")
         database = database or conf.get('lens.client.dbname')
         self.session = LensSessionClient(self.base_url, username, password, database, conf)
