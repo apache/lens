@@ -48,8 +48,6 @@ import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -172,7 +170,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       ") as testcube group by testcube.alias0", newArrayList(query1, query2, query3));
   }
   @Test
-  public void testFieldWithDifferentDescriptions() throws ParseException, LensException {
+  public void testFieldWithDifferentDescriptions() throws LensException {
     NoCandidateFactAvailableException e = getLensExceptionInRewrite("select invmsr1 from testcube where " + TWO_DAYS_RANGE, getConf());
     assertEquals(e.getJsonMessage().getBrief(), "Columns [invmsr1] are not present in any table");
     //todo descriptive error
@@ -200,10 +198,16 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     //todo write asserts. check why having is coming in inner as well
   }
   @Test //todo add asserts
-  public void testQueryWithManyToMany() throws ParseException, LensException {
+  public void testQueryWithManyToMany() throws LensException {
     String userQuery = "select usersports.name, xusersports.name, yusersports.name, segmsr1, msr2 from testcube where " + TWO_DAYS_RANGE;
     CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
     String hql = ctx.toHQL();
     System.out.println(hql);
+  }
+  @Test
+  public void testQueryWithHavingOnInnerMeasure() throws LensException {
+    String userQuery = "select cityid from testcube where " + TWO_DAYS_RANGE + " having segmsr1 > 1 and msr2 > 2";
+    CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
+    System.out.println(ctx.toHQL());
   }
 }

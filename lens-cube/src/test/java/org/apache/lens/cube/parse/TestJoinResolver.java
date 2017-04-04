@@ -66,10 +66,10 @@ public class TestJoinResolver extends TestQueryRewrite {
     String from = null;
     if (query.getPickedCandidate() instanceof StorageCandidate) {
       StorageCandidate sc = (StorageCandidate) query.getPickedCandidate();
-      from =  sc.getFromString();
+      from =  ((StorageCandidateHQLContext)query.getQueryWriterContext()).getFromString();
       // Dim only query
     } else if (query.getPickedCandidate() == null) {
-      from = query.getHqlContext().getFrom();
+      from = ((DimHQLContext)query.getQueryWriterContext()).getFrom();
     }
     return from;
   }

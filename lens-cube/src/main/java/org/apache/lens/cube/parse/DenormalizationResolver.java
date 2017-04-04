@@ -20,7 +20,6 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
-import static org.apache.hadoop.hive.ql.parse.HiveParser_SelectClauseParser.TOK_FUNCTION;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.denormColumnNotFound;
 
 import java.util.*;
@@ -139,14 +138,14 @@ public class DenormalizationResolver implements ContextRewriter {
     }
 
     Set<Dimension> rewriteDenormctx(CubeQueryContext cubeql,
-      StorageCandidate sc, Map<Dimension, CandidateDim> dimsToQuery, boolean replaceFact) throws LensException {
+      StorageCandidateHQLContext sc, Map<Dimension, CandidateDim> dimsToQuery, boolean replaceFact) throws LensException {
       Set<Dimension> refTbls = new HashSet<>();
       log.info("Doing denorm changes for fact :{}", sc);
 
       if (!tableToRefCols.isEmpty()) {
         // pick referenced columns for fact
         if (sc != null) {
-          pickColumnsForTable(cubeql, sc.getName());
+          pickColumnsForTable(cubeql, sc.getStorageCandidate().getName());
         }
         // pick referenced columns for dimensions
         if (dimsToQuery != null) {
@@ -158,7 +157,7 @@ public class DenormalizationResolver implements ContextRewriter {
         replaceReferencedColumns(cubeql, sc, replaceFact);
         // Add the picked references to dimsToQuery
         for (PickedReference picked : pickedRefs) {
-          if (isPickedFor(picked, sc, dimsToQuery)) {
+          if (isPickedFor(picked, sc == null ? null : sc.getStorageCandidate(), dimsToQuery)) {
             refTbls.add((Dimension) cubeql.getCubeTableForAlias(picked.getChainRef().getChainName()));
             cubeql.addColumnsQueried(picked.getChainRef().getChainName(), picked.getChainRef().getRefColumn());
           }
@@ -263,10 +262,10 @@ public class DenormalizationResolver implements ContextRewriter {
       }
     }
 
-    private void replaceReferencedColumns(CubeQueryContext cubeql, StorageCandidate sc, boolean replaceFact) throws LensException {
+    private void replaceReferencedColumns(CubeQueryContext cubeql, StorageCandidateHQLContext sc, boolean replaceFact) throws LensException {
       QueryAST ast = cubeql;
-      boolean factRefExists = sc != null && tableToRefCols.get(sc.getName()) != null && !tableToRefCols.get(sc
-          .getName()).isEmpty();
+      boolean factRefExists = sc != null && tableToRefCols.get(sc.getStorageCandidate().getName()) != null && !tableToRefCols.get(sc
+          .getStorageCandidate().getName()).isEmpty();
       if (replaceFact && factRefExists) {
         ast = sc.getQueryAst();
       }

@@ -28,16 +28,21 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 
+import lombok.Getter;
+
 /**
  * Dimension HQLContext.
  * <p></p>
  * Contains all the dimensions queried and their candidate dim tables Update where string with storage filters added
  * dimensions queried.
  */
-abstract class DimHQLContext extends SimpleHQLContext {
-
-  private final Map<Dimension, CandidateDim> dimsToQuery;
-  private final Set<Dimension> queriedDims;
+abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, QueryWriterContext {
+  @Getter
+  protected final Map<Dimension, CandidateDim> dimsToQuery;
+  @Getter
+  protected final Set<Dimension> queriedDims;
+  @Getter
+  protected final QueryAST queryAst;
   private String where;
   protected final CubeQueryContext query;
   private final String astFromString;
@@ -45,19 +50,25 @@ abstract class DimHQLContext extends SimpleHQLContext {
   public CubeQueryContext getQuery() {
     return query;
   }
+  public CubeQueryContext getCubeQueryContext() {
+    return query;
+  }
   DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery,
     Set<Dimension> queriedDims, QueryAST ast) throws LensException {
-    super(ast.getSelectString(), ast.getGroupByString(), ast.getOrderByString(),
-        ast.getHavingString(), ast.getLimitValue());
+    super(ast);
     this.query = query;
     this.dimsToQuery = dimsToQuery;
     this.where = ast.getWhereString();
     this.queriedDims = queriedDims;
     this.astFromString = ast.getFromString();
+    this.queryAst = ast;
   }
 
   protected void setMissingExpressions() throws LensException {
-    setFrom(String.format(astFromString, getFromTable()));
+    if (from == null) {
+      from = "%s";
+    }
+    setFrom(String.format(getFrom(), getFromTable()));
     setWhere(joinWithAnd(
       genWhereClauseWithDimPartitions(where), getQuery().getConf().getBoolean(
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
@@ -74,7 +85,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
     return dimsToQuery;
   }
 
-  private String genWhereClauseWithDimPartitions(String originalWhere) {
+  protected String genWhereClauseWithDimPartitions(String originalWhere) {
     StringBuilder whereBuf;
     if (originalWhere != null) {
       whereBuf = new StringBuilder(originalWhere);

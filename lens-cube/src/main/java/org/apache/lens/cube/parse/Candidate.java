@@ -20,6 +20,7 @@ package org.apache.lens.cube.parse;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -29,6 +30,7 @@ import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -49,6 +51,7 @@ public interface Candidate {
    * @return
    */
   Collection<String> getColumns();
+
   default boolean hasColumn(String column) {
     return getColumns().contains(column);
   }
@@ -89,9 +92,11 @@ public interface Candidate {
    * @return
    */
   Collection<? extends Candidate> getChildren();
+
   default int getChildrenCount() {
     return Optional.ofNullable(getChildren()).map(Collection::size).orElse(0);
   }
+
   /**
    * Is time range coverable based on start and end times configured in schema for the composing storage candidates
    * and valid update periods.
@@ -136,11 +141,13 @@ public interface Candidate {
    * 1. For a JoinCandidate, atleast one of the child candidates should be able to answer the expression
    * 2. For a UnionCandidate, all child candidates should answer the expression
    *
-   * @param expr     :Expression need to be evaluated for Candidate
+   * @param expressionContext     :Expression need to be evaluated for Candidate
    * @return
    */
   boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expressionContext);
+
   boolean isExpressionEvaluable(String expr);
+
   boolean isDimAttributeEvaluable(String dim) throws LensException;
 
   /**
@@ -154,9 +161,11 @@ public interface Candidate {
   }
 
   boolean isPhraseAnswerable(QueriedPhraseContext phrase) throws LensException;
+
   default boolean isColumnPresentAndValidForRange(String column) throws LensException {
     return getColumns().contains(column) && isColumnValidForRange(column);
   }
+
   // todo: split into two methods
   // todo: override in union candidate since column times might not be contiguous in children
   default boolean isColumnValidForRange(String column) {
@@ -167,8 +176,11 @@ public interface Candidate {
       && (!end.isPresent()
       || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getToDate().after(end.get())));
   }
+
   Optional<Date> getColumnStartTime(String column);
+
   Optional<Date> getColumnEndTime(String column);
+
   CubeQueryContext getCubeQueryContext();
 
   default void addAnswerableMeasurePhraseIndices(int index) {
@@ -185,27 +197,6 @@ public interface Candidate {
     return covered;
   }
 
-  default void addAutoJoinDims() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.addAutoJoinDims();
-    }
-  }
-  default void addExpressionDims() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.addExpressionDims();
-    }
-  }
-  default void addDenormDims() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.addDenormDims();
-    }
-  }
-
-  default void updateDimFilterWithFactFilter() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.updateDimFilterWithFactFilter();
-    }
-  }
   default Candidate explode() throws LensException {
     if (getChildren() != null) {
       for (Candidate candidate : getChildren()) {
@@ -214,20 +205,19 @@ public interface Candidate {
     }
     return this;
   }
-  default void prepareASTs(Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.prepareASTs(dimsToQuery);
-    }
-  }
-  default void addRangeClauses() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.addRangeClauses();
-    }
-  }
 
-  default void updateFromString() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.updateFromString();
+  default QueryWriterContext toQueryWriterContext(Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
+    if (getChildren() != null) {
+      List<QueryWriterContext> writerContexts = Lists.newArrayList();
+      for (Candidate candidate : getChildren()) {
+        QueryWriterContext child = candidate.toQueryWriterContext(dimsToQuery);
+        if (child instanceof StorageCandidateHQLContext) {
+          child.getQueryAst().setHavingAST(null);
+        }
+        writerContexts.add(child); //todo try to remove exception
+      }
+      return new MultiCandidateQueryWriterContext(writerContexts, getCubeQueryContext());
     }
+    throw new LensException("blah");
   }
 }

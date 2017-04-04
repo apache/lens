@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * this class rewrites union query for all the participating StorageCandidates.
  */
 @Slf4j
-public class UnionQueryWriter {
+public class UnionQueryWriter implements QueryWriter {
 
   private QueryAST queryAst;
   private Map<HQLParser.HashableASTNode, ASTNode> innerToOuterSelectASTs = new HashMap<>();
@@ -60,11 +60,10 @@ public class UnionQueryWriter {
       throw new RuntimeException("default measure not parsable");
     }
   }
-  Collection<StorageCandidate> storageCandidates;
+  Collection<StorageCandidateHQLContext> storageCandidates;
 
-  public UnionQueryWriter(Candidate cand, CubeQueryContext cubeql) {
-    storageCandidates = Lists.newArrayList();
-    CandidateUtil.getStorageCandidates(cand, storageCandidates);
+  public UnionQueryWriter(List<StorageCandidateHQLContext> storageCandidates, CubeQueryContext cubeql) {
+    this.storageCandidates = storageCandidates;
     if (storageCandidates == null || storageCandidates.size()<=1) {
       throw new IllegalArgumentException("There should be atleast two storage candidates to write a union query");
     }
@@ -73,7 +72,7 @@ public class UnionQueryWriter {
   }
 
   public String toHQL() throws LensException {
-    StorageCandidate firstCandidate = storageCandidates.iterator().next();
+    StorageCandidateHQLContext firstCandidate = storageCandidates.iterator().next();
     // Set the default queryAST for the outer query
     queryAst = DefaultQueryAST.fromStorageCandidate(firstCandidate,
         firstCandidate.getQueryAst());
@@ -88,7 +87,7 @@ public class UnionQueryWriter {
 //        CandidateUtil.updateFinalAlias(storageCandidate.getCubeQueryContext().getSelectAST(), cubeql);
 //      }
 //    }
-    return CandidateUtil.buildHQLString(queryAst.getSelectString(), getFromString(), null,
+    return cubeql.getInsertClause() +CandidateUtil.buildHQLString(queryAst.getSelectString(), getFromString(), null,
         queryAst.getGroupByString(), queryAst.getOrderByString(),
         queryAst.getHavingString(), queryAst.getLimitValue());
   }
@@ -98,8 +97,8 @@ public class UnionQueryWriter {
    * being constructed from StorageCandidate.
    */
   private void updateAsts() {
-    for (StorageCandidate sc : storageCandidates) {
-      storageCandidateToSelectAstMap.put(sc.toString(),
+    for (StorageCandidateHQLContext sc : storageCandidates) {
+      storageCandidateToSelectAstMap.put(sc.getStorageCandidate().toString(),
           new ASTNode(new CommonToken(TOK_SELECT, "TOK_SELECT"))); // todo remove three ifs
       if (sc.getQueryAst().getHavingAST() != null) {
         sc.getQueryAst().setHavingAST(null);
@@ -256,7 +255,7 @@ public class UnionQueryWriter {
    */
   private ASTNode getAggregateNodesExpression(int position) {
     ASTNode node = null;
-    for (StorageCandidate sc : storageCandidates) {
+    for (StorageCandidateHQLContext sc : storageCandidates) {
       node = (ASTNode) sc.getQueryAst().getSelectAST().getChild(position).getChild(0);
       if (HQLParser.isAggregateAST(node) || HQLParser.hasAggregate(node)) {
         return MetastoreUtil.copyAST(node);
@@ -319,7 +318,7 @@ public class UnionQueryWriter {
   private List<ASTNode> getProjectedNonDefaultPhrases() {
     List<ASTNode> phrases = new ArrayList<>();
     for (int i = 0; i < storageCandidates.iterator().next().getQueryAst().getSelectAST().getChildCount(); i++) {
-      for (StorageCandidate sc : storageCandidates) {
+      for (StorageCandidateHQLContext sc : storageCandidates) {
         ASTNode selectAST = sc.getQueryAst().getSelectAST();
         if (isNodeDefault((ASTNode) selectAST.getChild(i))) {
           continue;
@@ -370,7 +369,7 @@ public class UnionQueryWriter {
             subList(1, phraseCountMap.get(col).size());
         int counter = 0;
         for (int i : childenToDelete) {
-          for (StorageCandidate sc : storageCandidates) {
+          for (StorageCandidateHQLContext sc : storageCandidates) {
             sc.getQueryAst().getSelectAST().deleteChild(i - counter);
           }
           counter++;
@@ -419,47 +418,47 @@ public class UnionQueryWriter {
 
       // Select phrase is dimension
       if (!phrase.hasMeasures(cubeql)) {
-        for (StorageCandidate sc : storageCandidates) {
+        for (StorageCandidateHQLContext sc : storageCandidates) {
           ASTNode exprWithOutAlias = (ASTNode) sc.getQueryAst().getSelectAST().getChild(i).getChild(0);
-          storageCandidateToSelectAstMap.get(sc.toString()).
+          storageCandidateToSelectAstMap.get(sc.getStorageCandidate().toString()).
               addChild(getSelectExpr(exprWithOutAlias, aliasNode, false));
         }
 
         // Select phrase is measure
       } else if (!phrase.getQueriedMsrs().isEmpty()) {
-        for (StorageCandidate sc : storageCandidates) {
-          if (sc.getAnswerableMeasurePhraseIndices().contains(phrase.getPosition())) {
+        for (StorageCandidateHQLContext sc : storageCandidates) {
+          if (sc.getStorageCandidate().getAnswerableMeasurePhraseIndices().contains(phrase.getPosition())) {
             ASTNode exprWithOutAlias = (ASTNode) sc.getQueryAst().getSelectAST().getChild(i).getChild(0);
-            storageCandidateToSelectAstMap.get(sc.toString()).
+            storageCandidateToSelectAstMap.get(sc.getStorageCandidate().toString()).
                 addChild(getSelectExpr(exprWithOutAlias, aliasNode, false));
           } else {
             ASTNode resolvedExprNode = getAggregateNodesExpression(i);
             if (isAggregateFunctionUsedInAST(resolvedExprNode)) {
-              setDefaultValueInExprForAggregateNodes(resolvedExprNode, sc);
+              setDefaultValueInExprForAggregateNodes(resolvedExprNode, sc.getStorageCandidate());
             } else {
               resolvedExprNode = getSelectExpr(null, null, true);
             }
-            storageCandidateToSelectAstMap.get(sc.toString()).
+            storageCandidateToSelectAstMap.get(sc.getStorageCandidate().toString()).
                 addChild(getSelectExpr(resolvedExprNode, aliasNode, false));
           }
         }
 
         // Select phrase is expression
       } else {
-        for (StorageCandidate sc : storageCandidates) {
-          if (phrase.isEvaluable(sc)
-              || sc.getAnswerableMeasurePhraseIndices().contains(phrase.getPosition())) {
+        for (StorageCandidateHQLContext sc : storageCandidates) {
+          if (phrase.isEvaluable(sc.getStorageCandidate())
+              || sc.getStorageCandidate().getAnswerableMeasurePhraseIndices().contains(phrase.getPosition())) {
             ASTNode exprWithOutAlias = (ASTNode) sc.getQueryAst().getSelectAST().getChild(i).getChild(0);
-            storageCandidateToSelectAstMap.get(sc.toString()).
+            storageCandidateToSelectAstMap.get(sc.getStorageCandidate().toString()).
                 addChild(getSelectExpr(exprWithOutAlias, aliasNode, false));
           } else {
             ASTNode resolvedExprNode = getAggregateNodesExpression(i);
             if (isAggregateFunctionUsedInAST(resolvedExprNode)) {
-              setDefaultValueInExprForAggregateNodes(resolvedExprNode, sc);
+              setDefaultValueInExprForAggregateNodes(resolvedExprNode, sc.getStorageCandidate());
             } else {
               resolvedExprNode = getSelectExpr(null, null, true);
             }
-            storageCandidateToSelectAstMap.get(sc.toString()).
+            storageCandidateToSelectAstMap.get(sc.getStorageCandidate().toString()).
                 addChild(getSelectExpr(resolvedExprNode, aliasNode, false));
           }
         }
@@ -476,7 +475,7 @@ public class UnionQueryWriter {
     ASTNode outerSelectAst = new ASTNode(queryAst.getSelectAST());
     DefaultAliasDecider aliasDecider = new DefaultAliasDecider();
     int selectAliasCounter = 0;
-    for (StorageCandidate sc : storageCandidates) {
+    for (StorageCandidateHQLContext sc : storageCandidates) {
       aliasDecider.setCounter(0);
       ASTNode innerSelectAST = new ASTNode(new CommonToken(TOK_SELECT, "TOK_SELECT"));
       processSelectExpression(sc, outerSelectAst, innerSelectAST, aliasDecider);
@@ -485,9 +484,9 @@ public class UnionQueryWriter {
     queryAst.setSelectAST(outerSelectAst);
 
     // Iterate over the StorageCandidates and add non projected having columns in inner select ASTs
-    for (StorageCandidate sc : storageCandidates) {
+    for (StorageCandidateHQLContext sc : storageCandidates) {
       aliasDecider.setCounter(selectAliasCounter);
-      processHavingAST(sc.getQueryAst().getSelectAST(), aliasDecider, sc);
+      processHavingAST(sc.getQueryAst().getSelectAST(), aliasDecider, sc.getStorageCandidate());
     }
     removeRedundantProjectedPhrases();
   }
@@ -501,10 +500,10 @@ public class UnionQueryWriter {
    * @param aliasDecider
    * @throws LensException
    */
-  private void processSelectExpression(StorageCandidate sc, ASTNode outerSelectAst, ASTNode innerSelectAST,
+  private void processSelectExpression(StorageCandidateHQLContext sc, ASTNode outerSelectAst, ASTNode innerSelectAST,
       AliasDecider aliasDecider) throws LensException {
     //ASTNode selectAST = sc.getQueryAst().getSelectAST();
-    ASTNode selectAST = storageCandidateToSelectAstMap.get(sc.toString());
+    ASTNode selectAST = storageCandidateToSelectAstMap.get(sc.getStorageCandidate().toString());
     if (selectAST == null) {
       return;
     }
@@ -513,7 +512,7 @@ public class UnionQueryWriter {
       ASTNode child = (ASTNode) selectAST.getChild(i);
       ASTNode outerSelect = new ASTNode(child);
       ASTNode selectExprAST = (ASTNode) child.getChild(0);
-      ASTNode outerAST = getOuterAST(selectExprAST, innerSelectAST, aliasDecider, sc, true, cubeql.getBaseCube().getDimAttributeNames());
+      ASTNode outerAST = getOuterAST(selectExprAST, innerSelectAST, aliasDecider, sc.getStorageCandidate(), true, cubeql.getBaseCube().getDimAttributeNames());
       outerSelect.addChild(outerAST);
       // has an alias? add it
       if (child.getChildCount() > 1) {
@@ -714,7 +713,7 @@ public class UnionQueryWriter {
    */
   private String getFromString() throws LensException {
     List<String> hqlQueries = new ArrayList<>();
-    for (StorageCandidate sc : storageCandidates) {
+    for (StorageCandidateHQLContext sc : storageCandidates) {
       sc.setRootCubeQueryContext(cubeql);
       hqlQueries.add(sc.toHQL()); // todo remove arg2 by pushing inside function
     }

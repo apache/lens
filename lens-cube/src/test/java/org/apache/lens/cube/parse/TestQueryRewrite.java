@@ -84,14 +84,14 @@ public abstract class TestQueryRewrite {
     SessionState.get().setCurrentDatabase(TestQueryRewrite.class.getSimpleName());
   }
 
-  protected String rewrite(String query, Configuration conf) throws LensException, ParseException {
+  protected String rewrite(String query, Configuration conf) throws LensException {
     String rewrittenQuery = rewriteCtx(query, conf).toHQL();
     log.info("Rewritten query: {}", rewrittenQuery);
     return rewrittenQuery;
   }
 
   protected CubeQueryContext rewriteCtx(String query, Configuration conf)
-    throws LensException, ParseException {
+    throws LensException {
     log.info("User query: {}", query);
     CubeQueryRewriter driver = new CubeQueryRewriter(conf, hconf);
     return driver.rewrite(query);
@@ -111,7 +111,7 @@ public abstract class TestQueryRewrite {
   }
 
   protected <T extends LensException> T getLensExceptionInRewrite(String query, Configuration conf)
-    throws LensException, ParseException {
+    throws LensException {
     try {
       String hql = rewrite(query, conf);
       Assert.fail("Should have thrown exception. But rewrote the query : " + hql);

@@ -297,12 +297,12 @@ public class SegmentationCandidate implements Candidate {
     answerableMeasurePhraseIndices.add(index);
   }
 
-  @Override
-  public void addAutoJoinDims() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.addAutoJoinDims();
-    }
-  }
+//  @Override
+//  public void addAutoJoinDims() throws LensException {
+//    for (Candidate candidate : getChildren()) {
+//      candidate.addAutoJoinDims();
+//    }
+//  }
 
   public String toString() {
     Collector<CharSequence, ?, String> collector = joining(", ", "SEG[", "]");

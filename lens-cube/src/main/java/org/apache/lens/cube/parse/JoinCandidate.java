@@ -152,13 +152,13 @@ public class JoinCandidate implements Candidate {
     return children.stream().map(x->x.getColumnEndTime(column)).filter(Optional::isPresent).map(Optional::get)
       .min(Comparator.naturalOrder());
   }
-
-  @Override
-  public void addAutoJoinDims() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.addAutoJoinDims();
-    }
-  }
+//
+//  @Override
+//  public void addAutoJoinDims() throws LensException {
+//    for (Candidate candidate : getChildren()) {
+//      candidate.addAutoJoinDims();
+//    }
+//  }
 
   @Override
   public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {

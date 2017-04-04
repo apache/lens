@@ -33,33 +33,20 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class SimpleHQLContext implements HQLContextInterface {
 
   private String select;
-  private String from;
+  protected String from;
   private String where;
   private String groupby;
   private String orderby;
   private String having;
   private Integer limit;
 
-  SimpleHQLContext() {
+  public SimpleHQLContext(QueryAST ast) {
+//    setQueryParts(ast);
   }
 
-  SimpleHQLContext(String select, String from, String where, String groupby, String orderby, String having,
-                   Integer limit) {
-    this.select = select;
-    this.from = from;
-    this.where = where;
-    this.groupby = groupby;
-    this.orderby = orderby;
-    this.having = having;
-    this.limit = limit;
-  }
-
-  SimpleHQLContext(String select, String groupby, String orderby, String having, Integer limit) {
-    this.select = select;
-    this.groupby = groupby;
-    this.orderby = orderby;
-    this.having = having;
-    this.limit = limit;
+  protected void setQueryParts(QueryAST ast) {
+    select = ast.getSelectString(); groupby = ast.getGroupByString(); orderby= ast.getOrderByString();
+      having=ast.getHavingString(); limit=ast.getLimitValue();
   }
 
   /**

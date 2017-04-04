@@ -378,14 +378,14 @@ class ExpressionResolver implements ContextRewriter {
       return ec.isEvaluable(cTable);
     }
 
-    Set<Dimension> rewriteExprCtx(CubeQueryContext cubeql, StorageCandidate sc, Map<Dimension, CandidateDim> dimsToQuery,
+    Set<Dimension> rewriteExprCtx(CubeQueryContext cubeql, StorageCandidateHQLContext sc, Map<Dimension, CandidateDim> dimsToQuery,
       QueryAST queryAST) throws LensException {
       Set<Dimension> exprDims = new HashSet<Dimension>();
       log.info("Picking expressions for candidate {} ", sc);
       if (!allExprsQueried.isEmpty()) {
         // pick expressions for fact
         if (sc != null) {
-          pickExpressionsForTable(sc);
+          pickExpressionsForTable(sc.getStorageCandidate());
         }
         // pick expressions for dimensions
         if (dimsToQuery != null && !dimsToQuery.isEmpty()) {
@@ -398,7 +398,7 @@ class ExpressionResolver implements ContextRewriter {
           for (PickedExpression pe : peSet) {
             exprDims.addAll(pe.pickedCtx.exprDims);
             pe.initRewrittenAST(pe.pickedCtx.deNormCtx.hasReferences());
-            exprDims.addAll(pe.pickedCtx.deNormCtx.rewriteDenormctxInExpression(cubeql, sc, dimsToQuery,
+            exprDims.addAll(pe.pickedCtx.deNormCtx.rewriteDenormctxInExpression(cubeql, sc == null ? null : sc.getStorageCandidate(), dimsToQuery,
               pe.getRewrittenAST()));
           }
         }
@@ -411,7 +411,7 @@ class ExpressionResolver implements ContextRewriter {
       return exprDims;
     }
 
-    private void replacePickedExpressions(StorageCandidate sc, QueryAST queryAST)
+    private void replacePickedExpressions(StorageCandidateHQLContext sc, QueryAST queryAST) //todo remove second arg
       throws LensException {
       replaceAST(cubeql, queryAST.getSelectAST());
       if (sc != null) {
@@ -423,7 +423,11 @@ class ExpressionResolver implements ContextRewriter {
       replaceAST(cubeql, queryAST.getGroupByAST());
       // Having AST is resolved by each fact, so that all facts can expand their expressions.
       // Having ast is not copied now, it's maintained in cubeQueryContext, each fact processes that serially.
-      replaceAST(cubeql, cubeql.getHavingAST());
+      if (queryAST.getHavingAST() != null) {
+        replaceAST(cubeql, queryAST.getHavingAST());
+      } else {
+        replaceAST(cubeql, cubeql.getHavingAST());
+      }
       replaceAST(cubeql, queryAST.getOrderByAST());
     }
 

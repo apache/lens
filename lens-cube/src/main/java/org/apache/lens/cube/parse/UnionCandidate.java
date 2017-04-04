@@ -103,12 +103,12 @@ public class UnionCandidate implements Candidate {
       .max(Comparator.naturalOrder());
   }
 
-  @Override
-  public void addAutoJoinDims() throws LensException {
-    for (Candidate candidate : getChildren()) {
-      candidate.addAutoJoinDims();
-    }
-  }
+//  @Override
+//  public void addAutoJoinDims() throws LensException {
+//    for (Candidate candidate : getChildren()) {
+//      candidate.addAutoJoinDims();
+//    }
+//  }
 
   @Override
   public Collection<String> getColumns() {
