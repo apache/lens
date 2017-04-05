@@ -960,82 +960,24 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       // prune join paths for picked fact and dimensions
       autoJoinCtx.pruneAllPaths(cube, cand.getColumns(), dimsToQuery);
     }
-
-//    if (cand != null) {
-//      // Set the default queryAST for StorageCandidate and copy child ASTs from cubeQueryContext.
-//      // Later in the rewrite flow each Storage candidate will modify them accordingly.
-//      cand.prepareASTs(dimsToQuery);
-//      cand.addRangeClauses();
-//    }
-
-    queryWriterContext.addExpressionDims();
-
     // pick dimension tables required during expression expansion for the picked fact and dimensions
-//    Set<Dimension> exprDimensions = new HashSet<>();
-//    if (cand != null) {
-//      cand.addExpressionDims();
-//    } else {
-//      // dim only query
-//      exprDimensions.addAll(exprCtx.rewriteExprCtx(this, null, dimsToQuery, this));
-//      dimsToQuery.putAll(pickCandidateDimsToQuery(exprDimensions)); // todo move inside else above. since it'll be empty otherwise
-//    }
-
+    queryWriterContext.addExpressionDims();
     // pick denorm tables for the picked fact and dimensions
     queryWriterContext.addDenormDims();
-//    Set<Dimension> denormTables = new HashSet<>();
-//    if (cand != null) {
-//      cand.addDenormDims();
-//    } else {
-//      denormTables.addAll(deNormCtx.rewriteDenormctx(this, null, dimsToQuery, false));
-//      dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables)); // todo move inside else above
-//    }
-    Set<Dimension> autoJoinDimensions = new HashSet<>();
     // Prune join paths once denorm tables are picked
     if (cand != null && autoJoinCtx != null) {
       // prune join paths for picked fact and dimensions
       autoJoinCtx.pruneAllPaths(cube, cand.getColumns(), dimsToQuery);
     }
     queryWriterContext.addAutoJoinDims();
-//    if (cand != null) {
-//      cand.addAutoJoinDims();
-//    } else {
-//      if (isAutoJoinResolved()) {
-//        autoJoinDimensions.addAll(autoJoinCtx.pickOptionalTables(null, dimsToQuery.keySet(), this));
-//      }
-//    dimsToQuery.putAll(pickCandidateDimsToQuery(autoJoinDimensions));
-//    }
     pickedDimTables = dimsToQuery.values();
-    pickedCandidate = cand;
 
-    queryWriterContext.updateFromString();
     //Set From string and time range clause
-//    if (cand != null) {
-//      cand.updateFromString();
-//    } else {
-//      updateFromString(null, dimsToQuery);
-//    }
+    queryWriterContext.updateFromString();
     //update dim filter with fact filter
     queryWriterContext.updateDimFilterWithFactFilter();
-//    if (cand != null) { // todo merge with next block after f2f completion
-//      cand.updateDimFilterWithFactFilter();
-//    }
-    // todo move this all to inheritence
-    // query writer context
-    // which has dim only context, single candidate context and union writer context
-    queryWriterContext.updateAnswerableSelectColumns();
     queryWriter = queryWriterContext.toQueryWriter();
     return queryWriter.toHQL();
-//    if (cand == null) {
-//      hqlContext = new DimOnlyHQLContext(dimsToQuery, this, this);
-//      return hqlContext.toHQL();
-//    } else if (cand instanceof StorageCandidate) {
-//      StorageCandidate sc = (StorageCandidate) cand;
-//      sc.updateAnswerableSelectColumns(this);
-//      return getInsertClause() + sc.toHQL();
-//    } else {
-//      UnionQueryWriter uqc = new UnionQueryWriter(cand, this);
-//      return getInsertClause() + uqc.toHQL();
-//    }
   }
 
   public ASTNode toAST(Context ctx) throws LensException {

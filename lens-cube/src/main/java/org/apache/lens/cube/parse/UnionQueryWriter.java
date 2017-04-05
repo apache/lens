@@ -714,7 +714,7 @@ public class UnionQueryWriter implements QueryWriter {
   private String getFromString() throws LensException {
     List<String> hqlQueries = new ArrayList<>();
     for (StorageCandidateHQLContext sc : storageCandidates) {
-      sc.setRootCubeQueryContext(cubeql);
+//      sc.setRootCubeQueryContext(cubeql);
       hqlQueries.add(sc.toHQL()); // todo remove arg2 by pushing inside function
     }
     return hqlQueries.stream().collect(joining(" UNION ALL ", "(", ") as " + cubeql.getBaseCube()));

@@ -12,7 +12,5 @@ public interface QueryWriterContext {
   void updateDimFilterWithFactFilter() throws LensException;
   QueryAST getQueryAst();
   void updateFromString() throws LensException;
-  QueryWriter toQueryWriter();
-
-  default void updateAnswerableSelectColumns() throws LensException {}
+  QueryWriter toQueryWriter() throws LensException;
 }

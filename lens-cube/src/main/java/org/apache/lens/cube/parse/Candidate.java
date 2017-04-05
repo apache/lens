@@ -25,10 +25,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
+
+import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -182,7 +185,12 @@ public interface Candidate {
   Optional<Date> getColumnEndTime(String column);
 
   CubeQueryContext getCubeQueryContext();
-
+  default Configuration getConf() {
+    return getCubeQueryContext().getConf();
+  }
+  default CubeMetastoreClient getCubeMetastoreClient() {
+    return getCubeQueryContext().getMetastoreClient();
+  }
   default void addAnswerableMeasurePhraseIndices(int index) {
     throw new UnsupportedOperationException("Can't add answerable measure index");
   }
@@ -212,6 +220,7 @@ public interface Candidate {
       for (Candidate candidate : getChildren()) {
         QueryWriterContext child = candidate.toQueryWriterContext(dimsToQuery);
         if (child instanceof StorageCandidateHQLContext) {
+          ((StorageCandidateHQLContext) child).setRootCubeQueryContext(getCubeQueryContext());
           child.getQueryAst().setHavingAST(null);
         }
         writerContexts.add(child); //todo try to remove exception

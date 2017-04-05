@@ -40,9 +40,6 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
   private String having;
   private Integer limit;
 
-  public SimpleHQLContext(QueryAST ast) {
-//    setQueryParts(ast);
-  }
 
   protected void setQueryParts(QueryAST ast) {
     select = ast.getSelectString(); groupby = ast.getGroupByString(); orderby= ast.getOrderByString();

@@ -627,7 +627,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         + TWO_DAYS_RANGE, conf);
     String expected =
       getExpectedQuery(TEST_CUBE_NAME, "select citydim.name as `name`, sum(testcube.msr2) as `sum(msr2)` FROM "
-          , "INNER JOIN " + getDbName() + "c2_citytable citydim ON" + " testCube.cityid = citydim.id",
+          , " INNER JOIN " + getDbName() + "c2_citytable citydim ON" + " testCube.cityid = citydim.id",
           null, " group by citydim.name ",
         null, getWhereForDailyAndHourly2days(TEST_CUBE_NAME, "C2_testfact"));
     compareQueries(hqlQuery, expected);

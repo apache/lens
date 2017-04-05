@@ -158,7 +158,7 @@ public class AutoJoinContext {
     joinPathFromColumns.remove(dim);
   }
 
-  public String getFromString(String fromTable, StorageCandidateHQLContext sc, Set<Dimension> qdims,
+  public String getFromString(String fromTable, DimHQLContext sc, Set<Dimension> qdims,
     Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql, QueryAST ast) throws LensException {
     String fromString = fromTable;
     log.info("All paths dump:{} Queried dims:{}", cubeql.getAutoJoinCtx().getAllPaths(), qdims);
@@ -167,14 +167,14 @@ public class AutoJoinContext {
     }
     // Compute the merged join clause string for the min cost joinClause
     String clause = getMergedJoinClause(cubeql, sc, ast,
-      cubeql.getAutoJoinCtx().getJoinClause(sc == null ? null : sc.getStorageCandidate()), dimsToQuery);
+      cubeql.getAutoJoinCtx().getJoinClause(sc.getStorageCandidate()), dimsToQuery);
 
     fromString += clause;
     return fromString;
   }
 
   // Some refactoring needed to account for multiple join paths
-  public String getMergedJoinClause(CubeQueryContext cubeql, StorageCandidateHQLContext sc, QueryAST ast, JoinClause joinClause,
+  public String getMergedJoinClause(CubeQueryContext cubeql, DimHQLContext sc, QueryAST ast, JoinClause joinClause,
                                     Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     Set<String> clauses = new LinkedHashSet<>();
     String joinTypeStr = "";
@@ -564,7 +564,7 @@ public class AutoJoinContext {
     }
   }
 
-  public Set<Dimension> pickOptionalTables(final StorageCandidateHQLContext sc,
+  public Set<Dimension> pickOptionalTables(final DimHQLContext sc,
     Set<Dimension> qdims, CubeQueryContext cubeql) throws LensException {
     // Find the min cost join clause and add dimensions in the clause as optional dimensions
     Set<Dimension> joiningOptionalTables = new HashSet<>();
@@ -572,7 +572,7 @@ public class AutoJoinContext {
       return joiningOptionalTables;
     }
     // find least cost path
-    Iterator<JoinClause> itr = getJoinClausesForAllPaths(sc == null ? null : sc.getStorageCandidate(), qdims, cubeql);
+    Iterator<JoinClause> itr = getJoinClausesForAllPaths(sc.getStorageCandidate(), qdims, cubeql);
     JoinClause minCostClause = null;
     while (itr.hasNext()) {
       JoinClause clause = itr.next();
@@ -587,7 +587,7 @@ public class AutoJoinContext {
     }
 
     log.info("Fact: {} minCostClause:{}", sc, minCostClause);
-    if (sc != null) { // todo remove cubeql.getAutoJoinCtx since `this` is autojoinctx
+    if (sc.getStorageCandidate() != null) { // todo remove cubeql.getAutoJoinCtx since `this` is autojoinctx
       cubeql.getAutoJoinCtx().getFactClauses().put(sc.getStorageCandidate(), minCostClause);
     } else {
       cubeql.getAutoJoinCtx().setMinCostClause(minCostClause);

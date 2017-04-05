@@ -63,15 +63,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   private String getAutoResolvedFromString(CubeQueryContext query) throws LensException {
-    String from = null;
-    if (query.getPickedCandidate() instanceof StorageCandidate) {
-      StorageCandidate sc = (StorageCandidate) query.getPickedCandidate();
-      from =  ((StorageCandidateHQLContext)query.getQueryWriterContext()).getFromString();
-      // Dim only query
-    } else if (query.getPickedCandidate() == null) {
-      from = ((DimHQLContext)query.getQueryWriterContext()).getFrom();
-    }
-    return from;
+    return ((DimHQLContext)query.getQueryWriterContext()).getFrom();
   }
 
   @Test

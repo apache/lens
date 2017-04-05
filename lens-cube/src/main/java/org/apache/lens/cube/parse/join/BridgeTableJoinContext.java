@@ -41,7 +41,7 @@ public class BridgeTableJoinContext {
   private final String bridgeTableFieldAggr;
   private final String arrayFilter;
   private final CubeQueryContext cubeql;
-  private final StorageCandidateHQLContext sc;
+  private final DimHQLContext sc;
   private final QueryAST queryAST;
   private final boolean doFlatteningEarly;
   private boolean initedBridgeClauses = false;
@@ -51,7 +51,7 @@ public class BridgeTableJoinContext {
   private final StringBuilder bridgeJoinClause = new StringBuilder();
   private final StringBuilder bridgeGroupbyClause = new StringBuilder();
 
-  public BridgeTableJoinContext(CubeQueryContext cubeql, StorageCandidateHQLContext sc, QueryAST queryAST,
+  public BridgeTableJoinContext(CubeQueryContext cubeql, DimHQLContext sc, QueryAST queryAST,
     String bridgeTableFieldAggr, String arrayFilter, boolean doFlatteningEarly) {
     this.cubeql = cubeql;
     this.queryAST = queryAST;
@@ -236,7 +236,7 @@ public class BridgeTableJoinContext {
       }
     }
 
-    void processWhereClauses(StorageCandidateHQLContext sc) throws LensException {
+    void processWhereClauses(DimHQLContext sc) throws LensException {
       processWhereAST(sc.getQueryAst().getWhereAST(), null, 0);
     }
 

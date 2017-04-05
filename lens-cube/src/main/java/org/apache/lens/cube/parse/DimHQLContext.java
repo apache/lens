@@ -36,7 +36,9 @@ import lombok.Getter;
  * Contains all the dimensions queried and their candidate dim tables Update where string with storage filters added
  * dimensions queried.
  */
-abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, QueryWriterContext {
+//@RequiredArgsConstructor
+public abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, QueryWriterContext {
+  protected final CubeQueryContext query;
   @Getter
   protected final Map<Dimension, CandidateDim> dimsToQuery;
   @Getter
@@ -44,24 +46,22 @@ abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, Qu
   @Getter
   protected final QueryAST queryAst;
   private String where;
-  protected final CubeQueryContext query;
-  private final String astFromString;
+
+  public abstract StorageCandidate getStorageCandidate();
+
+  protected DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery, QueryAST queryAst) {
+    this.query = query;
+    this.dimsToQuery = dimsToQuery;
+    this.queriedDims = dimsToQuery.keySet();
+    this.queryAst = queryAst;
+  }
 
   public CubeQueryContext getQuery() {
     return query;
   }
+
   public CubeQueryContext getCubeQueryContext() {
     return query;
-  }
-  DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery,
-    Set<Dimension> queriedDims, QueryAST ast) throws LensException {
-    super(ast);
-    this.query = query;
-    this.dimsToQuery = dimsToQuery;
-    this.where = ast.getWhereString();
-    this.queriedDims = queriedDims;
-    this.astFromString = ast.getFromString();
-    this.queryAst = ast;
   }
 
   protected void setMissingExpressions() throws LensException {
@@ -69,6 +69,9 @@ abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, Qu
       from = "%s";
     }
     setFrom(String.format(getFrom(), getFromTable()));
+    if (where == null) {
+      where = queryAst.getWhereString();
+    }
     setWhere(joinWithAnd(
       genWhereClauseWithDimPartitions(where), getQuery().getConf().getBoolean(
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
@@ -81,10 +84,6 @@ abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, Qu
 
   protected abstract String getFromTable() throws LensException;
 
-  public Map<Dimension, CandidateDim> getDimsToQuery() {
-    return dimsToQuery;
-  }
-
   protected String genWhereClauseWithDimPartitions(String originalWhere) {
     StringBuilder whereBuf;
     if (originalWhere != null) {
@@ -94,7 +93,7 @@ abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, Qu
     }
 
     // add where clause for all dimensions
-    if (queriedDims != null) {
+    if (getCubeQueryContext() != null) {
       boolean added = (originalWhere != null);
       for (Dimension dim : queriedDims) {
         CandidateDim cdim = dimsToQuery.get(dim);
@@ -123,5 +122,22 @@ abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, Qu
       filterCondition.append(whereClause);
       filterCondition.append(")");
     }
+  }
+
+  @Override
+  public void addAutoJoinDims() throws LensException {
+    if (getCubeQueryContext().isAutoJoinResolved()) {
+      dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getAutoJoinCtx().pickOptionalTables(this, queriedDims, getCubeQueryContext())));
+    }
+  }
+
+  @Override
+  public void addExpressionDims() throws LensException {
+    dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getExprCtx().rewriteExprCtx(getCubeQueryContext(), this, getDimsToQuery(), getQueryAst()))); // todo move inside else above. since it'll be empty otherwise
+  }
+
+  @Override
+  public void addDenormDims() throws LensException {
+    dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getDeNormCtx().rewriteDenormctx(getCubeQueryContext(), this, getDimsToQuery(), getStorageCandidate() != null)));
   }
 }

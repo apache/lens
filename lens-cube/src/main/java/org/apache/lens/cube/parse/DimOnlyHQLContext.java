@@ -32,19 +32,19 @@ import org.apache.lens.server.api.error.LensException;
  */
 class DimOnlyHQLContext extends DimHQLContext {
 
+
   DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, QueryAST ast)
     throws LensException {
-    this(dimsToQuery, dimsToQuery.keySet(), query, ast);
-  }
-
-  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> dimsQueried,
-    CubeQueryContext query, QueryAST ast)
-    throws LensException {
-    super(query, dimsToQuery, dimsQueried, ast);
+    super(query, dimsToQuery, ast);
   }
 
   public String toHQL() throws LensException {
     return query.getInsertClause() + super.toHQL();
+  }
+
+  @Override
+  public StorageCandidate getStorageCandidate() {
+    return null;
   }
 
   protected String getFromTable() throws LensException {
@@ -57,23 +57,6 @@ class DimOnlyHQLContext extends DimHQLContext {
   }
 
   @Override
-  public void addAutoJoinDims() throws LensException {
-    if(getCubeQueryContext().isAutoJoinResolved()) {
-      dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getAutoJoinCtx().pickOptionalTables(null, dimsToQuery.keySet(), getCubeQueryContext())));
-    }
-  }
-
-  @Override
-  public void addExpressionDims() throws LensException {
-    dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getExprCtx().rewriteExprCtx(getCubeQueryContext(), null, getDimsToQuery(), getCubeQueryContext()))); // todo move inside else above. since it'll be empty otherwise
-  }
-
-  @Override
-  public void addDenormDims() throws LensException {
-    dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getDeNormCtx().rewriteDenormctx(getCubeQueryContext(), null, getDimsToQuery(), false)));
-  }
-
-  @Override
   public void updateDimFilterWithFactFilter() throws LensException {
     //void
   }
@@ -83,7 +66,7 @@ class DimOnlyHQLContext extends DimHQLContext {
     String fromString = "%s"; // storage string is updated later
     if (getCubeQueryContext().isAutoJoinResolved()) {
       setFrom( //todo check setFrom correct or not
-        getCubeQueryContext().getAutoJoinCtx().getFromString(fromString, null, dimsToQuery.keySet(), dimsToQuery, getCubeQueryContext(), getCubeQueryContext()));
+        getCubeQueryContext().getAutoJoinCtx().getFromString(fromString, this, dimsToQuery.keySet(), dimsToQuery, getCubeQueryContext(), getCubeQueryContext()));
     }
   }
 
@@ -91,30 +74,5 @@ class DimOnlyHQLContext extends DimHQLContext {
   public QueryWriter toQueryWriter() {
     super.setQueryParts(queryAst);
     return this;
-  }
-
-  @Override
-  public String getSelect() {
-    return queryAst.getSelectString();
-  }
-
-  @Override
-  public String getGroupby() {
-    return queryAst.getGroupByString();
-  }
-
-  @Override
-  public String getOrderby() {
-    return queryAst.getOrderByString();
-  }
-
-  @Override
-  public String getHaving() {
-    return queryAst.getHavingString();
-  }
-
-  @Override
-  public Integer getLimit() {
-    return queryAst.getLimitValue();
   }
 }
