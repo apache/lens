@@ -31,7 +31,7 @@ import org.apache.lens.server.api.error.LensException;
  * <p/>
  * Updates from string with join clause expanded
  */
-class DimOnlyHQLContext extends DimHQLContext {
+public class DimOnlyHQLContext extends DimHQLContext {
 
 
   DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, QueryAST ast)

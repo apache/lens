@@ -21,5 +21,11 @@ package org.apache.lens.cube.parse;
 import org.apache.lens.server.api.error.LensException;
 
 public interface QueryWriter {
+  /**
+   * Get the HQL query.
+   *
+   * @return query string
+   * @throws LensException
+   */
   String toHQL() throws LensException;
 }

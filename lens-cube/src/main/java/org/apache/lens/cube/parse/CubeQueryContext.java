@@ -872,7 +872,6 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return pickedCandidate;
   }
 
-  private HQLContextInterface hqlContext;
   @Getter
   private QueryWriterContext queryWriterContext;
   @Getter
@@ -1091,13 +1090,6 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
 
   Set<Aliased<Dimension>> getOptionalDimensions() {
     return optionalDimensionMap.keySet();
-  }
-
-  /**
-   * @return the hqlContext
-   */
-  HQLContextInterface getHqlContext() {
-    return hqlContext;
   }
 
   public boolean shouldReplaceTimeDimWithPart() {

@@ -37,37 +37,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public abstract class SimpleHQLContext implements HQLContextInterface {
+public abstract class SimpleHQLContext implements QueryWriter {
   private String prefix;
   private String from;
   private String where;
   @Getter
   public final QueryAST queryAst;
-
-  @Override
-  public String getSelect() {
-    return getQueryAst().getSelectString();
-  }
-
-  @Override
-  public String getGroupby() {
-    return getQueryAst().getGroupByString();
-  }
-
-  @Override
-  public String getOrderby() {
-    return getQueryAst().getOrderByString();
-  }
-
-  @Override
-  public String getHaving() {
-    return getQueryAst().getHavingString();
-  }
-
-  @Override
-  public Integer getLimit() {
-    return getQueryAst().getLimitValue();
-  }
 
   /**
    * Set all missing expressions of HQL context.
@@ -87,7 +62,8 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
   private static final String BASE_QUERY_FORMAT = "SELECT %s FROM %s";
 
   private String buildHQLString() {
-    return buildHQLString(prefix, getSelect(), from, where, getGroupby(), getOrderby(), getHaving(), getLimit());
+    return buildHQLString(prefix, getQueryAst().getSelectString(), from, where, getQueryAst().getGroupByString(),
+      getQueryAst().getOrderByString(), getQueryAst().getHavingString(), getQueryAst().getLimitValue());
   }
   private static String buildHQLString(String prefix, String select, String from, String where,
     String groupby, String orderby, String having, Integer limit) {

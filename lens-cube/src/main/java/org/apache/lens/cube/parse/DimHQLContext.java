@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
  * Contains all the dimensions queried and their candidate dim tables Update where string with storage filters added
  * dimensions queried.
  */
-public abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, QueryWriterContext {
+public abstract class DimHQLContext extends SimpleHQLContext implements QueryWriterContext {
   protected final CubeQueryContext query;
   @Getter
   protected final Map<Dimension, CandidateDim> dimsToQuery;
