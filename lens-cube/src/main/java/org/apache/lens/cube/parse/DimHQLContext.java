@@ -37,13 +37,16 @@ import lombok.RequiredArgsConstructor;
  * Contains all the dimensions queried and their candidate dim tables Update where string with storage filters added
  * dimensions queried.
  */
-@RequiredArgsConstructor
 public abstract class DimHQLContext extends SimpleHQLContext implements QueryWriter, QueryWriterContext {
   protected final CubeQueryContext query;
   @Getter
   protected final Map<Dimension, CandidateDim> dimsToQuery;
-  @Getter
-  protected final QueryAST queryAst;
+
+  public DimHQLContext(CubeQueryContext query, final Map<Dimension, CandidateDim> dimsToQuery, QueryAST queryAST) {
+    super(queryAST);
+    this.query = query;
+    this.dimsToQuery = dimsToQuery;
+  }
 
   public abstract StorageCandidate getStorageCandidate();
 
@@ -58,9 +61,6 @@ public abstract class DimHQLContext extends SimpleHQLContext implements QueryWri
     return query;
   }
 
-  protected void setMissingExpressions() throws LensException {
-    setQueryParts(queryAst);
-  }
 
   protected String getPostSelectionWhereClause() throws LensException {
     return null;

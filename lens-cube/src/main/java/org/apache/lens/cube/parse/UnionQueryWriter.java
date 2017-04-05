@@ -45,14 +45,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
 
-  private QueryAST queryAst;
   private Map<HQLParser.HashableASTNode, ASTNode> innerToOuterSelectASTs = new HashMap<>();
   private Map<HQLParser.HashableASTNode, ASTNode> innerToOuterHavingASTs = new HashMap<>();
   private Map<String, ASTNode> storageCandidateToSelectAstMap = new HashMap<>();
-  private AliasDecider aliasDecider = new DefaultAliasDecider();
   private CubeQueryContext cubeql;
-  public static final ASTNode DEFAULT_MEASURE_AST;
-  public static final String DEFAULT_MEASURE = "0.0";
+  static final ASTNode DEFAULT_MEASURE_AST;
+  private static final String DEFAULT_MEASURE = "0.0";
   static {
     try {
       DEFAULT_MEASURE_AST = HQLParser.parseExpr(DEFAULT_MEASURE);
@@ -60,11 +58,12 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
       throw new RuntimeException("default measure not parsable");
     }
   }
-  Collection<StorageCandidateHQLContext> storageCandidates;
+  private Collection<StorageCandidateHQLContext> storageCandidates;
 
-  public UnionQueryWriter(List<StorageCandidateHQLContext> storageCandidates, CubeQueryContext cubeql) {
+  UnionQueryWriter(List<StorageCandidateHQLContext> storageCandidates, CubeQueryContext cubeql) throws LensException {
+    super(DefaultQueryAST.fromStorageCandidate(storageCandidates.iterator().next()));
     this.storageCandidates = storageCandidates;
-    if (storageCandidates == null || storageCandidates.size()<=1) {
+    if (storageCandidates.size() <= 1) {
       throw new IllegalArgumentException("There should be atleast two storage candidates to write a union query");
     }
     this.cubeql = cubeql;
@@ -73,10 +72,7 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
 
   @Override
   protected void setMissingExpressions() throws LensException {
-    StorageCandidateHQLContext firstCandidate = storageCandidates.iterator().next();
     // Set the default queryAST for the outer query
-    queryAst = DefaultQueryAST.fromStorageCandidate(firstCandidate,
-      firstCandidate.getQueryAst());
     updateAsts();
     updateInnterSelectASTWithDefault();
     processSelectAndHavingAST();
@@ -85,7 +81,6 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
     CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), cubeql);
     setPrefix(cubeql.getInsertClause());
     setFrom(getFromString());
-    setQueryParts(queryAst);
   }
 
   /**
@@ -295,11 +290,7 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
   }
 
   private boolean isAggregateFunctionUsedInAST(ASTNode node) {
-    if (HQLParser.isAggregateAST(node)
-        || HQLParser.hasAggregate(node)) {
-      return true;
-    }
-    return false;
+    return HQLParser.isAggregateAST(node) || HQLParser.hasAggregate(node);
   }
 
   private boolean isNodeDefault(ASTNode node) {

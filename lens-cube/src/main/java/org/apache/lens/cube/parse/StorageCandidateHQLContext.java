@@ -50,9 +50,6 @@ public class StorageCandidateHQLContext extends DimHQLContext {
 
   @Override
   public QueryWriter toQueryWriter() throws LensException {
-    if (rootCubeQueryContext == null) {
-      updateAnswerableSelectColumns();
-    }
     return this;
   }
 
@@ -119,17 +116,16 @@ public class StorageCandidateHQLContext extends DimHQLContext {
       genWhereClauseWithDimPartitions(getWhere()), getCubeQueryContext().getConf().getBoolean(
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
         ? getPostSelectionWhereClause() : null));
-    if (rootCubeQueryContext == null && Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate())) {
-      if (getCubeQueryContext().getHavingAST() != null) {
-//        queryAst.setHavingAST(MetastoreUtil.copyAST(getCubeQueryContext().getHavingAST()));
+    if (rootCubeQueryContext == null) {
+      updateAnswerableSelectColumns();
+      if(Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate())) {
+        // Check if the picked candidate is a StorageCandidate and in that case
+        // update the selectAST with final alias.
+        CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), getCubeQueryContext());
+        updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
+        setPrefix(getCubeQueryContext().getInsertClause());
       }
-      // Check if the picked candidate is a StorageCandidate and in that case
-      // update the selectAST with final alias.
-      CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), getCubeQueryContext());
-      updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
-      setPrefix(getCubeQueryContext().getInsertClause());
     }
-    super.setMissingExpressions();
   }
 
   private void updateOrderByWithFinalAlias(ASTNode orderby, ASTNode select) {

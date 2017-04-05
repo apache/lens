@@ -61,6 +61,9 @@ public class DefaultQueryAST implements QueryAST {
     return null;
   }
 
+  public static DefaultQueryAST fromStorageCandidate(DimHQLContext sc) throws LensException {
+    return fromStorageCandidate(sc, sc.getQueryAst());
+  }
   public static DefaultQueryAST fromStorageCandidate(DimHQLContext sc, QueryAST ast) throws
       LensException {
     return new DefaultQueryAST(ast.getSelectAST(),

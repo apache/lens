@@ -27,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.google.common.collect.Lists;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,18 +39,34 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 public abstract class SimpleHQLContext implements HQLContextInterface {
   private String prefix;
-  private String select;
   private String from;
   private String where;
-  private String groupby;
-  private String orderby;
-  private String having;
-  private Integer limit;
+  @Getter
+  public final QueryAST queryAst;
 
+  @Override
+  public String getSelect() {
+    return getQueryAst().getSelectString();
+  }
 
-  protected void setQueryParts(QueryAST ast) {
-    select = ast.getSelectString(); groupby = ast.getGroupByString(); orderby= ast.getOrderByString();
-      having=ast.getHavingString(); limit=ast.getLimitValue();
+  @Override
+  public String getGroupby() {
+    return getQueryAst().getGroupByString();
+  }
+
+  @Override
+  public String getOrderby() {
+    return getQueryAst().getOrderByString();
+  }
+
+  @Override
+  public String getHaving() {
+    return getQueryAst().getHavingString();
+  }
+
+  @Override
+  public Integer getLimit() {
+    return getQueryAst().getLimitValue();
   }
 
   /**
@@ -69,33 +86,33 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
 
   private static final String BASE_QUERY_FORMAT = "SELECT %s FROM %s";
 
-  public String buildHQLString() {
-    return buildHQLString(prefix, select, from, where, groupby, orderby, having, limit);
+  private String buildHQLString() {
+    return buildHQLString(prefix, getSelect(), from, where, getGroupby(), getOrderby(), getHaving(), getLimit());
   }
-  public static String buildHQLString(String prefix, String select, String from, String where,
+  private static String buildHQLString(String prefix, String select, String from, String where,
     String groupby, String orderby, String having, Integer limit) {
     StringBuilder queryFormat = new StringBuilder();
     List<String> qstrs = Lists.newArrayList();
-    if (!StringUtils.isBlank(prefix)) {
+    if (StringUtils.isNotBlank(prefix)) {
       queryFormat.append("%s");
       qstrs.add(prefix);
     }
     queryFormat.append(BASE_QUERY_FORMAT);
     qstrs.add(select);
     qstrs.add(from);
-    if (!StringUtils.isBlank(where)) {
+    if (StringUtils.isNotBlank(where)) {
       queryFormat.append(" WHERE %s");
       qstrs.add(where);
     }
-    if (!StringUtils.isBlank(groupby)) {
+    if (StringUtils.isNotBlank(groupby)) {
       queryFormat.append(" GROUP BY %s");
       qstrs.add(groupby);
     }
-    if (!StringUtils.isBlank(having)) {
+    if (StringUtils.isNotBlank(having)) {
       queryFormat.append(" HAVING %s");
       qstrs.add(having);
     }
-    if (!StringUtils.isBlank(orderby)) {
+    if (StringUtils.isNotBlank(orderby)) {
       queryFormat.append(" ORDER BY %s");
       qstrs.add(orderby);
     }

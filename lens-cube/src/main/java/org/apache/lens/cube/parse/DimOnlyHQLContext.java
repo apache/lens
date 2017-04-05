@@ -81,7 +81,6 @@ class DimOnlyHQLContext extends DimHQLContext {
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
         ? getPostSelectionWhereClause() : null));
     setPrefix(query.getInsertClause());
-    super.setMissingExpressions();
   }
 
   @Override
