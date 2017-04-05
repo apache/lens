@@ -109,7 +109,7 @@ public class CandidateUtil {
     targetAst.setWhereString(sourceAst.getWhereString());
   }
 
-  public static Collection<StorageCandidate> getStorageCandidates(final Candidate candidate) {
+  public static Set<StorageCandidate> getStorageCandidates(final Candidate candidate) {
     return getStorageCandidates(new HashSet<Candidate>(1) {{ add(candidate); }});
   }
 
@@ -161,8 +161,8 @@ public class CandidateUtil {
    * @param candidates
    * @return
    */
-  public static Collection<StorageCandidate> getStorageCandidates(Collection<? extends Candidate> candidates) {
-    Collection<StorageCandidate> storageCandidateSet = new HashSet<>();
+  public static Set<StorageCandidate> getStorageCandidates(Collection<? extends Candidate> candidates) {
+    Set<StorageCandidate> storageCandidateSet = new HashSet<>();
     getStorageCandidates(candidates, storageCandidateSet);
     return storageCandidateSet;
   }
@@ -209,13 +209,6 @@ public class CandidateUtil {
       rangeWhere =  "((" + rangeWhere + ") and  (" + fallback + "))";
     }
     return rangeWhere;
-  }
-
-  public static class ChildrenSizeBasedCandidateComparator<T> implements Comparator<Candidate> {
-    @Override
-    public int compare(Candidate o1, Candidate o2) {
-      return o1.getChildren().size() - o2.getChildren().size();
-    }
   }
 
   private static final String BASE_QUERY_FORMAT = "SELECT %s FROM %s";

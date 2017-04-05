@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * this class rewrites union query for all the participating StorageCandidates.
  */
 @Slf4j
-public class UnionQueryWriter implements QueryWriter {
+public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
 
   private QueryAST queryAst;
   private Map<HQLParser.HashableASTNode, ASTNode> innerToOuterSelectASTs = new HashMap<>();
@@ -71,25 +71,21 @@ public class UnionQueryWriter implements QueryWriter {
     this.storageCandidates = storageCandidates;
   }
 
-  public String toHQL() throws LensException {
+  @Override
+  protected void setMissingExpressions() throws LensException {
     StorageCandidateHQLContext firstCandidate = storageCandidates.iterator().next();
     // Set the default queryAST for the outer query
     queryAst = DefaultQueryAST.fromStorageCandidate(firstCandidate,
-        firstCandidate.getQueryAst());
+      firstCandidate.getQueryAst());
     updateAsts();
     updateInnterSelectASTWithDefault();
     processSelectAndHavingAST();
     processGroupByAST();
     processOrderByAST();
     CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), cubeql);
-//    for (StorageCandidate storageCandidate : factDimMap.keySet()) {
-//      if (storageCandidate.getCubeQueryContext() != cubeql) {
-//        CandidateUtil.updateFinalAlias(storageCandidate.getCubeQueryContext().getSelectAST(), cubeql);
-//      }
-//    }
-    return cubeql.getInsertClause() +CandidateUtil.buildHQLString(queryAst.getSelectString(), getFromString(), null,
-        queryAst.getGroupByString(), queryAst.getOrderByString(),
-        queryAst.getHavingString(), queryAst.getLimitValue());
+    setPrefix(cubeql.getInsertClause());
+    setFrom(getFromString());
+    setQueryParts(queryAst);
   }
 
   /**

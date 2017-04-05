@@ -94,7 +94,6 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   private String clauseName = null;
   @Getter
   private final Configuration conf;
-  private HiveConf metastoreConf;
 
   @Getter
   private final List<TimeRange> timeRanges;
@@ -216,7 +215,6 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     this.ast = ast;
     this.qb = qb;
     this.conf = queryConf;
-    this.metastoreConf = metastoreConf;
     this.clauseName = getClause();
     this.timeRanges = new ArrayList<>();
     try {
@@ -486,7 +484,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   }
 
   void addCandidatePruningMsg(Candidate cand, CandidateTablePruneCause pruneCause) {
-    Collection<StorageCandidate> scs = CandidateUtil.getStorageCandidates(cand);
+    Set<StorageCandidate> scs = CandidateUtil.getStorageCandidates(cand);
     for (StorageCandidate sc : scs) {
       addStoragePruningMsg(sc, pruneCause);
     }
@@ -650,15 +648,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       }
     }
   }
-
-//  public void updateFromString(StorageCandidate sc, Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
-//    fromString = "%s"; // storage string is updated later
-//    if (isAutoJoinResolved()) {
-//      fromString =
-//        getAutoJoinCtx().getFromString(fromString, sc, dimsToQuery.keySet(), dimsToQuery, this, this);
-//    }
-//  }
-
+  
   public String getSelectString() {
     return HQLParser.getString(selectAST);
   }

@@ -11,7 +11,6 @@ import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -27,12 +26,10 @@ import lombok.Setter;
 public class StorageCandidateHQLContext extends DimHQLContext {
   @Getter
   private StorageCandidate storageCandidate;
-  @Getter
-  @Setter
-  private String whereString;
   //todo set
   @Setter
   CubeQueryContext rootCubeQueryContext;
+
   StorageCandidateHQLContext(StorageCandidate storageCandidate, Map<Dimension, CandidateDim> dimsToQuery, QueryAST ast) throws LensException {
     super(storageCandidate.getCubeQueryContext(), dimsToQuery, ast);
     this.storageCandidate = storageCandidate;
@@ -45,10 +42,9 @@ public class StorageCandidateHQLContext extends DimHQLContext {
 
   public void updateFromString() throws LensException {
     String alias = getCubeQueryContext().getAliasForTableName(getCube().getName());
-    from = storageCandidate.getAliasForTable(alias);
+    setFrom(storageCandidate.getAliasForTable(alias));
     if (query.isAutoJoinResolved()) {
-      // here can't use queryast as ast, have to use cubequerycontext for some reason
-      from = query.getAutoJoinCtx().getFromString(from, this, this.queriedDims, this.dimsToQuery, query, getCubeQueryContext());
+      setFrom(query.getAutoJoinCtx().getFromString(getFrom(), this, getDimsToQuery(), query));
     }
   }
 
@@ -63,11 +59,12 @@ public class StorageCandidateHQLContext extends DimHQLContext {
   private CubeInterface getCube() {
     return storageCandidate.getCubeQueryContext().getCube();
   }
+
   // todo check for unification of getFromTable and updateFromString
   @Override
   protected String getFromTable() throws LensException {
     if (storageCandidate.getCubeQueryContext().isAutoJoinResolved()) {
-      return from;
+      return getFrom();
     } else {
       return storageCandidate.getCubeQueryContext().getQBFromString(storageCandidate, getDimsToQuery());
     }
@@ -80,11 +77,12 @@ public class StorageCandidateHQLContext extends DimHQLContext {
       String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1);
       String where = getCubeQueryContext().getWhere(this, getCubeQueryContext().getAutoJoinCtx(),
         getQueryAst().getWhereAST(), getCubeQueryContext().getAliasForTableName(getStorageCandidate().getBaseTable().getName()),
-        getCubeQueryContext().shouldReplaceDimFilterWithFactFilter(), storageTable, dimsToQuery);
-      setWhereString(where);
+        getCubeQueryContext().shouldReplaceDimFilterWithFactFilter(), storageTable, getDimsToQuery());
+      setWhere(where);
     }
   }
-  public void updateAnswerableSelectColumns() throws LensException {
+
+  private void updateAnswerableSelectColumns() throws LensException {
     // update select AST with selected fields
     int currentChild = 0;
     for (int i = 0; i < getCubeQueryContext().getSelectAST().getChildCount(); i++) {
@@ -117,16 +115,23 @@ public class StorageCandidateHQLContext extends DimHQLContext {
   @Override
   protected void setMissingExpressions() throws LensException {
     setFrom(getFromTable());
-    setWhereString(joinWithAnd(
-      genWhereClauseWithDimPartitions(whereString), getCubeQueryContext().getConf().getBoolean(
+    setWhere(joinWithAnd(
+      genWhereClauseWithDimPartitions(getWhere()), getCubeQueryContext().getConf().getBoolean(
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
         ? getPostSelectionWhereClause() : null));
-    if (rootCubeQueryContext == getCubeQueryContext() && this == getCubeQueryContext().getPickedCandidate()) {
+    if (rootCubeQueryContext == null && Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate())) {
       if (getCubeQueryContext().getHavingAST() != null) {
-        queryAst.setHavingAST(MetastoreUtil.copyAST(getCubeQueryContext().getHavingAST()));
+//        queryAst.setHavingAST(MetastoreUtil.copyAST(getCubeQueryContext().getHavingAST()));
       }
+      // Check if the picked candidate is a StorageCandidate and in that case
+      // update the selectAST with final alias.
+      CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), getCubeQueryContext());
+      updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
+      setPrefix(getCubeQueryContext().getInsertClause());
     }
+    super.setMissingExpressions();
   }
+
   private void updateOrderByWithFinalAlias(ASTNode orderby, ASTNode select) {
     if (orderby == null) {
       return;
@@ -145,22 +150,5 @@ public class StorageCandidateHQLContext extends DimHQLContext {
         }
       }
     }
-  }
-
-  public String toHQL() throws LensException {
-    setMissingExpressions();
-    // Check if the picked candidate is a StorageCandidate and in that case
-    // update the selectAST with final alias.
-    String prefix = "";
-    if (rootCubeQueryContext == null && Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate())) {
-      CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), getCubeQueryContext());
-      updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
-      prefix = getCubeQueryContext().getInsertClause();
-    } else {
-      queryAst.setHavingAST(null);
-    }
-    return prefix + CandidateUtil
-      .buildHQLString(queryAst.getSelectString(), from, whereString, queryAst.getGroupByString(),
-        queryAst.getOrderByString(), queryAst.getHavingString(), queryAst.getLimitValue());
   }
 }

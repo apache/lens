@@ -158,15 +158,16 @@ public class AutoJoinContext {
     joinPathFromColumns.remove(dim);
   }
 
-  public String getFromString(String fromTable, DimHQLContext sc, Set<Dimension> qdims,
-    Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql, QueryAST ast) throws LensException {
+  public String getFromString(String fromTable, DimHQLContext sc,
+    Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) throws LensException {
     String fromString = fromTable;
+    Set<Dimension> qdims = dimsToQuery.keySet();
     log.info("All paths dump:{} Queried dims:{}", cubeql.getAutoJoinCtx().getAllPaths(), qdims);
-    if (qdims == null || qdims.isEmpty()) {
+    if (qdims.isEmpty()) {
       return fromString;
     }
     // Compute the merged join clause string for the min cost joinClause
-    String clause = getMergedJoinClause(cubeql, sc, ast,
+    String clause = getMergedJoinClause(cubeql, sc,
       cubeql.getAutoJoinCtx().getJoinClause(sc.getStorageCandidate()), dimsToQuery);
 
     fromString += clause;
@@ -174,8 +175,8 @@ public class AutoJoinContext {
   }
 
   // Some refactoring needed to account for multiple join paths
-  public String getMergedJoinClause(CubeQueryContext cubeql, DimHQLContext sc, QueryAST ast, JoinClause joinClause,
-                                    Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
+  public String getMergedJoinClause(CubeQueryContext cubeql, DimHQLContext sc, JoinClause joinClause,
+    Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     Set<String> clauses = new LinkedHashSet<>();
     String joinTypeStr = "";
     JoinType joinType = JoinType.INNER;
@@ -187,7 +188,7 @@ public class AutoJoinContext {
 
     Iterator<JoinTree> iter = joinClause.getJoinTree().dft();
     boolean hasBridgeTable = false;
-    BridgeTableJoinContext bridgeTableJoinContext = new BridgeTableJoinContext(cubeql, sc, ast, bridgeTableFieldAggr,
+    BridgeTableJoinContext bridgeTableJoinContext = new BridgeTableJoinContext(cubeql, sc, bridgeTableFieldAggr,
       bridgeTableFieldArrayFilter, doFlatteningEarly);
 
     while (iter.hasNext()) {

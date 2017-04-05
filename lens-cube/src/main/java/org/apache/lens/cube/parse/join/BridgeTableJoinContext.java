@@ -42,7 +42,6 @@ public class BridgeTableJoinContext {
   private final String arrayFilter;
   private final CubeQueryContext cubeql;
   private final DimHQLContext sc;
-  private final QueryAST queryAST;
   private final boolean doFlatteningEarly;
   private boolean initedBridgeClauses = false;
   private final StringBuilder bridgeSelectClause = new StringBuilder();
@@ -51,10 +50,9 @@ public class BridgeTableJoinContext {
   private final StringBuilder bridgeJoinClause = new StringBuilder();
   private final StringBuilder bridgeGroupbyClause = new StringBuilder();
 
-  public BridgeTableJoinContext(CubeQueryContext cubeql, DimHQLContext sc, QueryAST queryAST,
+  public BridgeTableJoinContext(CubeQueryContext cubeql, DimHQLContext sc,
     String bridgeTableFieldAggr, String arrayFilter, boolean doFlatteningEarly) {
     this.cubeql = cubeql;
-    this.queryAST = queryAST;
     this.sc = sc;
     this.bridgeTableFieldAggr = bridgeTableFieldAggr;
     this.arrayFilter = arrayFilter;
