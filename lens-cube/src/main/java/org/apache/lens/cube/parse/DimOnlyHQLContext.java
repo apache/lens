@@ -18,7 +18,6 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
 
 import java.util.Map;
 
@@ -45,11 +44,11 @@ public class DimOnlyHQLContext extends DimHQLContext {
   }
 
   protected String getFromTable() throws LensException {
-    if (query.isAutoJoinResolved()) {
-      return getDimsToQuery().get(query.getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
-        query.getAliasForTableName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));
+    if (getCubeQueryContext().isAutoJoinResolved()) {
+      return getDimsToQuery().get(getCubeQueryContext().getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
+        getCubeQueryContext().getAliasForTableName(getCubeQueryContext().getAutoJoinCtx().getAutoJoinTarget().getName()));
     } else {
-      return query.getQBFromString(null, getDimsToQuery());
+      return getCubeQueryContext().getQBFromString(null, getDimsToQuery());
     }
   }
 
@@ -76,15 +75,7 @@ public class DimOnlyHQLContext extends DimHQLContext {
     if (getWhere() == null) {
       setWhere(queryAst.getWhereString());
     }
-    setWhere(joinWithAnd(
-      genWhereClauseWithDimPartitions(getWhere()), getQuery().getConf().getBoolean(
-        CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
-        ? getPostSelectionWhereClause() : null));
-    setPrefix(query.getInsertClause());
-  }
-
-  @Override
-  public QueryWriter toQueryWriter() {
-    return this;
+    setWhere(genWhereClauseWithDimPartitions(getWhere()));
+    setPrefix(getCubeQueryContext().getInsertClause());
   }
 }

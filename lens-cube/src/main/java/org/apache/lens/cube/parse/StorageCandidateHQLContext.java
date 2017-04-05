@@ -1,6 +1,5 @@
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
 
 import java.util.Map;
 import java.util.Objects;
@@ -8,7 +7,6 @@ import java.util.Set;
 
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.Dimension;
-import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.lib.Node;
@@ -43,14 +41,9 @@ public class StorageCandidateHQLContext extends DimHQLContext {
   public void updateFromString() throws LensException {
     String alias = getCubeQueryContext().getAliasForTableName(getCube().getName());
     setFrom(storageCandidate.getAliasForTable(alias));
-    if (query.isAutoJoinResolved()) {
-      setFrom(query.getAutoJoinCtx().getFromString(getFrom(), this, getDimsToQuery(), query));
+    if (getCubeQueryContext().isAutoJoinResolved()) {
+      setFrom(getCubeQueryContext().getAutoJoinCtx().getFromString(getFrom(), this, getDimsToQuery(), getCubeQueryContext()));
     }
-  }
-
-  @Override
-  public QueryWriter toQueryWriter() throws LensException {
-    return this;
   }
 
   private CubeInterface getCube() {
@@ -112,13 +105,10 @@ public class StorageCandidateHQLContext extends DimHQLContext {
   @Override
   protected void setMissingExpressions() throws LensException {
     setFrom(getFromTable());
-    setWhere(joinWithAnd(
-      genWhereClauseWithDimPartitions(getWhere()), getCubeQueryContext().getConf().getBoolean(
-        CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
-        ? getPostSelectionWhereClause() : null));
+    setWhere(genWhereClauseWithDimPartitions(getWhere()));
     if (rootCubeQueryContext == null) {
       updateAnswerableSelectColumns();
-      if(Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate())) {
+      if (Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate())) {
         // Check if the picked candidate is a StorageCandidate and in that case
         // update the selectAST with final alias.
         CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), getCubeQueryContext());
