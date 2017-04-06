@@ -871,10 +871,8 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     }
     return pickedCandidate;
   }
-
   @Getter
   private QueryWriterContext queryWriterContext;
-  @Getter
   private QueryWriter queryWriter;
 
   @Getter
@@ -940,33 +938,41 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       return cand.toQueryWriterContext(dimsToQuery);
     }
   }
-  public String toHQL() throws LensException {
-    Candidate cand = pickCandidateToQuery();
-    Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
-    queryWriterContext = getQueryWriterContext(cand, dimsToQuery);
-    log.info("Candidate: {}, DimsToQuery: {}", cand, dimsToQuery);
-    if (cand != null && autoJoinCtx != null) {
-      // prune join paths for picked fact and dimensions
-      autoJoinCtx.pruneAllPaths(cube, cand.getColumns(), dimsToQuery);
-    }
-    // pick dimension tables required during expression expansion for the picked fact and dimensions
-    queryWriterContext.addExpressionDims();
-    // pick denorm tables for the picked fact and dimensions
-    queryWriterContext.addDenormDims();
-    // Prune join paths once denorm tables are picked
-    if (cand != null && autoJoinCtx != null) {
-      // prune join paths for picked fact and dimensions
-      autoJoinCtx.pruneAllPaths(cube, cand.getColumns(), dimsToQuery);
-    }
-    queryWriterContext.addAutoJoinDims();
-    pickedDimTables = dimsToQuery.values();
 
-    //Set From string and time range clause
-    queryWriterContext.updateFromString();
-    //update dim filter with fact filter
-    queryWriterContext.updateDimFilterWithFactFilter();
-    queryWriter = queryWriterContext.toQueryWriter();
-    return queryWriter.toHQL();
+  QueryWriter getQueryWriter() throws LensException {
+    if (queryWriter == null) {
+      Candidate cand = pickCandidateToQuery();
+      Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
+      log.info("Candidate: {}, DimsToQuery: {}", cand, dimsToQuery);
+      queryWriterContext = getQueryWriterContext(cand, dimsToQuery);
+
+      if (cand != null && autoJoinCtx != null) {
+        // prune join paths for picked fact and dimensions
+        autoJoinCtx.pruneAllPaths(cube, cand.getColumns(), dimsToQuery);
+      }
+      // pick dimension tables required during expression expansion for the picked fact and dimensions
+      queryWriterContext.addExpressionDims();
+      // pick denorm tables for the picked fact and dimensions
+      queryWriterContext.addDenormDims();
+      // Prune join paths once denorm tables are picked
+      if (cand != null && autoJoinCtx != null) {
+        // prune join paths for picked fact and dimensions
+        autoJoinCtx.pruneAllPaths(cube, cand.getColumns(), dimsToQuery);
+      }
+      queryWriterContext.addAutoJoinDims();
+      pickedDimTables = dimsToQuery.values();
+
+      //Set From string and time range clause
+      queryWriterContext.updateFromString();
+      //update dim filter with fact filter
+      queryWriterContext.updateDimFilterWithFactFilter();
+      queryWriter = queryWriterContext.toQueryWriter();
+    }
+    return queryWriter;
+  }
+
+  public String toHQL() throws LensException {
+    return getQueryWriter().toHQL();
   }
 
   public ASTNode toAST(Context ctx) throws LensException {

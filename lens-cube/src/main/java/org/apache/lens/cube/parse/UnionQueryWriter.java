@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * this class rewrites union query for all the participating StorageCandidates.
  */
 @Slf4j
-public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
+public class UnionQueryWriter extends SimpleHQLContext {
 
   private Map<HQLParser.HashableASTNode, ASTNode> innerToOuterSelectASTs = new HashMap<>();
   private Map<HQLParser.HashableASTNode, ASTNode> innerToOuterHavingASTs = new HashMap<>();
@@ -264,10 +264,7 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
   private boolean isNodeAnswerableForStorageCandidate(StorageCandidate sc, ASTNode node) { // todo change function name to not answerable
     Set<String> cols = new LinkedHashSet<>();
     getAllColumnsOfNode(node, cols);
-    if (!sc.getColumns().containsAll(cols)) {
-      return true;
-    }
-    return false;
+    return !sc.getColumns().containsAll(cols);
   }
 
   /**
@@ -307,9 +304,7 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
     for (int i = 0; i < storageCandidates.iterator().next().getQueryAst().getSelectAST().getChildCount(); i++) {
       for (StorageCandidateHQLContext sc : storageCandidates) {
         ASTNode selectAST = sc.getQueryAst().getSelectAST();
-        if (isNodeDefault((ASTNode) selectAST.getChild(i))) {
-          continue;
-        } else {
+        if (!isNodeDefault((ASTNode) selectAST.getChild(i))) {
           phrases.add((ASTNode) selectAST.getChild(i));
           break;
         }
@@ -339,12 +334,10 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
     }
     for (List<Integer> values : phraseCountMap.values()) {
       if (values.size() > 1) {
-        String aliasToKeep = HQLParser.findNodeByPath((ASTNode)
-            phrases.get(values.get(0)), Identifier).toString();
+        String aliasToKeep = HQLParser.findNodeByPath(phrases.get(values.get(0)), Identifier).toString();
         ArrayList<String> dupAliases = new ArrayList<>();
         for (int i : values.subList(1, values.size())) {
-          dupAliases.add(HQLParser.findNodeByPath((ASTNode)
-              phrases.get(i), Identifier).toString());
+          dupAliases.add(HQLParser.findNodeByPath(phrases.get(i), Identifier).toString());
         }
         aliasMap.put(aliasToKeep, dupAliases);
       }
@@ -372,7 +365,6 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
   public void updateOuterASTDuplicateAliases(ASTNode node, //todo rename to updateOuterASTDuplicateAliases
       Map<String, List<String>> aliasMap) {
     if (node.getToken().getType() == HiveParser.DOT) {
-      String table = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).toString();
       String col = node.getChild(1).toString();
       for (Map.Entry<String, List<String>> entry : aliasMap.entrySet()) {
         if (entry.getValue().contains(col)) {
@@ -681,7 +673,6 @@ public class UnionQueryWriter extends SimpleHQLContext implements QueryWriter {
    */
   private Set<String> getAllColumnsOfNode(ASTNode node, Set<String> msrs) {
     if (node.getToken().getType() == HiveParser.DOT) {
-      String table = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier).toString();
       msrs.add(node.getChild(1).toString());
     }
     for (int i = 0; i < node.getChildCount(); i++) {

@@ -68,7 +68,7 @@ public class MultiCandidateQueryWriterContext implements QueryWriterContext {
     return ret;
   }
   @Override
-  public QueryWriter toQueryWriter() throws LensException {
+  public UnionQueryWriter toQueryWriter() throws LensException {
     return new UnionQueryWriter(getLeafQueryWriterContexts(), getCubeQueryContext());
   }
 }

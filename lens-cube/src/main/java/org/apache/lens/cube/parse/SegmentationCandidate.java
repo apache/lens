@@ -54,9 +54,9 @@ public class SegmentationCandidate implements Candidate {
   Map<String, CubeQueryContext> cubeQueryContextMap;
   @Getter
   private final Set<Integer> answerableMeasurePhraseIndices = Sets.newHashSet();
-  private static final String IGNORE_KEY = "segmentations.to.ignore";
+//  private static final String IGNORE_KEY = "segmentations.to.ignore";
   private Map<TimeRange, TimeRange> queriedRangeToMyRange = Maps.newHashMap();
-  public SegmentationCandidate(CubeQueryContext cubeQueryContext, Segmentation segmentation, Configuration conf, HiveConf hconf) throws LensException {
+  SegmentationCandidate(CubeQueryContext cubeQueryContext, Segmentation segmentation, Configuration conf, HiveConf hconf) throws LensException {
     this.cubeQueryContext = cubeQueryContext;
     this.segmentation = segmentation;
     this.conf = new Configuration(conf);
@@ -65,25 +65,24 @@ public class SegmentationCandidate implements Candidate {
     cubeQueryContextMap = Maps.newHashMap();
     for (Segment segment : segmentation.getSegments()) {
       // assuming only base cubes in segmentation
-      cubesOfSegmentation.put(segment.getName(), (Cube) cubeQueryContext.getMetastoreClient().getCube(segment.getName()));
+      cubesOfSegmentation.put(segment.getName(), (Cube) getCubeMetastoreClient().getCube(segment.getName()));
     }
   }
 
   public SegmentationCandidate explode() throws LensException {
-    Collection<String> toIgnore = conf.getStringCollection(IGNORE_KEY); //TODO remove this, this is only a hack to avoid infinite loop and stack overflow
-    if (toIgnore.contains(segmentation.getName())) {
-      throw new LensException("Segmentation to be ignored");
-    } else {
-      toIgnore.add(segmentation.getName());
-//      conf.setStrings(IGNORE_KEY, toIgnore.toArray(new String[toIgnore.size()]));
-    }
-    CubeInterface cube = cubeQueryContext.getCube();
+//    Collection<String> toIgnore = conf.getStringCollection(IGNORE_KEY); //TODO remove this, this is only a hack to avoid infinite loop and stack overflow
+//    if (toIgnore.contains(segmentation.getName())) {
+//      throw new LensException("Segmentation to be ignored");
+//    } else {
+//      toIgnore.add(segmentation.getName());
+////      conf.setStrings(IGNORE_KEY, toIgnore.toArray(new String[toIgnore.size()]));
+//    }
+    CubeInterface cube = getCube();
     for (Segment segment : segmentation.getSegments()) {
       // assuming only base cubes in segmentation
-      cubesOfSegmentation.put(segment.getName(), (Cube) cubeQueryContext.getMetastoreClient().getCube(segment.getName()));
+      cubesOfSegmentation.put(segment.getName(), (Cube) getCubeMetastoreClient().getCube(segment.getName()));
       Set<QueriedPhraseContext> notAnswerable = cubeQueryContext.getQueriedPhrases().stream().filter((phrase) -> !isPhraseAnswerable(phrase)).collect(Collectors.toSet());
       // create ast
-      // todo: drop order by, having, limit
       ASTNode ast = MetastoreUtil.copyAST(cubeQueryContext.getAst(),
         astNode -> {
           // replace time range
@@ -105,9 +104,9 @@ public class SegmentationCandidate implements Candidate {
               return Tuple2.of(MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST), false);
             }
           }
-          if (astNode.getType() == HiveParser.TOK_HAVING) { // remove having tree completely
-            return Tuple2.of(null, false);
-          }
+//          if (astNode.getType() == HiveParser.TOK_HAVING) { // remove having tree completely
+//            return Tuple2.of(null, false);
+//          }
           // else, copy token replacing cube name and ask for recursion on child nodes
           // this is hard copy. Default is soft copy, which is new ASTNode(astNode)
           // Soft copy retains the token object inside it, hard copy copies token object

@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.FactPartition;
@@ -194,7 +195,9 @@ public interface Candidate {
   default void addAnswerableMeasurePhraseIndices(int index) {
     throw new UnsupportedOperationException("Can't add answerable measure index");
   }
-
+  default <T extends CubeInterface> T getCube() {
+    return (T) getCubeQueryContext().getCube();
+  }
   default Set<QueriedPhraseContext> coveredMeasures(Set<QueriedPhraseContext> msrs) throws LensException {
     Set<QueriedPhraseContext> covered = Sets.newHashSet();
     for (QueriedPhraseContext msr : msrs) {
