@@ -110,7 +110,7 @@ public class UnionCandidate implements Candidate {
     double cost = 0.0;
     for (TimeRange timeRange : cubeql.getTimeRanges()) {
       for (Map.Entry<Candidate, TimeRange> entry : getTimeRangeSplit(timeRange).entrySet()) {
-        cost += (entry.getValue().milliseconds() / timeRange.milliseconds()) * entry.getKey().getCost();
+        cost += entry.getKey().getCost() * entry.getValue().milliseconds() / timeRange.milliseconds();
       }
     }
     return cost;
