@@ -3,6 +3,9 @@ package org.apache.lens.cube.parse;
 import static java.util.stream.Collectors.joining;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.StringLiteral;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_HAVING;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_INSERT;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_ORDERBY;
 import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
 
 import java.util.Collection;
@@ -69,6 +72,7 @@ public class SegmentationCandidate implements Candidate {
     }
   }
 
+
   public SegmentationCandidate explode() throws LensException {
 //    Collection<String> toIgnore = conf.getStringCollection(IGNORE_KEY); //TODO remove this, this is only a hack to avoid infinite loop and stack overflow
 //    if (toIgnore.contains(segmentation.getName())) {
@@ -80,7 +84,8 @@ public class SegmentationCandidate implements Candidate {
     CubeInterface cube = getCube();
     for (Segment segment : segmentation.getSegments()) {
       // assuming only base cubes in segmentation
-      cubesOfSegmentation.put(segment.getName(), (Cube) getCubeMetastoreClient().getCube(segment.getName()));
+      Cube innerCube = (Cube) getCubeMetastoreClient().getCube(segment.getName());
+      cubesOfSegmentation.put(segment.getName(), innerCube);
       Set<QueriedPhraseContext> notAnswerable = cubeQueryContext.getQueriedPhrases().stream().filter((phrase) -> !isPhraseAnswerable(phrase)).collect(Collectors.toSet());
       // create ast
       ASTNode ast = MetastoreUtil.copyAST(cubeQueryContext.getAst(),
@@ -104,9 +109,6 @@ public class SegmentationCandidate implements Candidate {
               return Tuple2.of(MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST), false);
             }
           }
-//          if (astNode.getType() == HiveParser.TOK_HAVING) { // remove having tree completely
-//            return Tuple2.of(null, false);
-//          }
           // else, copy token replacing cube name and ask for recursion on child nodes
           // this is hard copy. Default is soft copy, which is new ASTNode(astNode)
           // Soft copy retains the token object inside it, hard copy copies token object
@@ -116,12 +118,13 @@ public class SegmentationCandidate implements Candidate {
           }
           return Tuple2.of(copy, true);
         });
+      trimHavingAndOrderby(ast, innerCube);
       // TODO modify time ranges. Nothing for now
       CubeQueryRewriter rewriter = new CubeQueryRewriter(conf, hconf);
       CubeQueryContext ctx = rewriter.rewrite(ast);
       // so that exception comes early
       // TODO: optimize
-      String hql = ctx.toHQL();
+      ctx.toHQL();
       for (StorageCandidate storageCandidate : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
         for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
           TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
@@ -140,6 +143,28 @@ public class SegmentationCandidate implements Candidate {
     }
     return this;
   }
+
+  private void trimHavingAndOrderby(ASTNode ast, Cube innerCube) {
+    ASTNode havingAst = HQLParser.findNodeByPath(ast, TOK_INSERT, TOK_HAVING);
+    if (havingAst != null) {
+      ASTNode newHavingAst = HQLParser.trimHavingAst(havingAst, innerCube.getAllFieldNames());
+      if (newHavingAst != null) {
+        havingAst.getParent().setChild(havingAst.getChildIndex(), newHavingAst);
+      } else {
+        havingAst.getParent().deleteChild(havingAst.getChildIndex());
+      }
+    }
+    ASTNode orderByAst = HQLParser.findNodeByPath(ast, TOK_INSERT, TOK_ORDERBY);
+    if (orderByAst != null) {
+      ASTNode newOrderByAst = HQLParser.trimOrderByAst(orderByAst, innerCube.getAllFieldNames());
+      if (newOrderByAst != null) {
+        orderByAst.getParent().setChild(orderByAst.getChildIndex(), newOrderByAst);
+      } else {
+        orderByAst.getParent().deleteChild(orderByAst.getChildIndex());
+      }
+    }
+  }
+
 
   public SegmentationCandidate(SegmentationCandidate segmentationCandidate) throws LensException {
     this(segmentationCandidate.cubeQueryContext, segmentationCandidate.segmentation,

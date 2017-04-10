@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import org.apache.lens.api.ds.Tuple2;
+import org.apache.lens.cube.metadata.Cube;
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
 
@@ -961,5 +962,62 @@ public final class HQLParser {
     public String convert(String s) {
       return s;
     }
+  }
+  static ASTNode trimHavingAst(ASTNode astNode, Collection<String> columns) {
+    if (astNode != null) {
+      if (astNode.getParent() != null && astNode.getParent().getType() == DOT && astNode.getChildIndex() == 1) {
+        return columns.contains(astNode.getText()) ? astNode : null;
+      }
+      for (int i = astNode.getChildCount() - 1; i >= 0; i--) {
+        ASTNode replacement = trimHavingAst((ASTNode) astNode.getChild(i), columns);
+        if (replacement == null) {
+          astNode.deleteChild(i);
+        } else {
+          astNode.setChild(i, replacement);
+        }
+      }
+      if (isAggregateAST(astNode) || BINARY_OPERATORS.contains(astNode.getType())) {
+        if (astNode.getChildCount() == 1) {
+          ASTNode child = (ASTNode) astNode.getChild(0);
+          if (!BINARY_OPERATORS.contains(child.getType())) {
+            return null;
+          } else {
+            return child;
+          }
+        }
+      }
+    }
+    return astNode;
+  }
+  static ASTNode trimOrderByAst(ASTNode astNode, Collection<String> columns) {
+    if (astNode != null) {
+      if (astNode.getParent() != null && astNode.getParent().getType() == DOT && astNode.getChildIndex() == 1) {
+        return columns.contains(astNode.getText()) ? astNode : null;
+      }
+      for (int i = astNode.getChildCount() - 1; i >= 0; i--) {
+        ASTNode replacement = trimOrderByAst((ASTNode) astNode.getChild(i), columns);
+        if (replacement == null) {
+          astNode.deleteChild(i);
+        } else {
+          astNode.setChild(i, replacement);
+        }
+      }
+      switch (astNode.getType()) {
+      case DOT:
+        if(astNode.getChildCount() < 2) {
+          return null;
+        }
+        break;
+      case TOK_TABSORTCOLNAMEASC:
+      case TOK_TABSORTCOLNAMEDESC:
+      case TOK_NULLS_FIRST:
+      case TOK_NULLS_LAST:
+        if (astNode.getChildCount() == 0) {
+          return null;
+        }
+        break;
+      }
+    }
+    return astNode;
   }
 }

@@ -20,8 +20,13 @@
 package org.apache.lens.cube.parse;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
+import static org.apache.lens.cube.parse.HQLParser.getString;
+import static org.apache.lens.cube.parse.HQLParser.parseExpr;
+import static org.apache.lens.cube.parse.HQLParser.trimHavingAst;
+import static org.apache.lens.cube.parse.HQLParser.trimOrderByAst;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,6 +43,7 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -334,19 +340,19 @@ public class TestHQLParser {
 
   @Test
   public void testEqualsAST() throws Exception {
-    ASTNode expr1 = HQLParser.parseExpr("T1.a + T2.b - T2.c");
-    ASTNode expr2 = HQLParser.parseExpr("t1.A + t2.B - t2.C");
+    ASTNode expr1 = parseExpr("T1.a + T2.b - T2.c");
+    ASTNode expr2 = parseExpr("t1.A + t2.B - t2.C");
 
     Assert.assertTrue(HQLParser.equalsAST(expr1, expr2));
 
-    ASTNode literalExpr1 = HQLParser.parseExpr("A = 'FooBar'");
-    ASTNode literalExpr2 = HQLParser.parseExpr("a = 'FooBar'");
+    ASTNode literalExpr1 = parseExpr("A = 'FooBar'");
+    ASTNode literalExpr2 = parseExpr("a = 'FooBar'");
     Assert.assertTrue(HQLParser.equalsAST(literalExpr1, literalExpr2));
 
-    ASTNode literalExpr3 = HQLParser.parseExpr("A = 'fOObAR'");
+    ASTNode literalExpr3 = parseExpr("A = 'fOObAR'");
     Assert.assertFalse(HQLParser.equalsAST(literalExpr1, literalExpr3));
 
-    ASTNode literalExpr4 = HQLParser.parseExpr("A <> 'FooBar'");
+    ASTNode literalExpr4 = parseExpr("A <> 'FooBar'");
     Assert.assertFalse(HQLParser.equalsAST(literalExpr1, literalExpr4));
   }
 
@@ -393,7 +399,7 @@ public class TestHQLParser {
 
   @Test(dataProvider = "nAryFlatteningDataProvider")
   public void testNAryOperatorFlattening(String input, String expected) throws LensException {
-    ASTNode tree = HQLParser.parseExpr(input);
+    ASTNode tree = parseExpr(input);
     String infixString = HQLParser.getString(tree);
     Assert.assertEquals(infixString, expected);
   }
@@ -415,7 +421,7 @@ public class TestHQLParser {
   @Test(dataProvider = "colsInExpr")
   public void testColsInExpr(String input, String[] expected) throws Exception {
     String tableAlias = "cie";
-    ASTNode inputAST = HQLParser.parseExpr(input);
+    ASTNode inputAST = parseExpr(input);
     Set<String> actual = HQLParser.getColsInExpr(tableAlias, inputAST);
     Set<String> expectedSet = new HashSet<>(Arrays.asList(expected));
     Assert.assertEquals(actual, expectedSet, "Received " + actual + " for input:" + input);
@@ -446,7 +452,7 @@ public class TestHQLParser {
 
   @Test(dataProvider = "primitiveBool")
   public void testIsPrimitiveBooleanExpr(String input, boolean expected) throws Exception {
-    ASTNode inputAST = HQLParser.parseExpr(input);
+    ASTNode inputAST = parseExpr(input);
     boolean actual = HQLParser.isPrimitiveBooleanExpression(inputAST);
     Assert.assertEquals(actual, expected, "Received " + actual + " for input:" + input + ":" + inputAST.dump());
   }
@@ -471,7 +477,7 @@ public class TestHQLParser {
 
   @Test(dataProvider = "primitiveBoolFunc")
   public void testIsPrimitiveBooleanFunction(String input, boolean expected) throws Exception {
-    ASTNode inputAST = HQLParser.parseExpr(input);
+    ASTNode inputAST = parseExpr(input);
     boolean actual = HQLParser.isPrimitiveBooleanFunction(inputAST);
     Assert.assertEquals(actual, expected, "Received " + actual + " for input:" + input);
   }
@@ -503,12 +509,47 @@ public class TestHQLParser {
   @Test(dataProvider = "exprDataProvider")
   public void testParseExpr(String expr, HiveConf conf, boolean success) {
     try {
-      HQLParser.parseExpr(expr, conf);
+      parseExpr(expr, conf);
       Assert.assertTrue(success);
     } catch (LensException e) {
       Assert.assertFalse(success);
       Assert.assertTrue(e.getMessage().contains(expr));
       Assert.assertTrue(e.getMessage().contains(LensCubeErrorCode.COULD_NOT_PARSE_EXPRESSION.name()));
     }
+  }
+  @DataProvider
+  public Object[][] havingTrimDataProvider() {
+    return new Object[][] {
+      {"((sum((testcube.segmsr1)) > 1) and (sum((testcube.msr2)) > 2))", Lists.newArrayList("segmsr1"), "(sum((testcube.segmsr1)) > 1)"},
+      {"(sum((testcube.msr2)) > 2)", Lists.newArrayList("segmsr1"), null},
+      {"(sum((testcube.segmsr1)) > 1)", Lists.newArrayList("segmsr1"), "(sum((testcube.segmsr1)) > 1)"}
+    };
+  }
+
+  @Test(dataProvider = "havingTrimDataProvider")
+  public void testHavingTrim(String expr, Collection<String> columns, String expected) throws LensException {
+    ASTNode actualAst = trimHavingAst(parseExpr(expr), columns);
+    ASTNode expectedAst = expected == null ? null : parseExpr(expected);
+    if (!HQLParser.equalsAST(actualAst, expectedAst)) {
+      Assert.assertEquals(getString(actualAst), expected);
+    }
+  }
+  @DataProvider
+  public Object[][] orderByTrimDataProvider() {
+    return new Object[][] {
+      {"testcube.segmsr1 asc", Lists.newArrayList("segmsr1"), "testcube.segmsr1 asc"},
+      {"testcube.segmsr1 desc, testcube.msr2", Lists.newArrayList("segmsr1"), "testcube.segmsr1 desc"},
+      {"testcube.segmsr1, testcube.msr2 desc", Lists.newArrayList("segmsr1"), "testcube.segmsr1 asc"},
+      {"testcube.msr2 desc", Lists.newArrayList("segmsr1"), ""}
+    };
+  }
+
+  @Test(dataProvider = "orderByTrimDataProvider")
+  public void testOrderByTrim(String expr, Collection<String> columns, String expected) throws LensException {
+    String query = "select * from testcube order by " + expr;
+    ASTNode queryAst = HQLParser.parseHQL(query, conf);
+    ASTNode orderByAST = HQLParser.findNodeByPath(queryAst, TOK_INSERT, TOK_ORDERBY);
+    ASTNode actualAst = trimOrderByAst(orderByAST, columns);
+    Assert.assertEquals(getString(actualAst), expected);
   }
 }

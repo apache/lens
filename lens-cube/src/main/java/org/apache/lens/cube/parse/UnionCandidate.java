@@ -18,12 +18,12 @@
  */
 package org.apache.lens.cube.parse;
 
+import static java.util.Comparator.comparing;
+
 import java.util.*;
 
-import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
-import org.apache.lens.cube.parse.join.AutoJoinContext;
 import org.apache.lens.server.api.error.LensException;
 
 import com.google.common.collect.Lists;
@@ -37,9 +37,9 @@ public class UnionCandidate implements Candidate {
   /**
    * Caching start and end time calculated for this candidate as it may have many child candidates.
    */
-  Date startTime = null;
-  Date endTime = null;
-  String toStr;
+  private Date startTime = null;
+  private Date endTime = null;
+  private String toStr;
   @Getter
   CubeQueryContext cubeQueryContext;
   /**
@@ -47,7 +47,6 @@ public class UnionCandidate implements Candidate {
    */
   @Getter
   private List<Candidate> children;
-  private QueryAST queryAst;
 
   public UnionCandidate(Collection<? extends Candidate> childCandidates, CubeQueryContext cubeQueryContext) {
     this.children = Lists.newArrayList(childCandidates);
@@ -103,12 +102,6 @@ public class UnionCandidate implements Candidate {
       .max(Comparator.naturalOrder());
   }
 
-//  @Override
-//  public void addAutoJoinDims() throws LensException {
-//    for (Candidate candidate : getChildren()) {
-//      candidate.addAutoJoinDims();
-//    }
-//  }
 
   @Override
   public Collection<String> getColumns() {
@@ -242,18 +235,13 @@ public class UnionCandidate implements Candidate {
    * @return
    */
   private Map<Candidate, TimeRange> splitTimeRangeForChildren(TimeRange timeRange) {
-    Collections.sort(children, new Comparator<Candidate>() {
-      @Override
-      public int compare(Candidate o1, Candidate o2) {
-        return o1.getCost() < o2.getCost() ? -1 : o1.getCost() == o2.getCost() ? 0 : 1;
-      }
-    });
+    children.sort(comparing(Candidate::getCost));
     Map<Candidate, TimeRange> childrenTimeRangeMap = new HashMap<>();
     // Sorted list based on the weights.
     Set<TimeRange> ranges = new HashSet<>();
     ranges.add(timeRange);
     for (Candidate c : children) {
-      TimeRange.TimeRangeBuilder builder = getClonedBuiler(timeRange);
+      TimeRange.TimeRangeBuilder builder = timeRange.cloneAsBuilder();
       TimeRange tr = resolveTimeRangeForChildren(c, ranges, builder);
       if (tr != null) {
         // If the time range is not null it means this child candidate is valid for this union candidate.
@@ -310,7 +298,7 @@ public class UnionCandidate implements Candidate {
       if (ret.getFromDate().getTime() == range.getFromDate().getTime()) {
         checkAndUpdateNewTimeRanges(ret, range, newTimeRanges);
       } else {
-        TimeRange.TimeRangeBuilder b1 = getClonedBuiler(ret);
+        TimeRange.TimeRangeBuilder b1 = ret.cloneAsBuilder();
         b1.fromDate(range.getFromDate());
         b1.toDate(ret.getFromDate());
         newTimeRanges.add(b1.build());
@@ -325,19 +313,10 @@ public class UnionCandidate implements Candidate {
 
   private void checkAndUpdateNewTimeRanges(TimeRange ret, TimeRange range, Set<TimeRange> newTimeRanges) {
     if (ret.getToDate().getTime() < range.getToDate().getTime()) {
-      TimeRange.TimeRangeBuilder b2 = getClonedBuiler(ret);
+      TimeRange.TimeRangeBuilder b2 = ret.cloneAsBuilder();
       b2.fromDate(ret.getToDate());
       b2.toDate(range.getToDate());
       newTimeRanges.add(b2.build());
     }
-  }
-
-  private TimeRange.TimeRangeBuilder getClonedBuiler(TimeRange timeRange) {
-    TimeRange.TimeRangeBuilder builder = new TimeRange.TimeRangeBuilder();
-    builder.astNode(timeRange.getAstNode());
-    builder.childIndex(timeRange.getChildIndex());
-    builder.parent(timeRange.getParent());
-    builder.partitionColumn(timeRange.getPartitionColumn());
-    return builder;
   }
 }

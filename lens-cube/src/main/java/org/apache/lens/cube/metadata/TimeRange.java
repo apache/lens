@@ -114,7 +114,10 @@ public class TimeRange {
   public static TimeRangeBuilder getBuilder() {
     return new TimeRangeBuilder();
   }
-
+  public TimeRangeBuilder cloneAsBuilder() {
+    return getBuilder().
+      astNode(getAstNode()).childIndex(getChildIndex()).parent(getParent()).partitionColumn(getPartitionColumn());
+  }
   private TimeRange() {
 
   }
