@@ -409,7 +409,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       for (Class<?> clazz: classes) {
         comparators.add(clazz.asSubclass(QueryComparator.class).newInstance());
       }
-      queryComparator = new ChainedComparator<QueryContext>(comparators);
+      queryComparator = new ChainedComparator<>(comparators);
     } catch (Exception e) {
       throw new LensException("Couldn't instantiate query comparator class. Classes: "
           + conf.get(QUERY_COMPARATOR_CLASSES) + ". Please supply a valid value for "
