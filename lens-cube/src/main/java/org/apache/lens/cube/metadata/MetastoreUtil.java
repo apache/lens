@@ -591,7 +591,7 @@ public class MetastoreUtil {
     return copy;
   }
 
-  public static String getUpdatePeriodStoragePrefixKey(String factTableName , String storageName, String updatePeriod) {
+  public static String getUpdatePeriodStoragePrefixKey(String factTableName, String storageName, String updatePeriod) {
     return MetastoreUtil.getFactKeyPrefix(factTableName) + "." + storageName + "." + updatePeriod;
   }
 

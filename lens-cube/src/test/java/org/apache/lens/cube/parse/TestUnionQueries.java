@@ -30,14 +30,11 @@ import static org.testng.Assert.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.apache.lens.cube.error.LensCubeErrorCode;
-import org.apache.lens.cube.error.NoCandidateDimAvailableException;
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -53,12 +50,12 @@ public class TestUnionQueries extends TestQueryRewrite {
   @BeforeTest
   public void setupDriver() throws Exception {
     testConf = LensServerAPITestUtil.getConfiguration(
-      DRIVER_SUPPORTED_STORAGES, "C0,C1,C2",
-      DISABLE_AUTO_JOINS, false,
-      ENABLE_SELECT_TO_GROUPBY, true,
-      ENABLE_GROUP_BY_TO_SELECT, true,
-      DISABLE_AGGREGATE_RESOLVER, false,
-      ENABLE_STORAGES_UNION, true);
+        DRIVER_SUPPORTED_STORAGES, "C0,C1,C2",
+        DISABLE_AUTO_JOINS, false,
+        ENABLE_SELECT_TO_GROUPBY, true,
+        ENABLE_GROUP_BY_TO_SELECT, true,
+        DISABLE_AGGREGATE_RESOLVER, false,
+        ENABLE_STORAGES_UNION, true);
   }
 
   @Override
@@ -66,334 +63,228 @@ public class TestUnionQueries extends TestQueryRewrite {
     return new Configuration(testConf);
   }
 
-  //TODOD union: @Test
+  @Test
   public void testUnionQueries() throws Exception {
-    Configuration conf = getConf();
-    conf.set(getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C1"), "DAILY,HOURLY");
-    conf.set(getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C2"), "MONTHLY,DAILY");
-    conf.setBoolean(CubeQueryConfUtil.ENABLE_STORAGES_UNION, false);
-    ArrayList<String> storages = Lists.newArrayList("c1_testfact", "c2_testfact");
+    Configuration conf = LensServerAPITestUtil.getConfigurationWithParams(getConf(),
+        CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C6",
+        getValidFactTablesKey("basecube"), "testfact",
+        FAIL_QUERY_ON_PARTIAL_DATA, false);
+    ArrayList<String> storages = Lists.newArrayList("daily_c6_testfact", "monthly_c6_testfact");
     try {
-      getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(HOURLY, DAILY));
-      getStorageToUpdatePeriodMap().put("c2_testfact", Lists.newArrayList(MONTHLY));
-
       // Union query
       String hqlQuery;
       String expected;
       StoragePartitionProvider provider = new StoragePartitionProvider() {
         @Override
         public Map<String, String> providePartitionsForStorage(String storage) {
-          return getWhereForMonthlyDailyAndHourly2monthsUnionQuery(storage);
+          if (storage.contains("daily_c6_testfact")) {
+            return getWhereForDays(storage, ONE_MONTH_BACK_TRUNCATED, getTruncatedDateWithOffset(MONTHLY, 0));
+          } else if (storage.contains("monthly_c6_testfact")) {
+            return getWhereForMonthly(storage, THREE_MONTHS_BACK_TRUNCATED, ONE_MONTH_BACK_TRUNCATED);
+          }
+          return null;
         }
       };
-      try {
-        rewrite("select cityid as `City ID`, msr8, msr7 as `Third measure` "
-          + "from testCube where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
-     //   fail("Union feature is disabled, should have failed");
-      } catch (LensException e) {
-        assertEquals(e.getErrorCode(), LensCubeErrorCode.STORAGE_UNION_DISABLED.getLensErrorInfo().getErrorCode());
-      }
-      conf.setBoolean(CubeQueryConfUtil.ENABLE_STORAGES_UNION, true);
-
-      hqlQuery = rewrite("select ascii(cityname) as `City Name`, msr8, msr7 as `Third measure` "
-        + "from testCube where ascii(cityname) = 'c' and cityname = 'a' and zipcode = 'b' and "
-        + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+      hqlQuery = rewrite("select cityname1 as `City Name`, msr8, msr7 as `Third measure` "
+          + "from testCube where cityname1 = 'a' and zipcode = 'b' and "
+          + THREE_MONTHS_RANGE_UPTO_MONTH, conf);
       expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0 as `City Name`, sum(testcube.alias1) + max(testcube.alias2), "
-          + "case when sum(testcube.alias1) = 0 then 0 else sum(testcube.alias3)/sum(testcube.alias1) end "
-          + "as `Third Measure`",
-        null, "group by testcube.alias0",
-        "select ascii(cubecity.name) as `alias0`, sum(testcube.msr2) as `alias1`, "
-          + "max(testcube.msr3) as `alias2`, "
-          + "sum(case when testcube.cityid = 'x' then testcube.msr21 else testcube.msr22 end) as `alias3`", " join "
-          + getDbName() + "c1_citytable cubecity on testcube.cityid = cubecity.id and (cubecity.dt = 'latest')",
-        "ascii(cubecity.name) = 'c' and cubecity.name = 'a' and testcube.zipcode = 'b'",
-        "group by ascii(cubecity.name))");
-      compareQueries(hqlQuery, expected);
-      hqlQuery = rewrite("select asciicity as `City Name`, msr8, msr7 as `Third measure` "
-        + "from testCube where asciicity = 'c' and cityname = 'a' and zipcode = 'b' and "
-        + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+          "SELECT (testcube.alias0) as `City Name`, (sum((testcube.alias1)) + max((testcube.alias2))) "
+              + "as `msr8`, case  when (sum((testcube.alias1)) = 0) then 0 else (sum((testcube.alias4)) / "
+              + "sum((testcube.alias1))) end as `Third measure` ",
+          null, "group by testcube.alias0",
+          "SELECT (cubecity1.name) as `alias0`, sum((testcube.msr2)) as `alias1`, max((testcube.msr3)) "
+              + "as `alias2`, sum(case  when ((testcube.cityid) = 'x') then (testcube.msr21) "
+              + "else (testcube.msr22) end) as `alias4` ", " join "
+              + getDbName() + "c6_citytable cubecity1 on testcube.cityid1 = cubecity1.id "
+              + "and (cubecity1.dt = 'latest') ",
+          "((cubecity1.name) = 'a') and ((testcube.zipcode) = 'b')",
+          "group by (cubecity1.name)");
       compareQueries(hqlQuery, expected);
 
       hqlQuery = rewrite("select ascii(cityid) as `City ID`, msr8, msr7 as `Third measure` "
-        + "from testCube where ascii(cityid) = 'c' and cityid = 'a' and zipcode = 'b' and "
-        + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+          + "from testCube where ascii(cityid) = 'c' and cityid = 'a' and zipcode = 'b' and "
+          + THREE_MONTHS_RANGE_UPTO_MONTH, conf);
 
       expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0 as `City ID`, sum(testcube.alias1) + max(testcube.alias2), "
-          + "case when sum(testcube.alias1) = 0 then 0 else sum(testcube.alias3)/sum(testcube.alias1) end "
-          + "as `Third Measure`",
-        null, "group by testcube.alias0",
-        "select ascii(testcube.cityid) as `alias0`, sum(testcube.msr2) as `alias1`, "
-          + "max(testcube.msr3) as `alias2`, "
-          + "sum(case when testcube.cityid = 'x' then testcube.msr21 else testcube.msr22 end) as `alias3`",
-        "ascii(testcube.cityid) = 'c' and testcube.cityid = 'a' and testcube.zipcode = 'b'",
-        "group by ascii(testcube.cityid)");
+          "SELECT (testcube.alias0) as `City ID`, (sum((testcube.alias1)) + max((testcube.alias2))) as `msr8`, "
+              + "case  when (sum((testcube.alias1)) = 0) then 0 else (sum((testcube.alias4)) / sum((testcube.alias1))) "
+              + "end as `Third measure`",
+          null, "group by testcube.alias0",
+          "SELECT ascii((testcube.cityid)) as `alias0`, sum((testcube.msr2)) as `alias1`, max((testcube.msr3)) "
+              + "as `alias2`, sum(case  when ((testcube.cityid) = 'x') then (testcube.msr21) "
+              + "else (testcube.msr22) end) as `alias4`",
+          "ascii(testcube.cityid) = 'c' and testcube.cityid = 'a' and testcube.zipcode = 'b'",
+          "group by ascii(testcube.cityid)");
 
       compareQueries(hqlQuery, expected);
 
       hqlQuery = rewrite("select cityid as `City ID`, msr8, msr7 as `Third measure` "
-        + "from testCube where cityid = 'a' and zipcode = 'b' and " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+          + "from testCube where cityid = 'a' and zipcode = 'b' and " + THREE_MONTHS_RANGE_UPTO_MONTH, conf);
 
       expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0 as `City ID`, sum(testcube.alias1) + max(testcube.alias2), "
-          + "case when sum(testcube.alias1) = 0 then 0 else sum(testcube.alias3)/sum(testcube.alias1) end "
-          + "as `Third Measure`",
-        null, "group by testcube.alias0",
-        "select testcube.cityid as `alias0`, sum(testcube.msr2) as `alias1`, "
-          + "max(testcube.msr3) as `alias2`, "
-          + "sum(case when testcube.cityid = 'x' then testcube.msr21 else testcube.msr22 end) as `alias3`",
-        "testcube.cityid = 'a' and testcube.zipcode = 'b'", "group by testcube.cityid");
+          "SELECT (testcube.alias0) as `City ID`, (sum((testcube.alias1)) + max((testcube.alias2))) as `msr8`, "
+              + "case  when (sum((testcube.alias1)) = 0) then 0 else (sum((testcube.alias4)) / sum((testcube.alias1)))"
+              + " end as `Third measure`",
+          null, "group by testcube.alias0",
+          "SELECT (testcube.cityid) as `alias0`, sum((testcube.msr2)) as `alias1`, max((testcube.msr3)) as `alias2`, "
+              + "sum(case  when ((testcube.cityid) = 'x') then (testcube.msr21) else (testcube.msr22) end) as `alias4`",
+          "testcube.cityid = 'a' and testcube.zipcode = 'b'", "group by testcube.cityid");
 
       compareQueries(hqlQuery, expected);
 
       hqlQuery = rewrite("select cityid as `City ID`, msr3 as `Third measure` from testCube where "
-        + TWO_MONTHS_RANGE_UPTO_HOURS + " having msr7 > 10", conf);
+          + THREE_MONTHS_RANGE_UPTO_MONTH + " having msr7 > 10", conf);
 
       expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0 as `City ID`, max(testcube.alias1) as `Third measure`",
-        null, "group by testcube.alias0 having "
-          + "(case when sum(testcube.alias2)=0 then 0 else sum(testcube.alias3)/sum(testcube.alias2) end > 10 )",
-        "SELECT testcube.cityid as `alias0`, max(testcube.msr3) as `alias1`, "
-          + "sum(testcube.msr2) as `alias2`, "
-          + "sum(case when testcube.cityid='x' then testcube.msr21 else testcube.msr22 end) as `alias3`",
-        null, "group by testcube.cityid");
+          "SELECT testcube.alias0 as `City ID`, max(testcube.alias1) as `Third measure`",
+          null, "group by testcube.alias0 having "
+              + "(case when sum(testcube.alias2)=0 then 0 else sum(testcube.alias3)/sum(testcube.alias2) end > 10 )",
+          "SELECT testcube.cityid as `alias0`, max(testcube.msr3) as `alias1`, "
+              + "sum(testcube.msr2) as `alias2`, "
+              + "sum(case when testcube.cityid='x' then testcube.msr21 else testcube.msr22 end) as `alias3`",
+          null, "group by testcube.cityid");
       compareQueries(hqlQuery, expected);
 
       hqlQuery = rewrite("select cityid as `City ID`, msr3 as `Third measure` from testCube where "
-        + TWO_MONTHS_RANGE_UPTO_HOURS + " having msr8 > 10", conf);
+          + THREE_MONTHS_RANGE_UPTO_MONTH + " having msr8 > 10", conf);
 
       expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0 as `City ID`, max(testcube.alias1) as `Third measure`",
-        null, "GROUP BY testcube.alias0 "
-          + "HAVING (sum(testcube.alias2) + max(testcube.alias1)) > 10 ",
-        "SELECT testcube.cityid as `alias0`, max(testcube.msr3) as `alias1`, "
-          + "sum(testcube.msr2)as `alias2`", null, "group by testcube.cityid");
+          "SELECT testcube.alias0 as `City ID`, max(testcube.alias1) as `Third measure`",
+          null, "GROUP BY testcube.alias0 "
+              + "HAVING (sum(testcube.alias2) + max(testcube.alias1)) > 10 ",
+          "SELECT testcube.cityid as `alias0`, max(testcube.msr3) as `alias1`, "
+              + "sum(testcube.msr2)as `alias2`", null, "group by testcube.cityid");
       compareQueries(hqlQuery, expected);
 
       hqlQuery = rewrite("select msr3 as `Measure 3` from testCube where "
-        + TWO_MONTHS_RANGE_UPTO_HOURS + " having msr2 > 10 and msr2 < 100", conf);
+          + THREE_MONTHS_RANGE_UPTO_MONTH + " having msr2 > 10 and msr2 < 100", conf);
 
       expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT max(testcube.alias0) as `Measure 3` ",
-        null, " HAVING sum(testcube.alias1) > 10 and sum(testcube.alias1) < 100",
-        "SELECT max(testcube.msr3) as `alias0`, sum(testcube.msr2) as `alias1`", null, null);
+          "SELECT max(testcube.alias0) as `Measure 3` ",
+          null, " HAVING sum(testcube.alias1) > 10 and sum(testcube.alias1) < 100",
+          "SELECT max(testcube.msr3) as `alias0`, sum(testcube.msr2) as `alias1`", null, null);
       compareQueries(hqlQuery, expected);
 
       hqlQuery = rewrite("select zipcode, cityid as `City ID`, msr3 as `Measure 3`, msr4, "
-        + "SUM(msr2) as `Measure 2` from testCube where "
-        + TWO_MONTHS_RANGE_UPTO_HOURS + " having msr4 > 10 order by cityid desc limit 5", conf);
+          + "SUM(msr2) as `Measure 2` from testCube where "
+          + THREE_MONTHS_RANGE_UPTO_MONTH + " having msr4 > 10 order by cityid desc limit 5", conf);
 
       expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0, testcube.alias1 as `City ID`, max(testcube.alias2) as `Measure 3`, "
-          + "count(testcube.alias3), sum(testcube.alias4) as `Measure 2`",
-        null, "group by testcube.alias0, testcube.alias1 "
-          + " having count(testcube.alias3) > 10 order by testcube.alias1 desc limit 5",
-        "select testcube.zipcode as `alias0`, testcube.cityid as `alias1`, "
-          + "max(testcube.msr3) as `alias2`,count(testcube.msr4) as `alias3`, sum(testcube.msr2) as `alias4`",
-        null, "group by testcube.zipcode, testcube.cityid ");
-      compareQueries(hqlQuery, expected);
-
-      conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, false);
-      conf.setBoolean(ENABLE_SELECT_TO_GROUPBY, false);
-      hqlQuery = rewrite("select cityid as `City ID`, msr3 as `Measure 3`, "
-        + "SUM(msr2) as `Measure 2` from testCube" + " where "
-        + TWO_MONTHS_RANGE_UPTO_HOURS + " group by zipcode having msr4 > 10 order by cityid desc limit 5", conf);
-
-      expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0 as `City ID`,max(testcube.alias1) as `Measure 3`,sum(testcube.alias2) as `Measure 2` ",
-        null, "group by testcube.alias3 having count(testcube.alias4) > 10 order by testcube.alias0 desc limit 5",
-        "SELECT testcube.cityid as `alias0`, max(testcube.msr3) as `alias1`, "
-          + "sum(testcube.msr2) as `alias2`, testcube.zipcode as `alias3`, count(testcube .msr4) as `alias4` FROM ",
-        null, "GROUP BY testcube.zipcode");
+          "SELECT (testcube.alias0) as `zipcode`, (testcube.alias1) as `City ID`, max((testcube.alias2)) "
+              + "as `Measure 3`, count((testcube.alias3)) as `msr4`, sum((testcube.alias4)) as `Measure 2`",
+          null, "group by testcube.alias0, testcube.alias1 "
+              + " having count(testcube.alias3) > 10 order by testcube.alias1 desc limit 5",
+          "SELECT (testcube.zipcode) as `alias0`, (testcube.cityid) as `alias1`, max((testcube.msr3)) as `alias2`, "
+              + "count((testcube.msr4)) as `alias3`, sum((testcube.msr2)) as `alias4`",
+          null, "group by testcube.zipcode, testcube.cityid ");
       compareQueries(hqlQuery, expected);
     } finally {
       getStorageToUpdatePeriodMap().clear();
     }
   }
-  //TODO: enable this test after lavkesh's changes
-  @Test(enabled = false)
+  @Test
   public void testDimAttrExpressionQuery() throws Exception {
-    Configuration conf = getConf();
-    conf.set(getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C1"), "DAILY,HOURLY");
-    conf.set(getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C2"), "MONTHLY,DAILY");
+    Configuration conf = LensServerAPITestUtil.getConfigurationWithParams(getConf(),
+        CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C6",
+        getValidFactTablesKey("testcube"), "testfact",
+        FAIL_QUERY_ON_PARTIAL_DATA, false);
+    ArrayList<String> storages = Lists.newArrayList("daily_c6_testfact", "monthly_c6_testfact");
+
+    StoragePartitionProvider provider = new StoragePartitionProvider() {
+      @Override
+      public Map<String, String> providePartitionsForStorage(String storage) {
+        if (storage.contains("daily_c6_testfact")) {
+          return getWhereForDays(storage, ONE_MONTH_BACK_TRUNCATED, getTruncatedDateWithOffset(MONTHLY, 0));
+        } else if (storage.contains("monthly_c6_testfact")) {
+          return getWhereForMonthly(storage, THREE_MONTHS_BACK_TRUNCATED, ONE_MONTH_BACK_TRUNCATED);
+        }
+        return null;
+      }
+    };
     // exception in following line
     String hqlQuery = rewrite("select asciicity as `City Name`, cityAndState as citystate, isIndia as isIndia,"
-      + " msr8, msr7 as `Third measure` "
-      + "from testCube where asciicity = 'c' and cityname = 'a' and zipcode = 'b' and "
-      + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+        + " msr8, msr7 as `Third measure` "
+        + "from testCube where asciicity = 'c' and cityname = 'a' and zipcode = 'b' and "
+        + THREE_MONTHS_RANGE_UPTO_MONTH, conf);
     String joinExpr1 =  " join "
-      + getDbName() + "c1_statetable cubestate on testcube.stateid = cubestate.id and (cubestate.dt = 'latest') join"
-      + getDbName() + "c1_citytable cubecity on testcube.cityid = cubecity.id and (cubecity.dt = 'latest')";
+        + getDbName() + "c6_statetable cubestate on testcube.stateid = cubestate.id and (cubestate.dt = 'latest') join"
+        + getDbName() + "c6_citytable cubecity on testcube.cityid = cubecity.id and (cubecity.dt = 'latest')";
     String joinExpr2 =  " join "
-      + getDbName() + "c1_citytable cubecity on testcube.cityid = cubecity.id and (cubecity.dt = 'latest') join"
-      + getDbName() + "c1_statetable cubestate on testcube.stateid = cubestate.id and (cubestate.dt = 'latest')";
+        + getDbName() + "c6_citytable cubecity on testcube.cityid = cubecity.id and (cubecity.dt = 'latest') join"
+        + getDbName() + "c6_statetable cubestate on testcube.stateid = cubestate.id and (cubestate.dt = 'latest')";
 
     String expected1 = getExpectedQueryForDimAttrExpressionQuery(joinExpr1);
-    String expected2 = getExpectedQueryForDimAttrExpressionQuery(joinExpr2);// not equals
+    String expected2 = getExpectedQueryForDimAttrExpressionQuery(joinExpr2);
     assertTrue(new TestQuery(hqlQuery).equals(new TestQuery(expected1))
-      || new TestQuery(hqlQuery).equals(new TestQuery(expected2)),
-      "Actual :" + hqlQuery + " Expected1:" + expected1 + " Expected2 : "+ expected2);
+            || new TestQuery(hqlQuery).equals(new TestQuery(expected2)),
+        "Actual :" + hqlQuery + " Expected1:" + expected1 + " Expected2 : "+ expected2);
   }
 
   private String getExpectedQueryForDimAttrExpressionQuery(String joinExpr) {
     try {
-      ArrayList<String> storages = Lists.newArrayList("c1_testfact", "c2_testfact");
-      getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(HOURLY, DAILY));
-      getStorageToUpdatePeriodMap().put("c2_testfact", Lists.newArrayList(MONTHLY));
-      StoragePartitionProvider provider = CubeTestSetup::getWhereForMonthlyDailyAndHourly2monthsUnionQuery;
-      return getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0 as `City Name`, testcube.alias1 as citystate, testcube.alias2 as isIndia, "
-          + "sum(testcube.alias3) + max(testcube.alias4), "
-          + "case when sum(testcube.alias3) = 0 then 0 else sum(testcube.alias5)/sum(testcube.alias3) end "
-          + "as `Third Measure`",
-        null, " group by testcube.alias0, testcube.alias1, testcube.alias2",
-        "select ascii(cubecity.name) as `alias0`, concat(cubecity.name, \":\", cubestate.name) as alias1,"
-          + "cubecity.name == 'DELHI' OR cubestate.name == 'KARNATAKA' OR cubestate.name == 'MAHARASHTRA' as alias2,"
-          + "sum(testcube.msr2) as `alias3`, max(testcube.msr3) as `alias4`, "
-          + "sum(case when testcube.cityid = 'x' then testcube.msr21 else testcube.msr22 end) as `alias5`", joinExpr,
-        "ascii(cubecity.name) = 'c' and cubecity.name = 'a' and testcube.zipcode = 'b'",
-        " group by ascii(cubecity.name)), concat(cubecity.name, \":\", cubestate.name),"
-          + "cubecity.name == 'DELHI' OR cubestate.name == 'KARNATAKA' OR cubestate.name == 'MAHARASHTRA'");
-    } finally {
-      getStorageToUpdatePeriodMap().clear();
-    }
-  }
-  //TODOD union: @Test
-  public void testNonAggregateOverAggregateFunction() throws Exception {
-    try {
-      Configuration conf = getConf();
-      conf.set(getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
-      conf.set(getValidUpdatePeriodsKey("testfact", "C1"), "DAILY,HOURLY");
-      conf.set(getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
-      conf.set(getValidUpdatePeriodsKey("testfact", "C2"), "MONTHLY,DAILY");
-      ArrayList<String> storages = Lists.newArrayList("c1_testfact", "c2_testfact");
-      getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(HOURLY, DAILY));
-      getStorageToUpdatePeriodMap().put("c2_testfact", Lists.newArrayList(MONTHLY));
+      ArrayList<String> storages = Lists.newArrayList("daily_c6_testfact", "monthly_c6_testfact");
+
       StoragePartitionProvider provider = new StoragePartitionProvider() {
         @Override
         public Map<String, String> providePartitionsForStorage(String storage) {
-          return getWhereForMonthlyDailyAndHourly2monthsUnionQuery(storage);
+          if (storage.contains("daily_c6_testfact")) {
+            return getWhereForDays(storage, ONE_MONTH_BACK_TRUNCATED, getTruncatedDateWithOffset(MONTHLY, 0));
+          } else if (storage.contains("monthly_c6_testfact")) {
+            return getWhereForMonthly(storage, THREE_MONTHS_BACK_TRUNCATED, ONE_MONTH_BACK_TRUNCATED);
+          }
+          return null;
         }
       };
-      String hqlQuery = rewrite("select cityid as `City ID`, msr3 as `Measure 3`, "
-        + "round(SUM(msr2)) as `Measure 2` from testCube" + " where "
-        + TWO_MONTHS_RANGE_UPTO_HOURS + " group by zipcode having msr4 > 10 order by cityid desc, stateid asc, zipcode "
-        + "asc limit 5",
-        conf);
-      String expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "SELECT testcube.alias0 as `City ID`,max(testcube.alias1) as `Measure 3`,round(sum(testcube.alias2)) as "
-          + "`Measure 2` ", null, "group by testcube.alias3 having count(testcube.alias4) > 10 "
-          + "order by testcube.alias0 desc, testcube.alias5 asc, testcube.alias3 asc limit 5",
-        "SELECT testcube.cityid as `alias0`, max(testcube.msr3) as `alias1`, sum(testcube.msr2) as `alias2`, "
-          + "testcube.zipcode as `alias3`, count(testcube .msr4) as `alias4`, (testcube.stateid) as `alias5` FROM ",
-        null, "GROUP BY testcube.zipcode");
-      compareQueries(hqlQuery, expected);
+      return getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
+          "SELECT (testcube.alias0) as `City Name`, (testcube.alias1) as `citystate`, (testcube.alias2) as `isIndia`, "
+              + "(sum((testcube.alias3)) + max((testcube.alias4))) as `msr8`, case  when (sum((testcube.alias3)) = 0) "
+              + "then 0 else (sum((testcube.alias6)) / sum((testcube.alias3))) end as `Third measure` ",
+          null, " group by testcube.alias0, testcube.alias1, testcube.alias2",
+          "SELECT ascii((cubecity.name)) as `alias0`, concat((cubecity.name), \":\", (cubestate.name)) as `alias1`, "
+              + "(((cubecity.name) == 'DELHI') or ((cubestate.name) == 'KARNATAKA') or ((cubestate.name) "
+              + "== 'MAHARASHTRA')) as `alias2`, sum((testcube.msr2)) as `alias3`, max((testcube.msr3)) as `alias4`, "
+              + "sum(case  when ((testcube.cityid) = 'x') then (testcube.msr21) else (testcube.msr22) end) "
+              + "as `alias6` ", joinExpr,
+          "ascii(cubecity.name) = 'c' and cubecity.name = 'a' and testcube.zipcode = 'b'",
+          " GROUP BY ascii((cubecity.name)), concat((cubecity.name), \":\", (cubestate.name)), "
+              + "(((cubecity.name) == 'DELHI') or ((cubestate.name) == 'KARNATAKA') "
+              + "or ((cubestate.name) == 'MAHARASHTRA'))");
     } finally {
       getStorageToUpdatePeriodMap().clear();
     }
   }
-
-  //TODOD union: @Test
-  public void testMultiFactMultiStorage() throws ParseException, LensException {
+  @Test
+  public void testNonAggregateOverAggregateFunction() throws Exception {
     try {
       Configuration conf = LensServerAPITestUtil.getConfigurationWithParams(getConf(),
-        CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2",
-        getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact",
-        getValidUpdatePeriodsKey("testfact", "C1"), "HOURLY",
-        getValidUpdatePeriodsKey("testfact", "C2"), "DAILY",
-        getValidUpdatePeriodsKey("testfact2_raw", "C1"), "YEARLY",
-        getValidUpdatePeriodsKey("testfact2_raw", "C2"), "YEARLY");
-      getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(HOURLY));
-      getStorageToUpdatePeriodMap().put("c2_testfact", Lists.newArrayList(DAILY));
-      String whereCond = "zipcode = 'a' and cityid = 'b' and (" + TWO_DAYS_RANGE_SPLIT_OVER_UPDATE_PERIODS + ")";
-      String hqlQuery = rewrite("select zipcode, count(msr4), sum(msr15) from testCube where " + whereCond, conf);
-      System.out.println(hqlQuery);
-      String possibleStart1 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq1.expr2 `count(msr4)`,"
-        + " mq2.expr3 `sum(msr15)` FROM ";
-      String possibleStart2 = "SELECT COALESCE(mq1.zipcode, mq2.zipcode) zipcode, mq2.expr2 `count(msr4)`,"
-        + " mq1.expr3 `sum(msr15)` FROM ";
+          CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C6",
+          getValidFactTablesKey("testcube"), "testfact",
+          FAIL_QUERY_ON_PARTIAL_DATA, false);
+      ArrayList<String> storages = Lists.newArrayList("daily_c6_testfact", "monthly_c6_testfact");
 
-      assertTrue(hqlQuery.startsWith(possibleStart1) || hqlQuery.startsWith(possibleStart2));
-      compareContains(rewrite("select zipcode as `zipcode`, sum(msr15) as `expr3` from testcube where " + whereCond,
-        conf), hqlQuery);
-      compareContains(rewrite("select zipcode as `zipcode`, count(msr4) as `expr2` from testcube where " + whereCond,
-        conf), hqlQuery);
-      assertTrue(hqlQuery.endsWith("on mq1.zipcode <=> mq2.zipcode"));
-      // No time_range_in should be remaining
-      assertFalse(hqlQuery.contains("time_range_in"));
-      //TODO: handle having after LENS-813, also handle for order by and limit
-    } finally {
-      getStorageToUpdatePeriodMap().clear();
-    }
-  }
+      StoragePartitionProvider provider = new StoragePartitionProvider() {
+        @Override
+        public Map<String, String> providePartitionsForStorage(String storage) {
+          if (storage.contains("daily_c6_testfact")) {
+            return getWhereForDays(storage, ONE_MONTH_BACK_TRUNCATED, getTruncatedDateWithOffset(MONTHLY, 0));
+          } else if (storage.contains("monthly_c6_testfact")) {
+            return getWhereForMonthly(storage, THREE_MONTHS_BACK_TRUNCATED, ONE_MONTH_BACK_TRUNCATED);
+          }
+          return null;
+        }
+      };
 
-  //TODOD union: @Test
-  public void testCubeWhereQueryWithMultipleTables() throws Exception {
-    Configuration conf = getConf();
-    conf.setBoolean(CubeQueryConfUtil.ENABLE_STORAGES_UNION, true);
-    conf.set(getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C1"), "DAILY");
-    conf.set(getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C2"), "HOURLY");
-
-    getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(DAILY));
-    getStorageToUpdatePeriodMap().put("c2_testfact", Lists.newArrayList(HOURLY));
-    StoragePartitionProvider provider = new StoragePartitionProvider() {
-      @Override
-      public Map<String, String> providePartitionsForStorage(String storage) {
-        return getWhereForDailyAndHourly2days(TEST_CUBE_NAME, storage);
-      }
-    };
-    try {
-      // Union query
-      String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-      System.out.println("HQL:" + hqlQuery);
-
-      String expected = getExpectedUnionQuery(TEST_CUBE_NAME,
-        Lists.newArrayList("c1_testfact", "c2_testfact"), provider,
-        "select sum(testcube.alias0) ", null, null,
-        "select sum(testcube.msr2) as `alias0` from ", null, null
-      );
-      compareQueries(hqlQuery, expected);
-    } finally {
-      getStorageToUpdatePeriodMap().clear();
-    }
-  }
-
-  //TODOD union: @Test
-  public void testCubeWhereQueryWithMultipleTablesForMonth() throws Exception {
-    Configuration conf = getConf();
-    conf.set(DRIVER_SUPPORTED_STORAGES, "C1,C2,C3");
-    conf.set(getValidStorageTablesKey("testfact"), "");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C1"), "HOURLY");
-    conf.set(getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
-    conf.set(getValidUpdatePeriodsKey("testfact2_raw", "C3"), "YEARLY");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C2"), "DAILY");
-    conf.set(getValidUpdatePeriodsKey("testfact", "C3"), "MONTHLY");
-
-    getStorageToUpdatePeriodMap().put("c1_testfact", Lists.newArrayList(HOURLY));
-    getStorageToUpdatePeriodMap().put("c2_testfact", Lists.newArrayList(DAILY));
-    getStorageToUpdatePeriodMap().put("c3_testfact", Lists.newArrayList(MONTHLY));
-    StoragePartitionProvider provider = new StoragePartitionProvider() {
-      @Override
-      public Map<String, String> providePartitionsForStorage(String storage) {
-        return getWhereForMonthlyDailyAndHourly2monthsUnionQuery(storage);
-      }
-    };
-    try {
-      // Union query
-      String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
-      System.out.println("HQL:" + hqlQuery);
-      ArrayList<String> storages = Lists.newArrayList("c1_testfact", "c2_testfact", "c3_testfact");
+      String hqlQuery = rewrite("select cityid as `City ID`, msr3 as `Measure 3`, "
+          + "round(SUM(msr2)) as `Measure 2` from testCube" + " where "
+          + THREE_MONTHS_RANGE_UPTO_MONTH + " group by cityid having msr3 > 10 order by cityid desc limit 5", conf);
       String expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-        "select sum(testcube.alias0)", null, null,
-        "select sum(testcube.msr2) as `alias0` from ", null, null
-      );
+          "SELECT (testcube.alias0) as `City ID`, max((testcube.alias1)) as `Measure 3`, round(sum((testcube.alias2))) "
+              + "as `Measure 2` ", null, "GROUP BY (testcube.alias0) HAVING (max((testcube.alias1)) > 10) "
+              + "ORDER BY testcube.alias0 desc LIMIT 5",
+          "SELECT (testcube.cityid) as `alias0`, max((testcube.msr3)) as `alias1`, "
+              + "sum((testcube.msr2)) as `alias2` FROM ",
+          null, "GROUP BY testcube.cityid");
       compareQueries(hqlQuery, expected);
     } finally {
       getStorageToUpdatePeriodMap().clear();
@@ -429,35 +320,33 @@ public class TestUnionQueries extends TestQueryRewrite {
     }
   }
 
-  //TODOD union: @Test
+  @Test
   public void testSingleFactMultiStorage() throws Exception {
     Configuration conf = LensServerAPITestUtil.getConfigurationWithParams(getConf(),
-      CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C3,C5",
-      getValidFactTablesKey("testcube"), "testfact",
-      getValidUpdatePeriodsKey("testfact", "C3"), "DAILY",
-      getValidUpdatePeriodsKey("testfact", "C5"), "DAILY",
-      FAIL_QUERY_ON_PARTIAL_DATA, false);
+        CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C6",
+        getValidFactTablesKey("testcube"), "testfact",
+        FAIL_QUERY_ON_PARTIAL_DATA, false);
 
-    String hqlQuery = rewrite("select count(msr4) from testCube where " + TWO_MONTHS_RANGE_UPTO_DAYS, conf);
+    String hqlQuery = rewrite("select count(msr4) from testCube where " + THREE_MONTHS_RANGE_UPTO_MONTH, conf);
     System.out.println(hqlQuery);
 
     // No time_range_in should be remaining
     assertFalse(hqlQuery.contains("time_range_in"));
-    ArrayList<String> storages = Lists.newArrayList("c3_testfact", "c5_testfact");
+    ArrayList<String> storages = Lists.newArrayList("daily_c6_testfact", "monthly_c6_testfact");
     StoragePartitionProvider provider = new StoragePartitionProvider() {
       @Override
       public Map<String, String> providePartitionsForStorage(String storage) {
-        if (storage.contains("c3")) {
-          return getWhereForDays(storage, TWO_MONTHS_BACK, getDateWithOffset(DAILY, -10));
-        } else if (storage.contains("c5")) {
-          return getWhereForDays(storage, getDateWithOffset(DAILY, -10), NOW);
+        if (storage.contains("daily_c6_testfact")) {
+          return getWhereForDays(storage, ONE_MONTH_BACK_TRUNCATED, getTruncatedDateWithOffset(MONTHLY, 0));
+        } else if (storage.contains("monthly_c6_testfact")) {
+          return getWhereForMonthly(storage, THREE_MONTHS_BACK_TRUNCATED, ONE_MONTH_BACK_TRUNCATED);
         }
         return null;
       }
     };
     String expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-      "select count(testcube.alias0)", null, null,
-      "select count(testcube.msr4) as `alias0` from ", null, null
+        "SELECT count((testcube.alias0)) as `count(msr4)`", null, null,
+        "select count(testcube.msr4) as `alias0` from ", null, null
     );
     compareQueries(hqlQuery, expected);
   }
@@ -466,19 +355,24 @@ public class TestUnionQueries extends TestQueryRewrite {
   @Test
   public void testSingleFactSingleStorageWithMultipleTableDescriptions() throws Exception {
     Configuration conf = LensServerAPITestUtil.getConfigurationWithParams(getConf(),
-      CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C6",
-      getValidFactTablesKey("testcube"), "testfact",
-      FAIL_QUERY_ON_PARTIAL_DATA, false);
+        CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C6",
+        getValidFactTablesKey("testcube"), "testfact",
+        FAIL_QUERY_ON_PARTIAL_DATA, false);
 
     //If not beginning of month. Expecting this to pass at beginning of every month (example April 01 00:00)
     if (!THREE_MONTHS_RANGE_UPTO_DAYS.equals(THREE_MONTHS_RANGE_UPTO_MONTH)) {
-      LensException e = getLensExceptionInRewrite("select count(msr4) from testCube where " + THREE_MONTHS_RANGE_UPTO_DAYS, conf);
+      LensException e = getLensExceptionInRewrite("select count(msr4) from testCube where "
+          + THREE_MONTHS_RANGE_UPTO_DAYS, conf);
       assertTrue(e instanceof NoCandidateFactAvailableException);
-      Set<Map.Entry<StorageCandidate, List<CandidateTablePruneCause>>> causes = ((NoCandidateFactAvailableException) e).getBriefAndDetailedError().entrySet().stream().filter(x -> x.getKey().getName().equalsIgnoreCase("c6_testfact")).collect(Collectors.toSet());
+      Set<Map.Entry<StorageCandidate, List<CandidateTablePruneCause>>> causes =
+          ((NoCandidateFactAvailableException) e).getBriefAndDetailedError()
+              .entrySet().stream().filter(x -> x.getKey().getStorageTable()
+              .equalsIgnoreCase("c6_testfact")).collect(Collectors.toSet());
       assertEquals(causes.size(), 1);
       List<CandidateTablePruneCause> pruneCauses = causes.iterator().next().getValue();
       assertEquals(pruneCauses.size(), 1);
-      assertEquals(pruneCauses.get(0).getCause(), CandidateTablePruneCause.CandidateTablePruneCode.STORAGE_NOT_AVAILABLE_IN_RANGE);
+      assertEquals(pruneCauses.get(0).getCause(), CandidateTablePruneCause.
+          CandidateTablePruneCode.STORAGE_NOT_AVAILABLE_IN_RANGE);
     }
 
     String hqlQuery2 = rewrite("select count(msr4) from testCube where " + THREE_MONTHS_RANGE_UPTO_MONTH, conf);
@@ -497,8 +391,8 @@ public class TestUnionQueries extends TestQueryRewrite {
       }
     };
     String expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
-      "select count(testcube.alias0) AS `count(msr4)`", null, null,
-      "select count((testcube.msr4)) AS `alias0` from ", null, null
+        "select count(testcube.alias0) AS `count(msr4)`", null, null,
+        "select count((testcube.msr4)) AS `alias0` from ", null, null
     );
     compareQueries(hqlQuery2, expected);
   }

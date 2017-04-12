@@ -137,6 +137,6 @@ public class JoinCandidate implements Candidate {
   }
 
   private String getToString() {
-    return this.toStr = "JOIN[" + childCandidate1.toString() + ", " + childCandidate2.toString() + "]";
+    return "JOIN[" + childCandidate1.toString() + ", " + childCandidate2.toString() + "]";
   }
 }

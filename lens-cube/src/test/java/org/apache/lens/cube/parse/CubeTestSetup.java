@@ -141,7 +141,7 @@ public class CubeTestSetup {
         innerWhere, innerPostWhere, null, provider.providePartitionsForStorage(storage)));
       sep = " UNION ALL ";
     }
-    return sb.append(") ").append(cubeName).append(" ").append(outerWhere == null ? "" : outerWhere)
+    return sb.append(") ").append(" as ").append(cubeName).append(" ").append(outerWhere == null ? "" : outerWhere)
       .append(" ").append(outerPostWhere == null ? "" : outerPostWhere).toString();
   }
   public static String getExpectedUnionQuery(String cubeName, List<String> storages, StoragePartitionProvider provider,
@@ -333,9 +333,9 @@ public class CubeTestSetup {
     return updatePeriodToWhereMap;
   }
 
-  // storageTables[0] is hourly
-  // storageTables[1] is daily
-  // storageTables[2] is monthly
+  // storageName[0] is hourly
+  // storageName[1] is daily
+  // storageName[2] is monthly
   public static Map<String, String> getWhereForMonthlyDailyAndHourly2months(String... storageTables) {
     Map<String, String> storageTableToWhereClause = new LinkedHashMap<String, String>();
     List<String> hourlyparts = new ArrayList<String>();
@@ -778,28 +778,33 @@ public class CubeTestSetup {
 
   private void dump(CubeMetastoreClient client) throws LensException, IOException {
 //    for (CubeInterface cubeInterface : client.getAllCubes()) {
-//      String path = getClass().getResource("/schema/cubes/" + ((cubeInterface instanceof Cube) ? "base" : "derived")).getPath() + "/" + cubeInterface.getName() + ".xml";
+//      String path = getClass().getResource("/schema/cubes/" + ((cubeInterface instanceof Cube) ? "base"
+// : "derived")).getPath() + "/" + cubeInterface.getName() + ".xml";
 //      try(BufferedWriter bw = new BufferedWriter(new FileWriter(path))) {
 //        bw.write(ToXMLString.toString(JAXBUtils.xCubeFromHiveCube(cubeInterface)));
 //      }
 //    }
     for (CubeFactTable cubeFactTable : client.getAllFacts()) {
-      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/facts").getPath()+"/"+cubeFactTable.getName()+".xml"))) {
+      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass()
+          .getResource("/schema/facts").getPath()+"/"+cubeFactTable.getName()+".xml"))) {
         bw.write(ToXMLString.toString(client.getXFactTable(cubeFactTable)));
       }
     }
 //    for (Dimension dim : client.getAllDimensions()) {
-//      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/dimensions").getPath()+"/"+dim.getName()+".xml"))) {
+//      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass()
+// .getResource("/schema/dimensions").getPath()+"/"+dim.getName()+".xml"))) {
 //        bw.write(ToXMLString.toString(JAXBUtils.xdimensionFromDimension(dim)));
 //      }
 //    }
     for (CubeDimensionTable dim : client.getAllDimensionTables()) {
-      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/dimtables").getPath()+"/"+dim.getName()+".xml"))) {
+      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass()
+          .getResource("/schema/dimtables").getPath()+"/"+dim.getName()+".xml"))) {
         bw.write(ToXMLString.toString(client.getXDimensionTable(dim)));
       }
     }
 //    for (Storage storage : client.getAllStorages()) {
-//      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass().getResource("/schema/storages").getPath()+"/"+storage.getName()+".xml"))) {
+//      try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass()
+// .getResource("/schema/storages").getPath()+"/"+storage.getName()+".xml"))) {
 //        bw.write(ToXMLString.toString(JAXBUtils.xstorageFromStorage(storage)));
 //      }
 //    }

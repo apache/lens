@@ -20,6 +20,7 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.Optional.*;
+
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.DAILY;
 
@@ -122,7 +123,7 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
 
   @DataProvider
   public Object[][] getBoundTypes() {
-    return new Object[][]{{OPEN, OPEN}, {OPEN,CLOSED},{CLOSED,OPEN},{CLOSED,CLOSED}};
+    return new Object[][]{{OPEN, OPEN}, {OPEN, CLOSED}, {CLOSED, OPEN}, {CLOSED, CLOSED}};
   }
 
   @Test(dataProvider = "getBoundTypes")
@@ -150,7 +151,8 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
   }
 
 
-  private void validateBetweenBoundTypes(String whereClause, DateFormat format, int testStartOffset, int testEndOffset) {
+  private void validateBetweenBoundTypes(String whereClause, DateFormat format,
+      int testStartOffset, int testEndOffset) {
     String expected = getBetweenClause("test", "dt", getDateWithOffset(DAILY, testStartOffset),
       getDateWithOffset(DAILY, testEndOffset), ofNullable(format).orElseGet(DAILY::format));
     Assert.assertEquals(expected, whereClause);

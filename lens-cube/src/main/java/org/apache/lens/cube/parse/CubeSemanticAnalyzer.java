@@ -22,6 +22,7 @@ package org.apache.lens.cube.parse;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.parse.*;
@@ -36,7 +37,7 @@ public class CubeSemanticAnalyzer extends SemanticAnalyzer {
   @Getter
   private QB cubeQB;
 
-  public CubeSemanticAnalyzer(HiveConf hiveConf) throws SemanticException {
+  public CubeSemanticAnalyzer(Configuration queryConf, HiveConf hiveConf) throws SemanticException {
     super(new QueryState(hiveConf));
     setupRules();
   }

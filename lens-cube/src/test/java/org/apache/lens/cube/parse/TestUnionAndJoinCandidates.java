@@ -25,8 +25,6 @@ import static org.apache.lens.cube.parse.TestCubeRewriter.compareContains;
 
 import static org.testng.Assert.*;
 
-import jodd.util.StringUtil;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.lens.server.api.LensServerAPITestUtil;
 import org.apache.lens.server.api.error.LensException;
 
@@ -35,6 +33,8 @@ import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import jodd.util.StringUtil;
 
 public class TestUnionAndJoinCandidates extends TestQueryRewrite {
 
@@ -76,7 +76,7 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
     assertEquals(StringUtil.count(rewrittenQuery, "sum((basecube.union_join_ctx_msr1))"), 2);
   }
 
-    @Test
+  @Test
   public void testFinalCandidateRewrittenQuery() throws ParseException, LensException {
     try {
       // Query with non projected measure in having clause.
@@ -85,12 +85,12 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
       String whereCond = " union_join_ctx_zipcode = 'a' and union_join_ctx_cityid = 'b' and "
           + "(" + TWO_MONTHS_RANGE_UPTO_DAYS + ")";
       String rewrittenQuery = rewrite("select " + colsSelected + " from basecube where " + whereCond + having, conf);
-      String expectedInnerSelect1 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, sum(0.0) as `alias1`, "
+      String expectedInnerSelect1 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, 0.0 as `alias1`, "
           + "sum((basecube.union_join_ctx_msr1)) as `alias2` FROM TestQueryRewrite.c1_union_join_ctx_fact1 basecube ";
-      String expectedInnerSelect2 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, sum(0.0) as `alias1`, "
+      String expectedInnerSelect2 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, 0.0 as `alias1`, "
           + "sum((basecube.union_join_ctx_msr1)) as `alias2` FROM TestQueryRewrite.c1_union_join_ctx_fact2 basecube ";
       String expectedInnerSelect3 = " SELECT (basecube.union_join_ctx_cityid) as `alias0`, "
-          + "sum((basecube.union_join_ctx_msr2)) as `alias1`, sum(0.0) as `alias2` "
+          + "sum((basecube.union_join_ctx_msr2)) as `alias1`, 0.0 as `alias2` "
           + "FROM TestQueryRewrite.c1_union_join_ctx_fact3 basecube ";
       String outerHaving = "HAVING (sum((basecube.alias2)) > 100)";
       compareContains(expectedInnerSelect1, rewrittenQuery);
@@ -111,14 +111,14 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
       expectedInnerSelect1 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, (cubecityjoinunionctx.name) "
           + "as `alias1`, case  when (basecube.union_join_ctx_cityid) is null then 0 else "
           + "(basecube.union_join_ctx_cityid) end as `alias2`, sum((basecube.union_join_ctx_msr1)) as `alias3`, "
-          + "sum(0.0) as `alias4` FROM TestQueryRewrite.c1_union_join_ctx_fact1 basecube";
+          + "0.0 as `alias4` FROM TestQueryRewrite.c1_union_join_ctx_fact1 basecube";
       expectedInnerSelect2 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, (cubecityjoinunionctx.name) "
           + "as `alias1`, case  when (basecube.union_join_ctx_cityid) is null then 0 else "
           + "(basecube.union_join_ctx_cityid) end as `alias2`, sum((basecube.union_join_ctx_msr1)) as `alias3`, "
-          + "sum(0.0) as `alias4` FROM TestQueryRewrite.c1_union_join_ctx_fact2";
+          + "0.0 as `alias4` FROM TestQueryRewrite.c1_union_join_ctx_fact2";
       expectedInnerSelect3 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, (cubecityjoinunionctx.name) "
           + "as `alias1`, case  when (basecube.union_join_ctx_cityid) is null then 0 else "
-          + "(basecube.union_join_ctx_cityid) end as `alias2`, sum(0.0) as `alias3`, "
+          + "(basecube.union_join_ctx_cityid) end as `alias2`, 0.0 as `alias3`, "
           + "sum((basecube.union_join_ctx_msr2)) as `alias4` FROM TestQueryRewrite.c1_union_join_ctx_fact3";
       String outerGroupBy = "GROUP BY (basecube.alias0), (basecube.alias1), (basecube.alias2)";
       compareContains(outerSelect, rewrittenQuery);
@@ -142,12 +142,12 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
           + "as `(sum(union_join_ctx_msr1) + 10)` FROM ";
       expectedInnerSelect1 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, "
           + "(cubecityjoinunionctx.name) as `alias1`, sum((basecube.union_join_ctx_msr1)) as `alias2`, "
-          + "sum(0.0) as `alias3`, sum(0.0) as `alias4` FROM";
+          + "0.0 as `alias3`, 0.0 as `alias4` FROM";
       expectedInnerSelect2 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, "
           + "(cubecityjoinunionctx.name) as `alias1`, sum((basecube.union_join_ctx_msr1)) as `alias2`, "
-          + "sum(0.0) as `alias3`, sum(0.0) as `alias4` FROM";
+          + "0.0 as `alias3`, 0.0 as `alias4` FROM";
       expectedInnerSelect3 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, (cubecityjoinunionctx.name) "
-          + "as `alias1`, sum(0.0) as `alias2`, sum((basecube.union_join_ctx_msr2)) as `alias3`, "
+          + "as `alias1`, 0.0 as `alias2`, sum((basecube.union_join_ctx_msr2)) as `alias3`, "
           + "sum(case  when ((basecube.union_join_ctx_msr2) > 0) then (basecube.union_join_ctx_msr2) else 0 end) "
           + "as `alias4` FROM";
       String innerGroupBy = "GROUP BY (basecube.union_join_ctx_cityid), (cubecityjoinunionctx.name)";

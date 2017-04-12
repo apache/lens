@@ -24,6 +24,8 @@ import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
+import com.google.common.collect.Maps;
+
 /**
  * Represents a union of two candidates
  */
@@ -41,7 +43,7 @@ public class UnionCandidate implements Candidate {
    */
   private List<Candidate> childCandidates;
   private QueryAST queryAst;
-
+  private Map<TimeRange, Map<Candidate, TimeRange>> splitTimeRangeMap = Maps.newHashMap();
   public UnionCandidate(List<Candidate> childCandidates, CubeQueryContext cubeql) {
     this.childCandidates = childCandidates;
     //this.alias = alias;
@@ -56,7 +58,7 @@ public class UnionCandidate implements Candidate {
 
   @Override
   public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
-    Map<Candidate, TimeRange> candidateRange = splitTimeRangeForChildren(timeRange);
+    Map<Candidate, TimeRange> candidateRange = getTimeRangeSplit(timeRange);
     for (Map.Entry<Candidate, TimeRange> entry : candidateRange.entrySet()) {
       if (!entry.getKey().isTimeRangeCoverable(entry.getValue())) {
         return false;
@@ -106,8 +108,10 @@ public class UnionCandidate implements Candidate {
   @Override
   public double getCost() {
     double cost = 0.0;
-    for (Candidate cand : childCandidates) {
-      cost += cand.getCost();
+    for (TimeRange timeRange : cubeql.getTimeRanges()) {
+      for (Map.Entry<Candidate, TimeRange> entry : getTimeRangeSplit(timeRange).entrySet()) {
+        cost += entry.getKey().getCost() * entry.getValue().milliseconds() / timeRange.milliseconds();
+      }
     }
     return cost;
   }
@@ -137,7 +141,7 @@ public class UnionCandidate implements Candidate {
   @Override
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange parentTimeRange, boolean failOnPartialData)
     throws LensException {
-    Map<Candidate, TimeRange> candidateRange = splitTimeRangeForChildren(timeRange);
+    Map<Candidate, TimeRange> candidateRange = getTimeRangeSplit(timeRange);
     boolean ret = true;
     for (Map.Entry<Candidate, TimeRange> entry : candidateRange.entrySet()) {
       ret &= entry.getKey().evaluateCompleteness(entry.getValue(), parentTimeRange, failOnPartialData);
@@ -192,12 +196,7 @@ public class UnionCandidate implements Candidate {
    * @return
    */
   private Map<Candidate, TimeRange> splitTimeRangeForChildren(TimeRange timeRange) {
-    Collections.sort(childCandidates, new Comparator<Candidate>() {
-      @Override
-      public int compare(Candidate o1, Candidate o2) {
-        return o1.getCost() < o2.getCost() ? -1 : o1.getCost() == o2.getCost() ? 0 : 1;
-      }
-    });
+    childCandidates.sort(Comparator.comparing(Candidate::getCost));
     Map<Candidate, TimeRange> childrenTimeRangeMap = new HashMap<>();
     // Sorted list based on the weights.
     Set<TimeRange> ranges = new HashSet<>();
@@ -211,6 +210,9 @@ public class UnionCandidate implements Candidate {
       }
     }
     return childrenTimeRangeMap;
+  }
+  private Map<Candidate, TimeRange> getTimeRangeSplit(TimeRange range) {
+    return splitTimeRangeMap.computeIfAbsent(range, this::splitTimeRangeForChildren);
   }
 
   /**

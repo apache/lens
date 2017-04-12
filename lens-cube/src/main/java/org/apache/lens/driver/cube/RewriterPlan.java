@@ -49,7 +49,7 @@ public final class RewriterPlan extends DriverQueryPlan {
     for (CubeQueryContext ctx : cubeQueries) {
       if (ctx.getPickedDimTables() != null && !ctx.getPickedDimTables().isEmpty()) {
         for (CandidateDim dim : ctx.getPickedDimTables()) {
-          addTablesQueried(dim.getStorageName());
+          addTablesQueried(dim.getStorageTable());
           if (partitions.get(dim.getName()) == null || partitions.get(dim.getName()).isEmpty()) {
             // puts storage table to latest part
             partitions.put(dim.getName(), dim.getParticipatingPartitions());
@@ -59,10 +59,10 @@ public final class RewriterPlan extends DriverQueryPlan {
       if (ctx.getPickedCandidate() != null) {
         for (StorageCandidate sc : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
           addTablesQueried(sc.getAliasForTable(""));
-          Set<FactPartition> factParts = (Set<FactPartition>) partitions.get(sc.getName());
+          Set<FactPartition> factParts = (Set<FactPartition>) partitions.get(sc.getStorageTable());
           if (factParts == null) {
             factParts = new HashSet<FactPartition>();
-            partitions.put(sc.getName(), factParts);
+            partitions.put(sc.getStorageTable(), factParts);
           }
           factParts.addAll((Set<FactPartition>) sc.getParticipatingPartitions());
         }

@@ -378,7 +378,8 @@ class ExpressionResolver implements ContextRewriter {
       return ec.isEvaluable(cTable);
     }
 
-    Set<Dimension> rewriteExprCtx(CubeQueryContext cubeql, StorageCandidate sc, Map<Dimension, CandidateDim> dimsToQuery,
+    Set<Dimension> rewriteExprCtx(CubeQueryContext cubeql, StorageCandidate sc,
+        Map<Dimension, CandidateDim> dimsToQuery,
       QueryAST queryAST) throws LensException {
       Set<Dimension> exprDims = new HashSet<Dimension>();
       log.info("Picking expressions for candidate {} ", sc);

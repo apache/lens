@@ -19,12 +19,12 @@
 
 package org.apache.lens.cube.parse;
 
-import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Sets.newHashSet;
-
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.columnNotFound;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
+
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 
 import java.util.*;
 
@@ -194,7 +194,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
       "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
     NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError error = ne.getJsonMessage();
-    Assert.assertEquals(error.getBrief(), CandidateTablePruneCode.UNSUPPORTED_STORAGE.errorFormat);
+    Assert.assertEquals(error.getBrief(), CandidateTablePruneCode.INVALID_DENORM_TABLE.errorFormat);
 
     Map<HashSet<String>, List<CandidateTablePruneCause>> enhanced = error.enhanced();
     Map<Set<String>, List<CandidateTablePruneCause>> expected = Maps.newHashMap();
@@ -343,7 +343,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     CubeQueryContext cubeql = rewriteCtx("select citydim.zipcode, citydim.statename from" + " citydim", tConf);
     Set<String> candidateDims = new HashSet<>();
     for (CandidateDim cdim : cubeql.getCandidateDims().get(cubeql.getMetastoreClient().getDimension("citydim"))) {
-      candidateDims.add(cdim.getName());
+      candidateDims.add(cdim.getStorageTable());
     }
     // city_table2 contains stateid, but not zipcode - it should have been removed.
     Assert.assertFalse(candidateDims.contains("city_table2"));

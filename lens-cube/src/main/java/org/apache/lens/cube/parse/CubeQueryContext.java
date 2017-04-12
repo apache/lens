@@ -19,27 +19,18 @@
 
 package org.apache.lens.cube.parse;
 
-import static com.google.common.base.Preconditions.checkArgument;
+
 import static java.util.stream.Collectors.toSet;
+
+import static org.apache.lens.cube.parse.CubeQueryConfUtil.*;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.DEFAULT_REWRITE_DIM_FILTER_TO_FACT_FILTER;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.NON_EXISTING_PARTITIONS;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL;
-import static org.apache.lens.cube.parse.CubeQueryConfUtil.REWRITE_DIM_FILTER_TO_FACT_FILTER;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
@@ -59,15 +50,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.JoinCond;
-import org.apache.hadoop.hive.ql.parse.ParseDriver;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.ParseUtils;
-import org.apache.hadoop.hive.ql.parse.QB;
-import org.apache.hadoop.hive.ql.parse.QBJoinTree;
-import org.apache.hadoop.hive.ql.parse.QBParseInfo;
+import org.apache.hadoop.hive.ql.parse.*;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -75,11 +58,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -756,7 +735,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       }
     } else { // (joinTree.getBaseSrc()[0] != null){
       String alias = joinTree.getBaseSrc()[0].toLowerCase();
-      builder.append(getStorageStringWithAlias(candidate , dimsToQuery, alias));
+      builder.append(getStorageStringWithAlias(candidate, dimsToQuery, alias));
       joiningTables.add(alias);
     }
     if (joinTree.getJoinCond() != null) {
@@ -854,23 +833,37 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     if (hasCubeInQuery()) {
       if (candidates.size() > 0) {
         cand = candidates.iterator().next();
-        log.info("Available Candidates:{}, picking up Candaidate: {} for querying", candidates, cand);
+        log.info("Available Candidates:{}, picking up Candidate: {} for querying", candidates, cand);
       } else {
-        if (!storagePruningMsgs.isEmpty()) {
-          try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(out, storagePruningMsgs.getJsonObject());
-            log.info("No candidate found because: {}", out.toString("UTF-8"));
-          } catch (Exception e) {
-            throw new LensException("Error writing fact pruning messages", e);
-          }
-        }
-        log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}",
-            storagePruningMsgs.toJsonObject());
-        throw new NoCandidateFactAvailableException(this);
+        throwNoCandidateFactException();
       }
     }
     return cand;
+  }
+
+  void throwNoCandidateFactException() throws LensException {
+    String reason = "";
+    if (!storagePruningMsgs.isEmpty()) {
+      ByteArrayOutputStream out = null;
+      try {
+        ObjectMapper mapper = new ObjectMapper();
+        out = new ByteArrayOutputStream();
+        mapper.writeValue(out, storagePruningMsgs.getJsonObject());
+        reason = out.toString("UTF-8");
+      } catch (Exception e) {
+        throw new LensException("Error writing fact pruning messages", e);
+      } finally {
+        if (out != null) {
+          try {
+            out.close();
+          } catch (IOException e) {
+            throw new LensException(e);
+          }
+        }
+      }
+    }
+    log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}", storagePruningMsgs.toJsonObject());
+    throw new NoCandidateFactAvailableException(this);
   }
 
   private HQLContextInterface hqlContext;
@@ -1026,8 +1019,8 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     //update dim filter with fact filter, set where string in sc
     if (scSet.size() > 0) {
       for (StorageCandidate sc : scSet) {
-        String qualifiedStorageTable = sc.getStorageName();
-        String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1); //TODO this looks useless
+        String qualifiedStorageTable = sc.getStorageTable();
+        String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1);
         String where = getWhere(sc, autoJoinCtx,
           sc.getQueryAst().getWhereAST(), getAliasForTableName(sc.getBaseTable().getName()),
           shouldReplaceDimFilterWithFactFilter(), storageTable, dimsToQuery);

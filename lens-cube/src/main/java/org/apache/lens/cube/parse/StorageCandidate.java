@@ -29,7 +29,6 @@ import static org.apache.lens.cube.parse.StorageUtil.processExpressionsForComple
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.CubeFactTable;
@@ -51,7 +50,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.util.ReflectionUtils;
 
 import org.antlr.runtime.CommonToken;
 
@@ -119,6 +117,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
   private CubeFactTable fact;
   @Getter
   private String storageName;
+  @Getter
+  private String storageTable;
   @Getter
   @Setter
   private QueryAST queryAst;
@@ -190,8 +190,9 @@ public class StorageCandidate implements Candidate, CandidateTable {
     this.fact = fact;
     this.cubeql = cubeql;
     this.storageName = storageName;
+    this.storageTable = MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), storageName);
     this.conf = cubeql.getConf();
-    this.name = MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), storageName);
+    this.name = fact.getName();
     this.processTimePartCol = conf.get(CubeQueryConfUtil.PROCESS_TIME_PART_COL);
     String formatStr = conf.get(CubeQueryConfUtil.PART_WHERE_CLAUSE_DATE_FORMAT);
     if (formatStr != null) {
@@ -205,8 +206,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
     if (storageTblNames.size() > 1) {
       isStorageTblsAtUpdatePeriodLevel = true;
     } else {
-      //if this.name is equal to the storage table name it implies isStorageTblsAtUpdatePeriodLevel is false
-      isStorageTblsAtUpdatePeriodLevel = !storageTblNames.iterator().next().equalsIgnoreCase(name);
+      //if this.storageTable is equal to the storage table name it implies isStorageTblsAtUpdatePeriodLevel is false
+      isStorageTblsAtUpdatePeriodLevel = !storageTblNames.iterator().next().equalsIgnoreCase(storageTable);
     }
     setStorageStartAndEndDate();
   }
@@ -417,8 +418,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   private void updatePartitionStorage(FactPartition part) throws LensException {
     try {
-      if (client.factPartitionExists(fact, part, name)) {
-        part.getStorageTables().add(name);
+      if (client.factPartitionExists(fact, part, storageTable)) {
+        part.getStorageTables().add(storageTable);
         part.setFound(true);
       }
     } catch (HiveException e) {
@@ -478,7 +479,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     }
 
     if (!client.partColExists(this.getFact().getName(), storageName, partCol)) {
-      log.info("{} does not exist in {}", partCol, name);
+      log.info("{} does not exist in {}", partCol, storageTable);
       return false;
     }
 
@@ -488,7 +489,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     TreeSet<UpdatePeriod> remainingIntervals =  new TreeSet<>(updatePeriods);
     remainingIntervals.remove(maxInterval);
     if (!CandidateUtil.isCandidatePartiallyValidForTimeRange(
-      maxIntervalStorageTblStartDate, maxIntervalStorageTblEndDate,fromDate, toDate)) {
+      maxIntervalStorageTblStartDate, maxIntervalStorageTblEndDate, fromDate, toDate)) {
       //Check the time range in remainingIntervals as maxInterval is not useful
       return getPartitions(fromDate, toDate, partCol, partitions, remainingIntervals,
         addNonExistingParts, failOnPartialData, missingPartitions);
@@ -498,7 +499,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
       ? fromDate : maxIntervalStorageTblStartDate, maxInterval);
     Date floorToDate = DateUtil.getFloorDate(toDate.before(maxIntervalStorageTblEndDate)
       ? toDate : maxIntervalStorageTblEndDate, maxInterval);
-    if(ceilFromDate.equals(floorToDate) || floorToDate.before(ceilFromDate)) {
+    if (ceilFromDate.equals(floorToDate) || floorToDate.before(ceilFromDate)) {
       return getPartitions(fromDate, toDate, partCol, partitions, remainingIntervals,
         addNonExistingParts, failOnPartialData, missingPartitions);
     }
@@ -623,7 +624,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     Set<FactPartition> rangeParts = getPartitions(timeRange, validUpdatePeriods, true, failOnPartialData, missingParts);
     String partCol = timeRange.getPartitionColumn();
     boolean partColNotSupported = rangeParts.isEmpty();
-    String storageTableName = getName();
+    String storageTableName = getStorageTable();
 
     if (storagePruningMsgs.containsKey(this)) {
       List<CandidateTablePruneCause> causes = storagePruningMsgs.get(this);
@@ -813,13 +814,13 @@ public class StorageCandidate implements Candidate, CandidateTable {
     StorageCandidate storageCandidateObj = (StorageCandidate) obj;
     //Assuming that same instance of cube and fact will be used across StorageCandidate s and hence relying directly
     //on == check for these.
-    return (this.cube == storageCandidateObj.cube && this.fact == storageCandidateObj.fact && this.name
-      .equals(storageCandidateObj.name));
+    return (this.cube == storageCandidateObj.cube && this.fact == storageCandidateObj.fact && this.storageTable
+      .equals(storageCandidateObj.storageTable));
   }
 
   @Override
   public int hashCode() {
-    return this.name.hashCode();
+    return this.storageTable.hashCode();
   }
 
   @Override
@@ -879,8 +880,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
   private boolean isUpdatePeriodUseful(TimeRange timeRange, UpdatePeriod updatePeriod) {
     try {
       if (!CandidateUtil.isCandidatePartiallyValidForTimeRange(getStorageTableStartDate(updatePeriod),
-        getStorageTableEndDate(updatePeriod), timeRange.getFromDate(), timeRange.getToDate()))
-      {
+        getStorageTableEndDate(updatePeriod), timeRange.getFromDate(), timeRange.getToDate())) {
         return false;
       }
       Date storageTblStartDate  = getStorageTableStartDate(updatePeriod);
@@ -983,7 +983,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   public String getResolvedName() {
     if (resolvedName == null) {
-      return name;
+      return storageTable;
     }
     return resolvedName;
   }
@@ -1009,7 +1009,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
       updatePeriodSpecificSc = new StorageCandidate(this);
       updatePeriodSpecificSc.truncatePartitions(period);
       updatePeriodSpecificSc.setResolvedName(client.getStorageTableName(fact.getName(),
-        storageName, period));
+          storageName, period));
       periodSpecificScList.add(updatePeriodSpecificSc);
     }
     return periodSpecificScList;

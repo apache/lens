@@ -40,7 +40,12 @@ import com.google.common.collect.TreeRangeSet;
 /**
  * Placeholder for Util methods that will be required for {@link Candidate}
  */
-public class CandidateUtil {
+public final class CandidateUtil {
+
+  private CandidateUtil() {
+    // Added due to checkstyle error getting below :
+    // (design) HideUtilityClassConstructor: Utility classes should not have a public or default constructor.
+  }
 
   /**
    * Returns true if the Candidate is valid for all the timeranges based on its start and end times.
@@ -217,10 +222,12 @@ public class CandidateUtil {
     return false;
   }
 
-  public static String getTimeRangeWhereClasue(TimeRangeWriter rangeWriter, StorageCandidate sc, TimeRange range) throws LensException {
-    String rangeWhere = rangeWriter.getTimeRangeWhereClause(sc.getCubeql(), sc.getCubeql().getAliasForTableName(sc.getCube().getName()),
+  public static String getTimeRangeWhereClasue(TimeRangeWriter rangeWriter,
+      StorageCandidate sc, TimeRange range) throws LensException {
+    String rangeWhere = rangeWriter.getTimeRangeWhereClause(sc.getCubeql(),
+        sc.getCubeql().getAliasForTableName(sc.getCube().getName()),
       sc.getRangeToPartitions().get(range));
-    if(sc.getRangeToExtraWhereFallBack().containsKey(range)){
+    if (sc.getRangeToExtraWhereFallBack().containsKey(range)) {
       rangeWhere =  "((" + rangeWhere + ") and  (" + sc.getRangeToExtraWhereFallBack().get(range) + "))";
     }
     return rangeWhere;

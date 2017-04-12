@@ -422,7 +422,7 @@ public class CubeMetastoreClient {
     public TreeMap<UpdatePeriod, CaseInsensitiveStringHashMap<PartitionTimeline>> get(String fact, String storage)
       throws HiveException, LensException {
       // SUSPEND CHECKSTYLE CHECK DoubleCheckedLockingCheck
-      // Unique key for the timeline cache, based on storageName and fact.
+      // Unique key for the timeline cache, based on storage and fact.
       String timeLineKey = (Storage.getPrefix(storage)+ fact).toLowerCase();
       synchronized (this) {
         if (get(timeLineKey) == null) {
@@ -1756,7 +1756,8 @@ public class CubeMetastoreClient {
         for (Map.Entry entry : updatePeriodToTableMap.entrySet()) {
           XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
           updatePeriodTableDescriptor.setTableDesc(getStorageTableDescFromHiveTable(
-            this.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(), (String) entry.getValue()))));
+            this.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(),
+                (String) entry.getValue()))));
           updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(((UpdatePeriod)entry.getKey()).name()));
           xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
         }
