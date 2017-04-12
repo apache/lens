@@ -87,7 +87,7 @@ class StorageTableResolver implements ContextRewriter {
     }
   }
 
-  public StorageTableResolver(Configuration conf) {
+  StorageTableResolver(Configuration conf) {
     this.conf = conf;
     this.supportedStorages = getSupportedStorages(conf);
     this.allStoragesSupported = (supportedStorages == null);

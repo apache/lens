@@ -306,10 +306,8 @@ public final class LensServerTestUtil {
   }
 
 
-  public static LensSessionHandle openSession(WebTarget target, final String userName, final String passwd, final
-  LensConf
-    conf, MediaType
-    mt) {
+  public static LensSessionHandle openSession(WebTarget target, final String userName, final String passwd,
+    final LensConf conf, MediaType mt) {
 
     final WebTarget sessionTarget = target.path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();

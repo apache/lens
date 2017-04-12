@@ -558,7 +558,7 @@ public class TestEventService {
   private static class TestEvent extends LensEvent{
     String id;
     boolean processed = false;
-    public TestEvent(String id) {
+    TestEvent(String id) {
       super(System.currentTimeMillis());
       this.id = id;
     }
@@ -576,7 +576,7 @@ public class TestEventService {
     }
   }
   private static class DummyAsncEventListener extends AsyncEventListener<QuerySuccess> {
-    public DummyAsncEventListener(){
+    DummyAsncEventListener(){
       super(5); //core pool = 5
     }
     @Override

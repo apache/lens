@@ -132,7 +132,7 @@ public class SavedQueryResourceHelper extends ServiceManagerHelper {
 
   public SavedQuery getSavedQuery(Long queryId, String sessionHandleString) throws JAXBException {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString, "id", Long.toString(queryId));
-    Response response = this.exec("get", SAVED_QUERY_BASE_URL + "/" + queryId , servLens, null, query);
+    Response response = this.exec("get", SAVED_QUERY_BASE_URL + "/" + queryId, servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
     return response.readEntity(SavedQuery.class);
   }
@@ -143,7 +143,7 @@ public class SavedQueryResourceHelper extends ServiceManagerHelper {
 
   public ResourceModifiedResponse deleteSavedQuery(Long queryId, String sessionHandleString) throws JAXBException {
     MapBuilder query = new MapBuilder("sessionid", sessionHandleString, "id", Long.toString(queryId));
-    Response response = this.exec("delete", SAVED_QUERY_BASE_URL + "/" + queryId , servLens, null, query);
+    Response response = this.exec("delete", SAVED_QUERY_BASE_URL + "/" + queryId, servLens, null, query);
     AssertUtil.assertSucceededResponse(response);
     return response.readEntity(ResourceModifiedResponse.class);
   }
@@ -181,7 +181,7 @@ public class SavedQueryResourceHelper extends ServiceManagerHelper {
     formData.getForm().bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf")
         .build(), conf, MediaType.APPLICATION_XML_TYPE));
 
-    Response response = this.exec("post", SAVED_QUERY_BASE_URL + "/" + queryId , servLens, null, map,
+    Response response = this.exec("post", SAVED_QUERY_BASE_URL + "/" + queryId, servLens, null, map,
         MediaType.MULTIPART_FORM_DATA_TYPE, MediaType.APPLICATION_XML, formData.getForm());
 
     AssertUtil.assertSucceededResponse(response);

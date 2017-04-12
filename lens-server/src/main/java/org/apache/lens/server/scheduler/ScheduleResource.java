@@ -75,7 +75,7 @@ public class ScheduleResource {
   public LensAPIResult<SchedulerJobHandle> submitJob(@QueryParam("sessionid") LensSessionHandle sessionId,
     @QueryParam("action") String action, XJob job) throws LensException {
     validateSession(sessionId);
-    SUBMIT_ACTION op = UtilityMethods.checkAndGetOperation(action, SUBMIT_ACTION.class, SUBMIT_ACTION.values());
+    SubmitAction op = UtilityMethods.checkAndGetOperation(action, SubmitAction.class, SubmitAction.values());
     SchedulerJobHandle jobHandle;
     switch (op) {
     case SUBMIT:
@@ -85,7 +85,7 @@ public class ScheduleResource {
       jobHandle = schedulerService.submitAndScheduleJob(sessionId, job);
       break;
     default:
-      throw new UnSupportedOpException(SUBMIT_ACTION.values());
+      throw new UnSupportedOpException(SubmitAction.values());
     }
     return LensAPIResult.composedOf(null, this.logSegregationContext.getLogSegragationId(), jobHandle);
   }
@@ -206,7 +206,7 @@ public class ScheduleResource {
     @PathParam("jobHandle") SchedulerJobHandle jobHandle, @DefaultValue("schedule") @QueryParam("action") String action)
     throws LensException {
     validateSession(sessionId);
-    JOB_ACTION op = UtilityMethods.checkAndGetOperation(action, JOB_ACTION.class, JOB_ACTION.values());
+    JobAction op = UtilityMethods.checkAndGetOperation(action, JobAction.class, JobAction.values());
     switch (op) {
     case SCHEDULE:
       schedulerService.scheduleJob(sessionId, jobHandle);
@@ -225,7 +225,7 @@ public class ScheduleResource {
       break;
 
     default:
-      throw new UnSupportedOpException(JOB_ACTION.values());
+      throw new UnSupportedOpException(JobAction.values());
     }
     return LensAPIResult.composedOf(null, this.logSegregationContext.getLogSegragationId(), null);
   }
@@ -299,7 +299,7 @@ public class ScheduleResource {
     throws LensException {
     boolean res = true;
     validateSession(sessionId);
-    INSTANCE_ACTION op = UtilityMethods.checkAndGetOperation(action, INSTANCE_ACTION.class, INSTANCE_ACTION.values());
+    InstanceAction op = UtilityMethods.checkAndGetOperation(action, InstanceAction.class, InstanceAction.values());
     switch (op) {
     case KILL:
       res = schedulerService.killInstance(sessionId, instanceHandle);
@@ -308,21 +308,21 @@ public class ScheduleResource {
       schedulerService.rerunInstance(sessionId, instanceHandle);
       break;
     default:
-      throw new UnSupportedOpException(INSTANCE_ACTION.values());
+      throw new UnSupportedOpException(InstanceAction.values());
     }
     final String requestId = this.logSegregationContext.getLogSegragationId();
     return LensAPIResult.composedOf(null, requestId, res);
   }
 
-  private enum SUBMIT_ACTION {
+  private enum SubmitAction {
     SUBMIT, SUBMIT_AND_SCHEDULE;
   }
 
-  private enum INSTANCE_ACTION {
+  private enum InstanceAction {
     KILL, RERUN;
   }
 
-  private enum JOB_ACTION {
+  private enum JobAction {
     SCHEDULE, EXPIRE, SUSPEND, RESUME;
   }
 }

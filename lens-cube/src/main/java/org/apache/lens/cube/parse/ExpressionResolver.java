@@ -30,7 +30,6 @@ import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
@@ -44,9 +43,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class ExpressionResolver implements ContextRewriter {
-
-  public ExpressionResolver(Configuration conf) {
-  }
 
   static class ExpressionContext {
     @Getter
@@ -212,13 +208,13 @@ class ExpressionResolver implements ContextRewriter {
       finalAST = replaceAlias(exprSpec.copyASTNode(), cubeql);
       exprSpecs.add(exprSpec);
     }
-    public ExprSpecContext(ExprSpecContext nested, ExprSpec current, ASTNode node,
+    ExprSpecContext(ExprSpecContext nested, ExprSpec current, ASTNode node,
       CubeQueryContext cubeql) throws LensException {
       exprSpecs.addAll(nested.exprSpecs);
       exprSpecs.add(current);
       finalAST = replaceAlias(node, cubeql);
     }
-    public void replaceAliasInAST(CubeQueryContext cubeql)
+    void replaceAliasInAST(CubeQueryContext cubeql)
       throws LensException {
       AliasReplacer.extractTabAliasForCol(cubeql, this);
       finalAST = AliasReplacer.replaceAliases(finalAST, 0, cubeql.getColToTableAlias());

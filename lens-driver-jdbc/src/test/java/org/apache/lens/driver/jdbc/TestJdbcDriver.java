@@ -537,7 +537,7 @@ public class TestJdbcDriver {
     prs.setFullyAccessed(true);
 
     //Check Purge
-    assertEquals(prs.canBePurged() , true);
+    assertEquals(prs.canBePurged(), true);
   }
 
   @Test

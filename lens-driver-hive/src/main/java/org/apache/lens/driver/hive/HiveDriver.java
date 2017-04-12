@@ -235,7 +235,7 @@ public class HiveDriver extends AbstractLensDriver {
      * @param conn    the conn
      * @param timeout the timeout
      */
-    public ExpirableConnection(ThriftConnection conn, long timeout) {
+    ExpirableConnection(ThriftConnection conn, long timeout) {
       this.conn = conn;
       this.timeout = timeout;
       connId = CONNECTION_COUNTER.incrementAndGet();

@@ -39,7 +39,7 @@ public class TotalQueryCostCeilingConstraintTest {
 
   @DataProvider
   public Object[][] dpTestAllowsLaunchOfQuery() {
-    return new Object[][] { {7.0, true} , {90.0, true}, {91.0, false}};
+    return new Object[][] { {7.0, true}, {90.0, true}, {91.0, false}};
   }
 
   @Test(dataProvider = "dpTestAllowsLaunchOfQuery")

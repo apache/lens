@@ -45,7 +45,7 @@ class GroupbyResolver implements ContextRewriter {
   private final boolean selectPromotionEnabled;
   private final boolean groupbyPromotionEnabled;
 
-  public GroupbyResolver(Configuration conf) {
+  GroupbyResolver(Configuration conf) {
     selectPromotionEnabled =
       conf.getBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, CubeQueryConfUtil.DEFAULT_ENABLE_SELECT_TO_GROUPBY);
     groupbyPromotionEnabled =

@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 class MaxCoveringFactResolver implements ContextRewriter {
   private final boolean failOnPartialData;
 
-  public MaxCoveringFactResolver(Configuration conf) {
+  MaxCoveringFactResolver(Configuration conf) {
     this.failOnPartialData = conf.getBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
   }
 
@@ -184,7 +184,7 @@ class MaxCoveringFactResolver implements ContextRewriter {
     private final long seconds;
     private final long milliseconds;
 
-    public TimeCovered(long ms) {
+    TimeCovered(long ms) {
       milliseconds = ms % (24 * 60 * 60 * 1000);
       long seconds = ms / (24 * 60 * 60 * 1000);
       this.seconds = seconds % (24 * 60 * 60);

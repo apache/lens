@@ -196,7 +196,7 @@ public class ITSavedQueryTests extends BaseTestClass {
 
     //checking if the above deleted saved query is being deleted
     MapBuilder map = new MapBuilder("sessionid", sessionHandleString, "id", Long.toString(queryId));
-    Response res = lens.exec("get", SavedQueryResourceHelper.SAVED_QUERY_BASE_URL + "/" + queryId , servLens,
+    Response res = lens.exec("get", SavedQueryResourceHelper.SAVED_QUERY_BASE_URL + "/" + queryId, servLens,
         null, map);
     AssertUtil.assertNotFound(res);
   }

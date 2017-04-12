@@ -40,7 +40,7 @@ public enum LensCommonErrorCode {
     return this.errorCode;
   }
 
-  private LensCommonErrorCode(final int code) {
+  LensCommonErrorCode(final int code) {
     this.errorCode = code;
   }
 

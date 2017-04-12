@@ -135,18 +135,18 @@ public class CubeQueryRewriter {
    */
   private void setupRewriters() {
     // Resolve columns - the column alias and table alias
-    rewriters.add(new ColumnResolver(conf));
+    rewriters.add(new ColumnResolver());
     // Rewrite base trees (groupby, having, orderby, limit) using aliases
-    rewriters.add(new AliasReplacer(conf));
-    ExpressionResolver exprResolver = new ExpressionResolver(conf);
+    rewriters.add(new AliasReplacer());
+    ExpressionResolver exprResolver = new ExpressionResolver();
     DenormalizationResolver denormResolver = new DenormalizationResolver(conf);
-    CandidateTableResolver candidateTblResolver = new CandidateTableResolver(conf);
+    CandidateTableResolver candidateTblResolver = new CandidateTableResolver();
     StorageTableResolver storageTableResolver = new StorageTableResolver(conf);
     rewriters.add(exprResolver);
     // De-normalized columns resolved
     rewriters.add(denormResolver);
     // Resolve time ranges
-    rewriters.add(new TimerangeResolver(conf));
+    rewriters.add(new TimerangeResolver());
     // Resolve candidate fact tables and dimension tables for columns queried
     rewriters.add(candidateTblResolver);
     // Resolve aggregations and generate base select tree
@@ -154,7 +154,7 @@ public class CubeQueryRewriter {
     rewriters.add(new GroupbyResolver(conf));
     rewriters.add(new FieldValidator());
     // Resolve joins and generate base join tree
-    rewriters.add(new JoinResolver(conf));
+    rewriters.add(new JoinResolver());
     // Do col life validation
     rewriters.add(new TimeRangeChecker(conf));
     // Resolve candidate fact tables and dimension tables for columns included
@@ -168,7 +168,7 @@ public class CubeQueryRewriter {
       rewriters.add(denormResolver);
       // Prune candidate facts without any valid expressions
       rewriters.add(exprResolver);
-      rewriters.add(new LightestFactResolver(conf));
+      rewriters.add(new LightestFactResolver());
     }
     // Phase 2: resolve fact table partitions.
     rewriters.add(storageTableResolver);
@@ -183,10 +183,10 @@ public class CubeQueryRewriter {
     // "if two facts have the same least weight, then the fact with least number of time partitions queried will be
     // picked". This will be useful, if users did not set fact weights.
     if (!lightFactFirst) {
-      rewriters.add(new LightestFactResolver(conf));
+      rewriters.add(new LightestFactResolver());
     }
-    rewriters.add(new LeastPartitionResolver(conf));
-    rewriters.add(new LightestDimensionResolver(conf));
+    rewriters.add(new LeastPartitionResolver());
+    rewriters.add(new LightestDimensionResolver());
   }
 
   public CubeQueryContext rewrite(ASTNode astnode) throws LensException {

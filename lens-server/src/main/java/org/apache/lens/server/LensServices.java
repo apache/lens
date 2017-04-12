@@ -107,7 +107,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
   /** The service mode. */
   @Getter
   @Setter
-  private SERVICE_MODE serviceMode;
+  private ServiceMode serviceMode;
 
   /** Scheduled Executor which persists the server state periodically*/
   private ScheduledExecutorService serverSnapshotScheduler;
@@ -152,9 +152,9 @@ public class LensServices extends CompositeService implements ServiceProvider {
   }
 
   /**
-   * The Enum SERVICE_MODE.
+   * The Enum ServiceMode.
    */
-  public enum SERVICE_MODE {
+  public enum ServiceMode {
 
     /** The read only. */
     READ_ONLY, // All requests on sesssion resource and Only GET requests on all other resources
@@ -197,7 +197,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       conf = hiveConf;
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getCanonicalName());
       serviceMode = conf.getEnum(SERVER_MODE,
-        SERVICE_MODE.valueOf(DEFAULT_SERVER_MODE));
+        ServiceMode.valueOf(DEFAULT_SERVER_MODE));
       cliService = new CLIService(null);
       UserConfigLoaderFactory.init(conf);
       // Add default services
