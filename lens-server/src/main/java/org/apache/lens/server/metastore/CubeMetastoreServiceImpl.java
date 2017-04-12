@@ -226,7 +226,6 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
    */
   @Override
   public void createDimensionTable(LensSessionHandle sessionid, XDimensionTable xDimTable) throws LensException {
-    String dimTblName = xDimTable.getTableName();
     try (SessionContext ignored = new SessionContext(sessionid)){
       getClient(sessionid).createCubeDimensionTable(xDimTable);
       log.info("Dimension Table created " + xDimTable.getTableName());
