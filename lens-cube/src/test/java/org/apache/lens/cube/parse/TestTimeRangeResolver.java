@@ -19,23 +19,14 @@
 
 package org.apache.lens.cube.parse;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static org.apache.lens.cube.metadata.DateFactory.*;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.PART_COL_DOES_NOT_EXIST;
-import static
-  org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.STORAGE_NOT_AVAILABLE_IN_RANGE;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.UNSUPPORTED_STORAGE;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-import org.apache.lens.cube.error.NoCandidateFactAvailableException;
-import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 
@@ -47,7 +38,6 @@ import org.joda.time.DateTime;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.Sets;
 
 public class TestTimeRangeResolver extends TestQueryRewrite {
 
@@ -72,16 +62,9 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
 
   @Test
   public void testFactValidity() throws ParseException, LensException, HiveException, ClassNotFoundException {
-    LensException e =
-      getLensExceptionInRewrite("select msr2 from " + cubeName + " where " + LAST_YEAR_RANGE,
-        getConf());
-    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
-    PruneCauses.BriefAndDetailedError causes = ne.getJsonMessage();
-    assertTrue(causes.getBrief().contains("No storages available for all of these time ranges: "
-          + "[dt [2016-01-01-00:00:00,000 to 2017-01-01-00:00:00,000)]"), causes.getBrief());
-    assertEquals(causes.getDetails().values().stream().flatMap(Collection::stream)
-        .map(CandidateTablePruneCause::getCause).collect(Collectors.toSet()), newHashSet(COLUMN_NOT_FOUND,
-      PART_COL_DOES_NOT_EXIST, UNSUPPORTED_STORAGE, STORAGE_NOT_AVAILABLE_IN_RANGE));
+    String query = "select msr2 from " + cubeName + " where "  + LAST_YEAR_RANGE;
+    LensException e = getLensExceptionInRewrite(query, getConf());
+    assertEquals(e.getErrorInfo().getErrorName(), "NO_UNION_CANDIDATE_AVAILABLE");
   }
 
   @Test
@@ -118,14 +101,9 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     Configuration conf = getConf();
     DateTime dt = new DateTime(1990, 3, 23, 12, 0, 0, 0);
     conf.setLong(LensConfConstants.QUERY_CURRENT_TIME_IN_MILLIS, dt.getMillis());
-    NoCandidateFactAvailableException e =
-      (NoCandidateFactAvailableException)getLensExceptionInRewrite(
-        "select msr12 from basecube where time_range_in(d_time, 'now.day-275days','now')", conf);
-    TimeRange timeRange = e.getCubeQueryContext().getTimeRanges().get(0);
-    // Month starts from zero.
-    Calendar from = new GregorianCalendar(1989, 5, 21, 0, 0, 0);
-    assertEquals(timeRange.getFromDate(), from.getTime());
-    assertEquals(timeRange.getToDate(), dt.toDate());
+    String query = "select msr12 from basecube where time_range_in(d_time, 'now.day-275days','now')";
+    LensException e = getLensExceptionInRewrite(query, conf);
+    assertEquals(e.getMessage(), "NO_CANDIDATE_FACT_AVAILABLE[Range not answerable]");
   }
 
   /**
@@ -145,5 +123,4 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     }
     return  new ArrayList<CandidateTablePruneCause>();
   }
-
 }

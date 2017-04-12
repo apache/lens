@@ -18,14 +18,17 @@
  */
 package org.apache.lens.cube.parse;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
+
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
+
+import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.*;
 
 import org.apache.lens.cube.metadata.TimeRange;
+
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
@@ -46,7 +49,17 @@ public class CandidateTablePruneCause {
   public enum CandidateTablePruneCode {
     // other fact set element is removed
     ELEMENT_IN_SET_PRUNED("Other candidate from measure covering set is pruned"),
-
+    // least weight not satisfied
+    MORE_WEIGHT("Picked table had more weight than minimum."),
+    // partial data is enabled, another fact has more data.
+    LESS_DATA("Picked table has less data than the maximum"),
+    // cube table has more partitions
+    MORE_PARTITIONS("Picked table has more partitions than minimum"),
+    // storage is not supported by execution engine/driver
+    UNSUPPORTED_STORAGE("Unsupported Storage"),
+    // invalid cube table
+    INVALID("Invalid cube table provided in query"),
+    // expression is not evaluable in the candidate
     COLUMN_NOT_FOUND("%s are not %s") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         if (causes.size() == 1) {
@@ -80,9 +93,6 @@ public class CandidateTablePruneCause {
     PART_COL_DOES_NOT_EXIST("Partition column does not exist"),
     // Range is not supported by this storage table
     TIME_RANGE_NOT_ANSWERABLE("Range not answerable"),
-    // storage is not supported by execution engine/driver
-    UNSUPPORTED_STORAGE("Unsupported Storage"),
-
     STORAGE_NOT_AVAILABLE_IN_RANGE("No storages available for all of these time ranges: %s") {
       @Override
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
@@ -93,20 +103,11 @@ public class CandidateTablePruneCause {
       }
     },
 
-    // least weight not satisfied
-    MORE_WEIGHT("Picked table had more weight than minimum."),
-    // partial data is enabled, another fact has more data.
-    LESS_DATA("Picked table has less data than the maximum"),
-    // cube table has more partitions
-    MORE_PARTITIONS("Picked table has more partitions than minimum"),
-    // invalid cube table
-    INVALID("Invalid cube table provided in query"), //TODO move up. This does not make sense here.
-    // expression is not evaluable in the candidate
     EXPRESSION_NOT_EVALUABLE("%s expressions not evaluable") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         return new String[]{
           causes.stream().map(CandidateTablePruneCause::getMissingExpressions).flatMap(Collection::stream)
-            .collect(toSet()).toString()
+            .collect(toSet()).toString(),
         };
       }
     },
@@ -153,7 +154,7 @@ public class CandidateTablePruneCause {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         return new String[]{
           causes.stream().map(CandidateTablePruneCause::getJoinColumns).flatMap(Collection::stream)
-            .collect(toSet()).toString()
+            .collect(toSet()).toString(),
         };
       }
     },
@@ -163,7 +164,7 @@ public class CandidateTablePruneCause {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         return new String[]{
           causes.stream().map(CandidateTablePruneCause::getColumnsMissingDefaultAggregate).flatMap(Collection::stream)
-            .collect(toSet()).toString()
+            .collect(toSet()).toString(),
         };
       }
     },
@@ -180,7 +181,7 @@ public class CandidateTablePruneCause {
     MISSING_PARTITIONS("Missing partitions for the cube table: %s") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         return new String[]{
-          causes.stream().map(CandidateTablePruneCause::getMissingPartitions).collect(toSet()).toString()
+          causes.stream().map(CandidateTablePruneCause::getMissingPartitions).collect(toSet()).toString(),
         };
       }
     },
@@ -189,7 +190,7 @@ public class CandidateTablePruneCause {
             + " %s. Please try again later or rerun after removing incomplete metrics") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         return new String[]{
-          causes.stream().map(CandidateTablePruneCause::getIncompletePartitions).collect(toSet()).toString()
+          causes.stream().map(CandidateTablePruneCause::getIncompletePartitions).collect(toSet()).toString(),
         };
       }
     };

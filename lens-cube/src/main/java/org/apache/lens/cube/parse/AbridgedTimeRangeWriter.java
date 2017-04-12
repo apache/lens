@@ -19,12 +19,9 @@
 
 package org.apache.lens.cube.parse;
 
-import static com.google.common.collect.Sets.newHashSet;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.server.api.error.LensException;

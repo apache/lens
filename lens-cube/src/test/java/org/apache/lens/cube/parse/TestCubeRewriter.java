@@ -78,8 +78,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
   @Test
   public void testQueryWithNow() throws Exception {
-    LensException e = getLensExceptionInRewrite( // rewrites with original time_range_in
-      "select SUM(msr2) from testCube where " + getTimeRangeString("NOW - 2DAYS", "NOW"), getConf());
+    LensException e = getLensExceptionInRewrite(
+        "select SUM(msr2) from testCube where " + getTimeRangeString("NOW - 2DAYS", "NOW"), getConf());
     assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
   }
 
@@ -1053,7 +1053,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     pr2.addPruningMsg(new CubeDimensionTable(new Table("test", "citydim")),
             CandidateTablePruneCause.expressionNotEvaluable("testexp1", "testexp2"));
     NoCandidateDimAvailableException ne2 = new NoCandidateDimAvailableException(pr2);
-    assertEquals(ne1.compareTo(ne2), -12);
+    assertEquals(ne1.compareTo(ne2), -7);
   }
 
   @Test
@@ -1083,6 +1083,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
             new HashMap<String, CandidateTablePruneCause.CandidateTablePruneCode>() {
               {
                 put("c1_statetable", CandidateTablePruneCause.CandidateTablePruneCode.NO_PARTITIONS);
+                put("c6_statetable", CandidateTablePruneCause.CandidateTablePruneCode.UNSUPPORTED_STORAGE);
               }
             }))
           );
@@ -1385,7 +1386,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Date nextToNextDay = DateUtils.addDays(nextDay, 1);
     HashSet<String> storageTables = Sets.newHashSet();
     for (StorageCandidate sc : CandidateUtil.getStorageCandidates(candidate)) {
-      storageTables.add(sc.getName());
+      storageTables.add(sc.getStorageTable());
     }
     TreeSet<FactPartition> expectedPartsQueried = Sets.newTreeSet();
     for (TimePartition p : Iterables.concat(

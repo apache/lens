@@ -223,7 +223,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     Candidate candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(),
+        ((StorageCandidate) candidate).getStorageTable().toLowerCase());
     String expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, testCube.msr2 as `msr2` from ", null, null,
         getWhereForHourly2days("c1_testfact2_raw"));
@@ -286,7 +287,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     Candidate candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     String expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, avg(testCube.msr2) as `avg(testCube.msr2)` "
           + "from ", null, "group by testcube.cityid", getWhereForHourly2days("c1_testfact2_raw"));
@@ -298,7 +300,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, sum(testCube.msr2) as `sum(testCube.msr2)` "
@@ -310,7 +313,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, testCube.msr2 as `msr2` from ",
@@ -322,7 +326,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, sum(testCube.msr2)  as `sum(testCube.msr2)` "
@@ -334,7 +339,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, sum(testCube.msr2) as `sum(testCube.msr2)` "
@@ -346,7 +352,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, sum(testCube.msr2)  as `sum(testCube.msr2)` "
@@ -359,7 +366,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, sum(testCube.msr2) as `sum(testCube.msr2)` "
@@ -372,7 +380,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT distinct testcube.cityid as `cityid`, round(testCube.msr2)  "
@@ -384,7 +393,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, count(distinct testCube.msr2) "
@@ -398,7 +408,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, round(testCube.msr1) as `round(testCube.msr1)` "
@@ -410,7 +421,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT distinct testcube.cityid as `cityid`, round(testCube.msr1) "
@@ -422,7 +434,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, count(distinct testCube.msr1) "
@@ -435,7 +448,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     Assert.assertEquals(1, cubeql.getCandidates().size());
     candidate = cubeql.getCandidates().iterator().next();
     Assert.assertTrue(candidate instanceof StorageCandidate);
-    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate).getName().toLowerCase());
+    Assert.assertEquals("c1_testFact2_raw".toLowerCase(), ((StorageCandidate) candidate)
+        .getStorageTable().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid as `cityid`, sum(testCube.msr1) as `sum(testCube.msr1)` "

@@ -29,7 +29,7 @@ import lombok.Getter;
 
 /**
  * Note: This class is mainly meant for test cases to assert the detailed reasons (stored in
- * {@link #briefAndDetailedError} and {@link #cubeQueryContext}) leading to "No Candidate was found"
+ * {@link #briefAndDetailedError}  leading to "No Candidate was found"
  */
 public class NoCandidateFactAvailableException extends LensException {
 
@@ -39,15 +39,11 @@ public class NoCandidateFactAvailableException extends LensException {
   private final PruneCauses<Candidate> briefAndDetailedError;
 
   public NoCandidateFactAvailableException(CubeQueryContext cubeql) {
-    this(cubeql.getStoragePruningMsgs().getBriefCause(), cubeql);
-  }
-
-  public NoCandidateFactAvailableException(String errMsg, CubeQueryContext cubeql) {
-    super(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(), errMsg);
+    super(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
+        cubeql.getStoragePruningMsgs().getBriefCause());
     this.cubeQueryContext = cubeql;
     this.briefAndDetailedError = cubeql.getStoragePruningMsgs();
   }
-
 
   public PruneCauses.BriefAndDetailedError getJsonMessage() {
     return briefAndDetailedError.toJsonObject();

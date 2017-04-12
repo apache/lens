@@ -494,7 +494,8 @@ public class UnionQueryWriter extends SimpleHQLContext {
       ASTNode child = (ASTNode) selectAST.getChild(i);
       ASTNode outerSelect = new ASTNode(child);
       ASTNode selectExprAST = (ASTNode) child.getChild(0);
-      ASTNode outerAST = getOuterAST(selectExprAST, innerSelectAST, aliasDecider, sc.getStorageCandidate(), true, cubeql.getBaseCube().getDimAttributeNames());
+      ASTNode outerAST = getOuterAST(selectExprAST, innerSelectAST, aliasDecider, sc.getStorageCandidate(), true,
+          cubeql.getBaseCube().getDimAttributeNames());
       outerSelect.addChild(outerAST);
       // has an alias? add it
       if (child.getChildCount() > 1) {
@@ -529,7 +530,8 @@ public class UnionQueryWriter extends SimpleHQLContext {
    5. If given ast is memorized as mentioned in the above cases, return the mapping.
  */
   private ASTNode getOuterAST(ASTNode astNode, ASTNode innerSelectAST,
-      AliasDecider aliasDecider, StorageCandidate sc, boolean isSelectAst, Set<String> dimensionSet) throws LensException {
+      AliasDecider aliasDecider, StorageCandidate sc, boolean isSelectAst, Set<String> dimensionSet)
+      throws LensException {
     if (astNode == null) {
       return null;
     }
@@ -695,10 +697,25 @@ public class UnionQueryWriter extends SimpleHQLContext {
   private String getFromString() throws LensException {
     List<String> hqlQueries = new ArrayList<>();
     for (StorageCandidateHQLContext sc : storageCandidates) {
-//      sc.setRootCubeQueryContext(cubeql);
+      removeAggreagateFromDefaultColumns(sc.getQueryAst().getSelectAST());
       hqlQueries.add(sc.toHQL()); // todo remove arg2 by pushing inside function
     }
     return hqlQueries.stream().collect(joining(" UNION ALL ", "(", ") as " + cubeql.getBaseCube()));
   }
 
+  private void removeAggreagateFromDefaultColumns(ASTNode node) throws LensException {
+    for (int i = 0; i < node.getChildCount(); i++) {
+      ASTNode selectExpr = (ASTNode) node.getChild(i);
+      if (selectExpr.getChildCount() == 2) {
+        ASTNode column = (ASTNode) selectExpr.getChild(0);
+        if (HQLParser.isAggregateAST(column)
+            && column.getChildCount() == 2) {
+          if (HQLParser.getString((ASTNode) column.getChild(1)).equals("0.0")) {
+            selectExpr.getParent().setChild(i, getSelectExpr(null, (ASTNode) selectExpr.getChild(1), true));
+          }
+        }
+      }
+    }
+
+  }
 }

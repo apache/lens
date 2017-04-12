@@ -38,7 +38,7 @@ public class CandidateDim implements CandidateTable {
   final CubeDimensionTable dimtable;
   @Getter
   @Setter
-  private String storageName;
+  private String storageTable;
   @Getter
   @Setter
   private String whereClause;
@@ -73,11 +73,11 @@ public class CandidateDim implements CandidateTable {
       String database = SessionState.get().getCurrentDatabase();
       // Add database name prefix for non default database
       if (StringUtils.isNotBlank(database) && !"default".equalsIgnoreCase(database)) {
-        storageName = database + "." + storageName;
+        storageTable = database + "." + storageTable;
       }
       dbResolved = true;
     }
-    return storageName + " " + alias;
+    return storageTable + " " + alias;
   }
 
   @Override

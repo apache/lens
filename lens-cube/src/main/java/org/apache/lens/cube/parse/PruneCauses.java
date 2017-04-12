@@ -18,8 +18,9 @@
  */
 package org.apache.lens.cube.parse;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static java.util.stream.Collectors.toMap;
+
+import static com.google.common.collect.Sets.newHashSet;
 
 import java.util.ArrayList;
 import java.util.Comparator;

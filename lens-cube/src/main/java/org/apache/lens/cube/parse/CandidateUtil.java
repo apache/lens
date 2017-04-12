@@ -41,7 +41,12 @@ import com.google.common.collect.TreeRangeSet;
 /**
  * Placeholder for Util methods that will be required for {@link Candidate}
  */
-public class CandidateUtil {
+public final class CandidateUtil {
+
+  private CandidateUtil() {
+    // Added due to checkstyle error getting below :
+    // (design) HideUtilityClassConstructor: Utility classes should not have a public or default constructor.
+  }
 
   /**
    * Returns true if the Candidate is valid for all the timeranges based on its start and end times.

@@ -212,7 +212,7 @@ public class CubeQueryRewriter {
   public CubeQueryContext rewrite(ASTNode astnode) throws LensException {
     CubeSemanticAnalyzer analyzer;
     try {
-      analyzer = new CubeSemanticAnalyzer(hconf);
+      analyzer = new CubeSemanticAnalyzer(conf, hconf);
       analyzer.analyze(astnode, qlCtx);
     } catch (SemanticException e) {
       throw new LensException(SYNTAX_ERROR.getLensErrorInfo(), e, e.getMessage());
@@ -248,6 +248,7 @@ public class CubeQueryRewriter {
        */
       MethodMetricsContext mgauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), true,
         rewriter.getClass().getCanonicalName() + ITER_STR + i);
+
       rewriter.rewriteContext(ctx);
       mgauge.markSuccess();
       i++;

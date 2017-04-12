@@ -69,6 +69,10 @@ public class TimeRange {
     return timeRange;
   }
 
+  public long milliseconds() {
+    return toDate.getTime() - fromDate.getTime();
+  }
+
   public static class TimeRangeBuilder {
     private final TimeRange range;
 

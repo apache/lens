@@ -18,6 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.denormColumnNotFound;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.denormColumnNotFound;
@@ -108,7 +110,8 @@ public class DenormalizationResolver implements ContextRewriter {
             // there is no path
             // to the source table
             log.info("Adding denormalized column for column:{} for table:{}", col, table);
-            tableToRefCols.computeIfAbsent(table.getName(), k -> new HashSet<>()).add(refer);
+            String name = (table instanceof CandidateDim) ? table.getName() : table.getStorageTable();
+            tableToRefCols.computeIfAbsent(name, k -> new HashSet<>()).add(refer);
             // Add to optional tables
             for (ChainRefCol refCol : refer.col.getChainRefColumns()) {
               cubeql.addOptionalDimTable(refCol.getChainName(), table, false, refer.col.getName(), true,
@@ -177,7 +180,7 @@ public class DenormalizationResolver implements ContextRewriter {
       if (!tableToRefCols.isEmpty()) {
         // pick referenced columns for fact
         if (sc != null) {
-          pickColumnsForTable(cubeql, sc.getName());
+          pickColumnsForTable(cubeql, sc.getStorageTable());
         }
         // pick referenced columns for dimensions
         if (dimsToQuery != null) {
@@ -202,7 +205,7 @@ public class DenormalizationResolver implements ContextRewriter {
     }
     // checks if the reference if picked for facts and dimsToQuery passed
     private boolean isPickedFor(PickedReference picked, StorageCandidate sc, Map<Dimension, CandidateDim> dimsToQuery) {
-      if (sc != null && picked.pickedFor.equalsIgnoreCase(sc.getName())) {
+      if (sc != null && picked.pickedFor.equalsIgnoreCase(sc.getStorageTable())) {
         return true;
       }
       if (dimsToQuery != null) {
@@ -394,7 +397,7 @@ public class DenormalizationResolver implements ContextRewriter {
         for (Iterator<StorageCandidate> i =
              CandidateUtil.getStorageCandidates(cubeql.getCandidates()).iterator(); i.hasNext();) {
           StorageCandidate candidate = i.next();
-          Set<String> nonReachableFields = denormCtx.getNonReachableReferenceFields(candidate.getName());
+          Set<String> nonReachableFields = denormCtx.getNonReachableReferenceFields(candidate.getStorageTable());
           if (!nonReachableFields.isEmpty()) {
             log.info("Not considering fact table:{} as columns {} are not available", candidate, nonReachableFields);
             cubeql.addCandidatePruningMsg(candidate, denormColumnNotFound(nonReachableFields));

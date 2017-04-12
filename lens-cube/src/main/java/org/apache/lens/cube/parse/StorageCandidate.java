@@ -61,6 +61,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import org.antlr.runtime.CommonToken;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -127,6 +129,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
   private CubeFactTable fact;
   @Getter
   private String storageName;
+  @Getter
+  private String storageTable;
   @Getter
   private Map<TimeRange, Set<FactPartition>> rangeToPartitions = new LinkedHashMap<>();
   @Getter
@@ -569,7 +573,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     Set<FactPartition> rangeParts = getPartitions(timeRange, validUpdatePeriods, true, failOnPartialData, missingParts);
     String partCol = timeRange.getPartitionColumn();
     boolean partColNotSupported = rangeParts.isEmpty();
-    String storageTableName = getName();
+    String storageTableName = getStorageTable();
 
     if (storagePruningMsgs.containsKey(this)) {
       List<CandidateTablePruneCause> causes = storagePruningMsgs.get(this);
@@ -733,13 +737,13 @@ public class StorageCandidate implements Candidate, CandidateTable {
     StorageCandidate storageCandidateObj = (StorageCandidate) obj;
     //Assuming that same instance of cube and fact will be used across StorageCandidate s and hence relying directly
     //on == check for these.
-    return (this.cube == storageCandidateObj.cube && this.fact == storageCandidateObj.fact && this.name
-      .equals(storageCandidateObj.name));
+    return (this.cube == storageCandidateObj.cube && this.fact == storageCandidateObj.fact && this.storageTable
+      .equals(storageCandidateObj.storageTable));
   }
 
   @Override
   public int hashCode() {
-    return this.name.hashCode();
+    return this.storageTable.hashCode();
   }
 
   @Override
@@ -884,7 +888,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   public String getResolvedName() {
     if (resolvedName == null) {
-      return name;
+      return storageTable;
     }
     return resolvedName;
   }
