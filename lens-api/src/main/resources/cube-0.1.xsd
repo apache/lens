@@ -1226,7 +1226,7 @@
         all fields in the base cube.
       </xs:documentation>
     </xs:annotation>
-    <xs:all>
+    <xs:sequence>
       <xs:element name="columns" type="x_columns" maxOccurs="1" minOccurs="1">
         <xs:annotation>
           <xs:documentation>
@@ -1263,7 +1263,7 @@
         </xs:annotation>
       </xs:element>
       <xs:element name="storage_tables" type="x_storage_tables" maxOccurs="1" minOccurs="0"/>
-    </xs:all>
+    </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required">
       <xs:annotation>
         <xs:documentation>

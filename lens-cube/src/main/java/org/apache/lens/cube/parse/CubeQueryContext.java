@@ -29,7 +29,6 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.ByteArrayOutputStream;
-<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -850,21 +849,23 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
         }
       }
       if (pickedCandidate == null) {
-        if (!storagePruningMsgs.isEmpty()) {
-          try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.writeValue(out, storagePruningMsgs.getJsonObject());
-            log.info("No candidate found because: {}", out.toString("UTF-8"));
-          } catch (Exception e) {
-            throw new LensException("Error writing fact pruning messages", e);
-          }
-        }
-        log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}",
-          storagePruningMsgs.toJsonObject());
-        throw new NoCandidateFactAvailableException(this);
+        throwNoCandidateFactException();
       }
     }
     return pickedCandidate;
+  }
+  void throwNoCandidateFactException() throws LensException {
+    if (!storagePruningMsgs.isEmpty()) {
+      try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(out, storagePruningMsgs.getJsonObject());
+        log.error("pruning messages: {}", out.toString("UTF-8"));
+      } catch (Exception e) {
+        throw new LensException("Error writing fact pruning messages", e);
+      }
+    }
+    log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}", storagePruningMsgs.toJsonObject());
+    throw new NoCandidateFactAvailableException(this);
   }
   @Getter
   private QueryWriterContext queryWriterContext;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,6 @@ public class JoinCandidate implements Candidate {
   @Getter
   private List<Candidate> children;
   private String toStr;
-  private QueryAST queryAST;
   @Getter
   private CubeQueryContext cubeQueryContext;
 
@@ -80,11 +79,6 @@ public class JoinCandidate implements Candidate {
   public boolean contains(final Candidate candidate) {
     return this.equals(candidate) || children.stream().anyMatch(c -> c.contains(candidate));
   }
-
-  /**
-   * @param timeRange
-   * @return
-   */
   @Override
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange parentTimeRange, boolean failOnPartialData)
     throws LensException {
@@ -152,13 +146,6 @@ public class JoinCandidate implements Candidate {
     return children.stream().map(x->x.getColumnEndTime(column)).filter(Optional::isPresent).map(Optional::get)
       .min(Comparator.naturalOrder());
   }
-//
-//  @Override
-//  public void addAutoJoinDims() throws LensException {
-//    for (Candidate candidate : getChildren()) {
-//      candidate.addAutoJoinDims();
-//    }
-//  }
 
   @Override
   public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
