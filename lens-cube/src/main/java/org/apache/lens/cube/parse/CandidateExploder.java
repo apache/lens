@@ -20,10 +20,19 @@ package org.apache.lens.cube.parse;
 
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
+
+import lombok.RequiredArgsConstructor;
+
 /**
  * Created on 11/04/17.
  */
+@RequiredArgsConstructor
 public class CandidateExploder implements ContextRewriter {
+  private final Configuration conf;
+  private final HiveConf hconf;
+
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     cubeql.getCandidates().removeIf(this::shouldBeRemoved);
@@ -34,7 +43,7 @@ public class CandidateExploder implements ContextRewriter {
       return false;
     } else if (candidate instanceof SegmentationCandidate) {
       try {
-        boolean areCandidatsPicked = (((SegmentationCandidate) candidate).rewriteInternal());
+        boolean areCandidatsPicked = (((SegmentationCandidate) candidate).rewriteInternal(conf, hconf));
         return !areCandidatsPicked;
       } catch (LensException e) {
         return true;

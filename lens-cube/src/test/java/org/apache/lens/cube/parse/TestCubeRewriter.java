@@ -152,7 +152,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     conf.set(DRIVER_SUPPORTED_STORAGES, "C1,C2,C4");
     CubeQueryContext cubeQueryContext =
       rewriteCtx("select SUM(msr2) from testCube where " + THIS_YEAR_RANGE, conf);
-    PruneCauses<StorageCandidate> pruneCause = cubeQueryContext.getStoragePruningMsgs();
+    PruneCauses<Candidate> pruneCause = cubeQueryContext.getStoragePruningMsgs();
     long lessDataCauses = pruneCause.values().stream()
       .flatMap(Collection::stream).map(CandidateTablePruneCause::getCause).filter(LESS_DATA::equals).count();
     assertTrue(lessDataCauses > 0);

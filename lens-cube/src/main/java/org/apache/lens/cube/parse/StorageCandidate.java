@@ -561,7 +561,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
       }
     }
     PartitionRangesForPartitionColumns missingParts = new PartitionRangesForPartitionColumns();
-    PruneCauses<StorageCandidate> storagePruningMsgs = cubeQueryContext.getStoragePruningMsgs();
+    PruneCauses<Candidate> storagePruningMsgs = cubeQueryContext.getStoragePruningMsgs();
     Set<String> unsupportedTimeDims = Sets.newHashSet();
     Set<String> partColsQueried = Sets.newHashSet();
     partColsQueried.add(timeRange.getPartitionColumn());

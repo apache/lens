@@ -19,12 +19,11 @@
 package org.apache.lens.cube.parse;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Lists.partition;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 import org.apache.lens.cube.metadata.TimeRange;
 
@@ -168,6 +167,15 @@ public class CandidateTablePruneCause {
         };
       }
     },
+    SEGMENTATION_PRUNED("segmentations pruned: [%s]") {
+      @Override
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        return new Object[]{
+          causes.stream().map(CandidateTablePruneCause::getInnerCauses).map(Map::entrySet).flatMap(Collection::stream)
+            .map(entry->entry.getKey()+": "+entry.getValue()).collect(joining(";")),
+        };
+      }
+    },
     // missing partitions for cube table
     MISSING_PARTITIONS("Missing partitions for the cube table: %s") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
@@ -244,6 +252,7 @@ public class CandidateTablePruneCause {
 
   private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
 
+  private Map<String, PruneCauses<Candidate>> innerCauses;
 
   public CandidateTablePruneCause(CandidateTablePruneCode cause) {
     this.cause = cause;
@@ -349,6 +358,11 @@ public class CandidateTablePruneCause {
     final Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(NO_CANDIDATE_UPDATE_PERIODS);
     cause.updatePeriodRejectionCause = updatePeriodRejectionCause;
+    return cause;
+  }
+  public static CandidateTablePruneCause segmentationPruned(Map<String, PruneCauses<Candidate>> inner) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(SEGMENTATION_PRUNED);
+    cause.innerCauses = inner;
     return cause;
   }
 }

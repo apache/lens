@@ -19,6 +19,7 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.StringLiteral;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FROM;
@@ -32,6 +33,7 @@ import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -58,6 +60,7 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import org.antlr.runtime.CommonToken;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Getter;
@@ -71,19 +74,15 @@ public class SegmentationCandidate implements Candidate {
   @Getter
   private final CubeQueryContext cubeQueryContext;
   private Segmentation segmentation;
-  private final Configuration conf;
-  private final HiveConf hconf;
   private Map<String, Cube> cubesOfSegmentation;
   Map<String, CubeQueryContext> cubeQueryContextMap;
   @Getter
   private final Set<Integer> answerableMeasurePhraseIndices = Sets.newHashSet();
 //  private static final String IGNORE_KEY = "segmentations.to.ignore";
   private Map<TimeRange, TimeRange> queriedRangeToMyRange = Maps.newHashMap();
-  SegmentationCandidate(CubeQueryContext cubeQueryContext, Segmentation segmentation, Configuration conf, HiveConf hconf) throws LensException {
+  SegmentationCandidate(CubeQueryContext cubeQueryContext, Segmentation segmentation) throws LensException {
     this.cubeQueryContext = cubeQueryContext;
     this.segmentation = segmentation;
-    this.conf = new Configuration(conf);
-    this.hconf = hconf;
     cubesOfSegmentation = Maps.newHashMap();
     cubeQueryContextMap = Maps.newHashMap();
     for (Segment segment : segmentation.getSegments()) {
@@ -100,7 +99,7 @@ public class SegmentationCandidate implements Candidate {
     return this;
   }
 
-  public boolean rewriteInternal() throws LensException {
+  public boolean rewriteInternal(Configuration conf, HiveConf hconf) throws LensException {
     CubeInterface cube = getCube();
     if (cube == null) {
       return false;
@@ -204,8 +203,7 @@ public class SegmentationCandidate implements Candidate {
 
 
   public SegmentationCandidate(SegmentationCandidate segmentationCandidate) throws LensException {
-    this(segmentationCandidate.cubeQueryContext, segmentationCandidate.segmentation,
-      segmentationCandidate.conf, segmentationCandidate.hconf);
+    this(segmentationCandidate.cubeQueryContext, segmentationCandidate.segmentation);
 
   }
 
@@ -284,7 +282,10 @@ public class SegmentationCandidate implements Candidate {
   }
 
   private Stream<Candidate> candidateStream() {
-    return cubeQueryContextMap.values().stream().map(CubeQueryContext::getPickedCandidate);
+    return contextStream().map(CubeQueryContext::getPickedCandidate);
+  }
+  private Stream<CubeQueryContext> contextStream() {
+    return cubeQueryContextMap.values().stream();
   }
 
   private Stream<Cube> cubeStream() {
@@ -359,12 +360,6 @@ public class SegmentationCandidate implements Candidate {
     answerableMeasurePhraseIndices.add(index);
   }
 
-//  @Override
-//  public void addAutoJoinDims() throws LensException {
-//    for (Candidate candidate : getChildren()) {
-//      candidate.addAutoJoinDims();
-//    }
-//  }
 
   public String toString() {
     Collector<CharSequence, ?, String> collector = joining(", ", "SEG[", "]");
@@ -373,5 +368,8 @@ public class SegmentationCandidate implements Candidate {
     } else {
       return cubeStream().map(Cube::getName).collect(collector);
     }
+  }
+  public List<PruneCauses<Candidate>> getPruneCauses() {
+    return contextStream().map(CubeQueryContext::getStoragePruningMsgs).collect(toList());
   }
 }

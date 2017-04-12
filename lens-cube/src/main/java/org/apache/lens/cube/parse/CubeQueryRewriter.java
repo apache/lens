@@ -167,7 +167,7 @@ public class CubeQueryRewriter {
     rewriters.add(candidateTblResolver);
     // Find Union and Join combinations over Storage Candidates that can answer the queried time range(s) and all
     // queried measures
-    rewriters.add(new CandidateSegmentResolver(conf, hconf));
+//    rewriters.add(new CandidateSegmentResolver(conf, hconf));
     rewriters.add(new CandidateCoveringSetsResolver());
 
     // If lightest fact first option is enabled for this driver (via lens.cube.query.pick.lightest.fact.first = true),
@@ -184,7 +184,7 @@ public class CubeQueryRewriter {
 
     // Phase 2 of storageTableResolver: resolve storage table partitions.
     rewriters.add(storageTableResolver);
-    rewriters.add(new CandidateExploder());
+    rewriters.add(new CandidateExploder(conf, hconf));
     // In case partial data is allowed (via lens.cube.query.fail.if.data.partial = false) and there are many
     // combinations with partial data, pick the one that covers the maximum part of time ranges(s) queried
     rewriters.add(new MaxCoveringFactResolver(conf));

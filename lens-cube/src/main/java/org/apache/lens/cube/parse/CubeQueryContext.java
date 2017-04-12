@@ -201,7 +201,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   @Setter
   private DenormalizationResolver.DenormalizationContext deNormCtx;
   @Getter
-  private PruneCauses<StorageCandidate>  storagePruningMsgs = new PruneCauses<>();
+  private PruneCauses<Candidate>  storagePruningMsgs = new PruneCauses<>();
   @Getter
   private Map<Dimension, PruneCauses<CubeDimensionTable>> dimPruningMsgs =
     new HashMap<Dimension, PruneCauses<CubeDimensionTable>>();
@@ -484,13 +484,17 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
   }
 
   void addCandidatePruningMsg(Candidate cand, CandidateTablePruneCause pruneCause) {
-    Set<StorageCandidate> scs = CandidateUtil.getStorageCandidates(cand);
-    for (StorageCandidate sc : scs) {
-      addStoragePruningMsg(sc, pruneCause);
+    if (cand instanceof SegmentationCandidate) {
+      addStoragePruningMsg(cand, pruneCause);
+    } else {
+      Set<StorageCandidate> scs = CandidateUtil.getStorageCandidates(cand);
+      for (StorageCandidate sc : scs) {
+        addStoragePruningMsg(sc, pruneCause);
+      }
     }
   }
 
-  void addStoragePruningMsg(StorageCandidate sc, CandidateTablePruneCause... factPruningMsgs) {
+  void addStoragePruningMsg(Candidate sc, CandidateTablePruneCause... factPruningMsgs) {
     for (CandidateTablePruneCause factPruningMsg: factPruningMsgs) {
       log.info("Pruning Storage {} with cause: {}", sc, factPruningMsg);
       storagePruningMsgs.addPruningMsg(sc, factPruningMsg);
@@ -841,9 +845,9 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
           cand = cand.explode();
           pickedCandidate = cand;
         } catch (NoCandidateFactAvailableException e) {
-          PruneCauses<StorageCandidate> causes = e.getBriefAndDetailedError();
+          PruneCauses<Candidate> causes = e.getBriefAndDetailedError();
           CandidateTablePruneCause.CandidateTablePruneCode maxCode = causes.getMaxCause();
-          for (Map.Entry<StorageCandidate, List<CandidateTablePruneCause>> entry : causes.entrySet()) {
+          for (Map.Entry<Candidate, List<CandidateTablePruneCause>> entry : causes.entrySet()) {
             for (CandidateTablePruneCause cause : entry.getValue()) {
               if (cause.getCause().equals(maxCode)) {
 //                  addStoragePruningMsg(entry.getKey(), cause);

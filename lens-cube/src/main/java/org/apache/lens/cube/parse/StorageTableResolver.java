@@ -256,8 +256,8 @@ class StorageTableResolver implements ContextRewriter {
     Iterator<Candidate> it = cubeql.getCandidates().iterator();
     while (it.hasNext()) {
       Candidate c = it.next();
-      assert (c instanceof StorageCandidate);
-      StorageCandidate sc = (StorageCandidate) c;
+      if (c instanceof StorageCandidate) {
+        StorageCandidate sc = (StorageCandidate) c;
       String storageTable = sc.getStorageName();
       // first check: if the storage is supported on driver
       if (!isStorageSupportedOnDriver(storageTable)) {
@@ -359,7 +359,7 @@ class StorageTableResolver implements ContextRewriter {
             }
           }
 
-          if(pruningCauseForThisTimeRange != null) {
+          if (pruningCauseForThisTimeRange != null) {
             allPruningCauses.add(pruningCauseForThisTimeRange);
           }
         }
@@ -369,6 +369,7 @@ class StorageTableResolver implements ContextRewriter {
           cubeql.addStoragePruningMsg(sc, allPruningCauses.toArray(new CandidateTablePruneCause[0]));
         }
       }
+    }
     }
   }
 

@@ -30,7 +30,7 @@ public class CandidateSegmentResolver implements ContextRewriter {
     if (enabled) {
       List<SegmentationCandidate> segmentationCandidates = Lists.newArrayList();
       for (Segmentation segmentation : cubeql.getMetastoreClient().getAllSegmentations(cubeql.getCube())) {
-        segmentationCandidates.add(new SegmentationCandidate(cubeql, segmentation, conf, hconf));
+        segmentationCandidates.add(new SegmentationCandidate(cubeql, segmentation));
       }
       cubeql.getCandidates().addAll(segmentationCandidates);
     }

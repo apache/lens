@@ -29,9 +29,13 @@ import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -99,6 +103,11 @@ class CandidateTableResolver implements ContextRewriter {
         }
       }
       log.info("Populated storage candidates: {}", cubeql.getCandidates());
+      List<SegmentationCandidate> segmentationCandidates = Lists.newArrayList();
+      for (Segmentation segmentation : cubeql.getMetastoreClient().getAllSegmentations(cubeql.getCube())) {
+        segmentationCandidates.add(new SegmentationCandidate(cubeql, segmentation));
+      }
+      cubeql.getCandidates().addAll(segmentationCandidates);
     }
 
     if (cubeql.getDimensions().size() != 0) {
@@ -310,13 +319,13 @@ class CandidateTableResolver implements ContextRewriter {
             i.remove();
           }
         } else {
-          throw new LensException("Not a storage candidate!!");
+//          throw new LensException("Not a storage candidate!!");
         }
       }
-//      if (cubeQueryContext.getCandidates().size() == 0) {
-//        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
-//          getColumns(cubeQueryContext.getQueriedPhrases()).toString());
-//      }
+      if (cubeql.getCandidates().size() == 0) {
+        throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
+          getColumns(cubeql.getQueriedPhrases()).toString());
+      }
     }
   }
 

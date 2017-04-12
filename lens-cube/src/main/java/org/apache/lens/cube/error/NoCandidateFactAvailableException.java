@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.error;
 
+import org.apache.lens.cube.parse.Candidate;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.PruneCauses;
 import org.apache.lens.cube.parse.StorageCandidate;
@@ -35,7 +36,7 @@ public class NoCandidateFactAvailableException extends LensException {
   @Getter
   private final CubeQueryContext cubeQueryContext;
   @Getter
-  private final PruneCauses<StorageCandidate> briefAndDetailedError;
+  private final PruneCauses<Candidate> briefAndDetailedError;
 
   public NoCandidateFactAvailableException(CubeQueryContext cubeql) {
     this(cubeql.getStoragePruningMsgs().getBriefCause(), cubeql);
