@@ -912,24 +912,20 @@ public final class HQLParser {
     private boolean hashCodeComputed = false;
 
     public HashableASTNode(ASTNode ast) {
-      this.ast = MetastoreUtil.copyAST(ast, astNode -> {
-        ASTNode copy = new ASTNode(new CommonToken(astNode.getToken()));
-        if (astNode.getType() == Identifier) {
-          ASTNode parent  = (ASTNode) astNode.getParent();
-          if (parent != null && parent.getType() == TOK_TABLE_OR_COL) {
-            ASTNode grandParent = (ASTNode) parent.getParent();
-            if (grandParent != null && grandParent.getType() == DOT && parent.getChildIndex() == 0) { // left child
-              copy.getToken().setText(copy.getToken().getText().replaceAll("^.*$", "_"));
-            }
-          }
-        }
-        return Tuple2.of(copy, true);
-      });
-    }
-
-    public void setAST(ASTNode ast) {
+//      this.ast = MetastoreUtil.copyAST(ast, astNode -> {
+//        ASTNode copy = new ASTNode(new CommonToken(astNode.getToken()));
+//        if (astNode.getType() == Identifier) {
+//          ASTNode parent  = (ASTNode) astNode.getParent();
+//          if (parent != null && parent.getType() == TOK_TABLE_OR_COL) {
+//            ASTNode grandParent = (ASTNode) parent.getParent();
+//            if (grandParent != null && grandParent.getType() == DOT && parent.getChildIndex() == 0) { // left child
+//              copy.getToken().setText(copy.getToken().getText().replaceAll("^.*$", "_"));
+//            }
+//          }
+//        }
+//        return Tuple2.of(copy, true);
+//      });
       this.ast = ast;
-      hashCodeComputed = false;
     }
 
     public ASTNode getAST() {

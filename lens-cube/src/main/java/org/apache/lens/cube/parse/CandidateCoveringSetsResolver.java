@@ -130,7 +130,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     List<Candidate> candidateSet = new ArrayList<>();
     for (Candidate cand : allCandidates) {
       // Assuming initial list of candidates populated are StorageCandidate
-      if (cand instanceof StorageCandidate || cand instanceof SegmentationCandidate) {
+      if (true || cand instanceof StorageCandidate || cand instanceof SegmentationCandidate) {
         if (CandidateUtil.isValidForTimeRanges(cand, cubeql.getTimeRanges())) {
           candidateSet.add(cand.copy());
         } else if (CandidateUtil.isPartiallyValidForTimeRanges(cand, cubeql.getTimeRanges())) {

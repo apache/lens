@@ -95,14 +95,14 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
   public void testSegmentRewrite() throws Exception {
     CubeQueryContext ctx = rewriteCtx("select cityid, segmsr1 from testcube where " + TWO_DAYS_RANGE,
       getConf());
-    String query1 = getExpectedQuery("b1cube",
-      "select b1cube.cityid as alias0, sum(b1cube.segmsr1) as alias1 FROM ", null,
-      "group by b1cube.cityid",
-      getWhereForDailyAndHourly2days("b1cube", "c1_b1fact1"));
-    String query2 = getExpectedQuery("b2cube",
-      "select b2cube.cityid as alias0, sum(b2cube.segmsr1) as alias1 FROM ", null,
-      "group by b2cube.cityid",
-      getWhereForDailyAndHourly2days("b2cube", "c0_b2fact1"));
+    String query1 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 FROM ", null,
+      "group by testcube.cityid",
+      getWhereForDailyAndHourly2days("testcube", "c1_b1fact1"));
+    String query2 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 FROM ", null,
+      "group by testcube.cityid",
+      getWhereForDailyAndHourly2days("testcube", "c0_b2fact1"));
     compareUnionQuery(ctx,
       "SELECT (testcube.alias0) as `cityid`, sum((testcube.alias1)) as `segmsr1` FROM (",
       " ) as testcube GROUP BY (testcube.alias0)", newArrayList(query1, query2));
@@ -124,19 +124,19 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     CubeQueryContext ctx = rewriteCtx("select cityid, segmsr1 from testcube where " + TWO_MONTHS_RANGE_UPTO_DAYS,
       getConf());
     String query1,query2,query3,query4;
-    query1 = getExpectedQuery("b1cube", "select b1cube.cityid as alias0, sum(b1cube.segmsr1) as alias1 from ",
-      null, "group by b1cube.cityid",
-      getWhereForUpdatePeriods("b1cube", "c0_b1fact1",
+    query1 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
+      null, "group by testcube.cityid",
+      getWhereForUpdatePeriods("testcube", "c0_b1fact1",
         getDateWithOffset(UpdatePeriod.DAILY, -31), getDateWithOffset(UpdatePeriod.DAILY, -10),
         Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
-    query2 = getExpectedQuery("b1cube", "select b1cube.cityid as alias0, sum(b1cube.segmsr1) as alias1 from ",
-      null, "group by b1cube.cityid",
-      getWhereForUpdatePeriods("b1cube", "c1_b1fact1",
+    query2 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
+      null, "group by testcube.cityid",
+      getWhereForUpdatePeriods("testcube", "c1_b1fact1",
         getDateWithOffset(UpdatePeriod.DAILY, -11), NOW,
         Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
-    query3 = getExpectedQuery("b2cube", "select b2cube.cityid as alias0, sum(b2cube.segmsr1) as alias1 from ",
-      null, "group by b2cube.cityid",
-      getWhereForUpdatePeriods("b2cube", "c0_b2fact1",
+    query3 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
+      null, "group by testcube.cityid",
+      getWhereForUpdatePeriods("testcube", "c0_b2fact1",
         getDateWithOffset(UpdatePeriod.DAILY, -31), NOW,
         Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
     query4 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
@@ -153,14 +153,14 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     CubeQueryContext ctx = rewriteCtx("select cityid, msr2, segmsr1 from testcube where " + TWO_DAYS_RANGE,
       getConf());
     String query1, query2, query3;
-    query1 = getExpectedQuery("b1cube",
-      "select b1cube.cityid as alias0, sum(0.0) as alias1, sum(b1cube.segmsr1) as alias2 FROM ", null,
-      "group by b1cube.cityid",
-      getWhereForDailyAndHourly2days("b1cube", "c1_b1fact1"));
-    query2 = getExpectedQuery("b2cube",
-      "select b2cube.cityid as alias0, sum(0.0) as alias1, sum(b2cube.segmsr1) as alias2 FROM ", null,
-      "group by b2cube.cityid",
-      getWhereForDailyAndHourly2days("b2cube", "c0_b2fact1"));
+    query1 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, sum(0.0) as alias1, sum(testcube.segmsr1) as alias2 FROM ", null,
+      "group by testcube.cityid",
+      getWhereForDailyAndHourly2days("testcube", "c1_b1fact1"));
+    query2 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, sum(0.0) as alias1, sum(testcube.segmsr1) as alias2 FROM ", null,
+      "group by testcube.cityid",
+      getWhereForDailyAndHourly2days("testcube", "c0_b2fact1"));
     query3 = getExpectedQuery("testcube",
       "select testcube.cityid as alias0, sum(testcube.msr2) as alias1, sum(0.0) as alias2 FROM ", null,
       "group by testcube.cityid",
@@ -181,12 +181,12 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
         getConf());
       System.out.println(ctx.toHQL());
     String query1, query2;
-    query1 = getExpectedQuery("b1cube", "SELECT (cubecity.name) AS `alias0`, sum((b1cube.segmsr1)) AS `alias1` from",
-      " JOIN " + getDbName() + "c1_citytable cubecity ON b1cube.cityid = cubecity.id AND (cubecity.dt = 'latest')",
-      null, "group by cubecity.name", null, getWhereForDailyAndHourly2days("b1cube", "c1_b1fact1"));
-    query2 = getExpectedQuery("b2cube", "SELECT (cubecity.name) AS `alias0`, sum((b2cube.segmsr1)) AS `alias1` from",
-      " JOIN " + getDbName() + "c1_citytable cubecity ON b2cube.cityid = cubecity.id AND (cubecity.dt = 'latest')",
-      null, "group by cubecity.name", null, getWhereForDailyAndHourly2days("b2cube", "c0_b2fact1"));
+    query1 = getExpectedQuery("testcube", "SELECT (cubecity.name) AS `alias0`, sum((testcube.segmsr1)) AS `alias1` from",
+      " JOIN " + getDbName() + "c1_citytable cubecity ON testcube.cityid = cubecity.id AND (cubecity.dt = 'latest')",
+      null, "group by cubecity.name", null, getWhereForDailyAndHourly2days("testcube", "c1_b1fact1"));
+    query2 = getExpectedQuery("testcube", "SELECT (cubecity.name) AS `alias0`, sum((testcube.segmsr1)) AS `alias1` from",
+      " JOIN " + getDbName() + "c1_citytable cubecity ON testcube.cityid = cubecity.id AND (cubecity.dt = 'latest')",
+      null, "group by cubecity.name", null, getWhereForDailyAndHourly2days("testcube", "c0_b2fact1"));
     compareUnionQuery(ctx, "SELECT (testcube.alias0) AS `singlecolchainfield`, sum((testcube.alias1)) AS `segmsr1` from (",
       "as testcube group by testcube.alias0", newArrayList(query1, query2));
   }

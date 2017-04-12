@@ -527,15 +527,6 @@ public class CubeTestSetup {
   }
 
   public static void addParts(Collection<String> partitions, UpdatePeriod updatePeriod, Date from, Date to) {
-//    Calendar cal = Calendar.getInstance();
-//    cal.setTime(from);
-//    Date dt = cal.getTime();
-//    while (dt.before(to)) {
-//      String part = updatePeriod.format(dt);
-//      cal.add(updatePeriod.calendarField(), 1);
-//      partitions.add(part);
-//      dt = cal.getTime();
-//    }
     try {
       for (TimePartition timePartition : TimePartitionRange.between(from, to, updatePeriod)) {
         partitions.add(timePartition.toString());

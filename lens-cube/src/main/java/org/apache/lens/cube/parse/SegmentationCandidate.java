@@ -3,9 +3,12 @@ package org.apache.lens.cube.parse;
 import static java.util.stream.Collectors.joining;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.StringLiteral;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FROM;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_HAVING;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_INSERT;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_ORDERBY;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABREF;
 import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
 
 import java.util.Collection;
@@ -34,7 +37,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
@@ -74,14 +76,17 @@ public class SegmentationCandidate implements Candidate {
 
 
   public SegmentationCandidate explode() throws LensException {
-//    Collection<String> toIgnore = conf.getStringCollection(IGNORE_KEY); //TODO remove this, this is only a hack to avoid infinite loop and stack overflow
-//    if (toIgnore.contains(segmentation.getName())) {
-//      throw new LensException("Segmentation to be ignored");
-//    } else {
-//      toIgnore.add(segmentation.getName());
-////      conf.setStrings(IGNORE_KEY, toIgnore.toArray(new String[toIgnore.size()]));
-//    }
+    for (CubeQueryContext queryContext : cubeQueryContextMap.values()) {
+      queryContext.getQueryWriter();
+    }
+    return this;
+  }
+
+  public boolean rewriteInternal() throws LensException {
     CubeInterface cube = getCube();
+    if (cube == null) {
+      return false;
+    }
     for (Segment segment : segmentation.getSegments()) {
       // assuming only base cubes in segmentation
       Cube innerCube = (Cube) getCubeMetastoreClient().getCube(segment.getName());
@@ -105,7 +110,7 @@ public class SegmentationCandidate implements Candidate {
           }
           // else, replace unanswerable measures
           for (QueriedPhraseContext phraseContext : notAnswerable) {
-            if (astNode.getParent() == phraseContext.getExprAST()) {
+            if ((astNode.getType() != TOK_SELEXPR && astNode == phraseContext.getExprAST()) || astNode.getParent() == phraseContext.getExprAST()) {
               return Tuple2.of(MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST), false);
             }
           }
@@ -113,18 +118,18 @@ public class SegmentationCandidate implements Candidate {
           // this is hard copy. Default is soft copy, which is new ASTNode(astNode)
           // Soft copy retains the token object inside it, hard copy copies token object
           ASTNode copy = new ASTNode(new CommonToken(astNode.getToken()));
-          if (copy.getType() == Identifier) {
-            copy.getToken().setText(copy.getToken().getText().replaceAll("(?i)"+cube.getName(), segment.getName()));
-          }
+//          if (copy.getType() == Identifier) {
+//            copy.getToken().setText(copy.getToken().getText().replaceAll("(?i)"+cube.getName(), segment.getName()));
+//          }
           return Tuple2.of(copy, true);
         });
+      addCubeNameAndAlias(ast, innerCube);
       trimHavingAndOrderby(ast, innerCube);
       // TODO modify time ranges. Nothing for now
       CubeQueryRewriter rewriter = new CubeQueryRewriter(conf, hconf);
       CubeQueryContext ctx = rewriter.rewrite(ast);
+      ctx.pickCandidateToQuery();
       // so that exception comes early
-      // TODO: optimize
-      ctx.toHQL();
       for (StorageCandidate storageCandidate : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
         for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
           TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
@@ -140,8 +145,22 @@ public class SegmentationCandidate implements Candidate {
         }
       }
       cubeQueryContextMap.put(segment.getName(), ctx);
+      // TODO: optimize
+//      ctx.toHQL();
     }
-    return this;
+    return areCandidatesPicked();
+  }
+
+  private void addCubeNameAndAlias(ASTNode ast, Cube innerCube) {
+    ASTNode tabrefNode = HQLParser.findNodeByPath(ast, TOK_FROM, TOK_TABREF);
+    ASTNode cubeNameNode = new ASTNode(new CommonToken(Identifier, innerCube.getName()));
+    tabrefNode.getChild(0).setChild(0, cubeNameNode);
+    ASTNode aliasNode = new ASTNode(new CommonToken(Identifier, getCubeQueryContext().getAliasForTableName(getCube().getName())));
+    if (tabrefNode.getChildCount() > 1) {
+      tabrefNode.setChild(1, aliasNode);
+    } else {
+      tabrefNode.addChild(aliasNode);
+    }
   }
 
   private void trimHavingAndOrderby(ASTNode ast, Cube innerCube) {
@@ -169,6 +188,7 @@ public class SegmentationCandidate implements Candidate {
   public SegmentationCandidate(SegmentationCandidate segmentationCandidate) throws LensException {
     this(segmentationCandidate.cubeQueryContext, segmentationCandidate.segmentation,
       segmentationCandidate.conf, segmentationCandidate.hconf);
+
   }
 
   @Override

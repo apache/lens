@@ -970,9 +970,12 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     }
     return queryWriter;
   }
-
+  private String asHQL = null;
   public String toHQL() throws LensException {
-    return getQueryWriter().toHQL();
+    if (asHQL == null) {
+      asHQL = getQueryWriter().toHQL();
+    }
+    return asHQL;
   }
 
   public ASTNode toAST(Context ctx) throws LensException {

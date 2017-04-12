@@ -46,7 +46,7 @@ public class StorageCandidateHQLContext extends DimHQLContext {
     }
   }
 
-  private CubeInterface getCube() {
+  CubeInterface getCube() {
     return storageCandidate.getCubeQueryContext().getCube();
   }
 

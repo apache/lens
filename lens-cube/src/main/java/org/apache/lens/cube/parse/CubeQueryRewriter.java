@@ -181,22 +181,26 @@ public class CubeQueryRewriter {
       // Pick the least cost combination(s) (and prune others) out of a set of combinations produced
       // by CandidateCoveringSetsResolver
       rewriters.add(new LightestFactResolver(conf));
+
     }
 
     // Phase 2 of storageTableResolver: resolve storage table partitions.
     rewriters.add(storageTableResolver);
+    rewriters.add(new CandidateExploder());
     // In case partial data is allowed (via lens.cube.query.fail.if.data.partial = false) and there are many
     // combinations with partial data, pick the one that covers the maximum part of time ranges(s) queried
     rewriters.add(new MaxCoveringFactResolver(conf));
     // Phase 3 of storageTableResolver:  resolve dimension tables and partitions.
     rewriters.add(storageTableResolver);
-    // Prune candidate tables for which denorm column references do not exist
-    //TODO union: phase 2 of denormResolver needs to be moved before CoveringSetResolver.. check if this makes sense
-    rewriters.add(denormResolver);
-    // Phase 2 of exprResolver : Prune candidate facts without any valid expressions
-    rewriters.add(exprResolver);
 
-    if (!lightFactFirst) {
+
+    //TODO union: phase 2 of denormResolver needs to be moved before CoveringSetResolver.. check if this makes sense
+
+    if (!lightFactFirst) { //todo check tests
+      // Prune candidate tables for which denorm column references do not exist
+      rewriters.add(denormResolver);
+      // Phase 2 of exprResolver : Prune candidate facts without any valid expressions
+      rewriters.add(exprResolver);
       // Pick the least cost combination(s) (and prune others) out of a set of combinations produced
       // by CandidateCoveringSetsResolver
       rewriters.add(new LightestFactResolver(conf));

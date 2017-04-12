@@ -73,16 +73,10 @@ class AggregateResolver implements ContextRewriter {
       Iterator<Candidate> candItr = cubeql.getCandidates().iterator();
       while (candItr.hasNext()) {
         Candidate candidate = candItr.next();
-        if (candidate instanceof StorageCandidate) {
-          StorageCandidate sc = (StorageCandidate) candidate;
-          if (sc.getFact().isAggregated()) {
-            cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.missingDefaultAggregate());
-            candItr.remove();
-          }
-        } else {
-          System.out.println(candidate);
-          //TODO add what to do in case of seg candidate
-          //throw new LensException("Not a storage candidate!!");
+        StorageCandidate sc = (StorageCandidate) candidate;
+        if (sc.getFact().isAggregated()) {
+          cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.missingDefaultAggregate());
+          candItr.remove();
         }
       }
       nonDefaultAggregates = true;

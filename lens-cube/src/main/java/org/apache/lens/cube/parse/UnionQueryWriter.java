@@ -20,13 +20,16 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.lens.cube.parse.HQLParser.*;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.MetastoreUtil;
+import org.apache.lens.cube.metadata.Named;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.lib.Node;
