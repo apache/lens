@@ -30,7 +30,6 @@ public class CheckTableNames extends ValidationRule {
 
   @Override
   public boolean validate(CubeQueryContext ctx) throws LensException {
-    // TODO
     return true;
   }
 

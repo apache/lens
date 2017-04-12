@@ -59,8 +59,8 @@ public class TestRewriterPlan extends TestQueryRewrite {
     Assert.assertTrue(plan.getTablesQueried().contains("TestQueryRewrite.c2_testfact"));
     Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c2_testfact"), 1.0);
     Assert.assertFalse(plan.getPartitions().isEmpty());
-    Assert.assertFalse(plan.getPartitions().get("testfact").isEmpty());
-    Assert.assertTrue(plan.getPartitions().get("testfact").size() > 1);
+    Assert.assertFalse(plan.getPartitions().get("c2_testfact").isEmpty());
+    Assert.assertTrue(plan.getPartitions().get("c2_testfact").size() > 1);
   }
 
   @Test
@@ -79,8 +79,8 @@ public class TestRewriterPlan extends TestQueryRewrite {
     Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c1_testfact2"), 1.0);
     Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c1_citytable"), 100.0);
     Assert.assertFalse(plan.getPartitions().isEmpty());
-    Assert.assertFalse(plan.getPartitions().get("testfact2").isEmpty());
-    Assert.assertTrue(plan.getPartitions().get("testfact2").size() > 1);
+    Assert.assertFalse(plan.getPartitions().get("c1_testfact2").isEmpty());
+    Assert.assertTrue(plan.getPartitions().get("c1_testfact2").size() > 1);
     Assert.assertFalse(plan.getPartitions().get("citytable").isEmpty());
     Assert.assertEquals(plan.getPartitions().get("citytable").size(), 1);
   }
@@ -103,8 +103,8 @@ public class TestRewriterPlan extends TestQueryRewrite {
     Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c1_testfact2"), 1.0);
     Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c1_citytable"), 100.0);
     Assert.assertFalse(plan.getPartitions().isEmpty());
-    Assert.assertFalse(plan.getPartitions().get("testfact2").isEmpty());
-    Assert.assertTrue(plan.getPartitions().get("testfact2").size() > 1);
+    Assert.assertFalse(plan.getPartitions().get("c1_testfact2").isEmpty());
+    Assert.assertTrue(plan.getPartitions().get("c1_testfact2").size() > 1);
     Assert.assertFalse(plan.getPartitions().get("citytable").isEmpty());
     Assert.assertEquals(plan.getPartitions().get("citytable").size(), 1);
   }

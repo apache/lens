@@ -65,6 +65,16 @@ public class FactPartition implements Comparable<FactPartition> {
     }
   }
 
+  /**
+   *  Partition should not be used a indicative of the class itself.
+   *  New Fact partition created includes more final partitions with that creation.
+   * @return
+   */
+
+  public FactPartition withoutContaining() {
+    return new FactPartition(this.getPartCol(), this.getPartSpec(), this.getPeriod(), null, this
+      .getPartFormat(), this.getStorageTables());
+  }
   public FactPartition(String partCol, TimePartition timePartition) {
     this(partCol, timePartition, null, null);
   }

@@ -290,7 +290,7 @@ class ColumnResolver implements ContextRewriter {
     return Optional.fromNullable(funcName);
   }
 
-  private static void addColumnsForSelectExpr(final TrackQueriedColumns sel, ASTNode node, ASTNode parent,
+  static void addColumnsForSelectExpr(final TrackQueriedColumns sel, ASTNode node, ASTNode parent,
     Set<String> cols) {
     if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() != DOT)) {
       // Take child ident.totext

@@ -18,7 +18,7 @@
  */
 package org.apache.lens.server.metastore;
 
-import static org.apache.lens.server.metastore.JAXBUtils.*;
+import static org.apache.lens.cube.metadata.JAXBUtils.*;
 
 import java.util.*;
 import java.util.Date;
@@ -168,10 +168,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   @Override
   public void createCube(LensSessionHandle sessionid, XCube cube) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      CubeMetastoreClient msClient = getClient(sessionid);
-      Cube parent = cube instanceof XDerivedCube ? (Cube) msClient.getCube(
-        ((XDerivedCube) cube).getParent()) : null;
-      msClient.createCube(JAXBUtils.hiveCubeFromXCube(cube, parent));
+      getClient(sessionid).createCube(cube);
       log.info("Created cube " + cube.getName());
     }
   }
@@ -200,7 +197,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
    * @param cubeName cube name
    */
   public void dropCube(LensSessionHandle sessionid, String cubeName) throws LensException {
-    try(SessionContext ignored = new SessionContext(sessionid)) {
+    try (SessionContext ignored = new SessionContext(sessionid)) {
       getClient(sessionid).dropCube(cubeName);
     }
   }
@@ -214,10 +211,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   @Override
   public void updateCube(LensSessionHandle sessionid, XCube cube) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      CubeMetastoreClient msClient = getClient(sessionid);
-      Cube parent = cube instanceof XDerivedCube ? (Cube) msClient.getCube(
-        ((XDerivedCube) cube).getParent()) : null;
-      msClient.alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube, parent));
+      getClient(sessionid).alterCube(cube);
       log.info("Cube updated " + cube.getName());
     } catch (HiveException e) {
       throw new LensException(e);
@@ -232,24 +226,8 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
    */
   @Override
   public void createDimensionTable(LensSessionHandle sessionid, XDimensionTable xDimTable) throws LensException {
-    String dimTblName = xDimTable.getTableName();
-    List<FieldSchema> columns = JAXBUtils.fieldSchemaListFromColumns(xDimTable.getColumns());
-    Map<String, UpdatePeriod> updatePeriodMap =
-      JAXBUtils.dumpPeriodsFromStorageTables(xDimTable.getStorageTables());
-
-    Map<String, String> properties = JAXBUtils.mapFromXProperties(xDimTable.getProperties());
-    Map<String, StorageTableDesc> storageDesc = JAXBUtils.tableDescPrefixMapFromXStorageTables(
-      xDimTable.getStorageTables());
-
     try (SessionContext ignored = new SessionContext(sessionid)){
-      log.info("# Columns: " + columns);
-      getClient(sessionid).createCubeDimensionTable(xDimTable.getDimensionName(),
-        dimTblName,
-        columns,
-        xDimTable.getWeight(),
-        updatePeriodMap,
-        properties,
-        storageDesc);
+      getClient(sessionid).createCubeDimensionTable(xDimTable);
       log.info("Dimension Table created " + xDimTable.getTableName());
     }
   }
@@ -265,31 +243,14 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   @Override
   public XDimensionTable getDimensionTable(LensSessionHandle sessionid, String dimTblName) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      CubeMetastoreClient msClient = getClient(sessionid);
-      CubeDimensionTable dimTable = msClient.getDimensionTable(dimTblName);
-      XDimensionTable dt = JAXBUtils.dimTableFromCubeDimTable(dimTable);
-      if (dimTable.getStorages() != null && !dimTable.getStorages().isEmpty()) {
-        for (String storageName : dimTable.getStorages()) {
-          XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-            msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(dimTblName, storageName)));
-          tblElement.setStorageName(storageName);
-          UpdatePeriod p = dimTable.getSnapshotDumpPeriods().get(storageName);
-          if (p != null) {
-            tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
-          }
-          dt.getStorageTables().getStorageTable().add(tblElement);
-        }
-      }
-      return dt;
+      return getClient(sessionid).getXDimensionTable(dimTblName);
     }
   }
 
   @Override
   public void updateDimensionTable(LensSessionHandle sessionid, XDimensionTable dimensionTable) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).alterCubeDimensionTable(dimensionTable.getTableName(),
-        JAXBUtils.cubeDimTableFromDimTable(dimensionTable),
-        JAXBUtils.tableDescPrefixMapFromXStorageTables(dimensionTable.getStorageTables()));
+      getClient(sessionid).alterCubeDimensionTable(dimensionTable);
       log.info("Updated dimension table " + dimensionTable.getTableName());
     } catch (HiveException exc) {
       throw new LensException(exc);
@@ -395,43 +356,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   @Override
   public XFactTable getFactTable(LensSessionHandle sessionid, String fact) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      CubeMetastoreClient msClient = getClient(sessionid);
-      CubeFactTable cft = msClient.getFactTable(fact);
-      XFactTable factTable = JAXBUtils.factTableFromCubeFactTable(cft);
-      Map<String, Map<UpdatePeriod, String>> storageMap = cft.getStoragePrefixUpdatePeriodMap();
-      for (String storageName : cft.getStorages()) {
-        Set<UpdatePeriod> updatePeriods = cft.getUpdatePeriods().get(storageName);
-        // This map tells if there are different tables for different update period.
-        Map<UpdatePeriod, String> updatePeriodToTableMap = storageMap.get(storageName);
-        Set<String> tableNames = new HashSet<>();
-        for (UpdatePeriod updatePeriod : updatePeriods) {
-          tableNames.add(updatePeriodToTableMap.get(updatePeriod));
-        }
-        if (tableNames.size() <= 1) {
-          XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-            msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(fact, storageName)));
-          tblElement.setStorageName(storageName);
-          for (UpdatePeriod p : updatePeriods) {
-            tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
-          }
-          factTable.getStorageTables().getStorageTable().add(tblElement);
-        } else {
-          // Multiple storage tables.
-          XStorageTableElement tblElement = new XStorageTableElement();
-          tblElement.setStorageName(storageName);
-          XUpdatePeriods xUpdatePeriods = new XUpdatePeriods();
-          tblElement.setUpdatePeriods(xUpdatePeriods);
-          for (Map.Entry entry : updatePeriodToTableMap.entrySet()) {
-            XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
-            updatePeriodTableDescriptor.setTableDesc(getStorageTableDescFromHiveTable(
-              msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(fact, (String) entry.getValue()))));
-            updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(((UpdatePeriod)entry.getKey()).name()));
-            xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
-          }
-          factTable.getStorageTables().getStorageTable().add(tblElement);
-        }
-      }
-      return factTable;
+      return getClient(sessionid).getXFactTable(fact);
     }
   }
 
@@ -448,54 +373,34 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   @Override
   public void createFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).createCubeFactTable(fact.getCubeName(),
-        fact.getName(),
-        JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()),
-        JAXBUtils.getFactUpdatePeriodsFromStorageTables(fact.getStorageTables()),
-        fact.getWeight(),
-        addFactColStartTimePropertyToFactProperties(fact),
-        JAXBUtils.tableDescPrefixMapFromXStorageTables(fact.getStorageTables()),
-        JAXBUtils.storageTablePrefixMapOfStorage(fact.getStorageTables()));
+      getClient(sessionid).createCubeFactTable(fact);
       log.info("Created fact table " + fact.getName());
     }
   }
-  public  Map<String, String> addFactColStartTimePropertyToFactProperties(XFactTable fact) {
-    Map<String, String> props = new HashMap<String, String>();
-    props.putAll(JAXBUtils.mapFromXProperties(fact.getProperties()));
-    props.putAll(JAXBUtils.columnStartAndEndTimeFromXColumns(fact.getColumns()));
-    return props;
-  }
-
-  @Override
-  public void createSegmentation(LensSessionHandle sessionid, XSegmentation cubeSeg) throws LensException {
-    try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).createSegmentation(
-              cubeSeg.getCubeName(),
-              cubeSeg.getName(),
-              JAXBUtils.segmentsFromXSegments(cubeSeg.getSegements()),
-              cubeSeg.getWeight(),
-              JAXBUtils.mapFromXProperties(cubeSeg.getProperties()));
-      log.info("Created segmentation " + cubeSeg.getName());
-    }
-  }
-
 
   @Override
   public void updateFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(fact),
-        JAXBUtils.tableDescPrefixMapFromXStorageTables(fact.getStorageTables()),
-          JAXBUtils.columnStartAndEndTimeFromXColumns(fact.getColumns()));
+      getClient(sessionid).alterCubeFactTable(fact);
       log.info("Updated fact table " + fact.getName());
     } catch (HiveException e) {
       throw new LensException(e);
     }
   }
 
+
+  @Override
+  public void createSegmentation(LensSessionHandle sessionid, XSegmentation cubeSeg) throws LensException {
+    try (SessionContext ignored = new SessionContext(sessionid)){
+      getClient(sessionid).createSegmentation(cubeSeg);
+      log.info("Created segmentation " + cubeSeg.getName());
+    }
+  }
+
   @Override
   public void updateSegmentation(LensSessionHandle sessionid, XSegmentation cubeSeg) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).alterSegmentation(cubeSeg.getName(), segmentationFromXSegmentation(cubeSeg));
+      getClient(sessionid).alterSegmentation(cubeSeg);
       log.info("Updated segmentation " + cubeSeg.getName());
     } catch (HiveException e) {
       throw new LensException(e);
@@ -906,7 +811,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   public void createStorage(LensSessionHandle sessionid, XStorage storage)
     throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).createStorage(JAXBUtils.storageFromXStorage(storage));
+      getClient(sessionid).createStorage(storage);
       log.info("Created storage " + storage.getName());
     }
 
@@ -925,8 +830,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   public void alterStorage(LensSessionHandle sessionid, String storageName,
     XStorage storage) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).alterStorage(storageName,
-        JAXBUtils.storageFromXStorage(storage));
+      getClient(sessionid).alterStorage(storage);
       log.info("Altered storage " + storageName);
     } catch (HiveException e) {
       throw new LensException(e);
@@ -1015,7 +919,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   public void createDimension(LensSessionHandle sessionid, XDimension dimension)
     throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).createDimension(JAXBUtils.dimensionFromXDimension(dimension));
+      getClient(sessionid).createDimension(dimension);
       log.info("Created dimension " + dimension.getName());
     }
   }
@@ -1041,8 +945,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   public void updateDimension(LensSessionHandle sessionid, String dimName, XDimension dimension)
     throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).alterDimension(dimName,
-        JAXBUtils.dimensionFromXDimension(dimension));
+      getClient(sessionid).alterDimension(dimension);
       log.info("Altered dimension " + dimName);
     } catch (HiveException e) {
       throw new LensException(e);

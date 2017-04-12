@@ -30,6 +30,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.server.api.error.LensException;
@@ -305,11 +306,11 @@ public final class DateUtil {
     switch (interval) {
     case SECONDLY:
     case CONTINUOUS:
-      return getMilliSecondCoveringInfo(from, to, 1000);
+      return getMilliSecondCoveringInfo(from, to, 1000, interval);
     case MINUTELY:
     case HOURLY:
     case DAILY:
-      return getMilliSecondCoveringInfo(from, to, interval.weight());
+      return getMilliSecondCoveringInfo(from, to, interval.weight(), interval);
     case WEEKLY:
       return getWeeklyCoveringInfo(from, to);
     case MONTHLY:
@@ -323,18 +324,26 @@ public final class DateUtil {
     }
   }
 
-  private static CoveringInfo getMilliSecondCoveringInfo(Date from, Date to, long millisInInterval) {
+  private static CoveringInfo getMilliSecondCoveringInfo(Date from, Date to, long millisInInterval,
+      UpdatePeriod interval) {
     long diff = to.getTime() - from.getTime();
-    return new CoveringInfo((int) (diff / millisInInterval), diff % millisInInterval == 0);
+    return new CoveringInfo((int) (diff / millisInInterval),
+      Stream.of(from, to).allMatch(a->interval.truncate(a).equals(a)));
+    // start date and end date should lie on boundaries.
   }
 
+  /**
+   * Whether the range [from,to) is coverable by intervals
+   * @param from        from time
+   * @param to          to time
+   * @param intervals   intervals to check
+   * @return            true if any of the intervals can completely cover the range
+   */
   static boolean isCoverableBy(Date from, Date to, Set<UpdatePeriod> intervals) {
-    for (UpdatePeriod period : intervals) {
-      if (getCoveringInfo(from, to, period).isCoverable()) {
-        return true;
-      }
-    }
-    return false;
+    return intervals.stream().anyMatch(period->isCoverableBy(from, to, period));
+  }
+  private static boolean isCoverableBy(Date from, Date to, UpdatePeriod period) {
+    return getCoveringInfo(from, to, period).isCoverable();
   }
 
   public static int getTimeDiff(Date fromDate, Date toDate, UpdatePeriod updatePeriod) {

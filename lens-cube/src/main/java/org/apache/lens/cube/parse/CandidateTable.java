@@ -37,10 +37,10 @@ public interface CandidateTable {
   String getStorageString(String alias);
 
   /**
-   * Get storage tables corresponding to this candidate
+   * Get storage table corresponding to this candidate
    * @return
    */
-  Set<String> getStorageTables();
+  String getStorageTable();
 
   /**
    * Get candidate table
@@ -73,5 +73,5 @@ public interface CandidateTable {
   /**
    * Get partitions queried
    */
-  Set<?> getPartsQueried();
+  Set<?> getParticipatingPartitions();
 }

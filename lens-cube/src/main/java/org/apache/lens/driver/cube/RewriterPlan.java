@@ -23,8 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.FactPartition;
-import org.apache.lens.cube.parse.CandidateTable;
-import org.apache.lens.cube.parse.CubeQueryContext;
+import org.apache.lens.cube.parse.*;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.error.LensException;
@@ -49,23 +48,23 @@ public final class RewriterPlan extends DriverQueryPlan {
 
     for (CubeQueryContext ctx : cubeQueries) {
       if (ctx.getPickedDimTables() != null && !ctx.getPickedDimTables().isEmpty()) {
-        for (CandidateTable dim : ctx.getPickedDimTables()) {
-          addTablesQueried(dim.getStorageTables());
+        for (CandidateDim dim : ctx.getPickedDimTables()) {
+          addTablesQueried(dim.getStorageTable());
           if (partitions.get(dim.getName()) == null || partitions.get(dim.getName()).isEmpty()) {
             // puts storage table to latest part
-            partitions.put(dim.getName(), dim.getPartsQueried());
+            partitions.put(dim.getName(), dim.getParticipatingPartitions());
           }
         }
       }
-      if (ctx.getPickedFacts() != null && !ctx.getPickedFacts().isEmpty()) {
-        for (CandidateTable fact : ctx.getPickedFacts()) {
-          addTablesQueried(fact.getStorageTables());
-          Set<FactPartition> factParts = (Set<FactPartition>) partitions.get(fact.getName());
+      if (ctx.getPickedCandidate() != null) {
+        for (StorageCandidate sc : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
+          addTablesQueried(sc.getAliasForTable(""));
+          Set<FactPartition> factParts = (Set<FactPartition>) partitions.get(sc.getStorageTable());
           if (factParts == null) {
             factParts = new HashSet<FactPartition>();
-            partitions.put(fact.getName(), factParts);
+            partitions.put(sc.getStorageTable(), factParts);
           }
-          factParts.addAll((Set<FactPartition>) fact.getPartsQueried());
+          factParts.addAll((Set<FactPartition>) sc.getParticipatingPartitions());
         }
       }
       for (String table : getTablesQueried()) {

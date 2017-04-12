@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_dimension_table dimension_name="statedim" table_name="statetable_partitioned" weight="0.0" xmlns="uri:lens:cube:0.1">
+  <columns>
+    <column name="id" _type="int" comment="code"/>
+    <column name="name" _type="string" comment="field1"/>
+    <column name="capital" _type="string" comment="field2"/>
+  </columns>
+  <properties>
+    <property name="dimtble.statetable_partitioned.c3.dumpperiod" value="HOURLY"/>
+    <property name="dimension.statedim.timed.dimension" value="dt"/>
+    <property name="dimtble.statetable_partitioned.dim.name" value="statedim"/>
+    <property name="dimtble.statetable_partitioned.storages" value="C3"/>
+    <property name="cube.table.statetable_partitioned.weight" value="0.0"/>
+    <property name="dimtable.statetable_partitioned.part.cols" value="countryid"/>
+  </properties>
+  <storage_tables>
+    <storage_table>
+      <update_periods>
+        <update_period>HOURLY</update_period>
+      </update_periods>
+      <storage_name>C3</storage_name>
+      <table_desc external="false">
+        <part_cols>
+          <column name="dt" _type="string" comment="date partition"/>
+          <column name="countryid" _type="string" comment="region name"/>
+        </part_cols>
+        <table_parameters>
+          <property name="cube.storagetable.time.partcols" value="dt"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_dimension_table>

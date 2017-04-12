@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_dimension name="cycledim1" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="int" name="id" description="code">
+    </dim_attribute>
+    <dim_attribute _type="string" name="name" description="name">
+    </dim_attribute>
+    <dim_attribute _type="string" name="cyledim2id" description="link to cyclic dim 2">
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains>
+    <join_chain dest_table="cycledim2" name="cycledim2chain" display_string="cycledim2chain"
+                description="cycledim2chain">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="cycledim1" column="cyledim2id" maps_to_many="false"/>
+              <to table="cycledim2" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
+  <properties>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="dimension.cycledim1.timed.dimension" value="dt"/>
+    <property name="dimension.joinchain.cycledim2chain.displaystring" value="cycledim2chain"/>
+    <property name="dimension.joinchain.cycledim2chain.numchains" value="1"/>
+    <property name="transient_lastDdlTime" value="1488895853"/>
+    <property name="dimension.cycledim1.joinchains.list.size" value="1"/>
+    <property name="cube.col.cyledim2id.description" value="link to cyclic dim 2"/>
+    <property name="base.cycledim1.expressions.list.size" value="0"/>
+    <property name="dimension.cycledim1.joinchains.list0" value="cycledim2chain"/>
+    <property name="cube.col.id.description" value="code"/>
+    <property name="cube.dimension.name.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.cycledim1.attributes.list0" value="id,name,cyledim2id"/>
+    <property name="dimension.cycledim1.attributes.list.size" value="1"/>
+    <property name="cube.col.name.description" value="name"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.table.cycledim1.weight" value="0.0"/>
+    <property name="dimension.joinchain.cycledim2chain.description" value="cycledim2chain"/>
+    <property name="cube.dimension.cyledim2id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.name.type" value="string"/>
+    <property name="cube.dimension.cyledim2id.type" value="string"/>
+    <property name="dimension.joinchain.cycledim2chain.fullchain.0"
+              value="cycledim1.cyledim2id.false,cycledim2.id.false"/>
+  </properties>
+</x_dimension>

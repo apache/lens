@@ -64,7 +64,7 @@ public class AutoJoinContext {
 
   // there can be separate join clause for each fact in-case of multi fact queries
   @Getter
-  Map<CandidateFact, JoinClause> factClauses = new HashMap<>();
+  Map<StorageCandidate, JoinClause> factClauses = new HashMap<>();
   @Getter
   @Setter
   JoinClause minCostClause;
@@ -99,11 +99,11 @@ public class AutoJoinContext {
     return autoJoinTarget;
   }
 
-  public JoinClause getJoinClause(CandidateFact fact) {
-    if (fact == null || !factClauses.containsKey(fact)) {
+  public JoinClause getJoinClause(StorageCandidate sc) {
+    if (sc == null || !factClauses.containsKey(sc)) {
       return minCostClause;
     }
-    return factClauses.get(fact);
+    return factClauses.get(sc);
   }
 
   // Populate map of tables to their columns which are present in any of the
@@ -169,7 +169,7 @@ public class AutoJoinContext {
     joinPathFromColumns.remove(dim);
   }
 
-  public String getFromString(String fromTable, CandidateFact fact, Set<Dimension> qdims,
+  public String getFromString(String fromTable, StorageCandidate sc, Set<Dimension> qdims,
     Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql, QueryAST ast) throws LensException {
     String fromString = fromTable;
     log.info("All paths dump:{} Queried dims:{}", cubeql.getAutoJoinCtx().getAllPaths(), qdims);
@@ -177,15 +177,15 @@ public class AutoJoinContext {
       return fromString;
     }
     // Compute the merged join clause string for the min cost joinClause
-    String clause = getMergedJoinClause(cubeql, fact, ast,
-      cubeql.getAutoJoinCtx().getJoinClause(fact), dimsToQuery);
+    String clause = getMergedJoinClause(cubeql, sc, ast,
+      cubeql.getAutoJoinCtx().getJoinClause(sc), dimsToQuery);
 
     fromString += clause;
     return fromString;
   }
 
   // Some refactoring needed to account for multiple join paths
-  public String getMergedJoinClause(CubeQueryContext cubeql, CandidateFact fact, QueryAST ast, JoinClause joinClause,
+  public String getMergedJoinClause(CubeQueryContext cubeql, StorageCandidate sc, QueryAST ast, JoinClause joinClause,
                                     Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     Set<String> clauses = new LinkedHashSet<>();
     String joinTypeStr = "";
@@ -198,7 +198,7 @@ public class AutoJoinContext {
 
     Iterator<JoinTree> iter = joinClause.getJoinTree().dft();
     boolean hasBridgeTable = false;
-    BridgeTableJoinContext bridgeTableJoinContext = new BridgeTableJoinContext(cubeql, fact, ast, bridgeTableFieldAggr,
+    BridgeTableJoinContext bridgeTableJoinContext = new BridgeTableJoinContext(cubeql, sc, ast, bridgeTableFieldAggr,
       bridgeTableFieldArrayFilter, doFlatteningEarly);
 
     while (iter.hasNext()) {
@@ -347,22 +347,30 @@ public class AutoJoinContext {
     return allPaths;
   }
 
-  public void pruneAllPaths(CubeInterface cube, final Set<CandidateFact> cfacts,
+  /**
+   * Prunes the join chains defined in Cube whose starting column is not there in any of the candidate facts.
+   * Same is done in case of join paths defined in Dimensions.
+   *
+   * @param cube
+   * @param scSet picked StorageCandidates
+   * @param dimsToQuery
+   * @throws LensException
+   */
+  public void pruneAllPaths(CubeInterface cube, Collection<StorageCandidate> scSet,
     final Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
     // Remove join paths which cannot be satisfied by the resolved candidate
     // fact and dimension tables
-    if (cfacts != null) {
-      // include columns from all picked facts
-      Set<String> factColumns = new HashSet<>();
-      for (CandidateFact cFact : cfacts) {
-        factColumns.addAll(cFact.getColumns());
+    if (scSet != null) {
+      // include columns from picked candidate
+      Set<String> candColumns = new HashSet<>();
+      for (StorageCandidate sc : scSet) {
+        candColumns.addAll(sc.getColumns());
       }
-
       for (List<JoinPath> paths : allPaths.values()) {
         for (int i = 0; i < paths.size(); i++) {
           JoinPath jp = paths.get(i);
           List<String> cubeCols = jp.getColumnsForTable((AbstractCubeTable) cube);
-          if (cubeCols != null && !factColumns.containsAll(cubeCols)) {
+          if (cubeCols != null && !candColumns.containsAll(cubeCols)) {
             // This path requires some columns from the cube which are not
             // present in the candidate fact
             // Remove this path
@@ -433,7 +441,7 @@ public class AutoJoinContext {
   }
 
   private Map<Aliased<Dimension>, List<JoinPath>> pruneFactPaths(CubeInterface cube,
-    final CandidateFact cFact) throws LensException {
+    final StorageCandidate sc) throws LensException {
     Map<Aliased<Dimension>, List<JoinPath>> prunedPaths = new HashMap<>();
     // Remove join paths which cannot be satisfied by the candidate fact
     for (Map.Entry<Aliased<Dimension>, List<JoinPath>> ppaths : allPaths.entrySet()) {
@@ -442,7 +450,7 @@ public class AutoJoinContext {
       for (int i = 0; i < paths.size(); i++) {
         JoinPath jp = paths.get(i);
         List<String> cubeCols = jp.getColumnsForTable((AbstractCubeTable) cube);
-        if (cubeCols != null && !cFact.getColumns().containsAll(cubeCols)) {
+        if (cubeCols != null && !sc.getColumns().containsAll(cubeCols)) {
           // This path requires some columns from the cube which are not
           // present in the candidate fact
           // Remove this path
@@ -485,12 +493,12 @@ public class AutoJoinContext {
    * There can be multiple join paths between a dimension and the target. Set of all possible join clauses is the
    * cartesian product of join paths of all dimensions
    */
-  private Iterator<JoinClause> getJoinClausesForAllPaths(final CandidateFact fact,
+  private Iterator<JoinClause> getJoinClausesForAllPaths(final StorageCandidate sc,
     final Set<Dimension> qDims, final CubeQueryContext cubeql) throws LensException {
     Map<Aliased<Dimension>, List<JoinPath>> allPaths;
     // if fact is passed only look at paths possible from fact to dims
-    if (fact != null) {
-      allPaths = pruneFactPaths(cubeql.getCube(), fact);
+    if (sc != null) {
+      allPaths = pruneFactPaths(cubeql.getCube(), sc);
     } else {
       allPaths = new LinkedHashMap<>(this.allPaths);
     }
@@ -573,7 +581,7 @@ public class AutoJoinContext {
     }
   }
 
-  public Set<Dimension> pickOptionalTables(final CandidateFact fact,
+  public Set<Dimension> pickOptionalTables(final StorageCandidate sc,
     Set<Dimension> qdims, CubeQueryContext cubeql) throws LensException {
     // Find the min cost join clause and add dimensions in the clause as optional dimensions
     Set<Dimension> joiningOptionalTables = new HashSet<>();
@@ -581,7 +589,7 @@ public class AutoJoinContext {
       return joiningOptionalTables;
     }
     // find least cost path
-    Iterator<JoinClause> itr = getJoinClausesForAllPaths(fact, qdims, cubeql);
+    Iterator<JoinClause> itr = getJoinClausesForAllPaths(sc, qdims, cubeql);
     JoinClause minCostClause = null;
     while (itr.hasNext()) {
       JoinClause clause = itr.next();
@@ -595,9 +603,9 @@ public class AutoJoinContext {
           qdims.toString(), autoJoinTarget.getName());
     }
 
-    log.info("Fact: {} minCostClause:{}", fact, minCostClause);
-    if (fact != null) {
-      cubeql.getAutoJoinCtx().getFactClauses().put(fact, minCostClause);
+    log.info("Fact: {} minCostClause:{}", sc, minCostClause);
+    if (sc != null) {
+      cubeql.getAutoJoinCtx().getFactClauses().put(sc, minCostClause);
     } else {
       cubeql.getAutoJoinCtx().setMinCostClause(minCostClause);
     }

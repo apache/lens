@@ -124,12 +124,7 @@ public class CandidateDim implements CandidateTable {
   }
 
   @Override
-  public Set<String> getStorageTables() {
-    return Collections.singleton(storageTable);
-  }
-
-  @Override
-  public Set<String> getPartsQueried() {
+  public Set<String> getParticipatingPartitions() {
     if (StringUtils.isBlank(whereClause)) {
       return Collections.emptySet();
     }

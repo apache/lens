@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_fact_table name="testfact3_base" cube_name="baseCube" weight="5.0" xmlns="uri:lens:cube:0.1">
+  <columns>
+    <column name="msr13" _type="double" comment="third measure"/>
+    <column name="msr14" _type="bigint" comment="fourth measure"/>
+    <column name="d_time" _type="timestamp" comment="event time"/>
+    <column name="processing_time" _type="timestamp" comment="processing time"/>
+    <column name="dim1" _type="string" comment="base dim"/>
+    <column name="dim11" _type="string" comment="base dim"/>
+  </columns>
+  <properties>
+    <property name="cube.table.testfact3_base.weight" value="5.0"/>
+    <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
+    <property name="cube.fact.testfact3_base.cubename" value="baseCube"/>
+    <property name="cube.fact.testfact3_base.c2.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
+    <property name="cube.fact.testfact3_base.c3.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
+    <property name="cube.fact.testfact3_base.c4.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
+    <property name="cube.fact.testfact3_base.storages" value="C3,C4,C1,C2"/>
+    <property name="cube.fact.testfact3_base.c1.updateperiods" value="MONTHLY,HOURLY,YEARLY,QUARTERLY,MINUTELY,DAILY"/>
+  </properties>
+  <storage_tables>
+    <storage_table>
+      <update_periods>
+        <update_period>MINUTELY</update_period>
+        <update_period>HOURLY</update_period>
+        <update_period>DAILY</update_period>
+        <update_period>MONTHLY</update_period>
+        <update_period>QUARTERLY</update_period>
+        <update_period>YEARLY</update_period>
+      </update_periods>
+      <storage_name>C3</storage_name>
+      <table_desc external="false">
+        <part_cols>
+          <column name="dt" _type="string" comment="date partition"/>
+        </part_cols>
+        <table_parameters>
+          <property name="cube.storagetable.time.partcols" value="dt"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
+    <storage_table>
+      <update_periods>
+        <update_period>MINUTELY</update_period>
+        <update_period>HOURLY</update_period>
+        <update_period>DAILY</update_period>
+        <update_period>MONTHLY</update_period>
+        <update_period>QUARTERLY</update_period>
+        <update_period>YEARLY</update_period>
+      </update_periods>
+      <storage_name>C4</storage_name>
+      <table_desc external="false">
+        <part_cols>
+          <column name="ttd" _type="string" comment="test date partition"/>
+          <column name="ttd2" _type="string" comment="test date partition"/>
+        </part_cols>
+        <table_parameters>
+          <property name="cube.storagetable.time.partcols" value="ttd,ttd2"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+        <time_part_cols>ttd</time_part_cols>
+        <time_part_cols>ttd2</time_part_cols>
+      </table_desc>
+    </storage_table>
+    <storage_table>
+      <update_periods>
+        <update_period>MINUTELY</update_period>
+        <update_period>HOURLY</update_period>
+        <update_period>DAILY</update_period>
+        <update_period>MONTHLY</update_period>
+        <update_period>QUARTERLY</update_period>
+        <update_period>YEARLY</update_period>
+      </update_periods>
+      <storage_name>C1</storage_name>
+      <table_desc external="false">
+        <part_cols>
+          <column name="dt" _type="string" comment="date partition"/>
+        </part_cols>
+        <table_parameters>
+          <property name="cube.storagetable.time.partcols" value="dt"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
+    <storage_table>
+      <update_periods>
+        <update_period>MINUTELY</update_period>
+        <update_period>HOURLY</update_period>
+        <update_period>DAILY</update_period>
+        <update_period>MONTHLY</update_period>
+        <update_period>QUARTERLY</update_period>
+        <update_period>YEARLY</update_period>
+      </update_periods>
+      <storage_name>C2</storage_name>
+      <table_desc external="false">
+        <part_cols>
+          <column name="dt" _type="string" comment="date partition"/>
+        </part_cols>
+        <table_parameters>
+          <property name="cube.storagetable.time.partcols" value="dt"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_fact_table>

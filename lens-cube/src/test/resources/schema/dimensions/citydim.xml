@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_dimension name="citydim" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="int" name="stateid" description="state id">
+    </dim_attribute>
+    <dim_attribute _type="int" name="zipcode" description="zip code">
+    </dim_attribute>
+    <dim_attribute _type="int" name="id" description="code">
+    </dim_attribute>
+    <dim_attribute _type="string" name="statename" display_string="State name" description="state name">
+      <chain_ref_column chain_name="citystate" ref_col="name" dest_table="statedim"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="nocandidatecol" description="used in testing no candidate available">
+    </dim_attribute>
+    <dim_attribute _type="string" name="name" description="city name">
+    </dim_attribute>
+    <dim_attribute _type="string" name="ambigdim1" description="used in testColumnAmbiguity">
+    </dim_attribute>
+    <dim_attribute _type="string" name="ambigdim2" description="used in testColumnAmbiguity">
+    </dim_attribute>
+  </attributes>
+  <expressions>
+    <expression _type="string" name="citystate" display_string="City State" description="city's state">
+      <expr_spec expr="concat(citydim.name, &quot;:&quot;, citydim.statename)"/>
+    </expression>
+    <expression _type="string" name="cityaddress" display_string="City Address"
+                description="city with state and city and zip">
+      <expr_spec
+        expr="concat(citydim.name, &quot;:&quot;, citystate.name, &quot;:&quot;, citycountry.name, &quot;:&quot;, cityzip.code)"/>
+      <expr_spec expr="concat(citydim.name, &quot;:&quot;, citystate.name)"/>
+    </expression>
+    <expression _type="int" name="aggrexpr" display_string="city count" description="count(name)">
+      <expr_spec expr="count(name)"/>
+    </expression>
+  </expressions>
+  <join_chains>
+    <join_chain dest_table="countrydim" name="citycountry" display_string="cube-zip" description="country thru city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="citydim" column="stateid" maps_to_many="false"/>
+              <to table="statedim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="statedim" column="countryid" maps_to_many="false"/>
+              <to table="countrydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="citydim" column="statename" maps_to_many="false"/>
+              <to table="statedim" column="name" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="statedim" column="countryid" maps_to_many="false"/>
+              <to table="countrydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="statedim" name="citystate" display_string="city-state" description="state thru city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="citydim" column="stateid" maps_to_many="false"/>
+              <to table="statedim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="citydim" column="statename" maps_to_many="false"/>
+              <to table="statedim" column="name" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="zipdim" name="cityzip" display_string="city-zip" description="Zipcode thru city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="citydim" column="zipcode" maps_to_many="false"/>
+              <to table="zipdim" column="code" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
+  <properties>
+    <property name="dimension.citydim.timed.dimension" value="dt"/>
+    <property name="cube.table.citydim.weight" value="0.0"/>
+  </properties>
+</x_dimension>

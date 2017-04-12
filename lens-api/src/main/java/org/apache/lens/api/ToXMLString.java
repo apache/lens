@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.bind.*;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.namespace.QName;
 
 import org.apache.lens.api.jaxb.LensJAXBContext;
 
@@ -31,6 +34,11 @@ public abstract class ToXMLString {
   protected static final Map<Class<?>, JAXBContext> JAXB_CONTEXTS = new HashMap<>();
 
   public static String toString(Object o) {
+    if (!(o instanceof JAXBElement) && o.getClass().getAnnotation(XmlRootElement.class) == null
+      && o.getClass().getAnnotation(XmlType.class)!= null) {
+      o = new JAXBElement(new QName("uri:lens:cube:0.1", o.getClass().getAnnotation(XmlType.class).name()),
+        o.getClass(), null, o);
+    }
     try {
       StringWriter stringWriter = new StringWriter();
       Class cl = null;

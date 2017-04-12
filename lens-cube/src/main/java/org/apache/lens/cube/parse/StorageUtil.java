@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,12 +18,18 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.*;
+import static org.apache.lens.cube.metadata.DateUtil.WSPACE;
 
-import org.apache.lens.cube.metadata.FactPartition;
-import org.apache.lens.cube.metadata.StorageConstants;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.lens.cube.metadata.*;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.google.common.collect.Lists;
 
 public final class StorageUtil {
   private StorageUtil() {
@@ -69,8 +75,8 @@ public final class StorageUtil {
     String sep = "";
     for (String timePartCol : timedDimensions) {
       if (!timePartCol.equals(partCol)) {
-        sb.append(sep).append(alias).append(".").append(timePartCol)
-          .append(" != '").append(StorageConstants.LATEST_PARTITION_VALUE).append("'");
+        sb.append(sep).append(alias).append(".").append(timePartCol).append(" != '")
+          .append(StorageConstants.LATEST_PARTITION_VALUE).append("'");
         sep = " AND ";
       }
     }
@@ -82,15 +88,11 @@ public final class StorageUtil {
     String sep = "((";
     for (String clause : clauses) {
       if (clause != null && !clause.isEmpty()) {
-        sb
-          .append(sep)
-          .append(clause);
+        sb.append(sep).append(clause);
         sep = ") AND (";
       }
     }
-    return sb
-      .append(sep.equals("((") ? "" : "))")
-      .toString();
+    return sb.append(sep.equals("((") ? "" : "))").toString();
   }
 
   /**
@@ -161,4 +163,112 @@ public final class StorageUtil {
       return null;
     }
   }
+
+  /**
+   * Get fallback range
+   *
+   * @param range
+   * @param factName
+   * @param cubeql
+   * @return
+   * @throws LensException
+   */
+  public static TimeRange getFallbackRange(TimeRange range, String factName, CubeQueryContext cubeql)
+    throws LensException {
+    Cube baseCube = cubeql.getBaseCube();
+    ArrayList<String> tableNames = Lists.newArrayList(factName, cubeql.getCube().getName());
+    if (!cubeql.getCube().getName().equals(baseCube.getName())) {
+      tableNames.add(baseCube.getName());
+    }
+    String fallBackString = null;
+    String timedim = baseCube.getTimeDimOfPartitionColumn(range.getPartitionColumn());
+    for (String tableName : tableNames) {
+      fallBackString = cubeql.getMetastoreClient().getTable(tableName).getParameters()
+        .get(MetastoreConstants.TIMEDIM_RELATION + timedim);
+      if (StringUtils.isNotBlank(fallBackString)) {
+        break;
+      }
+    }
+    if (StringUtils.isBlank(fallBackString)) {
+      return null;
+    }
+    Matcher matcher = Pattern.compile("(.*?)\\+\\[(.*?),(.*?)\\]").matcher(fallBackString.replaceAll(WSPACE, ""));
+    if (!matcher.matches()) {
+      return null;
+    }
+    DateUtil.TimeDiff diff1 = DateUtil.TimeDiff.parseFrom(matcher.group(2).trim());
+    DateUtil.TimeDiff diff2 = DateUtil.TimeDiff.parseFrom(matcher.group(3).trim());
+    String relatedTimeDim = matcher.group(1).trim();
+    String fallbackPartCol = baseCube.getPartitionColumnOfTimeDim(relatedTimeDim);
+    return TimeRange.getBuilder().fromDate(diff2.negativeOffsetFrom(range.getFromDate()))
+      .toDate(diff1.negativeOffsetFrom(range.getToDate())).partitionColumn(fallbackPartCol).build();
+  }
+
+  /**
+   * Checks how much data is completed for a column.
+   * See this: {@link org.apache.lens.server.api.metastore.DataCompletenessChecker}
+   *
+   * @param cubeql
+   * @param cubeCol
+   * @param alias
+   * @param measureTag
+   * @param tagToMeasureOrExprMap
+   * @return
+   */
+  public static boolean processCubeColForDataCompleteness(CubeQueryContext cubeql, String cubeCol, String alias,
+    Set<String> measureTag, Map<String, String> tagToMeasureOrExprMap) {
+    CubeMeasure column = cubeql.getCube().getMeasureByName(cubeCol);
+    if (column != null && column.getTags() != null) {
+      String dataCompletenessTag = column.getTags().get(MetastoreConstants.MEASURE_DATACOMPLETENESS_TAG);
+      //Checking if dataCompletenessTag is set for queried measure
+      if (dataCompletenessTag != null) {
+        measureTag.add(dataCompletenessTag);
+        String value = tagToMeasureOrExprMap.get(dataCompletenessTag);
+        if (value == null) {
+          tagToMeasureOrExprMap.put(dataCompletenessTag, alias);
+        } else {
+          value = value.concat(",").concat(alias);
+          tagToMeasureOrExprMap.put(dataCompletenessTag, value);
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * This method extracts all the columns used in expressions (used in query) and evaluates each
+   * column separately for completeness
+   *
+   * @param cubeql
+   * @param measureTag
+   * @param tagToMeasureOrExprMap
+   */
+  public static void processExpressionsForCompleteness(CubeQueryContext cubeql, Set<String> measureTag,
+    Map<String, String> tagToMeasureOrExprMap) {
+    boolean isExprProcessed;
+    String cubeAlias = cubeql.getAliasForTableName(cubeql.getCube().getName());
+    for (String expr : cubeql.getQueriedExprsWithMeasures()) {
+      isExprProcessed = false;
+      for (ExpressionResolver.ExprSpecContext esc : cubeql.getExprCtx().getExpressionContext(expr, cubeAlias)
+        .getAllExprs()) {
+        if (esc.getTblAliasToColumns().get(cubeAlias) != null) {
+          for (String cubeCol : esc.getTblAliasToColumns().get(cubeAlias)) {
+            if (processCubeColForDataCompleteness(cubeql, cubeCol, expr, measureTag, tagToMeasureOrExprMap)) {
+              /* This is done to associate the expression with one of the dataCompletenessTag for the measures.
+              So, even if the expression is composed of measures with different dataCompletenessTags, we will be
+              determining the dataCompleteness from one of the measure and this expression is grouped with the
+              other queried measures that have the same dataCompletenessTag. */
+              isExprProcessed = true;
+              break;
+            }
+          }
+        }
+        if (isExprProcessed) {
+          break;
+        }
+      }
+    }
+  }
 }
+

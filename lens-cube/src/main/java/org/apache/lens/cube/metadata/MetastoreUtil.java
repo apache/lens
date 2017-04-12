@@ -595,5 +595,4 @@ public class MetastoreUtil {
     return MetastoreUtil.getFactKeyPrefix(factTableName) + "." + storageName + "." + updatePeriod;
   }
 
-
 }

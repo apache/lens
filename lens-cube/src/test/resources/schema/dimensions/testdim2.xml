@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_dimension name="testdim2" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="bigint" name="bigidnew" description="big id">
+    </dim_attribute>
+    <dim_attribute _type="int" name="id" description="code">
+    </dim_attribute>
+    <dim_attribute _type="string" name="name" description="name">
+    </dim_attribute>
+    <dim_attribute _type="string" name="unreachablename" display_string="urdim name" description="">
+      <chain_ref_column chain_name="unreachabledim_chain" ref_col="name" dest_table="unreachabledim"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="cityname" display_string="cityname" description="name">
+      <chain_ref_column chain_name="dim2city" ref_col="name" dest_table="citydim"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="testdim3id" display_string="dim3 refer" description="f-key to testdim3">
+      <chain_ref_column chain_name="dim3chain" ref_col="id" dest_table="testdim3"/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="urdimid" display_string="urdim refer" description="ref dim">
+    </dim_attribute>
+    <dim_attribute _type="bigint" name="bigid1" description="big id">
+    </dim_attribute>
+    <dim_attribute _type="bigint" name="bigid2" description="big id">
+    </dim_attribute>
+    <dim_attribute _type="string" name="cityid" description="f-key to citydim">
+    </dim_attribute>
+    <dim_attribute _type="string" name="citystatecapital" display_string="State's capital thru city"
+                   description="State's capital thru city">
+      <chain_ref_column chain_name="citystate" ref_col="capital" dest_table="statedim"/>
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains>
+    <join_chain dest_table="citydim" name="dim2city" display_string="dim2-city" description="city thru dim2">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testdim2" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="testdim3" name="dim3chain" display_string="dim3-chain" description="dim3 thru dim2">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="testdim4" name="dim4chain" display_string="cube-testdim3" description="cyclicdim thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim3" column="testdim4id" maps_to_many="false"/>
+              <to table="testdim4" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="statedim" name="citystate" display_string="city-state" description="state thru city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testdim2" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="citydim" column="stateid" maps_to_many="false"/>
+              <to table="statedim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="testdim2" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="citydim" column="statename" maps_to_many="false"/>
+              <to table="statedim" column="name" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="unreachabledim" name="unreachabledim_chain" display_string="dim2-unreachableDim"
+                description="unreachableDim thru dim2">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testdim2" column="urdimid" maps_to_many="false"/>
+              <to table="unreachabledim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
+  <properties>
+    <property name="cube.dimension.urdimid.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.joinchain.citystate.description" value="state thru city"/>
+    <property name="cube.col.testdim3id.displaystring" value="dim3 refer"/>
+    <property name="cube.dimension.citystatecapital.type" value="string"/>
+    <property name="cube.dimension.unreachablename.class" value="org.apache.lens.cube.metadata.ReferencedDimAttribute"/>
+    <property name="cube.col.cityid.description" value="f-key to citydim"/>
+    <property name="cube.col.id.description" value="code"/>
+    <property name="cube.dimension.bigidnew.type" value="bigint"/>
+    <property name="dimension.joinchain.citystate.fullchain.0"
+              value="testdim2.cityid.false,citydim.id.false,citydim.stateid.false,statedim.id.false"/>
+    <property name="cube.dimension.cityid.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.joinchain.citystate.fullchain.1"
+              value="testdim2.cityid.false,citydim.id.false,citydim.statename.false,statedim.name.false"/>
+    <property name="dimension.testdim2.attributes.list0"
+              value="bigidnew,id,name,unreachablename,cityname,testdim3id,urdimid,bigid1,bigid2,cityid,citystatecapital"/>
+    <property name="dimension.joinchain.dim3chain.displaystring" value="dim3-chain"/>
+    <property name="cube.col.cityname.description" value="name"/>
+    <property name="cube.col.citystatecapital.description" value="State's capital thru city"/>
+    <property name="cube.col.testdim3id.description" value="f-key to testdim3"/>
+    <property name="cube.dimension.cityname.class" value="org.apache.lens.cube.metadata.ReferencedDimAttribute"/>
+    <property name="dimension.joinchain.dim2city.fullchain.0" value="testdim2.cityid.false,citydim.id.false"/>
+    <property name="cube.col.bigidnew.description" value="big id"/>
+    <property name="dimension.joinchain.unreachabledim_chain.description" value="unreachableDim thru dim2"/>
+    <property name="cube.col.cityname.displaystring" value="cityname"/>
+    <property name="dimension.joinchain.citystate.displaystring" value="city-state"/>
+    <property name="cube.col.bigid1.description" value="big id"/>
+    <property name="cube.col.bigid2.description" value="big id"/>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="cube.dimension.cityid.type" value="string"/>
+    <property name="dimension.joinchain.unreachabledim_chain.fullchain.0"
+              value="testdim2.urdimid.false,unreachabledim.id.false"/>
+    <property name="cube.table.testdim2.weight" value="0.0"/>
+    <property name="cube.dimension.cityname.chain.column.name" value="name"/>
+    <property name="dimension.joinchain.dim4chain.description" value="cyclicdim thru cube"/>
+    <property name="cube.dimension.unreachablename.chain.column.name" value="name"/>
+    <property name="cube.dimension.bigid2.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.unreachablename.type" value="string"/>
+    <property name="dimension.joinchain.dim4chain.numchains" value="1"/>
+    <property name="dimension.joinchain.dim3chain.fullchain.0" value="testdim2.testdim3id.false,testdim3.id.false"/>
+    <property name="dimension.testdim2.joinchains.list.size" value="1"/>
+    <property name="cube.col.unreachablename.description" value=""/>
+    <property name="dimension.joinchain.unreachabledim_chain.displaystring" value="dim2-unreachableDim"/>
+    <property name="dimension.joinchain.dim3chain.numchains" value="1"/>
+    <property name="cube.dimension.testdim3id.chain.column.name" value="id"/>
+    <property name="cube.dimension.testdim3id.type" value="string"/>
+    <property name="dimension.joinchain.citystate.numchains" value="2"/>
+    <property name="dimension.joinchain.dim3chain.description" value="dim3 thru dim2"/>
+    <property name="dimension.joinchain.dim4chain.fullchain.0"
+              value="testdim2.testdim3id.false,testdim3.id.false,testdim3.testdim4id.false,testdim4.id.false"/>
+    <property name="cube.col.cityname.cost" value="0.0"/>
+    <property name="cube.dimension.bigid2.type" value="bigint"/>
+    <property name="cube.dimension.bigid1.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.testdim3id.class" value="org.apache.lens.cube.metadata.ReferencedDimAttribute"/>
+    <property name="dimension.joinchain.unreachabledim_chain.numchains" value="1"/>
+    <property name="cube.col.testdim3id.cost" value="0.0"/>
+    <property name="cube.dimension.name.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.cityname.type" value="string"/>
+    <property name="cube.dimension.citystatecapital.class"
+              value="org.apache.lens.cube.metadata.ReferencedDimAttribute"/>
+    <property name="cube.col.urdimid.displaystring" value="urdim refer"/>
+    <property name="cube.col.name.description" value="name"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.name.type" value="string"/>
+    <property name="cube.col.urdimid.cost" value="10.0"/>
+    <property name="cube.dimension.cityname.chain.name" value="dim2city"/>
+    <property name="cube.dimension.testdim3id.chain.name" value="dim3chain"/>
+    <property name="dimension.joinchain.dim2city.description" value="city thru dim2"/>
+    <property name="dimension.joinchain.dim4chain.displaystring" value="cube-testdim3"/>
+    <property name="dimension.testdim2.timed.dimension" value="dt"/>
+    <property name="cube.dimension.bigidnew.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.joinchain.dim2city.numchains" value="1"/>
+    <property name="dimension.testdim2.attributes.list.size" value="1"/>
+    <property name="cube.col.urdimid.description" value="ref dim"/>
+    <property name="cube.dimension.citystatecapital.chain.column.name" value="capital"/>
+    <property name="dimension.testdim2.joinchains.list0"
+              value="dim2city,dim3chain,dim4chain,citystate,unreachabledim_chain"/>
+    <property name="cube.col.unreachablename.displaystring" value="urdim name"/>
+    <property name="cube.dimension.urdimid.type" value="int"/>
+    <property name="base.testdim2.expressions.list.size" value="0"/>
+    <property name="cube.col.unreachablename.cost" value="10.0"/>
+    <property name="dimension.joinchain.dim2city.displaystring" value="dim2-city"/>
+    <property name="cube.dimension.citystatecapital.chain.name" value="citystate"/>
+    <property name="cube.dimension.bigid1.type" value="bigint"/>
+    <property name="cube.col.citystatecapital.displaystring" value="State's capital thru city"/>
+    <property name="cube.dimension.unreachablename.chain.name" value="unreachabledim_chain"/>
+  </properties>
+</x_dimension>

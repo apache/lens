@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_dimension name="testdim3" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="int" name="id" description="code">
+    </dim_attribute>
+    <dim_attribute _type="string" name="name" description="name">
+    </dim_attribute>
+    <dim_attribute _type="string" name="testdim4id" description="f-key to testdim4">
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains>
+    <join_chain dest_table="testdim4" name="dim4chain" display_string="dim4-chain" description="dim4 thru dim3">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testdim3" column="testdim4id" maps_to_many="false"/>
+              <to table="testdim4" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
+  <properties>
+    <property name="base.testdim3.expressions.list.size" value="0"/>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="dimension.testdim3.attributes.list0" value="id,name,testdim4id"/>
+    <property name="dimension.testdim3.timed.dimension" value="dt"/>
+    <property name="cube.dimension.testdim4id.type" value="string"/>
+    <property name="dimension.testdim3.attributes.list.size" value="1"/>
+    <property name="dimension.joinchain.dim4chain.fullchain.0" value="testdim3.testdim4id.false,testdim4.id.false"/>
+    <property name="cube.table.testdim3.weight" value="0.0"/>
+    <property name="dimension.joinchain.dim4chain.description" value="dim4 thru dim3"/>
+    <property name="cube.col.id.description" value="code"/>
+    <property name="dimension.testdim3.joinchains.list.size" value="1"/>
+    <property name="dimension.testdim3.joinchains.list0" value="dim4chain"/>
+    <property name="cube.dimension.name.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.testdim4id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.joinchain.dim4chain.numchains" value="1"/>
+    <property name="cube.col.name.description" value="name"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.name.type" value="string"/>
+    <property name="cube.col.testdim4id.description" value="f-key to testdim4"/>
+    <property name="dimension.joinchain.dim4chain.displaystring" value="dim4-chain"/>
+  </properties>
+</x_dimension>

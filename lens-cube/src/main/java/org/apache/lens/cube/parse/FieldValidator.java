@@ -104,7 +104,6 @@ public class FieldValidator implements ContextRewriter {
           conflictingFields.addAll(queriedMsrs);
           throw new FieldsCannotBeQueriedTogetherException(new ConflictingFields(conflictingFields));
         } else {
-
           conflictingFields.addAll(queriedMsrs);
           throw new FieldsCannotBeQueriedTogetherException(new ConflictingFields(conflictingFields));
         }

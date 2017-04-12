@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_derived_cube parent="basecube" name="der2" xmlns="uri:lens:cube:0.1">
+  <properties>
+    <property name="cube.der2.measures.list.size" value="1"/>
+    <property name="cube.der2.parent.cube" value="basecube"/>
+    <property name="cube.allfields.queriable" value="true"/>
+    <property name="cube.der2.dimensions.list0"
+              value="dim22,test_time_dim_day_id,dim13,dim12,test_time_dim2,test_time_dim_day_id2,test_time_dim_hour_id2,yuserid,d_time,dim2bignew,test_time_dim,dim2big1,dim11,dim2,cityid,dim1,dim2big2,stateid,test_time_dim_hour_id,userid,xuserid"/>
+    <property name="cube.der2.measures.list0" value="msr2,msr12,msr14,msr13,directmsr"/>
+    <property name="cube.der2.dimensions.list.size" value="1"/>
+    <property name="cube.table.der2.weight" value="10.0"/>
+  </properties>
+  <measure_names>
+    <measure_name>directmsr</measure_name>
+    <measure_name>msr2</measure_name>
+    <measure_name>msr12</measure_name>
+    <measure_name>msr14</measure_name>
+    <measure_name>msr13</measure_name>
+  </measure_names>
+  <dim_attr_names>
+    <attr_name>test_time_dim_hour_id</attr_name>
+    <attr_name>test_time_dim_hour_id2</attr_name>
+    <attr_name>yuserid</attr_name>
+    <attr_name>test_time_dim_day_id</attr_name>
+    <attr_name>dim2</attr_name>
+    <attr_name>dim2bignew</attr_name>
+    <attr_name>dim1</attr_name>
+    <attr_name>stateid</attr_name>
+    <attr_name>test_time_dim2</attr_name>
+    <attr_name>xuserid</attr_name>
+    <attr_name>dim2big1</attr_name>
+    <attr_name>cityid</attr_name>
+    <attr_name>userid</attr_name>
+    <attr_name>dim2big2</attr_name>
+    <attr_name>test_time_dim</attr_name>
+    <attr_name>test_time_dim_day_id2</attr_name>
+    <attr_name>dim13</attr_name>
+    <attr_name>dim11</attr_name>
+    <attr_name>dim22</attr_name>
+    <attr_name>dim12</attr_name>
+    <attr_name>d_time</attr_name>
+  </dim_attr_names>
+</x_derived_cube>

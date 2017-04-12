@@ -22,7 +22,7 @@ import static org.apache.lens.cube.metadata.DateUtil.ABSDATE_PARSER;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TreeSet;
+import java.util.Set;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.server.api.error.LensException;
@@ -48,10 +48,28 @@ public class TimeRange {
   private ASTNode parent;
   private int childIndex;
 
-  public boolean isCoverableBy(TreeSet<UpdatePeriod> updatePeriods) {
+  public boolean isCoverableBy(Set<UpdatePeriod> updatePeriods) {
     return DateUtil.isCoverableBy(fromDate, toDate, updatePeriods);
   }
 
+  /**
+   * Truncate time range using the update period.
+   * The lower value of the truncated time range is the smallest date value equal to or larger than original
+   * time range's lower value which lies at the update period's boundary. Similarly for higher value.
+   * @param updatePeriod   Update period to truncate time range with
+   * @return               truncated time range
+   * @throws LensException If the truncated time range is invalid.
+   */
+  public TimeRange truncate(UpdatePeriod updatePeriod) throws LensException {
+    TimeRange timeRange = new TimeRangeBuilder().partitionColumn(partitionColumn)
+      .fromDate(updatePeriod.getCeilDate(fromDate)).toDate(updatePeriod.getFloorDate(toDate)).build();
+    timeRange.validate();
+    return timeRange;
+  }
+
+  public long milliseconds() {
+    return toDate.getTime() - fromDate.getTime();
+  }
 
   public static class TimeRangeBuilder {
     private final TimeRange range;

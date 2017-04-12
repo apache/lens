@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_fact_table name="summary4" cube_name="testCube" weight="15.0" xmlns="uri:lens:cube:0.1">
+  <columns>
+    <column name="msr21" _type="float" comment="second measure"/>
+    <column name="msr4" _type="bigint" comment="fourth measure"/>
+    <column name="msr15" _type="int" comment="fifteenth measure"/>
+    <column name="union_join_ctx_msr3" _type="int" comment="union_join_ctx_third measure"/>
+    <column name="newmeasure" _type="bigint" comment="measure available  from now"/>
+    <column name="union_join_ctx_msr2" _type="int" comment="union_join_ctx_second measure"/>
+    <column name="msr2" _type="float" comment="second measure"/>
+    <column name="msr3" _type="double" comment="third measure"/>
+    <column name="msr22" _type="float" comment="second measure"/>
+    <column name="msr9" _type="bigint" comment="ninth measure"/>
+    <column name="msr1" _type="int" comment="first measure"/>
+    <column name="noaggrmsr" _type="bigint" comment="measure without a default aggregate"/>
+    <column name="union_join_ctx_msr1" _type="int" comment="union_join_ctx_first measure"/>
+    <column name="dim1" _type="string" comment="dim1"/>
+    <column name="dim2" _type="string" comment="dim2"/>
+    <column name="testdim3id" _type="string" comment="dim2"/>
+    <column name="dim2big" _type="string" comment="dim2"/>
+    <column name="zipcode" _type="int" comment="zip"/>
+    <column name="cityid" _type="int" comment="city id"/>
+  </columns>
+  <properties>
+    <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
+    <property name="cube.table.summary4.weight" value="15.0"/>
+    <property name="cube.fact.summary4.storages" value="C2"/>
+    <property name="cube.fact.summary4.valid.columns"
+              value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,dim2big1,dim2big2,cityid"/>
+    <property name="cube.fact.summary3.valid.columns"
+              value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,dim2,cityid,stateid"/>
+    <property name="cube.fact.summary4.cubename" value="testCube"/>
+    <property name="cube.fact.summary2.valid.columns"
+              value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,dim2"/>
+    <property name="cube.fact.summary1.valid.columns"
+              value="msr21,msr4,msr15,union_join_ctx_msr3,newmeasure,union_join_ctx_msr2,msr2,msr3,msr22,msr9,msr1,noAggrMsr,union_join_ctx_msr1,,dim1,testdim3id"/>
+    <property name="cube.fact.summary4.c2.updateperiods" value="HOURLY,MINUTELY,DAILY"/>
+  </properties>
+  <storage_tables>
+    <storage_table>
+      <update_periods>
+        <update_period>MINUTELY</update_period>
+        <update_period>HOURLY</update_period>
+        <update_period>DAILY</update_period>
+      </update_periods>
+      <storage_name>C2</storage_name>
+      <table_desc external="false">
+        <part_cols>
+          <column name="pt" _type="string" comment="p time"/>
+          <column name="it" _type="string" comment="i time"/>
+          <column name="et" _type="string" comment="e time"/>
+        </part_cols>
+        <table_parameters>
+          <property name="cube.storagetable.time.partcols" value="pt,it,et"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+        <time_part_cols>pt</time_part_cols>
+        <time_part_cols>it</time_part_cols>
+        <time_part_cols>et</time_part_cols>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_fact_table>

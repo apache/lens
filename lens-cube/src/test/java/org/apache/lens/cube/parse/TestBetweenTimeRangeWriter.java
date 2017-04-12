@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static java.util.Optional.*;
+
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.DAILY;
 
@@ -37,19 +39,19 @@ import org.testng.annotations.Test;
 
 public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
 
-  public static final String CLOSED = "CLOSED";
-  public static final String OPEN = "OPEN";
+  private static final String CLOSED = "CLOSED";
+  private static final String OPEN = "OPEN";
 
-  public static final int START_DATE_OFFSET = 1;
-  public static final int END_DATE_OFFSET = 2;
+  private static final int START_DATE_OFFSET = 1;
+  private static final int END_DATE_OFFSET = 2;
 
-  public static final DateFormat DAY_DB_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+  private static final DateFormat DAY_DB_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
   private static Set<FactPartition> answeringParts;
   private static Set<FactPartition> answeringPartsWithFormat;
 
   static {
-    answeringParts = new LinkedHashSet<FactPartition>();
+    answeringParts = new LinkedHashSet<>();
     answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, START_DATE_OFFSET), DAILY, null, null));
     answeringParts.add(new FactPartition("dt", getDateWithOffset(DAILY, END_DATE_OFFSET), DAILY, null, null));
 
@@ -108,7 +110,7 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
 
   }
 
-  public void validateBetweenOnlySingle(String whereClause, DateFormat format) {
+  private void validateBetweenOnlySingle(String whereClause, DateFormat format) {
     String expected = null;
     if (format == null) {
       expected =
@@ -121,22 +123,7 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
 
   @DataProvider
   public Object[][] getBoundTypes() {
-
-    Object[][] data = new Object[4][2];
-
-    data[0][0] = OPEN;
-    data[0][1] = OPEN;
-
-    data[1][0] = OPEN;
-    data[1][1] = CLOSED;
-
-    data[2][0] = CLOSED;
-    data[2][1] = OPEN;
-
-    data[3][0] = CLOSED;
-    data[3][1] = CLOSED;
-
-    return data;
+    return new Object[][]{{OPEN, OPEN}, {OPEN, CLOSED}, {CLOSED, OPEN}, {CLOSED, CLOSED}};
   }
 
   @Test(dataProvider = "getBoundTypes")
@@ -148,10 +135,10 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
 
     int testStartOffset = START_DATE_OFFSET;
     int testEndOffset = END_DATE_OFFSET;
-    if (startBoundType.equals(OPEN)) {
+    if (startBoundType.equalsIgnoreCase(OPEN)) {
       testStartOffset = START_DATE_OFFSET - 1;
     }
-    if (endBoundType.equals(OPEN)) {
+    if (endBoundType.equalsIgnoreCase(OPEN)) {
       testEndOffset = END_DATE_OFFSET + 1;
     }
     validateBetweenBoundTypes(whereClause, null, testStartOffset, testEndOffset);
@@ -163,18 +150,11 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
     validateBetweenBoundTypes(whereClause, DAY_DB_FORMAT, testStartOffset, testEndOffset);
   }
 
+
   private void validateBetweenBoundTypes(String whereClause, DateFormat format,
-    int testStartOffset, int testEndOffset) {
-    String expected = null;
-    if (format == null) {
-      expected =
-        getBetweenClause("test", "dt", getDateWithOffset(DAILY, testStartOffset),
-          getDateWithOffset(DAILY, testEndOffset), DAILY.format());
-    } else {
-      expected =
-        getBetweenClause("test", "dt", getDateWithOffset(DAILY, testStartOffset),
-          getDateWithOffset(DAILY, testEndOffset), format);
-    }
+      int testStartOffset, int testEndOffset) {
+    String expected = getBetweenClause("test", "dt", getDateWithOffset(DAILY, testStartOffset),
+      getDateWithOffset(DAILY, testEndOffset), ofNullable(format).orElseGet(DAILY::format));
     Assert.assertEquals(expected, whereClause);
   }
 }

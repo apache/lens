@@ -42,7 +42,10 @@ import lombok.extern.slf4j.Slf4j;
 class JoinResolver implements ContextRewriter {
   private Map<AbstractCubeTable, JoinType> tableJoinTypeMap;
   private AbstractCubeTable target;
-  private HashMap<Dimension, List<JoinChain>> dimensionInJoinChain = new HashMap<Dimension, List<JoinChain>>();
+  /**
+   * Dimension as key and all the participating join chains for this dimension as value.
+   */
+  private HashMap<Dimension, List<JoinChain>> dimensionToJoinChainsMap = new HashMap<Dimension, List<JoinChain>>();
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
@@ -91,10 +94,10 @@ class JoinResolver implements ContextRewriter {
       dims.add(chain.getDestTable());
       for (String dim : dims) {
         Dimension dimension = cubeql.getMetastoreClient().getDimension(dim);
-        if (dimensionInJoinChain.get(dimension) == null) {
-          dimensionInJoinChain.put(dimension, new ArrayList<JoinChain>());
+        if (dimensionToJoinChainsMap.get(dimension) == null) {
+          dimensionToJoinChainsMap.put(dimension, new ArrayList<JoinChain>());
         }
-        dimensionInJoinChain.get(dimension).add(chain);
+        dimensionToJoinChainsMap.get(dimension).add(chain);
       }
     }
   }
@@ -139,7 +142,7 @@ class JoinResolver implements ContextRewriter {
 
     Map<Aliased<Dimension>, List<JoinPath>> multipleJoinPaths = new LinkedHashMap<>();
 
-    // populate paths from joinchains
+    // populate paths from joinchains. For a destination Dimension get all the join paths that lead to it.
     for (JoinChain chain : cubeql.getJoinchains().values()) {
       Dimension dimension = cubeql.getMetastoreClient().getDimension(chain.getDestTable());
       Aliased<Dimension> aliasedDimension = Aliased.create(dimension, chain.getName());
@@ -149,6 +152,7 @@ class JoinResolver implements ContextRewriter {
       multipleJoinPaths.get(aliasedDimension).addAll(
         chain.getRelationEdges(cubeql.getMetastoreClient()));
     }
+
     boolean flattenBridgeTables = cubeql.getConf().getBoolean(CubeQueryConfUtil.ENABLE_FLATTENING_FOR_BRIDGETABLES,
       CubeQueryConfUtil.DEFAULT_ENABLE_FLATTENING_FOR_BRIDGETABLES);
     String bridgeTableFieldAggr = cubeql.getConf().get(CubeQueryConfUtil.BRIDGE_TABLE_FIELD_AGGREGATOR,

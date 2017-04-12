@@ -32,7 +32,6 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.collect.Sets;
-
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,7 +69,8 @@ class CandidateTableResolver implements ContextRewriter {
       if (cubeql.getAutoJoinCtx() != null) {
         // Before checking for candidate table columns, prune join paths containing non existing columns
         // in populated candidate tables
-        cubeql.getAutoJoinCtx().pruneAllPaths(cubeql.getCube(), cubeql.getCandidateFacts(), null);
+        cubeql.getAutoJoinCtx().pruneAllPaths(cubeql.getCube(),
+            CandidateUtil.getStorageCandidates(cubeql.getCandidates()), null);
         cubeql.getAutoJoinCtx().pruneAllPathsForCandidateDims(cubeql.getCandidateDimTables());
         cubeql.getAutoJoinCtx().refreshJoinPathColumns();
       }
@@ -78,7 +78,6 @@ class CandidateTableResolver implements ContextRewriter {
       // check for joined columns and denorm columns on refered tables
       resolveCandidateFactTablesForJoins(cubeql);
       resolveCandidateDimTablesForJoinsAndDenorms(cubeql);
-      cubeql.pruneCandidateFactSet(CandidateTablePruneCode.INVALID_DENORM_TABLE);
       checkForQueriedColumns = true;
     }
   }
@@ -91,10 +90,16 @@ class CandidateTableResolver implements ContextRewriter {
             cubeql.getCube().getName() + " does not have any facts");
       }
       for (CubeFactTable fact : factTables) {
-        CandidateFact cfact = new CandidateFact(fact, cubeql.getCube());
-        cubeql.getCandidateFacts().add(cfact);
+        if (fact.getUpdatePeriods().isEmpty()) {
+          log.info("Not considering fact: {} as it has no update periods", fact.getName());
+        } else {
+          for (String s : fact.getStorages()) {
+            StorageCandidate sc = new StorageCandidate(cubeql.getCube(), fact, s, cubeql);
+            cubeql.getCandidates().add(sc);
+          }
+        }
       }
-      log.info("Populated candidate facts: {}", cubeql.getCandidateFacts());
+      log.info("Populated storage candidates: {}", cubeql.getCandidates());
     }
 
     if (cubeql.getDimensions().size() != 0) {
@@ -154,10 +159,10 @@ class CandidateTableResolver implements ContextRewriter {
     OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().remove(dim);
     // remove all the depending candidate table as well
     for (CandidateTable candidate : optdim.requiredForCandidates) {
-      if (candidate instanceof CandidateFact) {
-        log.info("Not considering fact:{} as refered table does not have any valid dimtables", candidate);
-        cubeql.getCandidateFacts().remove(candidate);
-        cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
+      if (candidate instanceof StorageCandidate) {
+        log.info("Not considering storage candidate:{} as refered table does not have any valid dimtables", candidate);
+        cubeql.getCandidates().remove(candidate);
+        cubeql.addStoragePruningMsg(((StorageCandidate) candidate), new CandidateTablePruneCause(
           CandidateTablePruneCode.INVALID_DENORM_TABLE));
       } else {
         log.info("Not considering dimtable:{} as refered table does not have any valid dimtables", candidate);
@@ -172,20 +177,20 @@ class CandidateTableResolver implements ContextRewriter {
     }
   }
 
-  public static boolean isColumnAvailableInRange(final TimeRange range, Date startTime, Date endTime) {
+  private static boolean isColumnAvailableInRange(final TimeRange range, Date startTime, Date endTime) {
     return (isColumnAvailableFrom(range.getFromDate(), startTime)
         && isColumnAvailableTill(range.getToDate(), endTime));
   }
 
-  public static boolean isColumnAvailableFrom(@NonNull final Date date, Date startTime) {
+  private static boolean isColumnAvailableFrom(@NonNull final Date date, Date startTime) {
     return (startTime == null) ? true : date.equals(startTime) || date.after(startTime);
   }
 
-  public static boolean isColumnAvailableTill(@NonNull final Date date, Date endTime) {
+  private static boolean isColumnAvailableTill(@NonNull final Date date, Date endTime) {
     return (endTime == null) ? true : date.equals(endTime) || date.before(endTime);
   }
 
-  public static boolean isFactColumnValidForRange(CubeQueryContext cubeql, CandidateTable cfact, String col) {
+  private static boolean isFactColumnValidForRange(CubeQueryContext cubeql, CandidateTable cfact, String col) {
     for(TimeRange range : cubeql.getTimeRanges()) {
       if (!isColumnAvailableInRange(range, getFactColumnStartTime(cfact, col), getFactColumnEndTime(cfact, col))) {
         return false;
@@ -194,14 +199,14 @@ class CandidateTableResolver implements ContextRewriter {
     return true;
   }
 
-  public static Date getFactColumnStartTime(CandidateTable table, String factCol) {
+  private static Date getFactColumnStartTime(CandidateTable table, String factCol) {
     Date startTime = null;
-    if (table instanceof CandidateFact) {
-      for (String key : ((CandidateFact) table).fact.getProperties().keySet()) {
+    if (table instanceof StorageCandidate) {
+      for (String key : ((StorageCandidate) table).getFact().getProperties().keySet()) {
         if (key.contains(MetastoreConstants.FACT_COL_START_TIME_PFX)) {
           String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_START_TIME_PFX);
           if (factCol.equals(propCol)) {
-            startTime = ((CandidateFact) table).fact.getDateFromProperty(key, false, true);
+            startTime = ((StorageCandidate) table).getFact().getDateFromProperty(key, false, true);
           }
         }
       }
@@ -209,14 +214,14 @@ class CandidateTableResolver implements ContextRewriter {
     return startTime;
   }
 
-  public static Date getFactColumnEndTime(CandidateTable table, String factCol) {
+  private static Date getFactColumnEndTime(CandidateTable table, String factCol) {
     Date endTime = null;
-    if (table instanceof CandidateFact) {
-      for (String key : ((CandidateFact) table).fact.getProperties().keySet()) {
+    if (table instanceof StorageCandidate) {
+      for (String key : ((StorageCandidate) table).getFact().getProperties().keySet()) {
         if (key.contains(MetastoreConstants.FACT_COL_END_TIME_PFX)) {
           String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_END_TIME_PFX);
           if (factCol.equals(propCol)) {
-            endTime = ((CandidateFact) table).fact.getDateFromProperty(key, false, true);
+            endTime = ((StorageCandidate) table).getFact().getDateFromProperty(key, false, true);
           }
         }
       }
@@ -228,7 +233,7 @@ class CandidateTableResolver implements ContextRewriter {
     if (cubeql.getCube() != null) {
       String str = cubeql.getConf().get(CubeQueryConfUtil.getValidFactTablesKey(cubeql.getCube().getName()));
       List<String> validFactTables =
-        StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
+          StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
 
       Set<QueriedPhraseContext> queriedMsrs = new HashSet<>();
       Set<QueriedPhraseContext> dimExprs = new HashSet<>();
@@ -239,101 +244,79 @@ class CandidateTableResolver implements ContextRewriter {
           dimExprs.add(qur);
         }
       }
-      // Remove fact tables based on whether they are valid or not.
-      for (Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator(); i.hasNext();) {
-        CandidateFact cfact = i.next();
-
-        if (validFactTables != null) {
-          if (!validFactTables.contains(cfact.getName().toLowerCase())) {
-            log.info("Not considering fact table:{} as it is not a valid fact", cfact);
-            cubeql
-              .addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(CandidateTablePruneCode.INVALID));
-            i.remove();
-            continue;
+      // Remove storage candidates based on whether they are valid or not.
+      for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
+        Candidate cand = i.next();
+        if (cand instanceof StorageCandidate) {
+          StorageCandidate sc = (StorageCandidate) cand;
+          if (validFactTables != null) {
+            if (!validFactTables.contains(sc.getFact().getName().toLowerCase())) {
+              log.info("Not considering storage candidate:{} as it is not a valid candidate", sc);
+              cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.INVALID));
+              i.remove();
+              continue;
+            }
           }
-        }
 
-        // update expression evaluability for this fact
-        for (String expr : cubeql.getQueriedExprs()) {
-          cubeql.getExprCtx().updateEvaluables(expr, cfact);
-        }
-
-        // go over the columns accessed in the query and find out which tables
-        // can answer the query
-        // the candidate facts should have all the dimensions queried and
-        // atleast
-        // one measure
-        boolean toRemove = false;
-        for (QueriedPhraseContext qur : dimExprs) {
-          if (!qur.isEvaluable(cubeql, cfact)) {
-            log.info("Not considering fact table:{} as columns {} are not available", cfact, qur.getColumns());
-            cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(qur.getColumns()));
-            toRemove = true;
-            break;
+          // update expression evaluability for this fact
+          for (String expr : cubeql.getQueriedExprs()) {
+            cubeql.getExprCtx().updateEvaluables(expr, sc);
           }
-        }
 
-        // check if the candidate fact has atleast one measure queried
-        // if expression has measures, they should be considered along with other measures and see if the fact can be
-        // part of measure covering set
-        if (!checkForFactColumnExistsAndValidForRange(cfact, queriedMsrs, cubeql)) {
-          Set<String> columns = getColumns(queriedMsrs);
-
-          log.info("Not considering fact table:{} as columns {} is not available", cfact, columns);
-          cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(columns));
-          toRemove = true;
-        }
-        // go over join chains and prune facts that dont have any of the columns in each chain
-        for (JoinChain chain : cubeql.getJoinchains().values()) {
-          OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(Aliased.create((Dimension)cubeql.getCubeTbls()
-            .get(chain.getName()), chain.getName()));
-          if (!checkForFactColumnExistsAndValidForRange(cfact, chain.getSourceColumns(), cubeql)) {
-            // check if chain is optional or not
-            if (optdim == null) {
-              log.info("Not considering fact table:{} as columns {} are not available", cfact,
-                chain.getSourceColumns());
-              cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(chain.getSourceColumns()));
+          // go over the columns accessed in the query and find out which tables
+          // can answer the query
+          // the candidate facts should have all the dimensions queried and
+          // atleast
+          // one measure
+          boolean toRemove = false;
+          for (QueriedPhraseContext qur : dimExprs) {
+            if (!qur.isEvaluable(cubeql, sc)) {
+              log.info("Not considering storage candidate:{} as columns {} are not available", sc, qur.getColumns());
+              cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
+                qur.getColumns()));
               toRemove = true;
               break;
             }
           }
-        }
 
-        if (toRemove) {
-          i.remove();
+          // check if the candidate fact has atleast one measure queried
+          // if expression has measures, they should be considered along with other measures and see if the fact can be
+          // part of measure covering set
+          if (!checkForFactColumnExistsAndValidForRange(sc, queriedMsrs, cubeql)) {
+            Set<String> columns = getColumns(queriedMsrs);
+            log.info("Not considering storage candidate:{} as columns {} is not available", sc, columns);
+            cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
+              columns));
+            toRemove = true;
+          }
+
+          // go over join chains and prune facts that dont have any of the columns in each chain
+          for (JoinChain chain : cubeql.getJoinchains().values()) {
+            OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(Aliased.create((Dimension) cubeql.getCubeTbls()
+                .get(chain.getName()), chain.getName()));
+            if (!checkForFactColumnExistsAndValidForRange(sc, chain.getSourceColumns(), cubeql)) {
+              // check if chain is optional or not
+              if (optdim == null) {
+                log.info("Not considering storage candidate:{} as columns {} are not available", sc,
+                    chain.getSourceColumns());
+                cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
+                  chain.getSourceColumns()));
+                toRemove = true;
+                break;
+              }
+            }
+          }
+
+          if (toRemove) {
+            i.remove();
+          }
+        } else {
+          throw new LensException("Not a storage candidate!!");
         }
       }
-      if (cubeql.getCandidateFacts().size() == 0) {
+      if (cubeql.getCandidates().size() == 0) {
         throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
-          getColumns(cubeql.getQueriedPhrases()).toString());
-      }
-      Set<Set<CandidateFact>> cfactset;
-      if (queriedMsrs.isEmpty()) {
-        // if no measures are queried, add all facts individually as single covering sets
-        cfactset = new HashSet<>();
-        for (CandidateFact cfact : cubeql.getCandidateFacts()) {
-          Set<CandidateFact> one = new LinkedHashSet<>();
-          one.add(cfact);
-          cfactset.add(one);
-        }
-        cubeql.getCandidateFactSets().addAll(cfactset);
-      } else {
-        // Find out candidate fact table sets which contain all the measures
-        // queried
-
-        List<CandidateFact> cfacts = new ArrayList<>(cubeql.getCandidateFacts());
-        cfactset = findCoveringSets(cubeql, cfacts, queriedMsrs);
-        log.info("Measure covering fact sets :{}", cfactset);
-        String msrString = getColumns(queriedMsrs).toString();
-        if (cfactset.isEmpty()) {
-          throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(), msrString);
-        }
-        cubeql.getCandidateFactSets().addAll(cfactset);
-        cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.columnNotFound(getColumns(queriedMsrs)));
-
-        if (cubeql.getCandidateFacts().size() == 0) {
-          throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(), msrString);
-        }
+            getColumns(cubeql.getQueriedPhrases()).toString());
       }
     }
   }
@@ -344,51 +327,6 @@ class CandidateTableResolver implements ContextRewriter {
       cols.addAll(qur.getColumns());
     }
     return cols;
-  }
-  static Set<Set<CandidateFact>> findCoveringSets(CubeQueryContext cubeql, List<CandidateFact> cfactsPassed,
-    Set<QueriedPhraseContext> msrs) throws LensException {
-    Set<Set<CandidateFact>> cfactset = new HashSet<>();
-    List<CandidateFact> cfacts = new ArrayList<>(cfactsPassed);
-    for (Iterator<CandidateFact> i = cfacts.iterator(); i.hasNext();) {
-      CandidateFact cfact = i.next();
-      if (!checkForFactColumnExistsAndValidForRange(cfact, msrs, cubeql)) {
-        // cfact does not contain any of msrs and none of exprsWithMeasures are evaluable.
-        // ignore the fact
-        i.remove();
-        continue;
-      } else if (allEvaluable(cfact, msrs, cubeql)) {
-        // return single set
-        Set<CandidateFact> one = new LinkedHashSet<>();
-        one.add(cfact);
-        cfactset.add(one);
-        i.remove();
-      }
-    }
-    // facts that contain all measures or no measures are removed from iteration.
-    // find other facts
-    for (Iterator<CandidateFact> i = cfacts.iterator(); i.hasNext();) {
-      CandidateFact cfact = i.next();
-      i.remove();
-      // find the remaining measures in other facts
-      if (i.hasNext()) {
-        Set<QueriedPhraseContext> remainingMsrs = new HashSet<>(msrs);
-        Set<QueriedPhraseContext> coveredMsrs  = coveredMeasures(cfact, msrs, cubeql);
-        remainingMsrs.removeAll(coveredMsrs);
-
-        Set<Set<CandidateFact>> coveringSets = findCoveringSets(cubeql, cfacts, remainingMsrs);
-        if (!coveringSets.isEmpty()) {
-          for (Set<CandidateFact> set : coveringSets) {
-            set.add(cfact);
-            cfactset.add(set);
-          }
-        } else {
-          log.info("Couldnt find any set containing remaining measures:{} {} in {}", remainingMsrs,
-            cfactsPassed);
-        }
-      }
-    }
-    log.info("Covering set {} for measures {} with factsPassed {}", cfactset, msrs, cfactsPassed);
-    return cfactset;
   }
 
   private void resolveCandidateDimTablesForJoinsAndDenorms(CubeQueryContext cubeql) throws LensException {
@@ -484,11 +422,10 @@ class CandidateTableResolver implements ContextRewriter {
       return;
     }
     Collection<String> colSet = null;
-    if (cubeql.getCube() != null && !cubeql.getCandidateFacts().isEmpty()) {
-      for (Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator(); i.hasNext();) {
-        CandidateFact cfact = i.next();
-        CubeFactTable fact = cfact.fact;
-
+    if (cubeql.getCube() != null && !cubeql.getCandidates().isEmpty()) {
+      for (Iterator<StorageCandidate> i =
+           CandidateUtil.getStorageCandidates(cubeql.getCandidates()).iterator(); i.hasNext();) {
+        StorageCandidate sc = i.next();
         // for each join path check for columns involved in path
         for (Map.Entry<Aliased<Dimension>, Map<AbstractCubeTable, List<String>>> joincolumnsEntry : cubeql
           .getAutoJoinCtx()
@@ -497,19 +434,19 @@ class CandidateTableResolver implements ContextRewriter {
           OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(reachableDim);
           colSet = joincolumnsEntry.getValue().get(cubeql.getCube());
 
-          if (!checkForFactColumnExistsAndValidForRange(cfact, colSet, cubeql)) {
+          if (!checkForFactColumnExistsAndValidForRange(sc, colSet, cubeql)) {
             if (optdim == null || optdim.isRequiredInJoinChain
-              || (optdim != null && optdim.requiredForCandidates.contains(cfact))) {
+              || (optdim != null && optdim.requiredForCandidates.contains(sc))) {
               i.remove();
-              log.info("Not considering fact table:{} as it does not have columns in any of the join paths."
-                + " Join columns:{}", fact, colSet);
-              cubeql.addFactPruningMsgs(fact, CandidateTablePruneCause.noColumnPartOfAJoinPath(colSet));
+              log.info("Not considering storage candidate :{} as it does not have columns in any of the join paths."
+                + " Join columns:{}", sc, colSet);
+              cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.noColumnPartOfAJoinPath(colSet));
               break;
             }
           }
         }
       }
-      if (cubeql.getCandidateFacts().size() == 0) {
+      if (cubeql.getCandidates().size() == 0) {
         throw new LensException(LensCubeErrorCode.NO_FACT_HAS_COLUMN.getLensErrorInfo(),
             colSet == null ? "NULL" : colSet.toString());
       }
@@ -586,12 +523,16 @@ class CandidateTableResolver implements ContextRewriter {
         if (removedCandidates.get(dim) != null) {
           for (CandidateTable candidate : removedCandidates.get(dim)) {
             if (!candidatesReachableThroughRefs.contains(candidate)) {
-              if (candidate instanceof CandidateFact) {
-                if (cubeql.getCandidateFacts().contains(candidate)) {
-                  log.info("Not considering fact:{} as its required optional dims are not reachable", candidate);
-                  cubeql.getCandidateFacts().remove(candidate);
-                  cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact,
-                    CandidateTablePruneCause.columnNotFound(col));
+              if (candidate instanceof StorageCandidate) {
+                if (cubeql.getCandidates().contains(candidate)) {
+                  log.info("Not considering Storage:{} as its required optional dims are not reachable", candidate);
+                  cubeql.getCandidates().remove(candidate);
+                  cubeql.addStoragePruningMsg((StorageCandidate) candidate,
+                      CandidateTablePruneCause.columnNotFound(col));
+                  Collection<Candidate> prunedCandidates = CandidateUtil.
+                      filterCandidates(cubeql.getCandidates(), (StorageCandidate) candidate);
+                  cubeql.addCandidatePruningMsg(prunedCandidates,
+                      new CandidateTablePruneCause(CandidateTablePruneCode.ELEMENT_IN_SET_PRUNED));
                 }
               } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
                 log.info("Not considering dimtable:{} as its required optional dims are not reachable", candidate);
@@ -639,11 +580,11 @@ class CandidateTableResolver implements ContextRewriter {
               // candidate has other evaluable expressions
               continue;
             }
-            if (candidate instanceof CandidateFact) {
-              if (cubeql.getCandidateFacts().contains(candidate)) {
+            if (candidate instanceof StorageCandidate) {
+              if (cubeql.getCandidates().contains(candidate)) {
                 log.info("Not considering fact:{} as is not reachable through any optional dim", candidate);
-                cubeql.getCandidateFacts().remove(candidate);
-                cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact,
+                cubeql.getCandidates().remove(candidate);
+                cubeql.addStoragePruningMsg(((StorageCandidate) candidate),
                   CandidateTablePruneCause.expressionNotEvaluable(col.getExprCol()));
               }
             } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
@@ -697,7 +638,8 @@ class CandidateTableResolver implements ContextRewriter {
                   // check if it available as reference, if not remove the
                   // candidate
                   log.info("Not considering dimtable: {} as column {} is not available", cdim, col);
-                  cubeql.addDimPruningMsgs(dim, cdim.getTable(), CandidateTablePruneCause.columnNotFound(col));
+                  cubeql.addDimPruningMsgs(dim, cdim.getTable(), CandidateTablePruneCause.columnNotFound(
+                    col));
                   i.remove();
                   break;
                 }
@@ -716,7 +658,7 @@ class CandidateTableResolver implements ContextRewriter {
 
   // The candidate table contains atleast one column in the colSet and
   // column can the queried in the range specified
-  static boolean checkForFactColumnExistsAndValidForRange(CandidateTable table, Collection<String> colSet,
+  private static boolean checkForFactColumnExistsAndValidForRange(CandidateTable table, Collection<String> colSet,
                                                           CubeQueryContext cubeql) {
     if (colSet == null || colSet.isEmpty()) {
       return true;
@@ -729,40 +671,18 @@ class CandidateTableResolver implements ContextRewriter {
     return false;
   }
 
-  static boolean checkForFactColumnExistsAndValidForRange(CandidateFact table, Collection<QueriedPhraseContext> colSet,
-                                                          CubeQueryContext cubeql) throws LensException {
+
+  private static boolean checkForFactColumnExistsAndValidForRange(StorageCandidate sc,
+                                                                  Collection<QueriedPhraseContext> colSet,
+                                                                  CubeQueryContext cubeql) throws LensException {
     if (colSet == null || colSet.isEmpty()) {
       return true;
     }
     for (QueriedPhraseContext qur : colSet) {
-      if (qur.isEvaluable(cubeql, table)) {
+      if (qur.isEvaluable(cubeql, sc)) {
         return true;
       }
     }
     return false;
-  }
-
-  static boolean allEvaluable(CandidateFact table, Collection<QueriedPhraseContext> colSet,
-                                                          CubeQueryContext cubeql) throws LensException {
-    if (colSet == null || colSet.isEmpty()) {
-      return true;
-    }
-    for (QueriedPhraseContext qur : colSet) {
-      if (!qur.isEvaluable(cubeql, table)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  static Set<QueriedPhraseContext> coveredMeasures(CandidateFact table, Collection<QueriedPhraseContext> msrs,
-                              CubeQueryContext cubeql) throws LensException {
-    Set<QueriedPhraseContext> coveringSet = new HashSet<>();
-    for (QueriedPhraseContext msr : msrs) {
-      if (msr.isEvaluable(cubeql, table)) {
-        coveringSet.add(msr);
-      }
-    }
-    return coveringSet;
   }
 }

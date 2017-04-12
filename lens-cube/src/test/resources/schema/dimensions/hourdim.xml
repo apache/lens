@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_dimension name="hourdim" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="string" name="full_hour" description="full date">
+    </dim_attribute>
+    <dim_attribute _type="int" name="id" description="code">
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains/>
+  <properties>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="dimension.hourdim.timed.dimension" value="dt"/>
+    <property name="base.hourdim.expressions.list.size" value="0"/>
+    <property name="cube.dimension.full_hour.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.col.id.description" value="code"/>
+    <property name="cube.table.hourdim.weight" value="0.0"/>
+    <property name="dimension.hourdim.attributes.list0" value="full_hour,id"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.col.full_hour.description" value="full date"/>
+    <property name="dimension.hourdim.attributes.list.size" value="1"/>
+    <property name="dimension.hourdim.joinchains.list.size" value="0"/>
+    <property name="cube.dimension.full_hour.type" value="string"/>
+  </properties>
+</x_dimension>

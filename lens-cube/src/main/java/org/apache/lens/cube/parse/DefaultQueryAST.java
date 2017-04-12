@@ -24,15 +24,16 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class DefaultQueryAST implements QueryAST {
   private ASTNode selectAST, whereAST, groupByAST, havingAST, joinAST, orderByAST;
   private Integer limitValue;
   private String fromString;
   private String whereString;
-
 
   public String getSelectString() {
     return HQLParser.getString(selectAST);
@@ -60,12 +61,12 @@ public class DefaultQueryAST implements QueryAST {
     return null;
   }
 
-  public static DefaultQueryAST fromCandidateFact(CandidateFact fact, String storageTable, QueryAST ast) throws
-    LensException {
+  public static DefaultQueryAST fromStorageCandidate(StorageCandidate sc, QueryAST ast) throws
+      LensException {
     return new DefaultQueryAST(ast.getSelectAST(),
-      null,
-      ast.getGroupByAST(), ast.getHavingAST(), ast.getJoinAST(), ast.getOrderByAST(), ast.getLimitValue(),
-      ast.getFromString(),
-      fact.getStorageWhereString(storageTable.substring(storageTable.indexOf(".") + 1)));
+        null,
+        ast.getGroupByAST(), ast.getHavingAST(), ast.getJoinAST(), ast.getOrderByAST(), ast.getLimitValue(),
+        ast.getFromString(),
+        sc.getWhereString());
   }
 }

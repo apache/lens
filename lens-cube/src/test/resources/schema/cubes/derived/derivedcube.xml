@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_derived_cube parent="testcube" name="derivedcube" xmlns="uri:lens:cube:0.1">
+  <properties>
+    <property name="cube.derivedcube.measures.list0" value="msr3,msr1,msr2,msr9"/>
+    <property name="cube.derivedcube.measures.list.size" value="1"/>
+    <property name="cube.derivedcube.dimensions.list0" value="dim2,dim1,dim2big2,dim2bignew,dim2big1"/>
+    <property name="cube.derivedcube.dimensions.list.size" value="1"/>
+    <property name="cube.derivedcube.parent.cube" value="testcube"/>
+    <property name="cube.table.derivedcube.weight" value="5.0"/>
+  </properties>
+  <measure_names>
+    <measure_name>msr3</measure_name>
+    <measure_name>msr2</measure_name>
+    <measure_name>msr1</measure_name>
+    <measure_name>msr9</measure_name>
+  </measure_names>
+  <dim_attr_names>
+    <attr_name>dim2</attr_name>
+    <attr_name>dim2bignew</attr_name>
+    <attr_name>dim1</attr_name>
+    <attr_name>dim2big1</attr_name>
+    <attr_name>dim2big2</attr_name>
+  </dim_attr_names>
+</x_derived_cube>

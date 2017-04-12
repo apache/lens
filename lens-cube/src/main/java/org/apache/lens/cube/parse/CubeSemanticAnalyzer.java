@@ -33,16 +33,12 @@ import lombok.Getter;
  * Accepts cube query AST and rewrites into storage table query
  */
 public class CubeSemanticAnalyzer extends SemanticAnalyzer {
-  private final Configuration queryConf;
-  private final HiveConf hiveConf;
-  private final List<ValidationRule> validationRules = new ArrayList<ValidationRule>();
+  private final List<ValidationRule> validationRules = new ArrayList<>();
   @Getter
   private QB cubeQB;
 
   public CubeSemanticAnalyzer(Configuration queryConf, HiveConf hiveConf) throws SemanticException {
     super(new QueryState(hiveConf));
-    this.queryConf = queryConf;
-    this.hiveConf = hiveConf;
     setupRules();
   }
 
@@ -65,10 +61,6 @@ public class CubeSemanticAnalyzer extends SemanticAnalyzer {
         ast.deleteChild(ast.getChildCount() - 1);
       }
     }
-    // analyzing from the ASTNode.
-    if (!doPhase1(ast, cubeQB, initPhase1Ctx(), null)) {
-      // if phase1Result false return
-      return;
-    }
+    doPhase1(ast, cubeQB, initPhase1Ctx(), null);
   }
 }

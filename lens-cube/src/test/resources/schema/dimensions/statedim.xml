@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_dimension name="statedim" xmlns="uri:lens:cube:0.1">
+  <attributes>
+    <dim_attribute _type="int" name="id" description="code">
+    </dim_attribute>
+    <dim_attribute _type="string" name="name" description="name">
+    </dim_attribute>
+    <dim_attribute _type="string" name="countryid" description="link to country table">
+    </dim_attribute>
+    <dim_attribute _type="string" name="capital" description="field2">
+    </dim_attribute>
+  </attributes>
+  <expressions/>
+  <join_chains>
+    <join_chain dest_table="country" name="countrychain" display_string="countrychain" description="countrychain">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="statedim" column="countryid" maps_to_many="false"/>
+              <to table="country" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
+  <properties>
+    <property name="dimension.joinchain.countrychain.displaystring" value="countrychain"/>
+    <property name="cube.col.id.description" value="code"/>
+    <property name="cube.col.capital.description" value="field2"/>
+    <property name="cube.dimension.name.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.joinchain.countrychain.fullchain.0" value="statedim.countryid.false,country.id.false"/>
+    <property name="cube.dimension.capital.type" value="string"/>
+    <property name="dimension.joinchain.countrychain.description" value="countrychain"/>
+    <property name="cube.col.name.description" value="name"/>
+    <property name="cube.dimension.id.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="dimension.statedim.attributes.list.size" value="1"/>
+    <property name="cube.dimension.name.type" value="string"/>
+    <property name="cube.dimension.capital.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="cube.dimension.id.type" value="int"/>
+    <property name="dimension.statedim.timed.dimension" value="dt"/>
+    <property name="cube.table.statedim.weight" value="0.0"/>
+    <property name="cube.col.countryid.description" value="link to country table"/>
+    <property name="dimension.statedim.attributes.list0" value="id,name,countryid,capital"/>
+    <property name="dimension.statedim.joinchains.list.size" value="1"/>
+    <property name="cube.dimension.countryid.type" value="string"/>
+    <property name="cube.dimension.countryid.class" value="org.apache.lens.cube.metadata.BaseDimAttribute"/>
+    <property name="base.statedim.expressions.list.size" value="0"/>
+    <property name="dimension.statedim.joinchains.list0" value="countrychain"/>
+    <property name="dimension.joinchain.countrychain.numchains" value="1"/>
+  </properties>
+</x_dimension>

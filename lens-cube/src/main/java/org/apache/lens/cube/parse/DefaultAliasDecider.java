@@ -20,8 +20,12 @@ package org.apache.lens.cube.parse;
 
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 
+import lombok.Getter;
+import lombok.Setter;
 
 public class DefaultAliasDecider implements AliasDecider {
+  @Getter
+  @Setter
   int counter = 0;
   private static final String ALIAS_PREFIX = "alias";
 
