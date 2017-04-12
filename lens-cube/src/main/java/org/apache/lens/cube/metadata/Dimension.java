@@ -66,8 +66,8 @@ public class Dimension extends AbstractBaseTable {
 
   }
 
-  public Dimension(final String name, final Set<CubeDimAttribute> attributes, final Set<ExprColumn> exprs, final
-  Map<String, String> dimProps, final long weight) {
+  public Dimension(final String name, final Set<CubeDimAttribute> attributes, final Set<ExprColumn> exprs,
+    final Map<String, String> dimProps, final long weight) {
     this(name, attributes, exprs, null, dimProps, weight);
   }
 

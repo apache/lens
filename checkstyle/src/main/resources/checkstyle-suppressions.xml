@@ -29,4 +29,5 @@
   <suppress checks="Indentation" files="Test*.java"/>
   <suppress checks="VisibilityModifier" files="Test*.java"/>
   <suppress checks="MagicNumberCheck" files="JavadocStyleCheck.java"/>
+  <suppress checks=".*" files="generated-sources"/>
 </suppressions>

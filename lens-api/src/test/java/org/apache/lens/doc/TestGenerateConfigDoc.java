@@ -275,7 +275,7 @@ public class TestGenerateConfigDoc {
      * @param confFile      the conf file
      * @param outputAPTFile the output apt file
      */
-    public ConfigPrinter(String confFile, String outputAPTFile) {
+    ConfigPrinter(String confFile, String outputAPTFile) {
       configFile = confFile;
       this.outputAPTFile = outputAPTFile;
       entries = new ArrayList<ConfigEntry>();

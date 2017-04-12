@@ -158,7 +158,7 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
   public LensAPIResult<XJob> getJobDefinition(String jobHandle, String sessionId, MediaType inputMedia,
       String outputMedia){
     MapBuilder map = new MapBuilder("sessionid", sessionId);
-    Response response = this.exec("get", SCHEDULER_JOBS_URL + "/" + jobHandle , servLens, null, map, inputMedia,
+    Response response = this.exec("get", SCHEDULER_JOBS_URL + "/" + jobHandle, servLens, null, map, inputMedia,
         outputMedia);
     AssertUtil.assertSucceededResponse(response);
     return response.readEntity(new GenericType<LensAPIResult<XJob>>(){});
@@ -170,7 +170,7 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
 
   public LensAPIResult deleteJob(String jobHandle, String sessionId){
     MapBuilder map = new MapBuilder("sessionid", sessionId);
-    Response response = this.exec("delete", SCHEDULER_JOBS_URL + "/" + jobHandle , servLens, null, map, null,
+    Response response = this.exec("delete", SCHEDULER_JOBS_URL + "/" + jobHandle, servLens, null, map, null,
         MediaType.APPLICATION_XML);
     AssertUtil.assertSucceededResponse(response);
     return response.readEntity(LensAPIResult.class);
@@ -230,7 +230,7 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
 
     MapBuilder map = new MapBuilder("sessionid", sessionId);
-    Response response = this.exec("get", SCHEDULER_INSTANCES_URL + "/" + instanceHandle , servLens, null, map);
+    Response response = this.exec("get", SCHEDULER_INSTANCES_URL + "/" + instanceHandle, servLens, null, map);
     AssertUtil.assertSucceededResponse(response);
     return response.readEntity(new GenericType<LensAPIResult<SchedulerJobInstanceInfo>>(){});
   }
@@ -239,7 +239,7 @@ public class ScheduleResourceHelper extends ServiceManagerHelper {
     throws JAXBException, IOException, ParseException, DatatypeConfigurationException {
 
     MapBuilder map = new MapBuilder("sessionid", sessionId, "action", action);
-    Response response = this.exec("post", SCHEDULER_INSTANCES_URL + "/" + instanceHandle , servLens, null, map);
+    Response response = this.exec("post", SCHEDULER_INSTANCES_URL + "/" + instanceHandle, servLens, null, map);
     AssertUtil.assertSucceededResponse(response);
     return response.readEntity(new GenericType<LensAPIResult<Boolean>>(){});
   }

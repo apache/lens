@@ -149,6 +149,7 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
     validateBetweenBoundTypes(whereClause, DAY_DB_FORMAT, testStartOffset, testEndOffset);
   }
 
+
   private void validateBetweenBoundTypes(String whereClause, DateFormat format, int testStartOffset, int testEndOffset) {
     String expected = getBetweenClause("test", "dt", getDateWithOffset(DAILY, testStartOffset),
       getDateWithOffset(DAILY, testEndOffset), ofNullable(format).orElseGet(DAILY::format));

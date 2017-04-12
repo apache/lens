@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 class MaxCoveringFactResolver implements ContextRewriter {
   private final boolean failOnPartialData;
 
-  public MaxCoveringFactResolver(Configuration conf) {
+  MaxCoveringFactResolver(Configuration conf) {
     this.failOnPartialData = conf.getBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
   }
 

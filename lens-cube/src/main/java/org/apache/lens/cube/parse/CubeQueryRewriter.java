@@ -137,8 +137,7 @@ public class CubeQueryRewriter {
     // Resolve columns - the column alias and table alias
     rewriters.add(new ColumnResolver());
     // Rewrite base trees (groupby, having, orderby, limit) using aliases
-    rewriters.add(new AliasReplacer(conf));
-
+    rewriters.add(new AliasReplacer());
     ExpressionResolver exprResolver = new ExpressionResolver();
     DenormalizationResolver denormResolver = new DenormalizationResolver();
     CandidateTableResolver candidateTblResolver = new CandidateTableResolver();
@@ -149,7 +148,7 @@ public class CubeQueryRewriter {
     // Phase 1 of denormResolver: De-normalized columns resolved
     rewriters.add(denormResolver);
     // Resolve time ranges
-    rewriters.add(new TimerangeResolver(conf));
+    rewriters.add(new TimerangeResolver());
     // Phase 1 of candidateTblResolver: Resolve candidate storages and dimension tables for columns queried
     rewriters.add(candidateTblResolver);
     // Resolve aggregations and generate base select tree
@@ -180,8 +179,7 @@ public class CubeQueryRewriter {
       rewriters.add(exprResolver);
       // Pick the least cost combination(s) (and prune others) out of a set of combinations produced
       // by CandidateCoveringSetsResolver
-      rewriters.add(new LightestFactResolver(conf));
-
+      rewriters.add(new LightestFactResolver());
     }
 
     // Phase 2 of storageTableResolver: resolve storage table partitions.
@@ -203,12 +201,12 @@ public class CubeQueryRewriter {
       rewriters.add(exprResolver);
       // Pick the least cost combination(s) (and prune others) out of a set of combinations produced
       // by CandidateCoveringSetsResolver
-      rewriters.add(new LightestFactResolver(conf));
+      rewriters.add(new LightestFactResolver());
     }
     // if two combinations have the same least weight/cost, then the combination with least number of time partitions
     // queried will be picked. Rest of the combinations will be pruned
-    rewriters.add(new LeastPartitionResolver(conf));
-    rewriters.add(new LightestDimensionResolver(conf));
+    rewriters.add(new LeastPartitionResolver());
+    rewriters.add(new LightestDimensionResolver());
   }
 
   public CubeQueryContext rewrite(ASTNode astnode) throws LensException {

@@ -57,9 +57,9 @@ public final class UserConfigLoaderFactory {
   }
 
   /**
-   * The Enum RESOLVER_TYPE.
+   * The Enum ResolverType.
    */
-  public enum RESOLVER_TYPE {
+  public enum ResolverType {
 
     /** The fixed. */
     FIXED,
@@ -94,7 +94,7 @@ public final class UserConfigLoaderFactory {
     if (resolverType == null || resolverType.length() == 0) {
       throw new UserConfigLoaderException("user resolver type not determined. value was not provided in conf");
     }
-    for (RESOLVER_TYPE type : RESOLVER_TYPE.values()) {
+    for (ResolverType type : ResolverType.values()) {
       if (type.name().equals(resolverType)) {
         return createUserConfigLoader(type);
       }
@@ -108,7 +108,7 @@ public final class UserConfigLoaderFactory {
    * @param resolverType the resolver type
    * @return the query user resolver
    */
-  public static UserConfigLoader createUserConfigLoader(RESOLVER_TYPE resolverType) {
+  public static UserConfigLoader createUserConfigLoader(ResolverType resolverType) {
     switch (resolverType) {
     case PROPERTYBASED:
       return new PropertyBasedUserConfigLoader(conf);

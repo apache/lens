@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,13 +20,8 @@ package org.apache.lens.api.metastore;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.Map;
 import java.util.function.BiConsumer;
-
-import javax.xml.bind.JAXBException;
-
-import org.apache.lens.api.jaxb.LensJAXBContext;
 
 import com.google.common.collect.Maps;
 

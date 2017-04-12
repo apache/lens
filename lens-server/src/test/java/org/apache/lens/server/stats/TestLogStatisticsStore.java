@@ -54,7 +54,7 @@ public class TestLogStatisticsStore {
      *
      * @param eventTime the event time
      */
-    public MyLoggableLens(long eventTime) {
+    MyLoggableLens(long eventTime) {
       super(eventTime);
     }
 

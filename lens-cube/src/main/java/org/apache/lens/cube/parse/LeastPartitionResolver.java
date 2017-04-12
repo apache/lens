@@ -25,8 +25,6 @@ import java.util.Map;
 
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.hadoop.conf.Configuration;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -34,8 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 class LeastPartitionResolver implements ContextRewriter {
-  public LeastPartitionResolver(Configuration conf) {
-  }
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {

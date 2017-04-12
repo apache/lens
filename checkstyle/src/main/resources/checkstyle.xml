@@ -145,7 +145,9 @@
             <property name="tokens"
                       value="BNOT, DEC, DOT, INC, LNOT, UNARY_MINUS, UNARY_PLUS"/>
         </module>
-        <module name="NoWhitespaceBefore"/>
+        <module name="NoWhitespaceBefore">
+            <property name="allowLineBreaks" value="true"/>
+        </module>
         <module name="OperatorWrap"/>
         <module name="ParenPad"/>
         <module name="TypecastParenPad"/>
@@ -162,7 +164,8 @@
         <!-- Modifier Checks                                    -->
         <!-- See http://checkstyle.sf.net/config_modifiers.html -->
         <module name="ModifierOrder"/>
-        <module name="RedundantModifier"/>
+        <!-- Commenting as workaround for https://github.com/checkstyle/checkstyle/issues/2508 -->
+        <!--<module name="RedundantModifier"/>-->
 
 
         <!-- Checks for blocks. You know, those {}'s         -->
@@ -188,7 +191,7 @@
         <!-- Checks for common coding problems               -->
         <!-- See http://checkstyle.sf.net/config_coding.html -->
         <!-- module name="AvoidInlineConditionals"/-->
-        <module name="DoubleCheckedLocking"/>
+        <!--<module name="DoubleCheckedLocking"/>-->
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
         <module name="StringLiteralEquality"/>
@@ -235,6 +238,7 @@
         <module name="Indentation">
             <property name="basicOffset" value="2"/>
             <property name="caseIndent" value="0"/>
+            <property name="lineWrappingIndentation" value="2"/>
         </module>
         <!--  module name="TodoComment"/ -->
         <module name="UpperEll"/>
@@ -257,6 +261,6 @@
     </module>
 
     <!--module name="SuppressionFilter">
-      <property name="file" value="checkstyle/src/main/resources/suppressions.xml"/>
+      <property name="file" value="checkstyle/src/main/resourcheckstyle-suppressions.xml.xml"/>
     </module-->
 </module>
