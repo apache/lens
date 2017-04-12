@@ -29,7 +29,7 @@ public enum LensHttpStatus implements Response.StatusType {
   @Getter private final String reasonPhrase;
   @Getter private final Response.Status.Family family;
 
-  private LensHttpStatus(int statusCode, String reasonPhrase) {
+  LensHttpStatus(int statusCode, String reasonPhrase) {
     this.statusCode = statusCode;
     this.reasonPhrase = reasonPhrase;
     this.family = LensHttpStatus.familyOf(statusCode);

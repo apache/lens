@@ -523,7 +523,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     // filter with or
     hql = rewrite(
         "select cubecountry.name, msr2 from" + " testCube" + " where (cubecountry.region = 'asia' "
-            + "or cubecountry.region = 'europe') and " + TWO_DAYS_RANGE , conf);
+            + "or cubecountry.region = 'europe') and " + TWO_DAYS_RANGE, conf);
     filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
         + "cubecountry where (((cubecountry.region) = 'asia') or ((cubecountry.region) = 'europe')) "
         + "and (cubecountry.dt = 'latest') )";
@@ -532,7 +532,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     //filter with in
     hql = rewrite(
         "select cubecountry.name, msr2 from" + " testCube" + " where cubecountry.region in ('asia','europe') "
-            + "and " + TWO_DAYS_RANGE , conf);
+            + "and " + TWO_DAYS_RANGE, conf);
     filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
         + "cubecountry where (cubecountry.region) in ('asia' , 'europe') and (cubecountry.dt = 'latest') )";
     assertTrue(hql.contains(filterSubquery));
@@ -540,7 +540,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     //filter with not in
     hql = rewrite(
         "select cubecountry.name, msr2 from" + " testCube" + " where cubecountry.region not in ('asia','europe') "
-            + "and " + TWO_DAYS_RANGE , conf);
+            + "and " + TWO_DAYS_RANGE, conf);
     filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
         + "cubecountry where (cubecountry.region) not  in ('asia' , 'europe') and (cubecountry.dt = 'latest') )";
     assertTrue(hql.contains(filterSubquery));
@@ -548,7 +548,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     //filter with !=
     hql = rewrite(
         "select cubecountry.name, msr2 from" + " testCube" + " where cubecountry.region != 'asia' "
-            + "and " + TWO_DAYS_RANGE , conf);
+            + "and " + TWO_DAYS_RANGE, conf);
     filterSubquery = "testcube.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
         + "cubecountry where ((cubecountry.region) != 'asia') and (cubecountry.dt = 'latest') )";
     assertTrue(hql.contains(filterSubquery));
@@ -556,7 +556,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     //filter with cube alias
     hql = rewrite(
         "select cubecountry.name, msr2 from" + " testCube as t" + " where cubecountry.region = 'asia' "
-            + "and zipcode = 'x' and " + TWO_DAYS_RANGE , conf);
+            + "and zipcode = 'x' and " + TWO_DAYS_RANGE, conf);
     filterSubquery = "t.countryid in ( select id from TestQueryRewrite.c3_countrytable_partitioned "
         + "cubecountry where ((cubecountry.region) = 'asia') and (cubecountry.dt = 'latest') )";
     assertTrue(hql.contains(filterSubquery));

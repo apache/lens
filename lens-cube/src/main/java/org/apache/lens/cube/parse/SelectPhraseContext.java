@@ -31,7 +31,7 @@ class SelectPhraseContext extends QueriedPhraseContext {
   private String finalAlias;
   private String exprWithoutAlias;
 
-  public SelectPhraseContext(ASTNode selectExpr) {
+  SelectPhraseContext(ASTNode selectExpr) {
     super(selectExpr);
   }
 

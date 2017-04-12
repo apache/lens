@@ -53,7 +53,7 @@ public abstract class CubeColumn implements Named {
       }
     };
 
-  public CubeColumn(String name , String description, String displayString,
+  public CubeColumn(String name, String description, String displayString,
                     Date startTime, Date endTime, Double cost) {
     this(name, description, displayString, startTime, endTime, cost, new HashMap<String, String>());
   }

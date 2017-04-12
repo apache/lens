@@ -36,7 +36,7 @@ import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.result.LensAPIResult;
-import org.apache.lens.server.LensServices.SERVICE_MODE;
+import org.apache.lens.server.LensServices.ServiceMode;
 import org.apache.lens.server.common.RestAPITestUtil;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -92,7 +92,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
    */
   @Test
   public void testReadOnlyMode() throws InterruptedException {
-    testMode(SERVICE_MODE.READ_ONLY);
+    testMode(ServiceMode.READ_ONLY);
   }
 
   /**
@@ -102,7 +102,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
    */
   @Test
   public void testMetastoreNoDropMode() throws InterruptedException {
-    testMode(SERVICE_MODE.METASTORE_NODROP);
+    testMode(ServiceMode.METASTORE_NODROP);
   }
 
   /**
@@ -112,7 +112,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
    */
   @Test
   public void testMetastoreReadOnlyMode() throws InterruptedException {
-    testMode(SERVICE_MODE.METASTORE_READONLY);
+    testMode(ServiceMode.METASTORE_READONLY);
   }
 
   /**
@@ -122,7 +122,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
    */
   @Test
   public void testOpenMode() throws InterruptedException {
-    testMode(SERVICE_MODE.OPEN);
+    testMode(ServiceMode.OPEN);
   }
 
   /**
@@ -131,7 +131,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
    * @param mode the mode
    * @throws InterruptedException the interrupted exception
    */
-  private void testMode(SERVICE_MODE mode) throws InterruptedException {
+  private void testMode(ServiceMode mode) throws InterruptedException {
     LensServices.get().setServiceMode(mode);
     // open a session
     // should always pass
@@ -156,7 +156,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     } catch (NotAllowedException nae) {
-      if (mode.equals(SERVICE_MODE.READ_ONLY) || mode.equals(SERVICE_MODE.METASTORE_READONLY)) {
+      if (mode.equals(ServiceMode.READ_ONLY) || mode.equals(ServiceMode.METASTORE_READONLY)) {
         // expected
         System.out.println("Create databse not allowed in mode:" + mode);
       } else {
@@ -170,8 +170,8 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
       assertNotNull(drop);
       assertEquals(drop.getStatus(), APIResult.Status.SUCCEEDED);
     } catch (NotAllowedException nae) {
-      if (mode.equals(SERVICE_MODE.READ_ONLY) || mode.equals(SERVICE_MODE.METASTORE_READONLY)
-        || mode.equals(SERVICE_MODE.METASTORE_NODROP)) {
+      if (mode.equals(ServiceMode.READ_ONLY) || mode.equals(LensServices.ServiceMode.METASTORE_READONLY)
+        || mode.equals(ServiceMode.METASTORE_NODROP)) {
         // expected
         System.out.println("Drop databse not allowed in mode:" + mode);
       } else {
@@ -196,7 +196,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
       qhandle = queryTarget.request().post(Entity.entity(query, MediaType.MULTIPART_FORM_DATA_TYPE),
           new GenericType<LensAPIResult<QueryHandle>>() {}).getData();
     } catch (NotAllowedException nae) {
-      if (mode.equals(SERVICE_MODE.READ_ONLY)) {
+      if (mode.equals(ServiceMode.READ_ONLY)) {
         // expected
         System.out.println("Launching query not allowed in mode:" + mode);
       } else {
@@ -210,7 +210,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
       });
     Assert.assertTrue(allQueriesXML.size() >= 1);
 
-    if (!mode.equals(SERVICE_MODE.READ_ONLY)) {
+    if (!mode.equals(ServiceMode.READ_ONLY)) {
       assertNotNull(qhandle);
       // wait for query completion if mode is not read only
       LensQuery ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request()
@@ -230,6 +230,6 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     // close the session
     APIResult sessionclose = target.queryParam("sessionid", lensSessionId).request().delete(APIResult.class);
     Assert.assertEquals(sessionclose.getStatus(), APIResult.Status.SUCCEEDED);
-    LensServices.get().setServiceMode(SERVICE_MODE.OPEN);
+    LensServices.get().setServiceMode(LensServices.ServiceMode.OPEN);
   }
 }

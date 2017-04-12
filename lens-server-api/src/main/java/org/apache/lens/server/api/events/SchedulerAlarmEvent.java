@@ -61,7 +61,7 @@ public class SchedulerAlarmEvent extends LensEvent {
   /**
    * Event type to know what kind of operations we want.
    */
-  public static enum EventType {
+  public enum EventType {
     SCHEDULE, EXPIRE
   }
 }

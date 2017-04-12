@@ -141,6 +141,7 @@ public class DenormalizationResolver implements ContextRewriter {
     Set<Dimension> rewriteDenormctx(CubeQueryContext cubeql,
       StorageCandidate sc, Map<Dimension, CandidateDim> dimsToQuery, boolean replaceFact) throws LensException {
       Set<Dimension> refTbls = new HashSet<>();
+      log.info("Doing denorm changes for fact :{}", sc);
 
       if (!tableToRefCols.isEmpty()) {
         // pick referenced columns for fact

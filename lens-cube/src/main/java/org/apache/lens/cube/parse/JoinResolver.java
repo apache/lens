@@ -28,7 +28,6 @@ import org.apache.lens.cube.metadata.join.JoinPath;
 import org.apache.lens.cube.parse.join.AutoJoinContext;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
 
@@ -47,9 +46,6 @@ class JoinResolver implements ContextRewriter {
    * Dimension as key and all the participating join chains for this dimension as value.
    */
   private HashMap<Dimension, List<JoinChain>> dimensionToJoinChainsMap = new HashMap<Dimension, List<JoinChain>>();
-
-  public JoinResolver(Configuration conf) {
-  }
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {

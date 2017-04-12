@@ -540,7 +540,7 @@ public class TestCubeMetastoreClient {
 
     // Assert expression validation
     try {
-      expr1 = new ExprSpec("contact(countrydim.name", null , null);
+      expr1 = new ExprSpec("contact(countrydim.name", null, null);
       stateCountryExpr.addExpression(expr1);
       fail("Expected add expression to fail because of syntax error");
     } catch (LensException exc) {

@@ -338,6 +338,8 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
           }
         }
       }
+      client = Hive.get();
+
       List<Partition> partitionsAdded = client.createPartitions(addParts);
       success = true;
       return partitionsAdded;

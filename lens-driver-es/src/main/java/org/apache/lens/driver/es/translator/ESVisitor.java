@@ -170,7 +170,7 @@ public abstract class ESVisitor implements ASTVisitor {
   }
 
   private static class ESRewriteException extends RuntimeException {
-    public ESRewriteException(Exception e) {
+    ESRewriteException(Exception e) {
       super(e);
     }
   }

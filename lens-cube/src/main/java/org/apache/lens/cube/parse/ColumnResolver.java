@@ -29,7 +29,6 @@ import org.apache.lens.cube.parse.HQLParser.TreeNode;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -37,9 +36,6 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import com.google.common.base.Optional;
 
 class ColumnResolver implements ContextRewriter {
-
-  public ColumnResolver(Configuration conf) {
-  }
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {

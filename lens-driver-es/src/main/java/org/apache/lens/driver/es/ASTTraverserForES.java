@@ -275,7 +275,7 @@ public final class ASTTraverserForES {
   private static class CriteriaInfo {
     final CriteriaType criteriaType;
 
-    public CriteriaInfo(CriteriaType criteriaType) {
+    CriteriaInfo(CriteriaType criteriaType) {
       this.criteriaType = criteriaType;
     }
   }
@@ -283,7 +283,7 @@ public final class ASTTraverserForES {
     final String logicalOperator;
     final LogicalOpType logicalOpType;
 
-    public LogicalOpInfo(String logicalOperator, LogicalOpType logicalOpType) {
+    LogicalOpInfo(String logicalOperator, LogicalOpType logicalOpType) {
       super(CriteriaType.LOGICAL);
       this.logicalOperator = logicalOperator;
       this.logicalOpType = logicalOpType;
@@ -294,7 +294,7 @@ public final class ASTTraverserForES {
     final String predicateOp;
 
 
-    public PredicateInfo(String operator, PredicateType predicateType) {
+    PredicateInfo(String operator, PredicateType predicateType) {
       super(CriteriaType.PREDICATE);
       this.predicateType = predicateType;
       this.predicateOp = operator;

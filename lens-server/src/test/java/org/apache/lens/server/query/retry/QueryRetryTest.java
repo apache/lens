@@ -55,12 +55,10 @@ import org.testng.annotations.Test;
 @Test(groups = "post-restart", dependsOnGroups = "restart-test")
 public class QueryRetryTest extends LensJerseyTest {
 
-  private QueryExecutionServiceImpl queryService;
-  private SessionService sessionService;
   private LensSessionHandle session;
 
   private QueryExecutionServiceImpl getQueryService() {
-    return queryService = LensServices.get().getService(QueryExecutionService.NAME);
+    return LensServices.get().getService(QueryExecutionService.NAME);
   }
 
   @Override
@@ -71,7 +69,7 @@ public class QueryRetryTest extends LensJerseyTest {
   }
 
   private SessionService getSessionService() {
-    return sessionService = LensServices.get().getService(SessionService.NAME);
+    return LensServices.get().getService(SessionService.NAME);
   }
 
   private LensSessionHandle getSession() throws LensException {

@@ -27,7 +27,6 @@ import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
@@ -41,9 +40,6 @@ import org.antlr.runtime.CommonToken;
  * Replaces all the columns in all expressions with tablealias.column
  */
 class AliasReplacer implements ContextRewriter {
-
-  public AliasReplacer(Configuration conf) {
-  }
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {

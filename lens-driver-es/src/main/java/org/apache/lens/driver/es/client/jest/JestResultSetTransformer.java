@@ -51,7 +51,7 @@ public abstract class JestResultSetTransformer {
 
     private List<ResultRow> rows = Lists.newArrayList();
 
-    public AggregateTransformer(JsonObject result, List<String> schema, List<String> selectedColumns) {
+    AggregateTransformer(JsonObject result, List<String> schema, List<String> selectedColumns) {
       super(result, schema, selectedColumns);
     }
 
@@ -131,7 +131,7 @@ public abstract class JestResultSetTransformer {
    */
   static class TermTransformer extends JestResultSetTransformer {
 
-    public TermTransformer(JsonObject result, List<String> schema, List<String> selectedColumns) {
+    TermTransformer(JsonObject result, List<String> schema, List<String> selectedColumns) {
       super(result, schema, selectedColumns);
     }
 

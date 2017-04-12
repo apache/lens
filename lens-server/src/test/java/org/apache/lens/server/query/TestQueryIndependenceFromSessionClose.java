@@ -90,11 +90,13 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
   }
 
   private QueryExecutionServiceImpl getQueryService() {
-    return queryService = LensServices.get().getService(QueryExecutionService.NAME);
+    queryService = LensServices.get().getService(QueryExecutionService.NAME);
+    return queryService;
   }
 
   private SessionService getSessionService() {
-    return sessionService = LensServices.get().getService(SessionService.NAME);
+    sessionService = LensServices.get().getService(SessionService.NAME);
+    return sessionService;
   }
 
   /*
