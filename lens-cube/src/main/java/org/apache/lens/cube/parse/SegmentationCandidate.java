@@ -56,6 +56,7 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import org.antlr.runtime.CommonToken;
@@ -172,15 +173,26 @@ public class SegmentationCandidate implements Candidate {
   }
 
   private void addCubeNameAndAlias(ASTNode ast, Cube innerCube) {
-    ASTNode tabrefNode = HQLParser.findNodeByPath(ast, TOK_FROM, TOK_TABREF);
-    ASTNode cubeNameNode = new ASTNode(new CommonToken(Identifier, innerCube.getName()));
-    tabrefNode.getChild(0).setChild(0, cubeNameNode);
+    ASTNode cubeNameNode = findCubeNameNode(HQLParser.findNodeByPath(ast, TOK_FROM));
+    ASTNode tabrefNode = (ASTNode) cubeNameNode.getParent().getParent();
+    cubeNameNode.getToken().setText(innerCube.getName());
     ASTNode aliasNode = new ASTNode(new CommonToken(Identifier, getCubeQueryContext().getAliasForTableName(getCube().getName())));
     if (tabrefNode.getChildCount() > 1) {
       tabrefNode.setChild(1, aliasNode);
     } else {
       tabrefNode.addChild(aliasNode);
     }
+  }
+
+  private ASTNode findCubeNameNode(ASTNode node) {
+    if (node.getType() == Identifier) {
+      if( node.getText().equalsIgnoreCase(getCubeQueryContext().getCube().getName())) {
+        return node;
+      } else {
+        return null; // should never come here.
+      }
+    }
+    return node.getChildren().stream().map(ASTNode.class::cast).map(this::findCubeNameNode).filter(Objects::nonNull).findFirst().orElse(null);
   }
 
   private void trimHavingAndOrderby(ASTNode ast, Cube innerCube) {

@@ -191,14 +191,14 @@ public class CubeQueryRewriter {
     // Phase 3 of storageTableResolver:  resolve dimension tables and partitions.
     rewriters.add(storageTableResolver);
 
-
     //TODO union: phase 2 of denormResolver needs to be moved before CoveringSetResolver.. check if this makes sense
 
+    // Prune candidate tables for which denorm column references do not exist
+    rewriters.add(denormResolver);
+    // Phase 2 of exprResolver : Prune candidate facts without any valid expressions
+    rewriters.add(exprResolver);
+
     if (!lightFactFirst) { //todo check tests
-      // Prune candidate tables for which denorm column references do not exist
-      rewriters.add(denormResolver);
-      // Phase 2 of exprResolver : Prune candidate facts without any valid expressions
-      rewriters.add(exprResolver);
       // Pick the least cost combination(s) (and prune others) out of a set of combinations produced
       // by CandidateCoveringSetsResolver
       rewriters.add(new LightestFactResolver());

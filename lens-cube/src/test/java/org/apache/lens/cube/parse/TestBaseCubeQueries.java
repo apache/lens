@@ -88,7 +88,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     e = getLensExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
       + TWO_DAYS_RANGE, conf);
     assertEquals(e.getErrorCode(),
-        LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo().getErrorCode());
+        LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
     assertTrue(e.getMessage().contains("[msr3, msr13]"));
 
   }

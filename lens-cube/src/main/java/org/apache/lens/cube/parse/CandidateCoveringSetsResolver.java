@@ -63,8 +63,13 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     } else if (!timeRangeCoveringSet.isEmpty()) {
       List<List<Candidate>> measureCoveringSets = resolveJoinCandidates(timeRangeCoveringSet, queriedMsrs, cubeql);
       if (measureCoveringSets.isEmpty()) {
-        throw new LensException(LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo(),
+        if(cubeql.getCandidates().size() == 1) {
+          // no join is possible
+          cubeql.throwNoCandidateFactException();
+        } else {
+          throw new LensException(LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo(),
             cubeql.getCube().getName(), getColumns(queriedMsrs).toString());
+        }
       }
       updateFinalCandidates(measureCoveringSets, cubeql);
     }
