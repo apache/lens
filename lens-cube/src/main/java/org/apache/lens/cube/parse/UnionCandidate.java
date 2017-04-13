@@ -49,7 +49,6 @@ public class UnionCandidate implements Candidate {
   @Getter
   private List<Candidate> children;
 
-  private List<Candidate> childCandidates;
   private Map<TimeRange, Map<Candidate, TimeRange>> splitTimeRangeMap = Maps.newHashMap();
   public UnionCandidate(Collection<? extends Candidate> childCandidates, CubeQueryContext cubeQueryContext) {
     this.children = Lists.newArrayList(childCandidates);

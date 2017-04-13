@@ -154,15 +154,15 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       getConf());
     String query1, query2, query3;
     query1 = getExpectedQuery("testcube",
-      "select testcube.cityid as alias0, sum(0.0) as alias1, sum(testcube.segmsr1) as alias2 FROM ", null,
+      "select testcube.cityid as alias0, 0.0 as alias1, sum(testcube.segmsr1) as alias2 FROM ", null,
       "group by testcube.cityid",
       getWhereForDailyAndHourly2days("testcube", "c1_b1fact1"));
     query2 = getExpectedQuery("testcube",
-      "select testcube.cityid as alias0, sum(0.0) as alias1, sum(testcube.segmsr1) as alias2 FROM ", null,
+      "select testcube.cityid as alias0, 0.0 as alias1, sum(testcube.segmsr1) as alias2 FROM ", null,
       "group by testcube.cityid",
       getWhereForDailyAndHourly2days("testcube", "c0_b2fact1"));
     query3 = getExpectedQuery("testcube",
-      "select testcube.cityid as alias0, sum(testcube.msr2) as alias1, sum(0.0) as alias2 FROM ", null,
+      "select testcube.cityid as alias0, sum(testcube.msr2) as alias1, 0.0 as alias2 FROM ", null,
       "group by testcube.cityid",
       getWhereForHourly2days("testcube", "c1_testfact2"));
     compareUnionQuery(ctx,

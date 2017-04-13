@@ -188,7 +188,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
       throw new IllegalArgumentException("Cube,fact and storageName should be non null");
     }
     this.storageName = storageName;
-    this.name = MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), storageName);
+    this.storageTable = MetastoreUtil.getFactOrDimtableStorageTableName(fact.getName(), storageName);
+    this.name = getFact().getName();
     this.processTimePartCol = getConf().get(CubeQueryConfUtil.PROCESS_TIME_PART_COL);
     String formatStr = getConf().get(CubeQueryConfUtil.PART_WHERE_CLAUSE_DATE_FORMAT);
     if (formatStr != null) {
@@ -198,7 +199,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     completenessThreshold = getConf()
       .getFloat(CubeQueryConfUtil.COMPLETENESS_THRESHOLD, CubeQueryConfUtil.DEFAULT_COMPLETENESS_THRESHOLD);
     Set<String> storageTblNames = getCubeMetastoreClient().getStorageTables(fact.getName(), storageName);
-    isStorageTblsAtUpdatePeriodLevel = storageTblNames.size() > 1 || !storageTblNames.iterator().next().equalsIgnoreCase(name);
+    isStorageTblsAtUpdatePeriodLevel = storageTblNames.size() > 1 || !storageTblNames.iterator().next().equalsIgnoreCase(storageTable);
     setStorageStartAndEndDate();
   }
 
@@ -367,7 +368,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   private void updatePartitionStorage(FactPartition part) throws LensException {
     try {
-      if (getCubeMetastoreClient().factPartitionExists(fact, part, name)) {
+      if (getCubeMetastoreClient().factPartitionExists(fact, part, storageTable)) {
         part.getStorageTables().add(name);
         part.setFound(true);
       }

@@ -20,6 +20,7 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.lens.cube.parse.HQLParser.*;
 
@@ -318,22 +319,13 @@ public class UnionQueryWriter extends SimpleHQLContext {
 
   private void removeRedundantProjectedPhrases() {
     List<ASTNode> phrases = getProjectedNonDefaultPhrases();
-    List<String> phrasesWithoutAlias = new ArrayList<>();
-    // populate all phrases without alias
-    for (ASTNode node : phrases) {
-      phrasesWithoutAlias.add(HQLParser.getString((ASTNode) node.getChild(0)));
-    }
+    List<String> phrasesWithoutAlias = phrases.stream().map(node -> node.getChild(0))
+      .map(ASTNode.class::cast).map(HQLParser::getString).collect(toList());
     Map<String, List<Integer>> phraseCountMap = new HashMap<>();
     Map<String, List<String>> aliasMap = new HashMap<>();
     for (int i = 0; i < phrasesWithoutAlias.size(); i++) {
       String phrase = phrasesWithoutAlias.get(i);
-      if (phraseCountMap.containsKey(phrase)) {
-        phraseCountMap.get(phrase).add(i);
-      } else {
-        List<Integer> indices = new ArrayList<>();
-        indices.add(i);
-        phraseCountMap.put(phrase, indices);
-      }
+      phraseCountMap.computeIfAbsent(phrase, x->new ArrayList()).add(i);
     }
     for (List<Integer> values : phraseCountMap.values()) {
       if (values.size() > 1) {

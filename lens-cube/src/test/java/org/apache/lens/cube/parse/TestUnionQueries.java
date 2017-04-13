@@ -361,10 +361,9 @@ public class TestUnionQueries extends TestQueryRewrite {
 
     //If not beginning of month. Expecting this to pass at beginning of every month (example April 01 00:00)
     if (!THREE_MONTHS_RANGE_UPTO_DAYS.equals(THREE_MONTHS_RANGE_UPTO_MONTH)) {
-      LensException e = getLensExceptionInRewrite("select count(msr4) from testCube where "
+      NoCandidateFactAvailableException e = getLensExceptionInRewrite("select count(msr4) from testCube where "
           + THREE_MONTHS_RANGE_UPTO_DAYS, conf);
-      assertTrue(e instanceof NoCandidateFactAvailableException);
-      Set<Map.Entry<Candidate, List<CandidateTablePruneCause>>> causes = ((NoCandidateFactAvailableException) e).getBriefAndDetailedError().entrySet().stream().filter(x -> x.getKey() instanceof StorageCandidate && ((StorageCandidate)x.getKey()).getName().equalsIgnoreCase("c6_testfact")).collect(Collectors.toSet());
+      Set<Map.Entry<Candidate, List<CandidateTablePruneCause>>> causes = e.getBriefAndDetailedError().entrySet().stream().filter(x -> x.getKey() instanceof StorageCandidate && ((StorageCandidate)x.getKey()).getStorageTable().equalsIgnoreCase("c6_testfact")).collect(Collectors.toSet());
       assertEquals(causes.size(), 1);
       List<CandidateTablePruneCause> pruneCauses = causes.iterator().next().getValue();
       assertEquals(pruneCauses.size(), 1);

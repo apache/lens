@@ -98,6 +98,9 @@ public class SegmentationCandidate implements Candidate {
     }
     return this;
   }
+  private static <T> Predicate<T> not(Predicate<T> predicate) {
+    return predicate.negate();
+  }
 
   public boolean rewriteInternal(Configuration conf, HiveConf hconf) throws LensException {
     CubeInterface cube = getCube();
@@ -108,14 +111,14 @@ public class SegmentationCandidate implements Candidate {
       // assuming only base cubes in segmentation
       Cube innerCube = (Cube) getCubeMetastoreClient().getCube(segment.getName());
       cubesOfSegmentation.put(segment.getName(), innerCube);
-      Set<QueriedPhraseContext> notAnswerable = cubeQueryContext.getQueriedPhrases().stream().filter((phrase) -> !isPhraseAnswerable(phrase)).collect(Collectors.toSet());
+      Set<QueriedPhraseContext> notAnswerable = cubeQueryContext.getQueriedPhrases().stream().filter(not(this::isPhraseAnswerable)).collect(Collectors.toSet());
       // create ast
       ASTNode ast = MetastoreUtil.copyAST(cubeQueryContext.getAst(),
         astNode -> {
           // replace time range
           for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
-            TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
-            TimeRange queriedTimeRange = timeRangeTimeRangeEntry.getValue();
+            TimeRange queriedTimeRange = timeRangeTimeRangeEntry.getKey();
+            TimeRange timeRange = timeRangeTimeRangeEntry.getValue();
             if (astNode.getParent() == queriedTimeRange.getAstNode()) {
               if (astNode.getChildIndex() == 2) {
                 return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate()))), false);

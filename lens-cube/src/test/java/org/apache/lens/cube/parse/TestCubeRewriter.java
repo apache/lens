@@ -1612,15 +1612,15 @@ public class TestCubeRewriter extends TestQueryRewrite {
     // Start time for dim attribute user_id_added_far_future is 2099-01-01
     String query2 = "select user_id_added_far_future from basecube where " + TWO_DAYS_RANGE;
     LensException e1 = getLensExceptionInRewrite(query2, getConf());
-    assertTrue(e1.getMessage().contains("NO_CANDIDATE_FACT_AVAILABLE"));
+    assertTrue(e1.getMessage().contains("NO_FACT_HAS_COLUMN"));
     // End time for dim attribute user_id_deprecated is 2016-01-01
     String query3 = "select user_id_deprecated from basecube where " + TWO_DAYS_RANGE;
     LensException e2 = getLensExceptionInRewrite(query3, getConf());
-    assertTrue(e2.getMessage().contains("NO_CANDIDATE_FACT_AVAILABLE"));
+    assertTrue(e2.getMessage().contains("NO_FACT_HAS_COLUMN"));
     // Start time for ref column user_id_added_far_future_chain is 2099-01-01
     String query4 = "select user_id_added_far_future_chain.name from basecube where " + TWO_DAYS_RANGE;
     LensException e3 = getLensExceptionInRewrite(query4, getConf());
-    assertTrue(e3.getMessage().contains("NO_CANDIDATE_FACT_AVAILABLE"));
+    assertTrue(e3.getMessage().contains("NO_FACT_HAS_COLUMN"));
   }
 
   @Test

@@ -148,7 +148,7 @@ public class DenormalizationResolver implements ContextRewriter {
       if (!tableToRefCols.isEmpty()) {
         // pick referenced columns for fact
         if (sc.getStorageCandidate() != null) {
-          pickColumnsForTable(cubeql, sc.getStorageCandidate().getName());
+          pickColumnsForTable(cubeql, sc.getStorageCandidate().getStorageTable());
         }
         // pick referenced columns for dimensions
         if (dimsToQuery != null) {
@@ -267,8 +267,8 @@ public class DenormalizationResolver implements ContextRewriter {
 
     private void replaceReferencedColumns(CubeQueryContext cubeql, DimHQLContext sc, boolean replaceFact) throws LensException {
       QueryAST ast = cubeql;
-      boolean factRefExists = sc.getStorageCandidate() != null && tableToRefCols.get(sc.getStorageCandidate().getName()) != null && !tableToRefCols.get(sc
-          .getStorageCandidate().getName()).isEmpty();
+      boolean factRefExists = sc.getStorageCandidate() != null && tableToRefCols.get(sc.getStorageCandidate().getStorageTable()) != null && !tableToRefCols.get(sc
+          .getStorageCandidate().getStorageTable()).isEmpty();
       if (replaceFact && factRefExists) {
         ast = sc.getQueryAst();
       }

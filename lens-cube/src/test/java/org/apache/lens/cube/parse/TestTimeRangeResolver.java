@@ -116,7 +116,7 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     PruneCauses<Candidate> allStoragePruningMsgs) {
     for (Candidate sc : allStoragePruningMsgs.keySet()) {
       if (sc instanceof StorageCandidate) {
-        if (((StorageCandidate)sc).getName().equals(stoargeName)) {
+        if (((StorageCandidate)sc).getStorageTable().equals(stoargeName)) {
           return allStoragePruningMsgs.get(sc);
         }
       }
