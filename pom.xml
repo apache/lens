@@ -40,7 +40,7 @@
     <servlet.api.version>2.5</servlet.api.version>
     <ws.rs.version>2.0.1</ws.rs.version>
     <jaxb.api.version>2.2.12</jaxb.api.version>
-    <javax.mail.version>1.4</javax.mail.version>
+    <javax.mail.version>1.4.7</javax.mail.version>
 
     <!-- hadoop stack -->
     <hadoop.version>2.6.0</hadoop.version>
