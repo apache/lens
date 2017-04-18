@@ -136,7 +136,7 @@ start() {
 
   mkdir -p $LENS_LOG_DIR
 
-  JAVA_PROPERTIES="${JAVA_PROPERTIES} $LENS_OPTS $LENS_PROPERTIES -Dlens.log.dir=$LENS_LOG_DIR -Dlens.home=${LENS_HOME_DIR} -Dconfig.location=$LENS_CONF"
+  JAVA_PROPERTIES="${JAVA_PROPERTIES} $LENS_OPTS $LENS_PROPERTIES -Dlens.log.dir=$LENS_LOG_DIR -Dlens.home=${LENS_HOME_DIR} -Dconfig.location=$LENS_CONF -Dquery.log.default.id=unknown"
   shift
 
   while [[ ${1} =~ ^\-D ]]; do
@@ -144,6 +144,10 @@ start() {
   shift
   done
 
+  queryLogIDFile="${LENS_LOG_DIR}/unknown.log"
+  if [ -f "$queryLogIDFile" ] ; then
+      rm "$queryLogIDFile"
+  fi
   if [ -n "$opt_verbose" ] ; then
     JAVA_PROPERTIES="-Dlensserver.root.logger=INFO,CONSOLE -Dlensserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
     ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.LensServer $*
