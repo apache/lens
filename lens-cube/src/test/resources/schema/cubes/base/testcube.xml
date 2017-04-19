@@ -670,7 +670,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="xuserid" maps_to_many="false"/>
+              <from table="testcube" column="xuserid" maps_to_many="false"/>
               <to table="userdim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -690,7 +690,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="yuserid" maps_to_many="false"/>
+              <from table="testcube" column="yuserid" maps_to_many="false"/>
               <to table="userdim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -710,7 +710,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="userid" maps_to_many="false"/>
+              <from table="testcube" column="userid" maps_to_many="false"/>
               <to table="userdim" column="id" maps_to_many="false"/>
             </edge>
             <edge>

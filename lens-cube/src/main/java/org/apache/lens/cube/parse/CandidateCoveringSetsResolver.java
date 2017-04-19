@@ -52,8 +52,12 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
 
     List<Candidate> timeRangeCoveringSet = resolveTimeRangeCoveringFactSet(cubeql, queriedMsrs, qpcList);
     if (timeRangeCoveringSet.isEmpty()) {
-      throw new LensException(LensCubeErrorCode.NO_UNION_CANDIDATE_AVAILABLE.getLensErrorInfo(),
+      if (cubeql.getCandidates().size() > 1) {
+        throw new LensException(LensCubeErrorCode.NO_UNION_CANDIDATE_AVAILABLE.getLensErrorInfo(),
           cubeql.getCube().getName(), cubeql.getTimeRanges().toString(), getColumns(queriedMsrs).toString());
+      } else {
+        cubeql.throwNoCandidateFactException();
+      }
     }
     log.info("Time covering candidates :{}", timeRangeCoveringSet);
 
@@ -61,14 +65,14 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       cubeql.getCandidates().clear();
       cubeql.getCandidates().addAll(timeRangeCoveringSet);
     } else if (!timeRangeCoveringSet.isEmpty()) {
-      List<List<Candidate>> measureCoveringSets = resolveJoinCandidates(timeRangeCoveringSet, queriedMsrs, cubeql);
+      List<List<Candidate>> measureCoveringSets = resolveJoinCandidates(timeRangeCoveringSet, queriedMsrs);
       if (measureCoveringSets.isEmpty()) {
-        if(cubeql.getCandidates().size() == 1) {
-          // no join is possible
-          cubeql.throwNoCandidateFactException();
-        } else {
+        if (cubeql.getCandidates().size() > 1) {
           throw new LensException(LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo(),
             cubeql.getCube().getName(), getColumns(queriedMsrs).toString());
+        } else {
+          // no join is possible
+          cubeql.throwNoCandidateFactException();
         }
       }
       updateFinalCandidates(measureCoveringSets, cubeql);
@@ -129,17 +133,13 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       // Partially valid candidates
       List<Candidate> allCandidatesPartiallyValid = new ArrayList<>();
       for (Candidate cand : allCandidates) {
-        if (true || cand instanceof StorageCandidate || cand instanceof SegmentationCandidate) {
-          if (CandidateUtil.isValidForTimeRanges(cand, cubeql.getTimeRanges())) {
-            candidateSet.add(cand.copy());
-          } else if (CandidateUtil.isPartiallyValidForTimeRanges(cand, cubeql.getTimeRanges())) {
-            allCandidatesPartiallyValid.add(cand.copy());
-          } else {
-            cubeql.addCandidatePruningMsg(cand, CandidateTablePruneCause.storageNotAvailableInRange(
-              cubeql.getTimeRanges()));
-          }
+        if (CandidateUtil.isValidForTimeRanges(cand, cubeql.getTimeRanges())) {
+          candidateSet.add(cand.copy());
+        } else if (CandidateUtil.isPartiallyValidForTimeRanges(cand, cubeql.getTimeRanges())) {
+          allCandidatesPartiallyValid.add(cand.copy());
         } else {
-          throw new LensException("Not a StorageCandidate or a segmentation candidate!!");
+          cubeql.addCandidatePruningMsg(cand, CandidateTablePruneCause.storageNotAvailableInRange(
+            cubeql.getTimeRanges()));
         }
       }
     // Get all covering fact sets
@@ -155,7 +155,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     pruneRedundantUnionCoveringSets(unionCoveringSet);
     // pruing done in the previous steps, now create union candidates
     candidateSet.addAll(unionCoveringSet);
-    updateQueriableMeasures(candidateSet, qpcList, cubeql);
+    updateQueriableMeasures(candidateSet, qpcList);
     return candidateSet;
   }
   private void pruneUnionCoveringSetWithoutAnyCommonMeasure(List<UnionCandidate> ucs,
@@ -210,7 +210,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
   }
 
   private List<List<Candidate>> resolveJoinCandidates(List<Candidate> candidates,
-      Set<QueriedPhraseContext> msrs, CubeQueryContext cubeql) throws LensException {
+    Set<QueriedPhraseContext> msrs) throws LensException {
     List<List<Candidate>> msrCoveringSets = new ArrayList<>();
     List<Candidate> ucSet = new ArrayList<>(candidates);
     // Check if a single set can answer all the measures and exprsWithMeasures
@@ -242,7 +242,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
         Set<QueriedPhraseContext> coveredMsrs = candidate.coveredMeasures(msrs);
         remainingMsrs.removeAll(coveredMsrs);
 
-        List<List<Candidate>> coveringSets = resolveJoinCandidates(ucSet, remainingMsrs, cubeql);
+        List<List<Candidate>> coveringSets = resolveJoinCandidates(ucSet, remainingMsrs);
         if (!coveringSets.isEmpty()) {
           for (List<Candidate> candSet : coveringSets) {
             candSet.add(candidate);
@@ -259,42 +259,9 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
   }
 
   private void updateQueriableMeasures(List<Candidate> cands,
-      List<QueriedPhraseContext> qpcList, CubeQueryContext cubeql) throws LensException {
+    List<QueriedPhraseContext> qpcList) throws LensException {
     for (Candidate cand : cands) {
-      updateStorageCandidateQueriableMeasures(cand, qpcList, cubeql);
-    }
-  }
-
-
-  private void updateStorageCandidateQueriableMeasures(Candidate unionCandidate,
-      List<QueriedPhraseContext> qpcList, CubeQueryContext cubeql) throws LensException {
-    QueriedPhraseContext msrPhrase;
-    boolean isEvaluable;
-    for (int index = 0; index < qpcList.size(); index++) {
-
-//      if (!qpcList.get(index).hasMeasures(cubeql)) {
-//        //Not a measure phrase. Skip it
-//        continue;
-//      }
-
-      msrPhrase = qpcList.get(index);
-      if (unionCandidate instanceof StorageCandidate && msrPhrase.isEvaluable(unionCandidate)) {
-        unionCandidate.addAnswerableMeasurePhraseIndices(index);
-      } else if (unionCandidate instanceof UnionCandidate) {
-        isEvaluable = true;
-        for (Candidate childCandidate : unionCandidate.getChildren()) {
-          if (!msrPhrase.isEvaluable(childCandidate)) {
-            isEvaluable = false;
-            break;
-          }
-        }
-        if (isEvaluable) {
-          //Set the index for all the children in this case
-          for (Candidate childCandidate : unionCandidate.getChildren()) {
-            childCandidate.addAnswerableMeasurePhraseIndices(index);
-          }
-        }
-      }
+      cand.updateStorageCandidateQueriableMeasures(qpcList);
     }
   }
 }

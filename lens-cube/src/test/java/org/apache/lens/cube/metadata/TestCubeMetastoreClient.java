@@ -63,7 +63,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
+@Test(enabled = false)
 public class TestCubeMetastoreClient {
 
   private static CubeMetastoreClient client;

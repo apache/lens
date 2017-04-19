@@ -27,6 +27,7 @@ import static org.apache.lens.cube.metadata.DateFactory.getDateWithOffset;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AUTO_JOINS;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES;
+import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_FLATTENING_FOR_BRIDGETABLES;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.RESOLVE_SEGMENTATIONS;
@@ -69,7 +70,8 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       ENABLE_SELECT_TO_GROUPBY, true,
       ENABLE_GROUP_BY_TO_SELECT, true,
       RESOLVE_SEGMENTATIONS, true,
-      DISABLE_AGGREGATE_RESOLVER, false);
+      DISABLE_AGGREGATE_RESOLVER, false,
+      ENABLE_FLATTENING_FOR_BRIDGETABLES, true);
   }
 
   @Override
@@ -179,13 +181,14 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
   public void testExpressions() throws Exception {
       CubeQueryContext ctx = rewriteCtx("select singlecolchainfield, segmsr1 from testcube where " + TWO_DAYS_RANGE,
         getConf());
-      System.out.println(ctx.toHQL());
+    String joinExpr = " JOIN " + getDbName()
+      + "c1_citytable cubecity ON testcube.cityid = cubecity.id AND (cubecity.dt = 'latest')";
     String query1, query2;
     query1 = getExpectedQuery("testcube", "SELECT (cubecity.name) AS `alias0`, sum((testcube.segmsr1)) AS `alias1` from",
-      " JOIN " + getDbName() + "c1_citytable cubecity ON testcube.cityid = cubecity.id AND (cubecity.dt = 'latest')",
+      joinExpr,
       null, "group by cubecity.name", null, getWhereForDailyAndHourly2days("testcube", "c1_b1fact1"));
     query2 = getExpectedQuery("testcube", "SELECT (cubecity.name) AS `alias0`, sum((testcube.segmsr1)) AS `alias1` from",
-      " JOIN " + getDbName() + "c1_citytable cubecity ON testcube.cityid = cubecity.id AND (cubecity.dt = 'latest')",
+      joinExpr,
       null, "group by cubecity.name", null, getWhereForDailyAndHourly2days("testcube", "c0_b2fact1"));
     compareUnionQuery(ctx, "SELECT (testcube.alias0) AS `singlecolchainfield`, sum((testcube.alias1)) AS `segmsr1` from (",
       "as testcube group by testcube.alias0", newArrayList(query1, query2));
@@ -194,20 +197,91 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
   public void testQueryWithWhereHavingGroupby() throws Exception {
     String userQuery = "select cityid, msr2, segmsr1 from testcube where cityname='blah' and " + TWO_DAYS_RANGE + " group by cityid having segmsr1 > 1 and msr2 > 2";
     CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
-    System.out.println(ctx.toHQL());
-    //todo write asserts. check why having is coming in inner as well
+    String join1, join2, join3;
+    String query1, query2, query3;
+    join1 = "join " + getDbName()
+      + "c1_citytable cubecity1 ON testcube.cityid1 = cubecity1.id AND (cubecity1.dt = 'latest')";
+    join2 = "join " + getDbName()
+      + "c1_citytable cubecity2 ON testcube.cityid2 = cubecity2.id AND (cubecity2.dt = 'latest')";
+    join3 = "join " + getDbName()
+      + "c1_citytable cubecity ON testcube.cityid = cubecity.id AND (cubecity.dt = 'latest')";
+    query1 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, 0.0 as alias1, sum(testcube.segmsr1) as alias2 FROM ", join1,"cubecity1.name='blah'",
+      "group by testcube.cityid",null,
+      getWhereForDailyAndHourly2days("testcube", "c1_b1fact1"));
+    query2 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, 0.0 as alias1, sum(testcube.segmsr1) as alias2 FROM ", join2,"cubecity2.name='blah'",
+      "group by testcube.cityid",null,
+      getWhereForDailyAndHourly2days("testcube", "c0_b2fact1"));
+    query3 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, sum(testcube.msr2) as alias1, 0.0 as alias2 FROM ", join3,"cubecity.name='blah'",
+      "group by testcube.cityid",null,
+      getWhereForHourly2days("testcube", "c1_testfact2"));
+    compareUnionQuery(ctx,
+      "select testcube.alias0 as cityid, sum(testcube.alias1) as msr2, sum(testcube.alias2) as segmsr1 from ( ",
+      ") as testcube group by testcube.alias0 having ((sum((testcube.alias2)) > 1) and (sum((testcube.alias1)) > 2)",
+      newArrayList(query1, query2, query3));
   }
   @Test(enabled = true) //todo add asserts
   public void testQueryWithManyToMany() throws LensException {
     String userQuery = "select usersports.name, xusersports.name, yusersports.name, segmsr1, msr2 from testcube where " + TWO_DAYS_RANGE;
     CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
-    String hql = ctx.toHQL();
-    System.out.println(hql);
+    String query1, query2, query3;
+    String joinExpr = " join " + getDbName() + "c1_usertable userdim_1 on testcube.userid = userdim_1.id "
+      + " join  (select user_interests_1.user_id as user_id, collect_set(usersports.name) as balias0 from "
+      + getDbName() + "c1_user_interests_tbl user_interests_1 join " + getDbName() + "c1_sports_tbl usersports on "
+      + "user_interests_1.sport_id = usersports.id group by user_interests_1.user_id) "
+      + "usersports on userdim_1.id = usersports.user_id"
+      + " join " + getDbName() + "c1_usertable userdim_0 on testcube.yuserid = userdim_0.id "
+      + " join  (select user_interests_0.user_id as user_id,collect_set(yusersports.name) as balias0 from "
+      + getDbName() + "c1_user_interests_tbl user_interests_0 join " + getDbName() + "c1_sports_tbl yusersports on "
+      + " user_interests_0.sport_id = yusersports.id group by user_interests_0.user_id) yusersports on userdim_0.id ="
+      + " yusersports.user_id join " + getDbName() + "c1_usertable userdim on testcube.xuserid = userdim.id"
+      + " join  (select user_interests.user_id as user_id,collect_set(xusersports.name) as balias0 from "
+      + getDbName() + "c1_user_interests_tbl user_interests join " + getDbName() + "c1_sports_tbl xusersports"
+      + " on user_interests.sport_id = xusersports.id group by user_interests.user_id) xusersports on userdim.id = "
+      + " xusersports.user_id";
+    query1 = getExpectedQuery("testcube",
+      "select (usersports.balias0) AS `alias0`, (xusersports.balias0) AS `alias1`, (yusersports.balias0) AS `alias2`, " +
+        "sum((testcube.segmsr1)) AS `alias3`, 0.0 AS `alias4` FROM ", joinExpr, null,
+      "group by (usersports.balias0), (xusersports.balias0), (yusersports.balias0), ",null,
+      getWhereForDailyAndHourly2days("testcube", "c1_b1fact1"));
+    query2 = getExpectedQuery("testcube",
+      "select (usersports.balias0) AS `alias0`, (xusersports.balias0) AS `alias1`, (yusersports.balias0) AS `alias2`, " +
+        "sum((testcube.segmsr1)) AS `alias3`, 0.0 AS `alias4` FROM ", joinExpr, null,
+      "group by (usersports.balias0), (xusersports.balias0), (yusersports.balias0)", null,
+      getWhereForDailyAndHourly2days("testcube", "c0_b2fact1"));
+    query3 = getExpectedQuery("testcube",
+      "select (usersports.balias0) AS `alias0`, (xusersports.balias0) AS `alias1`, (yusersports.balias0) AS `alias2`, " +
+        "0.0 AS `alias3`, sum(testcube.msr2) AS `alias4` FROM ", joinExpr, null,
+      "group by (usersports.balias0), (xusersports.balias0), (yusersports.balias0)", null,
+      getWhereForHourly2days("testcube", "c1_testfact2"));
+    compareUnionQuery(ctx,
+      "select testcube.alias0 AS `name`,testcube.alias1 AS `name`, testcube.alias2 AS `name`, " +
+        "sum((testcube.alias3)) AS `segmsr1`, sum((testcube.alias4)) AS `msr2` from ( ",
+      ") as testcube group by testcube.alias0, testcube.alias1, testcube.alias2",
+      newArrayList(query1, query2, query3));
   }
   @Test
   public void testQueryWithHavingOnInnerMeasure() throws LensException {
-    String userQuery = "select cityid from testcube where " + TWO_DAYS_RANGE + " having segmsr1 > 1 and msr2 > 2";
+    String userQuery = "select cityid from testcube where " + TWO_DAYS_RANGE + " having msr2 > 2 and segmsr1 > 1";
     CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
-    System.out.println(ctx.toHQL());
+    String query1, query2, query3;
+    query1 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, 0.0 as alias1, sum(testcube.segmsr1) as alias2 FROM ", null,
+      "group by testcube.cityid",
+      getWhereForDailyAndHourly2days("testcube", "c1_b1fact1"));
+    query2 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, 0.0 as alias1, sum(testcube.segmsr1) as alias2 FROM ", null,
+      "group by testcube.cityid",
+      getWhereForDailyAndHourly2days("testcube", "c0_b2fact1"));
+    query3 = getExpectedQuery("testcube",
+      "select testcube.cityid as alias0, sum(testcube.msr2) as alias1, 0.0 as alias2 FROM ", null,
+      "group by testcube.cityid",
+      getWhereForHourly2days("testcube", "c1_testfact2"));
+    compareUnionQuery(ctx,
+      "select testcube.alias0 as cityid from ( ",
+      ") as testcube group by testcube.alias0 having sum(testcube.alias1) > 2 and sum(testcube.alias2) > 1",
+      newArrayList(query1, query2, query3));
   }
 }

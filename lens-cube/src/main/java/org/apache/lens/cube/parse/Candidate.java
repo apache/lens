@@ -165,8 +165,23 @@ public interface Candidate {
   }
 
   boolean isPhraseAnswerable(QueriedPhraseContext phrase) throws LensException;
+  default void updateStorageCandidateQueriableMeasures(List<QueriedPhraseContext> qpcList) throws LensException {
+    for (int index = 0; index < qpcList.size(); index++) {
+      //      if (!qpcList.get(index).hasMeasures(cubeql)) {
+//        //Not a measure phrase. Skip it
+//        continue;
+//      }
 
-  default boolean isColumnPresentAndValidForRange(String column) throws LensException {
+      QueriedPhraseContext msrPhrase = qpcList.get(index);
+//      if (msrPhrase.isEvaluable(this) != isPhraseAnswerable(msrPhrase)) {
+//        throw new LensException("asdfads");
+//      }
+      if (isPhraseAnswerable(msrPhrase)) {
+        addAnswerableMeasurePhraseIndices(index);
+      }
+    }
+  }
+  default boolean isColumnPresentAndValidForRange(String column) {
     return getColumns().contains(column) && isColumnValidForRange(column);
   }
 

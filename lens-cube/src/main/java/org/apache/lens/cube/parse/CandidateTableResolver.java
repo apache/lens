@@ -19,6 +19,7 @@
 package org.apache.lens.cube.parse;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
@@ -270,43 +271,44 @@ class CandidateTableResolver implements ContextRewriter {
           for (String expr : cubeql.getQueriedExprs()) {
             cubeql.getExprCtx().updateEvaluables(expr, sc);
           }
-
-          // go over the columns accessed in the query and find out which tables
-          // can answer the query
-          // the candidate facts should have all the dimensions queried and
-          // atleast
-          // one measure
-          boolean toRemove = false;
-          for (QueriedPhraseContext qur : dimExprs) {
-            if (!qur.isEvaluable(sc)) {
-              log.info("Not considering storage candidate:{} as columns {} are not available", sc, qur.getColumns());
-              cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
-                qur.getColumns()));
-              toRemove = true;
-              break;
-            }
-          }
-
-          // check if the candidate fact has atleast one measure queried
-          // if expression has measures, they should be considered along with other measures and see if the fact can be
-          // part of measure covering set
-          if (!checkForFactColumnExistsAndValidForRange(sc, queriedMsrs)) {
-            Set<String> columns = getColumns(queriedMsrs);
-            log.info("Not considering storage candidate:{} as columns {} is not available", sc, columns);
-            cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
-              columns));
+        }
+        // go over the columns accessed in the query and find out which tables
+        // can answer the query
+        // the candidate facts should have all the dimensions queried and
+        // atleast
+        // one measure
+        boolean toRemove = false;
+        for (QueriedPhraseContext qur : dimExprs) {
+          if (!cand.isPhraseAnswerable(qur)) {
+            log.info("Not considering storage candidate:{} as columns {} are not available", cand, qur.getColumns());
+            cubeql.addStoragePruningMsg(cand, CandidateTablePruneCause.columnNotFound(
+              qur.getColumns()));
             toRemove = true;
+            break;
           }
+        }
 
-          // go over join chains and prune facts that dont have any of the columns in each chain
+        // check if the candidate fact has atleast one measure queried
+        // if expression has measures, they should be considered along with other measures and see if the fact can be
+        // part of measure covering set
+        if (!checkForFactColumnExistsAndValidForRange(cand, queriedMsrs)) {
+          Set<String> columns = getColumns(queriedMsrs);
+          log.info("Not considering storage candidate:{} as columns {} is not available", cand, columns);
+          cubeql.addStoragePruningMsg(cand, CandidateTablePruneCause.columnNotFound(columns));
+          toRemove = true;
+        }
+
+        // go over join chains and prune facts that dont have any of the columns in each chain
+        if (cand instanceof StorageCandidate) {
+          StorageCandidate sc = (StorageCandidate) cand;
           for (JoinChain chain : cubeql.getJoinchains().values()) {
             OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(Aliased.create((Dimension) cubeql.getCubeTbls()
-                .get(chain.getName()), chain.getName()));
+              .get(chain.getName()), chain.getName()));
             if (!checkForFactColumnExistsAndValidForRange(sc, chain.getSourceColumns(), cubeql)) {
               // check if chain is optional or not
               if (optdim == null) {
                 log.info("Not considering storage candidate:{} as columns {} are not available", sc,
-                    chain.getSourceColumns());
+                  chain.getSourceColumns());
                 cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.columnNotFound(
                   chain.getSourceColumns()));
                 toRemove = true;
@@ -314,12 +316,9 @@ class CandidateTableResolver implements ContextRewriter {
               }
             }
           }
-
-          if (toRemove) {
-            i.remove();
-          }
-        } else {
-//          throw new LensException("Not a storage candidate!!");
+        }
+        if (toRemove) {
+          i.remove();
         }
       }
       if (cubeql.getCandidates().size() == 0) {
@@ -363,8 +362,7 @@ class CandidateTableResolver implements ContextRewriter {
             Collection<String> colSet = joincolumnsEntry.getValue().get(dim);
 
             if (!checkForFactColumnExistsAndValidForRange(cdim, colSet, cubeql)) {
-              if (optdim == null || optdim.isRequiredInJoinChain
-                || (optdim != null && optdim.requiredForCandidates.contains(cdim))) {
+              if (optdim == null || optdim.isRequiredInJoinChain || optdim.requiredForCandidates.contains(cdim)) {
                 i.remove();
                 removed = true;
                 log.info("Not considering dimtable:{} as its columns are not part of any join paths. Join columns:{}",
@@ -383,8 +381,7 @@ class CandidateTableResolver implements ContextRewriter {
               Collection<String> colSet = joincolumnsEntry.getValue().get(dim);
 
               if (!checkForFactColumnExistsAndValidForRange(cdim, colSet, cubeql)) {
-                if (optdim == null || optdim.isRequiredInJoinChain
-                  || (optdim != null && optdim.requiredForCandidates.contains(cdim))) {
+                if (optdim == null || optdim.isRequiredInJoinChain || optdim.requiredForCandidates.contains(cdim)) {
                   i.remove();
                   removed = true;
                   log.info("Not considering dimtable:{} as its columns are not part of any join paths. Join columns:{}",
@@ -443,8 +440,7 @@ class CandidateTableResolver implements ContextRewriter {
           colSet = joincolumnsEntry.getValue().get(cubeql.getCube());
 
           if (!checkForFactColumnExistsAndValidForRange(sc, colSet, cubeql)) {
-            if (optdim == null || optdim.isRequiredInJoinChain
-              || (optdim != null && optdim.requiredForCandidates.contains(sc))) {
+            if (optdim == null || optdim.isRequiredInJoinChain || optdim.requiredForCandidates.contains(sc)) {
               i.remove();
               log.info("Not considering storage candidate :{} as it does not have columns in any of the join paths."
                 + " Join columns:{}", sc, colSet);
@@ -674,7 +670,7 @@ class CandidateTableResolver implements ContextRewriter {
   }
 
 
-  private static boolean checkForFactColumnExistsAndValidForRange(StorageCandidate sc,
+  private static boolean checkForFactColumnExistsAndValidForRange(Candidate sc,
     Collection<QueriedPhraseContext> colSet) throws LensException {
     if (colSet == null || colSet.isEmpty()) {
       return true;

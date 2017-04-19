@@ -15,6 +15,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,7 +26,8 @@ public class StorageCandidateHQLContext extends DimHQLContext {
   @Getter
   private StorageCandidate storageCandidate;
   //todo set
-  @Setter
+  @Setter(AccessLevel.PACKAGE)
+  private
   CubeQueryContext rootCubeQueryContext;
 
   StorageCandidateHQLContext(StorageCandidate storageCandidate, Map<Dimension, CandidateDim> dimsToQuery, QueryAST ast) throws LensException {

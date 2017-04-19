@@ -82,8 +82,10 @@ public class UnionCandidate implements Candidate {
   }
 
   @Override
-  public boolean isColumnValidForRange(String column) {
-    return false;
+  public void addAnswerableMeasurePhraseIndices(int index) {
+    for (Candidate candidate : getChildren()) {
+      candidate.addAnswerableMeasurePhraseIndices(index);
+    }
   }
 
   @Override

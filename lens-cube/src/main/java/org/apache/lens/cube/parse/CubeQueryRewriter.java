@@ -255,10 +255,6 @@ public class CubeQueryRewriter {
     }
   }
 
-  public Context getQLContext() {
-    return qlCtx;
-  }
-
   public void clear() {
     try {
       if (qlCtx != null) {

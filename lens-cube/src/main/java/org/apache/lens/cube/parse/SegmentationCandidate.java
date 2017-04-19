@@ -225,9 +225,9 @@ public class SegmentationCandidate implements Candidate {
   @Override
   public Collection<String> getColumns() {
     if (columns == null) {
-      columns = cubeStream().map(Cube::getAllFields)
+      columns = cubeStream().map(Cube::getAllFieldNames)
         .reduce(Sets::intersection).orElseGet(Sets::newHashSet)
-        .stream().map(CubeColumn::getName).collect(Collectors.toSet());
+        .stream().collect(Collectors.toSet());
     }
     return columns;
   }
@@ -336,7 +336,7 @@ public class SegmentationCandidate implements Candidate {
   @Override
   public boolean isPhraseAnswerable(QueriedPhraseContext phrase) {
     // TODO consider measure start time etc
-    return getColumns().containsAll(phrase.getQueriedMsrs());
+    return getColumns().containsAll(phrase.getColumns());
   }
 
   @Override

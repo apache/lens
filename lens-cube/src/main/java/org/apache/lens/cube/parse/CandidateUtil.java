@@ -18,10 +18,12 @@
  */
 package org.apache.lens.cube.parse;
 
+import static java.util.Comparator.naturalOrder;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.server.api.error.LensException;
@@ -66,12 +68,9 @@ public final class CandidateUtil {
 
   static boolean isCandidatePartiallyValidForTimeRange(Date candidateStartTime, Date candidateEndTime,
     Date timeRangeStart, Date timeRangeEnd) {
-    Date start  = candidateStartTime.after(timeRangeStart) ? candidateStartTime : timeRangeStart;
-    Date end = candidateEndTime.before(timeRangeEnd) ? candidateEndTime : timeRangeEnd;
-    if (end.after(start)) {
-      return true;
-    }
-    return false;
+    Date start  = Stream.of(timeRangeStart, candidateStartTime).max(naturalOrder()).orElse(candidateStartTime);
+    Date end = Stream.of(timeRangeEnd, candidateEndTime).min(naturalOrder()).orElse(candidateEndTime);
+    return end.after(start);
   }
 
 
