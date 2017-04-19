@@ -152,8 +152,6 @@ public class StorageCandidate implements Candidate, CandidateTable {
    */
   @Getter
   private Set<String> nonExistingPartitions = new HashSet<>();
-  @Getter
-  private int numQueriedParts = 0;
 
   /**
    * This will be true if this storage candidate has multiple storage tables (one per update period)
@@ -161,6 +159,9 @@ public class StorageCandidate implements Candidate, CandidateTable {
    */
   @Getter
   private boolean isStorageTblsAtUpdatePeriodLevel;
+
+  @Getter
+  private int numQueriedParts = 0;
 
   public StorageCandidate(StorageCandidate sc) throws LensException {
     this(sc.getCube(), sc.getFact(), sc.getStorageName(), sc.getCubeql());

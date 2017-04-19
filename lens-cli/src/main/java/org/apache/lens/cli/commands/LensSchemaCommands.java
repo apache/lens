@@ -20,19 +20,11 @@ package org.apache.lens.cli.commands;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.lens.api.metastore.SchemaTraverser;
-import org.apache.lens.api.metastore.XBaseCube;
-import org.apache.lens.api.metastore.XDerivedCube;
-import org.apache.lens.api.metastore.XDimension;
-import org.apache.lens.api.metastore.XDimensionTable;
-import org.apache.lens.api.metastore.XFactTable;
-import org.apache.lens.api.metastore.XSegmentation;
-import org.apache.lens.api.metastore.XStorage;
+import org.apache.lens.api.metastore.*;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,9 +34,7 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.shell.support.logging.HandlerUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @Component
