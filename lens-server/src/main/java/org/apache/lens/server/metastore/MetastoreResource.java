@@ -19,6 +19,7 @@
 package org.apache.lens.server.metastore;
 
 import static org.apache.lens.api.APIResult.*;
+import static org.apache.lens.cube.error.LensCubeErrorCode.NO_PARTITION_FILTER;
 
 import java.util.List;
 
@@ -1000,6 +1001,9 @@ public class MetastoreResource {
     @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("factName") String factName,
     @PathParam("storage") String storage,
     @QueryParam("filter") String filter) throws LensException {
+    if (filter == null || filter.isEmpty()) {
+      throw new LensException(NO_PARTITION_FILTER.getLensErrorInfo());
+    }
     checkSessionId(sessionid);
     return X_CUBE_OBJECT_FACTORY
       .createXPartitionList(getSvc().getAllPartitionsOfFactStorage(sessionid, factName, storage, filter));

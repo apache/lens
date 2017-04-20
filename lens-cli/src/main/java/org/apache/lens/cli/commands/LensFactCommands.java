@@ -191,7 +191,7 @@ public class LensFactCommands extends LogicalTableCrudCommand<XFactTable> {
   public String getAllPartitionsOfFact(
     @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
     @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
-    @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
+    @CliOption(key = {"", "filter"}, mandatory = true, help = "<partition-filter>") String filter) {
     return getAllPartitions(tableName, storageName, filter);
   }
 
