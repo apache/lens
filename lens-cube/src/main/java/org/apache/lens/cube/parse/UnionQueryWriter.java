@@ -21,16 +21,14 @@ package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+
 import static org.apache.lens.cube.parse.HQLParser.*;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.MetastoreUtil;
-import org.apache.lens.cube.metadata.Named;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.lib.Node;
@@ -39,7 +37,6 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -265,7 +262,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
    * @param node
    * @return
    */
-  private boolean isNodeAnswerableForStorageCandidate(StorageCandidate sc, ASTNode node) { // todo change function name to not answerable
+  private boolean isNodeNotAnswerableForStorageCandidate(StorageCandidate sc, ASTNode node) {
     Set<String> cols = new LinkedHashSet<>();
     getAllColumnsOfNode(node, cols);
     return !sc.getColumns().containsAll(cols);
@@ -280,7 +277,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
    */
   private ASTNode setDefaultValueInExprForAggregateNodes(ASTNode node, StorageCandidate sc) throws LensException {
     if (HQLParser.isAggregateAST(node)
-        && isNodeAnswerableForStorageCandidate(sc, node)) {
+        && isNodeNotAnswerableForStorageCandidate(sc, node)) {
       node.setChild(1, getSelectExpr(null, null, true));
     }
     for (int i = 0; i < node.getChildCount(); i++) {

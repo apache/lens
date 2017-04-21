@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.lens.cube.parse;
 
 
@@ -15,9 +33,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Created on 31/03/17.
@@ -25,17 +41,22 @@ import lombok.Setter;
 public class StorageCandidateHQLContext extends DimHQLContext {
   @Getter
   private StorageCandidate storageCandidate;
-  //todo set
-  @Setter(AccessLevel.PACKAGE)
-  private
-  CubeQueryContext rootCubeQueryContext;
+  private CubeQueryContext rootCubeQueryContext;
 
-  StorageCandidateHQLContext(StorageCandidate storageCandidate, Map<Dimension, CandidateDim> dimsToQuery, QueryAST ast) throws LensException {
+  StorageCandidateHQLContext(StorageCandidate storageCandidate, Map<Dimension, CandidateDim> dimsToQuery,
+    QueryAST ast, CubeQueryContext rootCubeQueryContext) throws LensException {
     super(storageCandidate.getCubeQueryContext(), dimsToQuery, ast);
     this.storageCandidate = storageCandidate;
+    this.rootCubeQueryContext = rootCubeQueryContext;
     getCubeQueryContext().addRangeClauses(this);
+    if (!isRoot()) {
+      getQueryAst().setHavingAST(null);
+    }
   }
-
+  private boolean isRoot() {
+    return Objects.equals(getCubeQueryContext(), rootCubeQueryContext)
+      && Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate());
+  }
   public CubeQueryContext getCubeQueryContext() {
     return storageCandidate.getCubeQueryContext();
   }
@@ -44,7 +65,8 @@ public class StorageCandidateHQLContext extends DimHQLContext {
     String alias = getCubeQueryContext().getAliasForTableName(getCube().getName());
     setFrom(storageCandidate.getAliasForTable(alias));
     if (getCubeQueryContext().isAutoJoinResolved()) {
-      setFrom(getCubeQueryContext().getAutoJoinCtx().getFromString(getFrom(), this, getDimsToQuery(), getCubeQueryContext()));
+      setFrom(getCubeQueryContext().getAutoJoinCtx().getFromString(
+        getFrom(), this, getDimsToQuery(), getCubeQueryContext()));
     }
   }
 
@@ -68,7 +90,8 @@ public class StorageCandidateHQLContext extends DimHQLContext {
       String qualifiedStorageTable = getStorageCandidate().getStorageName();
       String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1);
       String where = getCubeQueryContext().getWhere(this, getCubeQueryContext().getAutoJoinCtx(),
-        getQueryAst().getWhereAST(), getCubeQueryContext().getAliasForTableName(getStorageCandidate().getBaseTable().getName()),
+        getQueryAst().getWhereAST(),
+        getCubeQueryContext().getAliasForTableName(getStorageCandidate().getBaseTable().getName()),
         getCubeQueryContext().shouldReplaceDimFilterWithFactFilter(), storageTable, getDimsToQuery());
       setWhere(where);
     }
@@ -108,9 +131,9 @@ public class StorageCandidateHQLContext extends DimHQLContext {
   protected void setMissingExpressions() throws LensException {
     setFrom(getFromTable());
     setWhere(genWhereClauseWithDimPartitions(getWhere()));
-    if (rootCubeQueryContext == null) {
-      updateAnswerableSelectColumns();
+    if (isRoot()) {
       if (Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate())) {
+        updateAnswerableSelectColumns();
         // Check if the picked candidate is a StorageCandidate and in that case
         // update the selectAST with final alias.
         CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), getCubeQueryContext());

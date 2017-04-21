@@ -173,6 +173,6 @@ public class JoinCandidate implements Candidate {
   }
 
   private String getToString() {
-    return children.stream().map(Object::toString).collect(joining(",", "JOIN[", "]"));
+    return children.stream().map(Object::toString).collect(joining("; ", "JOIN[", "]"));
   }
 }

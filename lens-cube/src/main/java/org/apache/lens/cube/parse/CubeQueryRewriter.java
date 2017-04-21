@@ -21,7 +21,6 @@ package org.apache.lens.cube.parse;
 import static org.apache.lens.cube.error.LensCubeErrorCode.SYNTAX_ERROR;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.server.api.error.LensException;
@@ -33,6 +32,10 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.parse.*;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -41,7 +44,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CubeQueryRewriter {
   private final Configuration conf;
-  private final List<ContextRewriter> rewriters = new ArrayList<ContextRewriter>();
+  @VisibleForTesting
+  @Getter(AccessLevel.PACKAGE)
+  private final ImmutableList<ContextRewriter> rewriters;
   private final HiveConf hconf;
   private Context qlCtx = null;
   private boolean lightFactFirst;
@@ -56,7 +61,9 @@ public class CubeQueryRewriter {
     }
     lightFactFirst =
       conf.getBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, CubeQueryConfUtil.DEFAULT_LIGHTEST_FACT_FIRST);
-    setupRewriters();
+    ImmutableList.Builder<ContextRewriter> builder = ImmutableList.builder();
+    setupRewriters(builder);
+    rewriters = builder.build();
   }
 
   /*
@@ -133,7 +140,7 @@ public class CubeQueryRewriter {
    * copied from original query and the expressions missing from this fact
    * removed.
    */
-  private void setupRewriters() {
+  private void setupRewriters(ImmutableList.Builder<ContextRewriter> rewriters) {
     // Resolve columns - the column alias and table alias
     rewriters.add(new ColumnResolver());
     // Rewrite base trees (groupby, having, orderby, limit) using aliases
@@ -167,7 +174,6 @@ public class CubeQueryRewriter {
     rewriters.add(candidateTblResolver);
     // Find Union and Join combinations over Storage Candidates that can answer the queried time range(s) and all
     // queried measures
-//    rewriters.add(new CandidateSegmentResolver(conf, hconf));
     rewriters.add(new CandidateCoveringSetsResolver());
 
     // If lightest fact first option is enabled for this driver (via lens.cube.query.pick.lightest.fact.first = true),
@@ -184,7 +190,7 @@ public class CubeQueryRewriter {
 
     // Phase 2 of storageTableResolver: resolve storage table partitions.
     rewriters.add(storageTableResolver);
-    rewriters.add(new CandidateExploder(conf, hconf));
+    rewriters.add(new SegmentationInnerRewriter(conf, hconf));
     // In case partial data is allowed (via lens.cube.query.fail.if.data.partial = false) and there are many
     // combinations with partial data, pick the one that covers the maximum part of time ranges(s) queried
     rewriters.add(new MaxCoveringFactResolver(conf));
@@ -207,6 +213,7 @@ public class CubeQueryRewriter {
     // queried will be picked. Rest of the combinations will be pruned
     rewriters.add(new LeastPartitionResolver());
     rewriters.add(new LightestDimensionResolver());
+    rewriters.add(new CandidateExploder());
   }
 
   public CubeQueryContext rewrite(ASTNode astnode) throws LensException {

@@ -20,16 +20,83 @@
 package org.apache.lens.cube.metadata;
 
 import static org.apache.lens.cube.error.LensCubeErrorCode.EXPRESSION_NOT_PARSABLE;
-import static org.apache.lens.cube.metadata.MetastoreConstants.*;
+import static org.apache.lens.cube.metadata.MetastoreConstants.AGGR_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.ATTRIBUTES_LIST_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.BASE64_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.BASE_KEY_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.CHAIN_NAME_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.CHAIN_REF_COLUMN_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.CLASS_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.COL_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.COST_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.CUBE_KEY_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.CUBE_NAME_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.CUBE_TABLE_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DESC_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DIMENSIONS_LIST_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DIMENSION_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DIM_KEY_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DIM_NAME_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DIM_REFERS_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DIM_TABLE_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DIM_TBL_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DISPLAY_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.DUMP_PERIOD_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.END_TIME_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.EXPRESSIONS_LIST_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.EXPR_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.FACT_KEY_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.FORMATSTRING_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.FULL_CHAIN_KEY;
+import static org.apache.lens.cube.metadata.MetastoreConstants.HIERARCHY_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.INLINE_VALUES_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.IS_JOIN_KEY_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.JOIN_CHAIN_KEY;
+import static org.apache.lens.cube.metadata.MetastoreConstants.JOIN_CHAIN_LIST_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.LATEST_PART_TIMESTAMP_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.MAX_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.MEASURES_LIST_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.MEASURE_KEY_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.MIN_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.NUM_CHAINS_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.NUM_DISTINCT_VALUES;
+import static org.apache.lens.cube.metadata.MetastoreConstants.PARENT_CUBE_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.PARTCOLS_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.PARTITION_TIMELINE_CACHE;
+import static org.apache.lens.cube.metadata.MetastoreConstants.PARTITION_UPDATE_PERIOD;
+import static org.apache.lens.cube.metadata.MetastoreConstants.SEGMENTATION_CUBE_SEGMENT_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.SEGMENTATION_KEY_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.SEGMENT_PROP_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.START_TIME_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.STORAGE_CLASS;
+import static org.apache.lens.cube.metadata.MetastoreConstants.STORAGE_ENTITY_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.STORAGE_LIST_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.STORAGE_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.TABLE_COLUMN_SEPERATOR;
+import static org.apache.lens.cube.metadata.MetastoreConstants.TAGS_PFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.TIMED_DIMENSIONS_LIST_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.TIMED_DIMENSION_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.TYPE_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.UNIT_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.UPDATE_PERIOD_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.VALID_COLUMNS_SFX;
+import static org.apache.lens.cube.metadata.MetastoreConstants.WEIGHT_KEY_SFX;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
-import org.apache.lens.api.ds.Tuple2;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -430,7 +497,7 @@ public class MetastoreUtil {
 
   public static Set<Named> getNamedSetFromStringSet(Set<String> strings) {
     Set<Named> nameds = Sets.newHashSet();
-    for(final String s: strings) {
+    for (final String s : strings) {
       nameds.add(new Named() {
         @Override
         public String getName() {
@@ -440,6 +507,7 @@ public class MetastoreUtil {
     }
     return nameds;
   }
+
   public static <E extends Named> void addNameStrings(Map<String, String> props, String key, Collection<E> set) {
     addNameStrings(props, key, set, MAX_PARAM_LENGTH);
   }
@@ -581,13 +649,14 @@ public class MetastoreUtil {
   }
 
   public static ASTNode copyAST(ASTNode original) {
-    return copyAST(original, x-> Tuple2.of(new ASTNode(x), true));
+    return copyAST(original, x -> Pair.of(new ASTNode(x), true));
   }
+
   public static ASTNode copyAST(ASTNode original,
-    Function<ASTNode, Tuple2<ASTNode, Boolean>> overrideCopyFunction) {
-    Tuple2<ASTNode, Boolean> copy1 = overrideCopyFunction.apply(original);
-    ASTNode copy = copy1.get_1();
-    if (copy1.get_2()) {
+    Function<ASTNode, Pair<ASTNode, Boolean>> overrideCopyFunction) {
+    Pair<ASTNode, Boolean> copy1 = overrideCopyFunction.apply(original);
+    ASTNode copy = copy1.getLeft();
+    if (copy1.getRight()) {
       if (original.getChildren() != null) {
         for (Object o : original.getChildren()) {
           ASTNode childCopy = copyAST((ASTNode) o, overrideCopyFunction);

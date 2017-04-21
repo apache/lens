@@ -27,8 +27,8 @@ import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
 import com.google.common.collect.Lists;
-import lombok.Getter;
 import com.google.common.collect.Maps;
+import lombok.Getter;
 
 /**
  * Represents a union of two candidates
@@ -226,7 +226,7 @@ public class UnionCandidate implements Candidate {
     builder.append("UNION[");
     for (Candidate candidate : children) {
       builder.append(candidate.toString());
-      builder.append(", ");
+      builder.append("; ");
     }
     builder.delete(builder.length() - 2, builder.length());
     builder.append("]");

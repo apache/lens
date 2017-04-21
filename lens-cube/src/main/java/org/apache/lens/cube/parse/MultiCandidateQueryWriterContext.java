@@ -87,6 +87,7 @@ public class MultiCandidateQueryWriterContext implements QueryWriterContext {
   }
   @Override
   public UnionQueryWriter toQueryWriter() throws LensException {
-    return new UnionQueryWriter(getLeafQueryWriterContexts(), getCubeQueryContext());
+    List<StorageCandidateHQLContext> leafWriterContexts = getLeafQueryWriterContexts();
+    return new UnionQueryWriter(leafWriterContexts, getCubeQueryContext());
   }
 }

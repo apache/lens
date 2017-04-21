@@ -28,9 +28,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import org.apache.lens.api.ds.Tuple2;
-import org.apache.lens.cube.metadata.Cube;
-import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -1000,7 +997,7 @@ public final class HQLParser {
       }
       switch (astNode.getType()) {
       case DOT:
-        if(astNode.getChildCount() < 2) {
+        if (astNode.getChildCount() < 2) {
           return null;
         }
         break;

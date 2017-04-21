@@ -1071,7 +1071,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="segment" minOccurs="2" maxOccurs="unbounded" type="x_segment"/>
+      <xs:element name="segment" minOccurs="1" maxOccurs="unbounded" type="x_segment"/>
     </xs:sequence>
   </xs:complexType>
 

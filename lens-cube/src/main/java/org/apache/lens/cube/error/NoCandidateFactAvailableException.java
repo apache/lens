@@ -18,10 +18,12 @@
  */
 package org.apache.lens.cube.error;
 
+import java.util.Set;
+
 import org.apache.lens.cube.parse.Candidate;
+import org.apache.lens.cube.parse.CandidateTablePruneCause;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.PruneCauses;
-import org.apache.lens.cube.parse.StorageCandidate;
 import org.apache.lens.server.api.error.LensException;
 
 import lombok.Getter;
@@ -34,14 +36,22 @@ import lombok.Getter;
 public class NoCandidateFactAvailableException extends LensException {
 
   @Getter
-  private final CubeQueryContext cubeQueryContext;
-  @Getter
   private final PruneCauses<Candidate> briefAndDetailedError;
-
+  private static LensCubeErrorCode getErrorCode(CubeQueryContext cubeql) {
+    Set<CandidateTablePruneCause> causes = cubeql.getStoragePruningMsgs().getReversed().keySet();
+    if (causes.size() == 1) {
+      switch (causes.iterator().next().getCause()) {
+      case COLUMN_NOT_FOUND:
+        return LensCubeErrorCode.NO_FACT_HAS_COLUMN;
+      case DENORM_COLUMN_NOT_FOUND:
+        return LensCubeErrorCode.NO_REF_COL_AVAILABLE;
+      }
+    }
+    return LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE;
+  }
   public NoCandidateFactAvailableException(CubeQueryContext cubeql) {
-    super(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
+    super(getErrorCode(cubeql).getLensErrorInfo(),
         cubeql.getStoragePruningMsgs().getBriefCause());
-    this.cubeQueryContext = cubeql;
     this.briefAndDetailedError = cubeql.getStoragePruningMsgs();
   }
 

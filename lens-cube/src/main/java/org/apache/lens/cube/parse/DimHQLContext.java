@@ -99,18 +99,27 @@ public abstract class DimHQLContext extends SimpleHQLContext implements QueryWri
   @Override
   public void addAutoJoinDims() throws LensException {
     if (getCubeQueryContext().isAutoJoinResolved()) {
-      dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getAutoJoinCtx().pickOptionalTables(this, getQueriedDims(), getCubeQueryContext())));
+      Set<Dimension> autoJoinDims = getCubeQueryContext().getAutoJoinCtx().pickOptionalTables(this, getQueriedDims(),
+        getCubeQueryContext());
+      Map<Dimension, CandidateDim> autoJoinDimsToQuery = getCubeQueryContext().pickCandidateDimsToQuery(autoJoinDims);
+      dimsToQuery.putAll(autoJoinDimsToQuery);
     }
   }
 
   @Override
   public void addExpressionDims() throws LensException {
-    dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getExprCtx().rewriteExprCtx(getCubeQueryContext(), this, getDimsToQuery(), getQueryAst())));
+    Set<Dimension> expressionDims = getCubeQueryContext().getExprCtx().rewriteExprCtx(getCubeQueryContext(), this,
+      getDimsToQuery(), getQueryAst());
+    Map<Dimension, CandidateDim> expressionDimsToQuery = getCubeQueryContext().pickCandidateDimsToQuery(expressionDims);
+    dimsToQuery.putAll(expressionDimsToQuery);
   }
 
   @Override
   public void addDenormDims() throws LensException {
-    dimsToQuery.putAll(getCubeQueryContext().pickCandidateDimsToQuery(getCubeQueryContext().getDeNormCtx().rewriteDenormctx(getCubeQueryContext(), this, getDimsToQuery(), getStorageCandidate() != null)));
+    Set<Dimension> denormDims = getCubeQueryContext().getDeNormCtx().rewriteDenormctx(getCubeQueryContext(), this,
+      getDimsToQuery(), getStorageCandidate() != null);
+    Map<Dimension, CandidateDim> denormDimsToQuery = getCubeQueryContext().pickCandidateDimsToQuery(denormDims);
+    dimsToQuery.putAll(denormDimsToQuery);
   }
 
   @Override

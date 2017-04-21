@@ -46,7 +46,6 @@ import java.util.TreeSet;
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.CubeFactTable;
 import org.apache.lens.cube.metadata.CubeInterface;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.DateUtil;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.FactPartition;
@@ -60,8 +59,6 @@ import org.apache.lens.server.api.metastore.DataCompletenessChecker;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-
-import org.antlr.runtime.CommonToken;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -199,7 +196,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
     completenessThreshold = getConf()
       .getFloat(CubeQueryConfUtil.COMPLETENESS_THRESHOLD, CubeQueryConfUtil.DEFAULT_COMPLETENESS_THRESHOLD);
     Set<String> storageTblNames = getCubeMetastoreClient().getStorageTables(fact.getName(), storageName);
-    isStorageTblsAtUpdatePeriodLevel = storageTblNames.size() > 1 || !storageTblNames.iterator().next().equalsIgnoreCase(storageTable);
+    isStorageTblsAtUpdatePeriodLevel = storageTblNames.size() > 1
+      || !storageTblNames.iterator().next().equalsIgnoreCase(storageTable);
     setStorageStartAndEndDate();
   }
 
@@ -257,7 +255,9 @@ public class StorageCandidate implements Candidate, CandidateTable {
       // In this case skip invalid update periods and get storage tables only for valid ones.
       Set<String> uniqueStorageTables = new HashSet<>();
       for (UpdatePeriod updatePeriod : validUpdatePeriods) {
-        uniqueStorageTables.add(getCubeMetastoreClient().getStorageTableName(fact.getName(), storageName, updatePeriod));
+        uniqueStorageTables.add(
+          getCubeMetastoreClient().getStorageTableName(fact.getName(), storageName, updatePeriod)
+        );
       }
       return uniqueStorageTables;
     } else {
@@ -308,8 +308,10 @@ public class StorageCandidate implements Candidate, CandidateTable {
   public boolean isColumnValidForRange(String column) {
     Optional<Date> start = getColumnStartTime(column);
     Optional<Date> end = getColumnEndTime(column);
-    return (!start.isPresent() || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getFromDate().before(start.get())))
-      && (!end.isPresent() || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getToDate().after(end.get())));
+    return (!start.isPresent()
+      || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getFromDate().before(start.get())))
+      && (!end.isPresent()
+      || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getToDate().after(end.get())));
   }
 
   @Override
@@ -386,7 +388,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
    * and [1 oct - 1Dec) will be answered by MONTHLY partitions. The max interavl for this query will be MONTHLY.
    *
    * 2.Prune Storgaes that do not fall in the queries time range.
-   * {@link CubeMetastoreClient#isStorageTableCandidateForRange(String, Date, Date)}
+   * {@link org.apache.lens.cube.metadata.CubeMetastoreClient#isStorageTableCandidateForRange(String, Date, Date)}
    *
    * 3. Iterate over max interavl . In out case it will give two months Oct and Nov. Find partitions for
    * these two months.Check validity of FactPartitions for Oct and Nov
@@ -592,7 +594,9 @@ public class StorageCandidate implements Candidate, CandidateTable {
     while (rangeParts.isEmpty()) {
       String timeDim = cubeQueryContext.getBaseCube().getTimeDimOfPartitionColumn(partCol);
       if (partColNotSupported && !CandidateUtil.factHasColumn(getFact(), timeDim)) {
-        unsupportedTimeDims.add(cubeQueryContext.getBaseCube().getTimeDimOfPartitionColumn(timeRange.getPartitionColumn()));
+        unsupportedTimeDims.add(
+          cubeQueryContext.getBaseCube().getTimeDimOfPartitionColumn(timeRange.getPartitionColumn())
+        );
         break;
       }
       TimeRange fallBackRange = getFallbackRange(prevRange, this.getFact().getName(), cubeQueryContext);
@@ -602,8 +606,9 @@ public class StorageCandidate implements Candidate, CandidateTable {
       }
       partColsQueried.add(fallBackRange.getPartitionColumn());
       rangeParts = getPartitions(fallBackRange, validUpdatePeriods, true, failOnPartialData, missingParts);
-      extraWhereClauseFallback.append(sep)
-        .append(prevRange.toTimeDimWhereClause(cubeQueryContext.getAliasForTableName(cubeQueryContext.getCube()), timeDim));
+      extraWhereClauseFallback.append(sep).append(
+        prevRange.toTimeDimWhereClause(cubeQueryContext.getAliasForTableName(cubeQueryContext.getCube()), timeDim)
+      );
       sep = " AND ";
       prevRange = fallBackRange;
       partCol = prevRange.getPartitionColumn();
@@ -771,7 +776,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
   }
 
   boolean isUpdatePeriodUseful(UpdatePeriod updatePeriod) {
-    return getCubeQueryContext().getTimeRanges().stream().anyMatch(timeRange -> isUpdatePeriodUseful(timeRange, updatePeriod));
+    return getCubeQueryContext().getTimeRanges().stream()
+      .anyMatch(timeRange -> isUpdatePeriodUseful(timeRange, updatePeriod));
   }
 
   /**
@@ -941,10 +947,10 @@ public class StorageCandidate implements Candidate, CandidateTable {
   }
 
   @Override
-  public StorageCandidateHQLContext toQueryWriterContext(Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
-    DefaultQueryAST ast = DefaultQueryAST.fromStorageCandidate(null, getCubeQueryContext()); // todo remove two arguments
+  public StorageCandidateHQLContext toQueryWriterContext(Map<Dimension, CandidateDim> dimsToQuery,
+    CubeQueryContext rootCubeQueryContext) throws LensException {
+    DefaultQueryAST ast = DefaultQueryAST.fromStorageCandidate(null, getCubeQueryContext());
     CandidateUtil.copyASTs(getCubeQueryContext(), ast);
-    return new StorageCandidateHQLContext(this, Maps.newHashMap(dimsToQuery), ast);
+    return new StorageCandidateHQLContext(this, Maps.newHashMap(dimsToQuery), ast, rootCubeQueryContext);
   }
-
 }

@@ -19,11 +19,14 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 import static org.apache.lens.cube.parse.HQLParser.getString;
 import static org.apache.lens.cube.parse.HQLParser.parseExpr;
 import static org.apache.lens.cube.parse.HQLParser.trimHavingAst;
 import static org.apache.lens.cube.parse.HQLParser.trimOrderByAst;
+
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
+
+import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,7 +46,6 @@ import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -520,9 +522,10 @@ public class TestHQLParser {
   @DataProvider
   public Object[][] havingTrimDataProvider() {
     return new Object[][] {
-      {"((sum((testcube.segmsr1)) > 1) and (sum((testcube.msr2)) > 2))", Lists.newArrayList("segmsr1"), "(sum((testcube.segmsr1)) > 1)"},
-      {"(sum((testcube.msr2)) > 2)", Lists.newArrayList("segmsr1"), null},
-      {"(sum((testcube.segmsr1)) > 1)", Lists.newArrayList("segmsr1"), "(sum((testcube.segmsr1)) > 1)"}
+      {"((sum((testcube.segmsr1)) > 1) and (sum((testcube.msr2)) > 2))", newArrayList("segmsr1"),
+        "(sum((testcube.segmsr1)) > 1)", },
+      {"(sum((testcube.msr2)) > 2)", newArrayList("segmsr1"), null, },
+      {"(sum((testcube.segmsr1)) > 1)", newArrayList("segmsr1"), "(sum((testcube.segmsr1)) > 1)", },
     };
   }
 
@@ -537,10 +540,10 @@ public class TestHQLParser {
   @DataProvider
   public Object[][] orderByTrimDataProvider() {
     return new Object[][] {
-      {"testcube.segmsr1 asc", Lists.newArrayList("segmsr1"), "testcube.segmsr1 asc"},
-      {"testcube.segmsr1 desc, testcube.msr2", Lists.newArrayList("segmsr1"), "testcube.segmsr1 desc"},
-      {"testcube.segmsr1, testcube.msr2 desc", Lists.newArrayList("segmsr1"), "testcube.segmsr1 asc"},
-      {"testcube.msr2 desc", Lists.newArrayList("segmsr1"), ""}
+      {"testcube.segmsr1 asc", newArrayList("segmsr1"), "testcube.segmsr1 asc", },
+      {"testcube.segmsr1 desc, testcube.msr2", newArrayList("segmsr1"), "testcube.segmsr1 desc", },
+      {"testcube.segmsr1, testcube.msr2 desc", newArrayList("segmsr1"), "testcube.segmsr1 asc", },
+      {"testcube.msr2 desc", newArrayList("segmsr1"), "", },
     };
   }
 

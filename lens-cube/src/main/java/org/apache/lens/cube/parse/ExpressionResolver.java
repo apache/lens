@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CandidateUtil.getStorageCandidates;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
@@ -398,8 +400,8 @@ class ExpressionResolver implements ContextRewriter {
           for (PickedExpression pe : peSet) {
             exprDims.addAll(pe.pickedCtx.exprDims);
             pe.initRewrittenAST(pe.pickedCtx.deNormCtx.hasReferences());
-            exprDims.addAll(pe.pickedCtx.deNormCtx.rewriteDenormctxInExpression(cubeql, sc.getStorageCandidate(), dimsToQuery,
-              pe.getRewrittenAST()));
+            exprDims.addAll(pe.pickedCtx.deNormCtx.rewriteDenormctxInExpression(cubeql,
+              sc.getStorageCandidate(), dimsToQuery, pe.getRewrittenAST()));
           }
         }
         // Replace picked expressions in all the base trees
@@ -641,7 +643,7 @@ class ExpressionResolver implements ContextRewriter {
                 }
               } else {
                 // prune dimension only expressions
-                Collection<StorageCandidate> storageCandidates = CandidateUtil.getStorageCandidates(cubeql.getCandidates());
+                Collection<StorageCandidate> storageCandidates = getStorageCandidates(cubeql.getCandidates());
                 for (StorageCandidate sc : storageCandidates) {
                   if (!sc.isExpressionEvaluable(ec)) {
                     Collection<Candidate> prunedCandidates =

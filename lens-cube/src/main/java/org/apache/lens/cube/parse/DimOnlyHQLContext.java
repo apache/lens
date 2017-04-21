@@ -33,7 +33,10 @@ import org.apache.lens.server.api.error.LensException;
 public class DimOnlyHQLContext extends DimHQLContext {
 
 
-  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, QueryAST ast)
+  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws LensException {
+    this(dimsToQuery, query, query);
+  }
+  private DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, QueryAST ast)
     throws LensException {
     super(query, dimsToQuery, ast);
   }
@@ -45,8 +48,10 @@ public class DimOnlyHQLContext extends DimHQLContext {
 
   protected String getFromTable() throws LensException {
     if (getCubeQueryContext().isAutoJoinResolved()) {
-      return getDimsToQuery().get(getCubeQueryContext().getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
-        getCubeQueryContext().getAliasForTableName(getCubeQueryContext().getAutoJoinCtx().getAutoJoinTarget().getName()));
+      return getDimsToQuery().get(getCubeQueryContext().getAutoJoinCtx().getAutoJoinTarget())
+        .getStorageString(getCubeQueryContext().getAliasForTableName(
+          getCubeQueryContext().getAutoJoinCtx().getAutoJoinTarget().getName())
+        );
     } else {
       return getCubeQueryContext().getQBFromString(null, getDimsToQuery());
     }
@@ -61,8 +66,11 @@ public class DimOnlyHQLContext extends DimHQLContext {
   public void updateFromString() throws LensException {
     String fromString = "%s"; // storage string is updated later
     if (getCubeQueryContext().isAutoJoinResolved()) {
-      setFrom( //todo check setFrom correct or not
-        getCubeQueryContext().getAutoJoinCtx().getFromString(fromString, this, getDimsToQuery(), getCubeQueryContext()));
+      setFrom(
+        getCubeQueryContext().getAutoJoinCtx().getFromString(
+          fromString, this, getDimsToQuery(), getCubeQueryContext()
+        )
+      );
     }
   }
 

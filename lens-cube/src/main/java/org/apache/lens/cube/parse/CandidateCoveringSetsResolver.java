@@ -128,20 +128,20 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
   private List<Candidate> resolveTimeRangeCoveringFactSet(CubeQueryContext cubeql,
       Set<QueriedPhraseContext> queriedMsrs, List<QueriedPhraseContext> qpcList) throws LensException {
     List<Candidate> candidateSet = new ArrayList<>();
-      // All Candidates
-      List<Candidate> allCandidates = new ArrayList<>(cubeql.getCandidates());
-      // Partially valid candidates
-      List<Candidate> allCandidatesPartiallyValid = new ArrayList<>();
-      for (Candidate cand : allCandidates) {
-        if (CandidateUtil.isValidForTimeRanges(cand, cubeql.getTimeRanges())) {
-          candidateSet.add(cand.copy());
-        } else if (CandidateUtil.isPartiallyValidForTimeRanges(cand, cubeql.getTimeRanges())) {
-          allCandidatesPartiallyValid.add(cand.copy());
-        } else {
-          cubeql.addCandidatePruningMsg(cand, CandidateTablePruneCause.storageNotAvailableInRange(
-            cubeql.getTimeRanges()));
-        }
+    // All Candidates
+    List<Candidate> allCandidates = new ArrayList<>(cubeql.getCandidates());
+    // Partially valid candidates
+    List<Candidate> allCandidatesPartiallyValid = new ArrayList<>();
+    for (Candidate cand : allCandidates) {
+      if (CandidateUtil.isValidForTimeRanges(cand, cubeql.getTimeRanges())) {
+        candidateSet.add(cand.copy());
+      } else if (CandidateUtil.isPartiallyValidForTimeRanges(cand, cubeql.getTimeRanges())) {
+        allCandidatesPartiallyValid.add(cand.copy());
+      } else {
+        cubeql.addCandidatePruningMsg(cand, CandidateTablePruneCause.storageNotAvailableInRange(
+          cubeql.getTimeRanges()));
       }
+    }
     // Get all covering fact sets
     List<UnionCandidate> unionCoveringSet =
         getCombinations(new ArrayList<>(allCandidatesPartiallyValid), cubeql);

@@ -147,16 +147,10 @@ class StorageTableResolver implements ContextRewriter {
         }
       } else if (candidate.getParticipatingPartitions().isEmpty()) {
         if (candidate instanceof StorageCandidate
-        && ((StorageCandidate) candidate).getNonExistingPartitions().isEmpty()){
+          && ((StorageCandidate) candidate).getNonExistingPartitions().isEmpty()) {
           candidateIterator.remove();
           cubeql.addCandidatePruningMsg(candidate,
             new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE));
-        } else if (candidate instanceof SegmentationCandidate) {
-          if (!((SegmentationCandidate) candidate).areCandidatesPicked()) {
-//            candidateIterator.remove();
-            //todo think about pruning message
-            log.info("removing segment candidate {}", candidate);
-          }
         }
       }
     }

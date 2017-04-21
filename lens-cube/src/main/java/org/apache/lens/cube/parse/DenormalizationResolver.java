@@ -22,7 +22,6 @@ import static org.apache.lens.cube.parse.CandidateTablePruneCause.denormColumnNo
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.denormColumnNotFound;
 
 import java.util.*;
 
@@ -265,10 +264,12 @@ public class DenormalizationResolver implements ContextRewriter {
       }
     }
 
-    private void replaceReferencedColumns(CubeQueryContext cubeql, DimHQLContext sc, boolean replaceFact) throws LensException {
+    private void replaceReferencedColumns(CubeQueryContext cubeql, DimHQLContext sc, boolean replaceFact)
+      throws LensException {
       QueryAST ast = cubeql;
-      boolean factRefExists = sc.getStorageCandidate() != null && tableToRefCols.get(sc.getStorageCandidate().getStorageTable()) != null && !tableToRefCols.get(sc
-          .getStorageCandidate().getStorageTable()).isEmpty();
+      boolean factRefExists = sc.getStorageCandidate() != null
+        && tableToRefCols.get(sc.getStorageCandidate().getStorageTable()) != null
+        && !tableToRefCols.get(sc.getStorageCandidate().getStorageTable()).isEmpty();
       if (replaceFact && factRefExists) {
         ast = sc.getQueryAst();
       }

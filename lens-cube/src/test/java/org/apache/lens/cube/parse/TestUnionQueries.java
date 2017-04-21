@@ -32,7 +32,6 @@ import java.util.stream.Collectors;
 
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.server.api.LensServerAPITestUtil;
-import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -363,7 +362,11 @@ public class TestUnionQueries extends TestQueryRewrite {
     if (!THREE_MONTHS_RANGE_UPTO_DAYS.equals(THREE_MONTHS_RANGE_UPTO_MONTH)) {
       NoCandidateFactAvailableException e = getLensExceptionInRewrite("select count(msr4) from testCube where "
           + THREE_MONTHS_RANGE_UPTO_DAYS, conf);
-      Set<Map.Entry<Candidate, List<CandidateTablePruneCause>>> causes = e.getBriefAndDetailedError().entrySet().stream().filter(x -> x.getKey() instanceof StorageCandidate && ((StorageCandidate)x.getKey()).getStorageTable().equalsIgnoreCase("c6_testfact")).collect(Collectors.toSet());
+      Set<Map.Entry<Candidate, List<CandidateTablePruneCause>>> causes =
+        e.getBriefAndDetailedError().entrySet().stream().filter(x ->
+          x.getKey() instanceof StorageCandidate
+            && ((StorageCandidate)x.getKey()).getStorageTable().equalsIgnoreCase("c6_testfact"))
+          .collect(Collectors.toSet());
       assertEquals(causes.size(), 1);
       List<CandidateTablePruneCause> pruneCauses = causes.iterator().next().getValue();
       assertEquals(pruneCauses.size(), 1);

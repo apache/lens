@@ -21,6 +21,7 @@ package org.apache.lens.cube.parse;
 
 import static java.util.Calendar.DAY_OF_MONTH;
 import static java.util.Calendar.HOUR_OF_DAY;
+
 import static org.apache.lens.cube.metadata.DateFactory.BEFORE_4_DAYS;
 import static org.apache.lens.cube.metadata.DateFactory.BEFORE_6_DAYS;
 import static org.apache.lens.cube.metadata.DateFactory.NOW;
@@ -33,6 +34,7 @@ import static org.apache.lens.cube.metadata.UpdatePeriod.MINUTELY;
 import static org.apache.lens.cube.metadata.UpdatePeriod.MONTHLY;
 import static org.apache.lens.cube.metadata.UpdatePeriod.QUARTERLY;
 import static org.apache.lens.cube.metadata.UpdatePeriod.YEARLY;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -72,7 +74,6 @@ import org.apache.lens.cube.metadata.CubeMeasure;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.CubeTableType;
 import org.apache.lens.cube.metadata.DateUtil;
-import org.apache.lens.cube.metadata.ExprColumn;
 import org.apache.lens.cube.metadata.JAXBUtils;
 import org.apache.lens.cube.metadata.MetastoreConstants;
 import org.apache.lens.cube.metadata.MetastoreUtil;
@@ -815,7 +816,7 @@ public class CubeTestSetup {
       }
     }
   }, "$gregorian{", "}", '$');
-  private final StrSubstitutor ABSOLUTE_SUBSTITUTOR = new StrSubstitutor(new StrLookup<String>() {
+  private static final StrSubstitutor ABSOLUTE_SUBSTITUTOR = new StrSubstitutor(new StrLookup<String>() {
     @Override
     public String lookup(String s) {
       try {

@@ -19,7 +19,6 @@
 package org.apache.lens.cube.parse;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.*;
@@ -30,13 +29,10 @@ import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -676,7 +672,7 @@ class CandidateTableResolver implements ContextRewriter {
       return true;
     }
     for (QueriedPhraseContext qur : colSet) {
-      if (qur.isEvaluable(sc)) {
+      if (sc.isPhraseAnswerable(qur)) {
         return true;
       }
     }

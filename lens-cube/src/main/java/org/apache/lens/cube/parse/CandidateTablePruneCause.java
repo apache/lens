@@ -19,6 +19,7 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
@@ -28,11 +29,13 @@ import static com.google.common.collect.Lists.newArrayList;
 import java.util.*;
 
 import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.server.api.error.LensException;
 
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -168,12 +171,18 @@ public class CandidateTablePruneCause {
         };
       }
     },
-    SEGMENTATION_PRUNED("segmentations pruned: [%s]") {
+    SEGMENTATION_PRUNED("%s") {
       @Override
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        return new Object[]{
-          causes.stream().map(CandidateTablePruneCause::getInnerCauses).map(Map::entrySet).flatMap(Collection::stream)
-            .map(entry->entry.getKey()+": "+entry.getValue()).collect(joining(";")),
+        Map<String, String> briefCause = Maps.newHashMap();
+        for (CandidateTablePruneCause cause : causes) {
+          briefCause.putAll(cause.getInnerCauses());
+        }
+        if (briefCause.size() == 1) {
+          return new Object[]{briefCause.values().iterator().next(), };
+        }
+        return new Object[]{ "segmentation pruned: "
+          + briefCause.entrySet().stream().map(entry->entry.getKey()+": "+entry.getValue()).collect(joining(";")),
         };
       }
     },
@@ -253,7 +262,7 @@ public class CandidateTablePruneCause {
 
   private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
 
-  private Map<String, PruneCauses<Candidate>> innerCauses;
+  private Map<String, String> innerCauses;
 
   public CandidateTablePruneCause(CandidateTablePruneCode cause) {
     this.cause = cause;
@@ -361,9 +370,15 @@ public class CandidateTablePruneCause {
     cause.updatePeriodRejectionCause = updatePeriodRejectionCause;
     return cause;
   }
-  public static CandidateTablePruneCause segmentationPruned(Map<String, PruneCauses<Candidate>> inner) {
+  public static CandidateTablePruneCause segmentationPruned(Map<String, String> inner) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(SEGMENTATION_PRUNED);
     cause.innerCauses = inner;
+    return cause;
+  }
+  public static CandidateTablePruneCause segmentationPruned(LensException e) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(SEGMENTATION_PRUNED);
+    cause.innerCauses = Maps.newHashMap();
+    cause.innerCauses.put("unknown", e.getMessage());
     return cause;
   }
 }

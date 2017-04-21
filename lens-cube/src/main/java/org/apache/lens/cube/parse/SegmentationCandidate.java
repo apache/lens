@@ -20,6 +20,7 @@ package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.StringLiteral;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FROM;
@@ -27,7 +28,6 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_HAVING;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_INSERT;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_ORDERBY;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABREF;
 import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
 
 import java.util.Collection;
@@ -43,7 +43,6 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.lens.api.ds.Tuple2;
 import org.apache.lens.cube.metadata.Cube;
 import org.apache.lens.cube.metadata.CubeColumn;
 import org.apache.lens.cube.metadata.CubeInterface;
@@ -54,14 +53,13 @@ import org.apache.lens.cube.metadata.Segmentation;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import org.antlr.runtime.CommonToken;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Getter;
@@ -79,8 +77,9 @@ public class SegmentationCandidate implements Candidate {
   Map<String, CubeQueryContext> cubeQueryContextMap;
   @Getter
   private final Set<Integer> answerableMeasurePhraseIndices = Sets.newHashSet();
-//  private static final String IGNORE_KEY = "segmentations.to.ignore";
+  //  private static final String IGNORE_KEY = "segmentations.to.ignore";
   private Map<TimeRange, TimeRange> queriedRangeToMyRange = Maps.newHashMap();
+
   SegmentationCandidate(CubeQueryContext cubeQueryContext, Segmentation segmentation) throws LensException {
     this.cubeQueryContext = cubeQueryContext;
     this.segmentation = segmentation;
@@ -99,6 +98,7 @@ public class SegmentationCandidate implements Candidate {
     }
     return this;
   }
+
   private static <T> Predicate<T> not(Predicate<T> predicate) {
     return predicate.negate();
   }
@@ -112,7 +112,8 @@ public class SegmentationCandidate implements Candidate {
       // assuming only base cubes in segmentation
       Cube innerCube = (Cube) getCubeMetastoreClient().getCube(segment.getName());
       cubesOfSegmentation.put(segment.getName(), innerCube);
-      Set<QueriedPhraseContext> notAnswerable = cubeQueryContext.getQueriedPhrases().stream().filter(not(this::isPhraseAnswerable)).collect(Collectors.toSet());
+      Set<QueriedPhraseContext> notAnswerable = cubeQueryContext.getQueriedPhrases().stream()
+        .filter(not(this::isPhraseAnswerable)).collect(Collectors.toSet());
       // create ast
       ASTNode ast = MetastoreUtil.copyAST(cubeQueryContext.getAst(),
         astNode -> {
@@ -122,17 +123,20 @@ public class SegmentationCandidate implements Candidate {
             TimeRange timeRange = timeRangeTimeRangeEntry.getValue();
             if (astNode.getParent() == queriedTimeRange.getAstNode()) {
               if (astNode.getChildIndex() == 2) {
-                return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate()))), false);
+                return Pair.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate()))),
+                  false);
               } else if (astNode.getChildIndex() == 3) {
-                return Tuple2.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getToDate()))), false);
+                return Pair.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getToDate()))),
+                  false);
               }
               break;
             }
           }
           // else, replace unanswerable measures
           for (QueriedPhraseContext phraseContext : notAnswerable) {
-            if ((astNode.getType() != TOK_SELEXPR && astNode == phraseContext.getExprAST()) || astNode.getParent() == phraseContext.getExprAST()) {
-              return Tuple2.of(MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST), false);
+            if ((astNode.getType() != TOK_SELEXPR && astNode == phraseContext.getExprAST())
+              || astNode.getParent() == phraseContext.getExprAST()) {
+              return Pair.of(MetastoreUtil.copyAST(UnionQueryWriter.DEFAULT_MEASURE_AST), false);
             }
           }
           // else, copy token replacing cube name and ask for recursion on child nodes
@@ -142,7 +146,7 @@ public class SegmentationCandidate implements Candidate {
 //          if (copy.getType() == Identifier) {
 //            copy.getToken().setText(copy.getToken().getText().replaceAll("(?i)"+cube.getName(), segment.getName()));
 //          }
-          return Tuple2.of(copy, true);
+          return Pair.of(copy, true);
         });
       addCubeNameAndAlias(ast, innerCube);
       trimHavingAndOrderby(ast, innerCube);
@@ -160,7 +164,7 @@ public class SegmentationCandidate implements Candidate {
             storageCandidate.getRangeToPartitions().put(queriedTimeRange, rangeToPartition);
           }
           String extraWhere = storageCandidate.getRangeToExtraWhereFallBack().get(timeRange);
-          if (extraWhere!=null) {
+          if (extraWhere != null) {
             storageCandidate.getRangeToExtraWhereFallBack().put(queriedTimeRange, extraWhere);
           }
         }
@@ -176,7 +180,8 @@ public class SegmentationCandidate implements Candidate {
     ASTNode cubeNameNode = findCubeNameNode(HQLParser.findNodeByPath(ast, TOK_FROM));
     ASTNode tabrefNode = (ASTNode) cubeNameNode.getParent().getParent();
     cubeNameNode.getToken().setText(innerCube.getName());
-    ASTNode aliasNode = new ASTNode(new CommonToken(Identifier, getCubeQueryContext().getAliasForTableName(getCube().getName())));
+    ASTNode aliasNode = new ASTNode(new CommonToken(Identifier,
+      getCubeQueryContext().getAliasForTableName(getCube().getName())));
     if (tabrefNode.getChildCount() > 1) {
       tabrefNode.setChild(1, aliasNode);
     } else {
@@ -186,13 +191,14 @@ public class SegmentationCandidate implements Candidate {
 
   private ASTNode findCubeNameNode(ASTNode node) {
     if (node.getType() == Identifier) {
-      if( node.getText().equalsIgnoreCase(getCubeQueryContext().getCube().getName())) {
+      if (node.getText().equalsIgnoreCase(getCubeQueryContext().getCube().getName())) {
         return node;
       } else {
         return null; // should never come here.
       }
     }
-    return node.getChildren().stream().map(ASTNode.class::cast).map(this::findCubeNameNode).filter(Objects::nonNull).findFirst().orElse(null);
+    return node.getChildren().stream().map(ASTNode.class::cast).map(this::findCubeNameNode).filter(Objects::nonNull)
+      .findFirst().orElse(null);
   }
 
   private void trimHavingAndOrderby(ASTNode ast, Cube innerCube) {
@@ -264,7 +270,8 @@ public class SegmentationCandidate implements Candidate {
   }
 
   @Override
-  public boolean evaluateCompleteness(TimeRange timeRange, TimeRange queriedTimeRange, boolean failOnPartialData) throws LensException {
+  public boolean evaluateCompleteness(TimeRange timeRange, TimeRange queriedTimeRange, boolean failOnPartialData)
+    throws LensException {
     queriedRangeToMyRange.put(queriedTimeRange, timeRange);
     return true;
   }
@@ -299,6 +306,7 @@ public class SegmentationCandidate implements Candidate {
   private Stream<Candidate> candidateStream() {
     return contextStream().map(CubeQueryContext::getPickedCandidate);
   }
+
   private Stream<CubeQueryContext> contextStream() {
     return cubeQueryContextMap.values().stream();
   }
@@ -377,14 +385,20 @@ public class SegmentationCandidate implements Candidate {
 
 
   public String toString() {
-    Collector<CharSequence, ?, String> collector = joining(", ", "SEG[", "]");
+    Collector<CharSequence, ?, String> collector = joining("; ", "SEG[", "]");
     if (areCandidatesPicked()) {
       return candidateStream().map(Candidate::toString).collect(collector);
     } else {
       return cubeStream().map(Cube::getName).collect(collector);
     }
   }
+
   public List<PruneCauses<Candidate>> getPruneCauses() {
     return contextStream().map(CubeQueryContext::getStoragePruningMsgs).collect(toList());
+  }
+
+  public Map<String, PruneCauses<Candidate>> getPruneCausesOfFailedContexts() {
+    return cubeQueryContextMap.entrySet().stream().filter(entry -> entry.getValue().getPickedCandidate() == null)
+      .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().getStoragePruningMsgs()));
   }
 }

@@ -19,6 +19,7 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.Comparator.naturalOrder;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 
 import java.util.*;
@@ -56,7 +57,7 @@ public final class CandidateUtil {
    * @param timeRanges
    * @return
    */
-  public static boolean isValidForTimeRanges(Candidate candidate, List<TimeRange> timeRanges) {
+  static boolean isValidForTimeRanges(Candidate candidate, List<TimeRange> timeRanges) {
     for (TimeRange timeRange : timeRanges) {
       if (!(timeRange.getFromDate().after(candidate.getStartTime())
           && timeRange.getToDate().before(candidate.getEndTime()))) {
@@ -205,58 +206,19 @@ public final class CandidateUtil {
     return false;
   }
 
-  public static String getTimeRangeWhereClasue(TimeRangeWriter rangeWriter, StorageCandidate sc, TimeRange range) throws LensException {
-    String rangeWhere = rangeWriter.getTimeRangeWhereClause(sc.getCubeQueryContext(), sc.getCubeQueryContext().getAliasForTableName(sc.getCube().getName()),
+  public static String getTimeRangeWhereClasue(TimeRangeWriter rangeWriter, StorageCandidate sc, TimeRange range)
+    throws LensException {
+    String rangeWhere = rangeWriter.getTimeRangeWhereClause(
+      sc.getCubeQueryContext(), sc.getCubeQueryContext().getAliasForTableName(sc.getCube().getName()),
       sc.getRangeToPartitions().get(range));
     String fallback = sc.getRangeToExtraWhereFallBack().get(range);
-    if(StringUtils.isNotBlank(fallback)){
+    if (StringUtils.isNotBlank(fallback)){
       rangeWhere =  "((" + rangeWhere + ") and  (" + fallback + "))";
     }
     return rangeWhere;
   }
 
   private static final String BASE_QUERY_FORMAT = "SELECT %s FROM %s";
-
-  public static String buildHQLString(String select, String from, String where,
-      String groupby, String orderby, String having, Integer limit) {
-    List<String> qstrs = new ArrayList<String>();
-    qstrs.add(select);
-    qstrs.add(from);
-    if (!StringUtils.isBlank(where)) {
-      qstrs.add(where);
-    }
-    if (!StringUtils.isBlank(groupby)) {
-      qstrs.add(groupby);
-    }
-    if (!StringUtils.isBlank(having)) {
-      qstrs.add(having);
-    }
-    if (!StringUtils.isBlank(orderby)) {
-      qstrs.add(orderby);
-    }
-    if (limit != null) {
-      qstrs.add(String.valueOf(limit));
-    }
-
-    StringBuilder queryFormat = new StringBuilder();
-    queryFormat.append(BASE_QUERY_FORMAT);
-    if (!StringUtils.isBlank(where)) {
-      queryFormat.append(" WHERE %s");
-    }
-    if (!StringUtils.isBlank(groupby)) {
-      queryFormat.append(" GROUP BY %s");
-    }
-    if (!StringUtils.isBlank(having)) {
-      queryFormat.append(" HAVING %s");
-    }
-    if (!StringUtils.isBlank(orderby)) {
-      queryFormat.append(" ORDER BY %s");
-    }
-    if (limit != null) {
-      queryFormat.append(" LIMIT %s");
-    }
-    return String.format(queryFormat.toString(), qstrs.toArray(new Object[qstrs.size()]));
-  }
 
   /**
    *
@@ -267,7 +229,7 @@ public final class CandidateUtil {
    *  1. Replace queriedAlias with finalAlias if both are not same
    *  2. If queriedAlias is missing add finalAlias as alias
    */
-  public static void updateFinalAlias(ASTNode selectAST, CubeQueryContext cubeql) {
+  static void updateFinalAlias(ASTNode selectAST, CubeQueryContext cubeql) {
     for (int i = 0; i < selectAST.getChildCount(); i++) {
       ASTNode selectExpr = (ASTNode) selectAST.getChild(i);
       ASTNode aliasNode = HQLParser.findNodeByPath(selectExpr, Identifier);
@@ -287,7 +249,7 @@ public final class CandidateUtil {
       }
     }
   }
-  public static Set<String> getColumnsFromCandidates(Collection<? extends Candidate> scSet) {
+  static Set<String> getColumnsFromCandidates(Collection<? extends Candidate> scSet) {
     return scSet.stream().map(Candidate::getColumns).flatMap(Collection::stream).collect(Collectors.toSet());
   }
 }

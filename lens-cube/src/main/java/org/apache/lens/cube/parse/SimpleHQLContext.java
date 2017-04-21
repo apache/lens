@@ -18,7 +18,6 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.server.api.error.LensException;
@@ -26,6 +25,7 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.collect.Lists;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +41,8 @@ public abstract class SimpleHQLContext implements QueryWriter {
   private String prefix;
   private String from;
   private String where;
-  @Getter
-  public final QueryAST queryAst;
+  @Getter(AccessLevel.PUBLIC)
+  protected final QueryAST queryAst;
 
   /**
    * Set all missing expressions of HQL context.

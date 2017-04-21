@@ -40,8 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.io.IOException;
-import java.util.*;
 import java.util.function.Predicate;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
@@ -642,7 +640,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
       }
     }
   }
-  
+
   public String getSelectString() {
     return HQLParser.getString(selectAST);
   }
@@ -828,25 +826,10 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     Candidate cand;
     if (hasCubeInQuery()) {
       Iterator<Candidate> iter = candidates.iterator();
-      while (pickedCandidate == null && iter.hasNext()) { // todo reshuffle
+      while (pickedCandidate == null && iter.hasNext()) {
         cand = iter.next();
         log.info("Available Candidates:{}, picking up Candidate: {} for querying", candidates, cand);
-        try {
-          cand = cand.explode();
-          pickedCandidate = cand;
-        } catch (NoCandidateFactAvailableException e) {
-          PruneCauses<Candidate> causes = e.getBriefAndDetailedError();
-          CandidateTablePruneCause.CandidateTablePruneCode maxCode = causes.getMaxCause();
-          for (Map.Entry<Candidate, List<CandidateTablePruneCause>> entry : causes.entrySet()) {
-            for (CandidateTablePruneCause cause : entry.getValue()) {
-              if (cause.getCause().equals(maxCode)) {
-//                  addStoragePruningMsg(entry.getKey(), cause);
-              }
-            }
-          }
-        } catch (LensException e) {
-          // pass for now to completely run existing tests
-        }
+        pickedCandidate = cand;
       }
       if (pickedCandidate == null) {
         throwNoCandidateFactException();
@@ -927,11 +910,12 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     }
   }
 
-  public QueryWriterContext getQueryWriterContext(Candidate cand, Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
+  public QueryWriterContext getQueryWriterContext(Candidate cand, Map<Dimension, CandidateDim> dimsToQuery)
+    throws LensException {
     if (cand == null) {
-      return new DimOnlyHQLContext(dimsToQuery, this, this);
+      return new DimOnlyHQLContext(dimsToQuery, this);
     } else {
-      return cand.toQueryWriterContext(dimsToQuery);
+      return cand.toQueryWriterContext(dimsToQuery, this);
     }
   }
 

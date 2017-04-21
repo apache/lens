@@ -56,6 +56,11 @@ public interface Candidate {
    */
   Collection<String> getColumns();
 
+  /**
+   * Returns whether this candidate has the asked column or not
+   * @param column
+   * @return
+   */
   default boolean hasColumn(String column) {
     return getColumns().contains(column);
   }
@@ -232,19 +237,19 @@ public interface Candidate {
     return this;
   }
 
-  default QueryWriterContext toQueryWriterContext(Map<Dimension, CandidateDim> dimsToQuery) throws LensException {
+  default QueryWriterContext toQueryWriterContext(Map<Dimension, CandidateDim> dimsToQuery,
+    CubeQueryContext rootCubeQueryContext) throws LensException {
     if (getChildren() != null) {
       List<QueryWriterContext> writerContexts = Lists.newArrayList();
       for (Candidate candidate : getChildren()) {
-        QueryWriterContext child = candidate.toQueryWriterContext(dimsToQuery);
-        if (child instanceof StorageCandidateHQLContext) {
-          ((StorageCandidateHQLContext) child).setRootCubeQueryContext(getCubeQueryContext());
-          child.getQueryAst().setHavingAST(null);
-        }
+        QueryWriterContext child = candidate.toQueryWriterContext(dimsToQuery, rootCubeQueryContext);
         writerContexts.add(child); //todo try to remove exception
       }
-      return new MultiCandidateQueryWriterContext(writerContexts, getCubeQueryContext());
+      if (writerContexts.size() == 1) {
+        return writerContexts.iterator().next();
+      }
+      return new MultiCandidateQueryWriterContext(writerContexts, rootCubeQueryContext);
     }
-    throw new LensException("blah");
+    throw new IllegalArgumentException("Candidate doesn't have children and no suitable implementation found");
   }
 }
