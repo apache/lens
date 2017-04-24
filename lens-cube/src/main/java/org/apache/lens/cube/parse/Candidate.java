@@ -18,12 +18,15 @@
  */
 package org.apache.lens.cube.parse;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
@@ -98,7 +101,7 @@ public interface Candidate {
    * Returns child candidates of this candidate if any.
    * Note: StorageCandidate will return null
    *
-   * @return
+   * @return child candidates if this is a complex candidate, else null
    */
   Collection<? extends Candidate> getChildren();
 
@@ -190,8 +193,6 @@ public interface Candidate {
     return getColumns().contains(column) && isColumnValidForRange(column);
   }
 
-  // todo: split into two methods
-  // todo: override in union candidate since column times might not be contiguous in children
   default boolean isColumnValidForRange(String column) {
     Optional<Date> start = getColumnStartTime(column);
     Optional<Date> end = getColumnEndTime(column);
@@ -242,8 +243,7 @@ public interface Candidate {
     if (getChildren() != null) {
       List<QueryWriterContext> writerContexts = Lists.newArrayList();
       for (Candidate candidate : getChildren()) {
-        QueryWriterContext child = candidate.toQueryWriterContext(dimsToQuery, rootCubeQueryContext);
-        writerContexts.add(child); //todo try to remove exception
+        writerContexts.add(candidate.toQueryWriterContext(dimsToQuery, rootCubeQueryContext));
       }
       if (writerContexts.size() == 1) {
         return writerContexts.iterator().next();

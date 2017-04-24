@@ -74,7 +74,6 @@ public class StorageCandidateHQLContext extends DimHQLContext {
     return storageCandidate.getCubeQueryContext().getCube();
   }
 
-  // todo check for unification of getFromTable and updateFromString
   @Override
   protected String getFromTable() throws LensException {
     if (storageCandidate.getCubeQueryContext().isAutoJoinResolved()) {

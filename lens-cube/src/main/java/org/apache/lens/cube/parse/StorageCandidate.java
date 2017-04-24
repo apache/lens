@@ -305,16 +305,6 @@ public class StorageCandidate implements Candidate, CandidateTable {
   }
 
   @Override
-  public boolean isColumnValidForRange(String column) {
-    Optional<Date> start = getColumnStartTime(column);
-    Optional<Date> end = getColumnEndTime(column);
-    return (!start.isPresent()
-      || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getFromDate().before(start.get())))
-      && (!end.isPresent()
-      || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getToDate().after(end.get())));
-  }
-
-  @Override
   public Optional<Date> getColumnStartTime(String column) {
     Date startTime = null;
     for (String key : getTable().getProperties().keySet()) {

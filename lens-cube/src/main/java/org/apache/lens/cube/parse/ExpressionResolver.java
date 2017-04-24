@@ -380,8 +380,8 @@ class ExpressionResolver implements ContextRewriter {
       return ec.isEvaluable(cTable);
     }
 
-    Set<Dimension> rewriteExprCtx(CubeQueryContext cubeql, DimHQLContext sc, Map<Dimension, CandidateDim> dimsToQuery,
-      QueryAST queryAST) throws LensException {
+    Set<Dimension> rewriteExprCtx(CubeQueryContext cubeql, DimHQLContext sc, Map<Dimension, CandidateDim> dimsToQuery)
+      throws LensException {
       Set<Dimension> exprDims = new HashSet<Dimension>();
       log.info("Picking expressions for candidate {} ", sc);
       if (!allExprsQueried.isEmpty()) {
@@ -405,7 +405,7 @@ class ExpressionResolver implements ContextRewriter {
           }
         }
         // Replace picked expressions in all the base trees
-        replacePickedExpressions(sc, queryAST);
+        replacePickedExpressions(sc);
       }
 
       pickedExpressions.clear();
@@ -413,8 +413,9 @@ class ExpressionResolver implements ContextRewriter {
       return exprDims;
     }
 
-    private void replacePickedExpressions(DimHQLContext sc, QueryAST queryAST) //todo remove second arg
+    private void replacePickedExpressions(DimHQLContext sc)
       throws LensException {
+      QueryAST queryAST = sc.getQueryAst();
       replaceAST(cubeql, queryAST.getSelectAST());
       if (sc.getStorageCandidate() != null) {
         replaceAST(cubeql, sc.getQueryAst().getWhereAST());

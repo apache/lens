@@ -89,6 +89,11 @@ public class UnionCandidate implements Candidate {
   }
 
   @Override
+  public boolean isColumnValidForRange(String column) {
+    return getChildren().stream().anyMatch(candidate -> candidate.isColumnValidForRange(column));
+  }
+
+  @Override
   public Optional<Date> getColumnStartTime(String column) {
     return getChildren().stream()
       .map(x->x.getColumnStartTime(column))

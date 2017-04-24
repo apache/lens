@@ -39,14 +39,14 @@ public class NoCandidateFactAvailableException extends LensException {
   private final PruneCauses<Candidate> briefAndDetailedError;
   private static LensCubeErrorCode getErrorCode(CubeQueryContext cubeql) {
     Set<CandidateTablePruneCause> causes = cubeql.getStoragePruningMsgs().getReversed().keySet();
-    if (causes.size() == 1) {
-      switch (causes.iterator().next().getCause()) {
-      case COLUMN_NOT_FOUND:
-        return LensCubeErrorCode.NO_FACT_HAS_COLUMN;
-      case DENORM_COLUMN_NOT_FOUND:
-        return LensCubeErrorCode.NO_REF_COL_AVAILABLE;
-      }
-    }
+//    if (causes.size() == 1) {
+//      switch (causes.iterator().next().getCause()) {
+//      case COLUMN_NOT_FOUND:
+//        return LensCubeErrorCode.NO_FACT_HAS_COLUMN;
+//      case DENORM_COLUMN_NOT_FOUND:
+//        return LensCubeErrorCode.NO_REF_COL_AVAILABLE;
+//      }
+//    }
     return LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE;
   }
   public NoCandidateFactAvailableException(CubeQueryContext cubeql) {

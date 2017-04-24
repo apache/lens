@@ -79,7 +79,7 @@ public class MultiCandidateQueryWriterContext implements QueryWriterContext {
     for (QueryWriterContext queryWriterContext : getChildren()) {
       if (queryWriterContext instanceof MultiCandidateQueryWriterContext) {
         ret.addAll(((MultiCandidateQueryWriterContext) queryWriterContext).getLeafQueryWriterContexts());
-      } else { // todo assert for checking third tpye
+      } else {
         ret.add((StorageCandidateHQLContext) queryWriterContext);
       }
     }

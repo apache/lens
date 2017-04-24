@@ -588,10 +588,10 @@ public class AutoJoinContext {
     }
 
     log.info("Fact: {} minCostClause:{}", sc, minCostClause);
-    if (sc.getStorageCandidate() != null) { // todo remove cubeql.getAutoJoinCtx since `this` is autojoinctx
-      cubeql.getAutoJoinCtx().getFactClauses().put(sc.getStorageCandidate(), minCostClause);
+    if (sc.getStorageCandidate() != null) {
+      getFactClauses().put(sc.getStorageCandidate(), minCostClause);
     } else {
-      cubeql.getAutoJoinCtx().setMinCostClause(minCostClause);
+      setMinCostClause(minCostClause);
     }
     for (Dimension dim : minCostClause.getDimsInPath()) {
       if (!qdims.contains(dim)) {

@@ -142,15 +142,10 @@ public class SegmentationCandidate implements Candidate {
           // else, copy token replacing cube name and ask for recursion on child nodes
           // this is hard copy. Default is soft copy, which is new ASTNode(astNode)
           // Soft copy retains the token object inside it, hard copy copies token object
-          ASTNode copy = new ASTNode(new CommonToken(astNode.getToken()));
-//          if (copy.getType() == Identifier) {
-//            copy.getToken().setText(copy.getToken().getText().replaceAll("(?i)"+cube.getName(), segment.getName()));
-//          }
-          return Pair.of(copy, true);
+          return Pair.of(new ASTNode(new CommonToken(astNode.getToken())), true);
         });
       addCubeNameAndAlias(ast, innerCube);
       trimHavingAndOrderby(ast, innerCube);
-      // TODO modify time ranges. Nothing for now
       CubeQueryRewriter rewriter = new CubeQueryRewriter(conf, hconf);
       CubeQueryContext ctx = rewriter.rewrite(ast);
       ctx.pickCandidateToQuery();

@@ -109,7 +109,7 @@ public abstract class DimHQLContext extends SimpleHQLContext implements QueryWri
   @Override
   public void addExpressionDims() throws LensException {
     Set<Dimension> expressionDims = getCubeQueryContext().getExprCtx().rewriteExprCtx(getCubeQueryContext(), this,
-      getDimsToQuery(), getQueryAst());
+      getDimsToQuery());
     Map<Dimension, CandidateDim> expressionDimsToQuery = getCubeQueryContext().pickCandidateDimsToQuery(expressionDims);
     dimsToQuery.putAll(expressionDimsToQuery);
   }
