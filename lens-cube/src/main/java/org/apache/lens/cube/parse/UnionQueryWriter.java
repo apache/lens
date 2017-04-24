@@ -53,6 +53,7 @@ public class UnionQueryWriter {
   private CubeQueryContext cubeql;
   Collection<StorageCandidate> storageCandidates;
   public static final String DEFAULT_MEASURE = "0.0";
+  public static final String DUPLICATE_EXPRESSION_PREFIX = "D";
 
   public UnionQueryWriter(Collection<StorageCandidate> storageCandidates, CubeQueryContext cubeql) {
     if (storageCandidates == null || storageCandidates.size()<=1) {
@@ -353,15 +354,25 @@ public class UnionQueryWriter {
       if (phraseCountMap.get(col).size() > 1) {
         List<Integer> childenToDelete = phraseCountMap.get(col).
             subList(1, phraseCountMap.get(col).size());
-        int counter = 0;
         for (int i : childenToDelete) {
           for (StorageCandidate sc : storageCandidates) {
-            sc.getQueryAst().getSelectAST().deleteChild(i - counter);
+            sc.getQueryAst().getSelectAST().setChild(i,
+                new ASTNode(new CommonToken(HiveParser.Identifier, DUPLICATE_EXPRESSION_PREFIX)));
           }
-          counter++;
         }
       }
     }
+
+    for (StorageCandidate sc : storageCandidates) {
+      for (Node node : sc.getQueryAst().getSelectAST().getChildren()) {
+        ASTNode selectNode = (ASTNode) node;
+        if (selectNode.getToken().getType() == HiveParser.Identifier
+            && selectNode.getText().equals(DUPLICATE_EXPRESSION_PREFIX)) {
+          sc.getQueryAst().getSelectAST().deleteChild(selectNode.getChildIndex());
+        }
+      }
+    }
+
     updateOuterASTDuplicateAliases(queryAst.getSelectAST(), aliasMap);
     if (queryAst.getHavingAST() != null) {
       updateOuterASTDuplicateAliases(queryAst.getHavingAST(), aliasMap);
@@ -719,7 +730,7 @@ public class UnionQueryWriter {
         ASTNode column = (ASTNode) selectExpr.getChild(0);
         if (HQLParser.isAggregateAST(column)
             && column.getChildCount() == 2) {
-          if (HQLParser.getString((ASTNode) column.getChild(1)).equals("0.0")) {
+          if (HQLParser.getString((ASTNode) column.getChild(1)).equals(DEFAULT_MEASURE)) {
             selectExpr.getParent().setChild(i, getSelectExpr(null, (ASTNode) selectExpr.getChild(1), true));
           }
         }
