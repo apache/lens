@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
+import static java.util.Comparator.naturalOrder;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipUpdatePeriodCode;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.timeDimNotSupported;
@@ -42,6 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.CubeFactTable;
@@ -199,6 +201,18 @@ public class StorageCandidate implements Candidate, CandidateTable {
     isStorageTblsAtUpdatePeriodLevel = storageTblNames.size() > 1
       || !storageTblNames.iterator().next().equalsIgnoreCase(storageTable);
     setStorageStartAndEndDate();
+  }
+
+  String getTimeRangeWhereClasue(TimeRangeWriter rangeWriter, TimeRange range)
+    throws LensException {
+    String rangeWhere = rangeWriter.getTimeRangeWhereClause(
+      getCubeQueryContext(), getCubeQueryContext().getAliasForTableName(getCube().getName()),
+      getRangeToPartitions().get(range));
+    String fallback = getRangeToExtraWhereFallBack().get(range);
+    if (StringUtils.isNotBlank(fallback)){
+      rangeWhere =  "((" + rangeWhere + ") and  (" + fallback + "))";
+    }
+    return rangeWhere;
   }
 
   /**
@@ -430,7 +444,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
     TreeSet<UpdatePeriod> remainingIntervals = new TreeSet<>(updatePeriods);
     remainingIntervals.remove(maxInterval);
-    if (!CandidateUtil.isCandidatePartiallyValidForTimeRange(
+    if (!isCandidatePartiallyValidForTimeRange(
       maxIntervalStorageTblStartDate, maxIntervalStorageTblEndDate, fromDate, toDate)) {
       //Check the time range in remainingIntervals as maxInterval is not useful
       return getPartitions(fromDate, toDate, partCol, partitions, remainingIntervals,
@@ -496,10 +510,10 @@ public class StorageCandidate implements Candidate, CandidateTable {
                 // Get partitions for look ahead process time
                 log.debug("Looking for process time partitions between {} and {}", pdt, nextPdt);
                 Set<FactPartition> processTimeParts = getPartitions(
-                  TimeRange.getBuilder().fromDate(pdt).toDate(nextPdt).partitionColumn(processTimePartCol).build(),
+                  TimeRange.builder().fromDate(pdt).toDate(nextPdt).partitionColumn(processTimePartCol).build(),
                   newset, true, failOnPartialData, missingPartitions);
                 log.debug("Look ahead partitions: {}", processTimeParts);
-                TimeRange timeRange = TimeRange.getBuilder().fromDate(dt).toDate(nextDt).build();
+                TimeRange timeRange = TimeRange.builder().fromDate(dt).toDate(nextDt).build();
                 for (FactPartition pPart : processTimeParts) {
                   log.debug("Looking for finer partitions in pPart: {}", pPart);
                   for (Date date : timeRange.iterable(pPart.getPeriod(), 1)) {
@@ -546,6 +560,11 @@ public class StorageCandidate implements Candidate, CandidateTable {
       addNonExistingParts, failOnPartialData, missingPartitions);
   }
 
+  private boolean isCandidatePartiallyValidForTimeRange(Date startDate, Date endDate, Date fromDate, Date toDate) {
+    return Stream.of(startDate, fromDate).max(naturalOrder()).orElse(startDate)
+      .before(Stream.of(endDate, toDate).min(naturalOrder()).orElse(endDate));
+  }
+
   @Override
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange queriedTimeRange, boolean failOnPartialData)
     throws LensException {
@@ -583,7 +602,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     String sep = "";
     while (rangeParts.isEmpty()) {
       String timeDim = cubeQueryContext.getBaseCube().getTimeDimOfPartitionColumn(partCol);
-      if (partColNotSupported && !CandidateUtil.factHasColumn(getFact(), timeDim)) {
+      if (partColNotSupported && !getFact().hasColumn(timeDim)) {
         unsupportedTimeDims.add(
           cubeQueryContext.getBaseCube().getTimeDimOfPartitionColumn(timeRange.getPartitionColumn())
         );
@@ -781,13 +800,13 @@ public class StorageCandidate implements Candidate, CandidateTable {
    */
   private boolean isUpdatePeriodUseful(TimeRange timeRange, UpdatePeriod updatePeriod) {
     try {
-      if (!CandidateUtil.isCandidatePartiallyValidForTimeRange(getStorageTableStartDate(updatePeriod),
-        getStorageTableEndDate(updatePeriod), timeRange.getFromDate(), timeRange.getToDate())) {
+      if (!timeRange.truncate(getStorageTableStartDate(updatePeriod),
+        getStorageTableEndDate(updatePeriod)).isValid()) {
         return false;
       }
       Date storageTblStartDate = getStorageTableStartDate(updatePeriod);
       Date storageTblEndDate = getStorageTableEndDate(updatePeriod);
-      TimeRange.getBuilder() //TODO date calculation to move to util method and resued
+      TimeRange.builder() //TODO date calculation to move to util method and resued
         .fromDate(timeRange.getFromDate().after(storageTblStartDate) ? timeRange.getFromDate() : storageTblStartDate)
         .toDate(timeRange.getToDate().before(storageTblEndDate) ? timeRange.getToDate() : storageTblEndDate)
         .partitionColumn(timeRange.getPartitionColumn())
@@ -844,7 +863,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     Date maxIntervalStorageTableEndDate = getStorageTableEndDate(maxInterval);
     Set<UpdatePeriod> remainingIntervals = Sets.difference(intervals, Sets.newHashSet(maxInterval));
 
-    if (!CandidateUtil.isCandidatePartiallyValidForTimeRange(
+    if (!isCandidatePartiallyValidForTimeRange(
       maxIntervalStorageTableStartDate, maxIntervalStorageTableEndDate, timeRangeStart, timeRangeEnd)) {
       //Check the time range in remainingIntervals as maxInterval is not useful
       return isTimeRangeCoverable(timeRangeStart, timeRangeEnd, remainingIntervals);
@@ -940,7 +959,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
   public StorageCandidateHQLContext toQueryWriterContext(Map<Dimension, CandidateDim> dimsToQuery,
     CubeQueryContext rootCubeQueryContext) throws LensException {
     DefaultQueryAST ast = DefaultQueryAST.fromStorageCandidate(null, getCubeQueryContext());
-    CandidateUtil.copyASTs(getCubeQueryContext(), ast);
+    ast.copyFrom(getCubeQueryContext());
     return new StorageCandidateHQLContext(this, Maps.newHashMap(dimsToQuery), ast, rootCubeQueryContext);
   }
 }

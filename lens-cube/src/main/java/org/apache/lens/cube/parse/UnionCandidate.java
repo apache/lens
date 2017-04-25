@@ -20,7 +20,17 @@ package org.apache.lens.cube.parse;
 
 import static java.util.Comparator.comparing;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
@@ -50,7 +60,7 @@ public class UnionCandidate implements Candidate {
   private List<Candidate> children;
 
   private Map<TimeRange, Map<Candidate, TimeRange>> splitTimeRangeMap = Maps.newHashMap();
-  public UnionCandidate(Collection<? extends Candidate> childCandidates, CubeQueryContext cubeQueryContext) {
+  UnionCandidate(Collection<? extends Candidate> childCandidates, CubeQueryContext cubeQueryContext) {
     this.children = Lists.newArrayList(childCandidates);
     this.cubeQueryContext = cubeQueryContext;
   }
@@ -312,9 +322,9 @@ public class UnionCandidate implements Candidate {
       if (ret.getFromDate().getTime() == range.getFromDate().getTime()) {
         checkAndUpdateNewTimeRanges(ret, range, newTimeRanges);
       } else {
-        TimeRange.TimeRangeBuilder b1 = ret.cloneAsBuilder();
-        b1.fromDate(range.getFromDate());
-        b1.toDate(ret.getFromDate());
+        TimeRange.TimeRangeBuilder b1 = ret.cloneAsBuilder()
+          .fromDate(range.getFromDate())
+          .toDate(ret.getFromDate());
         newTimeRanges.add(b1.build());
         checkAndUpdateNewTimeRanges(ret, range, newTimeRanges);
 

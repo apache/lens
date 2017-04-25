@@ -863,7 +863,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     if (sc != null) {
       // resolve timerange positions and replace it by corresponding where clause
       for (TimeRange range : getTimeRanges()) {
-        String rangeWhere = CandidateUtil.getTimeRangeWhereClasue(rangeWriter, sc.getStorageCandidate(), range);
+        String rangeWhere = sc.getStorageCandidate().getTimeRangeWhereClasue(rangeWriter, range);
         if (!StringUtils.isBlank(rangeWhere)) {
           ASTNode updatedRangeAST = HQLParser.parseExpr(rangeWhere, conf);
           updateTimeRangeNode(sc.getQueryAst().getWhereAST(), range.getAstNode(), updatedRangeAST);

@@ -183,7 +183,7 @@ public final class StorageUtil {
     DateUtil.TimeDiff diff2 = DateUtil.TimeDiff.parseFrom(matcher.group(3).trim());
     String relatedTimeDim = matcher.group(1).trim();
     String fallbackPartCol = baseCube.getPartitionColumnOfTimeDim(relatedTimeDim);
-    return TimeRange.getBuilder().fromDate(diff2.negativeOffsetFrom(range.getFromDate()))
+    return TimeRange.builder().fromDate(diff2.negativeOffsetFrom(range.getFromDate()))
       .toDate(diff1.negativeOffsetFrom(range.getToDate())).partitionColumn(fallbackPartCol).build();
   }
 

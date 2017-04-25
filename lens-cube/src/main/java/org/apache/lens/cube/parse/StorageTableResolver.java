@@ -275,7 +275,7 @@ class StorageTableResolver implements ContextRewriter {
         boolean isUpdatePeriodForStorageAdded = false;
         Map<String, SkipUpdatePeriodCode> skipUpdatePeriodCauses = new HashMap<>();
 
-        if (!CandidateUtil.isPartiallyValidForTimeRanges(sc, cubeql.getTimeRanges())) {
+        if (!sc.isPartiallyValidForTimeRanges(cubeql.getTimeRanges())) {
           cubeql.addStoragePruningMsg(sc,
             new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE));
           it.remove();
@@ -324,7 +324,7 @@ class StorageTableResolver implements ContextRewriter {
           Set<CandidateTablePruneCause> allPruningCauses = new HashSet<>(cubeql.getTimeRanges().size());
           for (TimeRange range : cubeql.getTimeRanges()) {
             CandidateTablePruneCause pruningCauseForThisTimeRange = null;
-            if (!CandidateUtil.isPartiallyValidForTimeRange(sc, range)) {
+            if (!sc.isPartiallyValidForTimeRange(range)) {
               //This is the prune cause
               pruningCauseForThisTimeRange =
                 new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
@@ -339,7 +339,7 @@ class StorageTableResolver implements ContextRewriter {
                     pruningCauseForThisTimeRange = partitionColumnsMissing(fallBackRange.getPartitionColumn());
                     fallBackRange = StorageUtil.getFallbackRange(fallBackRange, sc.getFact().getName(), cubeql);
                   } else {
-                    if (!CandidateUtil.isPartiallyValidForTimeRange(sc, fallBackRange)) {
+                    if (!sc.isPartiallyValidForTimeRange(fallBackRange)) {
                       pruningCauseForThisTimeRange =
                         new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
                     }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,6 @@
 package org.apache.lens.cli.commands;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,16 +40,13 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.shell.support.logging.HandlerUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @Component
-@UserDocumentation(title = "Creating schema with one command",
-  description = "")
+@UserDocumentation(title = "Creating schema with one command")
 public class LensSchemaCommands implements CommandMarker {
-  public static final String STRUCTURE = "\n"
+  private static final String STRUCTURE = "\n"
     + ".\n"
     + "|-- storages\n"
     + "|  |-- storage1.xml\n"
@@ -95,7 +90,6 @@ public class LensSchemaCommands implements CommandMarker {
     logger.setLevel(Level.FINE);
   }
 
-  private static final FilenameFilter XML_FILTER = (dir, name) -> name.endsWith(".xml");
   private static final Map<Class<?>, String> CREATE_COMMAND_MAP = Maps.newHashMap();
   private static final Map<Class<?>, String> UPDATE_COMMAND_MAP = Maps.newHashMap();
 

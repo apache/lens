@@ -817,17 +817,20 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     StorageCandidate sc = CandidateUtil.getStorageCandidates(ctx.getCandidates().iterator().next()).iterator().next();
     assertEquals(sc.getRangeToPartitions().size(), 2);
     for(TimeRange range: sc.getRangeToPartitions().keySet()) {
-      String rangeWhere = CandidateUtil.getTimeRangeWhereClasue(ctx.getRangeWriter(), sc, range);
-      if (range.getPartitionColumn().equals("dt")) {
+      String rangeWhere = sc.getTimeRangeWhereClasue(ctx.getRangeWriter(), range);
+      switch (range.getPartitionColumn()) {
+      case "dt":
         ASTNode parsed = HQLParser.parseExpr(rangeWhere);
         assertEquals(parsed.getToken().getType(), KW_AND);
         assertTrue(rangeWhere.substring(((CommonToken) parsed.getToken()).getStopIndex() + 1)
           .toLowerCase().contains(dTimeWhereClause));
         assertFalse(rangeWhere.substring(0, ((CommonToken) parsed.getToken()).getStartIndex())
           .toLowerCase().contains("and"));
-      } else if (range.getPartitionColumn().equals("ttd")) {
+        break;
+      case "ttd":
         assertFalse(rangeWhere.toLowerCase().contains("and"));
-      } else {
+        break;
+      default:
         throw new LensException("Unexpected");
       }
     }

@@ -18,19 +18,11 @@
  */
 package org.apache.lens.cube.parse;
 
-import static java.util.Comparator.naturalOrder;
-
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.apache.lens.cube.metadata.*;
-import org.apache.lens.server.api.error.LensException;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
@@ -51,68 +43,6 @@ public final class CandidateUtil {
     // (design) HideUtilityClassConstructor: Utility classes should not have a public or default constructor.
   }
 
-  /**
-   * Returns true if the Candidate is valid for all the timeranges based on its start and end times.
-   * @param candidate
-   * @param timeRanges
-   * @return
-   */
-  static boolean isValidForTimeRanges(Candidate candidate, List<TimeRange> timeRanges) {
-    for (TimeRange timeRange : timeRanges) {
-      if (!(timeRange.getFromDate().after(candidate.getStartTime())
-          && timeRange.getToDate().before(candidate.getEndTime()))) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  static boolean isCandidatePartiallyValidForTimeRange(Date candidateStartTime, Date candidateEndTime,
-    Date timeRangeStart, Date timeRangeEnd) {
-    Date start  = Stream.of(timeRangeStart, candidateStartTime).max(naturalOrder()).orElse(candidateStartTime);
-    Date end = Stream.of(timeRangeEnd, candidateEndTime).min(naturalOrder()).orElse(candidateEndTime);
-    return end.after(start);
-  }
-
-
-  static boolean isPartiallyValidForTimeRange(Candidate cand, TimeRange timeRange) {
-    return isPartiallyValidForTimeRanges(cand, Arrays.asList(timeRange));
-  }
-
-  static boolean isPartiallyValidForTimeRanges(Candidate cand, List<TimeRange> timeRanges) {
-    return timeRanges.stream().anyMatch(timeRange ->
-      isCandidatePartiallyValidForTimeRange(cand.getStartTime(), cand.getEndTime(),
-        timeRange.getFromDate(), timeRange.getToDate()));
-  }
-
-  /**
-   * Copy Query AST from sourceAst to targetAst
-   *
-   * @param sourceAst
-   * @param targetAst
-   * @throws LensException
-   */
-  static void copyASTs(QueryAST sourceAst, QueryAST targetAst) {
-
-    targetAst.setSelectAST(MetastoreUtil.copyAST(sourceAst.getSelectAST()));
-    targetAst.setWhereAST(MetastoreUtil.copyAST(sourceAst.getWhereAST()));
-    if (sourceAst.getJoinAST() != null) {
-      targetAst.setJoinAST(MetastoreUtil.copyAST(sourceAst.getJoinAST()));
-    }
-    if (sourceAst.getGroupByAST() != null) {
-      targetAst.setGroupByAST(MetastoreUtil.copyAST(sourceAst.getGroupByAST()));
-    }
-    if (sourceAst.getHavingAST() != null) {
-      targetAst.setHavingAST(MetastoreUtil.copyAST(sourceAst.getHavingAST()));
-    }
-    if (sourceAst.getOrderByAST() != null) {
-      targetAst.setOrderByAST(MetastoreUtil.copyAST(sourceAst.getOrderByAST()));
-    }
-
-    targetAst.setLimitValue(sourceAst.getLimitValue());
-    targetAst.setFromString(sourceAst.getFromString());
-    targetAst.setWhereString(sourceAst.getWhereString());
-  }
 
   public static Set<StorageCandidate> getStorageCandidates(final Candidate candidate) {
     return getStorageCandidates(new HashSet<Candidate>(1) {{ add(candidate); }});
@@ -125,7 +55,7 @@ public final class CandidateUtil {
    * @param endTime
    * @return
    */
-  public static boolean isTimeRangeCovered(Collection<Candidate> candidates, Date startTime, Date endTime) {
+  static boolean isTimeRangeCovered(Collection<Candidate> candidates, Date startTime, Date endTime) {
     RangeSet<Date> set = TreeRangeSet.create();
     for (Candidate candidate : candidates) {
       set.add(Range.range(candidate.getStartTime(), BoundType.CLOSED, candidate.getEndTime(), BoundType.OPEN));
@@ -197,29 +127,6 @@ public final class CandidateUtil {
       getStorageCandidates(candidate.getChildren(), storageCandidateSet);
     }
   }
-
-  public static boolean factHasColumn(CubeFactTable fact, String column) {
-    for (FieldSchema factField : fact.getColumns()) {
-      if (factField.getName().equals(column)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public static String getTimeRangeWhereClasue(TimeRangeWriter rangeWriter, StorageCandidate sc, TimeRange range)
-    throws LensException {
-    String rangeWhere = rangeWriter.getTimeRangeWhereClause(
-      sc.getCubeQueryContext(), sc.getCubeQueryContext().getAliasForTableName(sc.getCube().getName()),
-      sc.getRangeToPartitions().get(range));
-    String fallback = sc.getRangeToExtraWhereFallBack().get(range);
-    if (StringUtils.isNotBlank(fallback)){
-      rangeWhere =  "((" + rangeWhere + ") and  (" + fallback + "))";
-    }
-    return rangeWhere;
-  }
-
-  private static final String BASE_QUERY_FORMAT = "SELECT %s FROM %s";
 
   /**
    *

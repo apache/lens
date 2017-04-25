@@ -19,7 +19,9 @@
 package org.apache.lens.cube.parse;
 
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +53,21 @@ import com.google.common.collect.Sets;
 public interface Candidate {
 
   /**
+   * Returns true if the Candidate is valid for all the timeranges based on its start and end times.
+   * @param timeRanges
+   * @return
+   */
+  default boolean isValidForTimeRanges(List<TimeRange> timeRanges) {
+    for (TimeRange timeRange : timeRanges) {
+      if (!(timeRange.getFromDate().after(getStartTime())
+          && timeRange.getToDate().before(getEndTime()))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Returns all the fact columns
    *
    * @return collection of column names
@@ -79,6 +96,20 @@ public interface Candidate {
    * @return end time of this candidate
    */
   Date getEndTime();
+
+  /**
+   * Utility method for checking whether this candidate is partially valid for the given time range
+   * @param timeRange time range to check
+   * @return          whether this candidate is partially valid
+   */
+  default boolean isPartiallyValidForTimeRange(TimeRange timeRange) {
+    return isPartiallyValidForTimeRanges(Collections.singletonList(timeRange));
+  }
+
+  default boolean isPartiallyValidForTimeRanges(List<TimeRange> timeRanges) {
+    return timeRanges.stream().map(timeRange ->
+      timeRange.truncate(getStartTime(), getEndTime())).anyMatch(TimeRange::isValid);
+  }
 
   /**
    * @return the cost of this candidate
