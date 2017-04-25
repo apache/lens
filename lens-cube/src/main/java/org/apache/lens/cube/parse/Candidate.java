@@ -18,8 +18,6 @@
  */
 package org.apache.lens.cube.parse;
 
-
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -53,21 +51,6 @@ import com.google.common.collect.Sets;
 public interface Candidate {
 
   /**
-   * Returns true if the Candidate is valid for all the timeranges based on its start and end times.
-   * @param timeRanges
-   * @return
-   */
-  default boolean isValidForTimeRanges(List<TimeRange> timeRanges) {
-    for (TimeRange timeRange : timeRanges) {
-      if (!(timeRange.getFromDate().after(getStartTime())
-          && timeRange.getToDate().before(getEndTime()))) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /**
    * Returns all the fact columns
    *
    * @return collection of column names
@@ -98,17 +81,31 @@ public interface Candidate {
   Date getEndTime();
 
   /**
+   * Returns true if the Candidate is valid for all the timeranges based on its start and end times.
+   * @param timeRanges time ranges to check
+   * @return           whether this candidate is completely valid for all the time ranges
+   */
+  default boolean isCompletelyValidForTimeRanges(List<TimeRange> timeRanges) {
+    return timeRanges.stream().allMatch(range -> range.truncate(getStartTime(), getEndTime()).equals(range));
+  }
+
+  /**
+   * Utility method to check whether this candidate is partially valid for any of the given time ranges
+   * @param timeRanges time ranges to check
+   * @return           whether this candidate is partially valid for any of the ranges
+   */
+  default boolean isPartiallyValidForTimeRanges(List<TimeRange> timeRanges) {
+    return timeRanges.stream().map(timeRange ->
+      timeRange.truncate(getStartTime(), getEndTime())).anyMatch(TimeRange::isValid);
+  }
+
+  /**
    * Utility method for checking whether this candidate is partially valid for the given time range
    * @param timeRange time range to check
    * @return          whether this candidate is partially valid
    */
   default boolean isPartiallyValidForTimeRange(TimeRange timeRange) {
     return isPartiallyValidForTimeRanges(Collections.singletonList(timeRange));
-  }
-
-  default boolean isPartiallyValidForTimeRanges(List<TimeRange> timeRanges) {
-    return timeRanges.stream().map(timeRange ->
-      timeRange.truncate(getStartTime(), getEndTime())).anyMatch(TimeRange::isValid);
   }
 
   /**

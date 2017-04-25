@@ -22,7 +22,6 @@ import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.UpdatePeriod.UpdatePeriodComparator;
-import org.apache.lens.cube.parse.CandidateUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
@@ -36,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CubeFactTable extends AbstractCubeTable {
   @Getter
-  // Map<StorageName, Map<update_period, storage_table_prefix>>
   private final Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap;
   private String cubeName;
   private final Map<String, Set<UpdatePeriod>> storageUpdatePeriods;

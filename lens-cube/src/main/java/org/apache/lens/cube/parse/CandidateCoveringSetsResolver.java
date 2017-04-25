@@ -124,7 +124,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     // Partially valid candidates
     List<Candidate> allCandidatesPartiallyValid = new ArrayList<>();
     for (Candidate cand : allCandidates) {
-      if (cand.isValidForTimeRanges(cubeql.getTimeRanges())) {
+      if (cand.isCompletelyValidForTimeRanges(cubeql.getTimeRanges())) {
         candidateSet.add(cand.copy());
       } else if (cand.isPartiallyValidForTimeRanges(cubeql.getTimeRanges())) {
         allCandidatesPartiallyValid.add(cand.copy());

@@ -19,6 +19,7 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.Comparator.naturalOrder;
+
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipUpdatePeriodCode;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.timeDimNotSupported;
