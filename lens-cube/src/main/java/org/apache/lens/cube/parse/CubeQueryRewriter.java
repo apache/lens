@@ -250,7 +250,7 @@ public class CubeQueryRewriter {
     int i = 0;
     for (ContextRewriter rewriter : rewriters) {
       /*
-       * Adding iteration number as part of gauge name since some rewriters are have more than one phase, and having
+       * Adding iteration number as part of gauge name since some rewriters have more than one phase, and having
        * iter number gives the idea which iteration the rewriter was run
        */
       MethodMetricsContext mgauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), true,

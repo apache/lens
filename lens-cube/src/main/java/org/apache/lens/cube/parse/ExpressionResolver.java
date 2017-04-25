@@ -632,28 +632,13 @@ class ExpressionResolver implements ContextRewriter {
           Set<ExpressionContext> ecSet = ecEntry.getValue();
           for (ExpressionContext ec : ecSet) {
             if (ec.getSrcTable().getName().equals(cubeql.getCube().getName())) {
-              if (cubeql.getQueriedExprsWithMeasures().contains(expr)) {
-                for (Iterator<Candidate> sItr = cubeql.getCandidates().iterator(); sItr.hasNext();) {
-                  Candidate cand = sItr.next();
-                  if (!cand.isExpressionEvaluable(ec)) {
-                    log.info("Not considering Candidate :{} as {} is not evaluable", cand, ec.exprCol.getName());
-                    sItr.remove();
-                    cubeql.addCandidatePruningMsg(cand,
-                        CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
-                  }
-                }
-              } else {
-                // prune dimension only expressions
-                Collection<StorageCandidate> storageCandidates = getStorageCandidates(cubeql.getCandidates());
-                for (StorageCandidate sc : storageCandidates) {
-                  if (!sc.isExpressionEvaluable(ec)) {
-                    Collection<Candidate> prunedCandidates =
-                        CandidateUtil.filterCandidates(cubeql.getCandidates(), sc);
-                    log.info("Not considering candidate(s) :{} as expr :{} in storage :{} is not evaluable",
-                        prunedCandidates, ec.exprCol.getName(), sc);
-                    cubeql.addStoragePruningMsg(sc,
-                        CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
-                  }
+              for (Iterator<Candidate> sItr = cubeql.getCandidates().iterator(); sItr.hasNext();) {
+                Candidate cand = sItr.next();
+                if (!cand.isExpressionEvaluable(ec)) {
+                  log.info("Not considering Candidate :{} as {} is not evaluable", cand, ec.exprCol.getName());
+                  sItr.remove();
+                  cubeql.addCandidatePruningMsg(cand,
+                      CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
                 }
               }
             }

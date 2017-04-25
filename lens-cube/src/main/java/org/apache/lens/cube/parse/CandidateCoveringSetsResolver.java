@@ -52,12 +52,8 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
 
     List<Candidate> timeRangeCoveringSet = resolveTimeRangeCoveringFactSet(cubeql, queriedMsrs, qpcList);
     if (timeRangeCoveringSet.isEmpty()) {
-      if (cubeql.getCandidates().size() > 1) {
-        throw new LensException(LensCubeErrorCode.NO_UNION_CANDIDATE_AVAILABLE.getLensErrorInfo(),
-          cubeql.getCube().getName(), cubeql.getTimeRanges().toString(), getColumns(queriedMsrs).toString());
-      } else {
-        cubeql.throwNoCandidateFactException();
-      }
+      throw new LensException(LensCubeErrorCode.NO_UNION_CANDIDATE_AVAILABLE.getLensErrorInfo(),
+        cubeql.getCube().getName(), cubeql.getTimeRanges().toString(), getColumns(queriedMsrs).toString());
     }
     log.info("Time covering candidates :{}", timeRangeCoveringSet);
 
@@ -67,13 +63,8 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     } else if (!timeRangeCoveringSet.isEmpty()) {
       List<List<Candidate>> measureCoveringSets = resolveJoinCandidates(timeRangeCoveringSet, queriedMsrs);
       if (measureCoveringSets.isEmpty()) {
-        if (cubeql.getCandidates().size() > 1) {
-          throw new LensException(LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo(),
-            cubeql.getCube().getName(), getColumns(queriedMsrs).toString());
-        } else {
-          // no join is possible
-          cubeql.throwNoCandidateFactException();
-        }
+        throw new LensException(LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo(),
+          cubeql.getCube().getName(), getColumns(queriedMsrs).toString());
       }
       updateFinalCandidates(measureCoveringSets, cubeql);
     }
@@ -239,7 +230,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       // find the remaining measures in other facts
       if (i.hasNext()) {
         Set<QueriedPhraseContext> remainingMsrs = new HashSet<>(msrs);
-        Set<QueriedPhraseContext> coveredMsrs = candidate.coveredMeasures(msrs);
+        Set<QueriedPhraseContext> coveredMsrs = candidate.coveredPhrases(msrs);
         remainingMsrs.removeAll(coveredMsrs);
 
         List<List<Candidate>> coveringSets = resolveJoinCandidates(ucSet, remainingMsrs);
@@ -261,7 +252,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
   private void updateQueriableMeasures(List<Candidate> cands,
     List<QueriedPhraseContext> qpcList) throws LensException {
     for (Candidate cand : cands) {
-      cand.updateStorageCandidateQueriableMeasures(qpcList);
+      cand.updateStorageCandidateQueriablePhraseIndices(qpcList);
     }
   }
 }

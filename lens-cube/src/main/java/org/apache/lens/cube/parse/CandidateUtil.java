@@ -152,8 +152,9 @@ public final class CandidateUtil {
     List<Candidate> prunedCandidates = new ArrayList<>();
     Iterator<Candidate> itr = candidates.iterator();
     while (itr.hasNext()) {
-      if (itr.next().contains(filterCandidate)) {
-        prunedCandidates.add(itr.next());
+      Candidate cur = itr.next();
+      if (cur.contains(filterCandidate)) {
+        prunedCandidates.add(cur);
         itr.remove();
       }
     }

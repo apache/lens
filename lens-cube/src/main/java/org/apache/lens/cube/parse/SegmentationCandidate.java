@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.StringLiteral;
@@ -33,7 +32,6 @@ import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -53,6 +51,7 @@ import org.apache.lens.cube.metadata.Segmentation;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -77,7 +76,6 @@ public class SegmentationCandidate implements Candidate {
   Map<String, CubeQueryContext> cubeQueryContextMap;
   @Getter
   private final Set<Integer> answerableMeasurePhraseIndices = Sets.newHashSet();
-  //  private static final String IGNORE_KEY = "segmentations.to.ignore";
   private Map<TimeRange, TimeRange> queriedRangeToMyRange = Maps.newHashMap();
 
   SegmentationCandidate(CubeQueryContext cubeQueryContext, Segmentation segmentation) throws LensException {
@@ -103,7 +101,7 @@ public class SegmentationCandidate implements Candidate {
     return predicate.negate();
   }
 
-  public boolean rewriteInternal(Configuration conf, HiveConf hconf) throws LensException {
+  boolean rewriteInternal(Configuration conf, HiveConf hconf) throws LensException {
     CubeInterface cube = getCube();
     if (cube == null) {
       return false;
@@ -149,7 +147,6 @@ public class SegmentationCandidate implements Candidate {
       CubeQueryRewriter rewriter = new CubeQueryRewriter(conf, hconf);
       CubeQueryContext ctx = rewriter.rewrite(ast);
       ctx.pickCandidateToQuery();
-      // so that exception comes early
       for (StorageCandidate storageCandidate : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
         for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
           TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
@@ -165,14 +162,13 @@ public class SegmentationCandidate implements Candidate {
         }
       }
       cubeQueryContextMap.put(segment.getName(), ctx);
-      // TODO: optimize
-//      ctx.toHQL();
     }
     return areCandidatesPicked();
   }
 
   private void addCubeNameAndAlias(ASTNode ast, Cube innerCube) {
     ASTNode cubeNameNode = findCubeNameNode(HQLParser.findNodeByPath(ast, TOK_FROM));
+    assert cubeNameNode != null;
     ASTNode tabrefNode = (ASTNode) cubeNameNode.getParent().getParent();
     cubeNameNode.getToken().setText(innerCube.getName());
     ASTNode aliasNode = new ASTNode(new CommonToken(Identifier,
@@ -250,8 +246,7 @@ public class SegmentationCandidate implements Candidate {
 
   @Override
   public boolean contains(Candidate candidate) {
-    // TODO implement this. Not required in MVP hence leaving it for now
-    return false;
+    return areCandidatesPicked() && getChildren().contains(candidate);
   }
 
   @Override
@@ -261,7 +256,7 @@ public class SegmentationCandidate implements Candidate {
 
   @Override
   public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
-    return true; //todo check with puneet
+    return true;
   }
 
   @Override
@@ -273,7 +268,6 @@ public class SegmentationCandidate implements Candidate {
 
   @Override
   public Set<FactPartition> getParticipatingPartitions() {
-    //TODO implement this
     Set<FactPartition> partitionSet = Sets.newHashSet();
     for (CubeQueryContext cubeQueryContext : cubeQueryContextMap.values()) {
       if (cubeQueryContext.getPickedCandidate() != null) {
@@ -285,16 +279,14 @@ public class SegmentationCandidate implements Candidate {
 
   @Override
   public boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expr) {
-    if (areCandidatesPicked()) {
-      return candidateStream().allMatch(cand -> cand.isExpressionEvaluable(expr));
-    } else {
-      return cubeStream()
-        .map(cube -> cube.getExpressionByName(expr.getExprCol().getName()))
-        .allMatch(Predicate.isEqual(expr.getExprCol()));
-    }
+    // expression context is specific to cubequerycontext. So for segmentation candidate,
+    // I can't ask my children to check this context for evaluability.
+    return cubeStream()
+      .map(cube -> cube.getExpressionByName(expr.getExprCol().getName()))
+      .allMatch(Predicate.isEqual(expr.getExprCol()));
   }
 
-  public boolean areCandidatesPicked() {
+  private boolean areCandidatesPicked() {
     return candidateStream().count() == cubesOfSegmentation.size();
   }
 
@@ -312,10 +304,7 @@ public class SegmentationCandidate implements Candidate {
 
   @Override
   public boolean isExpressionEvaluable(String expr) {
-    if (areCandidatesPicked()) {
-      return candidateStream().allMatch(cand -> cand.isExpressionEvaluable(expr));
-    }
-    throw new IllegalAccessError("I don't know");
+    return candidateStream().allMatch(cand -> cand.isExpressionEvaluable(expr));
   }
 
   @Override
@@ -349,12 +338,12 @@ public class SegmentationCandidate implements Candidate {
         .map(c -> c.getColumnStartTime(column))
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .min(Comparator.naturalOrder()); // TODO recheck min
+        .min(Comparator.naturalOrder());
     } else {
       return cubeStream()
         .map(cube -> cube.getColumnByName(column))
         .map(CubeColumn::getStartTime).filter(Objects::nonNull)
-        .min(Comparator.naturalOrder()); // todo recheck min
+        .min(Comparator.naturalOrder());
     }
   }
 
@@ -365,12 +354,12 @@ public class SegmentationCandidate implements Candidate {
         .map(c -> c.getColumnEndTime(column))
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .max(Comparator.naturalOrder()); // TODO recheck max
+        .max(Comparator.naturalOrder());
     } else {
       return cubeStream()
         .map(cube -> cube.getColumnByName(column))
         .map(CubeColumn::getEndTime).filter(Objects::nonNull)
-        .max(Comparator.naturalOrder()); // todo recheck max
+        .max(Comparator.naturalOrder());
     }
   }
 
@@ -388,11 +377,7 @@ public class SegmentationCandidate implements Candidate {
     }
   }
 
-  public List<PruneCauses<Candidate>> getPruneCauses() {
-    return contextStream().map(CubeQueryContext::getStoragePruningMsgs).collect(toList());
-  }
-
-  public Map<String, PruneCauses<Candidate>> getPruneCausesOfFailedContexts() {
+  Map<String, PruneCauses<Candidate>> getPruneCausesOfFailedContexts() {
     return cubeQueryContextMap.entrySet().stream().filter(entry -> entry.getValue().getPickedCandidate() == null)
       .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().getStoragePruningMsgs()));
   }

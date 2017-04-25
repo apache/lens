@@ -136,6 +136,11 @@ public class JoinCandidate implements Candidate {
   }
 
   @Override
+  public void addAnswerableMeasurePhraseIndices(int index) {
+    throw new IllegalArgumentException("Join candidates can't add answerable phrase indices");
+  }
+
+  @Override
   public Optional<Date> getColumnStartTime(String column) {
     return children.stream().map(x->x.getColumnStartTime(column)).filter(Optional::isPresent).map(Optional::get)
       .max(Comparator.naturalOrder());

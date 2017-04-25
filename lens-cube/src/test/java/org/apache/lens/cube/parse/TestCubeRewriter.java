@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.error.LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE;
+import static org.apache.lens.cube.error.LensCubeErrorCode.NO_FACT_HAS_COLUMN;
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
@@ -1610,16 +1612,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
     assertTrue(hql1.contains("c1_testfact4_raw_base"));
     // Start time for dim attribute user_id_added_far_future is 2099-01-01
     String query2 = "select user_id_added_far_future from basecube where " + TWO_DAYS_RANGE;
-    LensException e1 = getLensExceptionInRewrite(query2, getConf());
-    assertTrue(e1.getMessage().contains("NO_FACT_HAS_COLUMN"), e1.getMessage());
+    assertLensExceptionInRewrite(query2, getConf(), NO_FACT_HAS_COLUMN);
     // End time for dim attribute user_id_deprecated is 2016-01-01
     String query3 = "select user_id_deprecated from basecube where " + TWO_DAYS_RANGE;
-    LensException e2 = getLensExceptionInRewrite(query3, getConf());
-    assertTrue(e2.getMessage().contains("NO_FACT_HAS_COLUMN"), e2.getMessage());
+    assertLensExceptionInRewrite(query3, getConf(), NO_FACT_HAS_COLUMN);
     // Start time for ref column user_id_added_far_future_chain is 2099-01-01
     String query4 = "select user_id_added_far_future_chain.name from basecube where " + TWO_DAYS_RANGE;
-    LensException e3 = getLensExceptionInRewrite(query4, getConf());
-    assertTrue(e3.getMessage().contains("NO_FACT_HAS_COLUMN"), e3.getMessage());
+    assertLensExceptionInRewrite(query4, getConf(), NO_CANDIDATE_FACT_AVAILABLE);
   }
 
   @Test

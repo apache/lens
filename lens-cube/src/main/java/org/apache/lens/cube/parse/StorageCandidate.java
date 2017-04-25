@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -235,7 +235,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
    *
    * @throws LensException
    */
-  public void setStorageStartAndEndDate() throws LensException {
+  void setStorageStartAndEndDate() throws LensException {
     if (this.startTime != null && !this.isStorageTblsAtUpdatePeriodLevel) {
       //If the times are already set and are not dependent of update period, no point setting times again.
       return;
@@ -397,7 +397,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
     if (fromDate.equals(toDate) || fromDate.after(toDate)) {
       return true;
     }
-    if (updatePeriods == null | updatePeriods.isEmpty()) {
+    if (updatePeriods == null || updatePeriods.isEmpty()) {
       return false;
     }
 

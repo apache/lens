@@ -62,6 +62,15 @@ public class CandidateTablePruneCause {
     UNSUPPORTED_STORAGE("Unsupported Storage"),
     // invalid cube table
     INVALID("Invalid cube table provided in query"),
+    SEGMENTATION_PRUNED_WITH_ERROR ("%s") {
+      @Override
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        return new Object[]{
+          causes.stream().map(cause->cause.innerException).map(LensException::getMessage).collect(joining(","))
+        };
+      }
+    },
+
     // expression is not evaluable in the candidate
     COLUMN_NOT_FOUND("%s are not %s") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
@@ -263,6 +272,7 @@ public class CandidateTablePruneCause {
   private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
 
   private Map<String, String> innerCauses;
+  private LensException innerException;
 
   public CandidateTablePruneCause(CandidateTablePruneCode cause) {
     this.cause = cause;
@@ -376,9 +386,8 @@ public class CandidateTablePruneCause {
     return cause;
   }
   public static CandidateTablePruneCause segmentationPruned(LensException e) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(SEGMENTATION_PRUNED);
-    cause.innerCauses = Maps.newHashMap();
-    cause.innerCauses.put("unknown", e.getMessage());
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(SEGMENTATION_PRUNED_WITH_ERROR);
+    cause.innerException = e;
     return cause;
   }
 }

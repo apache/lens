@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,11 +22,23 @@ package org.apache.lens.cube.parse;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
-import static org.apache.lens.cube.parse.HQLParser.*;
+import static org.apache.lens.cube.parse.HQLParser.HashableASTNode;
+import static org.apache.lens.cube.parse.HQLParser.getDotAST;
+import static org.apache.lens.cube.parse.HQLParser.hasAggregate;
+import static org.apache.lens.cube.parse.HQLParser.isAggregateAST;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FUNCTION;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELECT;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
@@ -91,16 +103,10 @@ public class UnionQueryWriter extends SimpleHQLContext {
   private void updateAsts() {
     for (StorageCandidateHQLContext sc : storageCandidates) {
       storageCandidateToSelectAstMap.put(sc.getStorageCandidate().toString(),
-          new ASTNode(new CommonToken(TOK_SELECT, "TOK_SELECT"))); // todo remove three ifs
-      if (sc.getQueryAst().getHavingAST() != null) {
-        sc.getQueryAst().setHavingAST(null);
-      }
-      if (sc.getQueryAst().getOrderByAST() != null) {
-        sc.getQueryAst().setOrderByAST(null);
-      }
-      if (sc.getQueryAst().getLimitValue() != null) {
-        sc.getQueryAst().setLimitValue(null);
-      }
+          new ASTNode(new CommonToken(TOK_SELECT, "TOK_SELECT")));
+      sc.getQueryAst().setHavingAST(null);
+      sc.getQueryAst().setOrderByAST(null);
+      sc.getQueryAst().setLimitValue(null);
     }
   }
 
@@ -354,8 +360,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
     }
   }
 
-  public void updateOuterASTDuplicateAliases(ASTNode node, //todo rename to updateOuterASTDuplicateAliases
-      Map<String, List<String>> aliasMap) {
+  private void updateOuterASTDuplicateAliases(ASTNode node, Map<String, List<String>> aliasMap) {
     if (node.getToken().getType() == HiveParser.DOT) {
       String col = node.getChild(1).toString();
       for (Map.Entry<String, List<String>> entry : aliasMap.entrySet()) {
@@ -565,11 +570,8 @@ public class UnionQueryWriter extends SimpleHQLContext {
           return outerAST;
         } else {
           ASTNode outerAST = getDotAST(cubeql.getCube().getName(), alias);
-          if (isSelectAst) { // todo remove if-else
-            innerToOuterSelectASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
-          } else {
-            innerToOuterHavingASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
-          }
+          (isSelectAst ? innerToOuterSelectASTs : innerToOuterHavingASTs)
+            .put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
           return outerAST;
         }
       }
@@ -590,11 +592,8 @@ public class UnionQueryWriter extends SimpleHQLContext {
     //TODO: take care or non-transitive aggregate functions
     outerAST.addChild(new ASTNode(new CommonToken(Identifier, astNode.getChild(0).getText())));
     outerAST.addChild(dotAST);
-    if (isSelectAst) {
-      innerToOuterSelectASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
-    } else {
-      innerToOuterHavingASTs.put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
-    }
+    (isSelectAst ? innerToOuterSelectASTs : innerToOuterHavingASTs)
+      .put(new HashableASTNode(innerSelectASTWithoutAlias), outerAST);
     return outerAST;
   }
 
@@ -687,7 +686,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
     List<String> hqlQueries = new ArrayList<>();
     for (StorageCandidateHQLContext sc : storageCandidates) {
       removeAggreagateFromDefaultColumns(sc.getQueryAst().getSelectAST());
-      hqlQueries.add(sc.toHQL()); // todo remove arg2 by pushing inside function
+      hqlQueries.add(sc.toHQL());
     }
     return hqlQueries.stream().collect(joining(" UNION ALL ", "(", ") as " + cubeql.getBaseCube()));
   }

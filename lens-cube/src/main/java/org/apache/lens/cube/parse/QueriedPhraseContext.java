@@ -101,7 +101,7 @@ class QueriedPhraseContext extends TracksQueriedColumns implements TrackQueriedC
    * @return
    * @throws LensException
    */
-  public boolean isEvaluable(Candidate candidate) throws LensException {
+  public boolean isEvaluable(StorageCandidate candidate) throws LensException {
     // all measures of the queried phrase should be present
     for (String msr : queriedMsrs) {
       if (!candidate.isColumnPresentAndValidForRange(msr)) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
  */
 package org.apache.lens.cube.parse;
 
-import static java.util.stream.Collectors.toList;
 
 import java.util.Collection;
 import java.util.Date;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
@@ -55,14 +53,14 @@ public interface Candidate {
   /**
    * Returns all the fact columns
    *
-   * @return
+   * @return collection of column names
    */
   Collection<String> getColumns();
 
   /**
    * Returns whether this candidate has the asked column or not
-   * @param column
-   * @return
+   * @param column column to check
+   * @return       whether this candidate contains the column
    */
   default boolean hasColumn(String column) {
     return getColumns().contains(column);
@@ -71,29 +69,27 @@ public interface Candidate {
   /**
    * Start Time for this candidate (calculated based on schema)
    *
-   * @return
+   * @return start time of this candidate
    */
   Date getStartTime();
 
   /**
    * End Time for this candidate (calculated based on schema)
    *
-   * @return
+   * @return end time of this candidate
    */
   Date getEndTime();
 
   /**
-   * Returns the cost of this candidate
-   *
-   * @return
+   * @return the cost of this candidate
    */
   double getCost();
 
   /**
    * Returns true if this candidate contains the given candidate
    *
-   * @param candidate
-   * @return
+   * @param candidate candidate to check
+   * @return          whether this contains the candidate in question
    */
   boolean contains(Candidate candidate);
 
@@ -105,6 +101,10 @@ public interface Candidate {
    */
   Collection<? extends Candidate> getChildren();
 
+  /**
+   * Count of children
+   * @return number of children it has. 0 if null.
+   */
   default int getChildrenCount() {
     return Optional.ofNullable(getChildren()).map(Collection::size).orElse(0);
   }
@@ -119,9 +119,9 @@ public interface Candidate {
    * registered partitions. So isTimeRangeCoverable = false implies evaluateCompleteness = false but vice versa is
    * not true.
    *
-   * @param timeRange
-   * @return
-   * @throws LensException
+   * @param timeRange       The time range to check
+   * @return                whether this time range is coverable by this candidate
+   * @throws LensException  propagated exceptions
    */
   boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException;
 
@@ -144,55 +144,93 @@ public interface Candidate {
    * Note: This method can be called only after call to
    * {@link #evaluateCompleteness(TimeRange, TimeRange, boolean)}
    *
-   * @return
+   * @return a set of participating partitions
    */
   Set<FactPartition> getParticipatingPartitions();
 
   /**
-   * Checks whether an expression is evaluable by a candidate
+   * Checks whether an expression is evaluable by this candidate
    * 1. For a JoinCandidate, atleast one of the child candidates should be able to answer the expression
    * 2. For a UnionCandidate, all child candidates should answer the expression
    *
-   * @param expressionContext     :Expression need to be evaluated for Candidate
-   * @return
+   * @param expressionContext   Expression to be evaluated for Candidate
+   * @return                    Whether the given expression is evaluable or not
    */
   boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expressionContext);
 
+  /**
+   * Checks whether an expression is evaluable by this candidate
+   * 1. For a JoinCandidate, atleast one of the child candidates should be able to answer the expression
+   * 2. For a UnionCandidate, all child candidates should answer the expression
+   *
+   * @param expr                Expression to be evaluated for Candidate
+   * @return                    Whether the given expression is evaluable or not
+   */
   boolean isExpressionEvaluable(String expr);
 
+  /**
+   * Checks whether a dim attribute is evaluable by this candidate
+   * @param dim             dim attribute
+   * @return                whether the dim attribute is evaluable by this candidate
+   * @throws LensException  propageted exception
+   */
   boolean isDimAttributeEvaluable(String dim) throws LensException;
 
   /**
    * Gets the index positions of answerable measure phrases in CubeQueryContext#selectPhrases
-   * @return
+   * @return set of indices of answerable phrases
    */
   Set<Integer> getAnswerableMeasurePhraseIndices();
 
+  /**
+   * Clones this candidate
+   * @return the clone
+   * @throws LensException propagated exception
+   */
   default Candidate copy() throws LensException {
     throw new LensException("Candidate " + this + " doesn't support copy");
   }
 
+  /**
+   * Checks whether the given queries phrase is evaluable by this candidate
+   * @param phrase          Phrase to check
+   * @return                whether the phrase is evaluable by this candidate
+   * @throws LensException  propagated exception
+   */
   boolean isPhraseAnswerable(QueriedPhraseContext phrase) throws LensException;
-  default void updateStorageCandidateQueriableMeasures(List<QueriedPhraseContext> qpcList) throws LensException {
-    for (int index = 0; index < qpcList.size(); index++) {
-      //      if (!qpcList.get(index).hasMeasures(cubeql)) {
-//        //Not a measure phrase. Skip it
-//        continue;
-//      }
 
-      QueriedPhraseContext msrPhrase = qpcList.get(index);
-//      if (msrPhrase.isEvaluable(this) != isPhraseAnswerable(msrPhrase)) {
-//        throw new LensException("asdfads");
-//      }
-      if (isPhraseAnswerable(msrPhrase)) {
+  /**
+   * Add `index` as answerable index in a pre-decided list of queried phrases.
+   * @param index index to mark as answerable
+   */
+  void addAnswerableMeasurePhraseIndices(int index);
+  /**
+   * Default method to update querieble phrase indices in candidate
+   * @param qpcList         List of queries phrases
+   * @throws LensException  propagated exception
+   */
+  default void updateStorageCandidateQueriablePhraseIndices(List<QueriedPhraseContext> qpcList) throws LensException {
+    for (int index = 0; index < qpcList.size(); index++) {
+      if (isPhraseAnswerable(qpcList.get(index))) {
         addAnswerableMeasurePhraseIndices(index);
       }
     }
   }
+
+  /**
+   * Utility method for clubbing column contains check and column range validity check.
+   * @param column column name to check
+   * @return       true if this candidate can answer this column looking at existence and time validity.
+   */
   default boolean isColumnPresentAndValidForRange(String column) {
     return getColumns().contains(column) && isColumnValidForRange(column);
   }
 
+  /**
+   * Utility method for checking column time range validity.
+   * @param column column to check
+   * @return       true if this column is valid for all ranges queried
+   */
   default boolean isColumnValidForRange(String column) {
     Optional<Date> start = getColumnStartTime(column);
     Optional<Date> end = getColumnEndTime(column);
@@ -202,26 +240,60 @@ public interface Candidate {
       || getCubeQueryContext().getTimeRanges().stream().noneMatch(range -> range.getToDate().after(end.get())));
   }
 
+  /**
+   * This method should give start time of a column, if there's any. Else, this should return Optional.absent
+   * @param column column name
+   * @return       optional start time of this column
+   */
   Optional<Date> getColumnStartTime(String column);
-
+  /**
+   * This method should give end time of a column, if there's any. Else, this should return Optional.absent
+   * @param column column name
+   * @return       optional end time of this column
+   */
   Optional<Date> getColumnEndTime(String column);
 
+  /**
+   * A candidate always works along with its cube query context. So a top level method to retrieve that.
+   * @return cube query context for this candidate.
+   */
   CubeQueryContext getCubeQueryContext();
+
+  /**
+   * Utility method to return the configuration of its cube query context.
+   * @return getCubeQueryContext().getConf()
+   */
   default Configuration getConf() {
     return getCubeQueryContext().getConf();
   }
+
+  /**
+   * Utility method to return the metastore client of its cube query context
+   * @return getCubeQueryContext().getMetastoreClient()
+   */
   default CubeMetastoreClient getCubeMetastoreClient() {
     return getCubeQueryContext().getMetastoreClient();
   }
-  default void addAnswerableMeasurePhraseIndices(int index) {
-    throw new UnsupportedOperationException("Can't add answerable measure index");
-  }
+
+  /**
+   * Utility method to return cube of its cube query context
+   * @param  <T> a subclass of CubeInterface
+   * @return getCubeQueryContext().getCube()
+   */
+  @SuppressWarnings("unchecked")
   default <T extends CubeInterface> T getCube() {
     return (T) getCubeQueryContext().getCube();
   }
-  default Set<QueriedPhraseContext> coveredMeasures(Set<QueriedPhraseContext> msrs) throws LensException {
+
+  /**
+   * Filters phrases that are covered by this candidate
+   * @param phrases  queried phrases to check
+   * @return         a set of queried phrases belonging to the list `phrases` that are answerable by this candidate
+   * @throws LensException propagated exception
+   */
+  default Set<QueriedPhraseContext> coveredPhrases(Set<QueriedPhraseContext> phrases) throws LensException {
     Set<QueriedPhraseContext> covered = Sets.newHashSet();
-    for (QueriedPhraseContext msr : msrs) {
+    for (QueriedPhraseContext msr : phrases) {
       if (isPhraseAnswerable(msr)) {
         covered.add(msr);
       }
@@ -229,15 +301,24 @@ public interface Candidate {
     return covered;
   }
 
-  default Candidate explode() throws LensException {
-    if (getChildren() != null) {
-      for (Candidate candidate : getChildren()) {
-        candidate.explode();
-      }
-    }
-    return this;
-  }
+  /**
+   * Explode this candidate into another candidate.
+   * Generally candidates can return `this` in this method
+   * Special case is storage candidate that returns UnionCandidate if there are multiple update periods covered and
+   * update periods have different tables.
+   * @return converted candidate
+   */
+  Candidate explode() throws LensException;
 
+  /**
+   * Get query writer context from the candidate. Default implementation is for Union, Join and Segmentation candidates.
+   * In the default implementation, a MultiCandidateQueryWriterContext is returned, whose children are obtained by
+   * getting the query writer contexts from the children of this candidate.
+   * @param dimsToQuery               Dimensions and corresponding picked CandidateDim for query
+   * @param rootCubeQueryContext      Root query context.
+   * @return                          A Query Writer Context
+   * @throws LensException            exception to be propagated
+   */
   default QueryWriterContext toQueryWriterContext(Map<Dimension, CandidateDim> dimsToQuery,
     CubeQueryContext rootCubeQueryContext) throws LensException {
     if (getChildren() != null) {

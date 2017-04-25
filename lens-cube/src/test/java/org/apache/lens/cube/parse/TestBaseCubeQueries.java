@@ -88,17 +88,9 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     e = getLensExceptionInRewrite("select dim1, test_time_dim, msr3, msr13 from basecube where "
       + TWO_DAYS_RANGE, conf);
     assertEquals(e.getErrorCode(),
-        LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
+        LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo().getErrorCode());
     assertTrue(e.getMessage().contains("[msr3, msr13]"));
 
-  }
-
-  private void compareStrings(List<String> factTablesList, Map.Entry<String, List<CandidateTablePruneCause>> entry) {
-    String factTablesString = entry.getKey();
-    Iterable<String> factTablesIterator = Splitter.on(',').split(factTablesString);
-    for (String factTable : factTablesIterator) {
-      Assert.assertTrue(factTablesList.contains(factTable), "Not selecting" + factTable + "fact table");
-    }
   }
 
   @Test

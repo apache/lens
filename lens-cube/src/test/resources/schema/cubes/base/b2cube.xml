@@ -92,8 +92,6 @@
     <dim_attribute _type="bigint" name="dim2big2" display_string="dim2 refer" description="ref dim">
       <chain_ref_column chain_name="dim2chain" ref_col="bigid2" dest_table="testdim2"/>
     </dim_attribute>
-    <dim_attribute _type="int" name="user_id_deprecated" description="user_id_deprecated">
-    </dim_attribute>
     <dim_attribute _type="date" name="test_time_dim2" display_string="Timedim full date" description="chained dim">
       <chain_ref_column chain_name="timehourchain2" ref_col="full_hour" dest_table="hourdim"/>
       <chain_ref_column chain_name="timedatechain2" ref_col="full_date" dest_table="daydim"/>
@@ -118,8 +116,6 @@
     <dim_attribute _type="timestamp" name="d_time" description="d time">
     </dim_attribute>
     <dim_attribute _type="string" name="dim1" description="basedim">
-    </dim_attribute>
-    <dim_attribute _type="int" name="user_id_added_far_future" description="user_id_added_far_future">
     </dim_attribute>
     <dim_attribute _type="string" name="testdim3id" display_string="dim3 refer" description="direct id to testdim3">
       <chain_ref_column chain_name="dim3chain" ref_col="id" dest_table="testdim3"/>
@@ -169,8 +165,6 @@
     </dim_attribute>
     <dim_attribute _type="string" name="statename_cube" display_string="state name" description="state name">
       <chain_ref_column chain_name="cubestate" ref_col="name" dest_table="statedim"/>
-    </dim_attribute>
-    <dim_attribute _type="int" name="user_id_added_in_past" description="user_id_added_in_past">
     </dim_attribute>
     <dim_attribute _type="int" name="test_time_dim_day_id" display_string="Timedim reference" description="ref dim">
     </dim_attribute>
@@ -340,19 +334,6 @@
     </expression>
   </expressions>
   <join_chains>
-    <join_chain dest_table="userdim" name="user_id_added_far_future_chain"
-                display_string="user_id_added_far_future_chain" description="user_id_added_far_future_chain">
-      <paths>
-        <path>
-          <edges>
-            <edge>
-              <from table="b2cube" column="user_id_added_far_future" maps_to_many="false"/>
-              <to table="userdim" column="user_id_added_far_future" maps_to_many="false"/>
-            </edge>
-          </edges>
-        </path>
-      </paths>
-    </join_chain>
     <join_chain dest_table="countrydim" name="cubecountry" display_string="cube-country"
                 description="country thru cube">
       <paths>
