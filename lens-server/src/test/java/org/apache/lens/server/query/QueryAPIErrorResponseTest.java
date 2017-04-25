@@ -283,7 +283,7 @@ public class QueryAPIErrorResponseTest extends LensJerseyTest {
 
       //Create a StorageTable
       XStorageTables tables = new XStorageTables();
-      tables.getStorageTable().add(createStorageTblElement(testStorage,"DAILY"));
+      tables.getStorageTable().add(createStorageTblElement(testStorage, "DAILY"));
       xFactTable.setStorageTables(tables);
 
       createFactFailFast(target, sessionId, xFactTable, mt);
