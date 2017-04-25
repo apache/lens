@@ -21,6 +21,7 @@ package org.apache.lens.server.query;
 import static org.apache.lens.api.query.QueryStatus.Status.*;
 import static org.apache.lens.server.api.LensConfConstants.*;
 import static org.apache.lens.server.api.util.LensUtil.getImplementations;
+import static org.apache.lens.server.error.LensServerErrorCode.SERVER_OVERLOADED;
 import static org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 
 import java.io.*;
@@ -64,7 +65,10 @@ import org.apache.lens.server.api.query.comparators.*;
 import org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.events.*;
-import org.apache.lens.server.api.retry.*;
+import org.apache.lens.server.api.retry.BackOffRetryHandler;
+import org.apache.lens.server.api.retry.ChainedRetryPolicyDecider;
+import org.apache.lens.server.api.retry.OperationRetryHandlerFactory;
+import org.apache.lens.server.api.retry.RetryPolicyDecider;
 import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
@@ -1698,6 +1702,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       List<RewriteEstimateRunnable> runnables = new ArrayList<RewriteEstimateRunnable>(numDrivers);
       List<Future> estimateFutures = new ArrayList<Future>();
 
+      boolean cancelAllDueToOverload = false;
       for (final LensDriver driver : ctx.getDriverContext().getDrivers()) {
         RewriteEstimateRunnable r = new RewriteEstimateRunnable(driver,
           rewriteRunnables.get(driver),
@@ -1705,10 +1710,25 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           ctx, estimateCompletionLatch);
 
         // Submit composite rewrite + estimate operation to background pool
-        estimateFutures.add(estimatePool.submit(r));
-        runnables.add(r);
+        try {
+          estimateFutures.add(estimatePool.submit(r));
+          runnables.add(r);
+        } catch (RejectedExecutionException e) {
+          // This means the server can't accept anymore estimate requests at this time.
+          // Cancel all other futures.
+          cancelAllDueToOverload = true;
+          log.warn("Rejected from submitting to the estimate pool for driver {} ", r.getDriver(), e);
+          break;
+        }
       }
-
+      if (cancelAllDueToOverload) {
+        for (int i = 0; i < runnables.size(); i++) {
+          RewriteEstimateRunnable r = runnables.get(i);
+          estimateFutures.get(i).cancel(true);
+          log.info("Cancelling estimate tasks for driver due to incomplete driver {}", r.getDriver());
+        }
+        throw new LensException(SERVER_OVERLOADED.getLensErrorInfo());
+      }
       // Wait for all rewrite and estimates to finish
       try {
         long estimateLatchTimeout = ctx.getConf().getLong(ESTIMATE_TIMEOUT_MILLIS,

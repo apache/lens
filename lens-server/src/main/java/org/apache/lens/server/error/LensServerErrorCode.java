@@ -28,7 +28,8 @@ public enum LensServerErrorCode {
   TOO_MANY_OPEN_SESSIONS(2004, 0),
   SESSION_CLOSED(2005, 0),
   INVALID_HANDLE(2006, 0),
-  NULL_OR_EMPTY_ARGUMENT(2007, 0);
+  NULL_OR_EMPTY_ARGUMENT(2007, 0),
+  SERVER_OVERLOADED(2008, 0);
 
   public LensErrorInfo getLensErrorInfo() {
     return this.errorInfo;

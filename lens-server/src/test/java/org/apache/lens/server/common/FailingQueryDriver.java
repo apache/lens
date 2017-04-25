@@ -21,6 +21,7 @@ package org.apache.lens.server.common;
 
 import javax.ws.rs.NotFoundException;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.MockDriver;
 import org.apache.lens.server.api.error.LensException;
@@ -29,11 +30,26 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class FailingQueryDriver extends MockDriver {
 
   @Override
   public QueryCost estimate(final AbstractQueryContext ctx) throws LensException {
+    LensConf lensConf = ctx.getLensConf();
+    String driverSleep = lensConf.getProperty("mock.driver.sleep");
     if (ctx.getUserQuery().contains("fail")) {
+      return new FactPartitionBasedQueryCost(0.0);
+    } else if (driverSleep != null && driverSleep.equals("true")) {
+      try {
+        String sleepMS = lensConf.getProperty("mock.driver.sleep.ms");
+        if (sleepMS != null && !sleepMS.isEmpty()) {
+          Thread.sleep(Long.parseLong(sleepMS));
+        }
+      } catch (InterruptedException e) {
+        log.error("Sleeping thread interrupted", e);
+      }
       return new FactPartitionBasedQueryCost(0.0);
     } else {
       throw new LensException("Simulated Estimate Failure");

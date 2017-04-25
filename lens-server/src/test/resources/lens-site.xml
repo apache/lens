@@ -192,6 +192,11 @@
     <value>20</value>
     <description>Number of sessions can be allowed for each user.</description>
   </property>
+    <property>
+    <name>lens.server.estimate.pool.max.threads</name>
+    <value>20</value>
+    <description>Lens server estimate max threads</description>
+  </property>
   <property>
     <name>lens.server.status.update.exponential.wait.millis</name>
     <value>1000</value>
