@@ -20,14 +20,16 @@ package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+
+import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
+import static org.apache.lens.cube.metadata.MetastoreUtil.getStringLiteralAST;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.StringLiteral;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FROM;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_HAVING;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_INSERT;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_ORDERBY;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
-import static org.apache.lens.cube.metadata.DateUtil.formatAbsDate;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -51,7 +53,6 @@ import org.apache.lens.cube.metadata.Segmentation;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -121,11 +122,9 @@ public class SegmentationCandidate implements Candidate {
             TimeRange timeRange = timeRangeTimeRangeEntry.getValue();
             if (astNode.getParent() == queriedTimeRange.getAstNode()) {
               if (astNode.getChildIndex() == 2) {
-                return Pair.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getFromDate()))),
-                  false);
+                return Pair.of(getStringLiteralAST(formatAbsDate(timeRange.getFromDate())), false);
               } else if (astNode.getChildIndex() == 3) {
-                return Pair.of(new ASTNode(new CommonToken(StringLiteral, formatAbsDate(timeRange.getToDate()))),
-                  false);
+                return Pair.of(getStringLiteralAST(formatAbsDate(timeRange.getToDate())), false);
               }
               break;
             }
@@ -352,8 +351,8 @@ public class SegmentationCandidate implements Candidate {
     if (areCandidatesPicked()) {
       return candidateStream()
         .map(c -> c.getColumnEndTime(column))
-        .filter(Optional::isPresent)
-        .map(Optional::get)
+        .filter(Optional::isPresent) // use flatmap(Optional::stream) after migration to java9
+        .map(Optional::get)          // https://bugs.openjdk.java.net/browse/JDK-8050820
         .max(Comparator.naturalOrder());
     } else {
       return cubeStream()

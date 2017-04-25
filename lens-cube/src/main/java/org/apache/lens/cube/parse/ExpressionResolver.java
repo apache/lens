@@ -19,8 +19,6 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.CandidateUtil.getStorageCandidates;
-
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;

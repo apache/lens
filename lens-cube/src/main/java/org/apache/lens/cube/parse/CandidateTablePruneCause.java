@@ -19,7 +19,6 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
@@ -66,7 +65,7 @@ public class CandidateTablePruneCause {
       @Override
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         return new Object[]{
-          causes.stream().map(cause->cause.innerException).map(LensException::getMessage).collect(joining(","))
+          causes.stream().map(cause->cause.innerException).map(LensException::getMessage).collect(joining(",")),
         };
       }
     },
@@ -190,8 +189,9 @@ public class CandidateTablePruneCause {
         if (briefCause.size() == 1) {
           return new Object[]{briefCause.values().iterator().next(), };
         }
-        return new Object[]{ "segmentation pruned: "
-          + briefCause.entrySet().stream().map(entry->entry.getKey()+": "+entry.getValue()).collect(joining(";")),
+        return new Object[]{
+          "segmentation pruned: "
+            + briefCause.entrySet().stream().map(entry->entry.getKey()+": "+entry.getValue()).collect(joining(";")),
         };
       }
     },

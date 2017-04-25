@@ -100,8 +100,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
+
+import org.antlr.runtime.CommonToken;
 
 import com.google.common.collect.Sets;
 
@@ -672,5 +675,7 @@ public class MetastoreUtil {
   public static String getUpdatePeriodStoragePrefixKey(String factTableName, String storageName, String updatePeriod) {
     return MetastoreUtil.getFactKeyPrefix(factTableName) + "." + storageName + "." + updatePeriod;
   }
-
+  public static ASTNode getStringLiteralAST(String literal) {
+    return new ASTNode(new CommonToken(HiveParser.StringLiteral, literal));
+  }
 }
