@@ -822,11 +822,11 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return dimsToQuery;
   }
 
-  public Candidate pickCandidateToQuery() throws LensException {
+  Candidate pickCandidateToQuery() throws LensException {
     Candidate cand;
     if (hasCubeInQuery()) {
       Iterator<Candidate> iter = candidates.iterator();
-      while (pickedCandidate == null && iter.hasNext()) {
+      if (pickedCandidate == null && iter.hasNext()) {
         cand = iter.next();
         log.info("Available Candidates:{}, picking up Candidate: {} for querying", candidates, cand);
         pickedCandidate = cand;
@@ -838,16 +838,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return pickedCandidate;
   }
   void throwNoCandidateFactException() throws LensException {
-    if (!storagePruningMsgs.isEmpty()) {
-      try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(out, storagePruningMsgs.getJsonObject());
-        log.error("pruning messages: {}", out.toString("UTF-8"));
-      } catch (Exception e) {
-        throw new LensException("Error writing fact pruning messages", e);
-      }
-    }
-    log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}", storagePruningMsgs.toJsonObject());
+    log.error("Query rewrite failed due to NO_CANDIDATE_FACT_AVAILABLE, Cause {}", storagePruningMsgs.toJsonString());
     throw new NoCandidateFactAvailableException(this);
   }
   @Getter

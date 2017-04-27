@@ -19,7 +19,7 @@
   under the License.
 
 -->
-<x_base_cube name="b1cube" xmlns="uri:lens:cube:0.1">
+<x_base_cube name="b1c1cube" xmlns="uri:lens:cube:0.1">
   <properties>
     <property name="cube.timedim.partition.et" value="et"/>
     <property name="cube.timedim.partition.it" value="it"/>
@@ -29,19 +29,13 @@
     <property name="cube.timedim.partition.test_time_dim" value="ttd"/>
     <property name="cube.timedim.relation.d_time" value="processing_time+[-5 days,5 days]"/>
     <property name="cube.timedim.partition.test_time_dim2" value="ttd2"/>
-    <property name="cube.b1cube.timed.dimensions.list" value="d_time,pt,it,et,test_time_dim,test_time_dim2"/>
+    <property name="cube.b1c1cube.timed.dimensions.list" value="d_time,pt,it,et,test_time_dim,test_time_dim2"/>
     <property name="cube.allfields.queriable" value="true"/>
-    <property name="cube.table.b1cube.weight" value="0.0"/>
+    <property name="cube.table.b1c1cube.weight" value="0.0"/>
   </properties>
   <measures>
-    <measure _type="INT" name="segmsr1" default_aggr="SUM" description="segmentation measure 1"
-             display_string="segmentation measure 1"/>
-    <measure _type="INT" name="segmsr2" default_aggr="SUM" description="segmentation measure 2"
-             display_string="segmentation measure 2"/>
     <measure _type="INT" name="segsegmsr1" default_aggr="SUM" description="inner segmentation measure 1"
              display_string="inner segmentation measure 1"/>
-    <measure _type="INT" name="invmsr1" default_aggr="SUM" description="invalid measure b1cube"
-             display_string="b1cube invalid measure 1"/>
   </measures>
   <dim_attributes>
     <dim_attribute _type="string" name="business" display_string="business unit"
@@ -231,8 +225,8 @@
       <expr_spec expr="dim1)"/>
     </expression>
     <expression _type="string" name="singlecolchainrefexpr" display_string="dim3chainid"
-                description="b1cube.testDim3id">
-      <expr_spec expr="b1cube.testDim3id"/>
+                description="b1c1cube.testDim3id">
+      <expr_spec expr="b1c1cube.testDim3id"/>
     </expression>
     <expression _type="bigint" name="directmsrexpr" display_string="Direct Measure" description="">
       <expr_spec expr="directMsr + 0"/>
@@ -250,8 +244,8 @@
                 description="expression which facts and dimensions">
       <expr_spec expr="concat(dim1, &quot;:&quot;, citydim.name)"/>
     </expression>
-    <expression _type="string" name="singlecoldim1qualifiedexpr" display_string="dim1" description="b1cube.dim1">
-      <expr_spec expr="b1cube.dim1"/>
+    <expression _type="string" name="singlecoldim1qualifiedexpr" display_string="dim1" description="b1c1cube.dim1">
+      <expr_spec expr="b1c1cube.dim1"/>
     </expression>
     <expression _type="int" name="countofdistinctcityid" display_string="Count of Distinct CityId Expr"
                 description="Count of Distinct CityId">
@@ -344,7 +338,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="countryid" maps_to_many="false"/>
+              <from table="b1c1cube" column="countryid" maps_to_many="false"/>
               <to table="countrydim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -356,7 +350,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="userid" maps_to_many="false"/>
+              <from table="b1c1cube" column="userid" maps_to_many="false"/>
               <to table="userdim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -368,7 +362,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="userid" maps_to_many="false"/>
+              <from table="b1c1cube" column="userid" maps_to_many="false"/>
               <to table="userdim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -388,7 +382,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="cityid" maps_to_many="false"/>
+              <from table="b1c1cube" column="cityid" maps_to_many="false"/>
               <to table="citydim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -396,7 +390,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2" maps_to_many="false"/>
               <to table="testdim2" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -412,7 +406,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2" maps_to_many="false"/>
               <to table="testdim2" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -428,7 +422,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2big1" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2big1" maps_to_many="false"/>
               <to table="testdim2" column="bigid1" maps_to_many="false"/>
             </edge>
             <edge>
@@ -444,7 +438,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2big2" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2big2" maps_to_many="false"/>
               <to table="testdim2" column="bigid2" maps_to_many="false"/>
             </edge>
             <edge>
@@ -460,7 +454,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2bignew" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2bignew" maps_to_many="false"/>
               <to table="testdim2" column="bigidnew" maps_to_many="false"/>
             </edge>
             <edge>
@@ -476,7 +470,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="testdim3id" maps_to_many="false"/>
+              <from table="b1c1cube" column="testdim3id" maps_to_many="false"/>
               <to table="testdim3" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -488,7 +482,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim12" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim12" maps_to_many="false"/>
               <to table="testdim2" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -508,7 +502,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="cityid2" maps_to_many="false"/>
+              <from table="b1c1cube" column="cityid2" maps_to_many="false"/>
               <to table="citydim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -520,7 +514,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="cityid" maps_to_many="false"/>
+              <from table="b1c1cube" column="cityid" maps_to_many="false"/>
               <to table="citydim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -532,7 +526,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="cityid" maps_to_many="false"/>
+              <from table="b1c1cube" column="cityid" maps_to_many="false"/>
               <to table="citydim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -549,7 +543,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="test_time_dim_hour_id" maps_to_many="false"/>
+              <from table="b1c1cube" column="test_time_dim_hour_id" maps_to_many="false"/>
               <to table="hourdim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -561,7 +555,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="zipcode" maps_to_many="false"/>
+              <from table="b1c1cube" column="zipcode" maps_to_many="false"/>
               <to table="zipdim" column="code" maps_to_many="false"/>
             </edge>
           </edges>
@@ -569,7 +563,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="union_join_ctx_zipcode" maps_to_many="false"/>
+              <from table="b1c1cube" column="union_join_ctx_zipcode" maps_to_many="false"/>
               <to table="zipdim" column="code" maps_to_many="false"/>
             </edge>
           </edges>
@@ -581,7 +575,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="xuserid" maps_to_many="false"/>
+              <from table="b1c1cube" column="xuserid" maps_to_many="false"/>
               <to table="userdim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -601,7 +595,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="stateid" maps_to_many="false"/>
+              <from table="b1c1cube" column="stateid" maps_to_many="false"/>
               <to table="statedim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -614,7 +608,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="union_join_ctx_cityid" maps_to_many="false"/>
+              <from table="b1c1cube" column="union_join_ctx_cityid" maps_to_many="false"/>
               <to table="citydim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -627,7 +621,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="cityid" maps_to_many="false"/>
+              <from table="b1c1cube" column="cityid" maps_to_many="false"/>
               <to table="citydim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -647,7 +641,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="cityid" maps_to_many="false"/>
+              <from table="b1c1cube" column="cityid" maps_to_many="false"/>
               <to table="citydim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -664,7 +658,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="test_time_dim_day_id2" maps_to_many="false"/>
+              <from table="b1c1cube" column="test_time_dim_day_id2" maps_to_many="false"/>
               <to table="daydim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -676,7 +670,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2" maps_to_many="false"/>
               <to table="testdim2" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -688,7 +682,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2big1" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2big1" maps_to_many="false"/>
               <to table="testdim2" column="bigid1" maps_to_many="false"/>
             </edge>
             <edge>
@@ -700,7 +694,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2big2" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2big2" maps_to_many="false"/>
               <to table="testdim2" column="bigid2" maps_to_many="false"/>
             </edge>
             <edge>
@@ -712,7 +706,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2bignew" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2bignew" maps_to_many="false"/>
               <to table="testdim2" column="bigidnew" maps_to_many="false"/>
             </edge>
             <edge>
@@ -724,7 +718,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="testdim3id" maps_to_many="false"/>
+              <from table="b1c1cube" column="testdim3id" maps_to_many="false"/>
               <to table="testdim3" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -732,7 +726,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim12" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim12" maps_to_many="false"/>
               <to table="testdim2" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -749,7 +743,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="cdim2" maps_to_many="false"/>
+              <from table="b1c1cube" column="cdim2" maps_to_many="false"/>
               <to table="cycledim1" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -762,7 +756,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="urdimid" maps_to_many="false"/>
+              <from table="b1c1cube" column="urdimid" maps_to_many="false"/>
               <to table="unreachabledim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -774,7 +768,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="cityid1" maps_to_many="false"/>
+              <from table="b1c1cube" column="cityid1" maps_to_many="false"/>
               <to table="citydim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -786,7 +780,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="yuserid" maps_to_many="false"/>
+              <from table="b1c1cube" column="yuserid" maps_to_many="false"/>
               <to table="userdim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -807,7 +801,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="test_time_dim_hour_id2" maps_to_many="false"/>
+              <from table="b1c1cube" column="test_time_dim_hour_id2" maps_to_many="false"/>
               <to table="hourdim" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -820,7 +814,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="userid" maps_to_many="false"/>
+              <from table="b1c1cube" column="userid" maps_to_many="false"/>
               <to table="userdim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -836,7 +830,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2" maps_to_many="false"/>
               <to table="testdim2" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -844,7 +838,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2big1" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2big1" maps_to_many="false"/>
               <to table="testdim2" column="bigid1" maps_to_many="false"/>
             </edge>
           </edges>
@@ -852,7 +846,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2big2" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2big2" maps_to_many="false"/>
               <to table="testdim2" column="bigid2" maps_to_many="false"/>
             </edge>
           </edges>
@@ -860,7 +854,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim2bignew" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim2bignew" maps_to_many="false"/>
               <to table="testdim2" column="bigidnew" maps_to_many="false"/>
             </edge>
           </edges>
@@ -868,7 +862,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="dim12" maps_to_many="false"/>
+              <from table="b1c1cube" column="dim12" maps_to_many="false"/>
               <to table="testdim2" column="id" maps_to_many="false"/>
             </edge>
           </edges>
@@ -881,7 +875,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="stateid" maps_to_many="false"/>
+              <from table="b1c1cube" column="stateid" maps_to_many="false"/>
               <to table="statedim" column="id" maps_to_many="false"/>
             </edge>
             <edge>
@@ -898,7 +892,7 @@
         <path>
           <edges>
             <edge>
-              <from table="b1cube" column="test_time_dim_day_id" maps_to_many="false"/>
+              <from table="b1c1cube" column="test_time_dim_day_id" maps_to_many="false"/>
               <to table="daydim" column="id" maps_to_many="false"/>
             </edge>
           </edges>

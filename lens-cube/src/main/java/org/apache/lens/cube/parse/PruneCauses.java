@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toMap;
 
 import static com.google.common.collect.Sets.newHashSet;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -30,10 +31,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
@@ -60,6 +63,7 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
 
   @Getter(lazy = true)
   private final BriefAndDetailedError jsonObject = toJsonObject();
+
 
   public void addPruningMsg(T table, CandidateTablePruneCause msg) {
     computeIfAbsent(table, x -> new ArrayList()).add(msg);
@@ -105,6 +109,11 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
     new BriefAndDetailedError();
   }
 
+  String toJsonString() throws LensException {
+    return getJsonObject().toJsonString();
+  }
+
+
   @JsonWriteNullProperties(false)
   @Data
   @AllArgsConstructor
@@ -117,6 +126,15 @@ public class PruneCauses<T> extends HashMap<T, List<CandidateTablePruneCause>> {
       return getDetails().entrySet().stream().collect(toMap(
         o -> newHashSet(o.getKey().split(",")),
         Map.Entry::getValue));
+    }
+    String toJsonString() throws LensException {
+      try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(out, this);
+        return out.toString("UTF-8");
+      } catch (Exception e) {
+        throw new LensException("Error writing fact pruning messages", e);
+      }
     }
   }
 }

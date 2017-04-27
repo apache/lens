@@ -190,6 +190,8 @@ public class CubeQueryRewriter {
 
     // Phase 2 of storageTableResolver: resolve storage table partitions.
     rewriters.add(storageTableResolver);
+    // For all segmentation candidates, for all segments, modify query ast and perform rewrites on inner cubes
+    // Also takes care of performing rewrites in segmentation candidates under a union/join candidate
     rewriters.add(new SegmentationInnerRewriter(conf, hconf));
     // In case partial data is allowed (via lens.cube.query.fail.if.data.partial = false) and there are many
     // combinations with partial data, pick the one that covers the maximum part of time ranges(s) queried
@@ -213,6 +215,8 @@ public class CubeQueryRewriter {
     // queried will be picked. Rest of the combinations will be pruned
     rewriters.add(new LeastPartitionResolver());
     rewriters.add(new LightestDimensionResolver());
+    // Takes all candidates remaining till now, tries to explode that.
+    // see CandidateExploder#rewriteContext and Candidate#explode for further documentation
     rewriters.add(new CandidateExploder());
   }
 

@@ -28,6 +28,11 @@ import com.google.common.collect.Sets;
  * Created on 21/04/17.
  */
 public class CandidateExploder implements ContextRewriter {
+  /**
+   * Replacing all candidates with their exploded versions in cubeql.getCandidates()
+   * @param cubeql CubeQueryContext
+   * @throws LensException propagated exception
+   */
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     Set<Candidate> candidateSet = Sets.newHashSet();

@@ -23,6 +23,7 @@ import static org.apache.lens.cube.metadata.DateFactory.NOW;
 import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE;
 import static org.apache.lens.cube.metadata.DateFactory.TWO_MONTHS_RANGE_UPTO_DAYS;
 import static org.apache.lens.cube.metadata.DateFactory.getDateWithOffset;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.SEGMENTATION_PRUNED;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AUTO_JOINS;
 import static org.apache.lens.cube.parse.CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES;
@@ -43,6 +44,7 @@ import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
@@ -56,6 +58,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Sets;
+import junit.framework.Assert;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -308,5 +311,16 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       null,
       getWhereForDailyAndHourly2days("basecube", "c1_b1fact1"));
     compareQueries(actual, expected);
+  }
+  @Test
+  public void testSegmentationPruningWithPruneCause() throws LensException {
+    String userQuery = "select segsegmsr1 from testcube where " + TWO_DAYS_RANGE;
+    PruneCauses<Candidate> pruneCauses = getBriefAndDetailedError(userQuery, getConf());
+    Assert.assertEquals(pruneCauses.getMaxCause(), SEGMENTATION_PRUNED);
+    Map<String, String> innerCauses = pruneCauses.getCompact().get("SEG[b1cube; b2cube]")
+      .iterator().next().getInnerCauses();
+    Assert.assertEquals(innerCauses.size(), 2);
+    Assert.assertTrue(innerCauses.get("b1cube").equals("Columns [segsegmsr1] are not present in any table"));
+    Assert.assertTrue(innerCauses.get("b2cube").equals("Columns [segsegmsr1] are not present in any table"));
   }
 }

@@ -92,9 +92,6 @@ public class SegmentationCandidate implements Candidate {
 
 
   public SegmentationCandidate explode() throws LensException {
-    for (CubeQueryContext queryContext : cubeQueryContextMap.values()) {
-      queryContext.getQueryWriter();
-    }
     return this;
   }
 
@@ -145,22 +142,24 @@ public class SegmentationCandidate implements Candidate {
       trimHavingAndOrderby(ast, innerCube);
       CubeQueryRewriter rewriter = new CubeQueryRewriter(conf, hconf);
       CubeQueryContext ctx = rewriter.rewrite(ast);
-      ctx.pickCandidateToQuery();
-      for (StorageCandidate storageCandidate : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
-        for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
-          TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
-          TimeRange queriedTimeRange = timeRangeTimeRangeEntry.getValue();
-          Set<FactPartition> rangeToPartition = storageCandidate.getRangeToPartitions().get(timeRange);
-          if (rangeToPartition != null) {
-            storageCandidate.getRangeToPartitions().put(queriedTimeRange, rangeToPartition);
-          }
-          String extraWhere = storageCandidate.getRangeToExtraWhereFallBack().get(timeRange);
-          if (extraWhere != null) {
-            storageCandidate.getRangeToExtraWhereFallBack().put(queriedTimeRange, extraWhere);
+      cubeQueryContextMap.put(segment.getName(), ctx);
+      if (!ctx.getCandidates().isEmpty()) {
+        ctx.pickCandidateToQuery();
+        for (StorageCandidate storageCandidate : CandidateUtil.getStorageCandidates(ctx.getPickedCandidate())) {
+          for (Map.Entry<TimeRange, TimeRange> timeRangeTimeRangeEntry : queriedRangeToMyRange.entrySet()) {
+            TimeRange timeRange = timeRangeTimeRangeEntry.getKey();
+            TimeRange queriedTimeRange = timeRangeTimeRangeEntry.getValue();
+            Set<FactPartition> rangeToPartition = storageCandidate.getRangeToPartitions().get(timeRange);
+            if (rangeToPartition != null) {
+              storageCandidate.getRangeToPartitions().put(queriedTimeRange, rangeToPartition);
+            }
+            String extraWhere = storageCandidate.getRangeToExtraWhereFallBack().get(timeRange);
+            if (extraWhere != null) {
+              storageCandidate.getRangeToExtraWhereFallBack().put(queriedTimeRange, extraWhere);
+            }
           }
         }
       }
-      cubeQueryContextMap.put(segment.getName(), ctx);
     }
     return areCandidatesPicked();
   }
@@ -290,7 +289,7 @@ public class SegmentationCandidate implements Candidate {
   }
 
   private Stream<Candidate> candidateStream() {
-    return contextStream().map(CubeQueryContext::getPickedCandidate);
+    return contextStream().map(CubeQueryContext::getPickedCandidate).filter(Objects::nonNull);
   }
 
   private Stream<CubeQueryContext> contextStream() {

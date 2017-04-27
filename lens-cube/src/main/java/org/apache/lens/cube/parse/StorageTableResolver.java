@@ -251,10 +251,9 @@ class StorageTableResolver implements ContextRewriter {
       Candidate c = it.next();
       if (c instanceof StorageCandidate) {
         StorageCandidate sc = (StorageCandidate) c;
-        String storageName = sc.getStorageName();
         // first check: if the storage is supported on driver
-        if (!isStorageSupportedOnDriver(storageName)) {
-          log.info("Skipping storage: {} as it is not supported", storageName);
+        if (!isStorageSupportedOnDriver(sc.getStorageName())) {
+          log.info("Skipping storage: {} as it is not supported", sc.getStorageName());
           cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.UNSUPPORTED_STORAGE));
           it.remove();
           continue;
@@ -262,10 +261,9 @@ class StorageTableResolver implements ContextRewriter {
         String str = conf.get(CubeQueryConfUtil.getValidStorageTablesKey(sc.getFact().getName()));
         List<String> validFactStorageTables =
           StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
-        storageName = sc.getStorageTable();
         // Check if storagetable is in the list of valid storages.
-        if (validFactStorageTables != null && !validFactStorageTables.contains(storageName)) {
-          log.info("Skipping storage table {} as it is not valid", storageName);
+        if (validFactStorageTables != null && !validFactStorageTables.contains(sc.getStorageTable())) {
+          log.info("Skipping storage table {} as it is not valid", sc.getStorageTable());
           cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_STORAGE));
           it.remove();
           continue;
@@ -292,7 +290,7 @@ class StorageTableResolver implements ContextRewriter {
           } else if (validUpdatePeriods != null && !validUpdatePeriods.contains(updatePeriod.name().toLowerCase())) {
             // if user supplied valid update periods, other update periods are useless
             log.info("Skipping update period {} for candidate {} for storage {} since it's invalid",
-              updatePeriod, sc.getStorageTable(), storageName);
+              updatePeriod, sc.getName(), sc.getStorageName());
             skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.INVALID);
           } else if (!sc.isUpdatePeriodUseful(updatePeriod)) {
             // if the storage candidate finds this update useful to keep looking at the time ranges queried

@@ -269,10 +269,9 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     Configuration tConf = new Configuration(conf);
     tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
     //test_time_dim2 and dim2 are not querable together
-    NoCandidateFactAvailableException e = (NoCandidateFactAvailableException)getLensExceptionInRewrite(
+    // not checking error codes or prune causes. Just verifying not answerable
+    NoCandidateFactAvailableException e = getLensExceptionInRewrite(
       "select dim2, test_time_dim2 from testcube where " + TWO_DAYS_RANGE, tConf);
-    Assert.assertEquals(e.getJsonMessage().getBrief(),
-      "Range not answerable"); // getting storage update periods are not valid for given time range
   }
 
   @Test

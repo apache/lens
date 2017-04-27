@@ -28,6 +28,7 @@ import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.ErrorCollectionFactory;
 import org.apache.lens.api.error.LensError;
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.server.api.*;
 import org.apache.lens.server.api.error.LensException;
 
@@ -110,8 +111,7 @@ public abstract class TestQueryRewrite {
     }
   }
 
-  protected <T extends LensException> T getLensExceptionInRewrite(String query, Configuration conf)
-    throws LensException {
+  protected <T extends LensException> T getLensExceptionInRewrite(String query, Configuration conf) {
     try {
       String hql = rewrite(query, conf);
       Assert.fail("Should have thrown exception. But rewrote the query : " + hql);
@@ -121,6 +121,10 @@ public abstract class TestQueryRewrite {
       log.error("Lens exception in Rewrite.", e);
       return (T) e;
     }
+  }
+  protected PruneCauses<Candidate> getBriefAndDetailedError(String query, Configuration conf) {
+    NoCandidateFactAvailableException e = getLensExceptionInRewrite(query, conf);
+    return e.getBriefAndDetailedError();
   }
 
   protected void assertLensExceptionInRewrite(String query, Configuration conf, LensCubeErrorCode expectedError)

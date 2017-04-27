@@ -62,10 +62,14 @@
              description="measure without a default aggregate">
     </measure>
     <measure _type="INT" name="union_join_ctx_msr1" description="union_join_ctx_first measure"/>
-    <measure _type="INT" name="segmsr1" default_aggr="SUM" description="segmentation measure 1"
-             display_string="segmentation measure 1"/>
     <measure _type="INT" name="invmsr1" default_aggr="SUM" description="invalid measure seg"
              display_string="seg invalid measure 1"/>
+    <measure _type="INT" name="segmsr1" default_aggr="SUM" description="segmentation measure 1"
+             display_string="segmentation measure 1"/>
+    <measure _type="INT" name="segmsr2" default_aggr="SUM" description="segmentation measure 2"
+             display_string="segmentation measure 2"/>
+    <measure _type="INT" name="segsegmsr1" default_aggr="SUM" description="inner segmentation measure 1"
+             display_string="inner segmentation measure 1"/>
   </measures>
   <dim_attributes>
     <dim_attribute _type="string" name="union_join_ctx_cityname" display_string="union_join_ctx_city name"

@@ -904,30 +904,9 @@ public final class HQLParser {
   }
   @Data
   public static class HashableASTNode {
-    private ASTNode ast;
+    private final ASTNode ast;
     private int hashCode = -1;
     private boolean hashCodeComputed = false;
-
-    public HashableASTNode(ASTNode ast) {
-//      this.ast = MetastoreUtil.copyAST(ast, astNode -> {
-//        ASTNode copy = new ASTNode(new CommonToken(astNode.getToken()));
-//        if (astNode.getType() == Identifier) {
-//          ASTNode parent  = (ASTNode) astNode.getParent();
-//          if (parent != null && parent.getType() == TOK_TABLE_OR_COL) {
-//            ASTNode grandParent = (ASTNode) parent.getParent();
-//            if (grandParent != null && grandParent.getType() == DOT && parent.getChildIndex() == 0) { // left child
-//              copy.getToken().setText(copy.getToken().getText().replaceAll("^.*$", "_"));
-//            }
-//          }
-//        }
-//        return Tuple2.of(copy, true);
-//      });
-      this.ast = ast;
-    }
-
-    public ASTNode getAST() {
-      return ast;
-    }
 
     @Override
     public int hashCode() {
@@ -940,8 +919,8 @@ public final class HQLParser {
 
     @Override
     public boolean equals(Object o) {
-      return o instanceof HashableASTNode && this.hashCode() == o.hashCode() && getString(this.getAST())
-        .trim().equalsIgnoreCase(getString(((HashableASTNode) o).getAST()).trim());
+      return o instanceof HashableASTNode && this.hashCode() == o.hashCode() && getString(this.getAst())
+        .trim().equalsIgnoreCase(getString(((HashableASTNode) o).getAst()).trim());
     }
   }
 

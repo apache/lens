@@ -37,6 +37,7 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -601,11 +602,8 @@ public class MetastoreUtil {
     ASTNode copy = copy1.getLeft();
     if (copy1.getRight()) {
       if (original.getChildren() != null) {
-        for (Object o : original.getChildren()) {
-          ASTNode childCopy = copyAST((ASTNode) o, overrideCopyFunction);
-          if (childCopy != null) {
-            copy.addChild(childCopy);
-          }
+        for (Node o : original.getChildren()) {
+          copy.addChild(copyAST((ASTNode) o, overrideCopyFunction));
         }
       }
     }
