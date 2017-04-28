@@ -19,6 +19,7 @@
 package org.apache.lens.cli.commands;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,9 +45,10 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.Maps;
 
 @Component
-@UserDocumentation(title = "Creating schema with one command")
+@UserDocumentation(title = "Creating schema with one command",
+  description = "")
 public class LensSchemaCommands implements CommandMarker {
-  private static final String STRUCTURE = "\n"
+  public static final String STRUCTURE = "\n"
     + ".\n"
     + "|-- storages\n"
     + "|  |-- storage1.xml\n"
@@ -90,6 +92,7 @@ public class LensSchemaCommands implements CommandMarker {
     logger.setLevel(Level.FINE);
   }
 
+  private static final FilenameFilter XML_FILTER = (dir, name) -> name.endsWith(".xml");
   private static final Map<Class<?>, String> CREATE_COMMAND_MAP = Maps.newHashMap();
   private static final Map<Class<?>, String> UPDATE_COMMAND_MAP = Maps.newHashMap();
 

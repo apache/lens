@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,7 @@ import org.apache.lens.server.api.error.LensException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Prune candidate fact sets which require more partitions than minimum parts.
+ * Prune candidates which require more partitions than minimum parts.
  */
 @Slf4j
 class LeastPartitionResolver implements ContextRewriter {
@@ -41,16 +41,14 @@ class LeastPartitionResolver implements ContextRewriter {
       //The number of partitions being calculated is not the actual number of partitions,
       // they are number of time values now instead of partitions.
       // This seems fine, as the less number of time values actually represent the rollups on time. And with
-      // MaxCoveringFactResolver facts with less partitions which are not covering the range would be removed.
+      // MaxCoveringFactResolver candidates with less partitions which are not covering the range would be removed.
       for (Candidate candidate : cubeql.getCandidates()) {
-        int count = getPartCount(candidate);
-        if (count > 0) {
-          factPartCount.put(candidate, count);
+        int parts = candidate.getParticipatingPartitions().size();
+        if (parts > 0) {
+          factPartCount.put(candidate, parts);
         }
       }
-      if (factPartCount.isEmpty()) {
-        return;
-      }
+
       double minPartitions = Collections.min(factPartCount.values());
 
       for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
@@ -65,13 +63,4 @@ class LeastPartitionResolver implements ContextRewriter {
       }
     }
   }
-
-  private int getPartCount(Candidate candidate) {
-    int parts = 0;
-    for (StorageCandidate sc : CandidateUtil.getStorageCandidates(candidate)) {
-      parts += sc.getNumQueriedParts();
-    }
-    return parts;
-  }
-
 }

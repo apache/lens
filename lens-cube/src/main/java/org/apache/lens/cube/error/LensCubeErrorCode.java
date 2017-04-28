@@ -63,7 +63,8 @@ public enum LensCubeErrorCode {
   ERROR_IN_ENTITY_DEFINITION(3101, 100),
   TIMELINE_ABSENT(3102, 100),
   EXPRESSION_NOT_PARSABLE(3103, 1500),
-  ENTITY_NOT_FOUND(3104, 1500);
+  ENTITY_NOT_FOUND(3104, 1500),
+  NO_PARTITION_FILTER(3105, 1500);
 
   public LensErrorInfo getLensErrorInfo() {
     return this.errorInfo;

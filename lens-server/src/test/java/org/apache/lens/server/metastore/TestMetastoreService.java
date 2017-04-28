@@ -1954,9 +1954,18 @@ public class TestMetastoreService extends LensJerseyTest {
       assertSuccess(partUpdateResult);
 
       JAXBElement<XPartitionList> partitionsElement = target().path("metastore/facts").path(table)
-        .path("storages/S1/partitions").queryParam("sessionid", lensSessionId).request(mediaType)
+        .path("storages/S1/partitions").queryParam("sessionid", lensSessionId)
+        .queryParam("filter", "dt='" + HOURLY.format(partDate) + "'")
+        .request(mediaType)
         .get(new GenericType<JAXBElement<XPartitionList>>() {
         });
+
+      //Getting partitions without filter will throw an error.
+      Response res = target().path("metastore/facts").path(table).path("storages/S1/partitions")
+        .queryParam("sessionid", lensSessionId).request(mediaType).get();
+      assertEquals(res.getStatus(), 400);
+      assertEquals(res.readEntity(String.class), "Partition filter can not be null or empty");
+
 
       XPartitionList partitions = partitionsElement.getValue();
       assertNotNull(partitions);
@@ -1998,7 +2007,9 @@ public class TestMetastoreService extends LensJerseyTest {
 
       // Verify partition was dropped
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S1/partitions")
-        .queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XPartitionList>>() {
+        .queryParam("sessionid", lensSessionId)
+        .queryParam("filter", "dt='" + HOURLY.format(partDate) + "'")
+        .request(mediaType).get(new GenericType<JAXBElement<XPartitionList>>() {
         });
 
       partitions = partitionsElement.getValue();
@@ -2523,14 +2534,18 @@ public class TestMetastoreService extends LensJerseyTest {
 
       xp.setLocation(xp.getLocation() + "/a/b/c");
       APIResult partUpdateResult = target().path("metastore/facts/").path(table).path("storages/S2/partition")
-        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .queryParam("sessionid", lensSessionId)
+        .queryParam("filter", "dt='" + HOURLY.format(partDate) + "'")
+        .request(mediaType)
         .put(Entity.entity(new GenericEntity<JAXBElement<XPartition>>(cubeObjectFactory.createXPartition(xp)){},
           mediaType), APIResult.class);
       assertSuccess(partUpdateResult);
 
       JAXBElement<XPartitionList> partitionsElement = target().path("metastore/facts").path(table)
         .path("storages/S2/partitions")
-        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .queryParam("sessionid", lensSessionId)
+        .queryParam("filter", "dt='" + HOURLY.format(partDate) + "'")
+        .request(mediaType)
         .get(new GenericType<JAXBElement<XPartitionList>>() {
         });
 
@@ -2574,7 +2589,9 @@ public class TestMetastoreService extends LensJerseyTest {
 
       // Verify partition was dropped
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
-        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .queryParam("sessionid", lensSessionId)
+        .queryParam("filter", "dt='" + HOURLY.format(partDate) + "'")
+        .request(mediaType)
         .get(new GenericType<JAXBElement<XPartitionList>>() {
         });
 
@@ -2629,7 +2646,9 @@ public class TestMetastoreService extends LensJerseyTest {
 
       // Verify partition was added
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
-        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .queryParam("sessionid", lensSessionId)
+        .queryParam("filter", "dt='" + HOURLY.format(partDate) + "'")
+        .request(mediaType)
         .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
       partitions = partitionsElement.getValue();
@@ -2646,7 +2665,9 @@ public class TestMetastoreService extends LensJerseyTest {
 
       // Verify partition was dropped
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
-        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .queryParam("sessionid", lensSessionId)
+        .queryParam("filter", "dt='" + HOURLY.format(partDate) + "'")
+        .request(mediaType)
         .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
       partitions = partitionsElement.getValue();

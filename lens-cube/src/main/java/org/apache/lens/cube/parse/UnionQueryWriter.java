@@ -21,31 +21,22 @@ package org.apache.lens.cube.parse;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.lens.cube.parse.HQLParser.*;
 
-import static org.apache.lens.cube.parse.HQLParser.HashableASTNode;
-import static org.apache.lens.cube.parse.HQLParser.getDotAST;
-import static org.apache.lens.cube.parse.HQLParser.hasAggregate;
-import static org.apache.lens.cube.parse.HQLParser.isAggregateAST;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FUNCTION;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELECT;
+import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.apache.hadoop.util.StringUtils;
 
 import org.antlr.runtime.CommonToken;
 
@@ -71,7 +62,8 @@ public class UnionQueryWriter extends SimpleHQLContext {
       throw new RuntimeException("default measure not parsable");
     }
   }
-  private Collection<StorageCandidateHQLContext> storageCandidates;
+  Collection<StorageCandidateHQLContext> storageCandidates;
+  public static final String DUPLICATE_EXPRESSION_PREFIX = "D";
 
   UnionQueryWriter(List<StorageCandidateHQLContext> storageCandidates, CubeQueryContext cubeql) throws LensException {
     super(DefaultQueryAST.fromStorageCandidate(storageCandidates.iterator().next()));
@@ -80,7 +72,6 @@ public class UnionQueryWriter extends SimpleHQLContext {
       throw new IllegalArgumentException("There should be atleast two storage candidates to write a union query");
     }
     this.cubeql = cubeql;
-    this.storageCandidates = storageCandidates;
   }
 
   @Override
@@ -332,10 +323,12 @@ public class UnionQueryWriter extends SimpleHQLContext {
     }
     for (List<Integer> values : phraseCountMap.values()) {
       if (values.size() > 1) {
-        String aliasToKeep = HQLParser.findNodeByPath(phrases.get(values.get(0)), Identifier).toString();
+        String aliasToKeep = HQLParser.findNodeByPath((ASTNode)
+            phrases.get(values.get(0)), Identifier).toString();
         ArrayList<String> dupAliases = new ArrayList<>();
         for (int i : values.subList(1, values.size())) {
-          dupAliases.add(HQLParser.findNodeByPath(phrases.get(i), Identifier).toString());
+          dupAliases.add(HQLParser.findNodeByPath((ASTNode)
+              phrases.get(i), Identifier).toString());
         }
         aliasMap.put(aliasToKeep, dupAliases);
       }
@@ -354,6 +347,17 @@ public class UnionQueryWriter extends SimpleHQLContext {
         }
       }
     }
+
+    for (StorageCandidateHQLContext sc : storageCandidates) {
+      for (Node node : sc.getQueryAst().getSelectAST().getChildren()) {
+        ASTNode selectNode = (ASTNode) node;
+        if (selectNode.getToken().getType() == HiveParser.Identifier
+            && selectNode.getText().equals(DUPLICATE_EXPRESSION_PREFIX)) {
+          sc.getQueryAst().getSelectAST().deleteChild(selectNode.getChildIndex());
+        }
+      }
+    }
+
     updateOuterASTDuplicateAliases(queryAst.getSelectAST(), aliasMap);
     if (queryAst.getHavingAST() != null) {
       updateOuterASTDuplicateAliases(queryAst.getHavingAST(), aliasMap);
@@ -698,7 +702,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
         ASTNode column = (ASTNode) selectExpr.getChild(0);
         if (HQLParser.isAggregateAST(column)
             && column.getChildCount() == 2) {
-          if (HQLParser.getString((ASTNode) column.getChild(1)).equals("0.0")) {
+          if (HQLParser.getString((ASTNode) column.getChild(1)).equals(DEFAULT_MEASURE)) {
             selectExpr.getParent().setChild(i, getSelectExpr(null, (ASTNode) selectExpr.getChild(1), true));
           }
         }

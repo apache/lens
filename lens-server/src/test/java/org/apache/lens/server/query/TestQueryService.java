@@ -23,21 +23,32 @@ import static javax.ws.rs.core.Response.Status.*;
 
 import static org.apache.lens.server.LensServerTestUtil.DB_WITH_JARS;
 import static org.apache.lens.server.LensServerTestUtil.DB_WITH_JARS_2;
+
 import static org.apache.lens.server.api.LensServerAPITestUtil.getLensConf;
+
 import static org.apache.lens.server.api.user.MockDriverQueryHook.*;
+
 import static org.apache.lens.server.common.RestAPITestUtil.*;
 
 import static org.testng.Assert.*;
 
 import java.io.*;
 import java.net.URLEncoder;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
@@ -91,7 +102,6 @@ import org.testng.annotations.*;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -2020,5 +2030,86 @@ public class TestQueryService extends LensJerseyTest {
       + (lensQuery.getFinishTime() - lensQuery.getLaunchTime()));
     assertTrue((lensQuery.getFinishTime() - lensQuery.getLaunchTime()) < 400, "Query time is "
       + (lensQuery.getFinishTime() - lensQuery.getLaunchTime()));
+  }
+
+  @Test(dataProvider = "mediaTypeData")
+  public void testEstimateRejectionException(MediaType mt) throws Exception {
+    class EstimateRunnable implements Runnable {
+      boolean failed = false;
+      boolean completed = false;
+      boolean wrongMessage = true;
+
+      @Override
+      public void run() {
+        Map<String, String> sessionconf = new HashMap<>();
+        sessionconf.put("test.session.key", "svalue");
+        LensSessionHandle sessionhandle = null;
+        try {
+          sessionhandle = queryService.openSession("foo@localhost", "bar", sessionconf);
+          final WebTarget target = target().path("queryapi/queries");
+          LensConf lensConf = new LensConf();
+          lensConf.addProperty("mock.driver.sleep", "true");
+          lensConf.addProperty("mock.driver.sleep.ms", "500");
+          final FormDataMultiPart mp = new FormDataMultiPart();
+          mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), sessionhandle, mt));
+          mp.bodyPart(
+            new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
+          mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "estimate"));
+          mp.bodyPart(
+            new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), lensConf, mt));
+          Response response = target.request(mt).post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+          LensAPIResult result = response.readEntity(LensAPIResult.class);
+          if (response.getStatus() == 500) {
+            failed = true;
+            if (result.getLensErrorTO().getMessage().equals("Server is overloaded at this time")) {
+              wrongMessage = false;
+            }
+          }
+          if (response.getStatus() == 200) {
+            completed = true;
+          }
+        } catch (LensException e) {
+          log.error("Error in the EstimateRunnable thread while creating a session", e);
+        } finally {
+          try {
+            queryService.closeSession(sessionhandle);
+          } catch (LensException e) {
+            log.error("Error in the EstimateRunnable thread while closing the session", e);
+          }
+        }
+      }
+    }
+    List<Thread> threads = new ArrayList<>();
+    List<EstimateRunnable> estimateRunnables = new ArrayList<>();
+
+    int totalTasks = 10;
+    for (int i = 0; i < totalTasks; i++) {
+      EstimateRunnable r = new EstimateRunnable();
+      estimateRunnables.add(r);
+      Thread t = new Thread(r);
+      threads.add(t);
+      t.start();
+    }
+    // Wait for them to finish
+    for (Thread t : threads) {
+      t.join();
+    }
+    List<EstimateRunnable> completedTaks = estimateRunnables.stream().filter(new Predicate<EstimateRunnable>() {
+      @Override
+      public boolean test(EstimateRunnable estimateRunnable) {
+        return estimateRunnable.completed;
+      }
+    }).collect(Collectors.toList());
+    List<EstimateRunnable> inCompleteTasks = estimateRunnables.stream().filter(new Predicate<EstimateRunnable>() {
+      @Override
+      public boolean test(EstimateRunnable estimateRunnable) {
+        // If estimate was failed, it should only be because of the server getting overloaded.
+        return estimateRunnable.failed && !estimateRunnable.wrongMessage;
+      }
+    }).collect(Collectors.toList());
+
+    assertTrue(completedTaks.size() > 0);
+    assertTrue(inCompleteTasks.size() > 0);
+    assertEquals(completedTaks.size() + inCompleteTasks.size(), totalTasks);
   }
 }

@@ -263,6 +263,7 @@ public class CandidateTablePruneCause {
   // if a time dim is not supported by the fact. Would be set if and only if
   // the fact is not partitioned by part col of the time dim and time dim is not a dim attribute
   private Set<String> unsupportedTimeDims;
+  private MaxCoveringFactResolver.TimeCovered maxTimeCovered;
   // time covered
   // ranges in which fact is invalid
   private List<TimeRange> invalidRanges;
@@ -322,6 +323,12 @@ public class CandidateTablePruneCause {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(INCOMPLETE_PARTITION);
     //incompleteParts may be null when partial data is allowed.
     cause.setIncompletePartitions(incompleteParts);
+    return cause;
+  }
+
+  public static CandidateTablePruneCause lessData(MaxCoveringFactResolver.TimeCovered timeCovered) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(LESS_DATA);
+    cause.setMaxTimeCovered(timeCovered);
     return cause;
   }
 
