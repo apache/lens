@@ -21,6 +21,8 @@
  */
 package org.apache.lens.api.query;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -29,7 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlEnum
-public enum ResultColumnType {
+public enum ResultColumnType implements Serializable {
 
   /**
    * The boolean.

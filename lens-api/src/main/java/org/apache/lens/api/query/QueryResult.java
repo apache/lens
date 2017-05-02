@@ -21,6 +21,8 @@
  */
 package org.apache.lens.api.query;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
@@ -35,9 +37,9 @@ import lombok.NoArgsConstructor;
  */
 @XmlRootElement
 @XmlSeeAlso({PersistentQueryResult.class, InMemoryQueryResult.class})
-/**
+/*
  * Instantiates a new query result.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class QueryResult extends ToYAMLString implements PrettyPrintable {
+public abstract class QueryResult extends ToYAMLString implements PrettyPrintable, Serializable {
 }

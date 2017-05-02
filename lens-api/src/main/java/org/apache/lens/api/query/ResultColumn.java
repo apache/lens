@@ -21,6 +21,8 @@
  */
 package org.apache.lens.api.query;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -46,7 +48,7 @@ import lombok.NoArgsConstructor;
  * Instantiates a new result column.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ResultColumn {
+public class ResultColumn implements Serializable {
 
   /**
    * The name.
