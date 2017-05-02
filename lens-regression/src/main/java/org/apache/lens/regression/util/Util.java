@@ -80,7 +80,6 @@ public class Util {
   private static String localFile;
   private static String backupFile;
 
-  private static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(Util.class);
 
   private Util() {
 
@@ -461,13 +460,13 @@ public class Util {
       value        = xpath.compile(xmlPathExpr).evaluate(doc);
 
     } catch (ParserConfigurationException e) {
-      logger.info(e);
+      log.error("error", e);
     } catch (SAXException e) {
-      logger.info(e);
+      log.error("error", e);
     } catch (IOException e) {
-      logger.info(e);
+      log.error("error", e);
     } catch (XPathExpressionException e) {
-      logger.info(e);
+      log.error("error", e);
     }
     return value;
   }

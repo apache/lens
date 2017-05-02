@@ -21,6 +21,7 @@
  */
 package org.apache.lens.api.query;
 
+import java.io.Serializable;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -49,7 +50,7 @@ import lombok.NoArgsConstructor;
  * Instantiates a new query result set metadata.
  */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class QueryResultSetMetadata extends ToYAMLString {
+public class QueryResultSetMetadata extends ToYAMLString implements Serializable {
 
   /**
    * The columns.
