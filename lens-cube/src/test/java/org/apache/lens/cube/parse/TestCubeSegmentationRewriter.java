@@ -116,7 +116,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       "SELECT (testcube.alias0) as `cityid`, sum((testcube.alias1)) as `segmsr1` FROM (",
       " ) as testcube GROUP BY (testcube.alias0)", newArrayList(query1, query2));
   }
-  
+
   /*
   Asking for segmsr1 from testcube. segmsr1 is available in b1b2fact and seg1 split over time.
    Inside seg1, Two segments are there: b1cube and b2cube. b1cube has one fact b1fact which
