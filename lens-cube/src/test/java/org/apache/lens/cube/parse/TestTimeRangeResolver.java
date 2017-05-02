@@ -113,13 +113,14 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
    * @return
    */
   private static List<CandidateTablePruneCause> findPruningMessagesForStorage(String stoargeName,
-    PruneCauses<StorageCandidate> allStoragePruningMsgs) {
-    for (StorageCandidate sc : allStoragePruningMsgs.keySet()) {
-      if (sc.getStorageTable().equals(stoargeName)) {
-        return allStoragePruningMsgs.get(sc);
+    PruneCauses<Candidate> allStoragePruningMsgs) {
+    for (Candidate sc : allStoragePruningMsgs.keySet()) {
+      if (sc instanceof StorageCandidate) {
+        if (((StorageCandidate)sc).getStorageTable().equals(stoargeName)) {
+          return allStoragePruningMsgs.get(sc);
+        }
       }
     }
     return  new ArrayList<CandidateTablePruneCause>();
   }
-
 }

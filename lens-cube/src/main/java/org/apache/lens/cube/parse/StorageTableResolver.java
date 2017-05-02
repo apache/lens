@@ -99,7 +99,7 @@ class StorageTableResolver implements ContextRewriter {
       if (cubeql.getAutoJoinCtx() != null) {
         // After all candidates are pruned after storage resolver, prune join paths.
         cubeql.getAutoJoinCtx()
-          .pruneAllPaths(cubeql.getCube(), CandidateUtil.getStorageCandidates(cubeql.getCandidates()), null);
+          .pruneAllPaths(cubeql.getCube(), CandidateUtil.getColumnsFromCandidates(cubeql.getCandidates()), null);
         cubeql.getAutoJoinCtx().pruneAllPathsForCandidateDims(cubeql.getCandidateDimTables());
         cubeql.getAutoJoinCtx().refreshJoinPathColumns();
       }
@@ -137,7 +137,7 @@ class StorageTableResolver implements ContextRewriter {
       } else if (failOnPartialData && !isComplete) {
         candidateIterator.remove();
         log.info("Not considering candidate:{} as its data is not is not complete", candidate);
-        Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(candidate);
+        Collection<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(candidate);
         for (StorageCandidate sc : scSet) {
           if (!sc.getNonExistingPartitions().isEmpty()) {
             cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.missingPartitions(sc.getNonExistingPartitions()));
@@ -145,12 +145,13 @@ class StorageTableResolver implements ContextRewriter {
             cubeql.addStoragePruningMsg(sc, incompletePartitions(sc.getDataCompletenessMap()));
           }
         }
-      } else if (candidate.getParticipatingPartitions().isEmpty()
-        && candidate instanceof StorageCandidate
-        && ((StorageCandidate) candidate).getNonExistingPartitions().isEmpty()) {
-        candidateIterator.remove();
-        cubeql.addCandidatePruningMsg(candidate,
-          new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE));
+      } else if (candidate.getParticipatingPartitions().isEmpty()) {
+        if (candidate instanceof StorageCandidate
+          && ((StorageCandidate) candidate).getNonExistingPartitions().isEmpty()) {
+          candidateIterator.remove();
+          cubeql.addCandidatePruningMsg(candidate,
+            new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE));
+        }
       }
     }
   }
@@ -248,114 +249,113 @@ class StorageTableResolver implements ContextRewriter {
     Iterator<Candidate> it = cubeql.getCandidates().iterator();
     while (it.hasNext()) {
       Candidate c = it.next();
-      assert (c instanceof StorageCandidate);
-      StorageCandidate sc = (StorageCandidate) c;
-      String storageTable = sc.getStorageName();
-      // first check: if the storage is supported on driver
-      if (!isStorageSupportedOnDriver(storageTable)) {
-        log.info("Skipping storage: {} as it is not supported", storageTable);
-        cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.UNSUPPORTED_STORAGE));
-        it.remove();
-        continue;
-      }
-      String str = conf.get(CubeQueryConfUtil.getValidStorageTablesKey(sc.getFact().getName()));
-      List<String> validFactStorageTables =
-        StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
-      storageTable = sc.getStorageTable();
-      // Check if storagetable is in the list of valid storages.
-      if (validFactStorageTables != null && !validFactStorageTables.contains(storageTable)) {
-        log.info("Skipping storage table {} as it is not valid", storageTable);
-        cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_STORAGE));
-        it.remove();
-        continue;
-      }
-      List<String> validUpdatePeriods = CubeQueryConfUtil
-        .getStringList(conf, CubeQueryConfUtil.getValidUpdatePeriodsKey(sc.getFact().getName(), sc.getStorageName()));
-      boolean isUpdatePeriodForStorageAdded = false;
-      Map<String, SkipUpdatePeriodCode> skipUpdatePeriodCauses = new HashMap<>();
-
-      if (cubeql.getTimeRanges().stream().noneMatch(range -> CandidateUtil.isPartiallyValidForTimeRange(sc, range))) {
-        cubeql.addStoragePruningMsg(sc,
-          new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE));
-        it.remove();
-        continue;
-      }
-
-      // Populate valid update periods abd check validity at update period level
-      for (UpdatePeriod updatePeriod : sc.getFact().getUpdatePeriods().get(sc.getStorageName())) {
-        if (maxInterval != null && updatePeriod.compareTo(maxInterval) > 0) {
-          // if user supplied max interval, all intervals larger than that are useless.
-          log.info("Skipping update period {} for candidate {} since it's more than max interval supplied({})",
-            updatePeriod, sc.getStorageTable(), maxInterval);
-          skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.UPDATE_PERIOD_BIGGER_THAN_MAX);
-        } else if (validUpdatePeriods != null && !validUpdatePeriods.contains(updatePeriod.name().toLowerCase())) {
-          // if user supplied valid update periods, other update periods are useless
-          log.info("Skipping update period {} for candidate {} for storage {} since it's invalid",
-            updatePeriod, sc.getStorageTable(), storageTable);
-          skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.INVALID);
-        } else if (!sc.isUpdatePeriodUseful(updatePeriod)) {
-          // if the storage candidate finds this update useful to keep looking at the time ranges queried
-          skipUpdatePeriodCauses.put(updatePeriod.toString(),
-            SkipUpdatePeriodCode.TIME_RANGE_NOT_ANSWERABLE_BY_UPDATE_PERIOD);
-        } else {
-          isUpdatePeriodForStorageAdded = true;
-          sc.addValidUpdatePeriod(updatePeriod);
+      if (c instanceof StorageCandidate) {
+        StorageCandidate sc = (StorageCandidate) c;
+        // first check: if the storage is supported on driver
+        if (!isStorageSupportedOnDriver(sc.getStorageName())) {
+          log.info("Skipping storage: {} as it is not supported", sc.getStorageName());
+          cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.UNSUPPORTED_STORAGE));
+          it.remove();
+          continue;
         }
-      }
-      // For DEBUG purpose only to see why some update periods are skipped.
-      if (!skipUpdatePeriodCauses.isEmpty()) {
-        sc.setUpdatePeriodRejectionCause(skipUpdatePeriodCauses);
-      }
-      // if no update periods were added in previous section, we skip this storage candidate
-      if (!isUpdatePeriodForStorageAdded) {
-        if (skipUpdatePeriodCauses.values().stream().allMatch(
-          SkipUpdatePeriodCode.TIME_RANGE_NOT_ANSWERABLE_BY_UPDATE_PERIOD::equals)) {
-          // all update periods bigger than query range, it means time range not answerable.
+        String str = conf.get(CubeQueryConfUtil.getValidStorageTablesKey(sc.getFact().getName()));
+        List<String> validFactStorageTables =
+          StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
+        // Check if storagetable is in the list of valid storages.
+        if (validFactStorageTables != null && !validFactStorageTables.contains(sc.getStorageTable())) {
+          log.info("Skipping storage table {} as it is not valid", sc.getStorageTable());
+          cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_STORAGE));
+          it.remove();
+          continue;
+        }
+        List<String> validUpdatePeriods = CubeQueryConfUtil
+          .getStringList(conf, CubeQueryConfUtil.getValidUpdatePeriodsKey(sc.getFact().getName(), sc.getStorageName()));
+        boolean isUpdatePeriodForStorageAdded = false;
+        Map<String, SkipUpdatePeriodCode> skipUpdatePeriodCauses = new HashMap<>();
+
+        if (!sc.isPartiallyValidForTimeRanges(cubeql.getTimeRanges())) {
           cubeql.addStoragePruningMsg(sc,
             new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE));
-        } else { // Update periods are rejected for multiple reasons.
-          cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.updatePeriodsRejected(skipUpdatePeriodCauses));
+          it.remove();
+          continue;
         }
-        it.remove();
-      } else {
-        //set the dates again as they can change based on ValidUpdatePeriod
-        sc.setStorageStartAndEndDate();
-        Set<CandidateTablePruneCause> allPruningCauses = new HashSet<>(cubeql.getTimeRanges().size());
-        for (TimeRange range : cubeql.getTimeRanges()) {
-          CandidateTablePruneCause pruningCauseForThisTimeRange = null;
-          if (!CandidateUtil.isPartiallyValidForTimeRange(sc, range)) {
-            //This is the prune cause
-            pruningCauseForThisTimeRange =
-              new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
-          } else if (!sc.getValidUpdatePeriods().contains(UpdatePeriod.CONTINUOUS)) {
-            if (!client.partColExists(sc.getFact().getName(), sc.getStorageName(), range.getPartitionColumn())) {
-              pruningCauseForThisTimeRange = partitionColumnsMissing(range.getPartitionColumn());
-              TimeRange fallBackRange = StorageUtil.getFallbackRange(range, sc.getFact().getName(), cubeql);
-              while (fallBackRange != null) {
-                pruningCauseForThisTimeRange = null;
-                if (!client.partColExists(sc.getFact().getName(), sc.getStorageName(),
-                  fallBackRange.getPartitionColumn())) {
-                  pruningCauseForThisTimeRange = partitionColumnsMissing(fallBackRange.getPartitionColumn());
-                  fallBackRange = StorageUtil.getFallbackRange(fallBackRange, sc.getFact().getName(), cubeql);
-                } else {
-                  if (!CandidateUtil.isPartiallyValidForTimeRange(sc, fallBackRange)) {
-                    pruningCauseForThisTimeRange =
-                      new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
+
+        // Populate valid update periods abd check validity at update period level
+        for (UpdatePeriod updatePeriod : sc.getFact().getUpdatePeriods().get(sc.getStorageName())) {
+          if (maxInterval != null && updatePeriod.compareTo(maxInterval) > 0) {
+            // if user supplied max interval, all intervals larger than that are useless.
+            log.info("Skipping update period {} for candidate {} since it's more than max interval supplied({})",
+              updatePeriod, sc.getStorageTable(), maxInterval);
+            skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.UPDATE_PERIOD_BIGGER_THAN_MAX);
+          } else if (validUpdatePeriods != null && !validUpdatePeriods.contains(updatePeriod.name().toLowerCase())) {
+            // if user supplied valid update periods, other update periods are useless
+            log.info("Skipping update period {} for candidate {} for storage {} since it's invalid",
+              updatePeriod, sc.getName(), sc.getStorageName());
+            skipUpdatePeriodCauses.put(updatePeriod.toString(), SkipUpdatePeriodCode.INVALID);
+          } else if (!sc.isUpdatePeriodUseful(updatePeriod)) {
+            // if the storage candidate finds this update useful to keep looking at the time ranges queried
+            skipUpdatePeriodCauses.put(updatePeriod.toString(),
+              SkipUpdatePeriodCode.TIME_RANGE_NOT_ANSWERABLE_BY_UPDATE_PERIOD);
+          } else {
+            isUpdatePeriodForStorageAdded = true;
+            sc.addValidUpdatePeriod(updatePeriod);
+          }
+        }
+        // For DEBUG purpose only to see why some update periods are skipped.
+        if (!skipUpdatePeriodCauses.isEmpty()) {
+          sc.setUpdatePeriodRejectionCause(skipUpdatePeriodCauses);
+        }
+        // if no update periods were added in previous section, we skip this storage candidate
+        if (!isUpdatePeriodForStorageAdded) {
+          if (skipUpdatePeriodCauses.values().stream().allMatch(
+            SkipUpdatePeriodCode.TIME_RANGE_NOT_ANSWERABLE_BY_UPDATE_PERIOD::equals)) {
+            // all update periods bigger than query range, it means time range not answerable.
+            cubeql.addStoragePruningMsg(sc,
+              new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE));
+          } else { // Update periods are rejected for multiple reasons.
+            cubeql.addStoragePruningMsg(sc, CandidateTablePruneCause.updatePeriodsRejected(skipUpdatePeriodCauses));
+          }
+          it.remove();
+        } else {
+          //set the dates again as they can change based on ValidUpdatePeriod
+          sc.setStorageStartAndEndDate();
+          Set<CandidateTablePruneCause> allPruningCauses = new HashSet<>(cubeql.getTimeRanges().size());
+          for (TimeRange range : cubeql.getTimeRanges()) {
+            CandidateTablePruneCause pruningCauseForThisTimeRange = null;
+            if (!sc.isPartiallyValidForTimeRange(range)) {
+              //This is the prune cause
+              pruningCauseForThisTimeRange =
+                new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
+            } else if (!sc.getValidUpdatePeriods().contains(UpdatePeriod.CONTINUOUS)) {
+              if (!client.partColExists(sc.getFact().getName(), sc.getStorageName(), range.getPartitionColumn())) {
+                pruningCauseForThisTimeRange = partitionColumnsMissing(range.getPartitionColumn());
+                TimeRange fallBackRange = StorageUtil.getFallbackRange(range, sc.getFact().getName(), cubeql);
+                while (fallBackRange != null) {
+                  pruningCauseForThisTimeRange = null;
+                  if (!client.partColExists(sc.getFact().getName(), sc.getStorageName(),
+                    fallBackRange.getPartitionColumn())) {
+                    pruningCauseForThisTimeRange = partitionColumnsMissing(fallBackRange.getPartitionColumn());
+                    fallBackRange = StorageUtil.getFallbackRange(fallBackRange, sc.getFact().getName(), cubeql);
+                  } else {
+                    if (!sc.isPartiallyValidForTimeRange(fallBackRange)) {
+                      pruningCauseForThisTimeRange =
+                        new CandidateTablePruneCause(CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE);
+                    }
+                    break;
                   }
-                  break;
                 }
               }
             }
-          }
 
-          if (pruningCauseForThisTimeRange != null) {
-            allPruningCauses.add(pruningCauseForThisTimeRange);
+            if (pruningCauseForThisTimeRange != null) {
+              allPruningCauses.add(pruningCauseForThisTimeRange);
+            }
           }
-        }
-        if (!allPruningCauses.isEmpty()) {
-          // TODO if this storage can answer atleast one time range , why prune it ?
-          it.remove();
-          cubeql.addStoragePruningMsg(sc, allPruningCauses.toArray(new CandidateTablePruneCause[0]));
+          if (!allPruningCauses.isEmpty()) {
+            // TODO if this storage can answer atleast one time range , why prune it ?
+            it.remove();
+            cubeql.addStoragePruningMsg(sc, allPruningCauses.toArray(new CandidateTablePruneCause[0]));
+          }
         }
       }
     }

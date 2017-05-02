@@ -203,8 +203,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     expected.put(newHashSet("c2_summary2", "c2_summary3", "c1_testfact2_raw", ""
         + "c3_testfact2_raw", "c1_summary3", "c1_summary2"),
       newArrayList(new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE)));
-    expected.put(newHashSet("c0_testfact_continuous"), newArrayList(columnNotFound(
-      "msr2", "msr3")));
+    expected.put(newHashSet("c0_b1b2fact1", "c0_testfact_continuous", "SEG[b1cube; b2cube]"),
+      newArrayList(columnNotFound("msr2", "msr3")));
     expected.put(newHashSet("c2_summary2", "c2_summary3", "c2_summary4", "c4_testfact", "c2_summary1",
       "c3_testfact", "c3_testfact2_raw", "c6_testfact", "c4_testfact2", "c5_testfact", "c99_cheapfact",
       "c2_testfact", "c0_cheapfact", "c2_testfactmonthly", "c0_testfact"),
@@ -269,10 +269,9 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     Configuration tConf = new Configuration(conf);
     tConf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
     //test_time_dim2 and dim2 are not querable together
-    NoCandidateFactAvailableException e = (NoCandidateFactAvailableException)getLensExceptionInRewrite(
+    // not checking error codes or prune causes. Just verifying not answerable
+    NoCandidateFactAvailableException e = getLensExceptionInRewrite(
       "select dim2, test_time_dim2 from testcube where " + TWO_DAYS_RANGE, tConf);
-    Assert.assertEquals(e.getJsonMessage().getBrief(),
-      "Range not answerable"); // getting storage update periods are not valid for given time range
   }
 
   @Test

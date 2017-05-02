@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,8 @@
  * under the License.
  */
 package org.apache.lens.cube.parse;
+
+import org.apache.lens.cube.metadata.MetastoreUtil;
 
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 
@@ -87,6 +89,26 @@ public interface QueryAST {
   void setJoinAST(ASTNode node);
 
   void setFromString(String fromString);
+
   void setWhereString(String whereString);
 
+  default void copyFrom(QueryAST sourceAst) {
+    setSelectAST(MetastoreUtil.copyAST(sourceAst.getSelectAST()));
+    setWhereAST(MetastoreUtil.copyAST(sourceAst.getWhereAST()));
+    if (sourceAst.getJoinAST() != null) {
+      setJoinAST(MetastoreUtil.copyAST(sourceAst.getJoinAST()));
+    }
+    if (sourceAst.getGroupByAST() != null) {
+      setGroupByAST(MetastoreUtil.copyAST(sourceAst.getGroupByAST()));
+    }
+    if (sourceAst.getHavingAST() != null) {
+      setHavingAST(MetastoreUtil.copyAST(sourceAst.getHavingAST()));
+    }
+    if (sourceAst.getOrderByAST() != null) {
+      setOrderByAST(MetastoreUtil.copyAST(sourceAst.getOrderByAST()));
+    }
+    setLimitValue(sourceAst.getLimitValue());
+    setFromString(sourceAst.getFromString());
+    setWhereString(sourceAst.getWhereString());
+  }
 }

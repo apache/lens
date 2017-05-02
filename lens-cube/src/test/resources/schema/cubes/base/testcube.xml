@@ -61,8 +61,15 @@
     <measure _type="BIGINT" name="noAggrMsr" display_string="No aggregateMsr"
              description="measure without a default aggregate">
     </measure>
-    <measure _type="INT" name="union_join_ctx_msr1" description="union_join_ctx_first measure">
-    </measure>
+    <measure _type="INT" name="union_join_ctx_msr1" description="union_join_ctx_first measure"/>
+    <measure _type="INT" name="invmsr1" default_aggr="SUM" description="invalid measure seg"
+             display_string="seg invalid measure 1"/>
+    <measure _type="INT" name="segmsr1" default_aggr="SUM" description="segmentation measure 1"
+             display_string="segmentation measure 1"/>
+    <measure _type="INT" name="segmsr2" default_aggr="SUM" description="segmentation measure 2"
+             display_string="segmentation measure 2"/>
+    <measure _type="INT" name="segsegmsr1" default_aggr="SUM" description="inner segmentation measure 1"
+             display_string="inner segmentation measure 1"/>
   </measures>
   <dim_attributes>
     <dim_attribute _type="string" name="union_join_ctx_cityname" display_string="union_join_ctx_city name"
@@ -149,6 +156,9 @@
     </dim_attribute>
     <dim_attribute _type="int" name="test_time_dim_day_id" display_string="Timedim reference" description="ref dim">
     </dim_attribute>
+    <dim_attribute _type="int" name="xuserid" description="userid" />
+    <dim_attribute _type="int" name="yuserid" description="userid" />
+    <dim_attribute _type="int" name="userid" description="userid" />
   </dim_attributes>
   <expressions>
     <expression _type="string" name="singlecolchainfield" display_string="cubecityname" description="cubecity.name">
@@ -654,6 +664,66 @@
             <edge>
               <from table="testcube" column="urdimid" maps_to_many="false"/>
               <to table="unreachabledim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="sports" name="xusersports" display_string="xuser-sports" description="xuser sports">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testcube" column="xuserid" maps_to_many="false"/>
+              <to table="userdim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="userdim" column="id" maps_to_many="false"/>
+              <to table="user_interests" column="user_id" maps_to_many="true"/>
+            </edge>
+            <edge>
+              <from table="user_interests" column="sport_id" maps_to_many="false"/>
+              <to table="sports" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="sports" name="yusersports" display_string="yuser-sports" description="yuser sports">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testcube" column="yuserid" maps_to_many="false"/>
+              <to table="userdim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="userdim" column="id" maps_to_many="false"/>
+              <to table="user_interests" column="user_id" maps_to_many="true"/>
+            </edge>
+            <edge>
+              <from table="user_interests" column="sport_id" maps_to_many="false"/>
+              <to table="sports" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="sports" name="usersports" display_string="user-sports" description="user sports">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="testcube" column="userid" maps_to_many="false"/>
+              <to table="userdim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="userdim" column="id" maps_to_many="false"/>
+              <to table="user_interests" column="user_id" maps_to_many="true"/>
+            </edge>
+            <edge>
+              <from table="user_interests" column="sport_id" maps_to_many="false"/>
+              <to table="sports" column="id" maps_to_many="false"/>
             </edge>
           </edges>
         </path>

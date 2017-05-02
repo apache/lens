@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,16 +23,29 @@ import static org.apache.lens.cube.error.LensCubeErrorCode.EXPRESSION_NOT_PARSAB
 import static org.apache.lens.cube.metadata.MetastoreConstants.*;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
+
+import org.antlr.runtime.CommonToken;
 
 import com.google.common.collect.Sets;
 
@@ -428,7 +441,7 @@ public class MetastoreUtil {
 
   public static Set<Named> getNamedSetFromStringSet(Set<String> strings) {
     Set<Named> nameds = Sets.newHashSet();
-    for(final String s: strings) {
+    for (final String s : strings) {
       nameds.add(new Named() {
         @Override
         public String getName() {
@@ -438,6 +451,7 @@ public class MetastoreUtil {
     }
     return nameds;
   }
+
   public static <E extends Named> void addNameStrings(Map<String, String> props, String key, Collection<E> set) {
     addNameStrings(props, key, set, MAX_PARAM_LENGTH);
   }
@@ -579,13 +593,18 @@ public class MetastoreUtil {
   }
 
   public static ASTNode copyAST(ASTNode original) {
+    return copyAST(original, x -> Pair.of(new ASTNode(x), true));
+  }
 
-    ASTNode copy = new ASTNode(original); // Leverage constructor
-
-    if (original.getChildren() != null) {
-      for (Object o : original.getChildren()) {
-        ASTNode childCopy = copyAST((ASTNode) o);
-        copy.addChild(childCopy);
+  public static ASTNode copyAST(ASTNode original,
+    Function<ASTNode, Pair<ASTNode, Boolean>> overrideCopyFunction) {
+    Pair<ASTNode, Boolean> copy1 = overrideCopyFunction.apply(original);
+    ASTNode copy = copy1.getLeft();
+    if (copy1.getRight()) {
+      if (original.getChildren() != null) {
+        for (Node o : original.getChildren()) {
+          copy.addChild(copyAST((ASTNode) o, overrideCopyFunction));
+        }
       }
     }
     return copy;
@@ -594,5 +613,7 @@ public class MetastoreUtil {
   public static String getUpdatePeriodStoragePrefixKey(String factTableName, String storageName, String updatePeriod) {
     return MetastoreUtil.getFactKeyPrefix(factTableName) + "." + storageName + "." + updatePeriod;
   }
-
+  public static ASTNode getStringLiteralAST(String literal) {
+    return new ASTNode(new CommonToken(HiveParser.StringLiteral, literal));
+  }
 }

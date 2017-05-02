@@ -83,18 +83,6 @@ public final class StorageUtil {
     return sb.toString();
   }
 
-  public static String joinWithAnd(String... clauses) {
-    StringBuilder sb = new StringBuilder();
-    String sep = "((";
-    for (String clause : clauses) {
-      if (clause != null && !clause.isEmpty()) {
-        sb.append(sep).append(clause);
-        sep = ") AND (";
-      }
-    }
-    return sb.append(sep.equals("((") ? "" : "))").toString();
-  }
-
   /**
    * Get minimal set of storages which cover the queried partitions
    *
@@ -108,12 +96,7 @@ public final class StorageUtil {
     // invert the answering tables map and put in inverted map
     for (FactPartition part : answeringParts) {
       for (String table : part.getStorageTables()) {
-        Set<FactPartition> partsCovered = invertedMap.get(table);
-        if (partsCovered == null) {
-          partsCovered = new TreeSet<FactPartition>();
-          invertedMap.put(table, partsCovered);
-        }
-        partsCovered.add(part);
+        invertedMap.computeIfAbsent(table, k -> new TreeSet<>()).add(part);
       }
     }
     // there exist only one storage
@@ -200,7 +183,7 @@ public final class StorageUtil {
     DateUtil.TimeDiff diff2 = DateUtil.TimeDiff.parseFrom(matcher.group(3).trim());
     String relatedTimeDim = matcher.group(1).trim();
     String fallbackPartCol = baseCube.getPartitionColumnOfTimeDim(relatedTimeDim);
-    return TimeRange.getBuilder().fromDate(diff2.negativeOffsetFrom(range.getFromDate()))
+    return TimeRange.builder().fromDate(diff2.negativeOffsetFrom(range.getFromDate()))
       .toDate(diff1.negativeOffsetFrom(range.getToDate())).partitionColumn(fallbackPartCol).build();
   }
 

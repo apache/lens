@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,14 +43,17 @@ class LeastPartitionResolver implements ContextRewriter {
       // This seems fine, as the less number of time values actually represent the rollups on time. And with
       // MaxCoveringFactResolver candidates with less partitions which are not covering the range would be removed.
       for (Candidate candidate : cubeql.getCandidates()) {
-        factPartCount.put(candidate, candidate.getParticipatingPartitions().size());
+        int parts = candidate.getParticipatingPartitions().size();
+        if (parts > 0) {
+          factPartCount.put(candidate, parts);
+        }
       }
 
       double minPartitions = Collections.min(factPartCount.values());
 
       for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
         Candidate candidate = i.next();
-        if (factPartCount.get(candidate) > minPartitions) {
+        if (factPartCount.containsKey(candidate) && factPartCount.get(candidate) > minPartitions) {
           log.info("Not considering Candidate:{} as it requires more partitions to be" + " queried:{} minimum:{}",
             candidate, factPartCount.get(candidate), minPartitions);
           i.remove();

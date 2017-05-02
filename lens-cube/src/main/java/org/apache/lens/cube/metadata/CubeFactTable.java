@@ -19,6 +19,7 @@
 package org.apache.lens.cube.metadata;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.UpdatePeriod.UpdatePeriodComparator;
@@ -73,6 +74,15 @@ public class CubeFactTable extends AbstractCubeTable {
     this.storageUpdatePeriods = storageUpdatePeriods;
     this.storagePrefixUpdatePeriodMap = storagePrefixUpdatePeriodMap;
     addProperties();
+  }
+
+  public boolean hasColumn(String column) {
+    List<String> validColumns = getValidColumns();
+    if (validColumns != null) {
+      return validColumns.contains(column);
+    } else {
+      return getColumns().stream().map(FieldSchema::getName).anyMatch(Predicate.isEqual(column));
+    }
   }
 
   @Override

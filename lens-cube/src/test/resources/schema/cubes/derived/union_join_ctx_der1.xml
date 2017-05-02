@@ -35,6 +35,7 @@
     <measure_name>union_join_ctx_msr2</measure_name>
     <measure_name>union_join_ctx_msr1</measure_name>
     <measure_name>union_join_ctx_msr3</measure_name>
+    <measure_name>segmsr1</measure_name>
   </measure_names>
   <dim_attr_names>
     <attr_name>union_join_ctx_zipcode</attr_name>

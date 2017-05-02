@@ -39,25 +39,9 @@ public class ChainedComparatorTest {
   }
 
   public static final ChainedComparator<Tuple> COMPARATOR = new ChainedComparator<>(Lists.newArrayList(
-    new Comparator<Tuple>() {
-      @Override
-      public int compare(Tuple o1, Tuple o2) {
-        return o1.getA().compareTo(o2.getA());
-      }
-    },
-    new Comparator<Tuple>() {
-
-      @Override
-      public int compare(Tuple o1, Tuple o2) {
-        return o1.getB().compareTo(o2.getB());
-      }
-    },
-    new Comparator<Tuple>() {
-      @Override
-      public int compare(Tuple o1, Tuple o2) {
-        return o1.getC().compareTo(o2.getC());
-      }
-    }
+    Comparator.comparing(Tuple::getA),
+    Comparator.comparing(Tuple::getB),
+    Comparator.comparing(Tuple::getC)
   ));
 
   @DataProvider

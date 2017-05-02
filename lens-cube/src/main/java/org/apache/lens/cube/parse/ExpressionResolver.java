@@ -378,15 +378,14 @@ class ExpressionResolver implements ContextRewriter {
       return ec.isEvaluable(cTable);
     }
 
-    Set<Dimension> rewriteExprCtx(CubeQueryContext cubeql, StorageCandidate sc,
-        Map<Dimension, CandidateDim> dimsToQuery,
-      QueryAST queryAST) throws LensException {
+    Set<Dimension> rewriteExprCtx(CubeQueryContext cubeql, DimHQLContext sc, Map<Dimension, CandidateDim> dimsToQuery)
+      throws LensException {
       Set<Dimension> exprDims = new HashSet<Dimension>();
       log.info("Picking expressions for candidate {} ", sc);
       if (!allExprsQueried.isEmpty()) {
         // pick expressions for fact
-        if (sc != null) {
-          pickExpressionsForTable(sc);
+        if (sc.getStorageCandidate() != null) {
+          pickExpressionsForTable(sc.getStorageCandidate());
         }
         // pick expressions for dimensions
         if (dimsToQuery != null && !dimsToQuery.isEmpty()) {
@@ -399,12 +398,12 @@ class ExpressionResolver implements ContextRewriter {
           for (PickedExpression pe : peSet) {
             exprDims.addAll(pe.pickedCtx.exprDims);
             pe.initRewrittenAST(pe.pickedCtx.deNormCtx.hasReferences());
-            exprDims.addAll(pe.pickedCtx.deNormCtx.rewriteDenormctxInExpression(cubeql, sc, dimsToQuery,
-              pe.getRewrittenAST()));
+            exprDims.addAll(pe.pickedCtx.deNormCtx.rewriteDenormctxInExpression(cubeql,
+              sc.getStorageCandidate(), dimsToQuery, pe.getRewrittenAST()));
           }
         }
         // Replace picked expressions in all the base trees
-        replacePickedExpressions(sc, queryAST);
+        replacePickedExpressions(sc);
       }
 
       pickedExpressions.clear();
@@ -412,10 +411,11 @@ class ExpressionResolver implements ContextRewriter {
       return exprDims;
     }
 
-    private void replacePickedExpressions(StorageCandidate sc, QueryAST queryAST)
+    private void replacePickedExpressions(DimHQLContext sc)
       throws LensException {
+      QueryAST queryAST = sc.getQueryAst();
       replaceAST(cubeql, queryAST.getSelectAST());
-      if (sc != null) {
+      if (sc.getStorageCandidate() != null) {
         replaceAST(cubeql, sc.getQueryAst().getWhereAST());
       } else {
         replaceAST(cubeql, queryAST.getWhereAST());
@@ -423,8 +423,12 @@ class ExpressionResolver implements ContextRewriter {
       replaceAST(cubeql, queryAST.getJoinAST());
       replaceAST(cubeql, queryAST.getGroupByAST());
       // Having AST is resolved by each fact, so that all facts can expand their expressions.
-      // Having ast is not copied now, it's maintained in cubeql, each fact processes that serially.
-      replaceAST(cubeql, cubeql.getHavingAST());
+      // Having ast is not copied now, it's maintained in cubeQueryContext, each fact processes that serially.
+      if (queryAST.getHavingAST() != null) {
+        replaceAST(cubeql, queryAST.getHavingAST());
+      } else {
+        replaceAST(cubeql, cubeql.getHavingAST());
+      }
       replaceAST(cubeql, queryAST.getOrderByAST());
     }
 
@@ -626,28 +630,13 @@ class ExpressionResolver implements ContextRewriter {
           Set<ExpressionContext> ecSet = ecEntry.getValue();
           for (ExpressionContext ec : ecSet) {
             if (ec.getSrcTable().getName().equals(cubeql.getCube().getName())) {
-              if (cubeql.getQueriedExprsWithMeasures().contains(expr)) {
-                for (Iterator<Candidate> sItr = cubeql.getCandidates().iterator(); sItr.hasNext();) {
-                  Candidate cand = sItr.next();
-                  if (!cand.isExpressionEvaluable(ec)) {
-                    log.info("Not considering Candidate :{} as {} is not evaluable", cand, ec.exprCol.getName());
-                    sItr.remove();
-                    cubeql.addCandidatePruningMsg(cand,
-                        CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
-                  }
-                }
-              } else {
-                // prune dimension only expressions
-                Set<StorageCandidate> storageCandidates = CandidateUtil.getStorageCandidates(cubeql.getCandidates());
-                for (StorageCandidate sc : storageCandidates) {
-                  if (!sc.isExpressionEvaluable(ec)) {
-                    Collection<Candidate> prunedCandidates =
-                        CandidateUtil.filterCandidates(cubeql.getCandidates(), sc);
-                    log.info("Not considering candidate(s) :{} as expr :{} in storage :{} is not evaluable",
-                        prunedCandidates, ec.exprCol.getName(), sc);
-                    cubeql.addStoragePruningMsg(sc,
-                        CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
-                  }
+              for (Iterator<Candidate> sItr = cubeql.getCandidates().iterator(); sItr.hasNext();) {
+                Candidate cand = sItr.next();
+                if (!cand.isExpressionEvaluable(ec)) {
+                  log.info("Not considering Candidate :{} as {} is not evaluable", cand, ec.exprCol.getName());
+                  sItr.remove();
+                  cubeql.addCandidatePruningMsg(cand,
+                      CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
                 }
               }
             }

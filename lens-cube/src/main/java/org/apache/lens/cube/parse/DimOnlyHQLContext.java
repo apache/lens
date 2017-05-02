@@ -18,8 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.server.api.error.LensException;
@@ -30,29 +30,60 @@ import org.apache.lens.server.api.error.LensException;
  * <p/>
  * Updates from string with join clause expanded
  */
-class DimOnlyHQLContext extends DimHQLContext {
+public class DimOnlyHQLContext extends DimHQLContext {
 
-  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, QueryAST ast)
+
+  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws LensException {
+    this(dimsToQuery, query, query);
+  }
+  private DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, QueryAST ast)
     throws LensException {
-    this(dimsToQuery, dimsToQuery.keySet(), query, ast);
+    super(query, dimsToQuery, ast);
   }
 
-  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> dimsQueried,
-    CubeQueryContext query, QueryAST ast)
-    throws LensException {
-    super(query, dimsToQuery, dimsQueried, ast);
-  }
-
-  public String toHQL() throws LensException {
-    return query.getInsertClause() + super.toHQL();
+  @Override
+  public StorageCandidate getStorageCandidate() {
+    return null;
   }
 
   protected String getFromTable() throws LensException {
-    if (query.isAutoJoinResolved()) {
-      return getDimsToQuery().get(query.getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
-        query.getAliasForTableName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));
+    if (getCubeQueryContext().isAutoJoinResolved()) {
+      return getDimsToQuery().get(getCubeQueryContext().getAutoJoinCtx().getAutoJoinTarget())
+        .getStorageString(getCubeQueryContext().getAliasForTableName(
+          getCubeQueryContext().getAutoJoinCtx().getAutoJoinTarget().getName())
+        );
     } else {
-      return query.getQBFromString(null, getDimsToQuery());
+      return getCubeQueryContext().getQBFromString(null, getDimsToQuery());
     }
+  }
+
+  @Override
+  public void updateDimFilterWithFactFilter() throws LensException {
+    //void
+  }
+
+  @Override
+  public void updateFromString() throws LensException {
+    String fromString = "%s"; // storage string is updated later
+    if (getCubeQueryContext().isAutoJoinResolved()) {
+      setFrom(
+        getCubeQueryContext().getAutoJoinCtx().getFromString(
+          fromString, this, getDimsToQuery(), getCubeQueryContext()
+        )
+      );
+    }
+  }
+
+  @Override
+  protected void setMissingExpressions() throws LensException {
+    if (getFrom() == null) {
+      setFrom("%s");
+    }
+    setFrom(String.format(getFrom(), getFromTable()));
+    if (getWhere() == null) {
+      setWhere(queryAst.getWhereString());
+    }
+    setWhere(genWhereClauseWithDimPartitions(getWhere()));
+    setPrefix(getCubeQueryContext().getInsertClause());
   }
 }

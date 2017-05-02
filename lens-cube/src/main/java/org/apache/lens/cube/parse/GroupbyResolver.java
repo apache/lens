@@ -166,7 +166,7 @@ class GroupbyResolver implements ContextRewriter {
     sel.setFinalAlias(!StringUtils.isBlank(selectFinalAlias) ? "`" + selectFinalAlias + "`" : selectAlias);
     sel.setActualAlias(alias != null ? alias.toLowerCase() : null);
     cubeql.getSelectPhrases().add(exprInd, sel);
-    //cubeql.addSelectPhrase(sel);
+    //cubeQueryContext.addSelectPhrase(sel);
   }
 
   private void addChildAtIndex(int index, ASTNode parent, ASTNode child) {

@@ -721,11 +721,6 @@ public final class HQLParser {
     }
   }
 
-  public static void main(String[] args) throws Exception {
-    ASTNode ast = parseHQL("select * from default_table ", new HiveConf());
-
-    printAST(getHiveTokenMapping(), ast, 0, 0);
-  }
 
   public static String getString(ASTNode tree, AppendMode appendMode) {
     StringBuilder buf = new StringBuilder();
@@ -909,22 +904,9 @@ public final class HQLParser {
   }
   @Data
   public static class HashableASTNode {
-    private ASTNode ast;
+    private final ASTNode ast;
     private int hashCode = -1;
     private boolean hashCodeComputed = false;
-
-    public HashableASTNode(ASTNode ast) {
-      this.ast = ast;
-    }
-
-    public void setAST(ASTNode ast) {
-      this.ast = ast;
-      hashCodeComputed = false;
-    }
-
-    public ASTNode getAST() {
-      return ast;
-    }
 
     @Override
     public int hashCode() {
@@ -937,8 +919,8 @@ public final class HQLParser {
 
     @Override
     public boolean equals(Object o) {
-      return o instanceof HashableASTNode && this.hashCode() == o.hashCode() && getString(this.getAST())
-        .trim().equalsIgnoreCase(getString(((HashableASTNode) o).getAST()).trim());
+      return o instanceof HashableASTNode && this.hashCode() == o.hashCode() && getString(this.getAst())
+        .trim().equalsIgnoreCase(getString(((HashableASTNode) o).getAst()).trim());
     }
   }
 
@@ -952,5 +934,62 @@ public final class HQLParser {
     public String convert(String s) {
       return s;
     }
+  }
+  static ASTNode trimHavingAst(ASTNode astNode, Collection<String> columns) {
+    if (astNode != null) {
+      if (astNode.getParent() != null && astNode.getParent().getType() == DOT && astNode.getChildIndex() == 1) {
+        return columns.contains(astNode.getText()) ? astNode : null;
+      }
+      for (int i = astNode.getChildCount() - 1; i >= 0; i--) {
+        ASTNode replacement = trimHavingAst((ASTNode) astNode.getChild(i), columns);
+        if (replacement == null) {
+          astNode.deleteChild(i);
+        } else {
+          astNode.setChild(i, replacement);
+        }
+      }
+      if (isAggregateAST(astNode) || BINARY_OPERATORS.contains(astNode.getType())) {
+        if (astNode.getChildCount() == 1) {
+          ASTNode child = (ASTNode) astNode.getChild(0);
+          if (!BINARY_OPERATORS.contains(child.getType())) {
+            return null;
+          } else {
+            return child;
+          }
+        }
+      }
+    }
+    return astNode;
+  }
+  static ASTNode trimOrderByAst(ASTNode astNode, Collection<String> columns) {
+    if (astNode != null) {
+      if (astNode.getParent() != null && astNode.getParent().getType() == DOT && astNode.getChildIndex() == 1) {
+        return columns.contains(astNode.getText()) ? astNode : null;
+      }
+      for (int i = astNode.getChildCount() - 1; i >= 0; i--) {
+        ASTNode replacement = trimOrderByAst((ASTNode) astNode.getChild(i), columns);
+        if (replacement == null) {
+          astNode.deleteChild(i);
+        } else {
+          astNode.setChild(i, replacement);
+        }
+      }
+      switch (astNode.getType()) {
+      case DOT:
+        if (astNode.getChildCount() < 2) {
+          return null;
+        }
+        break;
+      case TOK_TABSORTCOLNAMEASC:
+      case TOK_TABSORTCOLNAMEDESC:
+      case TOK_NULLS_FIRST:
+      case TOK_NULLS_LAST:
+        if (astNode.getChildCount() == 0) {
+          return null;
+        }
+        break;
+      }
+    }
+    return astNode;
   }
 }

@@ -21,7 +21,6 @@ package org.apache.lens.cube.parse;
 import static org.apache.lens.cube.error.LensCubeErrorCode.SYNTAX_ERROR;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.server.api.error.LensException;
@@ -33,6 +32,10 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.parse.*;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -41,7 +44,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CubeQueryRewriter {
   private final Configuration conf;
-  private final List<ContextRewriter> rewriters = new ArrayList<ContextRewriter>();
+  @VisibleForTesting
+  @Getter(AccessLevel.PACKAGE)
+  private final ImmutableList<ContextRewriter> rewriters;
   private final HiveConf hconf;
   private Context qlCtx = null;
   private boolean lightFactFirst;
@@ -56,7 +61,9 @@ public class CubeQueryRewriter {
     }
     lightFactFirst =
       conf.getBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, CubeQueryConfUtil.DEFAULT_LIGHTEST_FACT_FIRST);
-    setupRewriters();
+    ImmutableList.Builder<ContextRewriter> builder = ImmutableList.builder();
+    setupRewriters(builder);
+    rewriters = builder.build();
   }
 
   /*
@@ -133,7 +140,7 @@ public class CubeQueryRewriter {
    * copied from original query and the expressions missing from this fact
    * removed.
    */
-  private void setupRewriters() {
+  private void setupRewriters(ImmutableList.Builder<ContextRewriter> rewriters) {
     // Resolve columns - the column alias and table alias
     rewriters.add(new ColumnResolver());
     // Rewrite base trees (groupby, having, orderby, limit) using aliases
@@ -183,13 +190,18 @@ public class CubeQueryRewriter {
 
     // Phase 2 of storageTableResolver: resolve storage table partitions.
     rewriters.add(storageTableResolver);
+    // For all segmentation candidates, for all segments, modify query ast and perform rewrites on inner cubes
+    // Also takes care of performing rewrites in segmentation candidates under a union/join candidate
+    rewriters.add(new SegmentationInnerRewriter(conf, hconf));
     // In case partial data is allowed (via lens.cube.query.fail.if.data.partial = false) and there are many
     // combinations with partial data, pick the one that covers the maximum part of time ranges(s) queried
     rewriters.add(new MaxCoveringFactResolver(conf));
     // Phase 3 of storageTableResolver:  resolve dimension tables and partitions.
     rewriters.add(storageTableResolver);
-    // Prune candidate tables for which denorm column references do not exist
+
     //TODO union: phase 2 of denormResolver needs to be moved before CoveringSetResolver.. check if this makes sense
+
+    // Prune candidate tables for which denorm column references do not exist
     rewriters.add(denormResolver);
     // Phase 2 of exprResolver : Prune candidate facts without any valid expressions
     rewriters.add(exprResolver);
@@ -203,6 +215,9 @@ public class CubeQueryRewriter {
     // queried will be picked. Rest of the combinations will be pruned
     rewriters.add(new LeastPartitionResolver());
     rewriters.add(new LightestDimensionResolver());
+    // Takes all candidates remaining till now, tries to explode that.
+    // see CandidateExploder#rewriteContext and Candidate#explode for further documentation
+    rewriters.add(new CandidateExploder());
   }
 
   public CubeQueryContext rewrite(ASTNode astnode) throws LensException {
@@ -239,7 +254,7 @@ public class CubeQueryRewriter {
     int i = 0;
     for (ContextRewriter rewriter : rewriters) {
       /*
-       * Adding iteration number as part of gauge name since some rewriters are have more than one phase, and having
+       * Adding iteration number as part of gauge name since some rewriters have more than one phase, and having
        * iter number gives the idea which iteration the rewriter was run
        */
       MethodMetricsContext mgauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), true,
@@ -249,10 +264,6 @@ public class CubeQueryRewriter {
       mgauge.markSuccess();
       i++;
     }
-  }
-
-  public Context getQLContext() {
-    return qlCtx;
   }
 
   public void clear() {

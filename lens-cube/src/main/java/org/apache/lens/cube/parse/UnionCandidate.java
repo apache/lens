@@ -18,13 +18,27 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.*;
+import static java.util.Comparator.comparing;
+
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import lombok.Getter;
 
 /**
  * Represents a union of two candidates
@@ -34,20 +48,21 @@ public class UnionCandidate implements Candidate {
   /**
    * Caching start and end time calculated for this candidate as it may have many child candidates.
    */
-  Date startTime = null;
-  Date endTime = null;
-  String toStr;
-  CubeQueryContext cubeql;
+  private Date startTime = null;
+  private Date endTime = null;
+  private String toStr;
+  @Getter
+  CubeQueryContext cubeQueryContext;
   /**
    * List of child candidates that will be union-ed
    */
-  private List<Candidate> childCandidates;
-  private QueryAST queryAst;
+  @Getter
+  private List<Candidate> children;
+
   private Map<TimeRange, Map<Candidate, TimeRange>> splitTimeRangeMap = Maps.newHashMap();
-  public UnionCandidate(List<Candidate> childCandidates, CubeQueryContext cubeql) {
-    this.childCandidates = childCandidates;
-    //this.alias = alias;
-    this.cubeql = cubeql;
+  UnionCandidate(Collection<? extends Candidate> childCandidates, CubeQueryContext cubeQueryContext) {
+    this.children = Lists.newArrayList(childCandidates);
+    this.cubeQueryContext = cubeQueryContext;
   }
 
   @Override
@@ -57,6 +72,15 @@ public class UnionCandidate implements Candidate {
   }
 
   @Override
+  public boolean isPhraseAnswerable(QueriedPhraseContext phrase) throws LensException {
+    for (Candidate cand : getChildren()) {
+      if (!cand.isPhraseAnswerable(phrase)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
     Map<Candidate, TimeRange> candidateRange = getTimeRangeSplit(timeRange);
     for (Map.Entry<Candidate, TimeRange> entry : candidateRange.entrySet()) {
@@ -68,25 +92,52 @@ public class UnionCandidate implements Candidate {
   }
 
   @Override
+  public void addAnswerableMeasurePhraseIndices(int index) {
+    for (Candidate candidate : getChildren()) {
+      candidate.addAnswerableMeasurePhraseIndices(index);
+    }
+  }
+
+  @Override
+  public boolean isColumnValidForRange(String column) {
+    return getChildren().stream().anyMatch(candidate -> candidate.isColumnValidForRange(column));
+  }
+
+  @Override
+  public Optional<Date> getColumnStartTime(String column) {
+    return getChildren().stream()
+      .map(x->x.getColumnStartTime(column))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .min(Comparator.naturalOrder());
+  }
+
+  @Override
+  public Optional<Date> getColumnEndTime(String column) {
+    return getChildren().stream()
+      .map(x->x.getColumnEndTime(column))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .max(Comparator.naturalOrder());
+  }
+
+
+  @Override
   public Collection<String> getColumns() {
     // In UnionCandidate all columns are same, return the columns
     // of first child
-    return childCandidates.iterator().next().getColumns();
+    return children.iterator().next().getColumns();
   }
 
   @Override
   public Date getStartTime() {
     //Note: concurrent calls not handled specifically (This should not be a problem even if we do
     //get concurrent calls).
-
     if (startTime == null) {
-      Date minStartTime = childCandidates.get(0).getStartTime();
-      for (Candidate child : childCandidates) {
-        if (child.getStartTime().before(minStartTime)) {
-          minStartTime = child.getStartTime();
-        }
-      }
-      startTime = minStartTime;
+      startTime = children.stream()
+        .map(Candidate::getStartTime)
+        .min(Comparator.naturalOrder())
+        .orElseGet(() -> new Date(Long.MIN_VALUE)); // this should be redundant.
     }
     return startTime;
   }
@@ -94,13 +145,10 @@ public class UnionCandidate implements Candidate {
   @Override
   public Date getEndTime() {
     if (endTime == null) {
-      Date maxEndTime = childCandidates.get(0).getEndTime();
-      for (Candidate child : childCandidates) {
-        if (child.getEndTime().after(maxEndTime)) {
-          maxEndTime = child.getEndTime();
-        }
-      }
-      endTime = maxEndTime;
+      endTime = children.stream()
+        .map(Candidate::getEndTime)
+        .max(Comparator.naturalOrder())
+        .orElseGet(() -> new Date(Long.MAX_VALUE)); // this should be redundant
     }
     return endTime;
   }
@@ -108,7 +156,7 @@ public class UnionCandidate implements Candidate {
   @Override
   public double getCost() {
     double cost = 0.0;
-    for (TimeRange timeRange : cubeql.getTimeRanges()) {
+    for (TimeRange timeRange : getCubeQueryContext().getTimeRanges()) {
       for (Map.Entry<Candidate, TimeRange> entry : getTimeRangeSplit(timeRange).entrySet()) {
         cost += entry.getKey().getCost() * entry.getValue().milliseconds() / timeRange.milliseconds();
       }
@@ -121,17 +169,12 @@ public class UnionCandidate implements Candidate {
     if (this.equals(candidate)) {
       return true;
     }
-    for (Candidate child : childCandidates) {
+    for (Candidate child : children) {
       if (child.contains((candidate))) {
         return true;
       }
     }
     return false;
-  }
-
-  @Override
-  public Collection<Candidate> getChildren() {
-    return childCandidates;
   }
 
   /**
@@ -152,7 +195,7 @@ public class UnionCandidate implements Candidate {
   @Override
   public Set<FactPartition> getParticipatingPartitions() {
     Set<FactPartition> factPartitionSet = new HashSet<>();
-    for (Candidate c : childCandidates) {
+    for (Candidate c : children) {
       factPartitionSet.addAll(c.getParticipatingPartitions());
     }
     return factPartitionSet;
@@ -160,12 +203,29 @@ public class UnionCandidate implements Candidate {
 
   @Override
   public boolean isExpressionEvaluable(ExpressionResolver.ExpressionContext expr) {
-    for (Candidate cand : childCandidates) {
-      if (!cand.isExpressionEvaluable(expr)) {
+    return children.stream().allMatch(cand-> cand.isExpressionEvaluable(expr));
+  }
+
+  @Override
+  public boolean isExpressionEvaluable(String expr) {
+    return children.stream().allMatch(cand->cand.isExpressionEvaluable(expr));
+  }
+
+  @Override
+  public boolean isDimAttributeEvaluable(String dim) throws LensException {
+    for (Candidate childCandidate : children) {
+      if (!childCandidate.isDimAttributeEvaluable(dim)) {
         return false;
       }
     }
     return true;
+  }
+  public UnionCandidate explode() throws LensException {
+    ListIterator<Candidate> i = children.listIterator();
+    while(i.hasNext()) {
+      i.set(i.next().explode());
+    }
+    return this;
   }
 
   @Override
@@ -177,11 +237,11 @@ public class UnionCandidate implements Candidate {
   }
 
   private String getToString() {
-    StringBuilder builder = new StringBuilder(10 * childCandidates.size());
+    StringBuilder builder = new StringBuilder(10 * children.size());
     builder.append("UNION[");
-    for (Candidate candidate : childCandidates) {
+    for (Candidate candidate : children) {
       builder.append(candidate.toString());
-      builder.append(", ");
+      builder.append("; ");
     }
     builder.delete(builder.length() - 2, builder.length());
     builder.append("]");
@@ -196,13 +256,13 @@ public class UnionCandidate implements Candidate {
    * @return
    */
   private Map<Candidate, TimeRange> splitTimeRangeForChildren(TimeRange timeRange) {
-    childCandidates.sort(Comparator.comparing(Candidate::getCost));
+    children.sort(comparing(Candidate::getCost));
     Map<Candidate, TimeRange> childrenTimeRangeMap = new HashMap<>();
     // Sorted list based on the weights.
     Set<TimeRange> ranges = new HashSet<>();
     ranges.add(timeRange);
-    for (Candidate c : childCandidates) {
-      TimeRange.TimeRangeBuilder builder = getClonedBuiler(timeRange);
+    for (Candidate c : children) {
+      TimeRange.TimeRangeBuilder builder = timeRange.cloneAsBuilder();
       TimeRange tr = resolveTimeRangeForChildren(c, ranges, builder);
       if (tr != null) {
         // If the time range is not null it means this child candidate is valid for this union candidate.
@@ -262,9 +322,9 @@ public class UnionCandidate implements Candidate {
       if (ret.getFromDate().getTime() == range.getFromDate().getTime()) {
         checkAndUpdateNewTimeRanges(ret, range, newTimeRanges);
       } else {
-        TimeRange.TimeRangeBuilder b1 = getClonedBuiler(ret);
-        b1.fromDate(range.getFromDate());
-        b1.toDate(ret.getFromDate());
+        TimeRange.TimeRangeBuilder b1 = ret.cloneAsBuilder()
+          .fromDate(range.getFromDate())
+          .toDate(ret.getFromDate());
         newTimeRanges.add(b1.build());
         checkAndUpdateNewTimeRanges(ret, range, newTimeRanges);
 
@@ -277,19 +337,10 @@ public class UnionCandidate implements Candidate {
 
   private void checkAndUpdateNewTimeRanges(TimeRange ret, TimeRange range, Set<TimeRange> newTimeRanges) {
     if (ret.getToDate().getTime() < range.getToDate().getTime()) {
-      TimeRange.TimeRangeBuilder b2 = getClonedBuiler(ret);
+      TimeRange.TimeRangeBuilder b2 = ret.cloneAsBuilder();
       b2.fromDate(ret.getToDate());
       b2.toDate(range.getToDate());
       newTimeRanges.add(b2.build());
     }
-  }
-
-  private TimeRange.TimeRangeBuilder getClonedBuiler(TimeRange timeRange) {
-    TimeRange.TimeRangeBuilder builder = new TimeRange.TimeRangeBuilder();
-    builder.astNode(timeRange.getAstNode());
-    builder.childIndex(timeRange.getChildIndex());
-    builder.parent(timeRange.getParent());
-    builder.partitionColumn(timeRange.getPartitionColumn());
-    return builder;
   }
 }

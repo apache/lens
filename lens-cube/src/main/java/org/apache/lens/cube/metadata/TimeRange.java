@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,11 +18,14 @@
  */
 package org.apache.lens.cube.metadata;
 
+import static java.util.Comparator.naturalOrder;
+
 import static org.apache.lens.cube.metadata.DateUtil.ABSDATE_PARSER;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.server.api.error.LensException;
@@ -32,21 +35,34 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * Timerange data structure
  */
 @JsonIgnoreProperties({"astNode", "parent"})
 @Data
+@EqualsAndHashCode(of = {"partitionColumn", "fromDate", "toDate"})
+@Builder
 public class TimeRange {
-  private String partitionColumn;
-  private Date toDate;
-  private Date fromDate;
-  private ASTNode astNode;
-  private ASTNode parent;
-  private int childIndex;
+  private final String partitionColumn;
+  private final Date toDate;
+  @NonNull
+  private final Date fromDate;
+  private final ASTNode astNode;
+  private final ASTNode parent;
+  private final int childIndex;
+
+  public TimeRange truncate(Date candidateStartTime, Date candidateEndTime) {
+    return TimeRange.builder().partitionColumn(getPartitionColumn())
+      .fromDate(Stream.of(getFromDate(), candidateStartTime).max(naturalOrder()).orElse(candidateStartTime))
+      .toDate(Stream.of(getToDate(), candidateEndTime).min(naturalOrder()).orElse(candidateEndTime))
+      .build();
+  }
 
   public boolean isCoverableBy(Set<UpdatePeriod> updatePeriods) {
     return DateUtil.isCoverableBy(fromDate, toDate, updatePeriods);
@@ -61,7 +77,7 @@ public class TimeRange {
    * @throws LensException If the truncated time range is invalid.
    */
   public TimeRange truncate(UpdatePeriod updatePeriod) throws LensException {
-    TimeRange timeRange = new TimeRangeBuilder().partitionColumn(partitionColumn)
+    TimeRange timeRange = TimeRange.builder().partitionColumn(partitionColumn)
       .fromDate(updatePeriod.getCeilDate(fromDate)).toDate(updatePeriod.getFloorDate(toDate)).build();
     timeRange.validate();
     return timeRange;
@@ -71,80 +87,37 @@ public class TimeRange {
     return toDate.getTime() - fromDate.getTime();
   }
 
-  public static class TimeRangeBuilder {
-    private final TimeRange range;
 
-    public TimeRangeBuilder() {
-      this.range = new TimeRange();
-    }
-
-    public TimeRangeBuilder partitionColumn(String col) {
-      range.partitionColumn = col;
-      return this;
-    }
-
-    public TimeRangeBuilder toDate(Date to) {
-      range.toDate = to;
-      return this;
-    }
-
-    public TimeRangeBuilder fromDate(Date from) {
-      range.fromDate = from;
-      return this;
-    }
-
-    public TimeRangeBuilder astNode(ASTNode node) {
-      range.astNode = node;
-      return this;
-    }
-
-    public TimeRangeBuilder parent(ASTNode parent) {
-      range.parent = parent;
-      return this;
-    }
-
-    public TimeRangeBuilder childIndex(int childIndex) {
-      range.childIndex = childIndex;
-      return this;
-    }
-
-    public TimeRange build() {
-      return range;
-    }
+  public TimeRangeBuilder cloneAsBuilder() {
+    return builder().
+      astNode(getAstNode()).childIndex(getChildIndex()).parent(getParent()).partitionColumn(getPartitionColumn());
   }
-
-  public static TimeRangeBuilder getBuilder() {
-    return new TimeRangeBuilder();
+  private boolean fromEqualsTo() {
+    return fromDate.equals(toDate);
   }
-
-  private TimeRange() {
-
+  private boolean fromAfterTo() {
+    return fromDate.after(toDate);
   }
-
+  public boolean isValid() {
+    return !(fromEqualsTo() || fromAfterTo());
+  }
   public void validate() throws LensException {
-    if (partitionColumn == null || fromDate == null || toDate == null || fromDate.equals(toDate)) {
+    if (partitionColumn == null || fromDate == null || toDate == null || fromEqualsTo()) {
       throw new LensException(LensCubeErrorCode.INVALID_TIME_RANGE.getLensErrorInfo());
     }
 
-    if (fromDate.after(toDate)) {
+    if (fromAfterTo()) {
       throw new LensException(LensCubeErrorCode.FROM_AFTER_TO.getLensErrorInfo(),
           fromDate.toString(), toDate.toString());
     }
-  }
-
-  public String toTimeDimWhereClause() {
-    return toTimeDimWhereClause(null, partitionColumn);
   }
 
   public String toTimeDimWhereClause(String prefix, String column) {
     if (StringUtils.isNotBlank(column)) {
       column = prefix + "." + column;
     }
-    return new StringBuilder()
-      .append(column).append(" >= '").append(DateUtil.HIVE_QUERY_DATE_PARSER.get().format(fromDate)).append("'")
-      .append(" AND ")
-      .append(column).append(" < '").append(DateUtil.HIVE_QUERY_DATE_PARSER.get().format(toDate)).append("'")
-      .toString();
+    return column + " >= '" + DateUtil.HIVE_QUERY_DATE_PARSER.get().format(fromDate) + "'"
+      + " AND " + column + " < '" + DateUtil.HIVE_QUERY_DATE_PARSER.get().format(toDate) + "'";
   }
 
   @Override
@@ -155,12 +128,12 @@ public class TimeRange {
 
   /** iterable from fromDate(including) to toDate(excluding) incrementing increment units of updatePeriod */
   public static Iterable iterable(Date fromDate, Date toDate, UpdatePeriod updatePeriod, int increment) {
-    return TimeRange.getBuilder().fromDate(fromDate).toDate(toDate).build().iterable(updatePeriod, increment);
+    return TimeRange.builder().fromDate(fromDate).toDate(toDate).build().iterable(updatePeriod, increment);
   }
 
   /** iterable from fromDate(including) incrementing increment units of updatePeriod. Do this numIters times */
   public static Iterable iterable(Date fromDate, int numIters, UpdatePeriod updatePeriod, int increment) {
-    return TimeRange.getBuilder().fromDate(fromDate).build().iterable(updatePeriod, numIters, increment);
+    return TimeRange.builder().fromDate(fromDate).build().iterable(updatePeriod, numIters, increment);
   }
 
   private Iterable iterable(UpdatePeriod updatePeriod, int numIters, int increment) {
@@ -181,7 +154,7 @@ public class TimeRange {
     private long numIters;
     private int increment;
 
-    public Iterable(UpdatePeriod updatePeriod, long numIters, int increment) {
+    Iterable(UpdatePeriod updatePeriod, long numIters, int increment) {
       this.updatePeriod = updatePeriod;
       this.numIters = numIters;
       if (this.numIters < 0) {

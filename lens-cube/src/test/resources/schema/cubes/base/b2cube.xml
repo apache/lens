@@ -1,0 +1,909 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_base_cube name="b2cube" xmlns="uri:lens:cube:0.1">
+  <properties>
+    <property name="cube.timedim.partition.et" value="et"/>
+    <property name="cube.timedim.partition.it" value="it"/>
+    <property name="cube.timedim.partition.d_time" value="dt"/>
+    <property name="cube.timedim.relation.processing_time" value="test_time_dim+[-5 days,5 days]"/>
+    <property name="cube.timedim.partition.processing_time" value="pt"/>
+    <property name="cube.timedim.partition.test_time_dim" value="ttd"/>
+    <property name="cube.timedim.relation.d_time" value="processing_time+[-5 days,5 days]"/>
+    <property name="cube.timedim.partition.test_time_dim2" value="ttd2"/>
+    <property name="cube.b2cube.timed.dimensions.list" value="d_time,pt,it,et,test_time_dim,test_time_dim2"/>
+    <property name="cube.allfields.queriable" value="true"/>
+    <property name="cube.table.b2cube.weight" value="0.0"/>
+  </properties>
+  <measures>
+    <measure _type="INT" name="segmsr1" default_aggr="SUM" description="segmentation measure 1"
+             display_string="segmentation measure 1"/>
+    <measure _type="INT" name="segmsr2" default_aggr="SUM" description="segmentation measure 2"
+             display_string="segmentation measure 2"/>
+    <measure _type="INT" name="segsegmsr1" default_aggr="SUM" description="inner segmentation measure 1"
+             display_string="inner segmentation measure 1"/>
+    <measure _type="INT" name="invmsr1" default_aggr="SUM" description="invalid measure b1cube"
+             display_string="b1cube invalid measure 1"/>
+  </measures>
+  <dim_attributes>
+    <dim_attribute _type="string" name="business" display_string="business unit"
+                   description="Business unit name for segmentation"/>
+    <dim_attribute _type="string" name="union_join_ctx_cityname" display_string="union_join_ctx_city name"
+                   description="union_join_ctx_city name">
+      <chain_ref_column chain_name="cubecityjoinunionctx" ref_col="name" dest_table="citydim"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="cityname" display_string="city name" description="city name">
+      <chain_ref_column chain_name="cubecity2" ref_col="name" dest_table="citydim"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="citycountry" display_string="city country" description="">
+      <chain_ref_column chain_name="cubecitystatecountry" ref_col="name" dest_table="countrydim"/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="union_join_ctx_zipcode" description="union_join_ctx_the zipcode">
+    </dim_attribute>
+    <dim_attribute _type="string" name="unreachablename" display_string="urdim name" description="">
+      <chain_ref_column chain_name="unreachabledim_chain" ref_col="name" dest_table="unreachabledim"/>
+    </dim_attribute>
+    <dim_attribute _type="bigint" name="dim2big1" display_string="dim2 refer" description="ref dim">
+      <chain_ref_column chain_name="dim2chain" ref_col="bigid1" dest_table="testdim2"/>
+    </dim_attribute>
+    <dim_attribute _type="array&lt;string&gt;" name="ysports" display_string="yuser sports" description="">
+      <chain_ref_column chain_name="yusersports" ref_col="name" dest_table="sports"/>
+    </dim_attribute>
+    <dim_attribute _type="array&lt;int&gt;" name="sportids" display_string="user sports" description="">
+      <chain_ref_column chain_name="userinterestids" ref_col="sport_id" dest_table="user_interests"/>
+    </dim_attribute>
+    <dim_attribute _type="String" name="cubecountrycapital" display_string="Country capital" description="ref dim">
+      <chain_ref_column chain_name="cubestate" ref_col="countrycapital" dest_table="statedim"/>
+      <chain_ref_column chain_name="cubecitystatecountry" ref_col="capital" dest_table="countrydim"/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="cityid" display_string="City1" description="id to city"/>
+    <dim_attribute _type="int" name="cityid1" display_string="City1" description="id to city"/>
+    <dim_attribute _type="int" name="cityid2" display_string="City2" description="id to city"/>
+    <dim_attribute _type="int" name="dim12" display_string="Dim2 refer" description="ref dim">
+      <chain_ref_column chain_name="dim2chain" ref_col="id" dest_table="testdim2"/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="xuserid" description="userid">
+    </dim_attribute>
+    <dim_attribute _type="string" name="dim11" description="basedim">
+    </dim_attribute>
+    <dim_attribute _type="int" start_time="2017-03-07T19:30:00.000+05:30" name="cdim2" display_string="Dim2 refer"
+                   description="ref dim">
+    </dim_attribute>
+    <dim_attribute _type="int" name="test_time_dim_day_id2" description="ref dim">
+    </dim_attribute>
+    <dim_attribute _type="int" name="union_join_ctx_cityid" description="union_join_ctx_the cityid ">
+    </dim_attribute>
+    <dim_attribute _type="int" name="urdimid" display_string="urdim refer" description="ref dim">
+    </dim_attribute>
+    <dim_attribute _type="bigint" name="dim2big2" display_string="dim2 refer" description="ref dim">
+      <chain_ref_column chain_name="dim2chain" ref_col="bigid2" dest_table="testdim2"/>
+    </dim_attribute>
+    <dim_attribute _type="date" name="test_time_dim2" display_string="Timedim full date" description="chained dim">
+      <chain_ref_column chain_name="timehourchain2" ref_col="full_hour" dest_table="hourdim"/>
+      <chain_ref_column chain_name="timedatechain2" ref_col="full_date" dest_table="daydim"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="citystatecapital" display_string="State's capital thru city"
+                   description="State's capital thru city">
+      <chain_ref_column chain_name="citystate" ref_col="capital" dest_table="statedim"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="statecountry" display_string="state country" description="">
+      <chain_ref_column chain_name="cubestatecountry" ref_col="name" dest_table="countrydim"/>
+    </dim_attribute>
+    <dim_attribute _type="bigint" start_time="2017-03-07T19:30:00.000+05:30" name="dim2bignew"
+                   display_string="Dim2 refer" description="ref dim">
+    </dim_attribute>
+    <dim_attribute _type="int" name="test_time_dim_hour_id2" description="ref dim">
+    </dim_attribute>
+    <dim_attribute _type="int" name="dim2" display_string="dim2 refer" description="ref dim">
+      <chain_ref_column chain_name="dim2chain" ref_col="id" dest_table="testdim2"/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="test_time_dim_hour_id" display_string="Timedim reference" description="ref dim">
+    </dim_attribute>
+    <dim_attribute _type="timestamp" name="d_time" description="d time">
+    </dim_attribute>
+    <dim_attribute _type="string" name="dim1" description="basedim">
+    </dim_attribute>
+    <dim_attribute _type="string" name="testdim3id" display_string="dim3 refer" description="direct id to testdim3">
+      <chain_ref_column chain_name="dim3chain" ref_col="id" dest_table="testdim3"/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="yuserid" description="userid">
+    </dim_attribute>
+    <dim_attribute _type="array&lt;string&gt;" name="xsports" display_string="xuser sports" description="">
+      <chain_ref_column chain_name="xusersports" ref_col="name" dest_table="sports"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="ambigdim1" description="used in testColumnAmbiguity">
+    </dim_attribute>
+    <dim_attribute _type="array&lt;string&gt;" name="sports" display_string="user sports" description="">
+      <chain_ref_column chain_name="usersports" ref_col="name" dest_table="sports"/>
+    </dim_attribute>
+    <dim_attribute _type="date" name="test_time_dim" display_string="Timedim full date" description="ref dim">
+      <chain_ref_column chain_name="timedatechain1" ref_col="full_date" dest_table="daydim"/>
+      <chain_ref_column chain_name="timehourchain1" ref_col="full_hour" dest_table="hourdim"/>
+    </dim_attribute>
+    <dim_attribute _type="string" name="concatedcitystate" display_string="CityState" description="citystate">
+    </dim_attribute>
+    <dim_attribute _type="string" name="dim13" description="basedim">
+    </dim_attribute>
+    <dim_attribute name="location" description="Location hierarchy">
+      <hierarchy>
+        <dim_attribute _type="int" name="zipcode" description="zip">
+        </dim_attribute>
+        <dim_attribute _type="int" name="cityid" description="city">
+        </dim_attribute>
+        <dim_attribute _type="int" name="stateid" description="state">
+        </dim_attribute>
+        <dim_attribute _type="int" name="countryid" description="country">
+        </dim_attribute>
+        <dim_attribute _type="string" num_distinct_values="3" name="regionname" display_string="regionname"
+                       description="region">
+          <values>APAC</values>
+          <values>EMEA</values>
+          <values>USA</values>
+        </dim_attribute>
+      </hierarchy>
+    </dim_attribute>
+    <dim_attribute _type="timestamp" name="processing_time" description="processing time">
+    </dim_attribute>
+    <dim_attribute _type="int" name="dim22" display_string="Dim2 refer" description="ref dim">
+      <chain_ref_column chain_name="dim2chain" ref_col="id" dest_table="testdim2"/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="userid" description="userid">
+    </dim_attribute>
+    <dim_attribute _type="string" name="statename_cube" display_string="state name" description="state name">
+      <chain_ref_column chain_name="cubestate" ref_col="name" dest_table="statedim"/>
+    </dim_attribute>
+    <dim_attribute _type="int" name="test_time_dim_day_id" display_string="Timedim reference" description="ref dim">
+    </dim_attribute>
+  </dim_attributes>
+  <expressions>
+    <expression _type="string" name="singlecolchainfield" display_string="cubecityname" description="cubecity.name">
+      <expr_spec expr="cubecity.name"/>
+    </expression>
+    <expression _type="double" name="msr8" display_string="Sixth Msr" description="measure expression">
+      <expr_spec expr="msr2 + msr3"/>
+    </expression>
+    <expression _type="double" name="msr2expr" display_string="Nested expr" description="nested expr">
+      <expr_spec expr="case when cityStateName = 'xyz' then msr2 else 0 end"/>
+    </expression>
+    <expression _type="String" name="cubestatename" display_string="CubeState Name"
+                description="statename from cubestate">
+      <expr_spec expr="substr(cubestate.name, 5)"/>
+    </expression>
+    <expression _type="int" name="union_join_ctx_non_zero_msr2_sum" display_string="union_join_ctx_non zero msr2 sum"
+                description="union_join_ctx_non zero msr2 sum">
+      <expr_spec expr="sum(case when union_join_ctx_msr2 &gt; 0 then union_join_ctx_msr2 else 0 end)"/>
+    </expression>
+    <expression _type="double" name="flooredmsr12" display_string="Floored msr12" description="floored measure12">
+      <expr_spec expr="floor(msr12)"/>
+    </expression>
+    <expression _type="String" name="cityandstate" display_string="City and State"
+                description="city and state together">
+      <expr_spec expr="concat(cityname, &quot;:&quot;, statename_cube)"/>
+      <expr_spec expr="substr(concatedcitystate, 10)"/>
+    </expression>
+    <expression _type="double" name="avgmsr" display_string="Avg Msr" description="avg measure">
+      <expr_spec expr="avg(msr1 + msr2)"/>
+    </expression>
+    <expression _type="double" name="equalsums" display_string="equalsums" description="sums are equals">
+      <expr_spec expr="msr3 + msr4"/>
+      <expr_spec expr="(msr3 + msr2)/100"/>
+    </expression>
+    <expression _type="array&lt;string&gt;" name="sportids_abbr" display_string="user sports" description="">
+      <expr_spec expr="case when sportids == 1 then 'CKT' when sportids == 2 then 'FTB' else 'NON' end"/>
+    </expression>
+    <expression _type="double" name="summsrs" display_string="Sum Msrs" description="sum measures">
+      <expr_spec expr="(1000 + sum(msr1) + sum(msr2))/100"/>
+    </expression>
+    <expression _type="boolean" name="booleancut" display_string="Boolean cut" description="a boolean expression">
+      <expr_spec expr="(dim1 != 'x' AND dim2 != 10)"/>
+    </expression>
+    <expression _type="int" name="notnullcityid" display_string="Not null cityid Expr" description="Not null cityid">
+      <expr_spec expr="case when cityid is null then 0 else cityid end"/>
+    </expression>
+    <expression _type="double" name="roundedmsr1" display_string="Rounded msr1" description="rounded measure1">
+      <expr_spec expr="round(msr1/1000)"/>
+    </expression>
+    <expression _type="double" name="msr5" display_string="Fifth Msr" description="materialized in some facts">
+      <expr_spec expr="msr2 + msr3"/>
+    </expression>
+    <expression _type="String" name="citystatename" display_string="City State" description="city state">
+      <expr_spec expr="concat('CityState:', cubecity.statename)"/>
+    </expression>
+    <expression _type="string" name="singlecoldim1expr" display_string="dim1" description="dim1">
+      <expr_spec expr="dim1)"/>
+    </expression>
+    <expression _type="string" name="singlecolchainrefexpr" display_string="dim3chainid"
+                description="b2cube.testDim3id">
+      <expr_spec expr="b2cube.testDim3id"/>
+    </expression>
+    <expression _type="bigint" name="directmsrexpr" display_string="Direct Measure" description="">
+      <expr_spec expr="directMsr + 0"/>
+      <expr_spec expr="msr13 + msr14"/>
+    </expression>
+    <expression _type="double" name="msr7" display_string="Seventh Msr" description="measure expression">
+      <expr_spec
+        expr="case when sum(msr2) = 0 then 0 else sum(case when cityid='x' then msr21 else msr22 end)/sum(msr2) end"/>
+    </expression>
+    <expression _type="string" name="substrexpr" display_string="Substr expr" description="a sub-string expression">
+      <expr_spec expr="substr(dim1, 3))"/>
+      <expr_spec expr="substr(ascii(dim2chain.name), 3)"/>
+    </expression>
+    <expression _type="string" name="refexpr" display_string="Expr with cube and dim fields"
+                description="expression which facts and dimensions">
+      <expr_spec expr="concat(dim1, &quot;:&quot;, citydim.name)"/>
+    </expression>
+    <expression _type="string" name="singlecoldim1qualifiedexpr" display_string="dim1" description="b2cube.dim1">
+      <expr_spec expr="b2cube.dim1"/>
+    </expression>
+    <expression _type="int" name="countofdistinctcityid" display_string="Count of Distinct CityId Expr"
+                description="Count of Distinct CityId">
+      <expr_spec expr="count(distinct(cityid))"/>
+    </expression>
+    <expression _type="array&lt;string&gt;" name="xsports_abbr" display_string="xuser sports" description="">
+      <expr_spec expr="substr(xsports, 3)"/>
+    </expression>
+    <expression _type="string" name="singlecolchainid" display_string="dim3chainid" description="dim3chain.id">
+      <expr_spec expr="dim3chain.id)"/>
+    </expression>
+    <expression _type="String" name="asciicity" display_string="ascii cityname substr" description="ascii cityname">
+      <expr_spec expr="ascii(cityname)"/>
+    </expression>
+    <expression _type="string" name="nocolexpr" display_string="No col expr"
+                description="expression which non existing colun">
+      <expr_spec expr="myfun(nonexist)"/>
+    </expression>
+    <expression _type="int" name="union_join_ctx_sum_msr1_msr2" display_string="union_join_ctx_sum of msr1 and msr2"
+                description="union_join_ctx_sum of msr1 and msr2">
+      <expr_spec expr="sum(union_join_ctx_msr1) + sum(union_join_ctx_msr2)"/>
+    </expression>
+    <expression _type="array&lt;string&gt;" name="sports_abbr" display_string="user sports" description="">
+      <expr_spec expr="substr(sports, 3)"/>
+    </expression>
+    <expression _type="boolean" name="indiasubstr" display_string="Nested expr"
+                description="nested sub string expression">
+      <expr_spec expr="substrexpr = 'INDIA'"/>
+    </expression>
+    <expression _type="int" name="union_join_ctx_notnullcityid" display_string="union_join_ctx_Not null cityid Expr"
+                description="union_join_ctx_Not null cityid">
+      <expr_spec expr="case when union_join_ctx_cityid is null then 0 else union_join_ctx_cityid end"/>
+    </expression>
+    <expression _type="String" name="cityandstatenew" display_string="City and State"
+                description="city and state together">
+      <expr_spec expr="concat(cityname, &quot;:&quot;, statename_cube)" end_time="$gregorian{now.month-2months}"/>
+      <expr_spec expr="substr(concatedcitystate, 10)"/>
+    </expression>
+    <expression _type="String" name="isindia" display_string="Is Indian City/state" description="is indian city/state">
+      <expr_spec expr="cubecity.name == 'DELHI' OR cubestate.name == 'KARNATAKA' OR cubestate.name == 'MAHARASHTRA'"/>
+    </expression>
+    <expression _type="int" name="union_join_ctx_msr1_greater_than_100"
+                display_string="union_join_ctx_msr1 greater than 100"
+                description="union_join_ctx_msr1 greater than 100">
+      <expr_spec expr="case when sum(union_join_ctx_msr1) &gt; 100 then &quot;high&quot; else &quot;low&quot; end"/>
+    </expression>
+    <expression _type="bigint" name="msr6" display_string="Measure6" description="sixth measure">
+      <expr_spec expr="sum(msr2) + max(msr3)/ count(msr4)"/>
+    </expression>
+    <expression _type="double" name="nestedexpr" display_string="Nested expr" description="nested expr">
+      <expr_spec expr="avg(roundedmsr2)"/>
+      <expr_spec expr="avg(equalsums)"/>
+      <expr_spec expr="case when substrexpr = 'xyz' then avg(msr5) when substrexpr = 'abc' then avg(msr4)/100 end"/>
+    </expression>
+    <expression _type="String" name="substrsprorts" display_string="substr sports" description="substr of sports">
+      <expr_spec expr="substr(sports, 10)"/>
+    </expression>
+    <expression _type="array&lt;string&gt;" name="ysports_abbr" display_string="yuser sports" description="">
+      <expr_spec expr="substr(ysports, 3)"/>
+    </expression>
+    <expression _type="string" name="newexpr" display_string="new measure expr"
+                description="expression which non existing colun">
+      <expr_spec expr="myfun(newmeasure)"/>
+    </expression>
+    <expression _type="string" name="substrexprdim2" display_string="Substr expr" description="a sub-string expression">
+      <expr_spec expr="substr(dim2, 3))"/>
+      <expr_spec expr="substr(ascii(dim2chain.name), 3)"/>
+    </expression>
+    <expression _type="double" name="singlecolmsr2expr" display_string="Msr2" description="measure2">
+      <expr_spec expr="msr2)"/>
+    </expression>
+    <expression _type="String" name="substrdim2big1" display_string="dim2big1 substr" description="substr of dim2big1">
+      <expr_spec expr="substr(dim2big1, 5)"/>
+    </expression>
+    <expression _type="double" name="roundedmsr2" display_string="Rounded msr2" description="rounded measure2">
+      <expr_spec expr="round(msr2/1000)"/>
+    </expression>
+    <expression _type="double" name="nestedexprwithtimes" display_string="Nested expr" description="nested expr">
+      <expr_spec expr="avg(roundedmsr2)"/>
+      <expr_spec expr="avg(equalsums)"/>
+      <expr_spec expr="case when substrexpr = 'xyz' then avg(msr5) when substrexpr = 'abc' then avg(msr4)/100 end"
+                 start_time="2017-03-07T19:30:00.000+05:30"/>
+      <expr_spec expr="avg(newmeasure)"/>
+    </expression>
+  </expressions>
+  <join_chains>
+    <join_chain dest_table="countrydim" name="cubecountry" display_string="cube-country"
+                description="country thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="countryid" maps_to_many="false"/>
+              <to table="countrydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="userdim" name="userchain" display_string="user-chain" description="user chain">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="userid" maps_to_many="false"/>
+              <to table="userdim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="sports" name="usersports" display_string="user-sports" description="user sports">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="userid" maps_to_many="false"/>
+              <to table="userdim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="userdim" column="id" maps_to_many="false"/>
+              <to table="user_interests" column="user_id" maps_to_many="true"/>
+            </edge>
+            <edge>
+              <from table="user_interests" column="sport_id" maps_to_many="false"/>
+              <to table="sports" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="citydim" name="cubecity" display_string="cube-city" description="city thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2" maps_to_many="false"/>
+              <to table="testdim2" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="testdim4" name="dim4chain" display_string="cube-testdim3" description="cyclicdim thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2" maps_to_many="false"/>
+              <to table="testdim2" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim3" column="testdim4id" maps_to_many="false"/>
+              <to table="testdim4" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2big1" maps_to_many="false"/>
+              <to table="testdim2" column="bigid1" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim3" column="testdim4id" maps_to_many="false"/>
+              <to table="testdim4" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2big2" maps_to_many="false"/>
+              <to table="testdim2" column="bigid2" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim3" column="testdim4id" maps_to_many="false"/>
+              <to table="testdim4" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2bignew" maps_to_many="false"/>
+              <to table="testdim2" column="bigidnew" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim3" column="testdim4id" maps_to_many="false"/>
+              <to table="testdim4" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim3" column="testdim4id" maps_to_many="false"/>
+              <to table="testdim4" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim12" maps_to_many="false"/>
+              <to table="testdim2" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim3" column="testdim4id" maps_to_many="false"/>
+              <to table="testdim4" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="citydim" name="cubecity2" display_string="cube-city" description="city thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="cityid2" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="statedim" name="citystate" display_string="city-state" description="state thru city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="citydim" column="stateid" maps_to_many="false"/>
+              <to table="statedim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="citydim" column="statename" maps_to_many="false"/>
+              <to table="statedim" column="name" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="hourdim" name="timehourchain1" display_string="time chain"
+                description="time dim thru hour dim">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="test_time_dim_hour_id" maps_to_many="false"/>
+              <to table="hourdim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="zipdim" name="cubezip" display_string="cube-zip" description="Zipcode thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="zipcode" maps_to_many="false"/>
+              <to table="zipdim" column="code" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="union_join_ctx_zipcode" maps_to_many="false"/>
+              <to table="zipdim" column="code" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="sports" name="xusersports" display_string="xuser-sports" description="xuser sports">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="xuserid" maps_to_many="false"/>
+              <to table="userdim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="userdim" column="id" maps_to_many="false"/>
+              <to table="user_interests" column="user_id" maps_to_many="true"/>
+            </edge>
+            <edge>
+              <from table="user_interests" column="sport_id" maps_to_many="false"/>
+              <to table="sports" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="statedim" name="cubestate" display_string="cube-state" description="state thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="stateid" maps_to_many="false"/>
+              <to table="statedim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="citydim" name="cubecityjoinunionctx" display_string="cube-city"
+                description="city thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="union_join_ctx_cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="countrydim" name="cubecitystatecountry" display_string="cube-city-state-country"
+                description="country through state thru city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="citydim" column="stateid" maps_to_many="false"/>
+              <to table="statedim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="statedim" column="countryid" maps_to_many="false"/>
+              <to table="countrydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="zipdim" name="cityzip" display_string="city-zip" description="zip thru city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="cityid" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="citydim" column="zipcode" maps_to_many="false"/>
+              <to table="zipdim" column="code" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="daydim" name="timedatechain2" display_string="time chain"
+                description="time dim thru date dim">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="test_time_dim_day_id2" maps_to_many="false"/>
+              <to table="daydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="testdim3" name="dim3chain" display_string="cube-testdim3" description="cyclicdim thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2" maps_to_many="false"/>
+              <to table="testdim2" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2big1" maps_to_many="false"/>
+              <to table="testdim2" column="bigid1" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2big2" maps_to_many="false"/>
+              <to table="testdim2" column="bigid2" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2bignew" maps_to_many="false"/>
+              <to table="testdim2" column="bigidnew" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim12" maps_to_many="false"/>
+              <to table="testdim2" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="testdim2" column="testdim3id" maps_to_many="false"/>
+              <to table="testdim3" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="cycledim1" name="cdimchain" display_string="cube-cyclicdim"
+                description="cyclicdim thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="cdim2" maps_to_many="false"/>
+              <to table="cycledim1" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="unreachabledim" name="unreachabledim_chain" display_string="cube-unreachableDim"
+                description="unreachableDim thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="urdimid" maps_to_many="false"/>
+              <to table="unreachabledim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="citydim" name="cubecity1" display_string="cube-city" description="city thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="cityid1" maps_to_many="false"/>
+              <to table="citydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="sports" name="yusersports" display_string="user-sports" description="user sports">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="yuserid" maps_to_many="false"/>
+              <to table="userdim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="userdim" column="id" maps_to_many="false"/>
+              <to table="user_interests" column="user_id" maps_to_many="true"/>
+            </edge>
+            <edge>
+              <from table="user_interests" column="sport_id" maps_to_many="false"/>
+              <to table="sports" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="hourdim" name="timehourchain2" display_string="time chain"
+                description="time dim thru hour dim">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="test_time_dim_hour_id2" maps_to_many="false"/>
+              <to table="hourdim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="user_interests" name="userinterestids" display_string="user-interestsIds"
+                description="user interest ids">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="userid" maps_to_many="false"/>
+              <to table="userdim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="userdim" column="id" maps_to_many="false"/>
+              <to table="user_interests" column="user_id" maps_to_many="true"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="testdim2" name="dim2chain" display_string="cube-testdim2" description="testdim2 thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2" maps_to_many="false"/>
+              <to table="testdim2" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2big1" maps_to_many="false"/>
+              <to table="testdim2" column="bigid1" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2big2" maps_to_many="false"/>
+              <to table="testdim2" column="bigid2" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim2bignew" maps_to_many="false"/>
+              <to table="testdim2" column="bigidnew" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="dim12" maps_to_many="false"/>
+              <to table="testdim2" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="countrydim" name="cubestatecountry" display_string="cube-state-country"
+                description="country through state">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="stateid" maps_to_many="false"/>
+              <to table="statedim" column="id" maps_to_many="false"/>
+            </edge>
+            <edge>
+              <from table="statedim" column="countryid" maps_to_many="false"/>
+              <to table="countrydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain dest_table="daydim" name="timedatechain1" display_string="time chain"
+                description="time dim thru date dim">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="b2cube" column="test_time_dim_day_id" maps_to_many="false"/>
+              <to table="daydim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
+</x_base_cube>

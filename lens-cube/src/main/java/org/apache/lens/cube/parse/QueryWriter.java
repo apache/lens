@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,12 +20,7 @@ package org.apache.lens.cube.parse;
 
 import org.apache.lens.server.api.error.LensException;
 
-
-/**
- * HQL context holding the ql expressions
- */
-public interface HQLContextInterface {
-
+public interface QueryWriter {
   /**
    * Get the HQL query.
    *
@@ -33,53 +28,4 @@ public interface HQLContextInterface {
    * @throws LensException
    */
   String toHQL() throws LensException;
-
-  /**
-   * Get select expression.
-   *
-   * @return select
-   */
-  String getSelect();
-
-  /**
-   * Get from string
-   *
-   * @return from
-   */
-  String getFrom();
-
-  /**
-   * Get where string
-   *
-   * @return where
-   */
-  String getWhere();
-
-  /**
-   * Get groupby string
-   *
-   * @return groupby
-   */
-  String getGroupby();
-
-  /**
-   * Get having string
-   *
-   * @return having
-   */
-  String getHaving();
-
-  /**
-   * Get orderby string
-   *
-   * @return orderby
-   */
-  String getOrderby();
-
-  /**
-   * Get limit
-   *
-   * @return limit
-   */
-  Integer getLimit();
 }

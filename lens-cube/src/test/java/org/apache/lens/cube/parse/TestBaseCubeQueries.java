@@ -48,7 +48,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Splitter;
 import lombok.Getter;
 
 public class TestBaseCubeQueries extends TestQueryRewrite {
@@ -91,14 +90,6 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
         LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo().getErrorCode());
     assertTrue(e.getMessage().contains("[msr3, msr13]"));
 
-  }
-
-  private void compareStrings(List<String> factTablesList, Map.Entry<String, List<CandidateTablePruneCause>> entry) {
-    String factTablesString = entry.getKey();
-    Iterable<String> factTablesIterator = Splitter.on(',').split(factTablesString);
-    for (String factTable : factTablesIterator) {
-      Assert.assertTrue(factTablesList.contains(factTable), "Not selecting" + factTable + "fact table");
-    }
   }
 
   @Test
@@ -145,7 +136,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testMultiFactQueryWithNoDimensionsSelected() throws Exception {
     CubeQueryContext ctx = rewriteCtx("select roundedmsr2, msr12 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     Set<String> storageCandidates = new HashSet<String>();
-    Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(ctx.getCandidates());
+    Collection<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(ctx.getCandidates());
     for (StorageCandidate sc : scSet) {
       storageCandidates.add(sc.getStorageTable());
     }
@@ -171,7 +162,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     CubeQueryContext ctx = rewriteCtx("select roundedmsr2, msr14, msr12 from basecube" + " where " + TWO_DAYS_RANGE,
       conf);
     Set<String> storageCandidates = new HashSet<String>();
-    Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(ctx.getCandidates());
+    Collection<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(ctx.getCandidates());
     for (StorageCandidate sc : scSet) {
       storageCandidates.add(sc.getStorageTable());
     }
@@ -785,9 +776,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     // If going to fallback timedim, and partitions are missing, then error should be missing partition on that
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C4");
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
-    LensException exc =
+    NoCandidateFactAvailableException ne =
       getLensExceptionInRewrite("select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
-    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) exc;
     PruneCauses.BriefAndDetailedError pruneCause = ne.getJsonMessage();
     assertTrue(pruneCause.getBrief().contains("Missing partitions"), pruneCause.getBrief());
     assertEquals(pruneCause.getDetails().get("c4_testfact2_base").iterator().next().getCause(), MISSING_PARTITIONS);
@@ -827,17 +817,20 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     StorageCandidate sc = CandidateUtil.getStorageCandidates(ctx.getCandidates().iterator().next()).iterator().next();
     assertEquals(sc.getRangeToPartitions().size(), 2);
     for(TimeRange range: sc.getRangeToPartitions().keySet()) {
-      String rangeWhere = CandidateUtil.getTimeRangeWhereClasue(ctx.getRangeWriter(), sc, range);
-      if (range.getPartitionColumn().equals("dt")) {
+      String rangeWhere = sc.getTimeRangeWhereClasue(ctx.getRangeWriter(), range);
+      switch (range.getPartitionColumn()) {
+      case "dt":
         ASTNode parsed = HQLParser.parseExpr(rangeWhere);
         assertEquals(parsed.getToken().getType(), KW_AND);
         assertTrue(rangeWhere.substring(((CommonToken) parsed.getToken()).getStopIndex() + 1)
           .toLowerCase().contains(dTimeWhereClause));
         assertFalse(rangeWhere.substring(0, ((CommonToken) parsed.getToken()).getStartIndex())
           .toLowerCase().contains("and"));
-      } else if (range.getPartitionColumn().equals("ttd")) {
+        break;
+      case "ttd":
         assertFalse(rangeWhere.toLowerCase().contains("and"));
-      } else {
+        break;
+      default:
         throw new LensException("Unexpected");
       }
     }
@@ -989,8 +982,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertTrue(hqlQuery.toLowerCase().startsWith("select (basecube.alias0) as `dim1`, "
         + "(basecube.alias1) as `dim11` from"), hqlQuery);
     assertTrue(hqlQuery.contains("UNION ALL") && hqlQuery.endsWith("HAVING ((sum((basecube.alias2)) > 2) "
-        + "and (round((sum((basecube.alias3)) / 1000)) > 0) and (sum((basecube.alias3)) > 100))"), hqlQuery);
-
+      + "and (round((sum((basecube.alias3)) / 1000)) > 0) and (sum((basecube.alias3)) > 100))"), hqlQuery);
     hqlQuery = rewrite("select dim1, dim11 from basecube where " + TWO_DAYS_RANGE
       + "having msr12+roundedmsr2 <= 1000", conf);
     expected1 = getExpectedQuery(cubeName,
@@ -1025,14 +1017,14 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       null, " group by basecube.dim1, basecube.dim11",
       getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
 
+
     compareContains(expected1, hqlQuery);
     compareContains(expected2, hqlQuery);
     assertTrue(hqlQuery.toLowerCase().startsWith("select (basecube.alias0) as `dim1`, (basecube.alias1) "
         + "as `dim11` from "), hqlQuery);
     assertTrue(hqlQuery.contains("UNION ALL")
       && hqlQuery.endsWith("HAVING ((sum((basecube.alias2)) > 2) and (round((sum((basecube.alias3)) / 1000)) > 0) "
-        + "and ((sum((basecube.alias2)) + round((sum((basecube.alias3)) / 1000))) <= 1000))"), hqlQuery);
-
+      + "and ((sum((basecube.alias2)) + round((sum((basecube.alias3)) / 1000))) <= 1000))"), hqlQuery);
 
     hqlQuery = rewrite("select dim1, dim11 from basecube where " + TWO_DAYS_RANGE
       + "having msr12 > 2 or roundedmsr2 > 0 or msr12+roundedmsr2 <= 1000", conf);
@@ -1053,6 +1045,6 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
         + "as `dim11` from"), hqlQuery);
     assertTrue(hqlQuery.contains("UNION ALL")
       && hqlQuery.endsWith("HAVING ((sum((basecube.alias2)) > 2) or (round((sum((basecube.alias3)) / 1000)) > 0) "
-        + "or ((sum((basecube.alias2)) + round((sum((basecube.alias3)) / 1000))) <= 1000))"), hqlQuery);
+      + "or ((sum((basecube.alias2)) + round((sum((basecube.alias3)) / 1000))) <= 1000))"), hqlQuery);
   }
 }

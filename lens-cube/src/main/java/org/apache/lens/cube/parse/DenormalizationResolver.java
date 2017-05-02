@@ -140,14 +140,14 @@ public class DenormalizationResolver implements ContextRewriter {
     }
 
     Set<Dimension> rewriteDenormctx(CubeQueryContext cubeql,
-      StorageCandidate sc, Map<Dimension, CandidateDim> dimsToQuery, boolean replaceFact) throws LensException {
+      DimHQLContext sc, Map<Dimension, CandidateDim> dimsToQuery, boolean replaceFact) throws LensException {
       Set<Dimension> refTbls = new HashSet<>();
       log.info("Doing denorm changes for fact :{}", sc);
 
       if (!tableToRefCols.isEmpty()) {
         // pick referenced columns for fact
-        if (sc != null) {
-          pickColumnsForTable(cubeql, sc.getStorageTable());
+        if (sc.getStorageCandidate() != null) {
+          pickColumnsForTable(cubeql, sc.getStorageCandidate().getStorageTable());
         }
         // pick referenced columns for dimensions
         if (dimsToQuery != null) {
@@ -159,7 +159,7 @@ public class DenormalizationResolver implements ContextRewriter {
         replaceReferencedColumns(cubeql, sc, replaceFact);
         // Add the picked references to dimsToQuery
         for (PickedReference picked : pickedRefs) {
-          if (isPickedFor(picked, sc, dimsToQuery)) {
+          if (isPickedFor(picked, sc.getStorageCandidate(), dimsToQuery)) {
             refTbls.add((Dimension) cubeql.getCubeTableForAlias(picked.getChainRef().getChainName()));
             cubeql.addColumnsQueried(picked.getChainRef().getChainName(), picked.getChainRef().getRefColumn());
           }
@@ -264,11 +264,12 @@ public class DenormalizationResolver implements ContextRewriter {
       }
     }
 
-    private void replaceReferencedColumns(CubeQueryContext cubeql, StorageCandidate sc, boolean replaceFact)
-        throws LensException {
+    private void replaceReferencedColumns(CubeQueryContext cubeql, DimHQLContext sc, boolean replaceFact)
+      throws LensException {
       QueryAST ast = cubeql;
-      boolean factRefExists = sc != null && tableToRefCols.get(sc.getStorageTable()) != null
-          && !tableToRefCols.get(sc.getStorageTable()).isEmpty();
+      boolean factRefExists = sc.getStorageCandidate() != null
+        && tableToRefCols.get(sc.getStorageCandidate().getStorageTable()) != null
+        && !tableToRefCols.get(sc.getStorageCandidate().getStorageTable()).isEmpty();
       if (replaceFact && factRefExists) {
         ast = sc.getQueryAst();
       }

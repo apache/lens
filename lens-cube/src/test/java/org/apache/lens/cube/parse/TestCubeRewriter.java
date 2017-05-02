@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.error.LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE;
+import static org.apache.lens.cube.error.LensCubeErrorCode.NO_FACT_HAS_COLUMN;
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.*;
@@ -114,9 +116,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     //from date 6 days back
     timeRangeString = getTimeRangeString(DAILY, -6, 0, qFmt);
-    LensException th = getLensExceptionInRewrite("select SUM(msr15) from testCube where "
+    NoCandidateFactAvailableException th = getLensExceptionInRewrite("select SUM(msr15) from testCube where "
       + timeRangeString, getConf());
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
   }
 
   @Test
@@ -152,7 +153,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     conf.set(DRIVER_SUPPORTED_STORAGES, "C1,C2,C4");
     CubeQueryContext cubeQueryContext =
       rewriteCtx("select SUM(msr2) from testCube where " + THIS_YEAR_RANGE, conf);
-    PruneCauses<StorageCandidate> pruneCause = cubeQueryContext.getStoragePruningMsgs();
+    PruneCauses<Candidate> pruneCause = cubeQueryContext.getStoragePruningMsgs();
     long lessDataCauses = pruneCause.values().stream()
       .flatMap(Collection::stream).map(CandidateTablePruneCause::getCause).filter(LESS_DATA::equals).count();
     assertTrue(lessDataCauses > 0);
@@ -178,10 +179,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     conf.setBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, true);
 
-    LensException th = getLensExceptionInRewrite(
+    NoCandidateFactAvailableException ne = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-    assertEquals(th.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
-    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) th;
     PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
     int endIndex = MISSING_PARTITIONS.errorFormat.length() - 3;
     assertEquals(
@@ -629,7 +628,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         + TWO_DAYS_RANGE, conf);
     String expected =
       getExpectedQuery(TEST_CUBE_NAME, "select citydim.name as `name`, sum(testcube.msr2) as `sum(msr2)` FROM "
-          , "INNER JOIN " + getDbName() + "c2_citytable citydim ON" + " testCube.cityid = citydim.id",
+          , " INNER JOIN " + getDbName() + "c2_citytable citydim ON" + " testCube.cityid = citydim.id",
           null, " group by citydim.name ",
         null, getWhereForDailyAndHourly2days(TEST_CUBE_NAME, "C2_testfact"));
     compareQueries(hqlQuery, expected);
@@ -872,8 +871,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     String expectedRewrittenQuery = "SELECT (citydim.name) as `Alias With  Spaces`, sum((testcube.msr2)) "
       + "as `TestMeasure` FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
-      + "ON ((testcube.cityid) = (citydim.id)) WHERE ((((testcube.dt) = '"
-      + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "'))) GROUP BY (citydim.name)";
+      + "ON ((testcube.cityid) = (citydim.id)) WHERE ((testcube.dt) = '"
+      + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "') GROUP BY (citydim.name)";
 
     String actualRewrittenQuery = rewrite(inputQuery, getConfWithStorages("C2"));
 
@@ -889,8 +888,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     String expectedRewrittenQuery = "SELECT (citydim.name) as `Alias With  Spaces`, sum((testcube.msr2)) "
       + "as `TestMeasure` FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c2_citytable citydim "
-      + "ON ((testcube.cityid) = (citydim.id)) WHERE ((((testcube.dt) = '"
-      + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "'))) GROUP BY (citydim.name)";
+      + "ON ((testcube.cityid) = (citydim.id)) WHERE ((testcube.dt) = '"
+      + getDateUptoHours(getDateWithOffset(HOURLY, -1)) + "') GROUP BY (citydim.name)";
 
     String actualRewrittenQuery = rewrite(inputQuery, getConfWithStorages("C2"));
 
@@ -997,10 +996,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Configuration conf = getConf();
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
 
-    LensException e = getLensExceptionInRewrite(
+    NoCandidateFactAvailableException ne = getLensExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
-    assertEquals(e.getErrorCode(), LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
-    NoCandidateFactAvailableException ne = (NoCandidateFactAvailableException) e;
     PruneCauses.BriefAndDetailedError pruneCauses = ne.getJsonMessage();
 
     assertEquals(
@@ -1615,16 +1612,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
     assertTrue(hql1.contains("c1_testfact4_raw_base"));
     // Start time for dim attribute user_id_added_far_future is 2099-01-01
     String query2 = "select user_id_added_far_future from basecube where " + TWO_DAYS_RANGE;
-    LensException e1 = getLensExceptionInRewrite(query2, getConf());
-    assertTrue(e1.getMessage().contains("NO_FACT_HAS_COLUMN"));
+    assertLensExceptionInRewrite(query2, getConf(), NO_FACT_HAS_COLUMN);
     // End time for dim attribute user_id_deprecated is 2016-01-01
     String query3 = "select user_id_deprecated from basecube where " + TWO_DAYS_RANGE;
-    LensException e2 = getLensExceptionInRewrite(query3, getConf());
-    assertTrue(e2.getMessage().contains("NO_FACT_HAS_COLUMN"));
+    assertLensExceptionInRewrite(query3, getConf(), NO_FACT_HAS_COLUMN);
     // Start time for ref column user_id_added_far_future_chain is 2099-01-01
     String query4 = "select user_id_added_far_future_chain.name from basecube where " + TWO_DAYS_RANGE;
-    LensException e3 = getLensExceptionInRewrite(query4, getConf());
-    assertTrue(e3.getMessage().contains("NO_FACT_HAS_COLUMN"));
+    assertLensExceptionInRewrite(query4, getConf(), NO_CANDIDATE_FACT_AVAILABLE);
   }
 
   @Test

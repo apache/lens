@@ -61,12 +61,14 @@ public class DefaultQueryAST implements QueryAST {
     return null;
   }
 
-  public static DefaultQueryAST fromStorageCandidate(StorageCandidate sc, QueryAST ast) throws
-      LensException {
+  public static DefaultQueryAST fromStorageCandidate(DimHQLContext sc) throws LensException {
+    return fromStorageCandidate(sc, sc.getQueryAst());
+  }
+  public static DefaultQueryAST fromStorageCandidate(DimHQLContext sc, QueryAST ast) {
     return new DefaultQueryAST(ast.getSelectAST(),
         null,
         ast.getGroupByAST(), ast.getHavingAST(), ast.getJoinAST(), ast.getOrderByAST(), ast.getLimitValue(),
         ast.getFromString(),
-        sc.getWhereString());
+        sc != null ? sc.getWhere() : null);
   }
 }

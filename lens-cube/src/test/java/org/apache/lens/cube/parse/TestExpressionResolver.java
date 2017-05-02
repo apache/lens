@@ -329,7 +329,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
       getLensExceptionInRewrite("select cityStateName, msr2expr, msr5, msr15 from testCube where "
         + TWO_DAYS_RANGE, conf);
     Assert.assertEquals(th.getErrorCode(),
-      LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo().getErrorCode());
+      LensCubeErrorCode.NO_JOIN_CANDIDATE_AVAILABLE.getLensErrorInfo().getErrorCode());
   }
   @Test
   public void testMaterializedExpressionPickingMaterializedValue() throws Exception {

@@ -28,13 +28,10 @@
   </columns>
   <properties>
     <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
-    <property name="cube.fact.union_join_ctx_fact1.cubename" value="baseCube"/>
     <property name="cube.fact.absolute.start.time" value="$absolute{now.day - 90 days}"/>
-    <property name="cube.fact.union_join_ctx_fact1.storages" value="C1"/>
     <property name="cube.table.union_join_ctx_fact1.weight" value="5.0"/>
     <property name="cube.fact.absolute.end.time" value="$absolute{now.day - 30 days}"/>
     <property name="cube.fact.is.aggregated" value="false"/>
-    <property name="cube.fact.union_join_ctx_fact1.c1.updateperiods" value="DAILY"/>
   </properties>
   <storage_tables>
     <storage_table>
@@ -46,12 +43,6 @@
         <part_cols>
           <column name="dt" _type="string" comment="date partition"/>
         </part_cols>
-        <table_parameters>
-          <property name="cube.storagetable.time.partcols" value="dt"/>
-        </table_parameters>
-        <serde_parameters>
-          <property name="serialization.format" value="1"/>
-        </serde_parameters>
         <time_part_cols>dt</time_part_cols>
       </table_desc>
     </storage_table>

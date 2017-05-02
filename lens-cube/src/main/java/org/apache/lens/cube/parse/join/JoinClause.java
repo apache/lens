@@ -53,19 +53,8 @@ public class JoinClause implements Comparable<JoinClause> {
   void initChainColumns() {
     for (List<TableRelationship> path : chain.values()) {
       for (TableRelationship edge : path) {
-        Set<String> fcols = chainColumns.get(edge.getFromTable());
-        if (fcols == null) {
-          fcols = new HashSet<>();
-          chainColumns.put(edge.getFromTable(), fcols);
-        }
-        fcols.add(edge.getFromColumn());
-
-        Set<String> tocols = chainColumns.get(edge.getToTable());
-        if (tocols == null) {
-          tocols = new HashSet<>();
-          chainColumns.put(edge.getToTable(), tocols);
-        }
-        tocols.add(edge.getToColumn());
+        chainColumns.computeIfAbsent(edge.getFromTable(), k -> new HashSet<>()).add(edge.getFromColumn());
+        chainColumns.computeIfAbsent(edge.getToTable(), k -> new HashSet<>()).add(edge.getToColumn());
       }
     }
   }

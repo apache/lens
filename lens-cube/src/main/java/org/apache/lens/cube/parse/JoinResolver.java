@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,15 +41,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class JoinResolver implements ContextRewriter {
   private Map<AbstractCubeTable, JoinType> tableJoinTypeMap;
-  private AbstractCubeTable target;
   /**
    * Dimension as key and all the participating join chains for this dimension as value.
    */
-  private HashMap<Dimension, List<JoinChain>> dimensionToJoinChainsMap = new HashMap<Dimension, List<JoinChain>>();
+  private HashMap<Dimension, List<JoinChain>> dimensionToJoinChainsMap = new HashMap<>();
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
-    tableJoinTypeMap = new HashMap<AbstractCubeTable, JoinType>();
+    tableJoinTypeMap = new HashMap<>();
     try {
       resolveJoins(cubeql);
     } catch (HiveException e) {
@@ -94,10 +93,7 @@ class JoinResolver implements ContextRewriter {
       dims.add(chain.getDestTable());
       for (String dim : dims) {
         Dimension dimension = cubeql.getMetastoreClient().getDimension(dim);
-        if (dimensionToJoinChainsMap.get(dimension) == null) {
-          dimensionToJoinChainsMap.put(dimension, new ArrayList<JoinChain>());
-        }
-        dimensionToJoinChainsMap.get(dimension).add(chain);
+        dimensionToJoinChainsMap.computeIfAbsent(dimension, k -> new ArrayList<>()).add(chain);
       }
     }
   }
@@ -105,9 +101,9 @@ class JoinResolver implements ContextRewriter {
   /**
    * Resolve joins automatically for the given query.
    *
-   * @param cubeql
-   * @throws LensException
-   * @throws HiveException
+   * @param cubeql cube query context
+   * @throws LensException lens exception
+   * @throws HiveException hive exception
    */
   private void autoResolveJoins(CubeQueryContext cubeql) throws LensException, HiveException {
     if (cubeql.getJoinchains().isEmpty()) {
@@ -117,6 +113,7 @@ class JoinResolver implements ContextRewriter {
     }
     processJoinChains(cubeql);
     // Find the target
+    AbstractCubeTable target;
     if (cubeql.hasCubeInQuery()) {
       // Only cube in the query
       target = (AbstractCubeTable) cubeql.getCube();
@@ -146,11 +143,8 @@ class JoinResolver implements ContextRewriter {
     for (JoinChain chain : cubeql.getJoinchains().values()) {
       Dimension dimension = cubeql.getMetastoreClient().getDimension(chain.getDestTable());
       Aliased<Dimension> aliasedDimension = Aliased.create(dimension, chain.getName());
-      if (multipleJoinPaths.get(aliasedDimension) == null) {
-        multipleJoinPaths.put(aliasedDimension, new ArrayList<JoinPath>());
-      }
-      multipleJoinPaths.get(aliasedDimension).addAll(
-        chain.getRelationEdges(cubeql.getMetastoreClient()));
+      multipleJoinPaths.computeIfAbsent(aliasedDimension, k -> new ArrayList<>())
+        .addAll(chain.getRelationEdges(cubeql.getMetastoreClient()));
     }
 
     boolean flattenBridgeTables = cubeql.getConf().getBoolean(CubeQueryConfUtil.ENABLE_FLATTENING_FOR_BRIDGETABLES,
@@ -229,9 +223,7 @@ class JoinResolver implements ContextRewriter {
 
       String[] leftChildAliases = leftTree.getLeftAliases();
       String[] leftAliases = new String[leftChildAliases.length + 1];
-      for (int i = 0; i < leftChildAliases.length; i++) {
-        leftAliases[i] = leftChildAliases[i];
-      }
+      System.arraycopy(leftChildAliases, 0, leftAliases, 0, leftChildAliases.length);
       leftAliases[leftChildAliases.length] = leftTree.getRightAliases()[0];
       joinTree.setLeftAliases(leftAliases);
 

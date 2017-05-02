@@ -63,15 +63,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   private String getAutoResolvedFromString(CubeQueryContext query) throws LensException {
-    String from = null;
-    if (query.getPickedCandidate() instanceof StorageCandidate) {
-      StorageCandidate sc = (StorageCandidate) query.getPickedCandidate();
-      from =  sc.getFromString();
-      // Dim only query
-    } else if (query.getPickedCandidate() == null) {
-      from = query.getHqlContext().getFrom();
-    }
-    return from;
+    return ((DimHQLContext)query.getQueryWriterContext()).getFrom();
   }
 
   @Test
@@ -677,7 +669,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   public void testUnreachableDim() throws ParseException, LensException, HiveException {
     assertLensExceptionInRewrite("select urdimid from testdim2", hconf, LensCubeErrorCode.NO_DIM_HAS_COLUMN);
     assertLensExceptionInRewrite("select urdimid from testcube where " + TWO_DAYS_RANGE, hconf,
-      LensCubeErrorCode.NO_FACT_HAS_COLUMN);
+      LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE);
     assertLensExceptionInRewrite("select unreachableName from testdim2", hconf,
       LensCubeErrorCode.NO_DIM_HAS_COLUMN);
     assertLensExceptionInRewrite("select unreachableName from testcube where " + TWO_DAYS_RANGE, hconf,
@@ -685,6 +677,6 @@ public class TestJoinResolver extends TestQueryRewrite {
     assertLensExceptionInRewrite("select unreachableDim_chain.name from testdim2", hconf,
       LensCubeErrorCode.NO_JOIN_PATH);
     assertLensExceptionInRewrite("select unreachableDim_chain.name from testcube where " + TWO_DAYS_RANGE, hconf,
-      LensCubeErrorCode.NO_FACT_HAS_COLUMN);
+      LensCubeErrorCode.NO_JOIN_PATH);
   }
 }

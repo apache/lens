@@ -21,12 +21,10 @@ package org.apache.lens.cube.metadata;
 import static java.util.Calendar.MONTH;
 
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -149,10 +147,14 @@ public final class DateUtil {
 
   public static String relativeToAbsolute(String relative, Date now) throws LensException {
     if (RELDATE_VALIDATOR.matcher(relative).matches()) {
-      return ABSDATE_PARSER.get().format(resolveRelativeDate(relative, now));
+      return formatAbsDate(resolveRelativeDate(relative, now));
     } else {
       return relative;
     }
+  }
+
+  public static String formatAbsDate(Date date) {
+    return ABSDATE_PARSER.get().format(date).replaceAll("([-:,]0+)+$", "");
   }
 
   static Cache<String, Date> stringToDateCache = CacheBuilder.newBuilder()
@@ -160,12 +162,7 @@ public final class DateUtil {
 
   public static Date resolveAbsoluteDate(final String str) throws LensException {
     try {
-      return stringToDateCache.get(str, new Callable<Date>() {
-        @Override
-        public Date call() throws ParseException {
-          return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
-        }
-      });
+      return stringToDateCache.get(str, () -> ABSDATE_PARSER.get().parse(getAbsDateFormatString(str)));
     } catch (Exception e) {
       log.error("Invalid date format. expected only {} date provided:{}", ABSDATE_FMT, str, e);
       throw new LensException(LensCubeErrorCode.WRONG_TIME_RANGE_FORMAT.getLensErrorInfo(), ABSDATE_FMT, str);

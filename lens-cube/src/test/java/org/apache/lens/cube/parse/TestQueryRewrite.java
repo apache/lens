@@ -28,6 +28,7 @@ import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.ErrorCollectionFactory;
 import org.apache.lens.api.error.LensError;
 import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.server.api.*;
 import org.apache.lens.server.api.error.LensException;
 
@@ -84,14 +85,14 @@ public abstract class TestQueryRewrite {
     SessionState.get().setCurrentDatabase(TestQueryRewrite.class.getSimpleName());
   }
 
-  protected String rewrite(String query, Configuration conf) throws LensException, ParseException {
+  protected String rewrite(String query, Configuration conf) throws LensException {
     String rewrittenQuery = rewriteCtx(query, conf).toHQL();
     log.info("Rewritten query: {}", rewrittenQuery);
     return rewrittenQuery;
   }
 
   protected CubeQueryContext rewriteCtx(String query, Configuration conf)
-    throws LensException, ParseException {
+    throws LensException {
     log.info("User query: {}", query);
     CubeQueryRewriter driver = new CubeQueryRewriter(conf, hconf);
     return driver.rewrite(query);
@@ -110,8 +111,7 @@ public abstract class TestQueryRewrite {
     }
   }
 
-  protected LensException getLensExceptionInRewrite(String query, Configuration conf)
-    throws LensException, ParseException {
+  protected <T extends LensException> T getLensExceptionInRewrite(String query, Configuration conf) {
     try {
       String hql = rewrite(query, conf);
       Assert.fail("Should have thrown exception. But rewrote the query : " + hql);
@@ -119,8 +119,12 @@ public abstract class TestQueryRewrite {
       return null;
     } catch (LensException e) {
       log.error("Lens exception in Rewrite.", e);
-      return e;
+      return (T) e;
     }
+  }
+  protected PruneCauses<Candidate> getBriefAndDetailedError(String query, Configuration conf) {
+    NoCandidateFactAvailableException e = getLensExceptionInRewrite(query, conf);
+    return e.getBriefAndDetailedError();
   }
 
   protected void assertLensExceptionInRewrite(String query, Configuration conf, LensCubeErrorCode expectedError)

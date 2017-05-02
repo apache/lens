@@ -18,9 +18,16 @@
  */
 package org.apache.lens.cube.parse;
 
+import java.util.List;
+
 import org.apache.lens.server.api.error.LensException;
 
+import org.apache.commons.lang.StringUtils;
+
+import com.google.common.collect.Lists;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -30,37 +37,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Data
-public abstract class SimpleHQLContext implements HQLContextInterface {
-
-  private String select;
+public abstract class SimpleHQLContext implements QueryWriter {
+  private String prefix;
   private String from;
   private String where;
-  private String groupby;
-  private String orderby;
-  private String having;
-  private Integer limit;
-
-  SimpleHQLContext() {
-  }
-
-  SimpleHQLContext(String select, String from, String where, String groupby, String orderby, String having,
-                   Integer limit) {
-    this.select = select;
-    this.from = from;
-    this.where = where;
-    this.groupby = groupby;
-    this.orderby = orderby;
-    this.having = having;
-    this.limit = limit;
-  }
-
-  SimpleHQLContext(String select, String groupby, String orderby, String having, Integer limit) {
-    this.select = select;
-    this.groupby = groupby;
-    this.orderby = orderby;
-    this.having = having;
-    this.limit = limit;
-  }
+  @Getter(AccessLevel.PUBLIC)
+  protected final QueryAST queryAst;
 
   /**
    * Set all missing expressions of HQL context.
@@ -70,11 +52,50 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
    *
    * @throws LensException
    */
-  protected void setMissingExpressions() throws LensException {
-  }
+  protected abstract void setMissingExpressions() throws LensException;
 
   public String toHQL() throws LensException {
     setMissingExpressions();
-    return CandidateUtil.buildHQLString(select, from, where, groupby, orderby, having, limit);
+    return buildHQLString();
+  }
+
+  private static final String BASE_QUERY_FORMAT = "SELECT %s FROM %s";
+
+  private String buildHQLString() {
+    return buildHQLString(prefix, getQueryAst().getSelectString(), from, where, getQueryAst().getGroupByString(),
+      getQueryAst().getOrderByString(), getQueryAst().getHavingString(), getQueryAst().getLimitValue());
+  }
+  private static String buildHQLString(String prefix, String select, String from, String where,
+    String groupby, String orderby, String having, Integer limit) {
+    StringBuilder queryFormat = new StringBuilder();
+    List<String> qstrs = Lists.newArrayList();
+    if (StringUtils.isNotBlank(prefix)) {
+      queryFormat.append("%s");
+      qstrs.add(prefix);
+    }
+    queryFormat.append(BASE_QUERY_FORMAT);
+    qstrs.add(select);
+    qstrs.add(from);
+    if (StringUtils.isNotBlank(where)) {
+      queryFormat.append(" WHERE %s");
+      qstrs.add(where);
+    }
+    if (StringUtils.isNotBlank(groupby)) {
+      queryFormat.append(" GROUP BY %s");
+      qstrs.add(groupby);
+    }
+    if (StringUtils.isNotBlank(having)) {
+      queryFormat.append(" HAVING %s");
+      qstrs.add(having);
+    }
+    if (StringUtils.isNotBlank(orderby)) {
+      queryFormat.append(" ORDER BY %s");
+      qstrs.add(orderby);
+    }
+    if (limit != null) {
+      queryFormat.append(" LIMIT %s");
+      qstrs.add(String.valueOf(limit));
+    }
+    return String.format(queryFormat.toString(), qstrs.toArray(new Object[qstrs.size()]));
   }
 }

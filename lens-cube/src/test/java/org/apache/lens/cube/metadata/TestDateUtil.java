@@ -286,13 +286,13 @@ public class TestDateUtil {
     Date now = new Date();
     Date nowDay = DateUtils.truncate(now, DAY_OF_MONTH);
     Date nowDayMinus2Days = DateUtils.add(nowDay, DAY_OF_MONTH, -2);
-    assertEquals(relativeToAbsolute("now", now), DateUtil.ABSDATE_PARSER.get().format(now));
-    assertEquals(relativeToAbsolute("now.day", now), DateUtil.ABSDATE_PARSER.get().format(nowDay));
-    assertEquals(relativeToAbsolute("now.day - 2 days", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
-    assertEquals(relativeToAbsolute("now.day - 2 day", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
-    assertEquals(relativeToAbsolute("now.day - 2day", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
-    assertEquals(relativeToAbsolute("now.day -2 day", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
-    assertEquals(relativeToAbsolute("now.day -2 days", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now", now), DateUtil.formatAbsDate(now));
+    assertEquals(relativeToAbsolute("now.day", now), DateUtil.formatAbsDate(nowDay));
+    assertEquals(relativeToAbsolute("now.day - 2 days", now), DateUtil.formatAbsDate(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now.day - 2 day", now), DateUtil.formatAbsDate(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now.day - 2day", now), DateUtil.formatAbsDate(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now.day -2 day", now), DateUtil.formatAbsDate(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now.day -2 days", now), DateUtil.formatAbsDate(nowDayMinus2Days));
   }
   @Test
   public void testTimestamp() throws LensException {

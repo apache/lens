@@ -84,8 +84,12 @@
     </measure>
     <measure _type="INT" name="union_join_ctx_msr1" description="union_join_ctx_first measure">
     </measure>
+    <measure _type="INT" name="segmsr1" default_aggr="SUM" description="segmentation measure 1"
+             display_string="segmentation measure 1"/>
   </measures>
   <dim_attributes>
+    <dim_attribute _type="string" name="business" display_string="business unit"
+                   description="Business unit name for segmentation" />
     <dim_attribute _type="string" name="union_join_ctx_cityname" display_string="union_join_ctx_city name"
                    description="union_join_ctx_city name">
       <chain_ref_column chain_name="cubecityjoinunionctx" ref_col="name" dest_table="citydim"/>

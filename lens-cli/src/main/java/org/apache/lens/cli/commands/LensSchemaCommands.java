@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,14 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.lens.api.metastore.*;
+import org.apache.lens.api.metastore.SchemaTraverser;
+import org.apache.lens.api.metastore.XBaseCube;
+import org.apache.lens.api.metastore.XDerivedCube;
+import org.apache.lens.api.metastore.XDimension;
+import org.apache.lens.api.metastore.XDimensionTable;
+import org.apache.lens.api.metastore.XFactTable;
+import org.apache.lens.api.metastore.XSegmentation;
+import org.apache.lens.api.metastore.XStorage;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
 import org.springframework.beans.factory.annotation.Autowired;

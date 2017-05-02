@@ -91,7 +91,7 @@ class TimerangeResolver implements ContextRewriter {
 
   private void processTimeRangeFunction(CubeQueryContext cubeql, ASTNode timenode, ASTNode parent, int childIndex)
     throws LensException {
-    TimeRange.TimeRangeBuilder builder = TimeRange.getBuilder();
+    TimeRange.TimeRangeBuilder builder = TimeRange.builder();
     builder.astNode(timenode);
     builder.parent(parent);
     builder.childIndex(childIndex);
