@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,6 +37,8 @@ import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly
 import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForHourly2days;
 import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForUpdatePeriods;
 import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
+
+import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 import static org.testng.Assert.assertEquals;
 
@@ -114,13 +116,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       "SELECT (testcube.alias0) as `cityid`, sum((testcube.alias1)) as `segmsr1` FROM (",
       " ) as testcube GROUP BY (testcube.alias0)", newArrayList(query1, query2));
   }
-
-  // TODO in the end after running other tests
-  @Test
-  public void testSegmentRewriteWithDifferentStartTimes() throws Exception {
-
-  }
-
+  
   /*
   Asking for segmsr1 from testcube. segmsr1 is available in b1b2fact and seg1 split over time.
    Inside seg1, Two segments are there: b1cube and b2cube. b1cube has one fact b1fact which
@@ -135,7 +131,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     query1 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
       null, "group by testcube.cityid",
       getWhereForUpdatePeriods("testcube", "c0_b1fact1",
-        getDateWithOffset(UpdatePeriod.DAILY, -31), getDateWithOffset(UpdatePeriod.DAILY, -10),
+        addDays(getDateWithOffset(UpdatePeriod.MONTHLY, -1), -1), getDateWithOffset(UpdatePeriod.DAILY, -10),
         Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
     query2 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
       null, "group by testcube.cityid",
@@ -145,12 +141,13 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     query3 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
       null, "group by testcube.cityid",
       getWhereForUpdatePeriods("testcube", "c0_b2fact1",
-        getDateWithOffset(UpdatePeriod.DAILY, -31), NOW,
+        addDays(getDateWithOffset(UpdatePeriod.MONTHLY, -1), -1), NOW,
         Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
     query4 = getExpectedQuery("testcube", "select testcube.cityid as alias0, sum(testcube.segmsr1) as alias1 from ",
       null, "group by testcube.cityid",
       getWhereForUpdatePeriods("testcube", "c0_b1b2fact1",
-        getDateWithOffset(UpdatePeriod.DAILY, -60), getDateWithOffset(UpdatePeriod.DAILY, -30),
+        addDays(getDateWithOffset(UpdatePeriod.MONTHLY, -2), -1),
+        addDays(getDateWithOffset(UpdatePeriod.MONTHLY, -1), 0),
         Sets.newHashSet(UpdatePeriod.MONTHLY, UpdatePeriod.DAILY)));
     compareUnionQuery(ctx, "select testcube.alias0 as cityid, sum(testcube.alias1) as segmsr1 from (",
       ") AS testcube GROUP BY (testcube.alias0)", newArrayList(query1, query2, query3, query4));
@@ -183,7 +180,6 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     NoCandidateFactAvailableException e = getLensExceptionInRewrite("select invmsr1 from testcube where "
       + TWO_DAYS_RANGE, getConf());
     assertEquals(e.getJsonMessage().getBrief(), "Columns [invmsr1] are not present in any table");
-    //todo descriptive error
   }
 
   @Test
