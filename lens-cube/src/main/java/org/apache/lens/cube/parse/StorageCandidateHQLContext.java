@@ -27,7 +27,6 @@ import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.server.api.error.LensException;
 
-import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
@@ -136,28 +135,8 @@ public class StorageCandidateHQLContext extends DimHQLContext {
         // Check if the picked candidate is a StorageCandidate and in that case
         // update the selectAST with final alias.
         CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), getCubeQueryContext());
-        updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
+        CandidateUtil.updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
         setPrefix(getCubeQueryContext().getInsertClause());
-      }
-    }
-  }
-
-  private void updateOrderByWithFinalAlias(ASTNode orderby, ASTNode select) {
-    if (orderby == null) {
-      return;
-    }
-    for (Node orderbyNode : orderby.getChildren()) {
-      ASTNode orderBychild = (ASTNode) orderbyNode;
-      for (Node selectNode : select.getChildren()) {
-        ASTNode selectChild = (ASTNode) selectNode;
-        if (selectChild.getChildCount() == 2) {
-          if (HQLParser.getString((ASTNode) selectChild.getChild(0))
-            .equals(HQLParser.getString((ASTNode) orderBychild.getChild(0)))) {
-            ASTNode alias = new ASTNode((ASTNode) selectChild.getChild(1));
-            orderBychild.replaceChildren(0, 0, alias);
-            break;
-          }
-        }
       }
     }
   }

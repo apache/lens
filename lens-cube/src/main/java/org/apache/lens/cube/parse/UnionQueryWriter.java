@@ -82,6 +82,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
     CandidateUtil.updateFinalAlias(queryAst.getSelectAST(), cubeql);
     setPrefix(cubeql.getInsertClause());
     setFrom(getFromString());
+    CandidateUtil.updateOrderByWithFinalAlias(queryAst.getOrderByAST(), queryAst.getSelectAST());
   }
 
   /**

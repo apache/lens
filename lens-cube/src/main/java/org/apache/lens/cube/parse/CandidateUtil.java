@@ -23,6 +23,10 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
+import org.apache.lens.server.api.error.LensException;
+
+import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
@@ -159,5 +163,28 @@ public final class CandidateUtil {
   }
   static Set<String> getColumnsFromCandidates(Collection<? extends Candidate> scSet) {
     return scSet.stream().map(Candidate::getColumns).flatMap(Collection::stream).collect(Collectors.toSet());
+  }
+
+  static void updateOrderByWithFinalAlias(ASTNode orderby, ASTNode select) throws LensException{
+    if (orderby == null) {
+      return;
+    }
+    for (Node orderbyNode : orderby.getChildren()) {
+      ASTNode orderBychild = (ASTNode) orderbyNode;
+      for (Node selectNode : select.getChildren()) {
+        ASTNode selectChild = (ASTNode) selectNode;
+        if (selectChild.getChildCount() == 2) {
+          if (HQLParser.getString((ASTNode) selectChild.getChild(0))
+              .equals(HQLParser.getString((ASTNode) orderBychild.getChild(0)))) {
+            ASTNode alias = new ASTNode((ASTNode) selectChild.getChild(1));
+            if (!alias.toString().matches("\\S+")) {
+              throw new LensException(LensCubeErrorCode.ORDERBY_ALIAS_CONTAINING_WHITESPACE.getLensErrorInfo(), alias);
+            }
+            orderBychild.replaceChildren(0, 0, alias);
+            break;
+          }
+        }
+      }
+    }
   }
 }

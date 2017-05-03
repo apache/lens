@@ -30,8 +30,10 @@ import static org.testng.Assert.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.error.NoCandidateFactAvailableException;
 import org.apache.lens.server.api.LensServerAPITestUtil;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -165,7 +167,7 @@ public class TestUnionQueries extends TestQueryRewrite {
           "SELECT max(testcube.msr3) as `alias0`, sum(testcube.msr2) as `alias1`", null, null);
       compareQueries(hqlQuery, expected);
 
-      hqlQuery = rewrite("select zipcode, cityid as `City ID`, msr3 as `Measure 3`, msr4, "
+      hqlQuery = rewrite("select zipcode, cityid as `CityID`, msr3 as `Measure 3`, msr4, "
           + "SUM(msr2) as `Measure 2` from testCube where "
           + THREE_MONTHS_RANGE_UPTO_MONTH + " having msr4 > 10 order by cityid desc limit 5", conf);
 
@@ -173,11 +175,22 @@ public class TestUnionQueries extends TestQueryRewrite {
           "SELECT (testcube.alias0) as `zipcode`, (testcube.alias1) as `City ID`, max((testcube.alias2)) "
               + "as `Measure 3`, count((testcube.alias3)) as `msr4`, sum((testcube.alias4)) as `Measure 2`",
           null, "group by testcube.alias0, testcube.alias1 "
-              + " having count(testcube.alias3) > 10 order by testcube.alias1 desc limit 5",
+              + " having count(testcube.alias3) > 10 order by cityid desc limit 5",
           "SELECT (testcube.zipcode) as `alias0`, (testcube.cityid) as `alias1`, max((testcube.msr3)) as `alias2`, "
               + "count((testcube.msr4)) as `alias3`, sum((testcube.msr2)) as `alias4`",
           null, "group by testcube.zipcode, testcube.cityid ");
       compareQueries(hqlQuery, expected);
+
+      // Order by column with whitespace in alias should fail
+      try {
+        hqlQuery = rewrite("select zipcode, cityid as `City ID`, msr3 as `Measure 3`, msr4, "
+            + "SUM(msr2) as `Measure 2` from testCube where "
+            + THREE_MONTHS_RANGE_UPTO_MONTH + " having msr4 > 10 order by cityid desc limit 5", conf);
+      } catch (LensException e) {
+        assertEquals(e.getErrorCode(),
+            LensCubeErrorCode.ORDERBY_ALIAS_CONTAINING_WHITESPACE.getLensErrorInfo().getErrorCode());
+      }
+
     } finally {
       getStorageToUpdatePeriodMap().clear();
     }
@@ -274,13 +287,13 @@ public class TestUnionQueries extends TestQueryRewrite {
         }
       };
 
-      String hqlQuery = rewrite("select cityid as `City ID`, msr3 as `Measure 3`, "
+      String hqlQuery = rewrite("select cityid as `CityID`, msr3 as `Measure 3`, "
           + "round(SUM(msr2)) as `Measure 2` from testCube" + " where "
           + THREE_MONTHS_RANGE_UPTO_MONTH + " group by cityid having msr3 > 10 order by cityid desc limit 5", conf);
       String expected = getExpectedUnionQuery(TEST_CUBE_NAME, storages, provider,
           "SELECT (testcube.alias0) as `City ID`, max((testcube.alias1)) as `Measure 3`, round(sum((testcube.alias2))) "
               + "as `Measure 2` ", null, "GROUP BY (testcube.alias0) HAVING (max((testcube.alias1)) > 10) "
-              + "ORDER BY testcube.alias0 desc LIMIT 5",
+              + "ORDER BY cityid desc LIMIT 5",
           "SELECT (testcube.cityid) as `alias0`, max((testcube.msr3)) as `alias1`, "
               + "sum((testcube.msr2)) as `alias2` FROM ",
           null, "GROUP BY testcube.cityid");
