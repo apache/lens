@@ -141,7 +141,9 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     // prune non covering sets
     pruneUnionCandidatesNotCoveringAllRanges(unionCoveringSet, cubeql);
     // prune candidate set which doesn't contain any common measure i
-    pruneUnionCoveringSetWithoutAnyCommonMeasure(unionCoveringSet, queriedMsrs);
+    if (!queriedMsrs.isEmpty()) {
+      pruneUnionCoveringSetWithoutAnyCommonMeasure(unionCoveringSet, queriedMsrs);
+    }
     // prune redundant covering sets
     pruneRedundantUnionCoveringSets(unionCoveringSet);
     // pruing done in the previous steps, now create union candidates

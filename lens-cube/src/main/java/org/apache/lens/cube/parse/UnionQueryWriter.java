@@ -336,12 +336,11 @@ public class UnionQueryWriter extends SimpleHQLContext {
       if (phraseCountMap.get(col).size() > 1) {
         List<Integer> childenToDelete = phraseCountMap.get(col).
             subList(1, phraseCountMap.get(col).size());
-        int counter = 0;
         for (int i : childenToDelete) {
           for (StorageCandidateHQLContext sc : storageCandidates) {
-            sc.getQueryAst().getSelectAST().deleteChild(i - counter);
+            sc.getQueryAst().getSelectAST().setChild(i,
+                new ASTNode(new CommonToken(HiveParser.Identifier, DUPLICATE_EXPRESSION_PREFIX)));
           }
-          counter++;
         }
       }
     }
