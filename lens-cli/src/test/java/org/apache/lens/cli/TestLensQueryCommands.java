@@ -230,7 +230,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     //Fetch again. Should not get resultset
     result = qCom.getQueryResults(handle, null, true);
     log.debug("Prepared Query Result is  " + result);
-    assertTrue(result.contains("Failed"), "Query is not purged yet " + handle);
+    assertTrue(result.contains("not available"), "Query is not purged yet " + handle);
 
     result = qCom.destroyPreparedQuery(qh);
 

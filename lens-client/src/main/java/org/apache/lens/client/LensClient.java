@@ -226,10 +226,10 @@ public class LensClient implements AutoCloseable {
       throw new IllegalStateException(query.getStatus().getErrorMessage());
     }
     LensClientResultSet result = null;
-    if (statement.getStatus().isResultSetAvailable()) {
-      result = new LensClientResultSet(statement.getResultSetMetaData(), statement.getResultSet());
+    if (query.getStatus().isResultSetAvailable()) {
+      result = new LensClientResultSet(statement.getResultSetMetaData(query), statement.getResultSet(query));
     }
-    return new LensClientResultSetWithStats(result, statement.getQuery());
+    return new LensClientResultSetWithStats(result, query);
   }
 
   public LensClientResultSetWithStats getAsyncResults(QueryHandle q) {

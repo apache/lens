@@ -244,7 +244,7 @@ User CLI Commands
 *--+--+
 |fact get storage [--fact_name] \<fact_name\> [--storage_name] \<path-to-storage-spec\>|describe storage <<<storage_name>>> of fact <<<fact_name>>>\ |
 *--+--+
-|fact list partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|get all partitions associated with fact <<<fact_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>\ |
+|fact list partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--filter] \<partition-filter\>|get all partitions associated with fact <<<fact_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>\ |
 *--+--+
 |fact list storage [--fact_name] \<fact_name\>|display list of storages associated to fact <<<fact_name>>>\ |
 *--+--+
