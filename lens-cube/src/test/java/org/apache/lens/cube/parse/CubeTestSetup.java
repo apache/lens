@@ -839,7 +839,7 @@ public class CubeTestSetup {
         throw new RuntimeException(e);
       }
     };
-    new SchemaTraverser(new File(getClass().getResource("/schema").getFile()), processor).run();
+    new SchemaTraverser(new File(getClass().getResource("/schema").getFile()), processor, null, null).run();
   }
 
   private void dump(CubeMetastoreClient client) throws LensException, IOException {

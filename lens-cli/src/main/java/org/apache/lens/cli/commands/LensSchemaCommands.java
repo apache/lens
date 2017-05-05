@@ -19,7 +19,7 @@
 package org.apache.lens.cli.commands;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,13 +42,14 @@ import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.shell.support.logging.HandlerUtils;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @Component
 @UserDocumentation(title = "Creating schema with one command",
   description = "")
 public class LensSchemaCommands implements CommandMarker {
-  public static final String STRUCTURE = "\n"
+  private static final String STRUCTURE = "\n"
     + ".\n"
     + "|-- storages\n"
     + "|  |-- storage1.xml\n"
@@ -86,13 +87,12 @@ public class LensSchemaCommands implements CommandMarker {
     + "directory itself.\nFor dimtables, you can keep your schema files in a directory named either dimtables or "
     + "dimensiontables.\nEach of these directories is optional and the order of processing is top to bottom.\nCLI will "
     + "let you know in case of any errors and proceed further without failing in between.";
-  protected final Logger logger = HandlerUtils.getLogger(getClass());
+  private final Logger logger = HandlerUtils.getLogger(getClass());
 
   {
     logger.setLevel(Level.FINE);
   }
 
-  private static final FilenameFilter XML_FILTER = (dir, name) -> name.endsWith(".xml");
   private static final Map<Class<?>, String> CREATE_COMMAND_MAP = Maps.newHashMap();
   private static final Map<Class<?>, String> UPDATE_COMMAND_MAP = Maps.newHashMap();
 
@@ -118,34 +118,22 @@ public class LensSchemaCommands implements CommandMarker {
     UPDATE_COMMAND_MAP.put(XSegmentation.class, "update segmentation --name %s --path %s");
   }
 
-  private final SchemaTraverser.SchemaEntityProcessor processor = (entityFile, type) -> {
-    String entityName = entityFile.getName().substring(0, entityFile.getName().length() - 4);
-    String entityPath = entityFile.getAbsolutePath();
-    String createCommand = String.format(CREATE_COMMAND_MAP.get(type), entityPath);
-    String entityType = createCommand.substring(8, createCommand.indexOf(" ", 9));
-    logger.fine(createCommand);
-    if (shell.executeScriptLine(createCommand)) {
-      logger.info("Created " + entityType + " " + entityName);
-    } else {
-      logger.warning("Create failed, trying update");
-      String updateCommand = String.format(UPDATE_COMMAND_MAP.get(type), entityName, entityPath);
-      logger.fine(updateCommand);
-      if (shell.executeScriptLine(updateCommand)) {
-        logger.info("Updated " + entityType + " " + entityName);
-      } else {
-        logger.severe("Couldn't create or update " + entityType + " " + entityName);
-      }
-    }
-  };
+  private final SchemaCreateUpdateCommandRunner processor = new SchemaCreateUpdateCommandRunner();
 
   @CliCommand(value = {"schema", "create schema"},
     help = "Parses the specified resource file and executes commands for "
-      + "creation/updation of schema\nExpected structure is " + STRUCTURE)
+      + "creation/updation of schema. If <schema-type-filter> is provided, only schema types matching that will "
+      + "be worked upon. If <file-name-filter> is provided, then only those files that contain the filter value "
+      + "will be worked upon. \nExpected directory structure is " + STRUCTURE)
   public void script(
     @CliOption(key = {"", "db"},
       help = "<database-to-create-schema-in>", mandatory = true) final String database,
     @CliOption(key = {"", "file", "path"},
-      help = "<schema-directory>", mandatory = true) final File schemaDirectory) {
+      help = "<schema-directory>", mandatory = true) final File schemaDirectory,
+    @CliOption(key = {"", "type"},
+      help = "<schema-type-filter>") final String type,
+    @CliOption(key = {"", "name"},
+      help = "<file-name-filter>") final String name) {
     if (!schemaDirectory.isDirectory()) {
       throw new IllegalStateException("Schema directory should be a directory");
     }
@@ -153,10 +141,38 @@ public class LensSchemaCommands implements CommandMarker {
     // ignore result. it can fail if database already exists
     shell.executeCommand("create database " + database);
     if (shell.executeScriptLine("use " + database)) {
-      SchemaTraverser schemaTraverser = new SchemaTraverser(schemaDirectory, processor);
+      SchemaTraverser schemaTraverser = new SchemaTraverser(schemaDirectory, processor, type, name);
       schemaTraverser.run();
+      logger.info("Finished all create/update commands");
+      logger.severe("All failures: " + processor.failedFor);
     } else {
       throw new IllegalStateException("Switching to database " + database + " failed");
+    }
+  }
+
+  private class SchemaCreateUpdateCommandRunner implements SchemaTraverser.SchemaEntityProcessor {
+    List<String> failedFor = Lists.newArrayList();
+
+    @Override
+    public void accept(File entityFile, Class<?> type) {
+      String entityName = entityFile.getName().substring(0, entityFile.getName().length() - 4);
+      String entityPath = entityFile.getAbsolutePath();
+      String createCommand = String.format(CREATE_COMMAND_MAP.get(type), entityPath);
+      String entityType = createCommand.substring(7, createCommand.indexOf(" ", 9));
+      logger.fine(createCommand);
+      if (shell.executeScriptLine(createCommand)) {
+        logger.info("Created " + entityType + " " + entityName);
+      } else {
+        logger.warning("Create failed, trying update");
+        String updateCommand = String.format(UPDATE_COMMAND_MAP.get(type), entityName, entityPath);
+        logger.fine(updateCommand);
+        if (shell.executeScriptLine(updateCommand)) {
+          logger.info("Updated " + entityType + " " + entityName);
+        } else {
+          logger.severe("Couldn't create or update " + entityType + " " + entityName);
+          failedFor.add(entityName);
+        }
+      }
     }
   }
 }
