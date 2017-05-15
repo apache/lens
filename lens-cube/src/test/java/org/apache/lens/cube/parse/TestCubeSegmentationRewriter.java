@@ -41,6 +41,7 @@ import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import static com.google.common.collect.Lists.newArrayList;
 
@@ -203,7 +204,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
   }
 
   @Test
-  public void testQueryWithWhereHavingGroupby() throws Exception {
+  public void testQueryWithWhereHavingGroupbyOrderby() throws Exception {
     String userQuery = "select cityid, msr2, segmsr1 from testcube where cityname='blah' and "
       + TWO_DAYS_RANGE + " group by cityid having segmsr1 > 1 and msr2 > 2";
     CubeQueryContext ctx = rewriteCtx(userQuery, getConf());
@@ -231,6 +232,25 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
       "select testcube.alias0 as cityid, sum(testcube.alias1) as msr2, sum(testcube.alias2) as segmsr1 from ( ",
       ") as testcube group by testcube.alias0 having ((sum((testcube.alias2)) > 1) and (sum((testcube.alias1)) > 2)",
       newArrayList(query1, query2, query3));
+
+    // Expression in having
+    userQuery = "select cityid, segmsr1 from testcube where cityname='blah' and "
+        + TWO_DAYS_RANGE + " having citysegmsr1 > 20";
+    String rewrittenQuery = rewrite(userQuery, getConf());
+    assertTrue(rewrittenQuery.toLowerCase().endsWith("sum(case  when ((cubecity.name) = 'foo') "
+        + "then (testcube.segmsr1) end) > 20)"));
+
+    // Order by on alias
+    userQuery = "select cityid as `city_id_alias`, segmsr1 from testcube where cityname='blah' and "
+        + TWO_DAYS_RANGE + " order by city_id_alias";
+    rewrittenQuery = rewrite(userQuery, getConf());
+    assertTrue(rewrittenQuery.toLowerCase().endsWith("order by city_id_alias asc"));
+
+    // Order by on column but the final query rewritten with alias
+    userQuery = "select cityid as `city_id_alias`, segmsr1 from testcube where cityname='blah' and "
+        + TWO_DAYS_RANGE + " order by cityid";
+    rewrittenQuery = rewrite(userQuery, getConf());
+    assertTrue(rewrittenQuery.toLowerCase().endsWith("order by city_id_alias asc"));
   }
 
   @Test

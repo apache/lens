@@ -40,6 +40,7 @@
   <dim_attr_names>
     <attr_name>union_join_ctx_zipcode</attr_name>
     <attr_name>union_join_ctx_cityname</attr_name>
+    <attr_name>union_join_ctx_dup_cityname</attr_name>
     <attr_name>d_time</attr_name>
     <attr_name>union_join_ctx_cityid</attr_name>
   </dim_attr_names>

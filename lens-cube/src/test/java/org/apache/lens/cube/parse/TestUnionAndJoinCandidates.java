@@ -77,6 +77,19 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
   }
 
   @Test
+  public void testMultipleDimAttributeReferingSameJoinChain() throws ParseException, LensException {
+    String colsSelected = " union_join_ctx_cityid, union_join_ctx_cityname, union_join_ctx_dup_cityname, "
+        + " sum(union_join_ctx_msr1) ";
+    String whereCond = " union_join_ctx_zipcode = 'a' and union_join_ctx_cityid = 'b' and "
+        + "(" + TWO_MONTHS_RANGE_UPTO_DAYS + ")";
+    String rewrittenQuery = rewrite("select " + colsSelected + " from basecube where " + whereCond, conf);
+    assertTrue(rewrittenQuery.contains("UNION ALL"));
+    // union_join_ctx_cityname and union_join_ctx_dup_cityname are refering to same join chain
+    // in the final query they both will have the same alias repeated twice in each union query.
+    assertEquals(StringUtil.count(rewrittenQuery, "basecube.alias1"), 4);
+  }
+
+  @Test
   public void testFinalCandidateRewrittenQuery() throws ParseException, LensException {
     try {
       // Query with non projected measure in having clause.

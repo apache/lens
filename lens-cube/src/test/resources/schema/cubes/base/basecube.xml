@@ -94,6 +94,10 @@
                    description="union_join_ctx_city name">
       <chain_ref_column chain_name="cubecityjoinunionctx" ref_col="name" dest_table="citydim"/>
     </dim_attribute>
+    <dim_attribute _type="string" name="union_join_ctx_dup_cityname" display_string="union_join_ctx_city name"
+                   description="union_join_ctx_city name">
+      <chain_ref_column chain_name="cubecityjoinunionctx" ref_col="name" dest_table="citydim"/>
+    </dim_attribute>
     <dim_attribute _type="string" name="cityname" display_string="city name" description="city name">
       <chain_ref_column chain_name="cubecity" ref_col="name" dest_table="citydim"/>
     </dim_attribute>
@@ -227,6 +231,9 @@
   <expressions>
     <expression _type="string" name="singlecolchainfield" display_string="cubecityname" description="cubecity.name">
       <expr_spec expr="cubecity.name"/>
+    </expression>
+    <expression _type="string" name="citysegmsr1" display_string="city segmsr1" description="city segmsr1 ">
+      <expr_spec expr="sum(case when cubecity.name = 'foo' then segmsr1 end)"/>
     </expression>
     <expression _type="double" name="msr8" display_string="Sixth Msr" description="measure expression">
       <expr_spec expr="msr2 + msr3"/>

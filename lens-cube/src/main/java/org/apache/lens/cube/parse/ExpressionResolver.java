@@ -426,14 +426,16 @@ class ExpressionResolver implements ContextRewriter {
       // Having ast is not copied now, it's maintained in cubeQueryContext, each fact processes that serially.
       if (queryAST.getHavingAST() != null) {
         replaceAST(cubeql, queryAST.getHavingAST());
-      } else {
+      } else if (cubeql.getHavingAST() != null) {
         replaceAST(cubeql, cubeql.getHavingAST());
+        queryAST.setHavingAST(MetastoreUtil.copyAST(cubeql.getHavingAST()));
       }
       replaceAST(cubeql, queryAST.getOrderByAST());
     }
 
     private void replaceAST(final CubeQueryContext cubeql, ASTNode node) throws LensException {
       if (node == null) {
+
         return;
       }
       // Traverse the tree and resolve expression columns
