@@ -556,11 +556,7 @@ class ExpressionResolver implements ContextRewriter {
               log.info("Removing expression {} as all tables have non reachable fields", esc);
               iterator.remove();
               removedEsc.add(esc);
-              removed = true;
               break;
-            }
-            if (removed) {
-              continue;
             }
             //remove expressions which are not valid in the timerange queried
             // If an expression is defined as

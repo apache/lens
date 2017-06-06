@@ -24,6 +24,7 @@
     <column name="msr11" _type="int" comment="first measure"/>
     <column name="msr12" _type="float" comment="second measure"/>
     <column name="msr9" _type="bigint" comment="ninth measure"/>
+    <column name="msr16" _type="bigint" comment="sixteenth measure"/>
     <column name="d_time" _type="timestamp" comment="event time"/>
     <column name="processing_time" _type="timestamp" comment="processing time"/>
     <column name="dim1" _type="string" comment="base dim"/>

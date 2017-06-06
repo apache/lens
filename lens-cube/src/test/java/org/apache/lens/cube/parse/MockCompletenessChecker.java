@@ -33,10 +33,12 @@ public class MockCompletenessChecker implements DataCompletenessChecker {
     Calendar cal = Calendar.getInstance();
     cal.setTimeZone(TimeZone.getTimeZone("GMT"));
     cal.add(Calendar.DATE, -1);
-    if (factTag.equals("f1")) {
-      partitionCompleteness.put(cal.getTime(), 80f);
-    } else {
-      partitionCompleteness.put(cal.getTime(), 90f);
+    if (start.before(cal.getTime()) && end.after(cal.getTime())) {
+      if (factTag.equals("f1")) {
+        partitionCompleteness.put(cal.getTime(), 80f);
+      } else {
+        partitionCompleteness.put(cal.getTime(), 90f);
+      }
     }
     result.put("tag1", partitionCompleteness);
     return result;

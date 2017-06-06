@@ -90,6 +90,11 @@
     </measure>
     <measure _type="INT" name="segmsr1" default_aggr="SUM" description="segmentation measure 1"
              display_string="segmentation measure 1"/>
+    <measure _type="BIGINT" name="msr16" description="sixteenth measure">
+      <tags>
+        <property name="cube.measure.datacompleteness.tag" value="tag1"/>
+      </tags>
+    </measure>
   </measures>
   <dim_attributes>
     <dim_attribute _type="string" name="business" display_string="business unit"
