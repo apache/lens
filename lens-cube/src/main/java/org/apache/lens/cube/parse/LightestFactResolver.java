@@ -19,7 +19,11 @@
 
 package org.apache.lens.cube.parse;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.server.api.error.LensException;
@@ -35,21 +39,21 @@ public class LightestFactResolver implements ContextRewriter {
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
     if (cubeql.getCube() != null && !cubeql.getCandidates().isEmpty()) {
-      Map<Candidate, Double> factWeightMap = new HashMap<Candidate, Double>();
-
-      for (Candidate cand : cubeql.getCandidates()) {
-        factWeightMap.put(cand, cand.getCost());
-      }
-
-      double minWeight = Collections.min(factWeightMap.values());
-
-      for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
-        Candidate cand = i.next();
-        if (factWeightMap.get(cand) > minWeight) {
-          log.info("Not considering candidate:{} from final candidates as it has more fact weight:{} minimum:{}",
-            cand, factWeightMap.get(cand), minWeight);
-          cubeql.addCandidatePruningMsg(cand, new CandidateTablePruneCause(CandidateTablePruneCode.MORE_WEIGHT));
-          i.remove();
+      Map<Candidate, Double> factWeightMap = cubeql.getCandidates().stream()
+        .filter(candidate -> candidate.getCost().isPresent())
+        .collect(Collectors.toMap(Function.identity(), x -> x.getCost().getAsDouble()));
+      if (!factWeightMap.isEmpty()) {
+        double minWeight = Collections.min(factWeightMap.values());
+        for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
+          Candidate cand = i.next();
+          if (factWeightMap.containsKey(cand)) {
+            if (factWeightMap.get(cand) > minWeight) {
+              log.info("Not considering candidate:{} from final candidates as it has more fact weight:{} minimum:{}",
+                cand, factWeightMap.get(cand), minWeight);
+              cubeql.addCandidatePruningMsg(cand, new CandidateTablePruneCause(CandidateTablePruneCode.MORE_WEIGHT));
+              i.remove();
+            }
+          }
         }
       }
     }

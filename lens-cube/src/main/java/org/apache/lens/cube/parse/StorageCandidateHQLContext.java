@@ -150,4 +150,13 @@ public class StorageCandidateHQLContext extends DimHQLContext {
       }
     }
   }
+
+  @Override
+  public int hashCode() {
+    final int PRIME = 59;
+    int result = 1;
+    result = result * PRIME + getStorageCandidate().hashCode();
+    result = result * PRIME + getCube().hashCode();
+    return result;
+  }
 }
