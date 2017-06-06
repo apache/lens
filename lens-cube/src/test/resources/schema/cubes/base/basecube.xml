@@ -46,6 +46,10 @@
     </measure>
     <measure _type="INT" name="union_join_ctx_msr2" description="union_join_ctx_second measure">
     </measure>
+    <measure _type="INT" name="union_join_ctx_msr22" description="union_join_ctx_second measure">
+    </measure>
+    <measure _type="INT" name="union_join_ctx_msr4" description="union_join_ctx_fourth measure">
+    </measure>
     <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr2" display_string="Measure2"
              description="second measure">
     </measure>
@@ -248,6 +252,14 @@
     <expression _type="int" name="union_join_ctx_non_zero_msr2_sum" display_string="union_join_ctx_non zero msr2 sum"
                 description="union_join_ctx_non zero msr2 sum">
       <expr_spec expr="sum(case when union_join_ctx_msr2 &gt; 0 then union_join_ctx_msr2 else 0 end)"/>
+    </expression>
+    <expression _type="int" name="union_join_ctx_msr2_expr" display_string="union_join_ctx_msr2_expr"
+                description="union_join_ctx_msr2_expr">
+      <expr_spec expr="sum(union_join_ctx_msr2) + 0"/>
+    </expression>
+    <expression _type="int" name="union_join_ctx_msr4_expr" display_string="union_join_ctx_msr4_expr"
+                description="union_join_ctx_msr4_expr">
+      <expr_spec expr="sum(union_join_ctx_msr4) + 0"/>
     </expression>
     <expression _type="double" name="flooredmsr12" display_string="Floored msr12" description="floored measure12">
       <expr_spec expr="floor(msr12)"/>

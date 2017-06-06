@@ -22,6 +22,7 @@
 <x_fact_table name="union_join_ctx_fact3" cube_name="baseCube" weight="5.0" xmlns="uri:lens:cube:0.1">
   <columns>
     <column name="union_join_ctx_msr2" _type="int" comment="second measure"/>
+    <column name="union_join_ctx_msr22" _type="int" comment="second measure"/>
     <column name="d_time" _type="timestamp" comment="event time"/>
     <column name="union_join_ctx_zipcode" _type="int" comment="zip"/>
     <column name="union_join_ctx_cityid" _type="int" comment="city id"/>

@@ -49,10 +49,12 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
         getValidStorageTablesKey("union_join_ctx_fact1"), "C1_union_join_ctx_fact1",
         getValidStorageTablesKey("union_join_ctx_fact2"), "C1_union_join_ctx_fact2",
         getValidStorageTablesKey("union_join_ctx_fact3"), "C1_union_join_ctx_fact3",
+        getValidStorageTablesKey("union_join_ctx_fact4"), "C1_union_join_ctx_fact4",
         // Update periods
         getValidUpdatePeriodsKey("union_join_ctx_fact1", "C1"), "DAILY",
         getValidUpdatePeriodsKey("union_join_ctx_fact2", "C1"), "DAILY",
-        getValidUpdatePeriodsKey("union_join_ctx_fact3", "C1"), "DAILY");
+        getValidUpdatePeriodsKey("union_join_ctx_fact3", "C1"), "DAILY",
+        getValidUpdatePeriodsKey("union_join_ctx_fact4", "C1"), "DAILY");
     conf.setBoolean(DISABLE_AUTO_JOINS, false);
     conf.setBoolean(ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(ENABLE_GROUP_BY_TO_SELECT, true);
@@ -90,6 +92,62 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
   }
 
   @Test
+  public void testCustomExpressionForJoinCandidate() throws ParseException, LensException {
+    // Expr : (case when union_join_ctx_msr2_expr = 0 then 0 else
+    // union_join_ctx_msr4_expr * 100 / union_join_ctx_msr2_expr end) is completely answered by
+    // c1_union_join_ctx_fact4 and partly answered by c1_union_join_ctx_fact3
+    String colsSelected = " union_join_ctx_notnullcityid, union_join_ctx_msr22 , "
+        + "case when union_join_ctx_msr2_expr = 0 then 0 else "
+        + " union_join_ctx_msr4_expr * 100 / union_join_ctx_msr2_expr end";
+    String whereCond =  "(" + TWO_MONTHS_RANGE_UPTO_DAYS + ")";
+    String rewrittenQuery = rewrite("select " + colsSelected + " from basecube where " + whereCond, conf);
+    assertTrue(rewrittenQuery.contains("UNION ALL"));
+    String expectedInnerSelect1 = "SELECT case  when (basecube.union_join_ctx_cityid) is null then 0 "
+        + "else (basecube.union_join_ctx_cityid) end as `alias0`, 0.0 as `alias1`, "
+        + "sum((basecube.union_join_ctx_msr2)) as `alias2`, sum((basecube.union_join_ctx_msr4)) as `alias3` "
+        + "FROM TestQueryRewrite.c1_union_join_ctx_fact4 basecube";
+    String expectedInnerSelect2 = "SELECT case  when (basecube.union_join_ctx_cityid) is null then 0 "
+        + "else (basecube.union_join_ctx_cityid) end as `alias0`, (basecube.union_join_ctx_msr22) as `alias1`, "
+        + "0.0 as `alias2`, 0.0 as `alias3` FROM TestQueryRewrite.c1_union_join_ctx_fact3 basecube";
+    String outerSelect = "SELECT (basecube.alias0) as `union_join_ctx_notnullcityid`, (basecube.alias1) "
+        + "as `union_join_ctx_msr22`, case  when ((sum((basecube.alias2)) + 0) = 0) then 0 else "
+        + "(((sum((basecube.alias3)) + 0) * 100) / (sum((basecube.alias2)) + 0)) end as "
+        + "`case  when (union_join_ctx_msr2_expr = 0) then 0 "
+        + "else ((union_join_ctx_msr4_expr * 100) / union_join_ctx_msr2_expr) end`";
+    String outerGroupBy = "GROUP BY (basecube.alias0)";
+    compareContains(expectedInnerSelect1, rewrittenQuery);
+    compareContains(expectedInnerSelect2, rewrittenQuery);
+    compareContains(outerSelect, rewrittenQuery);
+    compareContains(outerGroupBy, rewrittenQuery);
+  }
+
+  @Test
+  public void testDuplicateMeasureProjectionInJoinCandidate() throws ParseException, LensException {
+    // union_join_ctx_msr2 is common between two storage candidates and it should be answered from one
+    // and the other fact will have it replaced with 0.0
+    String colsSelected = " union_join_ctx_notnullcityid, sum(union_join_ctx_msr22) , "
+        + "sum(union_join_ctx_msr2), sum(union_join_ctx_msr4) ";
+    String whereCond =  "(" + TWO_MONTHS_RANGE_UPTO_DAYS + ")";
+    String rewrittenQuery = rewrite("select " + colsSelected + " from basecube where " + whereCond, conf);
+    assertTrue(rewrittenQuery.contains("UNION ALL"));
+    String expectedInnerSelect1 = "SELECT case  when (basecube.union_join_ctx_cityid) is null then 0 "
+        + "else (basecube.union_join_ctx_cityid) end as `alias0`, 0.0 as `alias1`, "
+        + "sum((basecube.union_join_ctx_msr2)) as `alias2`, sum((basecube.union_join_ctx_msr4)) "
+        + "as `alias3` FROM TestQueryRewrite.c1_union_join_ctx_fact4 basecube";
+    String expectedInnerSelect2 = "SELECT case  when (basecube.union_join_ctx_cityid) is null then 0 else "
+        + "(basecube.union_join_ctx_cityid) end as `alias0`, sum((basecube.union_join_ctx_msr22)) as `alias1`, "
+        + "0.0 as `alias2`, 0.0 as `alias3` FROM TestQueryRewrite.c1_union_join_ctx_fact3 basecube";
+    String outerSelect = "SELECT (basecube.alias0) as `union_join_ctx_notnullcityid`, sum((basecube.alias1)) "
+        + "as `sum(union_join_ctx_msr22)`, sum((basecube.alias2)) as `sum(union_join_ctx_msr2)`, "
+        + "sum((basecube.alias3)) as `sum(union_join_ctx_msr4)` FROM";
+    String outerGroupBy = "GROUP BY (basecube.alias0)";
+    compareContains(expectedInnerSelect1, rewrittenQuery);
+    compareContains(expectedInnerSelect2, rewrittenQuery);
+    compareContains(outerSelect, rewrittenQuery);
+    compareContains(outerGroupBy, rewrittenQuery);
+  }
+
+  @Test(invocationCount = 100)
   public void testFinalCandidateRewrittenQuery() throws ParseException, LensException {
     try {
       // Query with non projected measure in having clause.
