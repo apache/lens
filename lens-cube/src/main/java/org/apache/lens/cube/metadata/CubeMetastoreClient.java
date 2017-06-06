@@ -28,17 +28,7 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.lens.api.metastore.XCube;
-import org.apache.lens.api.metastore.XDerivedCube;
-import org.apache.lens.api.metastore.XDimension;
-import org.apache.lens.api.metastore.XDimensionTable;
-import org.apache.lens.api.metastore.XFactTable;
-import org.apache.lens.api.metastore.XSegmentation;
-import org.apache.lens.api.metastore.XStorage;
-import org.apache.lens.api.metastore.XStorageTableElement;
-import org.apache.lens.api.metastore.XUpdatePeriod;
-import org.apache.lens.api.metastore.XUpdatePeriodTableDescriptor;
-import org.apache.lens.api.metastore.XUpdatePeriods;
+import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Storage.LatestInfo;
 import org.apache.lens.cube.metadata.Storage.LatestPartColumnInfo;
@@ -67,9 +57,11 @@ import org.jvnet.jaxb2_commons.lang.Equals;
 import org.jvnet.jaxb2_commons.lang.HashCode;
 import org.jvnet.jaxb2_commons.lang.ToString;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -98,7 +90,9 @@ public class CubeMetastoreClient {
   private final Map<String, CubeDimensionTable> allDimTables = Maps.newConcurrentMap();
   private volatile boolean allDimTablesPopulated = false;
   // map from fact name to fact table
-  private final Map<String, CubeFactTable> allFactTables = Maps.newConcurrentMap();
+  private final Map<String, FactTable> allFactTables = Maps.newConcurrentMap();
+  // map from fact name to all virtual fact tables, any changes to facts must reflect in all of its virtual facts
+  private final Map<String, List<String>> factToVirtualFactMapping = Maps.newConcurrentMap();
   private volatile boolean allFactTablesPopulated = false;
   //map from segmentation name to segmentation
   private final Map<String, Segmentation> allSegmentations = Maps.newConcurrentMap();
@@ -133,8 +127,8 @@ public class CubeMetastoreClient {
   }
 
   /** extract storage name from fact and storage table name. String operation */
-  private String extractStorageName(CubeFactTable fact, String storageTableName) throws LensException {
-    int ind = storageTableName.lastIndexOf(fact.getName());
+  private String extractStorageName(FactTable fact, String storageTableName) throws LensException {
+    int ind = storageTableName.lastIndexOf(fact.getSourceFactName());
     if (ind <= 0) {
       throw new LensException("storageTable: " + storageTableName + ", does not belong to fact: " + fact.getName());
     }
@@ -164,7 +158,7 @@ public class CubeMetastoreClient {
     String partCol = cube.getPartitionColumnOfTimeDim(timeDimension);
     Date max = new Date(Long.MIN_VALUE);
     boolean updated = false;
-    for (CubeFactTable fact : getAllFacts(cube)) {
+    for (FactTable fact : getAllFacts(cube)) {
       for (String storage : fact.getStorages()) {
         for (UpdatePeriod updatePeriod : fact.getUpdatePeriods().get(storage)) {
           PartitionTimeline timeline = partitionTimelineCache.get(fact.getName(), storage, updatePeriod, partCol);
@@ -191,7 +185,7 @@ public class CubeMetastoreClient {
     throws LensException, HiveException {
     UpdatePeriod updatePeriod = updatePeriodStr == null ? null : UpdatePeriod.valueOf(updatePeriodStr.toUpperCase());
     List<PartitionTimeline> ret = Lists.newArrayList();
-    CubeFactTable fact = getCubeFact(factName);
+    CubeFactTable fact = getCubeFactTable(factName);
     List<String> storageList = Lists.newArrayList();
     if (storage != null) {
       storageList.add(storage);
@@ -315,7 +309,7 @@ public class CubeMetastoreClient {
       properties, storageUpdatePeriodMap);
     createCubeTable(factTable, storageTableDescs);
     // do a get to update cache
-    getCubeFact(factName);
+    getFactTable(factName);
 
   }
 
@@ -326,8 +320,8 @@ public class CubeMetastoreClient {
       createCube((XCube)entity);
     } else if (entity instanceof XDimension) {
       createDimension((XDimension) entity);
-    } else if (entity instanceof XFactTable) {
-      createCubeFactTable((XFactTable) entity);
+    } else if (entity instanceof XFact) {
+      createFactTable((XFact) entity);
     } else if (entity instanceof XDimensionTable) {
       createCubeDimensionTable((XDimensionTable) entity);
     } else if (entity instanceof XSegmentation) {
@@ -345,8 +339,8 @@ public class CubeMetastoreClient {
       alterCube((XCube)entity);
     } else if (entity instanceof XDimension) {
       alterDimension((XDimension) entity);
-    } else if (entity instanceof XFactTable) {
-      alterCubeFactTable((XFactTable) entity);
+    } else if (entity instanceof XFact) {
+      alterCubeFactTable((XFact) entity);
     } else if (entity instanceof XDimensionTable) {
       alterCubeDimensionTable((XDimensionTable) entity);
     } else if (entity instanceof XSegmentation) {
@@ -356,24 +350,45 @@ public class CubeMetastoreClient {
     }
   }
 
-
   public static Map<String, String> addFactColStartTimePropertyToFactProperties(XFactTable fact) {
     Map<String, String> props = new HashMap<String, String>();
     props.putAll(JAXBUtils.mapFromXProperties(fact.getProperties()));
     props.putAll(JAXBUtils.columnStartAndEndTimeFromXColumns(fact.getColumns()));
     return props;
   }
-  public void createCubeFactTable(XFactTable fact) throws LensException {
-    createCubeFactTable(fact.getCubeName(),
-      fact.getName(),
-      JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()),
-      JAXBUtils.getFactUpdatePeriodsFromStorageTables(fact.getStorageTables()),
-      fact.getWeight(),
-      addFactColStartTimePropertyToFactProperties(fact),
-      JAXBUtils.tableDescPrefixMapFromXStorageTables(fact.getStorageTables()),
-      JAXBUtils.storageTablePrefixMapOfStorage(fact.getStorageTables()));
+
+  public void createFactTable(XFact fact) throws LensException {
+
+    if (fact instanceof XVirtualFactTable) {
+      XVirtualFactTable xvf = (XVirtualFactTable) fact;
+      createVirtualFactTable(xvf.getCubeName(), xvf.getName(), xvf.getSourceFactName(),
+        xvf.getWeight(), JAXBUtils.mapFromXProperties(xvf.getProperties()));
+    } else {
+      XFactTable xf = (XFactTable) fact;
+      createCubeFactTable(fact.getCubeName(),
+        fact.getName(),
+        JAXBUtils.fieldSchemaListFromColumns(xf.getColumns()),
+        JAXBUtils.getFactUpdatePeriodsFromStorageTables(xf.getStorageTables()),
+        xf.getWeight(),
+        addFactColStartTimePropertyToFactProperties(xf),
+        JAXBUtils.tableDescPrefixMapFromXStorageTables(xf.getStorageTables()),
+        JAXBUtils.storageTablePrefixMapOfStorage(xf.getStorageTables()));
+    }
   }
 
+  public void createVirtualFactTable(String cubeName, String virtualFactName, String sourceFactName, Double weight,
+    Map<String, String> properties) throws LensException {
+    FactTable sourceFact = getFactTable(sourceFactName);
+
+    Optional<Double> optionalWeight = Optional.fromNullable(weight);
+
+    CubeVirtualFactTable factTable = new CubeVirtualFactTable(cubeName, virtualFactName,
+      optionalWeight, properties, sourceFact);
+    createCubeTable(factTable, null);
+    // do a get to update cache
+    getFactTable(virtualFactName);
+
+  }
 
   /**
    * In-memory storage of {@link PartitionTimeline} objects for each valid
@@ -442,7 +457,7 @@ public class CubeMetastoreClient {
     private void loadTimeLines(String fact, String storage, String timeLineKey) throws LensException, HiveException {
       Set<String> uniqueStorageTables = new HashSet<>();
       Map<UpdatePeriod, String> updatePeriodTableName = new HashMap<>();
-      for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
+      for (UpdatePeriod updatePeriod : getFactTable(fact).getUpdatePeriods().get(storage)) {
         String storageTableName = getStorageTableName(fact, storage, updatePeriod);
         updatePeriodTableName.put(updatePeriod, storageTableName);
         Table storageTable = getTable(storageTableName);
@@ -477,7 +492,7 @@ public class CubeMetastoreClient {
       // Not found in table properties either, compute from all partitions of the fact-storage table.
       // First make sure all combinations of update period and partition column have an entry even
       // if no partitions exist
-      if (getCubeFact(fact).getUpdatePeriods() != null && getCubeFact(fact).getUpdatePeriods().get(storage) != null) {
+      if (getFactTable(fact).getUpdatePeriods() != null && getFactTable(fact).getUpdatePeriods().get(storage) != null) {
         log.info("loading from all partitions: {}", storageTableName);
         Table storageTable = getTable(storageTableName);
         for (String partCol : getTimePartColNamesOfTable(storageTable)) {
@@ -848,7 +863,7 @@ public class CubeMetastoreClient {
       new CubeFactTable(cubeName, factName, columns, storageAggregatePeriods, weight, properties);
     createCubeTable(factTable, storageTableDescs);
     // do a get to update cache
-    getCubeFact(factName);
+    getFactTable(factName);
   }
 
   /**
@@ -1089,7 +1104,7 @@ public class CubeMetastoreClient {
   public Date getStorageTableEndDate(String storageTable, String factTableName)
     throws LensException {
     List<Date> endDates = getStorageTimes(storageTable, MetastoreUtil.getStoragetableEndTimesKey());
-    endDates.add(getFactTable(factTableName).getEndTime());
+    endDates.add((getFactTable(factTableName)).getEndTime());
     return Collections.min(endDates);
   }
 
@@ -1408,11 +1423,11 @@ public class CubeMetastoreClient {
   }
 
   /** extract storage name and check in timeline cache for existance */
-  public boolean factPartitionExists(CubeFactTable fact, FactPartition part, String storageTableName)
+  public boolean factPartitionExists(FactTable fact, FactPartition part, String storageTableName)
     throws HiveException, LensException {
     String storage = extractStorageName(fact, storageTableName);
-    return partitionTimelineCache.partitionTimeExists(fact.getName(), storage, part.getPeriod(), part.getPartCol(),
-      part.getPartSpec());
+    return partitionTimelineCache.partitionTimeExists(fact.getSourceFactName(), storage,
+      part.getPeriod(), part.getPartCol(), part.getPartSpec());
   }
 
   public boolean factPartitionExists(String factName, String storageName, UpdatePeriod updatePeriod,
@@ -1638,12 +1653,35 @@ public class CubeMetastoreClient {
 
   boolean isFactTable(Table tbl) {
     String tableType = tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY);
-    return CubeTableType.FACT.name().equals(tableType);
+    return CubeTableType.FACT.name().equals(tableType)
+      && tbl.getParameters().get(getSourceFactNameKey(tbl.getTableName())) == null;
   }
 
-
   boolean isFactTableForCube(Table tbl, String cube) {
-    return isFactTable(tbl) && CubeFactTable.getCubeName(tbl.getTableName(), tbl.getParameters())
+    return isFactTable(tbl) && tbl.getParameters().get(MetastoreUtil.getFactCubeNameKey(tbl.getTableName()))
+      .equalsIgnoreCase(cube.toLowerCase());
+  }
+
+  /**
+   * Is the table name passed a virtual fact table?
+   *
+   * @param virtualTableName table name
+   * @return true if it is virtual fact, false otherwise
+   * @throws HiveException
+   */
+  public boolean isVirtualFactTable(String virtualTableName) throws LensException {
+    Table tbl = getTable(virtualTableName);
+    return isVirtualFactTable(tbl);
+  }
+
+  boolean isVirtualFactTable(Table tbl) {
+    String tableType = tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY);
+    return CubeTableType.FACT.name().equals(tableType)
+      && tbl.getParameters().get(getSourceFactNameKey(tbl.getTableName())) != null;
+  }
+
+  boolean isVirtualFactTableForCube(Table tbl, String cube) {
+    return isVirtualFactTable(tbl) && tbl.getParameters().get(MetastoreUtil.getFactCubeNameKey(tbl.getTableName()))
       .equalsIgnoreCase(cube.toLowerCase());
   }
 
@@ -1724,58 +1762,57 @@ public class CubeMetastoreClient {
     return CubeTableType.DIMENSION.name().equals(tableType);
   }
 
-  public XFactTable getXFactTable(String tableName) throws LensException {
+  public XFact getXFactTable(String tableName) throws LensException {
     return getXFactTable(getFactTable(tableName));
   }
-  public XFactTable getXFactTable(CubeFactTable cft) throws LensException {
+  public XFact getXFactTable(FactTable ft) throws LensException {
 
-    XFactTable factTable = JAXBUtils.factTableFromCubeFactTable(cft);
-    Map<String, Map<UpdatePeriod, String>> storageMap = cft.getStoragePrefixUpdatePeriodMap();
-    for (String storageName : cft.getStorages()) {
-      Set<UpdatePeriod> updatePeriods = cft.getUpdatePeriods().get(storageName);
-      // This map tells if there are different tables for different update period.
-      Map<UpdatePeriod, String> updatePeriodToTableMap = storageMap.get(storageName);
-      Set<String> tableNames = new HashSet<>();
-      for (UpdatePeriod updatePeriod : updatePeriods) {
-        tableNames.add(updatePeriodToTableMap.get(updatePeriod));
-      }
-      if (tableNames.size() <= 1) {
-        XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-          getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(), storageName)));
-        tblElement.setStorageName(storageName);
-        for (UpdatePeriod p : updatePeriods) {
-          tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
+    XFact fact;
+    if (ft.isVirtualFact()) {
+      CubeVirtualFactTable cvft = (CubeVirtualFactTable) ft;
+      XVirtualFactTable factTable = JAXBUtils.virtualFactTableFromVirtualCubeFactTable(cvft);
+      factTable.setSourceFactName(cvft.getSourceCubeFactTable().getName());
+      fact = factTable;
+    } else {
+      CubeFactTable cft = (CubeFactTable) ft;
+      XFactTable factTable = JAXBUtils.factTableFromCubeFactTable(cft);
+      Map<String, Map<UpdatePeriod, String>> storageMap = cft.getStoragePrefixUpdatePeriodMap();
+      for (String storageName : cft.getStorages()) {
+        Set<UpdatePeriod> updatePeriods = cft.getUpdatePeriods().get(storageName);
+        // This map tells if there are different tables for different update period.
+        Map<UpdatePeriod, String> updatePeriodToTableMap = storageMap.get(storageName);
+        Set<String> tableNames = new HashSet<>();
+        for (UpdatePeriod updatePeriod : updatePeriods) {
+          tableNames.add(updatePeriodToTableMap.get(updatePeriod));
         }
-        factTable.getStorageTables().getStorageTable().add(tblElement);
-      } else {
-        // Multiple storage tables.
-        XStorageTableElement tblElement = new XStorageTableElement();
-        tblElement.setStorageName(storageName);
-        XUpdatePeriods xUpdatePeriods = new XUpdatePeriods();
-        tblElement.setUpdatePeriods(xUpdatePeriods);
-        for (Map.Entry entry : updatePeriodToTableMap.entrySet()) {
-          XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
-          updatePeriodTableDescriptor.setTableDesc(getStorageTableDescFromHiveTable(
-            this.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(),
+        if (tableNames.size() <= 1) {
+          XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
+            getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(), storageName)));
+          tblElement.setStorageName(storageName);
+          for (UpdatePeriod p : updatePeriods) {
+            tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
+          }
+          factTable.getStorageTables().getStorageTable().add(tblElement);
+        } else {
+          // Multiple storage tables.
+          XStorageTableElement tblElement = new XStorageTableElement();
+          tblElement.setStorageName(storageName);
+          XUpdatePeriods xUpdatePeriods = new XUpdatePeriods();
+          tblElement.setUpdatePeriods(xUpdatePeriods);
+          for (Map.Entry entry : updatePeriodToTableMap.entrySet()) {
+            XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
+            updatePeriodTableDescriptor.setTableDesc(getStorageTableDescFromHiveTable(
+              this.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(),
                 (String) entry.getValue()))));
-          updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(((UpdatePeriod)entry.getKey()).name()));
-          xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
+            updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(((UpdatePeriod) entry.getKey()).name()));
+            xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
+          }
+          factTable.getStorageTables().getStorageTable().add(tblElement);
         }
-        factTable.getStorageTables().getStorageTable().add(tblElement);
       }
+      fact = factTable;
     }
-    return factTable;
-  }
-  /**
-   * Get {@link CubeFactTable} object corresponding to the name
-   *
-   * @param tableName The cube fact name
-   * @return Returns CubeFactTable if table name passed is a fact table, null otherwise
-   * @throws LensException
-   */
-
-  public CubeFactTable getFactTable(String tableName) throws LensException {
-    return new CubeFactTable(getTableWithTypeFailFast(tableName, CubeTableType.FACT));
+    return fact;
   }
 
   public Segmentation getSegmentationTable(String tableName) throws HiveException, LensException {
@@ -1955,17 +1992,32 @@ public class CubeMetastoreClient {
    * @return Returns cube is table name passed is a cube
    * @throws LensException if there is no cube by the name
    */
-  public CubeFactTable getCubeFact(String tableName) throws LensException {
-    return getCubeFact(tableName, true);
+  public FactTable getFactTable(String tableName) throws LensException {
+    return getFactTable(tableName, true);
   }
-  private CubeFactTable getCubeFact(String tableName, boolean throwException) throws LensException {
+  private FactTable getFactTable(String tableName, boolean throwException) throws LensException {
     tableName = tableName.trim().toLowerCase();
-    CubeFactTable fact = allFactTables.get(tableName);
+    FactTable fact = allFactTables.get(tableName);
     if (fact == null) {
       synchronized (allFactTables) {
         if (!allFactTables.containsKey(tableName)) {
           Table tbl = getTableWithType(tableName, CubeTableType.FACT, throwException);
-          fact = tbl == null ? null : new CubeFactTable(tbl);
+          if (tbl != null){
+            String sourceFactName = tbl.getParameters().get(getSourceFactNameKey(tbl.getTableName()));
+            if (sourceFactName != null) {
+              fact = new CubeVirtualFactTable(tbl, getCubeFactTable(sourceFactName));
+              if (factToVirtualFactMapping.get(sourceFactName) != null) {
+                List<String> prevList = factToVirtualFactMapping.get(sourceFactName);
+                prevList.add(tableName);
+              }else{
+                List<String> newList = new ArrayList<>();
+                newList.add(tableName);
+                factToVirtualFactMapping.put(sourceFactName, newList);
+              }
+            } else {
+              fact = new CubeFactTable(tbl);
+            }
+          }
           if (enableCaching && fact != null) {
             allFactTables.put(tableName, fact);
           }
@@ -1975,6 +2027,15 @@ public class CubeMetastoreClient {
       }
     }
     return fact;
+  }
+
+  private FactTable getFactTable(Table tbl) throws LensException {
+    String sourceFact = tbl.getParameters().get(getSourceFactNameKey(tbl.getTableName()));
+    if (sourceFact != null) {
+      return new CubeVirtualFactTable(tbl, getCubeFactTable(sourceFact));
+    } else {
+      return new CubeFactTable(tbl);
+    }
   }
 
   public Segmentation getSegmentation(String segName) throws LensException {
@@ -2123,14 +2184,46 @@ public class CubeMetastoreClient {
    * @return List of Cube Fact Table objects
    * @throws LensException
    */
-  public Collection<CubeFactTable> getAllFacts() throws LensException {
+  public Collection<FactTable> getAllFacts() throws LensException {
     if (!allFactTablesPopulated) {
-      List<CubeFactTable> facts = new ArrayList<>();
+      List<FactTable> facts = new ArrayList<>();
       try {
         for (String table : getAllHiveTableNames()) {
-          CubeFactTable fact = getCubeFact(table, false);
+          FactTable fact = getFactTable(table, false);
           if (fact != null) {
             facts.add(fact);
+          }
+        }
+      } catch (HiveException e) {
+        throw new LensException("Could not get all fact tables", e);
+      }
+      allFactTablesPopulated = enableCaching;
+      return facts;
+    } else {
+      return allFactTables.values();
+    }
+  }
+
+  /**
+   * Get all facts in metastore (virtual facts optional)
+   * @param includeVirtualFacts set true for including virtual facts
+   * @return List of Cube Fact Table objects
+   * @throws LensException
+   */
+  public Collection<FactTable> getAllFacts(boolean includeVirtualFacts) throws LensException {
+    if (!allFactTablesPopulated) {
+      List<FactTable> facts = new ArrayList<>();
+      try {
+        for (String table : getAllHiveTableNames()) {
+          FactTable fact = getFactTable(table, false);
+          if (fact != null) {
+            if (fact.getProperties().get(getSourceFactNameKey(fact.getName())) != null) { //is virtual fact
+              if (includeVirtualFacts) {
+                facts.add(fact);
+              }
+            } else {
+              facts.add(fact);
+            }
           }
         }
       } catch (HiveException e) {
@@ -2169,8 +2262,6 @@ public class CubeMetastoreClient {
     }
   }
 
-
-
   private Collection<String> getAllHiveTableNames() throws HiveException, LensException {
     if (!allTablesPopulated) {
       List<String> allTables = getClient().getAllTables();
@@ -2192,7 +2283,7 @@ public class CubeMetastoreClient {
    * @return List of fact tables
    * @throws LensException
    */
-  public List<CubeFactTable> getAllFacts(CubeInterface cube) throws LensException {
+  public List<FactTable> getAllFacts(CubeInterface cube) throws LensException {
     String cubeName = null;
     if (cube != null) {
       if (cube instanceof DerivedCube) {
@@ -2200,8 +2291,33 @@ public class CubeMetastoreClient {
       }
       cubeName = cube.getName();
     }
-    List<CubeFactTable> cubeFacts = new ArrayList<>();
-    for (CubeFactTable fact : getAllFacts()) {
+    List<FactTable> cubeFacts = new ArrayList<>();
+    for (FactTable fact : getAllFacts()) {
+      if (cubeName == null || fact.getCubeName().equalsIgnoreCase(cubeName)) {
+        cubeFacts.add(fact);
+      }
+    }
+    return cubeFacts;
+  }
+
+  /**
+   * Get all facts of cube (optional virtual facts)
+   *
+   * @param cube Cube object
+   * @param includeVirtualFacts set true for virtual facts
+   * @return List of fact tables with optional virtual facts
+   * @throws LensException
+   */
+  public List<FactTable> getAllFacts(CubeInterface cube, boolean includeVirtualFacts) throws LensException {
+    String cubeName = null;
+    if (cube != null) {
+      if (cube instanceof DerivedCube) {
+        cube = ((DerivedCube) cube).getParent();
+      }
+      cubeName = cube.getName();
+    }
+    List<FactTable> cubeFacts = new ArrayList<>();
+    for (FactTable fact : getAllFacts(includeVirtualFacts)) {
       if (cubeName == null || fact.getCubeName().equalsIgnoreCase(cubeName)) {
         cubeFacts.add(fact);
       }
@@ -2262,8 +2378,8 @@ public class CubeMetastoreClient {
     return dimTables;
   }
 
-  public boolean partColExists(String fact, String storage, String partCol) throws LensException {
-    for (String storageTable : getStorageTables(fact, storage)) {
+  public boolean partColExists(FactTable factTable, String storage, String partCol) throws LensException {
+    for (String storageTable : getStorageTables(factTable, storage)) {
       for (FieldSchema f : getTable(storageTable).getPartCols()) {
         if (f.getName().equalsIgnoreCase(partCol)) {
           return true;
@@ -2278,19 +2394,20 @@ public class CubeMetastoreClient {
    * Note: If each update period in the storage has a different storage table, this method will return N Storage Tables
    * where N is the number of update periods in the storage (LENS-1386)
    *
-   * @param fact
+   * @param factTable
    * @param storage
    * @return
    * @throws LensException
    */
-  public Set<String> getStorageTables(String fact, String storage) throws LensException {
+  public Set<String> getStorageTables(FactTable factTable, String storage) throws LensException {
     Set<String> uniqueStorageTables = new HashSet<>();
-    for (UpdatePeriod updatePeriod : getFactTable(fact).getUpdatePeriods().get(storage)) {
-      uniqueStorageTables.add(getStorageTableName(fact, storage, updatePeriod));
+
+    for (UpdatePeriod updatePeriod : factTable.getUpdatePeriods().get(storage)) {
+      String factName = factTable.getSourceFactName();
+      uniqueStorageTables.add(getStorageTableName(factName, storage, updatePeriod));
     }
     return uniqueStorageTables;
   }
-
 
   /**
    *
@@ -2431,7 +2548,7 @@ public class CubeMetastoreClient {
    */
   public void dropFact(String factName, boolean cascade) throws LensException {
     getTableWithTypeFailFast(factName, CubeTableType.FACT);
-    CubeFactTable fact = getFactTable(factName);
+    FactTable fact = getFactTable(factName);
     if (cascade) {
       for (String storage : fact.getStorages()) {
         dropStorageFromFact(factName, storage, false);
@@ -2439,8 +2556,48 @@ public class CubeMetastoreClient {
     }
     dropHiveTable(factName);
     allFactTables.remove(factName.trim().toLowerCase());
+    if (fact.isVirtualFact()) {
+      String sourceFactTable = fact.getProperties().get(getSourceFactNameKey(fact.getName()));
+      if (factToVirtualFactMapping.get(sourceFactTable) != null
+        && factToVirtualFactMapping.get(sourceFactTable).contains(fact.getName())) {
+        factToVirtualFactMapping.get(sourceFactTable).remove(fact.getName());
+      }
+    } else {
+      dropAllVirtualFactTables(factName);
+    }
   }
 
+  private void dropAllVirtualFactTables(String cubeFactTableName) throws LensException {
+    if (enableCaching) {
+      cubeFactTableName = cubeFactTableName.trim().toLowerCase();
+      if (factToVirtualFactMapping.get(cubeFactTableName) != null) {
+        List<String> virtualFactTableNames = factToVirtualFactMapping.get(cubeFactTableName);
+        factToVirtualFactMapping.remove(cubeFactTableName);
+        for (String vf : virtualFactTableNames) {
+          dropVirtualFact(vf.trim().toLowerCase());
+        }
+      }
+    }
+  }
+
+  /**
+   * Drop a virtual fact
+   *
+   * @param virtualFactName virtual fact name
+   * @throws LensException
+   */
+  public void dropVirtualFact(String virtualFactName) throws LensException {
+    virtualFactName = virtualFactName.trim().toLowerCase();
+    Table virtualTbl = getTableWithTypeFailFast(virtualFactName, CubeTableType.FACT);
+    String sourceFactTable = virtualTbl.getParameters().get(getSourceFactNameKey(virtualTbl.getTableName()));
+    if (factToVirtualFactMapping.get(sourceFactTable) != null
+      && factToVirtualFactMapping.get(sourceFactTable).contains(virtualFactName)) {
+      factToVirtualFactMapping.get(sourceFactTable).remove(virtualFactName);
+    }
+    dropHiveTable(virtualFactName);
+    allFactTables.remove(virtualFactName.trim().toLowerCase());
+
+  }
 
   public void dropSegmentation(String segName) throws LensException {
     getTableWithTypeFailFast(segName, CubeTableType.SEGMENTATION);
@@ -2456,7 +2613,7 @@ public class CubeMetastoreClient {
    * @throws LensException
    */
   public void dropStorageFromFact(String factName, String storage) throws LensException {
-    CubeFactTable cft = getFactTable(factName);
+    CubeFactTable cft = getCubeFactTable(factName);
     dropHiveTablesForStorage(factName, storage);
     cft.dropStorage(storage);
     alterCubeTable(factName, getTableWithTypeFailFast(factName, CubeTableType.FACT), cft);
@@ -2464,7 +2621,7 @@ public class CubeMetastoreClient {
   }
 
   private void dropHiveTablesForStorage(String factName, String storage) throws LensException{
-    CubeFactTable cft = getFactTable(factName);
+    CubeFactTable cft = getCubeFactTable(factName);
     Set<String> droppedTables = new HashSet<>();
     for (Map.Entry updatePeriodEntry : cft.getStoragePrefixUpdatePeriodMap().get(storage).entrySet()) {
       UpdatePeriod updatePeriod = (UpdatePeriod) updatePeriodEntry.getKey();
@@ -2480,7 +2637,7 @@ public class CubeMetastoreClient {
     throws LensException {
     dropHiveTablesForStorage(factName, storage);
     if (updateFact) {
-      CubeFactTable cft = getFactTable(factName);
+      CubeFactTable cft = getCubeFactTable(factName);
       cft.dropStorage(storage);
       alterCubeTable(factName, getTableWithTypeFailFast(factName, CubeTableType.FACT), cft);
       updateFactCache(factName);
@@ -2530,11 +2687,20 @@ public class CubeMetastoreClient {
     dropHiveTable(dimTblName);
     allDimTables.remove(dimTblName.trim().toLowerCase());
   }
-  public void alterCubeFactTable(XFactTable fact) throws LensException, HiveException {
-    alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(fact),
-      JAXBUtils.tableDescPrefixMapFromXStorageTables(fact.getStorageTables()),
-      JAXBUtils.columnStartAndEndTimeFromXColumns(fact.getColumns()));
+
+  public void alterCubeFactTable(XFact fact) throws LensException, HiveException {
+    if (fact instanceof XVirtualFactTable) {
+      XVirtualFactTable xvf = (XVirtualFactTable) fact;
+      alterCubeFactTable(xvf.getName(), JAXBUtils.cubeVirtualFactFromFactTable(xvf,
+        getFactTable(xvf.getSourceFactName())), null, new HashMap<>());
+    } else {
+      XFactTable xf = (XFactTable) fact;
+      alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(xf),
+        JAXBUtils.tableDescPrefixMapFromXStorageTables(xf.getStorageTables()),
+        JAXBUtils.columnStartAndEndTimeFromXColumns(xf.getColumns()));
+    }
   }
+
   /**
    * Alter a cubefact with new definition and alter underlying storage tables as well.
    *
@@ -2544,7 +2710,7 @@ public class CubeMetastoreClient {
    *
    * @throws HiveException
    */
-  public void alterCubeFactTable(String factTableName, CubeFactTable cubeFactTable,
+  public void alterCubeFactTable(String factTableName, FactTable cubeFactTable,
                                  Map<String, StorageTableDesc> storageTableDescs,
                                  Map<String, String> props)
     throws HiveException, LensException {
@@ -2552,7 +2718,7 @@ public class CubeMetastoreClient {
     if (!props.isEmpty()) {
       cubeFactTable.getProperties().putAll(props);
     }
-    alterCubeTable(factTableName, factTbl, cubeFactTable);
+    alterCubeTable(factTableName, factTbl, (AbstractCubeTable) cubeFactTable);
     if (storageTableDescs != null) {
       // create/alter tables for each storage
       for (Map.Entry<String, StorageTableDesc> entry : storageTableDescs.entrySet()) {
@@ -2560,11 +2726,24 @@ public class CubeMetastoreClient {
       }
     }
     updateFactCache(factTableName);
+
+    updateAllVirtualFacts(getFactTable(factTableName));
   }
 
   public void alterSegmentation(XSegmentation cubeSeg) throws LensException, HiveException {
     alterSegmentation(cubeSeg.getName(), segmentationFromXSegmentation(cubeSeg));
   }
+
+  /**
+   * Alter a virtual cube fact with new definition
+   * @param cubeVirtualFactTable  cube virtual fact table
+   * @throws HiveException
+   */
+  public void alterVirtualCubeFactTable(CubeVirtualFactTable cubeVirtualFactTable)
+    throws HiveException, LensException {
+    alterCubeFactTable(cubeVirtualFactTable.getName(), cubeVirtualFactTable, null, new HashMap<>());
+  }
+
   public void alterSegmentation(String segName, Segmentation seg)
     throws HiveException, LensException {
     getTableWithTypeFailFast(segName, CubeTableType.SEGMENTATION);
@@ -2583,7 +2762,52 @@ public class CubeMetastoreClient {
 
   private void updateFactCache(String factTableName) throws LensException {
     if (enableCaching) {
-      allFactTables.put(factTableName.trim().toLowerCase(), new CubeFactTable(refreshTable(factTableName)));
+      Table factTbl = getTableWithTypeFailFast(factTableName, CubeTableType.FACT);
+      FactTable refreshedTable;
+      if (factTbl.getParameters().get(getSourceFactNameKey(factTableName)) != null){
+        String sourceFactName = factTbl.getParameters().get(getSourceFactNameKey(factTableName));
+        refreshedTable = new CubeVirtualFactTable(refreshTable(factTableName),
+          getCubeFactTable(sourceFactName));
+      }else {
+        refreshedTable = new CubeFactTable(refreshTable(factTableName));
+      }
+      allFactTables.put(factTableName.trim().toLowerCase(), refreshedTable);
+    }
+  }
+
+  public CubeFactTable getCubeFactTable(String factName) throws LensException {
+    FactTable factTable = getFactTable(factName);
+    if (factTable instanceof CubeFactTable) {
+      return (CubeFactTable) factTable;
+    } else {
+      throw new LensException(new LensException(LensCubeErrorCode.ENTITY_TYPE_NOT_AS_EXPECTED.getLensErrorInfo(),
+        factName, "Fact"));
+    }
+  }
+
+  public CubeVirtualFactTable getCubeVirtualFactTable(String factName) throws LensException {
+    FactTable factTable = getFactTable(factName);
+    if (factTable instanceof CubeVirtualFactTable) {
+      return (CubeVirtualFactTable) factTable;
+    } else {
+      throw new LensException(new LensException(LensCubeErrorCode.ENTITY_TYPE_NOT_AS_EXPECTED.getLensErrorInfo(),
+        factName, "VirtualFact"));
+    }
+  }
+
+  private void updateAllVirtualFacts(FactTable cubeFactTable) throws LensException {
+    if (enableCaching) {
+      String cubeFactTableName = cubeFactTable.getName().trim().toLowerCase();
+      if (factToVirtualFactMapping.get(cubeFactTableName) != null) {
+        synchronized (allFactTables) {
+          List<String> virtualFactTableNames = factToVirtualFactMapping.get(cubeFactTableName);
+          for (String vf : virtualFactTableNames) {
+            CubeVirtualFactTable cvf = getCubeVirtualFactTable(vf);
+            cvf.setSourceCubeFactTable(cubeFactTable);
+            allFactTables.put(vf.trim().toLowerCase(), cvf);
+          }
+        }
+      }
     }
   }
 
@@ -2693,8 +2917,11 @@ public class CubeMetastoreClient {
     if (updatePeriod == null) {
       return storage;
     }
-    if (isFactTable(factOrDimTableName)) {
-      return getFactTable(factOrDimTableName).getTablePrefix(storage, updatePeriod);
+    if (isVirtualFactTable(factOrDimTableName)) {
+      CubeFactTable sourceFact = (CubeFactTable) getCubeVirtualFactTable(factOrDimTableName).getSourceCubeFactTable();
+      return sourceFact.getTablePrefix(storage, updatePeriod);
+    } else if (isFactTable(factOrDimTableName)) {
+      return getCubeFactTable(factOrDimTableName).getTablePrefix(storage, updatePeriod);
     } else {
       return storage;
     }

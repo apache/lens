@@ -168,76 +168,6 @@
     </xs:complexContent>
   </xs:complexType>
 
-  <xs:element name="x_virtual_fact_table" type="x_virtual_fact_table"/>
-  <xs:complexType name="x_virtual_fact_table">
-    <xs:annotation>
-      <xs:documentation>
-        Virtual fact extends fact. It can override the cube of its source fact. It can have different
-        properties associated with it than its source.
-        Properties that can be set for a virtual fact are :
-        -  Filters which would be added in query rewriting
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-    <xs:element type="x_properties" name="properties" maxOccurs="1" minOccurs="0">
-      <xs:annotation>
-        <xs:documentation>
-          Properties that can be set for a virtual fact are
-          1. cube.fact.query.where.filter : filter string that needs to be added in WHERE clause. This string would be added as an additional
-          filter when the query is being constructed in the cube query writing phase.
-          2. cube.fact.absolute.start.time: start time of the fact. For queries that ask for time before this,
-          this fact is not a candidate. Time format can be as you would specify in the time_range_in clause.
-          i.e. yyyy[-mm[-dd[-hh[:MM[:ss[,SSS]]]]]]
-          3. cube.fact.relative.start.time: Here you can specify fact's relative validity relative to current time.
-          Useful if you want to specify e.g. this fact is valid for today - 90 days. Can be specified as just
-          a time difference e.g. "-90 days". Or can be specified in relative syntax.
-          e.g. now.year or now.day - 6 hour etc.
-          4. cube.fact.absolute.end.time: If you're deprecating this fact, put the final date till which the data of
-          the fact will be valid here. Format same as absolute start time.
-          5. cube.fact.relative.end.time: You can specify the end date for fact table
-          relative to current date e.g. fact table is valid for next 90days starting from today.
-          This can be specified as just a time difference e.g. "+90 days"
-
-        </xs:documentation>
-      </xs:annotation>
-    </xs:element>
-    </xs:sequence>
-    <xs:attribute type="xs:string" name="source_fact_name" use="required">
-      <xs:annotation>
-        <xs:documentation>
-          The Source fact name over which the Virtual fact is defined.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute type="xs:string" name="cube_name" use="required">
-      <xs:annotation>
-        <xs:documentation>
-          The base cube's name to which the Virtual fact is associated.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name="name" type="xs:string" use="required">
-      <xs:annotation>
-        <xs:documentation>
-          The virtual fact table name.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name="weight" use="optional" >
-      <xs:annotation>
-        <xs:documentation>
-          The weight of the fact table. LENS will use this attribute to decide the lightest table to query when there
-          are more than one eligible tables. If not defined, the source fact weight would be picked up.
-        </xs:documentation>
-      </xs:annotation>
-      <xs:simpleType>
-        <xs:restriction base="xs:double">
-          <xs:minInclusive value="0"></xs:minInclusive>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-  </xs:complexType>
-
   <xs:element name="x_derived_cube" type="x_derived_cube"/>
   <xs:complexType name="x_derived_cube">
     <xs:annotation>
@@ -1287,9 +1217,99 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:element name="x_fact" type="x_fact"/>
+
+  <xs:complexType name="x_fact" abstract="true">
+    <xs:annotation>
+      <xs:documentation>
+        XFact can either be a Cube Fact for which the user would give the full specification of the
+        columns and storages
+        or can be a Virtual fact, for which the user would specify only the Source fact and filters if any.
+        Virtual fact derives its columns and storage specific details all from the source Fact. It can however have
+        different properties associated with it than the source.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+    <xs:attribute type="xs:string" name="description"/>
+    <xs:attribute type="xs:string" name="cube_name" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The cube's name to which the fact is associated.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:element name="x_virtual_fact_table" type="x_virtual_fact_table"/>
+  <xs:complexType name="x_virtual_fact_table">
+    <xs:complexContent>
+      <xs:extension base="x_fact">
+        <xs:annotation>
+          <xs:documentation>
+            Virtual fact extends fact. It can override the cube of its source fact. It can have different
+            properties associated with it than its source.
+            Properties that can be set for a virtual fact are :
+            - Filters which would be added in query rewriting
+          </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element type="x_properties" name="properties" maxOccurs="1" minOccurs="0">
+            <xs:annotation>
+              <xs:documentation>
+                Properties that can be set for a virtual fact are :
+                1. cube.fact.query.where.filter : filter string that needs to be added in WHERE clause. This string
+                would be added as an additional
+                filter when the query is being constructed in the cube query writing phase.
+                2. cube.fact.absolute.start.time: start time of the fact. For queries that ask for time before this,
+                this fact is not a candidate. Time format can be as you would specify in the time_range_in clause.
+                i.e. yyyy[-mm[-dd[-hh[:MM[:ss[,SSS]]]]]]
+                3. cube.fact.relative.start.time: Here you can specify fact's relative validity relative to current
+                time.
+                Useful if you want to specify e.g. this fact is valid for today - 90 days. Can be specified as just
+                a time difference e.g. "-90 days". Or can be specified in relative syntax.
+                e.g. now.year or now.day - 6 hour etc.
+                4. cube.fact.absolute.end.time: If you're deprecating this fact, put the final date till which the data
+                of
+                the fact will be valid here. Format same as absolute start time.
+                5. cube.fact.relative.end.time: You can specify the end date for fact table
+                relative to current date e.g. fact table is valid for next 90days starting from today.
+                This can be specified as just a time difference e.g. "+90 days"
+
+              </xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+
+        <xs:attribute type="xs:string" name="source_fact_name" use="required">
+          <xs:annotation>
+            <xs:documentation>
+              The Source fact name over which the Virtual fact is defined.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="weight" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+              The weight of the fact table. LENS will use this attribute to decide the lightest table to query when
+              there
+              are more than one eligible tables. If not defined, the source fact weight would be picked up.
+            </xs:documentation>
+          </xs:annotation>
+          <xs:simpleType>
+            <xs:restriction base="xs:double">
+              <xs:minInclusive value="0"></xs:minInclusive>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
   <xs:element name="x_fact_table" type="x_fact_table"/>
 
   <xs:complexType name="x_fact_table">
+    <xs:complexContent>
+    <xs:extension base="x_fact">
     <xs:annotation>
       <xs:documentation>
         Fact table that is associated to a base cube. The columns in the fact table will be a subset of
@@ -1334,20 +1354,6 @@
       </xs:element>
       <xs:element name="storage_tables" type="x_storage_tables" maxOccurs="1" minOccurs="0"/>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required">
-      <xs:annotation>
-        <xs:documentation>
-          The fact table name.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name="cube_name" type="xs:string" use="required">
-      <xs:annotation>
-        <xs:documentation>
-          The base cube's name to which the fact_table is associated.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
     <xs:attribute name="weight" use="required" >
       <xs:annotation>
         <xs:documentation>
@@ -1361,6 +1367,8 @@
         </xs:restriction>
       </xs:simpleType>
     </xs:attribute>
+    </xs:extension>
+    </xs:complexContent>
   </xs:complexType>
 
   <xs:element name="x_segmentation" type="x_segmentation"/>

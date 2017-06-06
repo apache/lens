@@ -13,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+name: rawfact
+cubeName: sample_cube
 columns:
   dim1: type: INT
   dim2: type: INT
@@ -34,6 +36,4 @@ storageTables:
       external: true
       tableLocation: /tmp/examples/rawfact
       fieldDelimiter: ,
-name: rawfact
-cubeName: sample_cube
 weight: 500.0

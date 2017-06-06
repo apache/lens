@@ -710,7 +710,6 @@ public class MetastoreResource {
     return Entity.FACT.getAll(sessionid);
   }
 
-
   /**
    * Get all segmentations in the current database
    *
@@ -760,15 +759,15 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
-   * @return JAXB representation of {@link XFactTable}
+   * @return JAXB representation of {@link XFact}
    */
   @GET
   @Path("/facts/{factName}")
-  public JAXBElement<XFactTable> getFactTable(@QueryParam("sessionid") LensSessionHandle sessionid,
+  public JAXBElement<XFact> getFactTable(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("factName") String factName)
     throws LensException {
     checkSessionId(sessionid);
-    return X_CUBE_OBJECT_FACTORY.createXFactTable(getSvc().getFactTable(sessionid, factName));
+    return X_CUBE_OBJECT_FACTORY.createXFact(getSvc().getFactTable(sessionid, factName));
   }
 
   /**
@@ -791,13 +790,13 @@ public class MetastoreResource {
    * Create a new fact tabble
    *
    * @param sessionid The sessionid in which user is working
-   * @param fact      The {@link XFactTable} representation of the fact table definition
+   * @param fact      The {@link XFact} representation of the fact table definition
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
    * state {@link Status#FAILED}, if create has failed
    */
   @POST
   @Path("/facts")
-  public APIResult createFactTable(@QueryParam("sessionid") LensSessionHandle sessionid, XFactTable fact)
+  public APIResult createFactTable(@QueryParam("sessionid") LensSessionHandle sessionid, XFact fact)
     throws LensException {
     checkSessionId(sessionid);
     log.info("Create fact table");
@@ -823,20 +822,19 @@ public class MetastoreResource {
     return success();
   }
 
-
   /**
    * Update fact table definition
    *
    * @param sessionid The sessionid in which user is working
    * @param factName  name of the fact table
-   * @param fact      The {@link XFactTable} representation of the updated fact table definition
+   * @param fact      The {@link XFact} representation of the updated fact table definition
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
    * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/facts/{factName}")
   public APIResult updateFactTable(@QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("factName") String factName, XFactTable fact)
+    @PathParam("factName") String factName, XFact fact)
     throws LensException {
     checkSessionId(sessionid);
     getSvc().updateFactTable(sessionid, fact);
@@ -879,7 +877,6 @@ public class MetastoreResource {
     throws LensException {
     return Entity.FACT.delete(sessionid, factName, cascade);
   }
-
 
   /**
    * Drop the segmentation, specified by name

@@ -378,10 +378,10 @@ public interface CubeMetastoreService extends LensService, SessionValidator {
    *
    * @param sessionid The sessionid
    * @param fact      The fact table name
-   * @return {@link XFactTable}
+   * @return {@link XFact}
    * @throws LensException
    */
-  XFactTable getFactTable(LensSessionHandle sessionid, String fact) throws LensException;
+  XFact getFactTable(LensSessionHandle sessionid, String fact) throws LensException;
 
   /**
    * Create fact table
@@ -390,7 +390,7 @@ public interface CubeMetastoreService extends LensService, SessionValidator {
    * @param fact      The fact table definition
    * @throws LensException
    */
-  void createFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException;
+  void createFactTable(LensSessionHandle sessionid, XFact fact) throws LensException;
 
   /**
    * Update/Alter fact table
@@ -399,7 +399,7 @@ public interface CubeMetastoreService extends LensService, SessionValidator {
    * @param fact      The fact table's new definition
    * @throws LensException
    */
-  void updateFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException;
+  void updateFactTable(LensSessionHandle sessionid, XFact fact) throws LensException;
 
   /**
    * Drop fact table.

@@ -34,7 +34,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CubeFactTable extends AbstractCubeTable {
+public class CubeFactTable extends AbstractCubeTable implements FactTable {
   @Getter
   // Map<StorageName, Map<update_period, storage_table_prefix>>
   private final Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap;
@@ -44,7 +44,7 @@ public class CubeFactTable extends AbstractCubeTable {
   public CubeFactTable(Table hiveTable) {
     super(hiveTable);
     this.storageUpdatePeriods = getUpdatePeriods(getName(), getProperties());
-    this.cubeName = getCubeName(getName(), getProperties());
+    this.cubeName = this.getProperties().get(MetastoreUtil.getFactCubeNameKey(getName()));
     this.storagePrefixUpdatePeriodMap = getUpdatePeriodMap(getName(), getProperties());
   }
 
@@ -77,7 +77,7 @@ public class CubeFactTable extends AbstractCubeTable {
   }
 
   public boolean hasColumn(String column) {
-    List<String> validColumns = getValidColumns();
+    Set<String> validColumns = getValidColumns();
     if (validColumns != null) {
       return validColumns.contains(column);
     } else {
@@ -88,7 +88,7 @@ public class CubeFactTable extends AbstractCubeTable {
   @Override
   protected void addProperties() {
     super.addProperties();
-    addCubeNames(getName(), getProperties(), cubeName);
+    this.getProperties().put(MetastoreUtil.getFactCubeNameKey(getName()), cubeName);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
     addStorageTableProperties(getName(), getProperties(), storagePrefixUpdatePeriodMap);
   }
@@ -113,10 +113,6 @@ public class CubeFactTable extends AbstractCubeTable {
           MetastoreUtil.getNamedStr(entry.getValue()));
       }
     }
-  }
-
-  private static void addCubeNames(String factName, Map<String, String> props, String cubeName) {
-    props.put(MetastoreUtil.getFactCubeNameKey(factName), cubeName);
   }
 
   private Map<String, Map<UpdatePeriod, String>> getUpdatePeriodMap(String factName, Map<String, String> props) {
@@ -154,10 +150,6 @@ public class CubeFactTable extends AbstractCubeTable {
       }
     }
     return storageUpdatePeriods;
-  }
-
-  static String getCubeName(String factName, Map<String, String> props) {
-    return props.get(MetastoreUtil.getFactCubeNameKey(factName));
   }
 
   public Map<String, Set<UpdatePeriod>> getUpdatePeriods() {
@@ -276,10 +268,11 @@ public class CubeFactTable extends AbstractCubeTable {
    *
    * @return
    */
-  public List<String> getValidColumns() {
+  public Set<String> getValidColumns() {
     String validColsStr =
       MetastoreUtil.getNamedStringValue(getProperties(), MetastoreUtil.getValidColumnsKey(getName()));
-    return validColsStr == null ? null : Arrays.asList(StringUtils.split(validColsStr.toLowerCase(), ','));
+    return validColsStr == null ? null : new HashSet<>(Arrays.asList(StringUtils.split(validColsStr.toLowerCase(),
+      ',')));
   }
 
   /**
@@ -374,7 +367,7 @@ public class CubeFactTable extends AbstractCubeTable {
    */
   public void alterCubeName(String cubeName) {
     this.cubeName = cubeName;
-    addCubeNames(getName(), getProperties(), cubeName);
+    this.getProperties().put(MetastoreUtil.getFactCubeNameKey(getName()), cubeName);
   }
 
   public String getDataCompletenessTag() {
@@ -390,12 +383,28 @@ public class CubeFactTable extends AbstractCubeTable {
     getProperties().put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, Boolean.toString(isAggregated));
   }
 
+  @Override
+  public boolean isVirtualFact() {
+    return false;
+  }
+
+  @Override
+  public String getSourceFactName() {
+    return this.getName();
+  }
+
+  public String getTablePrefix(String storage, UpdatePeriod updatePeriod) {
+    return storagePrefixUpdatePeriodMap.get(storage).get(updatePeriod);
+  }
+
   public Date getAbsoluteStartTime() {
-    return getDateFromProperty(MetastoreConstants.FACT_ABSOLUTE_START_TIME, false, true);
+    return MetastoreUtil.getDateFromProperty(this.getProperties().get(MetastoreConstants.FACT_ABSOLUTE_START_TIME),
+      false, true);
   }
 
   public Date getRelativeStartTime() {
-    return getDateFromProperty(MetastoreConstants.FACT_RELATIVE_START_TIME, true, true);
+    return MetastoreUtil.getDateFromProperty(this.getProperties().get(MetastoreConstants.FACT_RELATIVE_START_TIME),
+      true, true);
   }
 
   public Date getStartTime() {
@@ -403,18 +412,17 @@ public class CubeFactTable extends AbstractCubeTable {
   }
 
   public Date getAbsoluteEndTime() {
-    return getDateFromProperty(MetastoreConstants.FACT_ABSOLUTE_END_TIME, false, false);
+    return MetastoreUtil.getDateFromProperty(this.getProperties().get(MetastoreConstants.FACT_ABSOLUTE_END_TIME),
+      false, false);
   }
 
   public Date getRelativeEndTime() {
-    return getDateFromProperty(MetastoreConstants.FACT_RELATIVE_END_TIME, true, false);
+    return MetastoreUtil.getDateFromProperty(this.getProperties().get(MetastoreConstants.FACT_RELATIVE_END_TIME),
+      true, false);
   }
 
   public Date getEndTime() {
     return Collections.min(Lists.newArrayList(getRelativeEndTime(), getAbsoluteEndTime()));
   }
 
-  public String getTablePrefix(String storage, UpdatePeriod updatePeriod) {
-    return storagePrefixUpdatePeriodMap.get(storage).get(updatePeriod);
-  }
 }

@@ -67,23 +67,7 @@ import javax.xml.bind.JAXBException;
 import org.apache.lens.api.ToXMLString;
 import org.apache.lens.api.jaxb.LensJAXBContext;
 import org.apache.lens.api.metastore.SchemaTraverser;
-import org.apache.lens.cube.metadata.CubeDimAttribute;
-import org.apache.lens.cube.metadata.CubeDimensionTable;
-import org.apache.lens.cube.metadata.CubeFactTable;
-import org.apache.lens.cube.metadata.CubeMeasure;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
-import org.apache.lens.cube.metadata.CubeTableType;
-import org.apache.lens.cube.metadata.DateUtil;
-import org.apache.lens.cube.metadata.JAXBUtils;
-import org.apache.lens.cube.metadata.MetastoreConstants;
-import org.apache.lens.cube.metadata.MetastoreUtil;
-import org.apache.lens.cube.metadata.Storage;
-import org.apache.lens.cube.metadata.StorageConstants;
-import org.apache.lens.cube.metadata.StoragePartitionDesc;
-import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
-import org.apache.lens.cube.metadata.TimePartition;
-import org.apache.lens.cube.metadata.TimePartitionRange;
-import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
@@ -140,6 +124,7 @@ public class CubeTestSetup {
   public static final String TEST_CUBE_NAME = "testCube";
   public static final String DERIVED_CUBE_NAME = "derivedCube";
   public static final String BASE_CUBE_NAME = "baseCube";
+  public static final String VIRTUAL_CUBE_NAME = "virtualCube";
 
   private static String c0 = "C0";
   private static String c1 = "C1";
@@ -598,7 +583,7 @@ public class CubeTestSetup {
 
     client.clearHiveTableCache();
 
-    CubeFactTable fact = client.getFactTable(factName);
+    CubeFactTable fact = client.getCubeFactTable(factName);
     Table table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(), Storage.getPrefix(c1)));
     assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
     for (UpdatePeriod period : Lists.newArrayList(MINUTELY, HOURLY, DAILY, MONTHLY, YEARLY, QUARTERLY)) {
@@ -647,7 +632,7 @@ public class CubeTestSetup {
 
   private void createCubeCheapFactPartitions(CubeMetastoreClient client) throws HiveException, LensException {
     String factName = "cheapFact";
-    CubeFactTable fact = client.getFactTable(factName);
+    CubeFactTable fact = client.getCubeFactTable(factName);
     // Add all hourly partitions for two days
     Calendar cal = Calendar.getInstance();
     cal.setTime(TWODAYS_BACK);
@@ -679,7 +664,7 @@ public class CubeTestSetup {
 
   private void createTestFact2Partitions(CubeMetastoreClient client) throws Exception {
     String factName = "testFact2";
-    CubeFactTable fact = client.getFactTable(factName);
+    CubeFactTable fact = client.getCubeFactTable(factName);
     // Add all hourly partitions for two days
     Calendar cal = Calendar.getInstance();
     cal.setTime(TWODAYS_BACK);
@@ -767,7 +752,7 @@ public class CubeTestSetup {
 
   private void createTestFact2RawPartitions(CubeMetastoreClient client) throws HiveException, LensException {
     String factName = "testFact2_raw";
-    CubeFactTable fact2 = client.getFactTable(factName);
+    CubeFactTable fact2 = client.getCubeFactTable(factName);
     // Add all hourly partitions for two days
     Calendar cal = Calendar.getInstance();
     cal.setTime(TWODAYS_BACK);
@@ -850,7 +835,8 @@ public class CubeTestSetup {
 //        bw.write(ToXMLString.toString(JAXBUtils.xCubeFromHiveCube(cubeInterface)));
 //      }
 //    }
-    for (CubeFactTable cubeFactTable : client.getAllFacts()) {
+    for (FactTable factTable : client.getAllFacts(false)) {
+      CubeFactTable cubeFactTable = (CubeFactTable) factTable;
       try(BufferedWriter bw = new BufferedWriter(new FileWriter(getClass()
           .getResource("/schema/facts").getPath()+"/"+cubeFactTable.getName()+".xml"))) {
         bw.write(ToXMLString.toString(client.getXFactTable(cubeFactTable)));
@@ -884,26 +870,26 @@ public class CubeTestSetup {
 
   private void createSummaryPartitions(CubeMetastoreClient client) throws Exception {
     String factName = "summary1";
-    CubeFactTable fact1 = client.getFactTable(factName);
+    CubeFactTable fact1 = client.getCubeFactTable(factName);
     createPIEParts(client, fact1, c2);
 
     factName = "summary2";
-    CubeFactTable fact2 = client.getFactTable(factName);
+    CubeFactTable fact2 = client.getCubeFactTable(factName);
     createPIEParts(client, fact2, c2);
 
     factName = "summary3";
-    CubeFactTable fact3 = client.getFactTable(factName);
+    CubeFactTable fact3 = client.getCubeFactTable(factName);
     createPIEParts(client, fact3, c2);
 
 
     factName = "summary4";
-    CubeFactTable fact4 = client.getFactTable(factName);
+    CubeFactTable fact4 = client.getCubeFactTable(factName);
     createPIEParts(client, fact4, c2);
   }
 
   private void createBaseCubeFactPartitions(CubeMetastoreClient client) throws HiveException, LensException {
     String factName = "testFact5_RAW_BASE";
-    CubeFactTable fact = client.getFactTable(factName);
+    CubeFactTable fact = client.getCubeFactTable(factName);
     // Add all hourly partitions for two days
     Calendar cal = Calendar.getInstance();
     cal.setTime(TWODAYS_BACK);

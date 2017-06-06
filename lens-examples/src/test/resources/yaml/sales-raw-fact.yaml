@@ -13,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+name: sales_raw_fact
+cubeName: sales
 columns:
   order_time: type: TIMESTAMP
   delivery_time: type: TIMESTAMP
@@ -46,6 +48,4 @@ storageTables:
       external: true
       tableLocation: /tmp/examples/rawfact
       fieldDelimiter: ,
-name: sales_raw_fact
-cubeName: sales
 weight: 500.0

@@ -24,14 +24,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.lens.api.metastore.SchemaTraverser;
-import org.apache.lens.api.metastore.XBaseCube;
-import org.apache.lens.api.metastore.XDerivedCube;
-import org.apache.lens.api.metastore.XDimension;
-import org.apache.lens.api.metastore.XDimensionTable;
-import org.apache.lens.api.metastore.XFactTable;
-import org.apache.lens.api.metastore.XSegmentation;
-import org.apache.lens.api.metastore.XStorage;
+import org.apache.lens.api.metastore.*;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,7 +74,12 @@ public class LensSchemaCommands implements CommandMarker {
     + "|\n"
     + "|-- facts\n"
     + "   |-- fact1.xml\n"
-    + "   |-- fact2.xml\n\n\n"
+    + "   |-- fact2.xml\n"
+    + "|  |\n"
+    + "|  |-- virtual\n"
+    + "|  |  |-- virtual_fact1.xml\n"
+    + "|  |  |-- virtual_fact2.xml\n"
+    + "|  |\n\n\n"
     + "If your cubes are divided between base and derived cubes,\nit makes sense to seperate into two directories, "
     + "since derived cubes can't be created unless base cube exists.\nIn the other case you can keep them in the cubes "
     + "directory itself.\nFor dimtables, you can keep your schema files in a directory named either dimtables or "
@@ -114,6 +112,8 @@ public class LensSchemaCommands implements CommandMarker {
     UPDATE_COMMAND_MAP.put(XDimensionTable.class, "update dimtable --dimtable_name %s --path %s");
     CREATE_COMMAND_MAP.put(XFactTable.class, "create fact --path %s");
     UPDATE_COMMAND_MAP.put(XFactTable.class, "update fact --fact_name %s --path %s");
+    CREATE_COMMAND_MAP.put(XVirtualFactTable.class, "create fact --path %s");
+    UPDATE_COMMAND_MAP.put(XVirtualFactTable.class, "update fact --name %s --path %s");
     CREATE_COMMAND_MAP.put(XSegmentation.class, "create segmentation --path %s");
     UPDATE_COMMAND_MAP.put(XSegmentation.class, "update segmentation --name %s --path %s");
   }

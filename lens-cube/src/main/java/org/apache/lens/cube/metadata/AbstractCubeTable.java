@@ -20,9 +20,6 @@ package org.apache.lens.cube.metadata;
 
 import java.util.*;
 
-import org.apache.lens.server.api.error.LensException;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
@@ -67,7 +64,7 @@ public abstract class AbstractCubeTable implements Named {
 
   protected void addProperties() {
     properties.put(MetastoreConstants.TABLE_TYPE_KEY, getTableType().name());
-    properties.put(MetastoreUtil.getCubeTableWeightKey(name), String.valueOf(weight));
+    properties.put(MetastoreUtil.getCubeTableWeightKey(name), String.valueOf(weight()));
   }
 
   public String getName() {
@@ -181,23 +178,6 @@ public abstract class AbstractCubeTable implements Named {
     }
     return true;
   }
-
-  public Date getDateFromProperty(String propKey, boolean relative, boolean start) {
-    String prop = getProperties().get(propKey);
-    try {
-      if (StringUtils.isNotBlank(prop)) {
-        if (relative) {
-          return DateUtil.resolveRelativeDate(prop, now());
-        } else {
-          return DateUtil.resolveAbsoluteDate(prop);
-        }
-      }
-    } catch (LensException e) {
-      log.error("unable to parse {} {} date: {}", relative ? "relative" : "absolute", start ? "start" : "end", prop);
-    }
-    return start ? DateUtil.MIN_DATE : DateUtil.MAX_DATE;
-  }
-
 
   @Override
   public String toString() {
