@@ -39,6 +39,7 @@
              description="fifteenth measure"/>
     <measure _type="INT" name="union_join_ctx_msr3" description="union_join_ctx_third measure"/>
     <measure _type="INT" name="union_join_ctx_msr2" description="union_join_ctx_second measure"/>
+    <measure _type="INT" name="union_join_ctx_msr4" description="union_join_ctx_fourth measure"/>
     <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr2" display_string="Measure2"
              description="second measure"/>
     <measure _type="DOUBLE" default_aggr="MAX" name="msr3" display_string="Measure3" description="third measure"/>
@@ -266,6 +267,14 @@
     <expression _type="int" name="union_join_ctx_notnullcityid" display_string="union_join_ctx_Not null cityid Expr"
                 description="union_join_ctx_Not null cityid">
       <expr_spec expr="case when union_join_ctx_cityid is null then 0 else union_join_ctx_cityid end"/>
+    </expression>
+    <expression _type="int" name="union_join_ctx_msr2_expr" display_string="union_join_ctx_msr2_expr"
+                description="union_join_ctx_msr2_expr">
+      <expr_spec expr="sum(union_join_ctx_msr2) + 0"/>
+    </expression>
+    <expression _type="int" name="union_join_ctx_msr4_expr" display_string="union_join_ctx_msr4_expr"
+                description="union_join_ctx_msr4_expr">
+      <expr_spec expr="sum(union_join_ctx_msr4) + 0"/>
     </expression>
     <expression _type="String" name="isindia" display_string="Is Indian City/state" description="is indian city/state">
       <expr_spec expr="cubecity.name == 'DELHI' OR cubestate.name == 'KARNATAKA' OR cubestate.name == 'MAHARASHTRA'"/>

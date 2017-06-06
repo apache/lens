@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_fact_table name="union_join_ctx_fact4" cube_name="baseCube" weight="6.0" xmlns="uri:lens:cube:0.1">
+    <columns>
+        <column name="union_join_ctx_msr4" _type="int" comment="fourth measure"/>
+        <column name="union_join_ctx_msr2" _type="int" comment="second measure"/>
+        <column name="d_time" _type="timestamp" comment="event time"/>
+        <column name="union_join_ctx_zipcode" _type="int" comment="zip"/>
+        <column name="union_join_ctx_cityid" _type="int" comment="city id"/>
+    </columns>
+    <properties>
+        <property name="cube.fact.union_join_ctx_fact4.cubename" value="baseCube"/>
+        <property name="cube.fact.absolute.start.time" value="$absolute{now.day - 90 days}"/>
+        <property name="cube.fact.union_join_ctx_fact4.c1.updateperiods" value="DAILY"/>
+        <property name="cube.fact.absolute.end.time" value="$absolute{now.day + 7 days}"/>
+        <property name="cube.fact.is.aggregated" value="false"/>
+        <property name="cube.fact.union_join_ctx_fact4.storages" value="C1"/>
+        <property name="cube.table.union_join_ctx_fact4.weight" value="5.0"/>
+    </properties>
+    <storage_tables>
+        <storage_table>
+            <update_periods>
+                <update_period>DAILY</update_period>
+            </update_periods>
+            <storage_name>C1</storage_name>
+            <table_desc external="false">
+                <part_cols>
+                    <column name="dt" _type="string" comment="date partition"/>
+                </part_cols>
+                <table_parameters>
+                    <property name="cube.storagetable.time.partcols" value="dt"/>
+                </table_parameters>
+                <serde_parameters>
+                    <property name="serialization.format" value="1"/>
+                </serde_parameters>
+                <time_part_cols>dt</time_part_cols>
+            </table_desc>
+        </storage_table>
+    </storage_tables>
+</x_fact_table>

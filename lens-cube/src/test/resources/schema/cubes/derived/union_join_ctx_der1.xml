@@ -35,6 +35,8 @@
     <measure_name>union_join_ctx_msr2</measure_name>
     <measure_name>union_join_ctx_msr1</measure_name>
     <measure_name>union_join_ctx_msr3</measure_name>
+    <measure_name>union_join_ctx_msr4</measure_name>
+    <measure_name>union_join_ctx_msr22</measure_name>
     <measure_name>segmsr1</measure_name>
   </measure_names>
   <dim_attr_names>

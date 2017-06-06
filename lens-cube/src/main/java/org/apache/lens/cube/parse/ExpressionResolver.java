@@ -285,6 +285,7 @@ class ExpressionResolver implements ContextRewriter {
     @Getter
     private Map<String, Set<ExpressionContext>> allExprsQueried = new HashMap<String, Set<ExpressionContext>>();
     private Map<String, Set<PickedExpression>> pickedExpressions = new HashMap<String, Set<PickedExpression>>();
+    private Map<String, ASTNode> nonPickedExpressionsForCandidate = new HashMap<String, ASTNode>();
     private final CubeQueryContext cubeql;
 
     ExpressionResolverContext(CubeQueryContext cubeql) {
@@ -407,6 +408,7 @@ class ExpressionResolver implements ContextRewriter {
       }
 
       pickedExpressions.clear();
+      nonPickedExpressionsForCandidate.clear();
 
       return exprDims;
     }
@@ -426,7 +428,7 @@ class ExpressionResolver implements ContextRewriter {
       // Having ast is not copied now, it's maintained in cubeQueryContext, each fact processes that serially.
       if (queryAST.getHavingAST() != null) {
         replaceAST(cubeql, queryAST.getHavingAST());
-      } else if (cubeql.getHavingAST() != null) {
+      } else if (cubeql.getHavingAST() != null && nonPickedExpressionsForCandidate.isEmpty()) {
         replaceAST(cubeql, cubeql.getHavingAST());
         queryAST.setHavingAST(MetastoreUtil.copyAST(cubeql.getHavingAST()));
       }
@@ -459,6 +461,9 @@ class ExpressionResolver implements ContextRewriter {
               if (expr != null) {
                 node1.setChild(i, replaceAlias(expr.getRewrittenAST(), cubeql));
               }
+            } else if (nonPickedExpressionsForCandidate.containsKey(column)) {
+              node1.setChild(i, nonPickedExpressionsForCandidate.get(column));
+
             }
           }
         }
@@ -477,7 +482,7 @@ class ExpressionResolver implements ContextRewriter {
       return null;
     }
 
-    private void pickExpressionsForTable(CandidateTable cTable) {
+    private void pickExpressionsForTable(CandidateTable cTable) throws LensException {
       for (Map.Entry<String, Set<ExpressionContext>> ecEntry : allExprsQueried.entrySet()) {
         Set<ExpressionContext> ecSet = ecEntry.getValue();
         for (ExpressionContext ec : ecSet) {
@@ -488,11 +493,38 @@ class ExpressionResolver implements ContextRewriter {
                 // pick first evaluable expression
                 pickedExpressions.computeIfAbsent(ecEntry.getKey(), k -> new HashSet<>())
                   .add(new PickedExpression(ec.srcAlias, ec.evaluableExpressions.get(cTable).iterator().next()));
+              } else {
+                nonPickedExpressionsForCandidate.put(ecEntry.getKey(), getDefaultExpr(getExprAst(ec)));
               }
             }
           }
         }
       }
+    }
+
+    private ASTNode getExprAst(ExpressionContext ec) {
+      Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(cubeql.getCandidates());
+      Set<String> storageTableNames = new HashSet<String>();
+      for (StorageCandidate sc : scSet) {
+        storageTableNames.add(sc.getStorageTable());
+      }
+      for (CandidateTable table : ec.evaluableExpressions.keySet()) {
+        if (storageTableNames.contains(table.getStorageTable())) {
+          return  MetastoreUtil.copyAST(ec.evaluableExpressions.get(table).iterator().next().finalAST);
+        }
+      }
+      return null;
+    }
+
+    private  ASTNode getDefaultExpr(ASTNode node) {
+      if (HQLParser.isAggregateAST(node)) {
+        node.setChild(1, new ASTNode(new CommonToken(HiveParser.Identifier, "0.0")));
+      }
+      for (int i = 0; i < node.getChildCount(); i++) {
+        ASTNode child = (ASTNode) node.getChild(i);
+        getDefaultExpr(child);
+      }
+      return node;
     }
 
     void pruneExpressions() {
