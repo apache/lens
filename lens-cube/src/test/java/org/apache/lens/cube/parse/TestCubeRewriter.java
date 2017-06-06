@@ -981,7 +981,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     conf.setStrings(CubeQueryConfUtil.COMPLETENESS_CHECK_PART_COL, "dt");
     String hqlQuery = rewrite("select SUM(msr9) from basecube where " + TWO_DAYS_RANGE, conf);
     String expected = getExpectedQuery("basecube", "select sum(basecube.msr9) as `sum(msr9)` FROM ", null, null,
-        getWhereForHourly2days("basecube", "c1_testfact5_raw_base"));
+      getWhereForHourly2days("basecube", "c1_testfact5_raw_base"));
     compareQueries(hqlQuery, expected);
   }
 
@@ -1005,6 +1005,53 @@ public class TestCubeRewriter extends TestQueryRewrite {
     for(String part: INCOMPLETE_PARTITION.errorFormat.split("%s")) {
       assertTrue(pruneCauses.getBrief().contains(part), pruneCauses.getBrief());
     }
+  }
+
+  /*
+   * The test is to check that query is rewritten successfully if there is missing entry in
+   * dataavailability service for the measure's tag
+   */
+  @Test
+  public void testQueryWithMeasureWithDataCompletenessTagWithDataAvailiability() throws ParseException,
+    LensException {
+    NoCandidateFactAvailableException ne;
+    PruneCauses.BriefAndDetailedError pruneCauses;
+    String hqlQuery;
+    String expected;
+
+    Configuration conf = getConf();
+    conf.setStrings(CubeQueryConfUtil.COMPLETENESS_CHECK_PART_COL, "dt");
+
+    conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
+
+    // 1. data completeness check applicable
+    ne = getLensExceptionInRewrite("select SUM(msr16) from basecube" + " where " + TWO_DAYS_RANGE, conf);
+    pruneCauses = ne.getJsonMessage();
+    assertEquals(pruneCauses.getBrief().substring(0, 10), INCOMPLETE_PARTITION.errorFormat.substring(0, 10),
+      pruneCauses.getBrief());
+
+    // 2. time outside data completeness check but missing partitions
+    ne = getLensExceptionInRewrite("select SUM(msr16) from basecube where " + TWO_DAYS_RANGE_BEFORE_4_DAYS, conf);
+    pruneCauses = ne.getJsonMessage();
+    assertEquals(pruneCauses.getBrief().substring(0, 10), MISSING_PARTITIONS.errorFormat.substring(0, 10),
+      pruneCauses.getBrief());
+
+
+    conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
+
+    // 3. query allowed on partial data although data incomplete
+    hqlQuery = rewrite("select SUM(msr16) from basecube" + " where " + TWO_DAYS_RANGE, conf);
+    expected = getExpectedQuery("basecube", "select sum(basecube.msr16)  as `sum(msr16)` FROM ", null, null,
+      getWhereForHourly2days("basecube", "c1_testfact2_raw_base"));
+    compareQueries(hqlQuery.toLowerCase(), expected.toLowerCase());
+
+    // 4. query allowed on partial data with missing partitions but outside data availability window
+    hqlQuery = rewrite("select SUM(msr16) from basecube" + " where " + TWO_DAYS_RANGE_BEFORE_4_DAYS, conf);
+    expected = getExpectedQuery("basecube", "select sum(basecube.msr16)  as `sum(msr16)` FROM ", null, null,
+      getWhereForUpdatePeriods("basecube", "c1_testfact2_raw_base",
+        DateUtils.addHours(getDateWithOffset(UpdatePeriod.DAILY, -6), -1),
+        getDateWithOffset(UpdatePeriod.DAILY, -4), Sets.newHashSet(UpdatePeriod.HOURLY)));
+    compareQueries(hqlQuery.toLowerCase(), expected.toLowerCase());
   }
 
   @Test

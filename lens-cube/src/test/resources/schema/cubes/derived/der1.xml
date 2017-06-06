@@ -33,6 +33,7 @@
     <measure_name>msr1</measure_name>
     <measure_name>msr11</measure_name>
     <measure_name>msr9</measure_name>
+    <measure_name>msr16</measure_name>
   </measure_names>
   <dim_attr_names>
     <attr_name>dim1</attr_name>
