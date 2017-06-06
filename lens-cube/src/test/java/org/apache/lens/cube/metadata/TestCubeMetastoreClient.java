@@ -82,6 +82,7 @@ public class TestCubeMetastoreClient {
   private static Set<CubeDimAttribute> moreCubeDimensions = Sets.newHashSet();
   private static Set<UpdatePeriod> hourlyAndDaily = Sets.newHashSet(HOURLY, DAILY);
   private static final String CUBE_NAME = "testMetastoreCube";
+  private static final String VIRTUAL_CUBE_NAME = "testMetastoreVirtualCube";
   private static final String CUBE_NAME_WITH_PROPS = "testMetastoreCubeWithProps";
   private static final String DERIVED_CUBE_NAME = "derivedTestMetastoreCube";
   private static final String DERIVED_CUBE_NAME_WITH_PROPS = "derivedTestMetastoreCubeWithProps";
@@ -136,6 +137,7 @@ public class TestCubeMetastoreClient {
   @BeforeClass
   public static void setup() throws HiveException, AlreadyExistsException, LensException {
     SessionState.start(conf);
+
     Database database = new Database();
     database.setName(TestCubeMetastoreClient.class.getSimpleName());
     Hive.get(conf).createDatabase(database);
@@ -149,6 +151,7 @@ public class TestCubeMetastoreClient {
   public static void teardown() throws Exception {
     // Drop the cube
     client.dropCube(CUBE_NAME);
+    client.dropCube(VIRTUAL_CUBE_NAME);
     client = CubeMetastoreClient.getInstance(conf);
     assertFalse(client.tableExists(CUBE_NAME));
 
@@ -1223,6 +1226,93 @@ public class TestCubeMetastoreClient {
     assertFalse(client.latestPartitionExists(cubeFact.getName(), c1, getDatePartitionKey()));
   }
 
+  @Test(priority = 2)
+  public void testVirtualCubeFact() throws Exception {
+
+    client.createCube(VIRTUAL_CUBE_NAME, cubeMeasures, cubeDimensions);
+    String sourceFactName = "testMetastoreFact1";
+    List<FieldSchema> factColumns = new ArrayList<>(cubeMeasures.size());
+    for (CubeMeasure measure : cubeMeasures) {
+      factColumns.add(measure.getColumn());
+    }
+
+    // add one dimension of the cube
+    factColumns.add(new FieldSchema("zipcode", "int", "zip"));
+
+    StorageTableDesc s1 = new StorageTableDesc(TextInputFormat.class, HiveIgnoreKeyTextOutputFormat.class,
+      datePartSingleton, datePartKeySingleton);
+
+    s1.getTblProps().put(MetastoreUtil.getStoragetableStartTimesKey(), "2015, now.day -10 days");
+    s1.getTblProps().put(MetastoreUtil.getStoragetableEndTimesKey(), "now.day - 1 day");
+
+    Map<String, Set<UpdatePeriod>> updatePeriods = getHashMap(c1, Sets.newHashSet(HOURLY, DAILY));
+    Map<String, StorageTableDesc> storageTables = getHashMap(c1, s1);
+
+    Map<String, String> sourceFactPropertiesMap = getHashMap("name1", "value1", "name2", "value2");
+    CubeFactTable sourceFact = new CubeFactTable(CUBE_NAME, sourceFactName, factColumns, updatePeriods, 10.0,
+      sourceFactPropertiesMap);
+
+    // create cube fact
+    client.createCubeFactTable(CUBE_NAME, sourceFactName, factColumns, updatePeriods, 10.0,
+      sourceFactPropertiesMap, storageTables);
+
+    String virtualFactName = "testMetastoreVirtualFact";
+
+    Map<String, String> virtualFactPropertiesMap = getHashMap("name1", "newvalue1");
+
+    CubeVirtualFactTable cubeVirtualFact = new CubeVirtualFactTable(VIRTUAL_CUBE_NAME, virtualFactName,
+      com.google.common.base.Optional.fromNullable(null), virtualFactPropertiesMap, sourceFact);
+
+    // create virtual cube fact
+    client.createVirtualFactTable(VIRTUAL_CUBE_NAME, virtualFactName, sourceFactName, null,
+      virtualFactPropertiesMap);
+    assertTrue(client.tableExists(virtualFactName));
+    Table virtualTbl = client.getHiveTable(virtualFactName);
+    assertTrue(client.isVirtualFactTable(virtualTbl));
+    assertTrue(client.isVirtualFactTableForCube(virtualTbl, VIRTUAL_CUBE_NAME));
+
+    //get virtual fact
+    assertTrue(client.getAllFacts(client.getCube(VIRTUAL_CUBE_NAME)).get(0).getName().equals(virtualFactName.trim()
+      .toLowerCase()));
+
+    CubeVirtualFactTable actualcubeVirtualFact = (CubeVirtualFactTable) (client.getFactTable(virtualFactName));
+    assertTrue(cubeVirtualFact.equals(actualcubeVirtualFact));
+
+    //alter virtual fact
+    Map<String, String> alterVirtualFactPropertiesMap = getHashMap("name1", "newvalue2", "name3", "value3");
+    cubeVirtualFact = new CubeVirtualFactTable(VIRTUAL_CUBE_NAME, virtualFactName,
+      com.google.common.base.Optional.fromNullable(null), alterVirtualFactPropertiesMap,
+      sourceFact);
+    client.alterVirtualCubeFactTable(cubeVirtualFact);
+    actualcubeVirtualFact = (CubeVirtualFactTable) client.getFactTable(virtualFactName);
+    assertEquals(actualcubeVirtualFact.getProperties().get("name1"), "newvalue2");
+    assertEquals(actualcubeVirtualFact.getProperties().get("name3"), "value3");
+    assertTrue(cubeVirtualFact.equals(actualcubeVirtualFact));
+
+    //alter source fact
+    FieldSchema newcol = new FieldSchema("newcol", "int", "new col for part");
+    sourceFact.alterColumn(newcol);
+    sourceFact.alterWeight(100);
+    client.alterCubeFactTable(sourceFact.getName(), sourceFact, storageTables, new HashMap<String, String>());
+    actualcubeVirtualFact = (CubeVirtualFactTable) client.getFactTable(virtualFactName);
+    assertTrue(actualcubeVirtualFact.getColumns().contains(newcol));
+    assertEquals(actualcubeVirtualFact.weight(), 100.0);
+    assertTrue(cubeVirtualFact.equals(actualcubeVirtualFact));
+
+    //drop source fact
+    client.dropFact(sourceFactName, true);
+
+    //drop virtual fact
+    try {
+      client.dropVirtualFact(virtualFactName);
+      fail("Expected 404");
+    } catch (LensException nfe) {
+      // PASS since virtual fact is already dropped when source fact was dropped
+    }
+
+    assertFalse(client.tableExists(virtualFactName));
+  }
+
   @Test(priority = 1)
   public void testSegmentation() throws Exception {
     String segmentName = "testMetastoreSegmentation";
@@ -1372,7 +1462,7 @@ public class TestCubeMetastoreClient {
     updatePeriodStoragePrefix.put(DAILY, c4);
     factTable.addStorage(c4, hourlyAndDaily, updatePeriodStoragePrefix);
     client.alterCubeFactTable(factName, factTable, storageTables, new HashMap<String, String>());
-    CubeFactTable altered2 = client.getCubeFact(factName);
+    CubeFactTable altered2 = client.getCubeFactTable(factName);
     assertTrue(client.tableExists(c1TableName));
     Table alteredC1Table = client.getTable(c1TableName);
     assertEquals(alteredC1Table.getInputFormatClass(), SequenceFileInputFormat.class);
@@ -1399,7 +1489,7 @@ public class TestCubeMetastoreClient {
     Map<String, StorageTableDesc> storageTableDescMap = new HashMap<>();
     storageTableDescMap.put(c3, s1);
     client.addStorage(altered2, c3, hourlyAndDaily, storageTableDescMap, updatePeriodStoragePrefix);
-    CubeFactTable altered3 = client.getCubeFact(factName);
+    CubeFactTable altered3 = client.getCubeFactTable(factName);
     assertTrue(altered3.getStorages().contains("C3"));
     assertTrue(altered3.getUpdatePeriods().get("C3").equals(hourlyAndDaily));
     String storageTableName = getFactOrDimtableStorageTableName(factName, c3);
@@ -1407,15 +1497,15 @@ public class TestCubeMetastoreClient {
     client.dropStorageFromFact(factName, c2);
     storageTableName = getFactOrDimtableStorageTableName(factName, c2);
     assertFalse(client.tableExists(storageTableName));
-    List<CubeFactTable> cubeFacts = client.getAllFacts(client.getCube(CUBE_NAME));
+    List<FactTable> cubeFacts = client.getAllFacts(client.getCube(CUBE_NAME));
     List<String> cubeFactNames = new ArrayList<>();
-    for (CubeFactTable cfact : cubeFacts) {
+    for (FactTable cfact : cubeFacts) {
       cubeFactNames.add(cfact.getName());
     }
     assertTrue(cubeFactNames.contains(factName.toLowerCase()));
     cubeFacts = client.getAllFacts(client.getCube(DERIVED_CUBE_NAME));
     cubeFactNames = new ArrayList<>();
-    for (CubeFactTable cfact : cubeFacts) {
+    for (FactTable cfact : cubeFacts) {
       cubeFactNames.add(cfact.getName());
     }
     assertTrue(cubeFactNames.contains(factName.toLowerCase()));
@@ -1425,7 +1515,7 @@ public class TestCubeMetastoreClient {
     assertFalse(client.tableExists(factName));
     cubeFacts = client.getAllFacts(cube);
     cubeFactNames = new ArrayList<>();
-    for (CubeFactTable cfact : cubeFacts) {
+    for (FactTable cfact : cubeFacts) {
       cubeFactNames.add(cfact.getName());
     }
     assertFalse(cubeFactNames.contains(factName.toLowerCase()));
@@ -1784,6 +1874,7 @@ public class TestCubeMetastoreClient {
     assertTimeline(endsAndHolesPartitionTimeline, storeAllPartitionTimeline, updatePeriod,
       getDateWithOffset(HOURLY, firstOffset), getDateWithOffset(HOURLY, latestOffset), holeDates);
   }
+
   private void assertTimeline(EndsAndHolesPartitionTimeline endsAndHolesPartitionTimeline,
     StoreAllPartitionTimeline storeAllPartitionTimeline, UpdatePeriod updatePeriod,
     Date first, Date latest, Date... holes) throws LensException {
@@ -2856,8 +2947,8 @@ public class TestCubeMetastoreClient {
   public void testCaching() throws HiveException, LensException {
     client = CubeMetastoreClient.getInstance(conf);
     CubeMetastoreClient client2 = CubeMetastoreClient.getInstance(new HiveConf(TestCubeMetastoreClient.class));
-    assertEquals(5, client.getAllCubes().size());
-    assertEquals(5, client2.getAllCubes().size());
+    assertEquals(6, client.getAllCubes().size());
+    assertEquals(6, client2.getAllCubes().size());
 
     defineCube("testcache1", "testcache2", "derived1", "derived2");
     client.createCube("testcache1", cubeMeasures, cubeDimensions);
@@ -2866,18 +2957,18 @@ public class TestCubeMetastoreClient {
     client.createDerivedCube("testcache2", "derived2", measures, dimensions, CUBE_PROPERTIES, 0L);
     assertNotNull(client.getCube("testcache1"));
     assertNotNull(client2.getCube("testcache1"));
-    assertEquals(9, client.getAllCubes().size());
-    assertEquals(9, client2.getAllCubes().size());
+    assertEquals(10, client.getAllCubes().size());
+    assertEquals(10, client2.getAllCubes().size());
 
     client2 = CubeMetastoreClient.getInstance(conf);
-    assertEquals(9, client.getAllCubes().size());
-    assertEquals(9, client2.getAllCubes().size());
+    assertEquals(10, client.getAllCubes().size());
+    assertEquals(10, client2.getAllCubes().size());
 
     conf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, false);
     client = CubeMetastoreClient.getInstance(conf);
     client2 = CubeMetastoreClient.getInstance(conf);
-    assertEquals(9, client.getAllCubes().size());
-    assertEquals(9, client2.getAllCubes().size());
+    assertEquals(10, client.getAllCubes().size());
+    assertEquals(10, client2.getAllCubes().size());
     defineCube("testcache3", "testcache4", "dervied3", "derived4");
     client.createCube("testcache3", cubeMeasures, cubeDimensions);
     client.createCube("testcache4", cubeMeasures, cubeDimensions, CUBE_PROPERTIES);
@@ -2885,8 +2976,8 @@ public class TestCubeMetastoreClient {
     client.createDerivedCube("testcache4", "derived4", measures, dimensions, CUBE_PROPERTIES, 0L);
     assertNotNull(client.getCube("testcache3"));
     assertNotNull(client2.getCube("testcache3"));
-    assertEquals(13, client.getAllCubes().size());
-    assertEquals(13, client2.getAllCubes().size());
+    assertEquals(14, client.getAllCubes().size());
+    assertEquals(14, client2.getAllCubes().size());
     conf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, true);
     client = CubeMetastoreClient.getInstance(conf);
   }

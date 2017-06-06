@@ -42,6 +42,7 @@ public class SchemaTraverser implements Runnable {
     types.put("cubes/derived", XDerivedCube.class);
     types.put("dimensions", XDimension.class);
     types.put("facts", XFactTable.class);
+    types.put("facts/virtual", XVirtualFactTable.class);
     types.put("dimtables", XDimensionTable.class);
     types.put("dimensiontables", XDimensionTable.class);
     types.put("dimensiontables", XDimensionTable.class);

@@ -323,7 +323,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   public void dropAllStoragesOfFact(LensSessionHandle sessionid, String factName) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
       CubeMetastoreClient msClient = getClient(sessionid);
-      CubeFactTable tab = msClient.getFactTable(factName);
+      CubeFactTable tab = msClient.getCubeFactTable(factName);
       int total = tab.getStorages().size();
       int i = 0;
       List<String> storageNames = new ArrayList<>(tab.getStorages());
@@ -354,7 +354,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   }
 
   @Override
-  public XFactTable getFactTable(LensSessionHandle sessionid, String fact) throws LensException {
+  public XFact getFactTable(LensSessionHandle sessionid, String fact) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
       return getClient(sessionid).getXFactTable(fact);
     }
@@ -371,15 +371,15 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
 
 
   @Override
-  public void createFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException {
+  public void createFactTable(LensSessionHandle sessionid, XFact fact) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
-      getClient(sessionid).createCubeFactTable(fact);
+      getClient(sessionid).createFactTable(fact);
       log.info("Created fact table " + fact.getName());
     }
   }
 
   @Override
-  public void updateFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException {
+  public void updateFactTable(LensSessionHandle sessionid, XFact fact) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
       getClient(sessionid).alterCubeFactTable(fact);
       log.info("Updated fact table " + fact.getName());
@@ -432,9 +432,9 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       if (cubeName != null && fact == null) {
         throw new LensException("Could not get table: " + cubeName + " as a cube");
       }
-      Collection<CubeFactTable> facts = client.getAllFacts(fact);
+      Collection<FactTable> facts = client.getAllFacts(fact);
       List<String> factNames = new ArrayList<>(facts.size());
-      for (CubeFactTable cft : facts) {
+      for (FactTable cft : facts) {
         factNames.add(cft.getName());
       }
       return factNames;
@@ -468,7 +468,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
         throw new NotFoundException("Not a fact table " + fact);
       }
 
-      CubeFactTable cft = msClient.getFactTable(fact);
+      CubeFactTable cft = msClient.getCubeFactTable(fact);
       if (cft != null) {
         return new ArrayList<>(cft.getStorages());
       } else {
@@ -481,7 +481,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
     throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)) {
       CubeMetastoreClient msClient = getClient(sessionid);
-      CubeFactTable factTable = msClient.getFactTable(fact);
+      FactTable factTable = msClient.getFactTable(fact);
       Set<UpdatePeriod> updatePeriods = factTable.getUpdatePeriods().get(storageName);
       XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
         msClient.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(fact, storageName)));
@@ -520,7 +520,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       CubeMetastoreClient msClient = getClient(sessionid);
       XStorageTables tables = new XStorageTables();
       tables.getStorageTable().add(storageTable);
-      msClient.addStorage(msClient.getFactTable(fact), storageTable.getStorageName(), updatePeriods,
+      msClient.addStorage(msClient.getCubeFactTable(fact), storageTable.getStorageName(), updatePeriods,
         JAXBUtils.tableDescPrefixMapFromXStorageTables(tables),
         JAXBUtils.storageTablePrefixMapOfStorage(tables).get(storageTable.getStorageName()));
       log.info("Added storage " + storageTable.getStorageName() + ":" + updatePeriods + " for fact " + fact);
@@ -541,7 +541,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
   private CubeFactTable checkFactStorage(LensSessionHandle sessionid, String fact, String storage)
     throws HiveException, LensException {
     CubeMetastoreClient client = getClient(sessionid);
-    CubeFactTable factTable = client.getCubeFact(fact);
+    CubeFactTable factTable = client.getCubeFactTable(fact);
     client.verifyStorageExists(factTable, storage);
     return factTable;
   }
@@ -550,7 +550,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
     throws LensException {
     Set<String> storageTableNames = new HashSet<>();
     if (getClient(sessionHandle).isFactTable(fact)) {
-      CubeFactTable cft = getClient(sessionHandle).getCubeFact(fact);
+      CubeFactTable cft = getClient(sessionHandle).getCubeFactTable(fact);
       Map<UpdatePeriod, String> storageMap = cft.getStoragePrefixUpdatePeriodMap().get(storageName);
       for (Map.Entry entry : storageMap.entrySet()) {
         storageTableNames.add(MetastoreUtil.getStorageTableName(fact, Storage.getPrefix((String) entry.getValue())));

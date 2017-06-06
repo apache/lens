@@ -37,7 +37,7 @@ public class TestLensSchemaCommands extends LensCLITest {
       assertTrue(((String) execute("show databases")).contains(dbName));
       execute("show storages", "local");
       execute("show dimensions", "test_detail\ntest_dim");
-      execute("show cubes", "sample_cube\ncube_with_no_weight_facts");
+      execute("show cubes", "virtualcube\nsample_cube\ncube_with_no_weight_facts");
       assertTrue(((String) execute("show dimtables")).contains("dim_table"));
       assertTrue(((String) execute("show facts")).contains("fact1"));
       execute("show segmentations", "seg1");

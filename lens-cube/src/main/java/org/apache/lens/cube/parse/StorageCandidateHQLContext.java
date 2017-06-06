@@ -19,6 +19,8 @@
 package org.apache.lens.cube.parse;
 
 
+import static org.apache.lens.cube.metadata.MetastoreConstants.VIRTUAL_FACT_FILTER;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -128,7 +130,15 @@ public class StorageCandidateHQLContext extends DimHQLContext {
   @Override
   protected void setMissingExpressions() throws LensException {
     setFrom(getFromTable());
-    setWhere(genWhereClauseWithDimPartitions(getWhere()));
+    String whereString = genWhereClauseWithDimPartitions(getWhere());
+    StringBuilder whereStringBuilder = (whereString != null) ? new StringBuilder(whereString) :  new StringBuilder();
+
+    if (this.storageCandidate.getFact().getProperties().get(VIRTUAL_FACT_FILTER) != null) {
+      appendWhereClause(whereStringBuilder,
+        this.storageCandidate.getFact().getProperties().get(VIRTUAL_FACT_FILTER), whereString != null);
+    }
+    setWhere(whereStringBuilder.length() == 0 ? null : whereStringBuilder.toString());
+
     if (isRoot()) {
       if (Objects.equals(getStorageCandidate(), getCubeQueryContext().getPickedCandidate())) {
         updateAnswerableSelectColumns();

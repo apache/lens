@@ -514,7 +514,7 @@ public class LensClient implements AutoCloseable {
     return mc.updateDimension(dimName, dimSpec);
   }
 
-  public XFactTable getFactTable(String factName) {
+  public XFact getFactTable(String factName) {
     return mc.getFactTable(factName);
   }
 

@@ -84,12 +84,12 @@ class CandidateTableResolver implements ContextRewriter {
 
   private void populateCandidateTables(CubeQueryContext cubeql) throws LensException {
     if (cubeql.getCube() != null) {
-      List<CubeFactTable> factTables = cubeql.getMetastoreClient().getAllFacts(cubeql.getCube());
+      List<FactTable> factTables = cubeql.getMetastoreClient().getAllFacts(cubeql.getCube());
       if (factTables.isEmpty()) {
         throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
             cubeql.getCube().getName() + " does not have any facts");
       }
-      for (CubeFactTable fact : factTables) {
+      for (FactTable fact : factTables) {
         if (fact.getUpdatePeriods().isEmpty()) {
           log.info("Not considering fact: {} as it has no update periods", fact.getName());
         } else {
@@ -99,6 +99,7 @@ class CandidateTableResolver implements ContextRewriter {
           }
         }
       }
+
       log.info("Populated storage candidates: {}", cubeql.getCandidates());
       List<SegmentationCandidate> segmentationCandidates = Lists.newArrayList();
       for (Segmentation segmentation : cubeql.getMetastoreClient().getAllSegmentations(cubeql.getCube())) {
@@ -211,7 +212,8 @@ class CandidateTableResolver implements ContextRewriter {
         if (key.contains(MetastoreConstants.FACT_COL_START_TIME_PFX)) {
           String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_START_TIME_PFX);
           if (factCol.equals(propCol)) {
-            startTime = ((StorageCandidate) table).getFact().getDateFromProperty(key, false, true);
+            startTime = MetastoreUtil.getDateFromProperty(((StorageCandidate) table).getFact().getProperties().get(key),
+              false, true);
           }
         }
       }
@@ -226,7 +228,8 @@ class CandidateTableResolver implements ContextRewriter {
         if (key.contains(MetastoreConstants.FACT_COL_END_TIME_PFX)) {
           String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_END_TIME_PFX);
           if (factCol.equals(propCol)) {
-            endTime = ((StorageCandidate) table).getFact().getDateFromProperty(key, false, true);
+            endTime = MetastoreUtil.getDateFromProperty(((StorageCandidate) table).getFact().getProperties().get(key),
+              false, true);
           }
         }
       }

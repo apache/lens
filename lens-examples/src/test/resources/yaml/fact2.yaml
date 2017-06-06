@@ -13,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+name: fact2
+cubeName: sample_cube
 columns:
   dim1: type: INT
   dim3: type: INT
@@ -32,6 +34,4 @@ storageTables:
       external: true
       tableLocation: /tmp/examples/fact2_local
       fieldDelimiter: ,
-name: fact2
-cubeName: sample_cube
 weight: 200.0

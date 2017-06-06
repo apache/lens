@@ -18,8 +18,6 @@
  */
 package org.apache.lens.cube.metadata;
 
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
@@ -38,10 +36,10 @@ public class CubeFactTableTest {
 
   @DataProvider(name = "properties")
   public Object[][] factProperties() throws LensException {
-    String minus1DaysRelative = "now -1 days";
-    String minus2DaysRelative = "now -2 days";
-    String plus1DaysRelative = "now +1 days";
-    String plus2DaysRelative = "now +2 days";
+    String minus1DaysRelative = "now.day -1 days";
+    String minus2DaysRelative = "now.day -2 days";
+    String plus1DaysRelative = "now.day +1 days";
+    String plus2DaysRelative = "now.day +2 days";
 
     String minus1DaysAbsolute = DateUtil.relativeToAbsolute(minus1DaysRelative, now);
     String minus2DaysAbsolute = DateUtil.relativeToAbsolute(minus2DaysRelative, now);
@@ -68,8 +66,6 @@ public class CubeFactTableTest {
     when(cubeFactTable.now()).thenReturn(now);
 
     when(cubeFactTable.getProperties()).thenReturn(properties);
-
-    when(cubeFactTable.getDateFromProperty(anyString(), anyBoolean(), anyBoolean())).thenCallRealMethod();
 
     when(cubeFactTable.getRelativeStartTime()).thenCallRealMethod();
     when(cubeFactTable.getAbsoluteStartTime()).thenCallRealMethod();

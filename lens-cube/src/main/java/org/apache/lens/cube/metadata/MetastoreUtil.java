@@ -49,6 +49,9 @@ import org.antlr.runtime.CommonToken;
 
 import com.google.common.collect.Sets;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class MetastoreUtil {
   private MetastoreUtil() {
 
@@ -345,7 +348,7 @@ public class MetastoreUtil {
   }
 
   // //////////////////////////
-  // Fact propertes ///
+  // Fact properties ///
   // /////////////////////////
   public static String getFactStorageListKey(String name) {
     return getFactKeyPrefix(name) + STORAGE_LIST_SFX;
@@ -361,6 +364,10 @@ public class MetastoreUtil {
 
   public static String getFactCubeNameKey(String name) {
     return getFactKeyPrefix(name) + CUBE_NAME_SFX;
+  }
+
+  public static String getSourceFactNameKey(String name) {
+    return getFactKeyPrefix(name) + SOURCE_NAME_SFX;
   }
 
   public static String getValidColumnsKey(String name) {
@@ -398,6 +405,23 @@ public class MetastoreUtil {
   // //////////////////////////
   // Utils ///
   // /////////////////////////
+
+  public static Date getDateFromProperty(String prop, boolean relative, boolean start) {
+    try {
+      if (StringUtils.isNotBlank(prop)) {
+        if (relative) {
+          return DateUtil.resolveRelativeDate(prop, new Date());
+        } else {
+          return DateUtil.resolveAbsoluteDate(prop);
+        }
+      }
+    } catch (LensException e) {
+      log.error("unable to parse {} {} date: {}", relative ? "relative" : "absolute", start ? "start" : "end", prop);
+    }
+    return start ? DateUtil.MIN_DATE : DateUtil.MAX_DATE;
+  }
+
+
   public static <E extends Named> String getNamedStr(Collection<E> set) {
     if (set == null) {
       return "";

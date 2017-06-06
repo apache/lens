@@ -22,7 +22,7 @@ import java.io.File;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.metastore.XFactTable;
+import org.apache.lens.api.metastore.XFact;
 import org.apache.lens.api.metastore.XPartition;
 import org.apache.lens.api.metastore.XStorageTableElement;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
@@ -39,7 +39,7 @@ import lombok.NonNull;
 @Component
 @UserDocumentation(title = "Commands for Facts Management",
   description = "These command provide CRUD for facts, associated storages, and fact partitions")
-public class LensFactCommands extends LogicalTableCrudCommand<XFactTable> {
+public class LensFactCommands extends LogicalTableCrudCommand<XFact> {
 
   /**
    * Show facts.
@@ -352,7 +352,7 @@ public class LensFactCommands extends LogicalTableCrudCommand<XFactTable> {
   }
 
   @Override
-  protected XFactTable doRead(String name) {
+  protected XFact doRead(String name) {
     return getClient().getFactTable(name);
   }
 

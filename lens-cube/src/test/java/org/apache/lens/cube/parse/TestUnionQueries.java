@@ -372,7 +372,7 @@ public class TestUnionQueries extends TestQueryRewrite {
         FAIL_QUERY_ON_PARTIAL_DATA, false);
 
     //If not beginning of month. Expecting this to pass at beginning of every month (example April 01 00:00)
-    if (!THREE_MONTHS_RANGE_UPTO_DAYS.equals(THREE_MONTHS_RANGE_UPTO_MONTH)) {
+    if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) != 1) {
       NoCandidateFactAvailableException e = getLensExceptionInRewrite("select count(msr4) from testCube where "
           + THREE_MONTHS_RANGE_UPTO_DAYS, conf);
       Set<Map.Entry<Candidate, List<CandidateTablePruneCause>>> causes =

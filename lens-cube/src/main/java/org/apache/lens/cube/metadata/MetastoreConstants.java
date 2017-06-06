@@ -49,6 +49,7 @@ public final class MetastoreConstants {
   public static final String FACT_KEY_PFX = "cube.fact.";
   public static final String UPDATE_PERIOD_SFX = ".updateperiods";
   public static final String CUBE_NAME_SFX = ".cubename";
+  public static final String SOURCE_NAME_SFX = ".source";
   public static final String VALID_COLUMNS_SFX = ".valid.columns";
   public static final String FACT_AGGREGATED_PROPERTY = "cube.fact.is.aggregated";
   public static final String FACT_ABSOLUTE_START_TIME = "cube.fact.absolute.start.time";
@@ -58,6 +59,7 @@ public final class MetastoreConstants {
   public static final String FACT_COL_START_TIME_PFX = "cube.fact.col.start.time.";
   public static final String FACT_COL_END_TIME_PFX = "cube.fact.col.end.time.";
   public static final String FACT_DATA_COMPLETENESS_TAG = "cube.fact.datacompleteness.tag";
+  public static final String VIRTUAL_FACT_FILTER = "cube.fact.query.where.filter";
 
   // Segmentation constants
   public static final String SEGMENTATION_KEY_PFX = "cube.segmentation.internal.";
