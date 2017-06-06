@@ -830,6 +830,11 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
         cand = iter.next();
         log.info("Available Candidates:{}, picking up Candidate: {} for querying", candidates, cand);
         pickedCandidate = cand;
+        // Answerable common measures in JoinCandidate should be answered by one of the children, otherwise
+        // measure numbers will be added multiple times in the final union query.
+        Set<Integer> measureIndices = getQueriedPhrases().stream().filter(x -> x.hasMeasures(this))
+          .map(QueriedPhraseContext::getPosition).collect(toSet());
+        pickedCandidate.decideMeasurePhrasesToAnswer(measureIndices);
       }
       if (pickedCandidate == null) {
         throwNoCandidateFactException();

@@ -30,6 +30,7 @@ import org.apache.lens.cube.metadata.TimeRange;
 import org.apache.lens.server.api.error.LensException;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.Getter;
 
 /**
@@ -175,6 +176,18 @@ public class JoinCandidate implements Candidate {
       i.set(i.next().explode());
     }
     return this;
+  }
+
+  @Override
+  public Set<Integer> decideMeasurePhrasesToAnswer(Set<Integer> measureIndices) throws LensException {
+    Set<Integer> remaining = Sets.newHashSet(measureIndices);
+    Set<Integer> allCovered = Sets.newHashSet();
+    for (Candidate child : children) {
+      Set<Integer> covered = child.decideMeasurePhrasesToAnswer(remaining);
+      allCovered.addAll(covered);
+      remaining = Sets.difference(remaining, covered);
+    }
+    return allCovered;
   }
 
   private String getToString() {
