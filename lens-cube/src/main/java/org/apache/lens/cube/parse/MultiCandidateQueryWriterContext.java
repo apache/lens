@@ -18,8 +18,11 @@
  */
 package org.apache.lens.cube.parse;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.server.api.error.LensException;
 
 import com.google.common.collect.Lists;
@@ -89,5 +92,13 @@ public class MultiCandidateQueryWriterContext implements QueryWriterContext {
   public UnionQueryWriter toQueryWriter() throws LensException {
     List<StorageCandidateHQLContext> leafWriterContexts = getLeafQueryWriterContexts();
     return new UnionQueryWriter(leafWriterContexts, getCubeQueryContext());
+  }
+
+  public Map<Dimension, CandidateDim> getDimsToQuery() {
+    Map<Dimension, CandidateDim> allDimsQueried = new HashMap<>();
+    for (QueryWriterContext ctx : children) {
+      allDimsQueried.putAll(ctx.getDimsToQuery());
+    }
+    return allDimsQueried;
   }
 }

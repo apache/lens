@@ -147,7 +147,7 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
     compareContains(outerGroupBy, rewrittenQuery);
   }
 
-  @Test(invocationCount = 100)
+  @Test
   public void testFinalCandidateRewrittenQuery() throws ParseException, LensException {
     try {
       // Query with non projected measure in having clause.

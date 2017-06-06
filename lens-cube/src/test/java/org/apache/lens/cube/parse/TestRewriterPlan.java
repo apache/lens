@@ -71,6 +71,8 @@ public class TestRewriterPlan extends TestQueryRewrite {
       + " cubecity.name != \"XYZ\" and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by cubecity.name limit 50",
       conf);
     ctx.toHQL();
+    // One dimension table queried
+    Assert.assertEquals(ctx.getQueryWriterContext().getDimsToQuery().size(), 1);
     RewriterPlan plan = new RewriterPlan(Collections.singleton(ctx));
     Assert.assertNotNull(plan);
     Assert.assertFalse(plan.getTablesQueried().isEmpty());
