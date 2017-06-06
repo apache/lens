@@ -443,7 +443,7 @@ public class CubeMetastoreClient {
         if (get(timeLineKey) == null) {
           loadTimeLines(fact, storage, timeLineKey);
         }
-        log.info("timeline for {} is: {}", storage, get(timeLineKey));
+        log.debug("timeline for {} is: {}", storage, get(timeLineKey));
         // return the final value from memory
         return get(timeLineKey);
         // RESUME CHECKSTYLE CHECK DoubleCheckedLockingCheck

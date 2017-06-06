@@ -729,6 +729,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   @Override
   public boolean isDimAttributeEvaluable(String dim) throws LensException {
+
     return getCubeQueryContext().getDeNormCtx()
       .addRefUsage(getCubeQueryContext(), this, dim, getCubeQueryContext().getCube().getName());
   }
@@ -954,5 +955,11 @@ public class StorageCandidate implements Candidate, CandidateTable {
     DefaultQueryAST ast = DefaultQueryAST.fromStorageCandidate(null, getCubeQueryContext());
     ast.copyFrom(getCubeQueryContext());
     return new StorageCandidateHQLContext(this, Maps.newHashMap(dimsToQuery), ast, rootCubeQueryContext);
+  }
+
+  @Override
+  public Set<Integer> decideMeasurePhrasesToAnswer(Set<Integer> measureIndices) {
+    answerableMeasurePhraseIndices.retainAll(measureIndices);
+    return answerableMeasurePhraseIndices;
   }
 }
