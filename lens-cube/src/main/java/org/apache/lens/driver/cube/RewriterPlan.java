@@ -45,10 +45,10 @@ public final class RewriterPlan extends DriverQueryPlan {
 
   @SuppressWarnings("unchecked") // required for (Set<FactPartition>) casting
   void extractPlan(Collection<CubeQueryContext> cubeQueries) {
-
     for (CubeQueryContext ctx : cubeQueries) {
-      if (ctx.getPickedDimTables() != null && !ctx.getPickedDimTables().isEmpty()) {
-        for (CandidateDim dim : ctx.getPickedDimTables()) {
+      if (ctx.getQueryWriterContext().getDimsToQuery() != null
+          && !ctx.getQueryWriterContext().getDimsToQuery().isEmpty()) {
+        for (CandidateDim dim : ctx.getQueryWriterContext().getDimsToQuery().values()) {
           addTablesQueried(dim.getStorageTable());
           if (partitions.get(dim.getName()) == null || partitions.get(dim.getName()).isEmpty()) {
             // puts storage table to latest part

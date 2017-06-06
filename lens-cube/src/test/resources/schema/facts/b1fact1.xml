@@ -19,7 +19,7 @@
   under the License.
 
 -->
-<x_fact_table name="b1fact1" cube_name="b1cube" weight="5.0" xmlns="uri:lens:cube:0.1">
+<x_fact_table name="b1fact1" cube_name="b1cube" weight="5.1" xmlns="uri:lens:cube:0.1">
   <columns>
     <column name="zipcode" _type="int" comment="zip"/>
     <column name="cityid" _type="int" comment="city id"/>

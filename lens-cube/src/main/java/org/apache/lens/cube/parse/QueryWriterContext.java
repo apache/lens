@@ -18,6 +18,9 @@
  */
 package org.apache.lens.cube.parse;
 
+import java.util.Map;
+
+import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.server.api.error.LensException;
 
 /**
@@ -31,4 +34,5 @@ public interface QueryWriterContext {
   QueryAST getQueryAst();
   void updateFromString() throws LensException;
   QueryWriter toQueryWriter() throws LensException;
+  Map<Dimension, CandidateDim> getDimsToQuery();
 }
