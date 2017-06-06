@@ -550,15 +550,14 @@ class ExpressionResolver implements ContextRewriter {
             }
             // Remove expressions for which denormalized columns are no more reachable
             esc.getDeNormCtx().pruneReferences(cubeql);
-            for (String table : esc.getDeNormCtx().getTableToRefCols().keySet()) {
-              Set<String> nonReachableFields = esc.getDeNormCtx().getNonReachableReferenceFields(table);
-              if (!nonReachableFields.isEmpty()) {
-                log.info("Removing expression {} as columns {} are not available", esc, nonReachableFields);
-                iterator.remove();
-                removedEsc.add(esc);
-                removed = true;
-                break;
-              }
+            if (!esc.getDeNormCtx().getTableToRefCols().isEmpty()
+              && esc.getDeNormCtx().getTableToRefCols().keySet().stream()
+              .map(esc.getDeNormCtx()::getNonReachableReferenceFields).noneMatch(Set::isEmpty)) {
+              log.info("Removing expression {} as all tables have non reachable fields", esc);
+              iterator.remove();
+              removedEsc.add(esc);
+              removed = true;
+              break;
             }
             if (removed) {
               continue;
@@ -662,19 +661,15 @@ class ExpressionResolver implements ContextRewriter {
         for (Map.Entry<String, Set<ExpressionContext>> ecEntry : exprCtx.allExprsQueried.entrySet()) {
           String expr = ecEntry.getKey();
           Set<ExpressionContext> ecSet = ecEntry.getValue();
-          for (ExpressionContext ec : ecSet) {
-            if (ec.getSrcTable().getName().equals(cubeql.getCube().getName())) {
-              for (Iterator<Candidate> sItr = cubeql.getCandidates().iterator(); sItr.hasNext();) {
-                Candidate cand = sItr.next();
-                if (!cand.isExpressionEvaluable(ec)) {
-                  log.info("Not considering Candidate :{} as {} is not evaluable", cand, ec.exprCol.getName());
-                  sItr.remove();
-                  cubeql.addCandidatePruningMsg(cand,
-                      CandidateTablePruneCause.expressionNotEvaluable(ec.exprCol.getName()));
-                }
-              }
+          cubeql.getCandidates().removeIf(x-> {
+            if (ecSet.stream().noneMatch(x::isExpressionEvaluable)) {
+              log.info("Not considering Candidate :{} as {} is not evaluable", x, expr);
+              cubeql.addCandidatePruningMsg(x,
+                CandidateTablePruneCause.expressionNotEvaluable(expr));
+              return true;
             }
-          }
+            return false;
+          });
         }
       }
       // prune candidate dims without any valid expressions
