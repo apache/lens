@@ -178,7 +178,7 @@
       <expr_spec expr="cubecity.name"/>
     </expression>
     <expression _type="string" name="citysegmsr1" display_string="city segmsr1" description="city segmsr1 ">
-      <expr_spec expr="sum(case when cubecity.name = 'foo' then segmsr1 end)"/>
+      <expr_spec expr="sum(case when singlecolchainfield = 'foo' then segmsr1 end)"/>
     </expression>
     <expression _type="double" name="msr8" display_string="Sixth Msr" description="measure expression">
       <expr_spec expr="msr2 + msr3"/>
