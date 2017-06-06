@@ -674,11 +674,13 @@ class CandidateTableResolver implements ContextRewriter {
     if (colSet == null || colSet.isEmpty()) {
       return true;
     }
+    boolean isEvaluable = false;
     for (QueriedPhraseContext qur : colSet) {
       if (sc.isPhraseAnswerable(qur)) {
-        return true;
+        isEvaluable = true;
+        continue;
       }
     }
-    return false;
+    return isEvaluable;
   }
 }
