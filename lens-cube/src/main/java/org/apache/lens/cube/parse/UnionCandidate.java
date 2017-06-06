@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.FactPartition;
@@ -154,14 +155,18 @@ public class UnionCandidate implements Candidate {
   }
 
   @Override
-  public double getCost() {
+  public OptionalDouble getCost() {
     double cost = 0.0;
     for (TimeRange timeRange : getCubeQueryContext().getTimeRanges()) {
       for (Map.Entry<Candidate, TimeRange> entry : getTimeRangeSplit(timeRange).entrySet()) {
-        cost += entry.getKey().getCost() * entry.getValue().milliseconds() / timeRange.milliseconds();
+        if (entry.getKey().getCost().isPresent()) {
+          cost +=  entry.getKey().getCost().getAsDouble() *entry.getValue().milliseconds() / timeRange.milliseconds();
+        } else {
+          return OptionalDouble.empty();
+        }
       }
     }
-    return cost;
+    return OptionalDouble.of(cost);
   }
 
   @Override
@@ -256,7 +261,9 @@ public class UnionCandidate implements Candidate {
    * @return
    */
   private Map<Candidate, TimeRange> splitTimeRangeForChildren(TimeRange timeRange) {
-    children.sort(comparing(Candidate::getCost));
+    if (children.stream().map(Candidate::getCost).allMatch(OptionalDouble::isPresent)) {
+      children.sort(comparing(x -> x.getCost().getAsDouble()));
+    }
     Map<Candidate, TimeRange> childrenTimeRangeMap = new HashMap<>();
     // Sorted list based on the weights.
     Set<TimeRange> ranges = new HashSet<>();

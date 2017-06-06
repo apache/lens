@@ -149,6 +149,7 @@ public class CubeQueryRewriter {
     DenormalizationResolver denormResolver = new DenormalizationResolver();
     CandidateTableResolver candidateTblResolver = new CandidateTableResolver();
     StorageTableResolver storageTableResolver = new StorageTableResolver(conf);
+    LightestFactResolver lightestFactResolver = new LightestFactResolver();
 
     // Phase 1 of exprResolver: Resolve expressions
     rewriters.add(exprResolver);
@@ -185,7 +186,7 @@ public class CubeQueryRewriter {
       rewriters.add(exprResolver);
       // Pick the least cost combination(s) (and prune others) out of a set of combinations produced
       // by CandidateCoveringSetsResolver
-      rewriters.add(new LightestFactResolver());
+      rewriters.add(lightestFactResolver);
     }
 
     // Phase 2 of storageTableResolver: resolve storage table partitions.
@@ -206,11 +207,10 @@ public class CubeQueryRewriter {
     // Phase 2 of exprResolver : Prune candidate facts without any valid expressions
     rewriters.add(exprResolver);
 
-    if (!lightFactFirst) {
-      // Pick the least cost combination(s) (and prune others) out of a set of combinations produced
-      // by CandidateCoveringSetsResolver
-      rewriters.add(new LightestFactResolver());
-    }
+    // Pick the least cost combination(s) (and prune others) out of a set of combinations produced
+    // by CandidateCoveringSetsResolver
+    rewriters.add(lightestFactResolver);
+
     // if two combinations have the same least weight/cost, then the combination with least number of time partitions
     // queried will be picked. Rest of the combinations will be pruned
     rewriters.add(new LeastPartitionResolver());

@@ -37,6 +37,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
@@ -238,8 +239,20 @@ public class SegmentationCandidate implements Candidate {
   }
 
   @Override
-  public double getCost() {
-    return segmentation.weight();
+  public OptionalDouble getCost() {
+    if (areCandidatesPicked()) {
+      double cost = 0.0;
+      for (Candidate candidate : getChildren()) {
+        if (candidate.getCost().isPresent()) {
+          cost += candidate.getCost().getAsDouble();
+        } else {
+          return OptionalDouble.empty();
+        }
+      }
+      return OptionalDouble.of(cost);
+    } else {
+      return OptionalDouble.empty();
+    }
   }
 
   @Override
@@ -281,7 +294,7 @@ public class SegmentationCandidate implements Candidate {
     // I can't ask my children to check this context for evaluability.
     return cubeStream()
       .map(cube -> cube.getExpressionByName(expr.getExprCol().getName()))
-      .allMatch(Predicate.isEqual(expr.getExprCol()));
+      .allMatch(Objects::nonNull);
   }
 
   private boolean areCandidatesPicked() {

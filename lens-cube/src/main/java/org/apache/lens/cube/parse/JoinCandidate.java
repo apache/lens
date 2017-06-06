@@ -72,8 +72,16 @@ public class JoinCandidate implements Candidate {
   }
 
   @Override
-  public double getCost() {
-    return children.stream().mapToDouble(Candidate::getCost).sum();
+  public OptionalDouble getCost() {
+    double cost = 0;
+    for (Candidate candidate : getChildren()) {
+      if (candidate.getCost().isPresent()) {
+        cost += candidate.getCost().getAsDouble();
+      } else {
+        return OptionalDouble.empty();
+      }
+    }
+    return OptionalDouble.of(cost);
   }
 
   @Override

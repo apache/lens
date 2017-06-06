@@ -105,7 +105,7 @@ public interface Candidate {
   /**
    * @return the cost of this candidate
    */
-  double getCost();
+  OptionalDouble getCost();
 
   /**
    * Returns true if this candidate contains the given candidate
