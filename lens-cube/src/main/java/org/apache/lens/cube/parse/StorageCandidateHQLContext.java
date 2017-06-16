@@ -50,7 +50,7 @@ public class StorageCandidateHQLContext extends DimHQLContext {
     this.storageCandidate = storageCandidate;
     this.rootCubeQueryContext = rootCubeQueryContext;
     getCubeQueryContext().addRangeClauses(this);
-    if (!isRoot()) {
+    if (!Objects.equals(getStorageCandidate(), rootCubeQueryContext.getPickedCandidate())) {
       getQueryAst().setHavingAST(null);
     }
   }
