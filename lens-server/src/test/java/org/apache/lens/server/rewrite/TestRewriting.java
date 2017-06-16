@@ -25,6 +25,7 @@ import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
+import org.apache.lens.cube.parse.QueryWriterContext;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
@@ -55,6 +56,7 @@ import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.Maps;
 
 /**
  * The Class TestRewriting.
@@ -96,24 +98,18 @@ public class TestRewriting {
 
   private CubeQueryRewriter getMockedRewriter() throws ParseException, LensException, HiveException {
     CubeQueryRewriter mockwriter = Mockito.mock(CubeQueryRewriter.class);
-    Mockito.when(mockwriter.rewrite(Matchers.any(String.class))).thenAnswer(new Answer<CubeQueryContext>() {
-      @Override
-      public CubeQueryContext answer(InvocationOnMock invocation) throws Throwable {
-        Object[] args = invocation.getArguments();
-        // return query for first NUM_SUCCESS calls and fail later
-        if (++i <= NUM_SUCCESS) {
-          return getMockedCubeContext((String) args[0]);
-        } else {
-          throw new RuntimeException("Mock fail");
-        }
+    Mockito.when(mockwriter.rewrite(Matchers.any(String.class))).thenAnswer(invocation -> {
+      Object[] args = invocation.getArguments();
+      // return query for first NUM_SUCCESS calls and fail later
+      if (++i <= NUM_SUCCESS) {
+        return getMockedCubeContext((String) args[0]);
+      } else {
+        throw new RuntimeException("Mock fail");
       }
     });
-    Mockito.when(mockwriter.rewrite(Matchers.any(ASTNode.class))).thenAnswer(new Answer<CubeQueryContext>() {
-      @Override
-      public CubeQueryContext answer(InvocationOnMock invocation) throws Throwable {
-        Object[] args = invocation.getArguments();
-        return getMockedCubeContext((ASTNode) args[0]);
-      }
+    Mockito.when(mockwriter.rewrite(Matchers.any(ASTNode.class))).thenAnswer(invocation -> {
+      Object[] args = invocation.getArguments();
+      return getMockedCubeContext((ASTNode) args[0]);
     });
     Mockito.doCallRealMethod().when(mockwriter).clear();
     return mockwriter;
@@ -130,6 +126,9 @@ public class TestRewriting {
   private CubeQueryContext getMockedCubeContext(String query)
     throws ParseException, LensException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
+    QueryWriterContext mockQueryWriterContext = Mockito.mock(QueryWriterContext.class);
+    Mockito.when(mockQueryWriterContext.getDimsToQuery()).thenReturn(Maps.newHashMap());
+    Mockito.when(context.getQueryWriterContext()).thenReturn(mockQueryWriterContext);
     Mockito.when(context.toHQL()).thenReturn(query.substring(4));
     Mockito.when(context.toAST(Matchers.any(Context.class)))
       .thenReturn(HQLParser.parseHQL(query.toLowerCase().replaceFirst("^cube", ""), hconf));
