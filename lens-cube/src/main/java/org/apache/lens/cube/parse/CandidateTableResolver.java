@@ -29,6 +29,7 @@ import org.apache.lens.cube.parse.ExpressionResolver.ExpressionContext;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -48,7 +49,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class CandidateTableResolver implements ContextRewriter {
 
+  private final List<String> supportedStorages;
+  private final boolean allStoragesSupported;
   private boolean checkForQueriedColumns = true;
+
+  public CandidateTableResolver(Configuration conf) {
+    this.supportedStorages = getSupportedStorages(conf);
+    this.allStoragesSupported = (supportedStorages == null);
+  }
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
@@ -81,6 +89,18 @@ class CandidateTableResolver implements ContextRewriter {
       checkForQueriedColumns = true;
     }
   }
+  private List<String> getSupportedStorages(Configuration conf) {
+    String[] storages = conf.getStrings(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES);
+    if (storages != null) {
+      return Arrays.asList(storages);
+    }
+    return null;
+  }
+
+  private boolean isStorageSupportedOnDriver(String storage) {
+    return allStoragesSupported || supportedStorages.contains(storage);
+  }
+
 
   private void populateCandidateTables(CubeQueryContext cubeql) throws LensException {
     if (cubeql.getCube() != null) {
@@ -95,7 +115,9 @@ class CandidateTableResolver implements ContextRewriter {
         } else {
           for (String s : fact.getStorages()) {
             StorageCandidate sc = new StorageCandidate(cubeql.getCube(), fact, s, cubeql);
-            cubeql.getCandidates().add(sc);
+            if (isStorageSupportedOnDriver(sc.getStorageName())) {
+              cubeql.getCandidates().add(sc);
+            }
           }
         }
       }

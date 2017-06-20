@@ -147,7 +147,7 @@ public class CubeQueryRewriter {
     rewriters.add(new AliasReplacer());
     ExpressionResolver exprResolver = new ExpressionResolver();
     DenormalizationResolver denormResolver = new DenormalizationResolver();
-    CandidateTableResolver candidateTblResolver = new CandidateTableResolver();
+    CandidateTableResolver candidateTblResolver = new CandidateTableResolver(conf);
     StorageTableResolver storageTableResolver = new StorageTableResolver(conf);
     LightestFactResolver lightestFactResolver = new LightestFactResolver();
 
