@@ -200,16 +200,10 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     Map<Set<String>, List<CandidateTablePruneCause>> expected = Maps.newHashMap();
     expected.put(newHashSet("c1_summary1", "c1_testfact", "c1_testfact2"),
       newArrayList(columnNotFound("dim2big2")));
-    expected.put(newHashSet("c2_summary2", "c2_summary3", "c1_testfact2_raw", ""
-        + "c3_testfact2_raw", "c1_summary3", "c1_summary2"),
+    expected.put(newHashSet("c1_testfact2_raw", "c1_summary3", "c1_summary2"),
       newArrayList(new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE)));
-    expected.put(newHashSet("c0_b1b2fact1", "c0_testfact_continuous", "SEG[b1cube; b2cube]"),
+    expected.put(newHashSet("SEG[b1cube; b2cube]"),
       newArrayList(columnNotFound("msr2", "msr3")));
-    expected.put(newHashSet("c2_summary2", "c2_summary3", "c2_summary4", "c4_testfact", "c2_summary1",
-      "c3_testfact", "c3_testfact2_raw", "c6_testfact", "c4_testfact2", "c5_testfact", "c99_cheapfact",
-      "c2_testfact", "c0_cheapfact", "c2_testfactmonthly", "c0_testfact"),
-      newArrayList(new CandidateTablePruneCause(CandidateTablePruneCode.UNSUPPORTED_STORAGE)));
-
     Assert.assertEquals(enhanced, expected);
   }
 

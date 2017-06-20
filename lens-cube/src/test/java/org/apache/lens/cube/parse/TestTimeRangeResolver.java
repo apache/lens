@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,9 +21,9 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.metadata.DateFactory.*;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.TIME_RANGE_NOT_ANSWERABLE;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.UNSUPPORTED_STORAGE;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.util.*;
 
@@ -40,8 +40,6 @@ import org.testng.annotations.Test;
 
 
 public class TestTimeRangeResolver extends TestQueryRewrite {
-
-  private final String cubeName = CubeTestSetup.TEST_CUBE_NAME;
 
   private Configuration conf;
 
@@ -62,7 +60,7 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
 
   @Test
   public void testFactValidity() throws ParseException, LensException, HiveException, ClassNotFoundException {
-    String query = "select msr2 from " + cubeName + " where "  + LAST_YEAR_RANGE;
+    String query = "select msr2 from " + CubeTestSetup.TEST_CUBE_NAME + " where "  + LAST_YEAR_RANGE;
     LensException e = getLensExceptionInRewrite(query, getConf());
     assertEquals(e.getErrorInfo().getErrorName(), "NO_UNION_CANDIDATE_AVAILABLE");
   }
@@ -74,13 +72,11 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
         getConf());
     List<CandidateTablePruneCause> causes = findPruningMessagesForStorage("c3_testfact_deprecated",
       ctx.getStoragePruningMsgs());
-    assertEquals(causes.size(), 1);
-    assertEquals(causes.get(0).getCause(), UNSUPPORTED_STORAGE);
+    assertTrue(causes.isEmpty());
 
     causes = findPruningMessagesForStorage("c4_testfact_deprecated",
       ctx.getStoragePruningMsgs());
-    assertEquals(causes.size(), 1);
-    assertEquals(causes.get(0).getCause(), UNSUPPORTED_STORAGE);
+    assertTrue(causes.isEmpty());
 
     // testfact_deprecated's validity should be in between of both ranges. So both ranges should be in the invalid list
     // That would prove that parsing of properties has gone through successfully
@@ -109,8 +105,8 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
   /**
    *
    * @param stoargeName  storageName_factName
-   * @param allStoragePruningMsgs
-   * @return
+   * @param allStoragePruningMsgs all pruning messages
+   * @return pruning messages for storagetable
    */
   private static List<CandidateTablePruneCause> findPruningMessagesForStorage(String stoargeName,
     PruneCauses<Candidate> allStoragePruningMsgs) {
@@ -121,6 +117,6 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
         }
       }
     }
-    return  new ArrayList<CandidateTablePruneCause>();
+    return new ArrayList<>();
   }
 }

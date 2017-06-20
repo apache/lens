@@ -252,12 +252,6 @@ class StorageTableResolver implements ContextRewriter {
       if (c instanceof StorageCandidate) {
         StorageCandidate sc = (StorageCandidate) c;
         // first check: if the storage is supported on driver
-        if (!isStorageSupportedOnDriver(sc.getStorageName())) {
-          log.info("Skipping storage: {} as it is not supported", sc.getStorageName());
-          cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.UNSUPPORTED_STORAGE));
-          it.remove();
-          continue;
-        }
         String str = conf.get(CubeQueryConfUtil.getValidStorageTablesKey(sc.getFact().getName()));
         List<String> validFactStorageTables =
           StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
