@@ -48,17 +48,18 @@ class LeastPartitionResolver implements ContextRewriter {
           factPartCount.put(candidate, parts);
         }
       }
+      if (!factPartCount.isEmpty()) {
+        double minPartitions = Collections.min(factPartCount.values());
 
-      double minPartitions = Collections.min(factPartCount.values());
-
-      for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
-        Candidate candidate = i.next();
-        if (factPartCount.containsKey(candidate) && factPartCount.get(candidate) > minPartitions) {
-          log.info("Not considering Candidate:{} as it requires more partitions to be" + " queried:{} minimum:{}",
-            candidate, factPartCount.get(candidate), minPartitions);
-          i.remove();
-          cubeql.addCandidatePruningMsg(candidate,
-            new CandidateTablePruneCause(CandidateTablePruneCause.CandidateTablePruneCode.MORE_PARTITIONS));
+        for (Iterator<Candidate> i = cubeql.getCandidates().iterator(); i.hasNext();) {
+          Candidate candidate = i.next();
+          if (factPartCount.containsKey(candidate) && factPartCount.get(candidate) > minPartitions) {
+            log.info("Not considering Candidate:{} as it requires more partitions to be" + " queried:{} minimum:{}",
+              candidate, factPartCount.get(candidate), minPartitions);
+            i.remove();
+            cubeql.addCandidatePruningMsg(candidate,
+              new CandidateTablePruneCause(CandidateTablePruneCause.CandidateTablePruneCode.MORE_PARTITIONS));
+          }
         }
       }
     }

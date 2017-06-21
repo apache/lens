@@ -604,7 +604,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
           break;
         }
       }
-      TimeRange fallBackRange = getFallbackRange(prevRange, this.getFact().getName(), cubeQueryContext);
+      TimeRange fallBackRange = getFallbackRange(prevRange, this.getFact().getSourceFactName(), cubeQueryContext);
       log.info("No partitions for range:{}. fallback range: {}", timeRange, fallBackRange);
       if (fallBackRange == null) {
         break;
