@@ -20,6 +20,7 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.incompletePartitions;
 import static org.apache.lens.cube.parse.CandidateTablePruneCause.partitionColumnsMissing;
+import static org.apache.lens.cube.parse.StorageUtil.getFallbackRange;
 
 import java.util.*;
 
@@ -324,13 +325,13 @@ class StorageTableResolver implements ContextRewriter {
             } else if (!sc.getValidUpdatePeriods().contains(UpdatePeriod.CONTINUOUS)) {
               if (!client.partColExists(sc.getFact(), sc.getStorageName(), range.getPartitionColumn())) {
                 pruningCauseForThisTimeRange = partitionColumnsMissing(range.getPartitionColumn());
-                TimeRange fallBackRange = StorageUtil.getFallbackRange(range, sc.getFact().getName(), cubeql);
+                TimeRange fallBackRange = getFallbackRange(range, sc.getFact().getSourceFactName(), cubeql);
                 while (fallBackRange != null) {
                   pruningCauseForThisTimeRange = null;
                   if (!client.partColExists(sc.getFact(), sc.getStorageName(),
                     fallBackRange.getPartitionColumn())) {
                     pruningCauseForThisTimeRange = partitionColumnsMissing(fallBackRange.getPartitionColumn());
-                    fallBackRange = StorageUtil.getFallbackRange(fallBackRange, sc.getFact().getName(), cubeql);
+                    fallBackRange = getFallbackRange(fallBackRange, sc.getFact().getSourceFactName(), cubeql);
                   } else {
                     if (!sc.isPartiallyValidForTimeRange(fallBackRange)) {
                       pruningCauseForThisTimeRange =

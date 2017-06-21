@@ -91,12 +91,11 @@ public class JoinCandidate implements Candidate {
   @Override
   public boolean evaluateCompleteness(TimeRange timeRange, TimeRange parentTimeRange, boolean failOnPartialData)
     throws LensException {
+    boolean complete = true;
     for (Candidate child : children) {
-      if (!child.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData)) {
-        return false;
-      }
+      complete &= child.evaluateCompleteness(timeRange, parentTimeRange, failOnPartialData);
     }
-    return true;
+    return complete;
   }
 
   /**
