@@ -360,6 +360,17 @@
                 description="union_join_ctx_Not null cityid">
       <expr_spec expr="case when union_join_ctx_cityid is null then 0 else union_join_ctx_cityid end"/>
     </expression>
+
+    <expression _type="int" name="union_join_ctx_cityname_msr1_expr" display_string="union_join_ctx_cityname_msr1_expr"
+                description="union_join_ctx_cityname_msr1_expr">
+      <expr_spec expr="sum(case when union_join_ctx_cityname = 'blr' then union_join_ctx_msr1 else 0 end)"/>
+    </expression>
+
+    <expression _type="int" name="union_join_ctx_cityname_msr2_expr" display_string="union_join_ctx_cityname_msr2_expr"
+                description="union_join_ctx_cityname_msr2_expr">
+      <expr_spec expr="sum(case when union_join_ctx_cityname = 'blr' then union_join_ctx_msr2 else 0 end)"/>
+    </expression>
+
     <expression _type="String" name="cityandstatenew" display_string="City and State"
                 description="city and state together">
       <expr_spec expr="concat(cityname, &quot;:&quot;, statename_cube)" end_time="$gregorian{now.month-2months}"/>
