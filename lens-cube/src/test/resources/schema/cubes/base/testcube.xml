@@ -206,6 +206,7 @@
     <expression _type="int" name="notnullcityid" display_string="Not null cityid Expr" description="Not null cityid">
       <expr_spec expr="case when cityid is null then 0 else cityid end"/>
     </expression>
+
     <expression _type="double" name="roundedmsr1" display_string="Rounded msr1" description="rounded measure1">
       <expr_spec expr="round(msr1/1000)"/>
     </expression>

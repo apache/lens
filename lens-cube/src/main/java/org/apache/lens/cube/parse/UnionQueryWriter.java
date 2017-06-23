@@ -28,7 +28,8 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
 
-import org.apache.lens.cube.metadata.MetastoreUtil;
+import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.join.JoinPath;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.lib.Node;
@@ -117,7 +118,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
    * @return ASTNode
    * @throws LensException
    */
-  private ASTNode processHavingAST(ASTNode innerAst, AliasDecider aliasDecider, StorageCandidate sc)
+  private ASTNode processHavingAST(ASTNode innerAst, AliasDecider aliasDecider, StorageCandidateHQLContext sc)
     throws LensException {
     if (cubeql.getHavingAST() != null) {
       ASTNode havingCopy = MetastoreUtil.copyAST(cubeql.getHavingAST());
@@ -251,22 +252,12 @@ public class UnionQueryWriter extends SimpleHQLContext {
     for (StorageCandidateHQLContext sc : storageCandidates) {
       node = (ASTNode) sc.getQueryAst().getSelectAST().getChild(position).getChild(0);
       if (HQLParser.isAggregateAST(node) || HQLParser.hasAggregate(node)) {
-        return MetastoreUtil.copyAST(node);
+        if (!node.getChild(1).toString().equals(DEFAULT_MEASURE))  {
+          return MetastoreUtil.copyAST(node);
+        }
       }
     }
     return MetastoreUtil.copyAST(node);
-  }
-
-  /**
-   *  Check if ASTNode is answerable by StorageCandidate
-   * @param sc
-   * @param node
-   * @return
-   */
-  private boolean isNodeNotAnswerableForStorageCandidate(StorageCandidate sc, ASTNode node) {
-    Set<String> cols = new LinkedHashSet<>();
-    getAllColumnsOfNode(node, cols);
-    return !sc.getColumns().containsAll(cols);
   }
 
   /**
@@ -467,7 +458,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
     // Iterate over the StorageCandidates and add non projected having columns in inner select ASTs
     for (StorageCandidateHQLContext sc : storageCandidates) {
       aliasDecider.setCounter(selectAliasCounter);
-      processHavingAST(sc.getQueryAst().getSelectAST(), aliasDecider, sc.getStorageCandidate());
+      processHavingAST(sc.getQueryAst().getSelectAST(), aliasDecider, sc);
     }
     removeRedundantProjectedPhrases();
   }
@@ -493,7 +484,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
       ASTNode child = (ASTNode) selectAST.getChild(i);
       ASTNode outerSelect = new ASTNode(child);
       ASTNode selectExprAST = (ASTNode) child.getChild(0);
-      ASTNode outerAST = getOuterAST(selectExprAST, innerSelectAST, aliasDecider, sc.getStorageCandidate(), true,
+      ASTNode outerAST = getOuterAST(selectExprAST, innerSelectAST, aliasDecider, sc, true,
           cubeql.getBaseCube().getDimAttributeNames());
       outerSelect.addChild(outerAST);
       // has an alias? add it
@@ -529,13 +520,14 @@ public class UnionQueryWriter extends SimpleHQLContext {
    5. If given ast is memorized as mentioned in the above cases, return the mapping.
  */
   private ASTNode getOuterAST(ASTNode astNode, ASTNode innerSelectAST,
-      AliasDecider aliasDecider, StorageCandidate sc, boolean isSelectAst, Set<String> dimensionSet)
+      AliasDecider aliasDecider, StorageCandidateHQLContext scContext, boolean isSelectAst, Set<String> dimensionSet)
       throws LensException {
+    StorageCandidate sc = scContext.getStorageCandidate();
     if (astNode == null) {
       return null;
     }
     Set<String> msrCols = new HashSet<>();
-    getAllColumnsOfNode(astNode, msrCols);
+    getAllColumnsOfNode(astNode, msrCols, scContext);
     msrCols.removeAll(dimensionSet);
     if (isAggregateAST(astNode) && sc.getColumns().containsAll(msrCols)) {
       return processAggregate(astNode, innerSelectAST, aliasDecider, isSelectAst);
@@ -544,7 +536,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
       ASTNode exprCopy = MetastoreUtil.copyAST(astNode);
       setDefaultValueInExprForAggregateNodes(exprCopy, sc);
       outerAST.addChild(getOuterAST(getSelectExpr(exprCopy, null, true),
-          innerSelectAST, aliasDecider, sc, isSelectAst, dimensionSet));
+          innerSelectAST, aliasDecider, scContext, isSelectAst, dimensionSet));
       return outerAST;
     } else {
       if (hasAggregate(astNode)) {
@@ -552,10 +544,12 @@ public class UnionQueryWriter extends SimpleHQLContext {
         for (Node child : astNode.getChildren()) {
           ASTNode childAST = (ASTNode) child;
           if (hasAggregate(childAST) && sc.getColumns().containsAll(msrCols)) {
-            outerAST.addChild(getOuterAST(childAST, innerSelectAST, aliasDecider, sc, isSelectAst, dimensionSet));
+            outerAST.addChild(getOuterAST(childAST, innerSelectAST, aliasDecider,
+                scContext, isSelectAst, dimensionSet));
           } else if (hasAggregate(childAST) && !sc.getColumns().containsAll(msrCols)) {
             childAST.replaceChildren(1, 1,  getSelectExpr(null, null, true));
-            outerAST.addChild(getOuterAST(childAST, innerSelectAST, aliasDecider, sc, isSelectAst, dimensionSet));
+            outerAST.addChild(getOuterAST(childAST, innerSelectAST, aliasDecider,
+                scContext, isSelectAst, dimensionSet));
           } else {
             outerAST.addChild(childAST);
           }
@@ -643,7 +637,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
    */
 
   private void processHavingExpression(ASTNode innerSelectAst, Set<ASTNode> havingAggASTs,
-      AliasDecider aliasDecider, StorageCandidate sc) throws LensException {
+      AliasDecider aliasDecider, StorageCandidateHQLContext sc) throws LensException {
     // iterate over all children of the ast and get outer ast corresponding to it.
     for (ASTNode child : havingAggASTs) {
       if (!innerToOuterSelectASTs.containsKey(new HQLParser.HashableASTNode(child))) {
@@ -677,15 +671,48 @@ public class UnionQueryWriter extends SimpleHQLContext {
    * @param msrs
    * @return
    */
-  private Set<String> getAllColumnsOfNode(ASTNode node, Set<String> msrs) {
+  private Set<String> getAllColumnsOfNode(ASTNode node, Set<String> msrs, StorageCandidateHQLContext sc) {
     if (node.getToken().getType() == HiveParser.DOT) {
-      msrs.add(node.getChild(1).toString());
+      String col = node.getChild(1).toString();
+      msrs.addAll(getSourceColumnOfRefColumn(col, sc));
     }
     for (int i = 0; i < node.getChildCount(); i++) {
       ASTNode child = (ASTNode) node.getChild(i);
-      getAllColumnsOfNode(child, msrs);
+      getAllColumnsOfNode(child, msrs, sc);
     }
     return msrs;
+  }
+
+  /**
+   * Returns the source column of the ref column
+   *
+   * @param refCol
+   * @return
+   */
+  private Set<String> getSourceColumnOfRefColumn(String refCol, StorageCandidateHQLContext sc) {
+    Set<String> sourceColumns = new HashSet<String>();
+    for (Map.Entry<String, Set<String>> entry : sc.getCubeQueryContext().getTblAliasToColumns().entrySet()) {
+      if (entry.getValue().contains(refCol)) {
+        String table = entry.getKey();
+
+        if (sc.getCubeQueryContext().getAutoJoinCtx() != null) {
+          for (Map.Entry<Aliased<Dimension>, List<JoinPath>> dimPaths
+              : sc.getCubeQueryContext().getAutoJoinCtx().getAllPaths().entrySet()) {
+
+            if (dimPaths.getKey().alias.equals(table)) {
+              List<JoinPath> joinPaths = dimPaths.getValue();
+              for (JoinPath path : joinPaths) {
+                sourceColumns.addAll(path.getColumnsForTable(sc.getCubeQueryContext().getBaseCube()));
+              }
+            }
+          }
+        }
+      }
+    }
+    if (sourceColumns.isEmpty()) {
+      sourceColumns.add(refCol);
+    }
+    return sourceColumns;
   }
 
   /**

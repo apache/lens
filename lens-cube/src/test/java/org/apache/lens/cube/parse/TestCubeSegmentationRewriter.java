@@ -234,8 +234,7 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
     userQuery = "select cityid, segmsr1 from testcube where cityname='blah' and "
         + TWO_DAYS_RANGE + " having citysegmsr1 > 20";
     String rewrittenQuery = rewrite(userQuery, getConf());
-    assertTrue(rewrittenQuery.toLowerCase().endsWith("sum(case  when ((cubecity.name) = 'foo') "
-        + "then (testcube.segmsr1) end) > 20)"));
+    assertTrue(rewrittenQuery.toLowerCase().endsWith("(sum((testcube.alias2)) > 20)"));
 
     // Order by on alias
     userQuery = "select cityid as `city_id_alias`, segmsr1 from testcube where cityname='blah' and "

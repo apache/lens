@@ -92,6 +92,32 @@ public class TestUnionAndJoinCandidates extends TestQueryRewrite {
   }
 
   @Test
+  public void testExpressionHavingRefcol() throws ParseException, LensException {
+    String colsSelected = " union_join_ctx_cityid, union_join_ctx_cityname_msr1_expr, "
+        + "union_join_ctx_cityname_msr2_expr ";
+    String whereCond = "(" + TWO_MONTHS_RANGE_UPTO_DAYS + ")";
+    String rewrittenQuery = rewrite("select " + colsSelected + " from basecube where " + whereCond, conf);
+    assertTrue(rewrittenQuery.contains("UNION ALL"));
+    String expectedInnerSelect1 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, sum(case  "
+        + "when ((cubecityjoinunionctx.name) = 'blr') then (basecube.union_join_ctx_msr1) else 0 end) "
+        + "as `alias1`, 0.0 as `alias2` FROM TestQueryRewrite.c1_union_join_ctx_fact1 basecube ";
+    String expectedInnerSelect2 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, "
+        + "sum(case  when ((cubecityjoinunionctx.name) = 'blr') then (basecube.union_join_ctx_msr1) else 0 end) "
+        + "as `alias1`, 0.0 as `alias2` FROM TestQueryRewrite.c1_union_join_ctx_fact2 basecube";
+    String expectedInnerSelect3 = "SELECT (basecube.union_join_ctx_cityid) as `alias0`, 0.0 as `alias1`, "
+        + "sum(case  when ((cubecityjoinunionctx.name) = 'blr') then (basecube.union_join_ctx_msr2) else 0 end) "
+        + "as `alias2` FROM TestQueryRewrite.c1_union_join_ctx_fact3 basecube";
+    String outerSelect = "SELECT (basecube.alias0) as `union_join_ctx_cityid`, sum((basecube.alias1)) "
+        + "as `union_join_ctx_cityname_msr1_expr`, sum((basecube.alias2)) as `union_join_ctx_cityname_msr2_expr` FROM";
+    String outerGroupBy = "GROUP BY (basecube.alias0)";
+    compareContains(expectedInnerSelect1, rewrittenQuery);
+    compareContains(expectedInnerSelect2, rewrittenQuery);
+    compareContains(expectedInnerSelect3, rewrittenQuery);
+    compareContains(outerSelect, rewrittenQuery);
+    compareContains(outerGroupBy, rewrittenQuery);
+  }
+
+  @Test
   public void testCustomExpressionForJoinCandidate() throws ParseException, LensException {
     // Expr : (case when union_join_ctx_msr2_expr = 0 then 0 else
     // union_join_ctx_msr4_expr * 100 / union_join_ctx_msr2_expr end) is completely answered by
