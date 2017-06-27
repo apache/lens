@@ -145,22 +145,6 @@ public class TestCubeRewriter extends TestQueryRewrite {
 //    assertNotNull(rewrittenQuery.getNonExistingParts());
   }
 
-
-  @Test
-  public void testVirtualFactCubeSimpleQuery() throws Exception {
-    Configuration conf = getConf();
-    conf.set(DRIVER_SUPPORTED_STORAGES, "C1");
-    CubeQueryContext rewrittenQuery =
-      rewriteCtx("select SUM(msr2) from virtualCube where " + TWO_DAYS_RANGE, getConfWithStorages("C1"));
-    String expected = getExpectedQuery(VIRTUAL_CUBE_NAME, "select sum(virtualcube.msr2) as `sum(msr2)` FROM ",
-      null, "AND ( dim1 = 10 )", getWhereForDailyAndHourly2days(VIRTUAL_CUBE_NAME,
-        "C1_summary1"));
-    String hql = rewrittenQuery.toHQL();
-    compareQueries(hql, expected);
-    System.out.println("Non existing parts:" + rewrittenQuery.getNonExistingParts());
-  }
-
-
   @Test
   public void testMaxCoveringFact() throws Exception {
     Configuration conf = getConf();
@@ -954,7 +938,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       rewrite("select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, getConfWithStorages("C2"));
     String expected =
       getExpectedQuery(TEST_CUBE_NAME, "select sum(testcube.msr2) as `sum(msr2)` FROM ", null, null,
-        getWhereForMonthlyDailyAndHourly2months("C2_testfact"));
+        getWhereForMonthlyDailyAndHourly2months(TEST_CUBE_NAME, "C2_testfact"));
     compareQueries(hqlQuery, expected);
   }
 
