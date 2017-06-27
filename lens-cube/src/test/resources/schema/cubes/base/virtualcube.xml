@@ -25,12 +25,31 @@
     <property name="cube.virtualcube.timed.dimensions.list" value="d_time"/>
   </properties>
   <measures>
+    <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr1" display_string="Measure1"
+             description="first measure"/>
     <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr2" display_string="Measure2"
              description="second measure"/>
+    <measure _type="DOUBLE" default_aggr="SUM" unit="RS" name="msr3" display_string="Measure3"
+             description="third measure"/>
 
   </measures>
   <dim_attributes>
-    <dim_attribute _type="string" name="dim1" description="basedim">
-    </dim_attribute>
+    <dim_attribute _type="string" name="dim1" description="basedim"/>
+    <dim_attribute _type="int" name="cityid" description="basedim"/>
+    <dim_attribute name="stateid" _type="int" description="state id"/>
   </dim_attributes>
+  <join_chains>
+    <join_chain dest_table="statedim" name="cubestate" display_string="cube-state" description="state thru cube">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="virtualcube" column="stateid" maps_to_many="false"/>
+              <to table="statedim" column="id" maps_to_many="false"/>
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
 </x_base_cube>

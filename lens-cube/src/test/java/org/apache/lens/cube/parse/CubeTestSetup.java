@@ -364,7 +364,7 @@ public class CubeTestSetup {
   // storageName[0] is hourly
   // storageName[1] is daily
   // storageName[2] is monthly
-  public static Map<String, String> getWhereForMonthlyDailyAndHourly2months(String... storageTables) {
+  public static Map<String, String> getWhereForMonthlyDailyAndHourly2months(String cubeName, String... storageTables) {
     Map<String, String> storageTableToWhereClause = new LinkedHashMap<String, String>();
     List<String> hourlyparts = new ArrayList<String>();
     List<String> dailyparts = new ArrayList<String>();
@@ -411,7 +411,7 @@ public class CubeTestSetup {
       tables.append(storageTables[0]);
     }
     Collections.sort(parts);
-    storageTableToWhereClause.put(tables.toString(), StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts));
+    storageTableToWhereClause.put(tables.toString(), StorageUtil.getWherePartClause("dt", cubeName, parts));
     return storageTableToWhereClause;
   }
 

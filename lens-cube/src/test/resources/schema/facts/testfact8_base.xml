@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_fact_table name="testfact8_base" cube_name="virtualcube" weight="5.0" xmlns="uri:lens:cube:0.1">
+  <columns>
+
+    <column name="msr2" _type="float" comment="second measure"/>
+    <column name="cityid" _type="int" comment="city id"/>
+    <column name="stateid" _type="int" comment="state id"/>
+  </columns>
+  <properties>
+    <property name="cube.fact.testfact.cubename" value="testCube"/>
+    <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
+    <property name="cube.table.testfact.weight" value="5.0"/>
+    <property name="cube.fact.testfact.storages" value="C1"/>
+    <property name="cube.fact.testfact.c1.updateperiods"
+              value="MONTHLY,HOURLY,YEARLY,CONTINUOUS,QUARTERLY,MINUTELY,DAILY"/>
+  </properties>
+  <storage_tables>
+    <storage_table>
+      <update_periods>
+        <update_period>HOURLY</update_period>
+        <update_period>DAILY</update_period>
+      </update_periods>
+      <storage_name>C1</storage_name>
+      <table_desc external="false">
+        <part_cols>
+          <column name="dt" _type="string" comment="date partition"/>
+        </part_cols>
+        <table_parameters>
+          <property name="cube.storagetable.time.partcols" value="dt"/>
+        </table_parameters>
+        <serde_parameters>
+          <property name="serialization.format" value="1"/>
+        </serde_parameters>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_fact_table>
