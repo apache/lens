@@ -882,6 +882,26 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     assertTrue(hqlQuery.endsWith("HAVING ((sum((basecube.alias2)) > 2) "
         + "and (round((sum((basecube.alias3)) / 1000)) > 0))"));
 
+    // Having clause with expression answerable from any one fact and not projected
+    hqlQuery = rewrite("select dim1, dim11, msr12  from basecube where " + TWO_DAYS_RANGE
+        + "having msr12 > 2 and roundedmsr2 > 0", conf);
+    expected1 = getExpectedQuery(cubeName,
+        "SELECT (basecube.dim1) as `alias0`, (basecube.dim11) as `alias1`, sum((basecube.msr12)) "
+            + "as `alias2`, 0.0 as `alias4` FROM ", null, " group by basecube.dim1, basecube.dim11",
+        getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
+    expected2 = getExpectedQuery(cubeName,
+        "SELECT (basecube.dim1) as `alias0`, (basecube.dim11) as `alias1`, 0.0 as `alias2`, "
+            + "sum((basecube.msr2)) as `alias4` FROM ", null, " group by basecube.dim1, basecube.dim11",
+        getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
+
+    compareContains(expected1, hqlQuery);
+    compareContains(expected2, hqlQuery);
+    assertTrue(hqlQuery.toLowerCase().startsWith("select (basecube.alias0) as `dim1`, (basecube.alias1) as `dim11`, "
+        + "sum((basecube.alias2)) as `msr12` from"),
+        hqlQuery);
+    assertTrue(hqlQuery.endsWith("HAVING ((sum((basecube.alias2)) > 2) and "
+        + "(round((sum((basecube.alias4)) / 1000)) > 0))"));
+
     hqlQuery = rewrite("select dim1, dim11, msr12, roundedmsr2 from basecube where " + TWO_DAYS_RANGE
         + "having msr12+roundedmsr2 <= 1000 and msr12 > 2 and roundedmsr2 > 0", conf);
     expected1 = getExpectedQuery(cubeName,

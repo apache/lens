@@ -424,20 +424,19 @@ class ExpressionResolver implements ContextRewriter {
       }
       replaceAST(cubeql, queryAST.getJoinAST());
       replaceAST(cubeql, queryAST.getGroupByAST());
-      // Having AST is resolved by each fact, so that all facts can expand their expressions.
-      // Having ast is not copied now, it's maintained in cubeQueryContext, each fact processes that serially.
+      // Resolve having expression for StorageCandidate
       if (queryAST.getHavingAST() != null) {
         replaceAST(cubeql, queryAST.getHavingAST());
-      } else if (cubeql.getHavingAST() != null && nonPickedExpressionsForCandidate.isEmpty()) {
-        replaceAST(cubeql, cubeql.getHavingAST());
-        queryAST.setHavingAST(MetastoreUtil.copyAST(cubeql.getHavingAST()));
+      } else if (cubeql.getHavingAST() != null) {
+        ASTNode havingCopy = MetastoreUtil.copyAST(cubeql.getHavingAST());
+        replaceAST(cubeql, havingCopy);
+        queryAST.setHavingAST(havingCopy);
       }
       replaceAST(cubeql, queryAST.getOrderByAST());
     }
 
     private void replaceAST(final CubeQueryContext cubeql, ASTNode node) throws LensException {
       if (node == null) {
-
         return;
       }
       // Traverse the tree and resolve expression columns
