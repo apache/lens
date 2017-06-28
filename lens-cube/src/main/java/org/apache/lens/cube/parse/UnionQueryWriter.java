@@ -96,7 +96,6 @@ public class UnionQueryWriter extends SimpleHQLContext {
       if (sc.getQueryAst().getHavingAST() != null) {
         cubeql.setHavingAST(sc.getQueryAst().getHavingAST());
       }
-      sc.getQueryAst().setHavingAST(null);
       sc.getQueryAst().setOrderByAST(null);
       sc.getQueryAst().setLimitValue(null);
     }
@@ -120,8 +119,12 @@ public class UnionQueryWriter extends SimpleHQLContext {
    */
   private ASTNode processHavingAST(ASTNode innerAst, AliasDecider aliasDecider, StorageCandidateHQLContext sc)
     throws LensException {
-    if (cubeql.getHavingAST() != null) {
-      ASTNode havingCopy = MetastoreUtil.copyAST(cubeql.getHavingAST());
+    if (sc.getQueryAst().getHavingAST() == null
+        && cubeql.getHavingAST() != null) {
+      sc.getQueryAst().setHavingAST(cubeql.getHavingAST());
+    }
+    if (sc.getQueryAst().getHavingAST() != null) {
+      ASTNode havingCopy = MetastoreUtil.copyAST(sc.getQueryAst().getHavingAST());
       Set<ASTNode> havingAggChildrenASTs = new LinkedHashSet<>();
       getAggregateChildrenInNode(havingCopy, havingAggChildrenASTs);
       processHavingExpression(innerAst, havingAggChildrenASTs, aliasDecider, sc);
@@ -283,8 +286,9 @@ public class UnionQueryWriter extends SimpleHQLContext {
   }
 
   private boolean isNodeDefault(ASTNode node) {
-    if (HQLParser.isAggregateAST((ASTNode) node.getChild(0))) {
-      if (HQLParser.getString((ASTNode) node.getChild(0).getChild(1)).equals(DEFAULT_MEASURE)) {
+    if (HQLParser.isAggregateAST((ASTNode) node.getChild(0)) || HQLParser.isAggregateAST(node)) {
+      if (HQLParser.getString((ASTNode) node.getChild(0).getChild(1)).equals(DEFAULT_MEASURE)
+          || HQLParser.getString((ASTNode) node.getChild(1)).equals(DEFAULT_MEASURE)) {
         return true;
       }
     }
@@ -640,9 +644,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
       AliasDecider aliasDecider, StorageCandidateHQLContext sc) throws LensException {
     // iterate over all children of the ast and get outer ast corresponding to it.
     for (ASTNode child : havingAggASTs) {
-      if (!innerToOuterSelectASTs.containsKey(new HQLParser.HashableASTNode(child))) {
-        getOuterAST(child, innerSelectAst, aliasDecider, sc, false, cubeql.getBaseCube().getDimAttributeNames());
-      }
+      getOuterAST(child, innerSelectAst, aliasDecider, sc, false, cubeql.getBaseCube().getDimAttributeNames());
     }
   }
 
@@ -726,6 +728,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
     List<String> hqlQueries = new ArrayList<>();
     for (StorageCandidateHQLContext sc : storageCandidates) {
       removeAggreagateFromDefaultColumns(sc.getQueryAst().getSelectAST());
+      sc.getQueryAst().setHavingAST(null);
       hqlQueries.add(sc.toHQL());
     }
     return hqlQueries.stream().collect(joining(" UNION ALL ", "(", ") as " + cubeql.getBaseCube()));
