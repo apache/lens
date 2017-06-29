@@ -161,7 +161,8 @@ public class CubeMetastoreClient {
     for (FactTable fact : getAllFacts(cube)) {
       for (String storage : fact.getStorages()) {
         for (UpdatePeriod updatePeriod : fact.getUpdatePeriods().get(storage)) {
-          PartitionTimeline timeline = partitionTimelineCache.get(fact.getName(), storage, updatePeriod, partCol);
+          PartitionTimeline timeline = partitionTimelineCache.get(fact.getSourceFactName(), storage, updatePeriod,
+            partCol);
           if (timeline != null) {// this storage table is partitioned by partCol or not.
             Date latest = timeline.getLatestDate();
             if (latest != null && latest.after(max)) {
@@ -1078,8 +1079,8 @@ public class CubeMetastoreClient {
       List<Partition> partsAdded = new ArrayList<>();
       // first update in memory, then add to hive table's partitions. delete is reverse.
       partitionTimelineCache.updateForAddition(factOrDimTable, storageName, updatePeriod,
-              getTimePartSpecs(storagePartitionDescs, getStorageTableStartDate(storageTableName, factOrDimTable),
-                      getStorageTableEndDate(storageTableName, factOrDimTable)));
+              getTimePartSpecs(storagePartitionDescs, getStorageTableStartDate(storageTableName,
+                getFactTable(factOrDimTable)), getStorageTableEndDate(storageTableName, getFactTable(factOrDimTable))));
       // Adding partition in fact table.
       if (storagePartitionDescs.size() > 0) {
         partsAdded = getStorage(storageName).addPartitions(getClient(), factOrDimTable, updatePeriod,
@@ -1094,17 +1095,17 @@ public class CubeMetastoreClient {
     }
   }
 
-  public Date getStorageTableStartDate(String storageTable, String factTableName)
+  public Date getStorageTableStartDate(String storageTable, FactTable factTableName)
     throws LensException {
     List<Date> startDates = getStorageTimes(storageTable, MetastoreUtil.getStoragetableStartTimesKey());
-    startDates.add(getFactTable(factTableName).getStartTime());
+    startDates.add(factTableName.getStartTime());
     return Collections.max(startDates);
   }
 
-  public Date getStorageTableEndDate(String storageTable, String factTableName)
+  public Date getStorageTableEndDate(String storageTable, FactTable factTableName)
     throws LensException {
     List<Date> endDates = getStorageTimes(storageTable, MetastoreUtil.getStoragetableEndTimesKey());
-    endDates.add((getFactTable(factTableName)).getEndTime());
+    endDates.add(factTableName.getEndTime());
     return Collections.min(endDates);
   }
 

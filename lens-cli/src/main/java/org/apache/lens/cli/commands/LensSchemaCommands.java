@@ -113,7 +113,7 @@ public class LensSchemaCommands implements CommandMarker {
     CREATE_COMMAND_MAP.put(XFactTable.class, "create fact --path %s");
     UPDATE_COMMAND_MAP.put(XFactTable.class, "update fact --fact_name %s --path %s");
     CREATE_COMMAND_MAP.put(XVirtualFactTable.class, "create fact --path %s");
-    UPDATE_COMMAND_MAP.put(XVirtualFactTable.class, "update fact --name %s --path %s");
+    UPDATE_COMMAND_MAP.put(XVirtualFactTable.class, "update fact --fact_name %s --path %s");
     CREATE_COMMAND_MAP.put(XSegmentation.class, "create segmentation --path %s");
     UPDATE_COMMAND_MAP.put(XSegmentation.class, "update segmentation --name %s --path %s");
   }

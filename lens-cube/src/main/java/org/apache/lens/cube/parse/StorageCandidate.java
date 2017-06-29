@@ -252,8 +252,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
     List<Date> startDates = new ArrayList<>();
     List<Date> endDates = new ArrayList<>();
     for (String storageTablePrefix : getValidStorageTableNames()) {
-      startDates.add(getCubeMetastoreClient().getStorageTableStartDate(storageTablePrefix, fact.getSourceFactName()));
-      endDates.add(getCubeMetastoreClient().getStorageTableEndDate(storageTablePrefix, fact.getSourceFactName()));
+      startDates.add(getCubeMetastoreClient().getStorageTableStartDate(storageTablePrefix, fact));
+      endDates.add(getCubeMetastoreClient().getStorageTableEndDate(storageTablePrefix, fact));
     }
     this.startTime = Collections.min(startDates);
     this.endTime = Collections.max(endDates);
@@ -891,7 +891,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
       return this.startTime;
     }
     return getCubeMetastoreClient().getStorageTableStartDate(
-      getCubeMetastoreClient().getStorageTableName(fact.getSourceFactName(), storageName, interval), fact.getName());
+      getCubeMetastoreClient().getStorageTableName(fact.getSourceFactName(), storageName, interval), fact);
   }
 
   private Date getStorageTableEndDate(UpdatePeriod interval) throws LensException {
@@ -900,7 +900,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
       return this.endTime;
     }
     return getCubeMetastoreClient().getStorageTableEndDate(
-      getCubeMetastoreClient().getStorageTableName(fact.getSourceFactName(), storageName, interval), fact.getName());
+      getCubeMetastoreClient().getStorageTableName(fact.getSourceFactName(), storageName, interval), fact);
   }
 
 
