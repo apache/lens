@@ -49,11 +49,6 @@
     <name>lens.server.persist.location</name>
     <value>target/persist-dir</value>
   </property>
-
-  <property>
-    <name>lens.query.result.parent.dir</name>
-    <value>target/lens-results</value>
-  </property>
   
   <property>
     <name>hive.server2.authentication</name>

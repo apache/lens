@@ -328,6 +328,11 @@ public class QueryContext extends AbstractQueryContext implements FailureContext
   }
 
   public String getResultSetParentDir() {
+    if (getSelectedDriver() != null && getSelectedDriverConf().get(LensConfConstants.RESULT_SET_PARENT_DIR) != null) {
+      log.info("Fetching Parent Dir from driver conf:- "
+              + getSelectedDriverConf().get(LensConfConstants.RESULT_SET_PARENT_DIR));
+      return getSelectedDriverConf().get(LensConfConstants.RESULT_SET_PARENT_DIR);
+    }
     return conf.get(LensConfConstants.RESULT_SET_PARENT_DIR, LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT);
   }
 

@@ -848,9 +848,11 @@ public class TestQueryService extends LensJerseyTest {
     LensResultSet rs = queryService.getResultset(handle3);
     //check persisted result path
     String expectedPath =
-        ctx3.getConf().get(LensConfConstants.RESULT_SET_PARENT_DIR) + "/" + handle3.getHandleIdString()
+        ctx3.getSelectedDriverConf().get(LensConfConstants.RESULT_SET_PARENT_DIR) + "/" + handle3.getHandleIdString()
             + ctx3.getConf().get(LensConfConstants.QUERY_OUTPUT_FILE_EXTN);
-    assertTrue(((PersistentResultSet) rs).getOutputPath().endsWith(expectedPath));
+    assertTrue(((PersistentResultSet) rs).getOutputPath().endsWith(expectedPath)
+            , "Result Path " + ((PersistentResultSet) rs).getOutputPath()
+            + " does not contain expected path: " + expectedPath);
 
     validateHttpEndPoint(target(), null, handle3, null);
   }

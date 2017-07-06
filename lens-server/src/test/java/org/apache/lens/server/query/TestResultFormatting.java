@@ -157,6 +157,22 @@ public class TestResultFormatting extends LensJerseyTest {
   }
 
   /**
+   * Test result formatter hdfs persistent result location override from driver conf.
+   *
+   * @throws InterruptedException the interrupted exception
+   * @throws IOException          Signals that an I/O exception has occurred.
+   */
+  @Test
+  public void testResultDirOverrideFromDriverConf() throws InterruptedException, IOException {
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    LensQuery lensQuery = testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false,
+            null, MediaType.APPLICATION_XML_TYPE);
+    assertEquals(lensQuery.getResultSetPath(), "file:"+System.getProperty("user.dir")+"/target/hive-lens-results/"
+            +lensQuery.getQueryHandle().getHandleIdString()+".csv");
+  }
+
+  /**
    * Test persistent result with max size.
    *
    * @throws InterruptedException the interrupted exception
@@ -196,7 +212,7 @@ public class TestResultFormatting extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    * @throws IOException          Signals that an I/O exception has occurred.
    */
-  private void testResultFormatter(LensConf conf, Status status, boolean isDir, String reDirectUrl, MediaType mt)
+  private LensQuery testResultFormatter(LensConf conf, Status status, boolean isDir, String reDirectUrl, MediaType mt)
     throws InterruptedException, IOException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
@@ -266,6 +282,8 @@ public class TestResultFormatting extends LensJerseyTest {
         || ctx.getStatus().getStatusMessage().equals(ResultFormatter.ERROR_MESSAGE));
       assertEquals(ctx.getStatus().getErrorMessage(), "Class NonexistentSerde.class not found");
     }
+
+    return ctx;
   }
 
   @AfterTest
