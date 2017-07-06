@@ -104,6 +104,9 @@ class CandidateTableResolver implements ContextRewriter {
 
   private void populateCandidateTables(CubeQueryContext cubeql) throws LensException {
     if (cubeql.getCube() != null) {
+      String str = cubeql.getConf().get(CubeQueryConfUtil.getValidFactTablesKey(cubeql.getCube().getName()));
+      List<String> validFactTables =
+        StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
       List<FactTable> factTables = cubeql.getMetastoreClient().getAllFacts(cubeql.getCube());
       if (factTables.isEmpty()) {
         throw new LensException(LensCubeErrorCode.NO_CANDIDATE_FACT_AVAILABLE.getLensErrorInfo(),
@@ -112,11 +115,15 @@ class CandidateTableResolver implements ContextRewriter {
       for (FactTable fact : factTables) {
         if (fact.getUpdatePeriods().isEmpty()) {
           log.info("Not considering fact: {} as it has no update periods", fact.getName());
+        } else if (validFactTables != null && !validFactTables.contains(fact.getName())) {
+          log.info("Not considering fact: {} as it's not valid as per user configuration.", fact.getName());
         } else {
           for (String s : fact.getStorages()) {
             StorageCandidate sc = new StorageCandidate(cubeql.getCube(), fact, s, cubeql);
             if (isStorageSupportedOnDriver(sc.getStorageName())) {
               cubeql.getCandidates().add(sc);
+            } else {
+              log.info("Not considering {} since storage is not supported on driver.", sc.getName());
             }
           }
         }
@@ -125,7 +132,12 @@ class CandidateTableResolver implements ContextRewriter {
       log.info("Populated storage candidates: {}", cubeql.getCandidates());
       List<SegmentationCandidate> segmentationCandidates = Lists.newArrayList();
       for (Segmentation segmentation : cubeql.getMetastoreClient().getAllSegmentations(cubeql.getCube())) {
-        segmentationCandidates.add(new SegmentationCandidate(cubeql, segmentation));
+        if (validFactTables != null && !validFactTables.contains(segmentation.getName())) {
+          log.info("Not considering segmentation: {} as it's not valid as per user configuration.",
+            segmentation.getName());
+        } else {
+          segmentationCandidates.add(new SegmentationCandidate(cubeql, segmentation));
+        }
       }
       cubeql.getCandidates().addAll(segmentationCandidates);
     }
@@ -261,9 +273,6 @@ class CandidateTableResolver implements ContextRewriter {
 
   private void resolveCandidateFactTables(CubeQueryContext cubeql) throws LensException {
     if (cubeql.getCube() != null) {
-      String str = cubeql.getConf().get(CubeQueryConfUtil.getValidFactTablesKey(cubeql.getCube().getName()));
-      List<String> validFactTables =
-          StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
 
       Set<QueriedPhraseContext> queriedMsrs = new HashSet<>();
       Set<QueriedPhraseContext> dimExprs = new HashSet<>();
@@ -279,15 +288,6 @@ class CandidateTableResolver implements ContextRewriter {
         Candidate cand = i.next();
         if (cand instanceof StorageCandidate) {
           StorageCandidate sc = (StorageCandidate) cand;
-          if (validFactTables != null) {
-            if (!validFactTables.contains(sc.getFact().getName().toLowerCase())) {
-              log.info("Not considering storage candidate:{} as it is not a valid candidate", sc);
-              cubeql.addStoragePruningMsg(sc, new CandidateTablePruneCause(CandidateTablePruneCode.INVALID));
-              i.remove();
-              continue;
-            }
-          }
-
           // update expression evaluability for this fact
           for (String expr : cubeql.getQueriedExprs()) {
             cubeql.getExprCtx().updateEvaluables(expr, sc);
