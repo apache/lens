@@ -82,4 +82,10 @@
     </description>
   </property>
 
+    <property>
+        <name>lens.query.result.parent.dir</name>
+        <value>target/hive-lens-results</value>
+        <final>true</final>
+    </property>
+
 </configuration>

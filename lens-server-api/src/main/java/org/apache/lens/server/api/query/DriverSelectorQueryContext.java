@@ -155,7 +155,9 @@ public class DriverSelectorQueryContext {
   private Configuration mergeConf(LensDriver driver, Configuration queryConf) {
     Configuration conf = new Configuration(driver.getConf());
     for (Map.Entry<String, String> entry : queryConf) {
-      conf.set(entry.getKey(), entry.getValue());
+      if (!conf.getFinalParameters().contains(entry.getKey())) {
+        conf.set(entry.getKey(), entry.getValue());
+      }
     }
     conf.setClassLoader(queryConf.getClassLoader());
     return conf;
