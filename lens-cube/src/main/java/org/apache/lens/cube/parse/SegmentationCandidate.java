@@ -52,6 +52,7 @@ import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.Segment;
 import org.apache.lens.cube.metadata.Segmentation;
 import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -141,7 +142,13 @@ public class SegmentationCandidate implements Candidate {
         });
       addCubeNameAndAlias(ast, innerCube);
       trimHavingAndOrderby(ast, innerCube);
-      CubeQueryRewriter rewriter = new CubeQueryRewriter(conf, hconf);
+      Configuration innerConf = conf;
+      if (conf.get(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY) != null) {
+        innerConf = new Configuration(conf);
+        innerConf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY,
+          conf.get(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY) + "-" + segment.getName());
+      }
+      CubeQueryRewriter rewriter = new CubeQueryRewriter(innerConf, hconf);
       CubeQueryContext ctx = rewriter.rewrite(ast);
       cubeQueryContextMap.put(segment.getName(), ctx);
       if (!ctx.getCandidates().isEmpty()) {
