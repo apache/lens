@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
+import com.google.common.collect.Sets;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -501,15 +502,21 @@ class ExpressionResolver implements ContextRewriter {
       }
     }
 
-    private ASTNode getExprAst(ExpressionContext ec) {
+    private ASTNode getExprAst(ExpressionContext expressionContext) {
       Set<StorageCandidate> scSet = CandidateUtil.getStorageCandidates(cubeql.getCandidates());
-      Set<String> storageTableNames = new HashSet<String>();
+      Set<String> storageTableNames = new HashSet<>();
+      Set<ExpressionContext> expressionContexts = Sets.newLinkedHashSet();
+      expressionContexts.add(expressionContext);
       for (StorageCandidate sc : scSet) {
         storageTableNames.add(sc.getStorageTable());
+        expressionContexts.add(sc.getCubeQueryContext().getExprCtx()
+          .getExpressionContext(expressionContext.getExprCol().getName(), expressionContext.getSrcAlias()));
       }
-      for (CandidateTable table : ec.evaluableExpressions.keySet()) {
-        if (storageTableNames.contains(table.getStorageTable())) {
-          return  MetastoreUtil.copyAST(ec.evaluableExpressions.get(table).iterator().next().finalAST);
+      for (ExpressionContext ec : expressionContexts) {
+        for (CandidateTable table : ec.evaluableExpressions.keySet()) {
+          if (storageTableNames.contains(table.getStorageTable())) {
+            return MetastoreUtil.copyAST(ec.evaluableExpressions.get(table).iterator().next().finalAST);
+          }
         }
       }
       return null;
