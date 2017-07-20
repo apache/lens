@@ -255,6 +255,9 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
         i.remove();
       }
     }
+    // sorting will make sure storage candidates come before complex candidates.
+    // ensuring maximum columns get selected from simpler candidates.
+    ucSet.sort(Comparator.comparing(Candidate::getChildrenCount));
     // Sets that contain all measures or no measures are removed from iteration.
     // find other facts
     for (Iterator<Candidate> i = ucSet.iterator(); i.hasNext();) {

@@ -273,6 +273,11 @@ public class SegmentationCandidate implements Candidate {
   }
 
   @Override
+  public int getChildrenCount() {
+    return segmentation.getSegments().size();
+  }
+
+  @Override
   public boolean isTimeRangeCoverable(TimeRange timeRange) throws LensException {
     return true;
   }
