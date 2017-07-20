@@ -209,21 +209,23 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
   private List<UnionCandidate> getCombinationTailIterative(List<Candidate> candidates, CubeQueryContext cubeql) {
     LinkedList<Candidate> candidateLinkedList = Lists.newLinkedList(candidates);
     List<List<Candidate>> incompleteCombinations = Lists.newArrayList();
+    incompleteCombinations.add(Lists.newArrayList());
     List<UnionCandidate> unionCandidates = Lists.newArrayList();
 
     while(!candidateLinkedList.isEmpty()) {
+      List<List<Candidate>> moreIncomplete = Lists.newArrayList();
       Candidate candidate = candidateLinkedList.remove();
-      incompleteCombinations.add(Lists.newArrayList());
-      Iterator<List<Candidate>> iter = incompleteCombinations.iterator();
-      while(iter.hasNext()) {
-        List<Candidate> incompleteCombination = iter.next();
+      for (List<Candidate> combination : incompleteCombinations) {
+        List<Candidate> incompleteCombination = Lists.newArrayList(combination);
         incompleteCombination.add(candidate);
         UnionCandidate unionCandidate = new UnionCandidate(incompleteCombination, cubeql);
         if (isCandidateCoveringTimeRanges(unionCandidate, cubeql.getTimeRanges())) {
           unionCandidates.add(unionCandidate);
-          iter.remove();
+        } else {
+          moreIncomplete.add(incompleteCombination);
         }
       }
+      incompleteCombinations.addAll(moreIncomplete);
     }
     return unionCandidates;
   }
