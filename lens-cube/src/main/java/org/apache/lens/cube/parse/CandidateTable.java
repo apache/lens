@@ -22,11 +22,12 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
+import org.apache.lens.cube.metadata.Named;
 
 /**
  * Candidate table interface
  */
-public interface CandidateTable {
+public interface CandidateTable extends Named {
 
   /**
    * Get storage string of the base table alias passed
@@ -55,13 +56,6 @@ public interface CandidateTable {
    * @return Cube or DerivedCube or Dimesions
    */
   AbstractCubeTable getBaseTable();
-
-  /**
-   * Get name of the candidate table
-   *
-   * @return name
-   */
-  String getName();
 
   /**
    * Get columns of candidate table

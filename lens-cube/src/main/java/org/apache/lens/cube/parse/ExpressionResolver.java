@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static java.util.stream.Collectors.toSet;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
@@ -557,6 +559,8 @@ class ExpressionResolver implements ContextRewriter {
             // Remove expressions for which denormalized columns are no more reachable
             esc.getDeNormCtx().pruneReferences(cubeql);
             if (!esc.getDeNormCtx().getTableToRefCols().isEmpty()
+              && esc.getDeNormCtx().getTableToRefCols().keySet().containsAll(
+                ec.getEvaluableExpressions().keySet().stream().map(Named::getName).collect(toSet()))
               && esc.getDeNormCtx().getTableToRefCols().keySet().stream()
               .map(esc.getDeNormCtx()::getNonReachableReferenceFields).noneMatch(Set::isEmpty)) {
               log.info("Removing expression {} as all tables have non reachable fields", esc);
