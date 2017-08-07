@@ -254,7 +254,7 @@ public class DriverSelectorQueryContext {
   }
 
   public void setDriverConf(LensDriver driver, Configuration conf) {
-    driverQueryContextMap.get(driver).setDriverSpecificConf(conf);
+    driverQueryContextMap.get(driver).setDriverSpecificConf(mergeConf(driver, conf));
   }
 
   public void setDriverCost(LensDriver driver, QueryCost cost) {

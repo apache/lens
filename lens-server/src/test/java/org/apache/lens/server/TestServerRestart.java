@@ -39,6 +39,7 @@ import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryExecutionService;
@@ -245,6 +246,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     assertEquals(lensQueryConf.getProperty(KEY_POST_SELECT), VALUE_POST_SELECT);
 
     if (afterRestart) {
+      assertEquals(driverConf.get(LensConfConstants.RESULT_SET_PARENT_DIR), "target/hive-lens-results");
       //This will be unavailable since if was not updated in LensConf by MockDriverQueryHook
       assertNull(driverConf.get(UNSAVED_KEY_POST_SELECT));
     } else {
