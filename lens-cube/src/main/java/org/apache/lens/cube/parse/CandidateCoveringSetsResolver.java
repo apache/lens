@@ -127,6 +127,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     // Get all covering fact sets
 //    List<UnionCandidate> unionCoveringSet = getCombinations(new ArrayList<>(allCandidatesPartiallyValid), cubeql);
     List<UnionCandidate> unionCoveringSet = getCombinationTailIterative(allCandidatesPartiallyValid, cubeql);
+    pruneRedundantUnionCoveringSets(unionCoveringSet);
     // Sort the Collection based on no of elements
     unionCoveringSet.sort(Comparator.comparing(Candidate::getChildrenCount));
     // prune candidate set which doesn't contain any common measure i
@@ -154,7 +155,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       }
     }
   }
-  @Deprecated
+
   private void pruneRedundantUnionCoveringSets(List<UnionCandidate> candidates) {
     for (int i = 0; i < candidates.size(); i++) {
       UnionCandidate current = candidates.get(i);
