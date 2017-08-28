@@ -23,5 +23,7 @@
                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <properties>
     <property name="cube.fact.query.where.filter" value=" dim1 = 10 "/>
+    <property name="cube.fact.virtualfact1.valid.columns"
+              value="msr1"/>
   </properties>
 </x_virtual_fact_table>
