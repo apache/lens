@@ -25,8 +25,11 @@ import static org.apache.lens.cube.parse.CubeQueryConfUtil.DISABLE_AGGREGATE_RES
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
+import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.server.api.LensServerAPITestUtil;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -119,5 +122,15 @@ public class TestVirtualFactQueries extends TestQueryRewrite {
 
   }
 
+  @Test
+  public void testVirtualFactValidColumns() throws Exception {
+
+    try {
+      rewriteCtx("select SUM(msr4) from virtualCube where " + TWO_DAYS_RANGE, getConfWithStorages("C1"));
+      fail("Rewrite should not succeed here");
+    } catch (LensException exc) {
+      assertEquals(exc.getErrorCode(), LensCubeErrorCode.COLUMN_NOT_FOUND.getLensErrorInfo().getErrorCode());
+    }
+  }
 }
 

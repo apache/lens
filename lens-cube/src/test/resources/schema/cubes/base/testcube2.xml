@@ -27,5 +27,7 @@
   <measures>
     <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr1" display_string="Measure1"
              description="first measure"/>
+    <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr4" display_string="Measure4"
+             description="fourth measure"/>
   </measures>
 </x_base_cube>

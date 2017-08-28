@@ -22,7 +22,8 @@
 <x_fact_table name="testfact9_base" cube_name="testcube2" weight="5.0" xmlns="uri:lens:cube:0.1">
   <columns>
 
-    <column name="msr1" _type="float" comment="second measure"/>
+    <column name="msr1" _type="float" comment="first measure"/>
+    <column name="msr4" _type="float" comment="fourth measure"/>
   </columns>
   <properties>
     <property name="cube.fact.testfact.cubename" value="testCube"/>
