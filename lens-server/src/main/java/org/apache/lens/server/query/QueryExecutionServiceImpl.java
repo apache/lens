@@ -3476,27 +3476,23 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
     // Add resources if either they haven't been marked as added on the session, or if Hive driver says they need
     // to be added to the corresponding hive driver
-    if (!hiveDriver.areDBResourcesAddedForSession(sessionIdentifier, ctx.getDatabase())) {
-      Collection<ResourceEntry> dbResources = session.getDBResources(ctx.getDatabase());
+    synchronized (session) {
+      if (!hiveDriver.areDBResourcesAddedForSession(sessionIdentifier, ctx.getDatabase())) {
+        Collection<ResourceEntry> dbResources = session.getDBResources(ctx.getDatabase());
 
-      if (CollectionUtils.isNotEmpty(dbResources)) {
-        log.info("Proceeding to add resources for DB {} for query {} resources: {}", session.getCurrentDatabase(),
-          ctx.getLogHandle(), dbResources);
+        if (CollectionUtils.isNotEmpty(dbResources)) {
+          log.info("Proceeding to add resources for DB {} for query {} resources: {}", session.getCurrentDatabase(),
+            ctx.getLogHandle(), dbResources);
 
-        List<ResourceEntry> failedDBResources = addResources(dbResources, sessionHandle, hiveDriver);
-        Iterator<ResourceEntry> itr = dbResources.iterator();
-        while (itr.hasNext()) {
-          ResourceEntry res = itr.next();
-          if (!failedDBResources.contains(res)) {
-            itr.remove();
-          }
+          List<ResourceEntry> failedDBResources = addResources(dbResources, sessionHandle, hiveDriver);
+          dbResources.removeIf(res -> !failedDBResources.contains(res));
+        } else {
+          log.info("No need to add DB resources for session: {} db= {}", sessionIdentifier,
+            session.getCurrentDatabase());
         }
-      } else {
-        log.info("No need to add DB resources for session: {} db= {}", sessionIdentifier, session.getCurrentDatabase());
+        hiveDriver.setResourcesAddedForSession(sessionIdentifier, ctx.getDatabase());
       }
-      hiveDriver.setResourcesAddedForSession(sessionIdentifier, ctx.getDatabase());
     }
-
     // Get pending session resources which needed to be added for this database
     Collection<ResourceEntry> pendingResources =
       session.getPendingSessionResourcesForDatabase(ctx.getDatabase());
