@@ -50,6 +50,15 @@ public class JoinClause implements Comparable<JoinClause> {
     this.dimsInPath = dimsInPath;
   }
 
+  public TableRelationship getStarJoin(String table) {
+    for (Map.Entry<TableRelationship, JoinTree>  entry : getJoinTree().getSubtrees().entrySet()) {
+      if (entry.getValue().getDepthFromRoot() == 1 && table.equals(entry.getValue().getAlias())) {
+        return entry.getKey();
+      }
+    }
+    return null;
+  }
+
   void initChainColumns() {
     for (List<TableRelationship> path : chain.values()) {
       for (TableRelationship edge : path) {

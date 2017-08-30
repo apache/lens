@@ -90,9 +90,8 @@ public class StorageCandidateHQLContext extends DimHQLContext {
       String qualifiedStorageTable = getStorageCandidate().getStorageName();
       String storageTable = qualifiedStorageTable.substring(qualifiedStorageTable.indexOf(".") + 1);
       String where = getCubeQueryContext().getWhere(this, getCubeQueryContext().getAutoJoinCtx(),
-        getQueryAst().getWhereAST(),
         getCubeQueryContext().getAliasForTableName(getStorageCandidate().getBaseTable().getName()),
-        getCubeQueryContext().shouldReplaceDimFilterWithFactFilter(), storageTable, getDimsToQuery());
+        getCubeQueryContext().shouldReplaceDimFilterWithFactFilter(), getDimsToQuery());
       setWhere(where);
     }
   }
