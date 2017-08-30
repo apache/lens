@@ -49,7 +49,6 @@ import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.join.TableRelationship;
 import org.apache.lens.cube.parse.join.AutoJoinContext;
 import org.apache.lens.cube.parse.join.JoinClause;
-import org.apache.lens.cube.parse.join.JoinTree;
 import org.apache.lens.cube.parse.join.JoinUtils;
 import org.apache.lens.server.api.error.LensException;
 
@@ -1137,14 +1136,13 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return ImmutableSet.copyOf(this.queriedTimeDimCols);
   }
 
-  String getWhere(StorageCandidateHQLContext sc, AutoJoinContext autoJoinCtx,
-    ASTNode node, String cubeAlias,
-    boolean shouldReplaceDimFilter, String storageTable,
-    Map<Dimension, CandidateDim> dimToQuery) throws LensException {
+  String getWhere(StorageCandidateHQLContext sc, AutoJoinContext autoJoinCtx, String cubeAlias,
+    boolean shouldReplaceDimFilter, Map<Dimension, CandidateDim> dimToQuery) throws LensException {
     String whereString;
     if (autoJoinCtx != null && shouldReplaceDimFilter) {
       List<String> allfilters = new ArrayList<>();
-      getAllFilters(node, cubeAlias, allfilters, autoJoinCtx.getJoinClause(sc.getStorageCandidate()), dimToQuery);
+      getAllFilters(sc.getQueryAst().getWhereAST(), cubeAlias, allfilters,
+        autoJoinCtx.getJoinClause(sc.getStorageCandidate()), dimToQuery);
       whereString = StringUtils.join(allfilters, " and ");
     } else {
       whereString = HQLParser.getString(sc.getQueryAst().getWhereAST());
@@ -1152,58 +1150,33 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return whereString;
   }
 
-  private void getAllFilters(ASTNode node, String cubeAlias, List<String> allFilters,
-                                    JoinClause joinClause,  Map<Dimension, CandidateDim> dimToQuery)
-    throws LensException {
-
-    if (node.getToken().getType() == HiveParser.KW_AND) {
-      // left child is and
-      if (node.getChild(0).getType() == HiveParser.KW_AND) {
-        // take right corresponding to right
-        String table = getTableFromFilterAST((ASTNode) node.getChild(1));
-        allFilters.add(getFilter(table, cubeAlias, node, joinClause, 1, dimToQuery));
-      } else if (node.getChildCount() > 1) {
-        for (int i = 0; i < node.getChildCount(); i++) {
-          String table = getTableFromFilterAST((ASTNode) node.getChild(i));
-          allFilters.add(getFilter(table, cubeAlias, node, joinClause, i, dimToQuery));
-        }
+  protected static void getAllFilters(ASTNode node, String cubeAlias, List<String> allFilters, JoinClause joinClause,
+    Map<Dimension, CandidateDim> dimToQuery) throws LensException {
+    if (node.getToken().getType() == HiveParser.KW_AND || node.getToken().getType() == HiveParser.TOK_WHERE) {
+      for (int i = 0; i < node.getChildCount(); i++) {
+        ASTNode child = (ASTNode) node.getChild(i);
+        getAllFilters(child, cubeAlias, allFilters, joinClause, dimToQuery);
       }
-    } else if (node.getParent() == null
-        && node.getToken().getType() != HiveParser.KW_AND
-      && node.getChild(0).getType() != HiveParser.KW_AND) {
-      // if node is the only child
-      allFilters.add(HQLParser.getString((ASTNode) node));
-    }
-    for (int i = 0; i < node.getChildCount(); i++) {
-      ASTNode child = (ASTNode) node.getChild(i);
-      getAllFilters(child, cubeAlias, allFilters, joinClause, dimToQuery);
+    } else {
+      String table = getTableFromFilterAST(node);
+      allFilters.add(getFilter(table, cubeAlias, node, joinClause, dimToQuery));
     }
   }
 
-  private String getFilter(String table, String cubeAlias, ASTNode node,  JoinClause joinClause,
-                           int index,  Map<Dimension, CandidateDim> dimToQuery)
+  private static String getFilter(String table, String cubeAlias, ASTNode node,  JoinClause joinClause,
+                           Map<Dimension, CandidateDim> dimToQuery)
     throws LensException{
     String filter;
-    if (table != null && !table.equals(cubeAlias) && getStarJoin(joinClause, table) != null) {
+    if (table != null && !table.equals(cubeAlias) && joinClause.getStarJoin(table) != null) {
       //rewrite dim filter to fact filter if its a star join with fact
-      filter = buildFactSubqueryFromDimFilter(getStarJoin(joinClause, table),
-          (ASTNode) node.getChild(index), table, dimToQuery, cubeAlias);
+      filter = buildFactSubqueryFromDimFilter(joinClause.getStarJoin(table), node, table, dimToQuery, cubeAlias);
     } else {
-      filter = HQLParser.getString((ASTNode) node.getChild(index));
+      filter = HQLParser.getString(node);
     }
     return filter;
   }
 
-  private TableRelationship getStarJoin(JoinClause joinClause, String table) {
-    for (Map.Entry<TableRelationship, JoinTree>  entry : joinClause.getJoinTree().getSubtrees().entrySet()) {
-      if (entry.getValue().getDepthFromRoot() == 1 && table.equals(entry.getValue().getAlias())) {
-        return entry.getKey();
-      }
-    }
-    return null;
-  }
-
-  private String getTableFromFilterAST(ASTNode node) {
+  private static String getTableFromFilterAST(ASTNode node) {
 
     if (node.getToken().getType() == HiveParser.DOT) {
       ASTNode n = HQLParser.findNodeByPath(node, TOK_TABLE_OR_COL, Identifier);
@@ -1222,7 +1195,7 @@ public class CubeQueryContext extends TracksQueriedColumns implements QueryAST, 
     return null;
   }
 
-  private String buildFactSubqueryFromDimFilter(TableRelationship tabRelation, ASTNode dimFilter,
+  private static String buildFactSubqueryFromDimFilter(TableRelationship tabRelation, ASTNode dimFilter,
                                                 String dimAlias, Map<Dimension, CandidateDim> dimToQuery,
                                                 String cubeAlias)
     throws LensException {
