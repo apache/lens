@@ -32,6 +32,8 @@
     <property name="cube.timedim.partition.test_time_dim2" value="ttd2"/>
   </properties>
   <measures>
+    <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr23" display_string="Measure23"
+             description="twenty third measure"/>
     <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr21" display_string="Measure22"
              description="second measure"/>
     <measure _type="BIGINT" default_aggr="COUNT" name="msr4" display_string="Measure4" description="fourth measure"/>

@@ -533,9 +533,9 @@ public class StorageCandidate implements Candidate, CandidateTable {
           log.debug("Adding non existing partition {}", part);
           if (addNonExistingParts) {
             // Add non existing partitions for all cases of whether we populate all non existing or not.
-            this.participatingUpdatePeriods.add(maxInterval);
             missingPartitions.add(part);
             if (!failOnPartialData) {
+              this.participatingUpdatePeriods.add(maxInterval);
               partitions.add(part);
               part.getStorageTables().add(storageTable);
             }

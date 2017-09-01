@@ -65,7 +65,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
   @BeforeTest
   public void setupDriver() throws Exception {
     conf = LensServerAPITestUtil.getConfiguration(
-      DRIVER_SUPPORTED_STORAGES, "C0,C1,C2",
+      DRIVER_SUPPORTED_STORAGES, "C0,C1,C2,C98",
       DISABLE_AUTO_JOINS, true,
       ENABLE_SELECT_TO_GROUPBY, true,
       ENABLE_GROUP_BY_TO_SELECT, true,
@@ -1467,6 +1467,19 @@ public class TestCubeRewriter extends TestQueryRewrite {
         .getParticipatingPartitions());
     // pt does not exist beyond 1 day. So in this test, max look ahead possible is 3
     assertEquals(partsQueried, expectedPartsQueried);
+  }
+
+  @Test
+  public void testTimeRangeIn() throws Exception {
+    //check whether time_range_in is resolving in cube rewrite
+    Configuration conf = getConf();
+    conf.set(CubeQueryConfUtil.PROCESS_TIME_PART_COL, "pt");
+    conf.set(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "true");
+    conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS, AbridgedTimeRangeWriter.class, TimeRangeWriter.class);
+    CubeQueryContext ctx = rewriteCtx("select dim1, sum(msr23)" + " from testCube" + " where " + ONE_DAY_RANGE_IT,
+      conf);
+    String rewrittenQuery = ctx.toHQL();
+    assertTrue(!rewrittenQuery.contains("time_range_in"));
   }
 
   @Test
