@@ -150,6 +150,7 @@ public class DateFactory {
 
   // Time Instances as Date Type
   public static final Date NOW;
+  public static final Date ONEDAY_BACK;
   public static final Date TWODAYS_BACK;
   public static final Date TWO_MONTHS_BACK;
   public static final Date THIS_MONTH_TRUNCATED;
@@ -168,6 +169,7 @@ public class DateFactory {
   public static final String TWO_DAYS_RANGE_TTD2;
   public static final String TWO_DAYS_RANGE_TTD2_BEFORE_4_DAYS;
   public static final String TWO_DAYS_RANGE_IT;
+  public static final String ONE_DAY_RANGE_IT;
   public static final String THIS_YEAR_RANGE;
   public static final String LAST_YEAR_RANGE;
   public static final String TWO_MONTHS_RANGE_UPTO_MONTH;
@@ -188,6 +190,9 @@ public class DateFactory {
 
     // Figure out if current hour is 0th hour
     zerothHour = getDateStringWithOffset(HOURLY, 0).endsWith("-00");
+
+    ONEDAY_BACK = getDateWithOffset(DAILY, -1);
+    System.out.println("Test ONEDAY_BACK:" + ONEDAY_BACK);
 
     TWODAYS_BACK = getDateWithOffset(DAILY, -2);
     System.out.println("Test TWODAYS_BACK:" + TWODAYS_BACK);
@@ -214,6 +219,7 @@ public class DateFactory {
     TWO_DAYS_RANGE_TTD2 = getTimeRangeString("test_time_dim2", DAILY, -2, 0, HOURLY);
     TWO_DAYS_RANGE_TTD2_BEFORE_4_DAYS = getTimeRangeString("test_time_dim2", DAILY, -6, -4, HOURLY);
     TWO_DAYS_RANGE_IT = getTimeRangeString("it", DAILY, -2, 0, HOURLY);
+    ONE_DAY_RANGE_IT = getTimeRangeString("it", DAILY, -1, 0, DAILY);
     THIS_YEAR_RANGE = getTimeRangeString(YEARLY, 0, 1);
     LAST_YEAR_RANGE = getTimeRangeString(YEARLY, -1, 0);
     TWO_MONTHS_RANGE_UPTO_MONTH = getTimeRangeString(MONTHLY, -2, 0);
