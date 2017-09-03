@@ -34,6 +34,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 
 import org.antlr.runtime.CommonToken;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -262,7 +263,7 @@ class ExpressionResolver implements ContextRewriter {
 
   @RequiredArgsConstructor
   @ToString
-  private static class PickedExpression {
+  static class PickedExpression {
     private final String srcAlias;
     private final ExprSpecContext pickedCtx;
     private transient ASTNode reWrittenAST = null;
@@ -286,11 +287,13 @@ class ExpressionResolver implements ContextRewriter {
 
   static class ExpressionResolverContext {
     @Getter
-    private Map<String, Set<ExpressionContext>> allExprsQueried = new HashMap<String, Set<ExpressionContext>>();
-    private Map<String, Set<PickedExpression>> pickedExpressions = new HashMap<String, Set<PickedExpression>>();
+    private Map<String, Set<ExpressionContext>> allExprsQueried = new HashMap<>();
+    private Map<String, Set<PickedExpression>> pickedExpressions = new HashMap<>();
+    @Getter
+    private Map<DimHQLContext, Map<String, Set<PickedExpression>>> pickedExpressionsPerCandidate = new HashMap<>();
     private Map<String, ASTNode> nonPickedExpressionsForCandidate = new HashMap<String, ASTNode>();
     private final CubeQueryContext cubeql;
-
+    private boolean replacedHavingExpressions = false;
     ExpressionResolverContext(CubeQueryContext cubeql) {
       this.cubeql = cubeql;
     }
@@ -409,7 +412,7 @@ class ExpressionResolver implements ContextRewriter {
         // Replace picked expressions in all the base trees
         replacePickedExpressions(sc);
       }
-
+      pickedExpressionsPerCandidate.put(sc, Maps.newHashMap(pickedExpressions));
       pickedExpressions.clear();
       nonPickedExpressionsForCandidate.clear();
 
@@ -428,16 +431,42 @@ class ExpressionResolver implements ContextRewriter {
       replaceAST(cubeql, queryAST.getJoinAST());
       replaceAST(cubeql, queryAST.getGroupByAST());
       // Resolve having expression for StorageCandidate
-      if (queryAST.getHavingAST() != null) {
-        replaceAST(cubeql, queryAST.getHavingAST());
-      } else if (cubeql.getHavingAST() != null) {
-        ASTNode havingCopy = MetastoreUtil.copyAST(cubeql.getHavingAST());
-        replaceAST(cubeql, havingCopy);
-        queryAST.setHavingAST(havingCopy);
-      }
       replaceAST(cubeql, queryAST.getOrderByAST());
     }
+    public void replaceHavingExpressions() throws LensException {
+      replaceHavingExpressions(pickedExpressionsPerCandidate);
+    }
+    public void replaceHavingExpressions(
+      Map<DimHQLContext, Map<String, Set<PickedExpression>>> pickedExpressionsPerCandidate) throws LensException {
+      if (cubeql.getHavingAST() != null && !replacedHavingExpressions) {
+        HQLParser.bft(cubeql.getHavingAST(), visited -> {
+          ASTNode node1 = visited.getNode();
+          int childcount = node1.getChildCount();
+          for (int i = 0; i < childcount; i++) {
+            ASTNode current = (ASTNode) node1.getChild(i);
+            if (current.getToken().getType() == DOT) {
+              // This is for the case where column name is prefixed by table name
+              // or table alias
+              // For example 'select fact.id, dim2.id ...'
+              // Right child is the column name, left child.ident is table name
+              ASTNode tabident = HQLParser.findNodeByPath(current, TOK_TABLE_OR_COL, Identifier);
+              ASTNode colIdent = (ASTNode) current.getChild(1);
+              String column = colIdent.getText().toLowerCase();
 
+              Optional<PickedExpression> exprOptional = pickedExpressionsPerCandidate.values().stream()
+                .filter(x -> x.containsKey(column)).map(x -> x.get(column)).flatMap(Collection::stream)
+                .filter(x -> x.srcAlias.equals(tabident.getText().toLowerCase())).findFirst();
+
+              if (exprOptional.isPresent()) {
+                PickedExpression expr = exprOptional.get();
+                node1.setChild(i, replaceAlias(expr.getRewrittenAST(), cubeql));
+              }
+            }
+          }
+        });
+        replacedHavingExpressions = true;
+      }
+    }
     private void replaceAST(final CubeQueryContext cubeql, ASTNode node) throws LensException {
       if (node == null) {
         return;

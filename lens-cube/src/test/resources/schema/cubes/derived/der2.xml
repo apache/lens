@@ -33,6 +33,8 @@
   <measure_names>
     <measure_name>directmsr</measure_name>
     <measure_name>msr2</measure_name>
+    <measure_name>msr21</measure_name>
+    <measure_name>msr22</measure_name>
     <measure_name>msr12</measure_name>
     <measure_name>msr14</measure_name>
     <measure_name>msr13</measure_name>

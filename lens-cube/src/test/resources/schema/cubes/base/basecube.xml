@@ -269,6 +269,12 @@
     <expression _type="double" name="flooredmsr12" display_string="Floored msr12" description="floored measure12">
       <expr_spec expr="floor(msr12)"/>
     </expression>
+    <expression _type="double" name="complexmsr12" display_string="Floored msr12" description="floored measure12">
+      <expr_spec expr="floor(msr12)+0"/>
+    </expression>
+    <expression _type="double" name="effectivemsr2" display_string="effective msr12" description="effective measure2">
+      <expr_spec expr="msr2 + msr21 + msr22"/>
+    </expression>
     <expression _type="String" name="cityandstate" display_string="City and State"
                 description="city and state together">
       <expr_spec expr="concat(cityname, &quot;:&quot;, statename_cube)"/>
