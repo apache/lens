@@ -129,6 +129,10 @@ public class StorageCandidateHQLContext extends DimHQLContext {
   @Override
   protected void setMissingExpressions() throws LensException {
     setFrom(getFromTable());
+    if (getQueryAst().getHavingAST() != null) {
+      getStorageCandidate().getCubeQueryContext().getExprCtx().replaceHavingExpressions();
+      getQueryAst().setHavingAST(getCubeQueryContext().getHavingAST());
+    }
     String whereString = genWhereClauseWithDimPartitions(getWhere());
     StringBuilder whereStringBuilder = (whereString != null) ? new StringBuilder(whereString) :  new StringBuilder();
 
