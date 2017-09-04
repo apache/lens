@@ -21,6 +21,7 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.metadata.MetastoreConstants.VIRTUAL_FACT_FILTER;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -50,7 +51,17 @@ public class StorageCandidateHQLContext extends DimHQLContext {
     this.storageCandidate = storageCandidate;
     this.rootCubeQueryContext = rootCubeQueryContext;
     getCubeQueryContext().addRangeClauses(this);
-    if (!Objects.equals(getStorageCandidate(), rootCubeQueryContext.getPickedCandidate())) {
+    boolean setNullHaving = true;
+    if (Objects.equals(getStorageCandidate(), rootCubeQueryContext.getPickedCandidate())) {
+      setNullHaving = false;
+    } else {
+      Collection<? extends Candidate> children = rootCubeQueryContext.getPickedCandidate().getChildren();
+      // children should not be null. Not checking for null here.
+      if (children.size() == 1 && Objects.equals(getStorageCandidate(), children.iterator().next())) {
+        setNullHaving = false;
+      }
+    }
+    if (setNullHaving) {
       getQueryAst().setHavingAST(null);
     }
   }

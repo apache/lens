@@ -316,11 +316,11 @@ public class TestCubeSegmentationRewriter extends TestQueryRewrite {
 
   @Test
   public void testSegmentationWithSingleSegment() throws LensException {
-    String userQuery = "select segmsr1 from basecube where " + TWO_DAYS_RANGE;
+    String userQuery = "select zipcode, segmsr1 from basecube where " + TWO_DAYS_RANGE + " having segmsr1 > 10";
     String actual = rewrite(userQuery, getConf());
     String expected = getExpectedQuery("basecube",
-      "select sum(basecube.segmsr1) FROM ", null,
-      null,
+      "select basecube.zipcode, sum(basecube.segmsr1) FROM ", null,
+      "group by basecube.zipcode having sum(basecube.segmsr1) > 10",
       getWhereForDailyAndHourly2days("basecube", "c1_b1fact1"));
     compareQueries(actual, expected);
   }
