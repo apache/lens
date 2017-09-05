@@ -169,7 +169,6 @@ public class StorageCandidate implements Candidate, CandidateTable {
       rangeToPartitions.put(entry.getKey(), new LinkedHashSet<>(entry.getValue()));
     }
     this.rangeToExtraWhereFallBack = sc.rangeToExtraWhereFallBack;
-    this.answerableMeasurePhraseIndices = sc.answerableMeasurePhraseIndices;
   }
 
   public StorageCandidate(CubeInterface cube, FactTable fact, String storageName, CubeQueryContext cubeQueryContext)
@@ -933,6 +932,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
         updatePeriodSpecificSc = copy();
         updatePeriodSpecificSc.setResolvedName(getCubeMetastoreClient().getStorageTableName(fact.getSourceFactName(),
           storageName, period));
+        updatePeriodSpecificSc.isStorageTblsAtUpdatePeriodLevel = false;
         updatePeriodSpecificSc.truncatePartitions(period);
         periodSpecificScList.add(updatePeriodSpecificSc);
       }

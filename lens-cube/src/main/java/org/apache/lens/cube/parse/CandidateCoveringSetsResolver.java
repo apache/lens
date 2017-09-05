@@ -169,7 +169,8 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
     }
   }
   @Deprecated
-  private List<UnionCandidate> getCombinations(final List<Candidate> candidates, CubeQueryContext cubeql) {
+  private List<UnionCandidate> getCombinations(final List<Candidate> candidates, CubeQueryContext cubeql)
+    throws LensException {
     List<UnionCandidate> combinations = new LinkedList<>();
     int size = candidates.size();
     int threshold = Double.valueOf(Math.pow(2, size)).intValue() - 1;
@@ -187,6 +188,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
       }
       UnionCandidate uc = new UnionCandidate(individualCombinationList, cubeql);
       if (isCandidateCoveringTimeRanges(uc, cubeql.getTimeRanges())) {
+        uc.cloneChildren();
         combinations.add(uc);
       }
     }
@@ -207,7 +209,8 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
    * @param cubeql
    * @return
    */
-  private List<UnionCandidate> getCombinationTailIterative(List<Candidate> candidates, CubeQueryContext cubeql) {
+  private List<UnionCandidate> getCombinationTailIterative(List<Candidate> candidates, CubeQueryContext cubeql)
+  throws LensException {
     LinkedList<Candidate> candidateLinkedList = Lists.newLinkedList(candidates);
     List<List<Candidate>> incompleteCombinations = Lists.newArrayList();
     incompleteCombinations.add(Lists.newArrayList());
@@ -221,6 +224,7 @@ public class CandidateCoveringSetsResolver implements ContextRewriter {
         incompleteCombination.add(candidate);
         UnionCandidate unionCandidate = new UnionCandidate(incompleteCombination, cubeql);
         if (isCandidateCoveringTimeRanges(unionCandidate, cubeql.getTimeRanges())) {
+          unionCandidate.cloneChildren();
           unionCandidates.add(unionCandidate);
         } else {
           moreIncomplete.add(incompleteCombination);

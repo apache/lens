@@ -65,7 +65,12 @@ public class UnionCandidate implements Candidate {
     this.children = Lists.newArrayList(childCandidates);
     this.cubeQueryContext = cubeQueryContext;
   }
-
+  void cloneChildren() throws LensException {
+    ListIterator<Candidate> iter = children.listIterator();
+    while(iter.hasNext()) {
+      iter.set(iter.next().copy());
+    }
+  }
   @Override
   public Set<Integer> getAnswerableMeasurePhraseIndices() {
     // All children in the UnionCandiate will be having common quriable measure
