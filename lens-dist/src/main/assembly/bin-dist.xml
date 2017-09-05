@@ -331,6 +331,14 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_aggr_fact2_local4</outputDirectory>
+      <includes>
+        <include>sales-aggr-fact2-local4*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
       <outputDirectory>/client/examples/data/sales_raw_local1</outputDirectory>
       <includes>
         <include>sales-raw-local1*.data</include>
