@@ -147,7 +147,7 @@ public class CubeVirtualFactTable extends AbstractCubeTable implements FactTable
   }
 
   public Date getRelativeStartTime() {
-    String relativeStartTime = this.getProperties().get(MetastoreConstants.FACT_ABSOLUTE_START_TIME);
+    String relativeStartTime = this.getProperties().get(MetastoreConstants.FACT_RELATIVE_START_TIME);
     Date relativeDate = null;
     if (StringUtils.isNotBlank(relativeStartTime)) {
       relativeDate = MetastoreUtil.getDateFromProperty(relativeStartTime, true, true);
