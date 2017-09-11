@@ -317,12 +317,14 @@ class ExpressionResolver implements ContextRewriter {
     }
 
     ExpressionContext getExpressionContext(String expr, String alias) {
-      for (ExpressionContext ec : allExprsQueried.get(expr)) {
-        if (ec.getSrcAlias().equals(alias)) {
-          return ec;
+      if (allExprsQueried.get(expr) != null) {
+        for (ExpressionContext ec : allExprsQueried.get(expr)) {
+          if (ec.getSrcAlias().equals(alias)) {
+            return ec;
+          }
         }
       }
-      throw new IllegalArgumentException("no expression available for " + expr + " alias:" + alias);
+      return null;
     }
 
     boolean hasMeasures(String expr, CubeInterface cube) {
@@ -540,8 +542,11 @@ class ExpressionResolver implements ContextRewriter {
       expressionContexts.add(expressionContext);
       for (StorageCandidate sc : scSet) {
         storageTableNames.add(sc.getStorageTable());
-        expressionContexts.add(sc.getCubeQueryContext().getExprCtx()
-          .getExpressionContext(expressionContext.getExprCol().getName(), expressionContext.getSrcAlias()));
+        ExpressionContext ex = sc.getCubeQueryContext().getExprCtx().getExpressionContext(expressionContext.
+            getExprCol().getName(), expressionContext.getSrcAlias());
+        if (ex != null) {
+          expressionContexts.add(ex);
+        }
       }
       for (ExpressionContext ec : expressionContexts) {
         for (CandidateTable table : ec.evaluableExpressions.keySet()) {
