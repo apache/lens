@@ -204,7 +204,8 @@ public class UnionQueryWriter extends SimpleHQLContext {
       ASTNode outerOrderby = new ASTNode(child);
       ASTNode tokNullsChild = (ASTNode) child.getChild(0);
       ASTNode outerTokNullsChild = new ASTNode(tokNullsChild);
-      if (((ASTNode) tokNullsChild.getChild(0)).getToken().getType() == HiveParser.DOT) {
+      if (((ASTNode) tokNullsChild.getChild(0)).getToken().getType() == HiveParser.DOT ||
+          ((ASTNode) tokNullsChild.getChild(0)).getToken().getType() == HiveParser.TOK_FUNCTION) {
         outerTokNullsChild.addChild(innerToOuterSelectASTs.get(new HQLParser.HashableASTNode((ASTNode) tokNullsChild)));
       } else {
         outerTokNullsChild.addChild(tokNullsChild);
