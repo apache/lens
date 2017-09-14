@@ -404,4 +404,25 @@ public class SegmentationCandidate implements Candidate {
     return cubeQueryContextMap.entrySet().stream().filter(entry -> entry.getValue().getPickedCandidate() == null)
       .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().getStoragePruningMsgs()));
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (super.equals(obj)) {
+      return true;
+    }
+
+    if (obj == null || !(obj instanceof SegmentationCandidate)) {
+      return false;
+    }
+
+    SegmentationCandidate segmantationCandidate = (SegmentationCandidate) obj;
+    return (segmantationCandidate.segmentation.getSegments().equals(this.segmentation.getSegments())
+        && segmantationCandidate.segmentation.getBaseCube().equals(this.segmentation.getBaseCube()));
+  }
+
+  @Override
+  public int hashCode() {
+    return segmentation.hashCode();
+  }
+
 }
