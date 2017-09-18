@@ -54,7 +54,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
   private Map<StorageCandidateHQLContext, ASTNode> storageCandidateToSelectAstMap = new HashMap<>();
   private CubeQueryContext cubeql;
   static final ASTNode DEFAULT_MEASURE_AST;
-  private static final String DEFAULT_MEASURE = "0.0";
+  private static final String DEFAULT_MEASURE = "0";
   static {
     try {
       DEFAULT_MEASURE_AST = HQLParser.parseExpr(DEFAULT_MEASURE);
@@ -204,8 +204,8 @@ public class UnionQueryWriter extends SimpleHQLContext {
       ASTNode outerOrderby = new ASTNode(child);
       ASTNode tokNullsChild = (ASTNode) child.getChild(0);
       ASTNode outerTokNullsChild = new ASTNode(tokNullsChild);
-      if (((ASTNode) tokNullsChild.getChild(0)).getToken().getType() == HiveParser.DOT ||
-          ((ASTNode) tokNullsChild.getChild(0)).getToken().getType() == HiveParser.TOK_FUNCTION) {
+      if (((ASTNode) tokNullsChild.getChild(0)).getToken().getType() == HiveParser.DOT
+          || ((ASTNode) tokNullsChild.getChild(0)).getToken().getType() == HiveParser.TOK_FUNCTION) {
         outerTokNullsChild.addChild(innerToOuterSelectASTs.get(new HQLParser.HashableASTNode((ASTNode) tokNullsChild)));
       } else {
         outerTokNullsChild.addChild(tokNullsChild);
@@ -217,7 +217,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
   }
 
   /**
-   * Get the select expression. In case of node is default retunrs "0.0" with alias
+   * Get the select expression. In case of node is default retunrs "0" with alias
    * otherwise the select phrase with alias.
    *
    * @param nodeWithoutAlias
@@ -247,7 +247,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
 
   /**
    * Get the aggregate node for the SelectPhrase index. A given measure might not be answerable
-   * for a StorageCanddate. In that case get the non default aggregate node wcich ideally not "0.0",
+   * for a StorageCanddate. In that case get the non default aggregate node wcich ideally not "0",
    * from otherStorage candidate.
    *
    * @param position
@@ -267,7 +267,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
   }
 
   /**
-   * Set the default value "0.0" in the non answerable aggreagte expressions.
+   * Set the default value "0" in the non answerable aggreagte expressions.
    * @param node
    * @param sc
    * @return
@@ -387,7 +387,7 @@ public class UnionQueryWriter extends SimpleHQLContext {
 
   /**
    * Set the default value for the non queriable measures. If a measure is not
-   * answerable from a StorageCandidate set it as 0.0
+   * answerable from a StorageCandidate set it as "0"
    *
    * @throws LensException
    */

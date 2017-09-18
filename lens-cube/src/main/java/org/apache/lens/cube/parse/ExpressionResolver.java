@@ -560,7 +560,7 @@ class ExpressionResolver implements ContextRewriter {
 
     private  ASTNode getDefaultExpr(ASTNode node) {
       if (HQLParser.isAggregateAST(node)) {
-        node.setChild(1, new ASTNode(new CommonToken(HiveParser.Identifier, "0.0")));
+        node.setChild(1, new ASTNode(new CommonToken(HiveParser.Identifier, "0")));
       }
       for (int i = 0; i < node.getChildCount(); i++) {
         ASTNode child = (ASTNode) node.getChild(i);

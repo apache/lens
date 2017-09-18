@@ -86,11 +86,11 @@ public class TestVirtualFactQueries extends TestQueryRewrite {
   public void testVirtualFactUnionQuery() throws Exception {
 
     String expectedInnerSelect = getExpectedQuery("virtualcube", "SELECT (virtualcube.cityid) AS `alias0`,"
-        + " sum((virtualcube.msr2)) AS `alias1`,0.0 AS `alias2` FROM ",
+        + " sum((virtualcube.msr2)) AS `alias1`,0 AS `alias2` FROM ",
       null, null, "GROUP BY (virtualcube.cityid)", null,
       getWhereForDailyAndHourly2days("virtualcube", "c1_testfact8_base"))
       + " UNION ALL " + getExpectedQuery("virtualcube", "SELECT (virtualcube.cityid) AS `alias0`,"
-        + "0.0 AS `alias1`, sum((virtualcube.msr3)) AS `alias2` FROM ",
+        + "0 AS `alias1`, sum((virtualcube.msr3)) AS `alias2` FROM ",
       null, null, "GROUP BY (virtualcube.cityid)", null,
       getWhereForDailyAndHourly2days("virtualcube", "c1_testfact7_base"));
 
