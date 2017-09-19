@@ -515,7 +515,8 @@ public class StorageCandidate implements Candidate, CandidateTable {
                       partWhereClauseFormat);
                     updatePartitionStorage(innerPart);
                     innerPart.setFound(pPart.isFound());
-                    if (innerPart.isFound()) {
+                    if (innerPart.isFound() || !failOnPartialData) {
+                      this.participatingUpdatePeriods.add(maxInterval);
                       partitions.add(innerPart);
                     }
                   }
