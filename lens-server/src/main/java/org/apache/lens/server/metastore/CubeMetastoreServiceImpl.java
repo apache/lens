@@ -781,6 +781,10 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
 
   public void dropPartitionFromStorageByFilter(LensSessionHandle sessionid, String cubeTableName,
     String storageName, String filter) throws LensException {
+    dropPartitionFromStorageByFilter(sessionid, cubeTableName, storageName, filter, null);
+  }
+  public void dropPartitionFromStorageByFilter(LensSessionHandle sessionid, String cubeTableName,
+    String storageName, String filter, String updatePeriodString) throws LensException {
     try (SessionContext ignored = new SessionContext(sessionid)){
       Set<String> storageTables = getAllTablesForStorage(sessionid, cubeTableName, storageName);
       List<Partition> partitions  = new ArrayList<>();
@@ -788,11 +792,15 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       for (String tableName : storageTables) {
         partitions.addAll(msClient.getPartitionsByFilter(tableName, filter));
       }
+      if (updatePeriodString!=null) {
+        partitions.removeIf(part -> !part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD).
+            equals((updatePeriodString.toUpperCase())));
+      }
       for (Partition part : partitions) {
         try {
           Map<String, Date> timeSpec = new HashMap<>();
           Map<String, String> nonTimeSpec = new HashMap<>();
-          UpdatePeriod updatePeriod = populatePartSpec(part, timeSpec, nonTimeSpec);
+          UpdatePeriod updatePeriod= populatePartSpec(part, timeSpec, nonTimeSpec);
           msClient.dropPartition(cubeTableName, storageName, timeSpec, nonTimeSpec, updatePeriod);
         } catch (HiveException e) {
           if (!(e.getCause() instanceof NoSuchObjectException)) {

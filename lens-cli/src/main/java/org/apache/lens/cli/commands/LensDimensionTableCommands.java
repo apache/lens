@@ -322,6 +322,11 @@ public class LensDimensionTableCommands extends LogicalTableCrudCommand<XDimensi
   }
 
   @Override
+  protected APIResult doDropPartitions(String tableName, String storageName, String filter, String updatePeriod) {
+    return getClient().dropAllPartitionsOfDim(tableName, storageName, filter);
+  }
+
+  @Override
   protected APIResult doUpdatePartition(String tableName, String storageName, String validPath) {
     return getClient().updatePartitionOfDim(tableName, storageName, validPath);
   }

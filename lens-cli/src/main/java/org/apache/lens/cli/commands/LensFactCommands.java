@@ -198,9 +198,10 @@ public class LensFactCommands extends LogicalTableCrudCommand<XFact> {
   /**
    * Drop all partitions of fact.
    *
-   * @param tableName   fact name
-   * @param storageName storage name
-   * @param filter      partition query filter
+   * @param tableName       fact name
+   * @param storageName     storage name
+   * @param filter          partition query filter
+   * @param updatePeriod    update period of partition to be dropped
    * @return the string
    */
   @CliCommand(value = "fact drop partitions",
@@ -209,8 +210,9 @@ public class LensFactCommands extends LogicalTableCrudCommand<XFact> {
   public String dropAllPartitionsOfFact(
     @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
     @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
+    @CliOption(key = {"", "update_period"}, mandatory = true, help = "<update_period>") String updatePeriod,
     @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
-    return dropPartitions(tableName, storageName, filter);
+    return dropPartitions(tableName, storageName, filter, updatePeriod);
   }
 
   /**
@@ -324,6 +326,11 @@ public class LensFactCommands extends LogicalTableCrudCommand<XFact> {
   @Override
   protected APIResult doDropPartitions(String tableName, String storageName, String filter) {
     return getClient().dropAllPartitionsOfFact(tableName, storageName, filter);
+  }
+
+  @Override
+  protected APIResult doDropPartitions(String tableName, String storageName, String filter, String updatePeriod) {
+    return getClient().dropAllPartitionsOfFact(tableName, storageName, filter, updatePeriod);
   }
 
   @Override

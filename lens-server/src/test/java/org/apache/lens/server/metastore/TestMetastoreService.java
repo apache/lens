@@ -2527,7 +2527,7 @@ public class TestMetastoreService extends LensJerseyTest {
   }
 
   private XPartition createPartition(String cubeTableName, Date partDate) {
-    return createPartition(cubeTableName, partDate, "dt");
+    return createPartition(cubeTableName, partDate, "dt", null);
   }
 
   private XTimePartSpecElement createTimePartSpecElement(Date partDate, String timeDimension) {
@@ -2539,11 +2539,17 @@ public class TestMetastoreService extends LensJerseyTest {
 
   private XPartition createPartition(String cubeTableName, Date partDate, final String timeDimension) {
 
-    return createPartition(cubeTableName, Lists.newArrayList(createTimePartSpecElement(partDate, timeDimension)));
+    return createPartition(cubeTableName, partDate, timeDimension, null);
   }
 
-  private XPartition createPartition(String cubeTableName, final List<XTimePartSpecElement> timePartSpecs) {
+  private XPartition createPartition(String cubeTableName, Date partDate, final String timeDimension,
+      String updatePeriod) {
+    return createPartition(cubeTableName, Lists.newArrayList(
+        createTimePartSpecElement(partDate, timeDimension)), updatePeriod);
+  }
 
+  private XPartition createPartition(String cubeTableName, final List<XTimePartSpecElement>
+      timePartSpecs, String updatePeriod) {
     XPartition xp = cubeObjectFactory.createXPartition();
     xp.setLocation(new Path(new File("target").getAbsolutePath(), "part/test_part").toString());
     xp.setFactOrDimensionTableName(cubeTableName);
@@ -2554,8 +2560,17 @@ public class TestMetastoreService extends LensJerseyTest {
     for (XTimePartSpecElement timePartSpec : timePartSpecs) {
       xp.getTimePartitionSpec().getPartSpecElement().add(timePartSpec);
     }
-    xp.setUpdatePeriod(XUpdatePeriod.HOURLY);
+    if (updatePeriod==null) {
+      xp.setUpdatePeriod(XUpdatePeriod.HOURLY);
+    } else {
+      XUpdatePeriod updatePeriod1=XUpdatePeriod.valueOf(updatePeriod.toUpperCase());
+      xp.setUpdatePeriod(updatePeriod1);
+    }
     return xp;
+  }
+
+  private XPartition createPartition(String cubeTableName, final List<XTimePartSpecElement> timePartSpecs) {
+    return createPartition(cubeTableName, timePartSpecs, null);
   }
 
   @Test(dataProvider = "mediaTypeData")
@@ -2704,6 +2719,7 @@ public class TestMetastoreService extends LensJerseyTest {
     setCurrentDatabase(DB, mediaType);
     createStorage("S1", mediaType);
     createStorage("S2", mediaType);
+    createStorage("S3", mediaType);
 
     try {
 
@@ -2717,6 +2733,7 @@ public class TestMetastoreService extends LensJerseyTest {
       f.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
       f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "DAILY"));
       f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "HOURLY"));
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S3", table, "HOURLY", "DAILY"));
       APIResult result = target()
         .path("metastore")
         .path("facts").queryParam("sessionid", lensSessionId)
@@ -2903,6 +2920,47 @@ public class TestMetastoreService extends LensJerseyTest {
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
       assertEquals(partitions.getPartition().size(), 0);
+
+      //adding 2 partition daily and hourly on S3 storage
+
+      xp = createPartition(table, partDate, "dt");
+      APIResult partAddResult1 = target().path("metastore/facts/").path(table).path("storages/S3/partition")
+          .queryParam("sessionid", lensSessionId).request(mediaType)
+          .post(Entity.entity(new GenericEntity<JAXBElement<XPartition>>(cubeObjectFactory.createXPartition(xp)) {
+          }, mediaType), APIResult.class);
+      assertSuccess(partAddResult1);
+
+      xp2 = createPartition(table, partDate, "dt", "daily");
+      APIResult partAddResult2 = target().path("metastore/facts/").path(table).path("storages/S3/partition")
+          .queryParam("sessionid", lensSessionId).request(mediaType)
+          .post(Entity.entity(new GenericEntity<JAXBElement<XPartition>>(cubeObjectFactory.createXPartition(xp2)) {
+          }, mediaType), APIResult.class);
+      assertSuccess(partAddResult2);
+
+      String filter="dt<='" + HOURLY.format(partDate) + "'";
+
+      //deleting partition based on filter and updatePeriod
+
+      dropResult = target().path("metastore/facts").path(table).path("storages/S3/partitions")
+          .queryParam("sessionid", lensSessionId).queryParam("filter", filter)
+          .queryParam("updatePeriod", "hourly").request(mediaType).delete(APIResult.class);
+
+      assertSuccess(dropResult);
+
+
+      // Verify only hourly partition was dropped
+      partitionsElement = target().path("metastore/facts").path(table).path("storages/S3/partitions")
+          .queryParam("sessionid", lensSessionId)
+          .queryParam("filter", "dt<='" + HOURLY.format(partDate) + "'")
+          .request(mediaType).get(new GenericType<JAXBElement<XPartitionList>>() {
+          });
+
+
+      partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitionsElement.getValue().getPartition().get(0).getUpdatePeriod(), XUpdatePeriod.DAILY);
+
+
     } finally {
       setCurrentDatabase(prevDb, mediaType);
       dropDatabase(DB, mediaType);

@@ -96,6 +96,10 @@ public abstract class LogicalTableCrudCommand<T> extends LensCRUDCommand<T> {
     return doDropPartitions(tableName, storageName, filter).toString().toLowerCase();
   }
 
+  public String dropPartitions(String tableName, String storageName, String filter, String updatePeriod) {
+    return doDropPartitions(tableName, storageName, filter, updatePeriod).toString().toLowerCase();
+  }
+
   protected abstract List<String> getAll(String filter);
 
   public abstract List<String> getAllStorages(String name);
@@ -115,6 +119,9 @@ public abstract class LogicalTableCrudCommand<T> extends LensCRUDCommand<T> {
   protected abstract APIResult doAddPartitions(String tableName, String storageName, String path);
 
   protected abstract APIResult doDropPartitions(String tableName, String storageName, String filter);
+
+  protected abstract APIResult doDropPartitions(String tableName, String storageName, String filter,
+                                                String updatePeriod);
 
   protected abstract APIResult doUpdatePartition(String tableName, String storageName, String validPath);
 

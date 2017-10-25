@@ -1022,10 +1022,11 @@ public class MetastoreResource {
   public APIResult dropPartitionsOfFactStorageByFilter(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("factName") String factName,
     @PathParam("storage") String storage,
-    @QueryParam("filter") String filter) throws LensException {
+    @QueryParam("filter") String filter,
+    @QueryParam("updatePeriod") String updatePeriod) throws LensException {
     checkSessionId(sessionid);
     try {
-      getSvc().dropPartitionFromStorageByFilter(sessionid, factName, storage, filter);
+      getSvc().dropPartitionFromStorageByFilter(sessionid, factName, storage, filter, updatePeriod);
     } catch (LensException exc) {
       log.warn("Got exception while dropping partition.", exc);
       return partial(processLensException(exc));

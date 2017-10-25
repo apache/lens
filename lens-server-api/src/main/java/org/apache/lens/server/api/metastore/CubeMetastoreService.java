@@ -536,6 +536,9 @@ public interface CubeMetastoreService extends LensService, SessionValidator {
   void dropPartitionFromStorageByFilter(LensSessionHandle sessionid,
     String cubeTableName, String storageName, String filter) throws LensException;
 
+  void dropPartitionFromStorageByFilter(LensSessionHandle sessionid,
+    String cubeTableName, String storageName, String filter, String updatePeriod) throws LensException;
+
   /**
    * Get flattened columns - all columns of table + all reachable columns
    *

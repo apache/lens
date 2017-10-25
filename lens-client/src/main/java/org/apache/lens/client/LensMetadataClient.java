@@ -602,14 +602,19 @@ public class LensMetadataClient {
     return getPartitionsOfFactTable(factName, storage, "");
   }
 
-  public APIResult dropPartitionsOfFactTable(String factName, String storage, String filter) {
+  public APIResult dropPartitionsOfFactTable(String factName, String storage, String filter, String updatePeriod) {
     WebTarget target = getMetastoreWebTarget();
     return translate(target.path("facts").path(factName)
       .path("storages").path(storage).path("partitions")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .queryParam("filter", filter)
+      .queryParam("updatePeriod", updatePeriod)
       .request(MediaType.APPLICATION_XML)
       .delete());
+  }
+
+  public APIResult dropPartitionsOfFactTable(String factName, String storage, String filter) {
+    return dropPartitionsOfFactTable(factName, storage, filter, null);
   }
 
   public APIResult dropPartitionsOfFactTable(String factName, String storage) {

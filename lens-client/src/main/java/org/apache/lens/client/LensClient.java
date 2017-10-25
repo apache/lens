@@ -609,6 +609,10 @@ public class LensClient implements AutoCloseable {
     return mc.dropPartitionsOfFactTable(fact, storage, list);
   }
 
+  public APIResult dropAllPartitionsOfFact(String fact, String storage, String list, String updatePeriod) {
+    return mc.dropPartitionsOfFactTable(fact, storage, list, updatePeriod);
+  }
+
   public APIResult dropAllPartitionsOfDim(String dim, String storage) {
     return mc.dropAllPartitionsOfDimensionTable(dim, storage);
   }
