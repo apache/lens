@@ -420,12 +420,23 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
     // Write out all the sessions
-    out.writeInt(SESSION_MAP.size());
+    List<LensSessionImpl> sessions = new ArrayList<>();
     for (LensSessionHandle sessionHandle : SESSION_MAP.values()) {
-      LensSessionImpl session = getSession(sessionHandle);
+      try {
+        sessions.add(getSession(sessionHandle));
+      } catch (ClientErrorException e) {
+        // warn for invalid/null session and continue.
+        log.warn("Cannot persist " + (sessionHandle != null ? sessionHandle.getPublicId() : "null ")
+                + " session. {}", e);
+      }
+    }
+
+    out.writeInt(sessions.size());
+    for (LensSessionImpl session : sessions) {
       session.getLensSessionPersistInfo().writeExternal(out);
     }
-    log.info("Session service pesristed " + SESSION_MAP.size() + " sessions");
+
+    log.info("Session service pesristed " + sessions.size() + " sessions out of " + SESSION_MAP.size());
   }
 
   /**
