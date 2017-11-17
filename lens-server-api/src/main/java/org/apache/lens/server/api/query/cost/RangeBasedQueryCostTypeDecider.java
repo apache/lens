@@ -16,21 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.lens.server.api.query.cost;
 
-import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.api.query.QueryCostType;
 import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.AbstractQueryContext;
 
-public class MockQueryCostCalculator implements QueryCostCalculator {
-  @Override
-  public void init(LensDriver lensDriver) throws LensException {
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@RequiredArgsConstructor
+public class RangeBasedQueryCostTypeDecider implements QueryCostTypeDecider {
+
+  @NonNull
+  private final QueryCostTypeRangeConf queryCostTypeRangeMap;
+
+  public RangeBasedQueryCostTypeDecider(String queryCostTypeRange) {
+    this.queryCostTypeRangeMap = new QueryCostTypeRangeConf(queryCostTypeRange);
   }
 
   @Override
-  public QueryCost calculateCost(AbstractQueryContext queryContext, LensDriver driver) throws LensException {
-    return new FactPartitionBasedQueryCost(10.0);
+  public QueryCostType decideCostType(@NonNull final QueryCost cost) throws LensException {
+    QueryCostType q = queryCostTypeRangeMap.get(cost.getEstimatedResourceUsage());
+    log.info("cost was: {}, decided querytype: {}", cost, q);
+    return q;
   }
 }

@@ -269,4 +269,29 @@
     <description>Flag to indicate Whether cancel on JDBC statement is supported. If not supported,
       framework wont call cancel on JDBC statement.</description>
   </property>
+
+  <property>
+    <name>lens.driver.jdbc.cost.calculator.class</name>
+    <value>org.apache.lens.cube.query.cost.StaticCostCalculator</value>
+    <description>Cost calculator class. By default calculating cost through static values </description>
+  </property>
+
+  <property>
+    <name>lens.driver.query.cost</name>
+    <value>0.0</value>
+    <description>Jdbc driver static cost value</description>
+  </property>
+
+  <property>
+    <name>lens.driver.cost.query.decider.class</name>
+    <value>org.apache.lens.server.api.query.cost.RangeBasedQueryCostTypeDecider</value>
+    <description>Decider class which looks at ranges passed in config and decides the querycosttype </description>
+  </property>
+
+  <property>
+    <name>lens.driver.cost.type.ranges</name>
+    <value>LOW,0.0,HIGH</value>
+    <description>Cost based Query type mapping</description>
+  </property>
+
 </configuration>

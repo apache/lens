@@ -25,7 +25,6 @@ import java.io.Serializable;
 
 import org.apache.lens.api.query.QueryCostType;
 
-import com.google.common.base.Preconditions;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,23 +32,26 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-public class FactPartitionBasedQueryCost implements QueryCost<FactPartitionBasedQueryCost>, Serializable {
+public class StaticQueryCost implements QueryCost<StaticQueryCost>, Serializable {
 
-  @Getter
-  private final double partitionCost;
+  private final double staticCost;
   @Getter
   @Setter
   private QueryCostType queryCostType;
 
-  public FactPartitionBasedQueryCost(final double partitionCost) {
-    Preconditions.checkArgument(partitionCost >= 0, "Cost can't be negative");
-    this.partitionCost = partitionCost;
-    this.queryCostType = QueryCostType.HIGH;
+  public StaticQueryCost(final double cost) {
+    this.staticCost = cost;
+  }
+
+  //Added for testcase
+  public StaticQueryCost(final double cost, final QueryCostType queryCostType) {
+    this.staticCost = cost;
+    this.queryCostType = queryCostType;
   }
 
   @Override
-  public FactPartitionBasedQueryCost add(final FactPartitionBasedQueryCost other) {
-    return new FactPartitionBasedQueryCost(partitionCost + other.partitionCost);
+  public StaticQueryCost add(final StaticQueryCost other) {
+    return new StaticQueryCost(staticCost + other.staticCost);
   }
 
   @Override
@@ -58,25 +60,17 @@ public class FactPartitionBasedQueryCost implements QueryCost<FactPartitionBased
   }
 
   @Override
-  public double getEstimatedResourceUsage() {
-    return partitionCost;
+  public double getEstimatedResourceUsage() throws UnsupportedOperationException {
+    return staticCost;
   }
 
   @Override
-  public int compareTo(final FactPartitionBasedQueryCost o) {
-    return new Double(partitionCost).compareTo(o.partitionCost);
+  public int compareTo(final StaticQueryCost staticQueryCost) {
+    return new Double(staticCost).compareTo(staticQueryCost.staticCost);
   }
 
   @Override
   public String toString() {
     return getQueryCostType() + "(" + getEstimatedResourceUsage() + ")";
-  }
-
-  public static class Parser implements org.apache.lens.api.parse.Parser<FactPartitionBasedQueryCost> {
-
-    @Override
-    public FactPartitionBasedQueryCost parse(String value) {
-      return new FactPartitionBasedQueryCost(Double.parseDouble(value));
-    }
   }
 }

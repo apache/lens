@@ -62,7 +62,7 @@ public abstract class RangeConf<K extends Comparable<K>, V> {
    *
    * @param confValue
    */
-  RangeConf(String confValue) {
+  public RangeConf(String confValue) {
     if (confValue == null || confValue.isEmpty()) {
       confValue = getDefaultConf();
     }

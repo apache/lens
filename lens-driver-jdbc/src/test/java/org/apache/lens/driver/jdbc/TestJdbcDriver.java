@@ -21,6 +21,8 @@ package org.apache.lens.driver.jdbc;
 import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.*;
 import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.ConnectionPoolProperties.*;
 
+import static org.apache.lens.server.api.LensConfConstants.DRIVER_COST_TYPE_RANGES;
+
 import static org.testng.Assert.*;
 
 import java.sql.*;
@@ -29,6 +31,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lens.api.LensConf;
+import org.apache.lens.api.query.QueryCostType;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.LensConfConstants;
@@ -40,6 +43,7 @@ import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
+import org.apache.lens.server.api.query.cost.StaticQueryCost;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
@@ -72,6 +76,8 @@ public class TestJdbcDriver {
 
   Collection<LensDriver> drivers;
 
+  static final StaticQueryCost JDBC_COST = new StaticQueryCost(0.0, QueryCostType.LOW);
+
   /**
    * Test create jdbc driver.
    *
@@ -85,6 +91,7 @@ public class TestJdbcDriver {
     baseConf.set(JDBC_USER, "SA");
     baseConf.set(JDBC_PASSWORD, "");
     baseConf.set(JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
+    baseConf.set(DRIVER_COST_TYPE_RANGES, "VERY_LOW,0.0,LOW,0.001,HIGH");
     hConf = new HiveConf(baseConf, this.getClass());
 
     driver = new JDBCDriver();
@@ -263,7 +270,7 @@ public class TestJdbcDriver {
     ExplainQueryContext ctx = createExplainContext(query1, baseConf);
     Assert.assertNull(ctx.getFinalDriverQuery(driver));
     QueryCost cost = driver.estimate(ctx);
-    Assert.assertEquals(cost, JDBCDriver.JDBC_DRIVER_COST);
+    Assert.assertEquals(cost, JDBC_COST);
     Assert.assertNotNull(ctx.getFinalDriverQuery(driver));
 
     // Test connection leak for estimate
@@ -336,7 +343,7 @@ public class TestJdbcDriver {
     // run estimate and execute - because server would first run estimate and then execute with same context
     QueryContext ctx = createQueryContext(query1, metricConf);
     QueryCost cost = driver.estimate(ctx);
-    Assert.assertEquals(cost, JDBCDriver.JDBC_DRIVER_COST);
+    Assert.assertEquals(cost, JDBC_COST);
     LensResultSet result = driver.execute(ctx);
     Assert.assertNotNull(result);
 
@@ -344,13 +351,13 @@ public class TestJdbcDriver {
     // run estimate and prepare - because server would first run estimate and then prepare with same context
     PreparedQueryContext pContext = new PreparedQueryContext(query1, "SA", metricConf, drivers);
     cost = driver.estimate(pContext);
-    Assert.assertEquals(cost, JDBCDriver.JDBC_DRIVER_COST);
+    Assert.assertEquals(cost, JDBC_COST);
     driver.prepare(pContext);
 
     // test explain and prepare
     PreparedQueryContext pContext2 = new PreparedQueryContext(query1, "SA", metricConf, drivers);
     cost = driver.estimate(pContext2);
-    Assert.assertEquals(cost, JDBCDriver.JDBC_DRIVER_COST);
+    Assert.assertEquals(cost, JDBC_COST);
     driver.prepare(pContext2);
     driver.explainAndPrepare(pContext2);
   }

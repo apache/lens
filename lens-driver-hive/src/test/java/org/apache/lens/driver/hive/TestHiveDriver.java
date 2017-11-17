@@ -89,7 +89,6 @@ public class TestHiveDriver {
   protected SessionState ss;
   private CostRangePriorityDecider alwaysNormalPriorityDecider
     = new CostRangePriorityDecider(new CostToPriorityRangeConf(""));
-
   /**
    * Before test.
    *

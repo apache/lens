@@ -1,4 +1,4 @@
-/**
+  /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,9 +44,7 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
-import org.apache.lens.server.api.query.cost.QueryCost;
-import org.apache.lens.server.api.query.cost.QueryCostCalculator;
+import org.apache.lens.server.api.query.cost.*;
 import org.apache.lens.server.api.query.priority.CostRangePriorityDecider;
 import org.apache.lens.server.api.query.priority.CostToPriorityRangeConf;
 import org.apache.lens.server.api.query.priority.QueryPriorityDecider;
@@ -337,6 +335,7 @@ public class HiveDriver extends AbstractLensDriver {
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
     connectionExpiryTimeout = getConf().getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
     whetherCalculatePriority = getConf().getBoolean(HS2_CALCULATE_PRIORITY, true);
+
     Class<? extends QueryCostCalculator> queryCostCalculatorClass = getConf().getClass(HS2_COST_CALCULATOR,
       FactPartitionBasedQueryCostCalculator.class, QueryCostCalculator.class);
     try {
@@ -344,6 +343,8 @@ public class HiveDriver extends AbstractLensDriver {
     } catch (InstantiationException | IllegalAccessException e) {
       throw new LensException("Can't instantiate query cost calculator of class: " + queryCostCalculatorClass, e);
     }
+    //For initializing the decider class instance
+    queryCostCalculator.init(this);
     queryPriorityDecider = new CostRangePriorityDecider(
       new CostToPriorityRangeConf(getConf().get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES))
     );

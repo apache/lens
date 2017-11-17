@@ -18,6 +18,9 @@
  */
 package org.apache.lens.cube.query.cost;
 
+import static org.apache.lens.server.api.LensConfConstants.DRIVER_COST_TYPE_RANGES;
+import static org.apache.lens.server.api.LensConfConstants.DRIVER_QUERY_COST_TYPE_DEFAULT_RANGES;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -26,9 +29,7 @@ import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
-import org.apache.lens.server.api.query.cost.QueryCost;
-import org.apache.lens.server.api.query.cost.QueryCostCalculator;
+import org.apache.lens.server.api.query.cost.*;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -36,6 +37,8 @@ import com.google.common.collect.Maps;
 public class FactPartitionBasedQueryCostCalculator implements QueryCostCalculator {
 
   public static final String UPDATE_PERIOD_WEIGHT_PREFIX = "update.period.weight.";
+
+  protected QueryCostTypeDecider queryCostTypeDecider;
 
   /**
    * Calculates total cost based on weights of selected tables and their selected partitions
@@ -91,9 +94,19 @@ public class FactPartitionBasedQueryCostCalculator implements QueryCostCalculato
   }
 
   @Override
+  public void init(LensDriver lensDriver) {
+    queryCostTypeDecider = new RangeBasedQueryCostTypeDecider(
+      lensDriver.getConf().get(DRIVER_COST_TYPE_RANGES, DRIVER_QUERY_COST_TYPE_DEFAULT_RANGES));
+  }
+
+  @Override
   public QueryCost calculateCost(final AbstractQueryContext queryContext, LensDriver driver) throws LensException {
     Double cost = getTotalPartitionCost(queryContext, driver);
-    return cost == null ? null : new FactPartitionBasedQueryCost(cost);
+    QueryCost queryCost =  cost == null ? null : new FactPartitionBasedQueryCost(cost);
+    if (queryCost != null) {
+      queryCost.setQueryCostType(queryCostTypeDecider.decideCostType(queryCost));
+    }
+    return queryCost;
   }
 
   public Map<String, Set<?>> getAllPartitions(AbstractQueryContext queryContext, LensDriver driver) {

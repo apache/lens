@@ -16,21 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.lens.server.api.query.cost;
 
-import org.apache.lens.server.api.driver.LensDriver;
+
+import org.apache.lens.api.query.QueryCostType;
 import org.apache.lens.server.api.error.LensException;
-import org.apache.lens.server.api.query.AbstractQueryContext;
 
-public class MockQueryCostCalculator implements QueryCostCalculator {
-  @Override
-  public void init(LensDriver lensDriver) throws LensException {
+public interface QueryCostTypeDecider {
 
-  }
-
-  @Override
-  public QueryCost calculateCost(AbstractQueryContext queryContext, LensDriver driver) throws LensException {
-    return new FactPartitionBasedQueryCost(10.0);
-  }
+  /**
+   * @param cost
+   * @return calculate queryCostType based on the pre calculated query cost
+   * @throws LensException when can't decide queryCostType.
+   */
+  QueryCostType decideCostType(QueryCost cost) throws LensException;
 }

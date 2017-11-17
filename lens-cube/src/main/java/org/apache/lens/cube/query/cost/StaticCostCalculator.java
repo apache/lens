@@ -16,21 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ *
+ */
+package org.apache.lens.cube.query.cost;
 
-package org.apache.lens.server.api.query.cost;
+import static org.apache.lens.server.api.LensConfConstants.*;
 
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.cost.*;
 
-public class MockQueryCostCalculator implements QueryCostCalculator {
+public class StaticCostCalculator implements QueryCostCalculator {
+
+  private QueryCost queryCost;
+
   @Override
   public void init(LensDriver lensDriver) throws LensException {
-
+    QueryCostTypeDecider queryCostTypeDecider = new RangeBasedQueryCostTypeDecider(
+      lensDriver.getConf().get(DRIVER_COST_TYPE_RANGES, DRIVER_QUERY_COST_TYPE_DEFAULT_RANGES));
+    this.queryCost = new StaticQueryCost(lensDriver.getConf().getDouble(DRIVER_QUERY_COST, DEFAULT_DRIVER_QUERY_COST));
+    this.queryCost.setQueryCostType(queryCostTypeDecider.decideCostType(this.queryCost));
   }
 
   @Override
   public QueryCost calculateCost(AbstractQueryContext queryContext, LensDriver driver) throws LensException {
-    return new FactPartitionBasedQueryCost(10.0);
+    return this.queryCost;
   }
+
 }

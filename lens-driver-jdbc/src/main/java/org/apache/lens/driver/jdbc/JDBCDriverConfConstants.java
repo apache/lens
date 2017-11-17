@@ -51,6 +51,10 @@ public final class JDBCDriverConfConstants {
   /** The Constant JDBC_PASSWORD. */
   public static final String JDBC_PASSWORD = JDBC_DRIVER_PFX + "db.password";
 
+  public static final String JDBC_COST_CALCULATOR = JDBC_DRIVER_PFX + "cost.calculator.class";
+
+  public static final String JDBC_COST_QUERY_DECIDER = JDBC_DRIVER_PFX + "cost.query.decider.class";
+
   public enum ConnectionPoolProperties {
     /** The Constant JDBC_POOL_MAX_SIZE_DEFAULT. */
     JDBC_POOL_MAX_SIZE("maxPoolSize", JDBC_DRIVER_PFX + "pool.max.size", 15),

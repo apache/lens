@@ -42,15 +42,19 @@ Hive driver configuration
 *--+--+---+--+
 |9|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|10|lens.driver.hive.calculate.priority|true|Whether priority should be calculated for hive mr jobs or not|
+|10|lens.driver.cost.query.decider.class|org.apache.lens.server.api.query.cost.RangeBasedQueryCostTypeDecider|Decider class which looks at ranges passed in config and decides the querycosttype|
 *--+--+---+--+
-|11|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is an embedded connection which does not require a remote hive server. For connecting to a hiveserver end point, remote connection should be used. The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection and org.apache.lens.driver.hive.RemoteThriftConnection.|
+|11|lens.driver.cost.type.ranges|LOW,0.0,HIGH|Cost based Query type mapping|
 *--+--+---+--+
-|12|lens.driver.hive.cost.calculator.class|org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator|Cost calculator class. By default calculating cost through fact partitions.|
+|12|lens.driver.hive.calculate.priority|true|Whether priority should be calculated for hive mr jobs or not|
 *--+--+---+--+
-|13|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
+|13|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is an embedded connection which does not require a remote hive server. For connecting to a hiveserver end point, remote connection should be used. The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection and org.apache.lens.driver.hive.RemoteThriftConnection.|
 *--+--+---+--+
-|14|lens.driver.hive.priority.ranges|VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW|Priority Ranges. The numbers are the costs of the query.                                                                                                                                                    \ |
+|14|lens.driver.hive.cost.calculator.class|org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator|Cost calculator class. By default calculating cost through fact partitions.|
+*--+--+---+--+
+|15|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
+*--+--+---+--+
+|16|lens.driver.hive.priority.ranges|VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW|Priority Ranges. The numbers are the costs of the query.                                                                                                                                                    \ |
 |  |                                |                                     |The cost is calculated based on partition weights and fact weights. The interpretation of the default config is:                                                                                            \ |
 |  |                                |                                     |                                                                                                                                                                                                            \ |
 |  |                                |                                     |cost \<= 7\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \ Priority = VERY_HIGH                                                                                                                                             \ |
@@ -66,10 +70,10 @@ Hive driver configuration
 |  |                                |                                     |One use case in range tuning can be that you never want queries to run with VERY_HIGH, assuming no other changes, you'll modify the value of this param in hivedriver-site.xml to be HIGH,30.0,NORMAL,90,LOW\ |
 |  |                                |                                     |via the configs, you can tune both the ranges and partition weights. this would give the end user more control.                                                                                               |
 *--+--+---+--+
-|15|lens.driver.hive.query.hook.classes| |The query hook classes for hive driver. By default there are no hooks. To add a hook, you should look at the default implementation and from there it'll be easy to derive what value can be added through a new hook. Multiple hooks can be provided by providing comma seperated name of classes.|
+|17|lens.driver.hive.query.hook.classes| |The query hook classes for hive driver. By default there are no hooks. To add a hook, you should look at the default implementation and from there it'll be easy to derive what value can be added through a new hook. Multiple hooks can be provided by providing comma seperated name of classes.|
 *--+--+---+--+
-|16|lens.driver.hive.query.launching.constraint.factories| |Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
+|18|lens.driver.hive.query.launching.constraint.factories| |Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
 *--+--+---+--+
-|17|lens.driver.hive.waiting.queries.selection.policy.factories| |Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
+|19|lens.driver.hive.waiting.queries.selection.policy.factories| |Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
 *--+--+---+--+
 The configuration parameters and their default values

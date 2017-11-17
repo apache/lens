@@ -47,7 +47,8 @@ import com.google.common.collect.Sets;
 
 public class TestFactPartitionBasedQueryCostCalculator {
   AbstractQueryContext queryContext;
-  FactPartitionBasedQueryCostCalculator calculator = new FactPartitionBasedQueryCostCalculator();
+  FactPartitionBasedQueryCostCalculator calculator =
+    new FactPartitionBasedQueryCostCalculator();
   LensDriver driver;
   private static String latest = "latest";
 
@@ -56,6 +57,7 @@ public class TestFactPartitionBasedQueryCostCalculator {
     driver = mock(LensDriver.class);
     when(driver.getConf()).thenReturn(new Configuration());
     queryContext = mock(AbstractQueryContext.class);
+    calculator.init(driver);
 
     ImmutableMap<String, Double> tableWeights = new ImmutableMap.Builder<String, Double>().build();
 

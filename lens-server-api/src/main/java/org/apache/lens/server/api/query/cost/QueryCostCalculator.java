@@ -23,6 +23,8 @@ import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 
 public interface QueryCostCalculator {
+
+  void init(LensDriver lensDriver) throws LensException;
   /**
    * @param queryContext
    * @return calculated cost based on anything available in abstract query context

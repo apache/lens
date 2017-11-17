@@ -27,5 +27,5 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType
 @XmlEnum
 public enum QueryCostType {
-  LOW, MEDIUM, HIGH
+  VERY_LOW, LOW, MEDIUM, HIGH
 }
