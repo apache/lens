@@ -217,7 +217,7 @@ public class TestQueryIndependenceFromSessionClose extends LensJerseyTest {
     };
   }
 
-  @Test(dataProvider = "restartDataProvider")
+  @Test(dataProvider = "restartDataProvider", enabled = false)
   public void testQueryAliveOnSessionClose(boolean restartBeforeFinish, boolean restartAfterFinish)
     throws LensException, InterruptedException {
     int numSessions = getSessionsOfFoo().size();
