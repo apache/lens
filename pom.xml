@@ -420,6 +420,7 @@
           <reportSet>
             <id>aggregate</id>
             <configuration>
+              <additionalparam>-Xdoclint:none</additionalparam>
               <quiet>true</quiet>
               <verbose>false</verbose>
               <includeDependencySources>false</includeDependencySources>
@@ -478,6 +479,14 @@
 
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${javadoc.plugin.version}</version>
+          <configuration>
+            <additionalparam>-Xdoclint:none</additionalparam>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-project-info-reports-plugin</artifactId>
