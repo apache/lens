@@ -43,6 +43,10 @@ public class PopulateSampleMetastore {
   private static final SimpleDateFormat FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
   private static final String NOW_TIME = FORMAT.format(DATE);
 
+  private static final String CREATE_QUERY = "CREATE TABLE if not exists mydb_sales_aggr_continuous_fact "
+    + "(order_time timestamp, delivery_time timestamp, customer_id integer, product_id integer, promotion_id integer, "
+    + "customer_city_id integer, production_city_id integer, delivery_city_id integer, unit_sales integer, "
+    + "store_sales integer, store_cost integer, max_line_item_price integer, max_line_item_discount integer)";
   private static final String INSERT_QUERY = "INSERT INTO "
       + "mydb_sales_aggr_continuous_fact (order_time, delivery_time, customer_id, "
       + "product_id, promotion_id, customer_city_id, production_city_id, delivery_city_id, unit_sales, "
@@ -119,6 +123,7 @@ public class PopulateSampleMetastore {
     con.setAutoCommit(true);
     Statement statement = con.createStatement();
     try {
+      statement.execute(CREATE_QUERY);
       statement.execute(INSERT_QUERY);
 
     } finally {
