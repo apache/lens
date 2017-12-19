@@ -163,4 +163,5 @@ public interface FactTable extends Named {
    */
   String getSourceFactName();
 
+  Map<String, String> getSourceFactProperties();
 }

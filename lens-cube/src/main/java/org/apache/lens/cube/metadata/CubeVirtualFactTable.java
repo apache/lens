@@ -190,4 +190,9 @@ public class CubeVirtualFactTable extends AbstractCubeTable implements FactTable
   public String getSourceFactName() {
     return this.sourceCubeFactTable.getName();
   }
+
+  @Override
+  public Map<String, String> getSourceFactProperties() {
+    return getSourceCubeFactTable().getProperties();
+  }
 }

@@ -315,7 +315,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   public Optional<Date> getColumnStartTime(String column) {
     Date startTime = null;
-    for (String key : getTable().getProperties().keySet()) {
+    for (String key : this.getFact().getSourceFactProperties().keySet()) {
       if (key.contains(MetastoreConstants.FACT_COL_START_TIME_PFX)) {
         String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_START_TIME_PFX);
         if (column.equals(propCol)) {
@@ -329,7 +329,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
   @Override
   public Optional<Date> getColumnEndTime(String column) {
     Date endTime = null;
-    for (String key : getTable().getProperties().keySet()) {
+    for (String key : this.getFact().getSourceFactProperties().keySet()) {
       if (key.contains(MetastoreConstants.FACT_COL_END_TIME_PFX)) {
         String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_END_TIME_PFX);
         if (column.equals(propCol)) {

@@ -393,6 +393,11 @@ public class CubeFactTable extends AbstractCubeTable implements FactTable {
     return this.getName();
   }
 
+  @Override
+  public Map<String, String> getSourceFactProperties() {
+    return getProperties();
+  }
+
   public String getTablePrefix(String storage, UpdatePeriod updatePeriod) {
     return storagePrefixUpdatePeriodMap.get(storage).get(updatePeriod);
   }
