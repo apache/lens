@@ -28,6 +28,7 @@ import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
+import org.apache.lens.server.api.query.cost.StaticQueryCost;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.map.MultiValueMap;
@@ -160,18 +161,17 @@ public class DefaultEstimatedQueryCollection implements EstimatedQueryCollection
   private QueryCost getTotalQueryCost(final Collection<QueryContext> queries) {
 
     if (queries.isEmpty()) {
-      return new FactPartitionBasedQueryCost(0);
+      return new StaticQueryCost(0);
     }
 
-    QueryContext query0 = Iterables.get(queries, 0);
-    QueryCost totalQueryCost = query0.getSelectedDriverQueryCost();
+    Double totalQueryCost = 0d;
 
     for (QueryContext query : queries) {
-      QueryCost queryCost = query.getSelectedDriverQueryCost();
-      totalQueryCost = totalQueryCost.add(queryCost);
+      Double queryCost = query.getSelectedDriverQueryCost().getEstimatedResourceUsage();
+      totalQueryCost = totalQueryCost + queryCost;
     }
     log.debug("Total Query Cost:{}", totalQueryCost);
-    return totalQueryCost;
+    return new StaticQueryCost(totalQueryCost);
   }
 
   @Override

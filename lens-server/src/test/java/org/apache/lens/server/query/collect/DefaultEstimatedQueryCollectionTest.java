@@ -30,8 +30,8 @@ import java.util.Set;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
+import org.apache.lens.server.api.query.cost.StaticQueryCost;
 
 import org.testng.annotations.Test;
 
@@ -50,7 +50,7 @@ public class DefaultEstimatedQueryCollectionTest {
 
     EstimatedQueryCollection queries = new DefaultEstimatedQueryCollection(mockQueries);
     QueryCost actualQueryCost = queries.getTotalQueryCost(MOCK_USER);
-    assertEquals(actualQueryCost, new FactPartitionBasedQueryCost(0));
+    assertEquals(actualQueryCost, new StaticQueryCost(0));
   }
 
   @Test
@@ -63,19 +63,15 @@ public class DefaultEstimatedQueryCollectionTest {
     final QueryContext query0 = Iterables.get(mockQueriesSet, 0);
     final QueryContext query1 = Iterables.get(mockQueriesSet, 1);
 
-    final QueryCost mockCost0 = mock(QueryCost.class);
-    final QueryCost mockCost1 = mock(QueryCost.class);
-    final QueryCost mockCost0Plus0 = mock(QueryCost.class);
-    final QueryCost mockCost0Plus0Plus1 = mock(QueryCost.class);
+    final QueryCost sCost0 = new StaticQueryCost(1.0);
+    final QueryCost sCost1 = new StaticQueryCost(1.0);
+    final QueryCost expectedCost = new StaticQueryCost(2.0);
 
-    when(query0.getSelectedDriverQueryCost()).thenReturn(mockCost0);
-    when(query1.getSelectedDriverQueryCost()).thenReturn(mockCost1);
-
-    when(mockCost0.add(mockCost0)).thenReturn(mockCost0Plus0);
-    when(mockCost0Plus0.add(mockCost1)).thenReturn(mockCost0Plus0Plus1);
+    when(query0.getSelectedDriverQueryCost()).thenReturn(sCost0);
+    when(query1.getSelectedDriverQueryCost()).thenReturn(sCost1);
 
     QueryCost actualQueryCost = new DefaultEstimatedQueryCollection(mockQueries).getTotalQueryCost(MOCK_USER);
-    assertEquals(actualQueryCost, mockCost0Plus0Plus1);
+    assertEquals(actualQueryCost, expectedCost);
   }
 
   @Test
