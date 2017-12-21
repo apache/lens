@@ -228,11 +228,18 @@ public abstract class BaseLensService extends CompositeService implements Extern
   }
 
   private void updateSessionsPerUser(String userName) {
-    Integer numOfSessions = SESSIONS_PER_USER.get(userName);
-    if (null == numOfSessions) {
-      SESSIONS_PER_USER.put(userName, 1);
-    } else {
-      SESSIONS_PER_USER.put(userName, ++numOfSessions);
+    SessionUser sessionUser = SESSION_USER_INSTANCE_MAP.get(userName);
+    if (sessionUser == null) {
+      log.info("Trying to update invalid session {} for user {}", userName);
+      return;
+    }
+    synchronized (sessionUser) {
+      Integer numOfSessions = SESSIONS_PER_USER.get(userName);
+      if (null == numOfSessions) {
+        SESSIONS_PER_USER.put(userName, 1);
+      } else {
+        SESSIONS_PER_USER.put(userName, ++numOfSessions);
+      }
     }
   }
 
@@ -340,10 +347,12 @@ public abstract class BaseLensService extends CompositeService implements Extern
     }
     synchronized (sessionUser) {
       Integer sessionCount = SESSIONS_PER_USER.get(userName);
-      if (sessionCount == 1) {
-        SESSIONS_PER_USER.remove(userName);
-      } else {
-        SESSIONS_PER_USER.put(userName, --sessionCount);
+      if(null != sessionCount) {
+        if (sessionCount == 1) {
+          SESSIONS_PER_USER.remove(userName);
+        } else {
+          SESSIONS_PER_USER.put(userName, --sessionCount);
+        }
       }
     }
   }
