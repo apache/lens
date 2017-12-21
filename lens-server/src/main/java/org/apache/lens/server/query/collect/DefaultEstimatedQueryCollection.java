@@ -26,7 +26,6 @@ import java.util.Set;
 
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.cost.StaticQueryCost;
 
@@ -35,7 +34,6 @@ import org.apache.commons.collections.map.MultiValueMap;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import lombok.NonNull;
 import lombok.ToString;
