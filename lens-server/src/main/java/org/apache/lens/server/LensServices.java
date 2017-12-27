@@ -34,6 +34,7 @@ import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.metastore.DatabaseResourcesServiceImpl;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
@@ -205,6 +206,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       addService(new EventServiceImpl(LensEventService.NAME));
       addService(new MetricsServiceImpl(MetricsService.NAME));
       addService(new StatisticsService(StatisticsService.STATS_SVC_NAME));
+      addService(new DatabaseResourcesServiceImpl(DatabaseResourcesServiceImpl.NAME));
 
       // Add configured services, these are instances of LensService which need a CLIService instance
       // for session management
