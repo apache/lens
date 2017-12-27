@@ -48,6 +48,7 @@ public final class CubeQueryConfUtil {
   public static final String PROCESS_TIME_PART_COL = "lens.cube.query.process.time" + ".partition.column";
   public static final String COMPLETENESS_CHECK_PART_COL = "lens.cube.query.completeness.check.partition.column";
   public static final String LOOK_AHEAD_PT_PARTS_PFX = "lens.cube.query.lookahead.ptparts.forinterval.";
+  public static final String LOOK_AHEAD_TIME_PARTS_PFX = "lens.cube.query.lookahead.timeparts.forinterval.";
   public static final String ENABLE_GROUP_BY_TO_SELECT = "lens.cube.query.promote.groupby.toselect";
   public static final String ENABLE_SELECT_TO_GROUPBY = "lens.cube.query.promote.select.togroupby";
   public static final String ENABLE_ATTRFIELDS_ADD_DISTINCT = "lens.cube.query.enable.attrfields.add.distinct";
@@ -58,12 +59,17 @@ public final class CubeQueryConfUtil {
   public static final String REPLACE_TIMEDIM_WITH_PART_COL = "lens.cube.query.replace.timedim";
   public static final boolean DEFAULT_MULTI_TABLE_SELECT = true;
   public static final int DEFAULT_LOOK_AHEAD_PT_PARTS = 1;
+  public static final int DEFAULT_LOOK_AHEAD_TIME_PARTS = 1;
   public static final boolean DEFAULT_ENABLE_GROUP_BY_TO_SELECT = false;
   public static final boolean DEFAULT_ENABLE_SELECT_TO_GROUPBY = false;
   public static final boolean DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL = true;
 
   public static String getLookAheadPTPartsKey(UpdatePeriod interval) {
     return LOOK_AHEAD_PT_PARTS_PFX + interval.name().toLowerCase();
+  }
+
+  public static String getLookAheadTimePartsKey(UpdatePeriod interval) {
+    return LOOK_AHEAD_TIME_PARTS_PFX + interval.name().toLowerCase();
   }
 
   private static String getValidKeyCubePFX(String cubeName) {

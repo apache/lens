@@ -456,6 +456,10 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
     int lookAheadNumParts = getConf()
       .getInt(CubeQueryConfUtil.getLookAheadPTPartsKey(maxInterval), CubeQueryConfUtil.DEFAULT_LOOK_AHEAD_PT_PARTS);
+
+    int lookAheadNumTimeParts = getConf()
+      .getInt(CubeQueryConfUtil.getLookAheadTimePartsKey(maxInterval), CubeQueryConfUtil.DEFAULT_LOOK_AHEAD_TIME_PARTS);
+
     TimeRange.Iterable.Iterator iter = TimeRange.iterable(ceilFromDate, floorToDate, maxInterval, 1).iterator();
     // add partitions from ceilFrom to floorTo
     while (iter.hasNext()) {
@@ -475,7 +479,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
           log.debug("part column is process time col");
         } else if (updatePeriods.first().equals(maxInterval)) {
           log.debug("Update period is the least update period");
-        } else if ((iter.getNumIters() - iter.getCounter()) > lookAheadNumParts) {
+        } else if ((iter.getNumIters() - iter.getCounter()) > lookAheadNumTimeParts) {
           // see if this is the part of the last-n look ahead partitions
           log.debug("Not a look ahead partition");
         } else {
@@ -486,16 +490,27 @@ public class StorageCandidate implements Candidate, CandidateTable {
           // process time are present
           TimeRange.Iterable.Iterator processTimeIter = TimeRange.iterable(nextDt, lookAheadNumParts, maxInterval, 1)
             .iterator();
+          TimeRange.Iterable.Iterator timeIter = TimeRange.iterable(nextDt, lookAheadNumTimeParts, maxInterval, 1)
+            .iterator();
           while (processTimeIter.hasNext()) {
             Date pdt = processTimeIter.next();
             Date nextPdt = processTimeIter.peekNext();
-            FactPartition processTimePartition = new FactPartition(processTimePartCol, pdt, maxInterval, null,
-              partWhereClauseFormat);
-            updatePartitionStorage(processTimePartition);
-            if (processTimePartition.isFound()) {
+            FactPartition currFactPartition;
+            boolean allProcessTimePartitionsFound = true;
+            while (timeIter.hasNext()){
+              Date date = timeIter.next();
+              currFactPartition = new FactPartition(processTimePartCol, date, maxInterval, null,
+                partWhereClauseFormat);
+              updatePartitionStorage(currFactPartition);
+              if (!currFactPartition.isFound()) {
+                log.debug("Looked ahead process time partition {} is not found : " + currFactPartition);
+                allProcessTimePartitionsFound = false;
+                break;
+              }
+            }
+            if (allProcessTimePartitionsFound) {
               log.debug("Finer parts not required for look-ahead partition :{}", part);
             } else {
-              log.debug("Looked ahead process time partition {} is not found", processTimePartition);
               TreeSet<UpdatePeriod> newset = new TreeSet<UpdatePeriod>();
               newset.addAll(updatePeriods);
               newset.remove(maxInterval);

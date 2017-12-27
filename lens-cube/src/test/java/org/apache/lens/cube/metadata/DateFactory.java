@@ -168,6 +168,7 @@ public class DateFactory {
   public static final String TWO_DAYS_RANGE_TTD_BEFORE_4_DAYS;
   public static final String TWO_DAYS_RANGE_TTD2;
   public static final String TWO_DAYS_RANGE_TTD2_BEFORE_4_DAYS;
+  public static final String THREE_DAYS_RANGE_IT;
   public static final String TWO_DAYS_RANGE_IT;
   public static final String ONE_DAY_RANGE_IT;
   public static final String THIS_YEAR_RANGE;
@@ -218,6 +219,7 @@ public class DateFactory {
     TWO_DAYS_RANGE_TTD_BEFORE_4_DAYS = getTimeRangeString("test_time_dim", DAILY, -6, -4, HOURLY);
     TWO_DAYS_RANGE_TTD2 = getTimeRangeString("test_time_dim2", DAILY, -2, 0, HOURLY);
     TWO_DAYS_RANGE_TTD2_BEFORE_4_DAYS = getTimeRangeString("test_time_dim2", DAILY, -6, -4, HOURLY);
+    THREE_DAYS_RANGE_IT = getTimeRangeString("it", DAILY, -3, 0, HOURLY);
     TWO_DAYS_RANGE_IT = getTimeRangeString("it", DAILY, -2, 0, HOURLY);
     ONE_DAY_RANGE_IT = getTimeRangeString("it", DAILY, -1, 0, DAILY);
     THIS_YEAR_RANGE = getTimeRangeString(YEARLY, 0, 1);
