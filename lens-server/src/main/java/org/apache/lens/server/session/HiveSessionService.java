@@ -347,7 +347,9 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   public synchronized void start() {
     super.start();
 
-    sessionExpiryThread = Executors.newSingleThreadScheduledExecutor();
+    sessionExpiryThread = Executors.newSingleThreadScheduledExecutor(runnable
+      -> new Thread(runnable, "Session-expiry-thread"));
+
     int sessionExpiryInterval = getSessionExpiryInterval();
     sessionExpiryThread.scheduleWithFixedDelay(sessionExpiryRunnable, sessionExpiryInterval,
         sessionExpiryInterval, TimeUnit.SECONDS);

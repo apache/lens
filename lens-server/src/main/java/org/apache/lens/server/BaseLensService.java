@@ -265,6 +265,11 @@ public abstract class BaseLensService extends CompositeService implements Extern
       LensSessionHandle restoredSession = new LensSessionHandle(hiveSessionHandle.getHandleIdentifier().getPublicId(),
         hiveSessionHandle.getHandleIdentifier().getSecretId());
       SESSION_MAP.put(restoredSession.getPublicId().toString(), restoredSession);
+      SessionUser sessionUser = SESSION_USER_INSTANCE_MAP.get(userName);
+      if (sessionUser == null) {
+        sessionUser = new SessionUser(userName);
+        SESSION_USER_INSTANCE_MAP.put(userName, sessionUser);
+      }
       updateSessionsPerUser(userName);
     } catch (HiveSQLException e) {
       throw new LensException("Error restoring session " + sessionHandle, e);
@@ -340,10 +345,14 @@ public abstract class BaseLensService extends CompositeService implements Extern
     }
     synchronized (sessionUser) {
       Integer sessionCount = SESSIONS_PER_USER.get(userName);
-      if (sessionCount == 1) {
-        SESSIONS_PER_USER.remove(userName);
-      } else {
-        SESSIONS_PER_USER.put(userName, --sessionCount);
+      if (null != sessionCount) {
+        if (sessionCount == 1) {
+          SESSIONS_PER_USER.remove(userName);
+        } else {
+          SESSIONS_PER_USER.put(userName, --sessionCount);
+        }
+      }else {
+        log.info("Trying to decrement session count for non existing session {} for user {}: ",sessionHandle, userName);
       }
     }
   }
