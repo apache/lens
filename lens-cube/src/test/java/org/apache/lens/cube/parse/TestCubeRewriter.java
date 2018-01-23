@@ -1467,6 +1467,49 @@ public class TestCubeRewriter extends TestQueryRewrite {
         .getParticipatingPartitions());
     // pt does not exist beyond 1 day. So in this test, max look ahead possible is 3
     assertEquals(partsQueried, expectedPartsQueried);
+
+    //New test case for testing look ahead time parts
+    expectedPartsQueried = Sets.newTreeSet();
+    conf.setInt(CubeQueryConfUtil.LOOK_AHEAD_TIME_PARTS_PFX + "daily", 2);
+
+    ceilDay = DAILY.getCeilDate(getDateWithOffset(DAILY, -3));
+    nextDay = DateUtils.addDays(ceilDay, 1);
+    nextToNextDay = DateUtils.addDays(nextDay, 1);
+
+    for (TimePartition p : Iterables.concat(
+      TimePartition.of(HOURLY, getDateWithOffset(DAILY, -3)).rangeUpto(TimePartition.of(HOURLY, ceilDay)),
+      TimePartition.of(DAILY, ceilDay).rangeUpto(TimePartition.of(DAILY, nextDay)),
+      TimePartition.of(DAILY, nextDay).rangeUpto(TimePartition.of(DAILY, nextToNextDay)),
+      TimePartition.of(HOURLY, nextToNextDay).rangeUpto(TimePartition.of(HOURLY, NOW)))) {
+      FactPartition fp = new FactPartition("it", p, null, storageTables);
+      expectedPartsQueried.add(fp);
+    }
+    for (TimePartition it : TimePartition.of(HOURLY, ceilDay).rangeUpto(TimePartition.of(HOURLY, nextDay))) {
+      for (TimePartition pt : TimePartition.of(HOURLY, nextDay).rangeUpto(TimePartition.of(HOURLY, nextToNextDay))) {
+        FactPartition ptPartition = new FactPartition("pt", pt, null, storageTables);
+        FactPartition itPartition = new FactPartition("it", it, ptPartition, storageTables);
+        expectedPartsQueried.add(itPartition);
+      }
+    }
+
+    ceilDay = DateUtils.addDays(ceilDay, 1);
+    nextDay = DateUtils.addDays(nextDay, 1);
+    nextToNextDay = DateUtils.addDays(nextToNextDay, 1);
+
+    for (TimePartition it : TimePartition.of(HOURLY, ceilDay).rangeUpto(TimePartition.of(HOURLY, nextDay))) {
+      for (TimePartition pt : TimePartition.of(HOURLY, nextDay).rangeUpto(TimePartition.of(HOURLY, nextToNextDay))) {
+        FactPartition ptPartition = new FactPartition("pt", pt, null, storageTables);
+        FactPartition itPartition = new FactPartition("it", it, ptPartition, storageTables);
+        expectedPartsQueried.add(itPartition);
+      }
+    }
+
+    ctx = rewriteCtx("select dim1, max(msr3)," + " msr2 from testCube" + " where " + THREE_DAYS_RANGE_IT,
+      conf);
+    partsQueried = new TreeSet<>(((StorageCandidate)ctx.getCandidates().iterator().next())
+      .getParticipatingPartitions());
+    // pt does not exist beyond 1 day. So in this test, max look ahead possible is 3
+    assertEquals(partsQueried, expectedPartsQueried);
   }
 
   @Test

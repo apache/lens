@@ -153,6 +153,14 @@
   </property>
 
   <property>
+    <name>lens.cube.query.lookahead.timeparts.forinterval.${interval}</name>
+    <value>1</value>
+    <description>The number of time partitions for interval specified where look ahead is applied.
+      Interval can be any Update period.
+    </description>
+  </property>
+
+  <property>
     <name>lens.cube.query.replace.timedim</name>
     <value>true</value>
     <description>Tells whether timedim attribute queried in the time range should be replaced with its corresponding
