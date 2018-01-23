@@ -46,7 +46,7 @@
     <property name="cube.fact.testfact.c5.updateperiods"
               value="MONTHLY,HOURLY,YEARLY,CONTINUOUS,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.fact.testfact.cubename" value="testCube"/>
-    <property name="cube.fact.relative.start.time" value="now.year - 90 days"/>
+    <property name="cube.fact.relative.start.time" value="now.year - 100 days"/>
     <property name="cube.fact.testfact.c4.updateperiods"
               value="MONTHLY,HOURLY,YEARLY,CONTINUOUS,QUARTERLY,MINUTELY,DAILY"/>
     <property name="cube.table.testfact.weight" value="5.0"/>
