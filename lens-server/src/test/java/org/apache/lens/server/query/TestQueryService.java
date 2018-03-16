@@ -2034,7 +2034,7 @@ public class TestQueryService extends LensJerseyTest {
       + (lensQuery.getFinishTime() - lensQuery.getLaunchTime()));
   }
 
-  @Test(dataProvider = "mediaTypeData")
+  //@Test(dataProvider = "mediaTypeData")
   public void testEstimateRejectionException(MediaType mt) throws Exception {
     class EstimateRunnable implements Runnable {
       boolean failed = false;

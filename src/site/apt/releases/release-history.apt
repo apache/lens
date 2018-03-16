@@ -23,6 +23,8 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |Release version|Major features|Release documentation|Release Notes|Download|Incompatibilities|More Info |
 *--+--+---+--+--+--+--+
+|2.7.0| Cube segmentation, Unioning data across facts, Support for source data completion checking, Added Retry feature for transient errors on query execution, Added an ability to analyze active sessions, Moving Lens to java8, Support for PreparedStatement in Lens JDBC client, Notifications on query completpletion, Limiting the max number of jobs scheduled per user, Support for creating the schema from CLI, Code cleanup and refactor, Doc/javadoc improvements, Bug fixes | {{{../versions/2.7.0/index.html} 2.7.x docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12336851} 2.7 release notes}} | {{{http://archive.apache.org/dist/lens/2.7.0/} Download}} | {{{#a2.7.x_from_2.6.x} 2.7.x-incompatibilities}} | - |
+*--+--+---+--+--+--+--+
 |2.6.1| GA release, Apache Hive 2 support, Query Scheduler, Lens UI enhancements, Python client, Streaming results, New regression module, Weighted Driver selector, Limit number of open sessions, Exponential back off for hive status updates, Single execution for duplicate queries, Auto kill queries on timeout, Convert dimension filter to fact filters for performance improvement, Code cleanup and refactor, Doc/javadoc improvements, Bug fixes| {{{../versions/2.6.1/index.html} 2.6.x docs}} |{{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12333846&styleName=&projectId=12315923} 2.6 release notes}} |{{{http://archive.apache.org/dist/lens/2.6.1/} Download}} |{{{#a2.6.x_from_2.5.x} 2.6.x-incompatibilities}} | - |
 *--+--+---+--+--+--+--+
 |2.5.0-beta| Support for multiple instances of a driver, REST API enhancements, Derived cube validation, Per-queue driver max launched queries constraint, New error codes for Hive and JDBC Driver, Lens CLI improvements, Query result retention policy, UI Enhancements, Code cleanup and refactor, Doc/javadoc improvements, Bug fixes| {{{../versions/2.5.0-beta/index.html} 2.5.x docs}} |{{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?version=12333326&projectId=12315923} 2.5 release notes}} |{{{http://archive.apache.org/dist/lens/2.5-beta/} Download}} |{{{#a2.5.x_from_2.4.x} 2.5.x-incompatibilities}} | - |
@@ -45,6 +47,14 @@ All Apache Lens releases
   ganglia metrics reporting, the jar needs to be downloaded and used.
 
 * Incompatibilities
+
+** 2.7.x from 2.6.x
+
+  * LENS-1387: Moved Lens to Java8
+
+  * LENS-1317: Finished_Queries store stores the LensConf
+
+  * LENS-1304: Storing Driver query in finished_queries tables for better analytics purposes
 
 ** 2.6.x from 2.5.x
 
