@@ -1,9 +1,9 @@
 {
-  "id":4,
-  "name": "sch",
+  "id":10,
+  "name": "D1",
   "implClass": "org.apache.ranger.services.hdfs.RangerServiceTest",
-  "label": "HDFS Repository",
-  "description": "HDFS Repository",
+  "label": "Sample Repository",
+  "description": "Sample Repository",
   "guid": "test",
   "resources":
   [
@@ -22,8 +22,8 @@
       "validationRegEx":"",
       "validationMessage": "",
       "uiHint":"",
-      "label": "Lens cube/fact/dim",
-      "description": "Lens cube/fact/dim"
+      "label": "Lens cube/fact/dim/storage/segmentation",
+      "description": "Lens cube/fact/dim/storage/segmentation"
     },
 
     {

@@ -22,9 +22,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.parse.Parser;
 import org.apache.lens.server.api.authorization.DefaultAuthorizer;
-import org.apache.lens.server.api.authorization.DefaultGroupFetcher;
 import org.apache.lens.server.api.authorization.IAuthorizer;
-import org.apache.lens.server.api.authorization.UserGroupFetcher;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.*;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
@@ -385,6 +383,11 @@ public final class LensConfConstants {
   public static final String USER_RESOLVER_LDAP_FIELDS = SERVER_PFX + "user.resolver.ldap.fields";
 
   /**
+   * The Constant USER_GROUP_LOOKUP_FIELDS.
+   */
+  public static final String USER_GROUP_LOOKUP_FIELDS = SERVER_PFX + "user.group.lookup.fields";
+
+  /**
    * The Constant USER_RESOLVER_LDAP_INTERMEDIATE_DB_INSERT_SQL.
    */
   public static final String USER_RESOLVER_LDAP_INTERMEDIATE_DB_INSERT_SQL = SERVER_PFX
@@ -436,8 +439,16 @@ public final class LensConfConstants {
   /**
    * The Constant AD_SERVER_ENDPOINT.
    */
-  public static final String AD_SERVER_ENDPOINT = "ad.server.endpoint";
+  public static final String AD_SERVER_ENDPOINT = SERVER_PFX +  "ad.server.endpoint";
 
+  public static final String  AD_SERVER_ENDPOINT_USER_NAME = SERVER_PFX + "ad.server.username";
+
+  public static final String  AD_SERVER_ENDPOINT_PWD = SERVER_PFX + "ad.server.pwd";
+
+
+  public static final String  AD_SERVER_ENDPOINT_USER_NAME_VALUE = SERVER_PFX + "ad.server.username.value";
+
+  public static final String  AD_SERVER_ENDPOINT_PWD_VALUE = SERVER_PFX + "ad.server.pwd.value";
   /**
    * The Constant STORAGE_COST.
    */
@@ -1319,9 +1330,6 @@ public final class LensConfConstants {
 
   public static final Class<? extends IAuthorizer> DEFAULT_AUTHORIZER =
     DefaultAuthorizer.class.asSubclass(IAuthorizer.class);
-
-  public static final Class<? extends UserGroupFetcher> DEFAULT_USERGROUP_FETCHER =
-    DefaultGroupFetcher.class.asSubclass(UserGroupFetcher.class);
 
   /**
    * This property is to enable Data Completeness Checks while resolving partitions.

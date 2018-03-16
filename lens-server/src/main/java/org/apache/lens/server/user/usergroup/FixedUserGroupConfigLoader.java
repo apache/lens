@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.user.UserConfigLoader;
+import org.apache.lens.server.api.user.UserGroupConfigLoader;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import com.google.common.collect.Maps;
 
-public class FixedUserGroupConfigLoader implements UserConfigLoader {
+public class FixedUserGroupConfigLoader implements UserGroupConfigLoader {
 
   private final String fixedValue;
 
@@ -21,7 +21,7 @@ public class FixedUserGroupConfigLoader implements UserConfigLoader {
   /*
      * (non-Javadoc)
      *
-     * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
+     * @see org.apache.lens.server.user.UserGroupConfigLoader#getUserConfig(java.lang.String)
      */
   @Override
   public Map<String, String> getUserConfig(String loggedInUser) {

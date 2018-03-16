@@ -670,7 +670,7 @@ public class CubeTestSetup {
       timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
       try {
-        client.addPartition(sPartSpec, c1, CubeTableType.FACT, "");
+        client.addPartition(sPartSpec, c1, CubeTableType.FACT);
       } catch (HiveException e) {
         log.error("Encountered Hive exception.", e);
       } catch (LensException e) {
@@ -687,7 +687,7 @@ public class CubeTestSetup {
       Map<String, Date> timeParts = new HashMap<String, Date>();
       timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, c1, CubeTableType.FACT,"");
+      client.addPartition(sPartSpec, c1, CubeTableType.FACT);
       cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
@@ -725,7 +725,7 @@ public class CubeTestSetup {
       cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
-    client.addPartitions(storagePartitionDescs, c4, CubeTableType.FACT, "");
+    client.addPartitions(storagePartitionDescs, c4, CubeTableType.FACT);
     client.clearHiveTableCache();
     table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(), Storage.getPrefix(c4)));
     assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
@@ -740,7 +740,7 @@ public class CubeTestSetup {
       timeParts.put("ttd", temp);
       timeParts.put("ttd2", temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, c4, CubeTableType.FACT, "");
+      client.addPartition(sPartSpec, c4, CubeTableType.FACT);
       cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
@@ -757,7 +757,7 @@ public class CubeTestSetup {
       Map<String, Date> timeParts = new HashMap<String, Date>();
       timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact2.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, c3, CubeTableType.FACT, "");
+      client.addPartition(sPartSpec, c3, CubeTableType.FACT);
       cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
@@ -815,7 +815,7 @@ public class CubeTestSetup {
         BufferedReader br = new BufferedReader(new FileReader(file));
         String replaced = br.lines().map(f.andThen(g)).collect(Collectors.joining("\n"));
         StringReader sr = new StringReader(replaced);
-        client.createEntity(LensJAXBContext.unmarshall(sr),"");
+        client.createEntity(LensJAXBContext.unmarshall(sr),null);
       } catch (LensException | JAXBException | IOException e) {
         throw new RuntimeException(e);
       }
@@ -897,7 +897,7 @@ public class CubeTestSetup {
       Map<String, Date> timeParts = new HashMap<String, Date>();
       timeParts.put("dt", temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, c1, CubeTableType.FACT, "");
+      client.addPartition(sPartSpec, c1, CubeTableType.FACT);
       cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
@@ -941,7 +941,7 @@ public class CubeTestSetup {
         StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, DAILY);
         pTimes.get(DAILY).add(ptime);
         iTimes.get(DAILY).add(itime);
-        client.addPartition(sPartSpec, storageName, CubeTableType.FACT, "");
+        client.addPartition(sPartSpec, storageName, CubeTableType.FACT);
         pcal.add(DAY_OF_MONTH, 1);
         ical.add(HOUR_OF_DAY, 20);
       } else if (p == 2) { // day2
@@ -958,7 +958,7 @@ public class CubeTestSetup {
         StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, DAILY);
         pTimes.get(DAILY).add(ptime);
         iTimes.get(DAILY).add(itime);
-        client.addPartition(sPartSpec, storageName, CubeTableType.FACT, "");
+        client.addPartition(sPartSpec, storageName, CubeTableType.FACT);
         // pt=day2-hour[0-3] it = day1-hour[20-23]
         // pt=day2-hour[4-23] it = day2-hour[0-19]
         for (int i = 0; i < 24; i++) {
@@ -970,7 +970,7 @@ public class CubeTestSetup {
           sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
           pTimes.get(HOURLY).add(ptime);
           iTimes.get(HOURLY).add(itime);
-          client.addPartition(sPartSpec, storageName, CubeTableType.FACT,"");
+          client.addPartition(sPartSpec, storageName, CubeTableType.FACT);
           pcal.add(HOUR_OF_DAY, 1);
           ical.add(HOUR_OF_DAY, 1);
         }
@@ -978,7 +978,7 @@ public class CubeTestSetup {
         sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, DAILY);
         pTimes.get(DAILY).add(ptime);
         iTimes.get(DAILY).add(itime);
-        client.addPartition(sPartSpec, storageName, CubeTableType.FACT,"");
+        client.addPartition(sPartSpec, storageName, CubeTableType.FACT);
       } else if (p == 3) { // day3
         // pt=day3-hour[0-3] it = day2-hour[20-23]
         // pt=day3-hour[4-23] it = day3-hour[0-19]
@@ -992,7 +992,7 @@ public class CubeTestSetup {
             new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
           pTimes.get(HOURLY).add(ptime);
           iTimes.get(HOURLY).add(itime);
-          client.addPartition(sPartSpec, storageName, CubeTableType.FACT,"");
+          client.addPartition(sPartSpec, storageName, CubeTableType.FACT);
 
           pcal.add(HOUR_OF_DAY, 1);
           ical.add(HOUR_OF_DAY, 1);
@@ -1035,14 +1035,14 @@ public class CubeTestSetup {
     timeParts.put("pt", ptime);
     timeParts.put("it", itime);
     StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, DAILY);
-    client.addPartition(sPartSpec, storageName, CubeTableType.FACT,"");
+    client.addPartition(sPartSpec, storageName, CubeTableType.FACT);
     for (int i = 0; i < 24; i++) {
       ptime = pcal.getTime();
       itime = ical.getTime();
       timeParts.put("pt", ptime);
       timeParts.put("it", itime);
       sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, storageName, CubeTableType.FACT,"");
+      client.addPartition(sPartSpec, storageName, CubeTableType.FACT);
       pcal.add(HOUR_OF_DAY, 1);
       ical.add(HOUR_OF_DAY, 1);
     }

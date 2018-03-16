@@ -1,6 +1,7 @@
 package org.apache.lens.cube.authorization;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.lens.server.api.authorization.ActionType;
@@ -27,7 +28,7 @@ public class RangerLensAuthorizer implements IAuthorizer {
   public void init() {
     if(rangerBasePlugin == null){
       synchronized(RangerLensAuthorizer.class) {
-        rangerBasePlugin = new RangerBasePlugin("LENS", "LENS");
+        rangerBasePlugin = new RangerBasePlugin("D1", "D1");
         rangerBasePlugin.setResultProcessor(new RangerDefaultAuditHandler());
         rangerBasePlugin.init();
       }
@@ -35,11 +36,11 @@ public class RangerLensAuthorizer implements IAuthorizer {
   }
 
   @Override
-  public boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, String user, Collection<String> userGroups) {
+  public boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, Collection<String> userGroups) {
 
     RangerLensResource rangerLensResource = getLensResource(lensPrivilegeObject);
 
-    RangerAccessRequest rangerAccessRequest = new RangerAccessRequestImpl(rangerLensResource, accessType.toString().toLowerCase() , user, (Set<String>) userGroups);
+    RangerAccessRequest rangerAccessRequest = new RangerAccessRequestImpl(rangerLensResource, accessType.toString().toLowerCase() , null , userGroups == null ? null : new HashSet<String>(userGroups));
 
     RangerAccessResult rangerAccessResult = rangerBasePlugin.isAccessAllowed(rangerAccessRequest);
 
@@ -57,6 +58,8 @@ public class RangerLensAuthorizer implements IAuthorizer {
     case DIMENSION:
     case CUBE:
     case DIMENSIONTABLE:
+    case STORAGE:
+    case SEGMENTATION:
     case FACT:
       lensResource = new RangerLensResource(LensObjectType.TABLE, lensPrivilegeObject.getCubeOrFactOrDim(), null);
       break;
@@ -69,5 +72,9 @@ public class RangerLensAuthorizer implements IAuthorizer {
   }
 
   enum LensObjectType { NONE, TABLE, COLUMN };
-
+//
+//  public static void main(String[] args) {
+//    IAuthorizer authorizer = new RangerLensAuthorizer();
+//    authorizer.authorize(new LensPrivilegeObject(LensPrivilegeObject.LensPrivilegeObjectType.CUBE, "sample_cube"), ActionType.CREATE , null);
+//  }
 }

@@ -83,6 +83,9 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
 
   /** The intermediate insert sql. */
   private final String insertSql;
+
+  /** The ldap fields. */
+  private final String[] lookupFields;
   /**
    * Instantiates a new LDAP backed database user config loader.
    *
@@ -98,10 +101,12 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
     expiryHours = conf.getInt(LensConfConstants.USER_GROUP_CACHE_EXPIRY, 2);
     cache = CacheBuilder.newBuilder().expireAfterWrite(expiryHours, TimeUnit.HOURS)
       .maximumSize(conf.getInt(LensConfConstants.USER_GROUP_CACHE_MAX_SIZE, 100)).build();
-
+    lookupFields = conf.get(LensConfConstants.USER_GROUP_LOOKUP_FIELDS).split("\\s*,\\s*");
     env = new Hashtable<String, Object>() {
       {
         put(LensConfConstants.AD_SERVER_ENDPOINT, conf.get(LensConfConstants.AD_SERVER_ENDPOINT_VALUE));
+        put(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME, conf.get(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME_VALUE));
+        put(LensConfConstants.AD_SERVER_ENDPOINT_PWD, conf.get(LensConfConstants.AD_SERVER_ENDPOINT_PWD_VALUE));
 
       }
     };
@@ -114,13 +119,20 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
    * @return the attributes
    * @throws NamingException the naming exception
    */
-  public String getAttributes(String user) throws IOException, JSONException {
+  public String[] getAttributes(String user) throws IOException, JSONException {
 
-    return ADGroupService.getGroups(formServerUrl(user));
+    Map<String, String> res = ADGroupService.getAttributes(formServerUrl(user), lookupFields, (String)env.get(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME),
+      (String)env.get(LensConfConstants.AD_SERVER_ENDPOINT_PWD));
+    String[] attributes = new String[lookupFields.length];
+
+    for (int i = 0; i < attributes.length; i++) {
+      attributes[i] = res.get(lookupFields[i]);
+    }
+    return attributes;
   }
 
   private String formServerUrl(String user) {
-    return env.get(LensConfConstants.AD_SERVER_ENDPOINT)+"/"+ user;
+    return env.get(LensConfConstants.AD_SERVER_ENDPOINT)+ user;
   }
 
   /*
@@ -131,33 +143,33 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
   @Override
   public Map<String, String> getUserConfig(final String loggedInUser) throws UserGroupLoaderException {
     try {
-      return cache.get(loggedInUser, new Callable<Map<String, String>>() {
+       Map<String, String> userConfigMap = cache.get(loggedInUser, new Callable<Map<String, String>>() {
         @Override
         public Map<String,String> call() throws Exception {
-          String[] finalConfig = null;
+
           try {
-            String[] config = queryDatabase(querySql, false, loggedInUser);
-            if (config.length != keys.length) {
+            String[] config = queryDatabase(querySql, true, loggedInUser,
+              Timestamp.valueOf(DateTime.now().toString(DATE_TIME_FORMATTER)));
+            if (config != null && config.length != keys.length) {
               throw new UserGroupLoaderException("size of columns retrieved by db query(" + config.length + ") "
                 + "is not equal to the number of keys required(" + keys.length + ").");
             }
-            if (!(config.length > 0)) {
-              finalConfig = getAttributes(loggedInUser).split(",");
-              Object[] updateArray = new Object[config.length + 2];
-              for (int i = 0; i < config.length; i++) {
-                updateArray[i + 1] = config[i];
+            if (config == null) {
+              String[] finalConfig = getAttributes(loggedInUser);
+              Object[] updateArray = new Object[finalConfig.length + 2];
+              for (int i = 0; i < finalConfig.length; i++) {
+                updateArray[i + 1] = finalConfig[i];
               }
               updateArray[0] = loggedInUser;
-              updateArray[config.length + 1] = Timestamp.valueOf(DateTime.now().plusHours(expiryHours)
+              updateArray[finalConfig.length + 1] = Timestamp.valueOf(DateTime.now().plusHours(expiryHours)
                 .toString(DATE_TIME_FORMATTER));
               QueryRunner runner = new QueryRunner(ds);
               runner.update(deleteSql, loggedInUser);
               runner.update(insertSql, updateArray);
-              String[] finalConfig1 = finalConfig;
               return new HashMap<String, String>() {
                 {
                   for (int i = 0; i < keys.length; i++) {
-                    put(keys[i], finalConfig1[i]);
+                    put(keys[i], finalConfig[i]);
                   }
                 }
               };
@@ -177,6 +189,7 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
           }
         }
       });
+      return  userConfigMap;
 
     } catch (ExecutionException e) {
       throw new UserGroupLoaderException(e);

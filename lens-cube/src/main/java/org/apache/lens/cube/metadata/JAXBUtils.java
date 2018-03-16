@@ -718,7 +718,7 @@ public final class JAXBUtils {
     Map<String, Map<UpdatePeriod, String>> storageTablePrefixMap = storageTablePrefixMapOfStorage(
       fact.getStorageTables());
     return new CubeFactTable(fact.getCubeName(), fact.getName(), columns, storageUpdatePeriods, fact.getWeight(),
-      mapFromXProperties(fact.getProperties()), storageTablePrefixMap, null);
+      mapFromXProperties(fact.getProperties()), storageTablePrefixMap);
   }
 
   public static CubeVirtualFactTable cubeVirtualFactFromFactTable(XVirtualFactTable fact, FactTable sourceFactTable)
@@ -744,7 +744,7 @@ public final class JAXBUtils {
             seg.getName(),
             segmentsFromXSegments(seg.getSegements()),
             seg.getWeight(),
-            props, null);
+            props);
   }
 
 

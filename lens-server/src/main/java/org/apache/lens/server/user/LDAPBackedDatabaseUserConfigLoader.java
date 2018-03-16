@@ -173,8 +173,7 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
       final String[] intermediateKey = intermediateCache.get(loggedInUser, new Callable<String[]>() {
         @Override
         public String[] call() throws Exception {
-          String[] config = queryDatabase(intermediateQuerySql, true, loggedInUser,
-            Timestamp.valueOf(DateTime.now().toString(DATE_TIME_FORMATTER)));
+          String[] config = queryDatabase(intermediateQuerySql, true, loggedInUser, Timestamp.valueOf(DateTime.now().toString(DATE_TIME_FORMATTER)));
           if (config == null) {
             config = getAttributes(loggedInUser);
             Object[] updateArray = new Object[config.length + 2];

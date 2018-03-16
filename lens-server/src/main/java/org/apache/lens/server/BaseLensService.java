@@ -200,7 +200,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
 
         Map<String, String> userGroupConfig = UserGroupLoaderFactory.getUserGroupConfig(username);
         //@TODO If proxy user is present, need to read that
-        sessionConf.put(LensConfConstants.SESSION_USER_GROUPS, userGroupConfig.get(username));
+        UtilityMethods.mergeMaps(sessionConf, userGroupConfig, false);
         if (sessionConf.get(LensConfConstants.SESSION_CLUSTER_USER) == null) {
           log.info("Didn't get cluster user from user config loader. Setting same as logged in user: {}", username);
           sessionConf.put(LensConfConstants.SESSION_CLUSTER_USER, username);

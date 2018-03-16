@@ -19,15 +19,15 @@
 <configuration xmlns:xi="http://www.w3.org/2001/XInclude">
 
   <property>
-    <name>ranger.plugin.sch.service.name</name>
-    <value>cubeaccessservice2</value>
+    <name>ranger.plugin.D1.service.name</name>
+    <value>cubeservicetest</value>
     <description>
       Name of the Ranger service containing policies for this YARN instance
     </description>
   </property>
 
   <property>
-    <name>ranger.plugin.sch.policy.source.impl</name>
+    <name>ranger.plugin.D1.policy.source.impl</name>
     <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>
     <description>
       Class to retrieve policies from the source
@@ -35,7 +35,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.sch.policy.rest.url</name>
+    <name>ranger.plugin.D1.policy.rest.url</name>
     <value>http://localhost:6080</value>
     <description>
       URL to Ranger Admin
@@ -43,7 +43,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.sch.policy.rest.ssl.config.file</name>
+    <name>ranger.plugin.D1.policy.rest.ssl.config.file</name>
     <value>/tmp/ranger-policymgr-ssl.xml</value>
     <description>
       Path to the file containing SSL details to contact Ranger Admin
@@ -51,7 +51,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.sch.policy.pollIntervalMs</name>
+    <name>ranger.plugin.D1.policy.pollIntervalMs</name>
     <value>30000</value>
     <description>
       How often to poll for changes in policies?
@@ -59,7 +59,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.sch.policy.cache.dir</name>
+    <name>ranger.plugin.D1.policy.cache.dir</name>
     <value>/tmp/policycache</value>
     <description>
       Directory where Ranger policies are cached after successful retrieval from the source
@@ -67,7 +67,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.sch.policy.rest.client.connection.timeoutMs</name>
+    <name>ranger.plugin.D1.policy.rest.client.connection.timeoutMs</name>
     <value>120000</value>
     <description>
       Hdfs Plugin RangerRestClient Connection Timeout in Milli Seconds
@@ -75,7 +75,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.sch.policy.rest.client.read.timeoutMs</name>
+    <name>ranger.plugin.D1.policy.rest.client.read.timeoutMs</name>
     <value>30000</value>
     <description>
       Hdfs Plugin RangerRestClient read Timeout in Milli Seconds

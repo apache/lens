@@ -9,7 +9,7 @@ import java.util.Set;
 public class DefaultAuthorizer implements IAuthorizer {
 
   @Override
-  public boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, String user, Collection<String> userGroups) {
+  public boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType,  Collection<String> userGroups) {
     return false;
   }
 }

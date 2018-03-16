@@ -18,20 +18,17 @@
  */
 package org.apache.lens.server.user.usergroup;
 
-import static org.apache.lens.server.api.LensConfConstants.*;
 import static org.apache.lens.server.api.LensConfConstants.USER_GROUP_CUSTOM_CLASS;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.user.UserConfigLoader;
 import org.apache.lens.server.api.user.UserConfigLoaderException;
-import org.apache.lens.server.user.FixedUserConfigLoader;
+import org.apache.lens.server.api.user.UserGroupConfigLoader;
+import org.apache.lens.server.api.user.UserGroupLoaderException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-
-import org.eclipse.persistence.annotations.TimeOfDay;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,8 +44,8 @@ public final class UserGroupLoaderFactory {
   /** The conf. */
   private static HiveConf conf;
 
-  /** The user config loader. */
-  private static UserConfigLoader userConfigLoader;
+  /** The user group config loader. */
+  private static UserGroupConfigLoader userGroupConfigLoader;
 
   /**
    * Inits the.
@@ -57,7 +54,7 @@ public final class UserGroupLoaderFactory {
    */
   public static void init(HiveConf c) {
     conf = c;
-    userConfigLoader = null;
+    userGroupConfigLoader = null;
   }
 
   /**
@@ -76,11 +73,11 @@ public final class UserGroupLoaderFactory {
     FIXED
   }
 
-  public static UserConfigLoader getUserConfigLoader() {
-    if (userConfigLoader == null) {
-      userConfigLoader = initializeUserGroupConfigLoader();
+  public static UserGroupConfigLoader getUserGroupConfigLoader() {
+    if (userGroupConfigLoader == null) {
+      userGroupConfigLoader = initializeUserGroupConfigLoader();
     }
-    return userConfigLoader;
+    return userGroupConfigLoader;
   }
 
   /**
@@ -88,17 +85,17 @@ public final class UserGroupLoaderFactory {
    *
    * @return the user config loader
    */
-  public static UserConfigLoader initializeUserGroupConfigLoader() {
+  public static UserGroupConfigLoader initializeUserGroupConfigLoader() {
     String groupType = conf.get(LensConfConstants.USER_GROUP_TYPE);
     if (groupType == null || groupType.length() == 0) {
-      throw new UserConfigLoaderException("user group type not determined. value was not provided in conf");
+      throw new UserGroupLoaderException("user group type not determined. value was not provided in conf");
     }
     for (GroupType type : GroupType.values()) {
       if (type.name().equals(groupType)) {
         return createUserGroupConfigLoader(type);
       }
     }
-    throw new UserConfigLoaderException("user resolver type not determined. provided value: " + groupType);
+    throw new UserGroupLoaderException("user resolver type not determined. provided value: " + groupType);
   }
 
   /**
@@ -107,15 +104,16 @@ public final class UserGroupLoaderFactory {
    * @param groupType the resolver type
    * @return the query user resolver
    */
-  public static UserConfigLoader createUserGroupConfigLoader(GroupType groupType) {
+  public static UserGroupConfigLoader createUserGroupConfigLoader(GroupType groupType) {
     switch (groupType) {
     case AD_GROUP:
+      return new ADGroupConfigLoader(conf);
     case CUSTOM:
       try {
-        return (conf.getClass(USER_GROUP_CUSTOM_CLASS, UserConfigLoader.class, UserConfigLoader.class))
+        return (conf.getClass(USER_GROUP_CUSTOM_CLASS, UserGroupConfigLoader.class, UserGroupConfigLoader.class))
           .getConstructor(HiveConf.class).newInstance(conf);
       } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException | InstantiationException e) {
-        throw new UserConfigLoaderException(e);
+        throw new UserGroupLoaderException(e);
       }
     case FIXED:
     default:
@@ -131,13 +129,13 @@ public final class UserGroupLoaderFactory {
    */
   public static Map<String, String> getUserGroupConfig(String loggedInUser) {
     try {
-      Map<String, String> config = getUserConfigLoader().getUserConfig(loggedInUser);
+      Map<String, String> config = getUserGroupConfigLoader().getUserConfig(loggedInUser);
       if (config == null) {
-        throw new UserConfigLoaderException("Got null User config for: " + loggedInUser);
+        throw new UserGroupLoaderException("Got null User Group config for: " + loggedInUser);
       }
       return config;
     } catch (RuntimeException e) {
-      log.error("Couldn't get user config for user: " + loggedInUser, e);
+      log.error("Couldn't get user Group config for user: " + loggedInUser, e);
       throw e;
     }
   }

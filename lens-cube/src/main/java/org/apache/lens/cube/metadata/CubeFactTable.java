@@ -61,14 +61,14 @@ public class CubeFactTable extends AbstractCubeTable implements FactTable {
   public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight, Map<String, String> properties) {
     this(cubeName, factName, columns, storageUpdatePeriods, weight, properties,
-      new HashMap<String, Map<UpdatePeriod, String>>(), null);
+      new HashMap<String, Map<UpdatePeriod, String>>());
 
   }
 
   public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight, Map<String, String> properties,
-    Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap, Set<String> accessGroups) {
-    super(factName, columns, properties, weight, accessGroups);
+    Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap) {
+    super(factName, columns, properties, weight);
     this.cubeName = cubeName;
     this.storageUpdatePeriods = storageUpdatePeriods;
     this.storagePrefixUpdatePeriodMap = storagePrefixUpdatePeriodMap;

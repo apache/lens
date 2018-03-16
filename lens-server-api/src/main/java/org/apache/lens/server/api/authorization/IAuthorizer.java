@@ -23,5 +23,5 @@ import java.util.Collection;
 
 public interface IAuthorizer {
 
-	boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, String user, Collection<String> userGroups);
+	boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, Collection<String> userGroups);
 }

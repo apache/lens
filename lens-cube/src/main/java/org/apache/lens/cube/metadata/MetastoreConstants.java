@@ -28,7 +28,6 @@ public final class MetastoreConstants {
   public static final String WEIGHT_KEY_SFX = ".weight";
   public static final String ACCESS_GROUP_ACTION_KEY = "cube.accessgroup.action";
   public static final String AUTHORIZER_CLASS = "authorizer.class";
-  public static final String USER_GROUP_FETCHER_CLASS = "usergroup.fetcher.class";
 
   public static final String BASE_KEY_PFX = "base.";
   public static final String EXPRESSIONS_LIST_SFX = ".expressions.list";
