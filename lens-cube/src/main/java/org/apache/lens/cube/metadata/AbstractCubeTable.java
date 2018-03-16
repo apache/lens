@@ -23,6 +23,7 @@ import java.util.*;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,21 +33,37 @@ public abstract class AbstractCubeTable implements Named {
   private final List<FieldSchema> columns;
   private final Map<String, String> properties = new HashMap<>();
   private double weight;
+  @Getter
+  private final Set<String> accessGroupNames;
 
   protected AbstractCubeTable(String name, List<FieldSchema> columns, Map<String, String> props, double weight) {
+    this(name, columns, props, weight, null);
+  }
+
+  protected AbstractCubeTable(String name, List<FieldSchema> columns, Map<String, String> props, double weight,
+    Set<String> accessGroupNames) {
     this.name = name.toLowerCase();
     this.columns = columns;
     this.weight = weight;
     if (props != null) {
       this.properties.putAll(props);
     }
+    if(accessGroupNames != null) {
+      this.accessGroupNames = accessGroupNames;
+    } else {
+      this.accessGroupNames = new HashSet<>();
+    }
+
+    this.properties.put(MetastoreUtil.getAccessGroupEntityPrefix(getName()), MetastoreUtil.getObjectStr(accessGroupNames));
   }
 
   protected AbstractCubeTable(Table hiveTable) {
+
     this.name = hiveTable.getTableName().toLowerCase();
     this.columns = hiveTable.getCols();
     this.properties.putAll(hiveTable.getParameters());
     this.weight = getWeight(getProperties(), getName());
+    this.accessGroupNames = getAccessGroupNames(getProperties(), getName());
   }
 
   public abstract CubeTableType getTableType();
@@ -60,6 +77,11 @@ public abstract class AbstractCubeTable implements Named {
   public static double getWeight(Map<String, String> properties, String name) {
     String wtStr = properties.get(MetastoreUtil.getCubeTableWeightKey(name));
     return wtStr == null ? 0L : Double.parseDouble(wtStr);
+  }
+
+  public static Set<String> getAccessGroupNames(Map<String, String> properties, String name) {
+    String accessGroupStr = properties.get(MetastoreUtil.getAccessGroupEntityPrefix(name));
+    return accessGroupStr == null ? new HashSet<>() : new HashSet<>(Arrays.asList(accessGroupStr.split(",")));
   }
 
   protected void addProperties() {

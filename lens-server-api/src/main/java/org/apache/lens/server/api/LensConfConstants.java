@@ -21,6 +21,10 @@ package org.apache.lens.server.api;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.parse.Parser;
+import org.apache.lens.server.api.authorization.DefaultAuthorizer;
+import org.apache.lens.server.api.authorization.DefaultGroupFetcher;
+import org.apache.lens.server.api.authorization.IAuthorizer;
+import org.apache.lens.server.api.authorization.UserGroupFetcher;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.*;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
@@ -268,6 +272,11 @@ public final class LensConfConstants {
   public static final String SESSION_CLUSTER_USER = SESSION_PFX + "cluster.user";
 
   /**
+   * The Constant SESSION_USER_GROUPS.
+   */
+  public static final String SESSION_USER_GROUPS = SESSION_PFX + "user.groups";
+
+  /**
    * The Constant MAPRED_JOB_QUEUE_NAME.
    */
   public static final String MAPRED_JOB_QUEUE_NAME = "mapred.job.queue.name";
@@ -283,10 +292,21 @@ public final class LensConfConstants {
    */
   public static final String USER_RESOLVER_TYPE = SERVER_PFX + "user.resolver.type";
 
+  // ldap user to user group for authorization checks
+  /**
+   * The Constant USER_GROUP_TYPE.
+   */
+  public static final String USER_GROUP_TYPE = SERVER_PFX + "user.group.type";
+
   /**
    * The Constant USER_RESOLVER_FIXED_VALUE.
    */
   public static final String USER_RESOLVER_FIXED_VALUE = SERVER_PFX + "user.resolver.fixed.value";
+
+  /**
+   * The Constant USER_GROUP_FIXED_VALUE.
+   */
+  public static final String USER_GROUP_FIXED_VALUE = SERVER_PFX + "user.group.fixed.value";
 
   /**
    * The Constant USER_RESOLVER_PROPERTYBASED_FILENAME.
@@ -299,6 +319,11 @@ public final class LensConfConstants {
   public static final String USER_RESOLVER_DB_KEYS = SERVER_PFX + "user.resolver.db.keys";
 
   /**
+   * The Constant USER_GROUP_DB_KEYS.
+   */
+  public static final String USER_GROUP_DB_KEYS = SERVER_PFX + "user.group.db.keys";
+
+  /**
    * The Constant USER_RESOLVER_DB_QUERY.
    */
   public static final String USER_RESOLVER_DB_QUERY = SERVER_PFX + "user.resolver.db.query";
@@ -307,6 +332,31 @@ public final class LensConfConstants {
    * The Constant USER_RESOLVER_CUSTOM_CLASS.
    */
   public static final String USER_RESOLVER_CUSTOM_CLASS = SERVER_PFX + "user.resolver.custom.class";
+
+  /**
+   * The Constant USER_GROUP_DB_QUERY.
+   */
+  public static final String USER_GROUP_DB_QUERY = SERVER_PFX + "user.group.db.query";
+
+  /**
+   * The Constant USER_GROUP_CUSTOM_CLASS.
+   */
+  public static final String USER_GROUP_CUSTOM_CLASS = SERVER_PFX + "user.group.custom.class";
+
+  /**
+   * The Constant USER_GROUP_CACHE_EXPIRY.
+   */
+  public static final String USER_GROUP_CACHE_EXPIRY = SERVER_PFX + "user.group.cache.expiry.inhours";
+
+  /**
+   * The Constant USER_GROUP_CACHE_MAX_SIZE.
+   */
+  public static final String USER_GROUP_CACHE_MAX_SIZE = SERVER_PFX + "user.group.cache.max_size";
+
+  /**
+   * The Constant USER_GROUP_ADSERVER_URL.
+   */
+  public static final String USER_GROUP_ADSERVER_URL = SERVER_PFX + "user.group.adserver.url";
 
   /**
    * The Constant USER_RESOLVER_CACHE_EXPIRY.
@@ -347,6 +397,18 @@ public final class LensConfConstants {
     + "user.resolver.ldap.intermediate.db.delete.sql";
 
   /**
+   * The Constant USER_GROUP_DB_INSERT_SQL.
+   */
+  public static final String USER_GROUP_DB_INSERT_SQL = SERVER_PFX
+    + "user.group.db.insert.sql";
+
+  /**
+   * The Constant USER_GROUP_INTERMEDIATE_DB_DELETE_SQL.
+   */
+  public static final String USER_GROUP_DB_DELETE_SQL = SERVER_PFX
+    + "user.group.db.delete.sql";
+
+  /**
    * The Constant USER_RESOLVER_LDAP_BIND_DN.
    */
   public static final String USER_RESOLVER_LDAP_BIND_DN = SERVER_PFX + "user.resolver.ldap.bind.dn";
@@ -365,6 +427,16 @@ public final class LensConfConstants {
    * The Constant USER_RESOLVER_LDAP_SEARCH_FILTER.
    */
   public static final String USER_RESOLVER_LDAP_SEARCH_FILTER = SERVER_PFX + "user.resolver.ldap.search.filter";
+
+  /**
+   * The Constant USER_AD_SERVER_ENDPOINT.
+   */
+  public static final String AD_SERVER_ENDPOINT_VALUE = SERVER_PFX + "ad.server.endpoint.value";
+
+  /**
+   * The Constant AD_SERVER_ENDPOINT.
+   */
+  public static final String AD_SERVER_ENDPOINT = "ad.server.endpoint";
 
   /**
    * The Constant STORAGE_COST.
@@ -1244,6 +1316,13 @@ public final class LensConfConstants {
   public static final Class<? extends DataCompletenessChecker> DEFAULT_COMPLETENESS_CHECKER =
           DefaultChecker.class.asSubclass(DataCompletenessChecker.class);
 
+
+  public static final Class<? extends IAuthorizer> DEFAULT_AUTHORIZER =
+    DefaultAuthorizer.class.asSubclass(IAuthorizer.class);
+
+  public static final Class<? extends UserGroupFetcher> DEFAULT_USERGROUP_FETCHER =
+    DefaultGroupFetcher.class.asSubclass(UserGroupFetcher.class);
+
   /**
    * This property is to enable Data Completeness Checks while resolving partitions.
    */
@@ -1253,6 +1332,16 @@ public final class LensConfConstants {
    * Default Value of the config "lens.cube.metastore.enable.datacompleteness.check"
    */
   public static final boolean DEFAULT_ENABLE_DATACOMPLETENESS_CHECK = false;
+
+  /**
+   * This property is to enable Data Completeness Checks while resolving partitions.
+   */
+  public static final String ENABLE_AUTHORIZATION_CHECK = "lens.cube.metastore.enable.authorization.check";
+
+  /**
+   * Default Value of the config "lens.cube.metastore.enable.authorization.check"
+   */
+  public static final boolean DEFAULT_ENABLE_AUTHORIZATION_CHECK = false;
 
   /**
    * This property is for setting static cost to driver

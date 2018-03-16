@@ -49,6 +49,7 @@ import org.apache.lens.server.error.LensServerErrorCode;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
+import org.apache.lens.server.user.usergroup.UserGroupLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.lang3.StringUtils;
@@ -196,6 +197,10 @@ public abstract class BaseLensService extends CompositeService implements Extern
         log.info("Got user config: {}", userConfig);
         UtilityMethods.mergeMaps(sessionConf, userConfig, false);
         sessionConf.put(LensConfConstants.SESSION_LOGGEDIN_USER, username);
+
+        Map<String, String> userGroupConfig = UserGroupLoaderFactory.getUserGroupConfig(username);
+        //@TODO If proxy user is present, need to read that
+        sessionConf.put(LensConfConstants.SESSION_USER_GROUPS, userGroupConfig.get(username));
         if (sessionConf.get(LensConfConstants.SESSION_CLUSTER_USER) == null) {
           log.info("Didn't get cluster user from user config loader. Setting same as logged in user: {}", username);
           sessionConf.put(LensConfConstants.SESSION_CLUSTER_USER, username);
@@ -600,6 +605,10 @@ public abstract class BaseLensService extends CompositeService implements Extern
       userSessionInfoList.add(sessionInfo);
     }
     return userSessionInfoList;
+  }
+
+  public String getSessionUserName(LensSessionHandle lensSessionHandle) {
+    return getSession(lensSessionHandle).getLoggedInUser();
   }
 }
 

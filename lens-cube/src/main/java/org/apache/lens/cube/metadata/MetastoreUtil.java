@@ -73,6 +73,22 @@ public class MetastoreUtil {
     return STORAGE_ENTITY_PFX + storageName.toLowerCase();
   }
 
+  public static String getAccessGroupClassKey(String name) {
+    return getAccessGroupEntityPrefix(name) + CLASS_SFX;
+  }
+
+  public static String getAccessGroupEntityPrefix(String name) {
+    return ACCESS_GROUP_ENTITY_PFX + name.toLowerCase();
+  }
+
+  public static String getAccessGroupUserPrefix(String name) {
+    return ACCESS_GROUP_USER_PFX + name.toLowerCase();
+  }
+
+  public static String getAccessGroupUserEmailIdPrefix(String name) {
+    return ACCESS_GROUP_USER_EMAILID_PFX + name.toLowerCase();
+  }
+
   // //////////////////////////
   // Dimension properties ///
   // /////////////////////////
@@ -323,6 +339,10 @@ public class MetastoreUtil {
     return getCubePrefix(cubeName) + MEASURES_LIST_SFX;
   }
 
+  public static String getCubeAccessGroupListKey(String cubeName) {
+    return getCubePrefix(cubeName) + ACCESSGROUP_LIST_SFX;
+  }
+
   public static String getCubeDimensionListKey(String cubeName) {
     return getCubePrefix(cubeName) + DIMENSIONS_LIST_SFX;
   }
@@ -376,6 +396,10 @@ public class MetastoreUtil {
 
   public static String getCubeTableWeightKey(String name) {
     return getCubeTableKeyPrefix(name) + WEIGHT_KEY_SFX;
+  }
+
+  public static String getCubeTableAccessGroupKey(String name) {
+    return getCubeTableKeyPrefix(name) + ACCESS_GROUP_PFX;
   }
 
   public static String getLatestPartTimestampKey(String partCol) {

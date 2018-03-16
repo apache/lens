@@ -1628,7 +1628,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     } finally {
       // Add old column back
       cube.alterDimension(col);
-      client.alterCube(TEST_CUBE_NAME, cube);
+      client.alterCube(TEST_CUBE_NAME, cube,"");
     }
 
     // Assert same query succeeds with valid column
@@ -1639,7 +1639,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       new BaseDimAttribute(new FieldSchema(col.getName(), "string", "invalid col"), col.getDisplayString(),
         oneWeekBack, null, col.getCost(), null);
     cube.alterDimension(newDim2);
-    client.alterCube(TEST_CUBE_NAME, cube);
+    client.alterCube(TEST_CUBE_NAME, cube,"");
     String hql = rewrite(query, testConf);
     assertNotNull(hql);
   }

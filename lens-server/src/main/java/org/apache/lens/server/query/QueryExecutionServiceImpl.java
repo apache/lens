@@ -2424,9 +2424,11 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       Configuration qconf = getLensConf(sessionHandle, conf);
       accept(query, qconf, SubmitOp.EXECUTE);
       QueryContext ctx = createContext(query, getSession(sessionHandle).getLoggedInUser(), conf, qconf, timeoutMillis);
+
       ctx.setQueryName(queryName);
       ctx.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
       rewriteAndSelect(ctx);
+
       return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
       release(sessionHandle);

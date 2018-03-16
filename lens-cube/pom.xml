@@ -33,7 +33,34 @@
   <packaging>jar</packaging>
   <description>OLAP cube queries</description>
 
+  <properties>
+    <mvn.classpath.file>${pom.basedir}/target/classpath</mvn.classpath.file>
+  </properties>
+
+
   <dependencies>
+    <dependency>
+    <groupId>com.sun.jersey</groupId>
+    <artifactId>jersey-bundle</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ranger</groupId>
+      <artifactId>ranger-plugins-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ranger</groupId>
+      <artifactId>ranger-plugins-audit</artifactId>
+
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ranger</groupId>
+      <artifactId>ranger-plugins-cred</artifactId>
+
+    </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
       <artifactId>lens-server-api</artifactId>

@@ -180,6 +180,7 @@ public class MetastoreResource {
           getSvc().dropDimensionTable(sessionid, entityName, cascade);
         }
       }
+
     };
 
     public abstract List<String> doGetAll(LensSessionHandle sessionid) throws LensException;

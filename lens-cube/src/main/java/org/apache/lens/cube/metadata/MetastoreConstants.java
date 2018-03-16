@@ -26,6 +26,9 @@ public final class MetastoreConstants {
   public static final String TABLE_TYPE_KEY = "cube.table.type";
   public static final String CUBE_TABLE_PFX = "cube.table.";
   public static final String WEIGHT_KEY_SFX = ".weight";
+  public static final String ACCESS_GROUP_ACTION_KEY = "cube.accessgroup.action";
+  public static final String AUTHORIZER_CLASS = "authorizer.class";
+  public static final String USER_GROUP_FETCHER_CLASS = "usergroup.fetcher.class";
 
   public static final String BASE_KEY_PFX = "base.";
   public static final String EXPRESSIONS_LIST_SFX = ".expressions.list";
@@ -33,6 +36,7 @@ public final class MetastoreConstants {
   // Cube constants
   public static final String CUBE_KEY_PFX = "cube.";
   public static final String MEASURES_LIST_SFX = ".measures.list";
+  public static final String ACCESSGROUP_LIST_SFX = ".accessgroups.list";
   public static final String DIMENSIONS_LIST_SFX = ".dimensions.list";
   public static final String JOIN_CHAIN_LIST_SFX = ".joinchains.list";
   public static final String TIMED_DIMENSIONS_LIST_SFX = ".timed.dimensions.list";
@@ -121,6 +125,11 @@ public final class MetastoreConstants {
   // storage constants
   public static final String STORAGE_ENTITY_PFX = "storage.";
   public static final String STORAGE_PFX = "cube.storagetable.";
+  public static final String ACCESS_GROUP_ENTITY_PFX = "accessgroup.";
+  public static final String ACCESS_GROUP_USER_PFX = "accessgroup.user.";
+  public static final String ACCESS_GROUP_USER_EMAILID_PFX = "accessgroup.user.emailid.";
+  public static final String ACCESS_GROUP_PFX = "cube.accessgroup.";
+
   public static final String PARTITION_TIMELINE_CACHE = "partition.timeline.cache.";
   public static final String STORAGE_CLASS = "storage.class";
   public static final String TIME_PART_COLUMNS = "cube.storagetable.time.partcols";

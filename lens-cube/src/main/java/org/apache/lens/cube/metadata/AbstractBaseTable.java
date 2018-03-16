@@ -49,7 +49,11 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
 
   public AbstractBaseTable(String name, Set<ExprColumn> exprs, Set<JoinChain> joinChains, Map<String, String>
     properties, double weight) {
-    super(name, COLUMNS, properties, weight);
+    this(name, exprs, joinChains, properties, weight, null);
+  }
+  public AbstractBaseTable(String name, Set<ExprColumn> exprs, Set<JoinChain> joinChains, Map<String, String>
+    properties, double weight, Set<String> accessGroupNames) {
+    super(name, COLUMNS, properties, weight, accessGroupNames);
 
     exprMap = new HashMap<>();
     if (exprs == null) {

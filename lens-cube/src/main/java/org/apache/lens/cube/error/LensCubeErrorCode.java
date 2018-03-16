@@ -23,6 +23,7 @@ import org.apache.lens.server.api.LensErrorInfo;
 public enum LensCubeErrorCode {
   // Error codes less than 3100 are errors encountered while submitting a query
   // Error codes same for drivers
+  NOT_AUTHORIZED_EXCEPTION(3000,0),
   SYNTAX_ERROR(3001, 0),
   FIELDS_CANNOT_BE_QUERIED_TOGETHER(3002, 0),
   MORE_THAN_ONE_CUBE(3003, 0),

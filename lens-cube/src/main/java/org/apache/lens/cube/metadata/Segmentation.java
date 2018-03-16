@@ -48,12 +48,12 @@ public class Segmentation extends AbstractCubeTable {
   }
 
   public Segmentation(String cubeName, String segmentName, Set<Segment> segments, double weight) {
-    this(cubeName, segmentName, segments, weight, new HashMap<String, String>());
+    this(cubeName, segmentName, segments, weight, new HashMap<String, String>(), null);
   }
 
   public Segmentation(String baseCube, String segmentName, Set<Segment> segments,
-                      double weight, Map<String, String> properties) {
-    super(segmentName, COLUMNS, properties, weight);
+                      double weight, Map<String, String> properties, Set<String> accessGroupNames) {
+    super(segmentName, COLUMNS, properties, weight, accessGroupNames);
     this.cubeName = baseCube;
     this.segments = segments;
     addProperties();

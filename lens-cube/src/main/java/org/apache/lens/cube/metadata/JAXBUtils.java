@@ -28,6 +28,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.lens.api.metastore.*;
+import org.apache.lens.server.api.authorization.ActionType;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.cube.metadata.ReferencedDimAttribute.ChainRefCol;
 import org.apache.lens.server.api.error.LensException;
@@ -659,6 +660,8 @@ public final class JAXBUtils {
     return xstorage;
   }
 
+
+
   public static XDimensionTable dimTableFromCubeDimTable(CubeDimensionTable cubeDimTable) {
     if (cubeDimTable == null) {
       return null;
@@ -715,7 +718,7 @@ public final class JAXBUtils {
     Map<String, Map<UpdatePeriod, String>> storageTablePrefixMap = storageTablePrefixMapOfStorage(
       fact.getStorageTables());
     return new CubeFactTable(fact.getCubeName(), fact.getName(), columns, storageUpdatePeriods, fact.getWeight(),
-      mapFromXProperties(fact.getProperties()), storageTablePrefixMap);
+      mapFromXProperties(fact.getProperties()), storageTablePrefixMap, null);
   }
 
   public static CubeVirtualFactTable cubeVirtualFactFromFactTable(XVirtualFactTable fact, FactTable sourceFactTable)
@@ -741,7 +744,7 @@ public final class JAXBUtils {
             seg.getName(),
             segmentsFromXSegments(seg.getSegements()),
             seg.getWeight(),
-            props);
+            props, null);
   }
 
 

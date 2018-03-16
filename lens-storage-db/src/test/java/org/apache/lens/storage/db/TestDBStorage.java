@@ -147,7 +147,7 @@ public class TestDBStorage {
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(db1.getName(), s1);
     storageTables.put(db2.getName(), s1);
-    client.createCubeDimensionTable("zipdim", dimTblName, dimColumns, 0L, dumpPeriods, null, storageTables);
+    client.createCubeDimensionTable("zipdim", dimTblName, dimColumns, 0L, dumpPeriods, null, storageTables, null);
 
     Assert.assertTrue(client.tableExists(dimTblName));
 

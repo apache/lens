@@ -68,7 +68,6 @@ public class DatabaseUserConfigLoader implements UserConfigLoader {
       .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
       .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
-
   /*
    * (non-Javadoc)
    *
