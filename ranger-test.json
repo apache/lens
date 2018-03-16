@@ -1,0 +1,101 @@
+{
+  "id":4,
+  "name": "sch",
+  "implClass": "org.apache.ranger.services.hdfs.RangerServiceTest",
+  "label": "HDFS Repository",
+  "description": "HDFS Repository",
+  "guid": "test",
+  "resources":
+  [
+    {
+      "itemId": 1,
+      "name": "table",
+      "type": "string",
+      "level": 10,
+      "parent": "",
+      "mandatory": true,
+      "lookupSupported": true,
+      "recursiveSupported": true,
+      "excludesSupported": false,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+      "matcherOptions": { "wildCard":true, "ignoreCase":false },
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Lens cube/fact/dim",
+      "description": "Lens cube/fact/dim"
+    },
+
+    {
+      "itemId": 2,
+      "name": "column",
+      "type": "string",
+      "level": 30,
+      "parent": "table",
+      "mandatory": false,
+      "lookupSupported": true,
+      "recursiveSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard":true, "ignoreCase":true },
+      "validationRegEx":"",
+      "validationMessage": "",
+      "uiHint":"",
+      "label": "Lens Column",
+      "description": "Lens Column"
+    }
+  ],
+
+  "accessTypes":
+  [
+    {
+      "itemId": 1,
+      "name": "create",
+      "label": "create"
+    },
+
+    {
+      "itemId": 2,
+      "name": "read",
+      "label": "read"
+    },
+
+    {
+      "itemId": 3,
+      "name": "update",
+      "label": "update"
+    },
+
+    {
+      "itemId": 4,
+      "name": "delete",
+      "label": "delete"
+    },
+
+    {
+      "itemId": 5,
+      "name": "select",
+      "label": "select"
+    }
+  ],
+
+  "configs":
+  [
+
+  ],
+
+  "enums":
+  [
+
+  ],
+
+  "contextEnrichers":
+  [
+
+  ],
+
+  "policyConditions":
+  [
+
+  ]
+}

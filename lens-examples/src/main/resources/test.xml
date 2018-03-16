@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<x_dimension_table xmlns="uri:lens:cube:0.1" dimension_name="iap_dimension_advertiser" table_name="iap_advertiser_dimtable_hdfs1" weight="0.1">
+  <columns>
+    <column name="iap_advertiser_id" _type="int" comment=""/>
+    <column name="iap_advertiser_name" _type="string" comment=""/>
+    <column name="iap_advertiser_account_id" _type="string" comment=""/>
+    <column name="iap_advertiser_region" _type="string" comment=""/>
+  </columns>
+  <storage_tables>
+    <storage_table>
+      <update_periods>
+        <update_period>HOURLY</update_period>
+      </update_periods>
+      <storage_name>dfw1</storage_name>
+      <table_desc external="true" input_format="org.apache.hadoop.hive.ql.io.RCFileInputFormat"
+                  output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+                  serde_class_name="com.inmobi.yoda.serde.LazyMetaColumnarSerde" compressed="true">
+        <part_cols>
+          <column name="dt" _type="string" comment="dim part column"/>
+        </part_cols>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_dimension_table>
