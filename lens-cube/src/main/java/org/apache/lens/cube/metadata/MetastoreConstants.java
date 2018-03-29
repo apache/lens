@@ -35,7 +35,6 @@ public final class MetastoreConstants {
   // Cube constants
   public static final String CUBE_KEY_PFX = "cube.";
   public static final String MEASURES_LIST_SFX = ".measures.list";
-  public static final String ACCESSGROUP_LIST_SFX = ".accessgroups.list";
   public static final String DIMENSIONS_LIST_SFX = ".dimensions.list";
   public static final String JOIN_CHAIN_LIST_SFX = ".joinchains.list";
   public static final String TIMED_DIMENSIONS_LIST_SFX = ".timed.dimensions.list";
@@ -54,6 +53,7 @@ public final class MetastoreConstants {
   public static final String CUBE_NAME_SFX = ".cubename";
   public static final String SOURCE_NAME_SFX = ".source";
   public static final String VALID_COLUMNS_SFX = ".valid.columns";
+  public static final String SENSITIVE_COLUMNS_SFX = ".sensitive.columns";
   public static final String FACT_AGGREGATED_PROPERTY = "cube.fact.is.aggregated";
   public static final String FACT_ABSOLUTE_START_TIME = "cube.fact.absolute.start.time";
   public static final String FACT_RELATIVE_START_TIME = "cube.fact.relative.start.time";

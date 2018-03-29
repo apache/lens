@@ -1351,6 +1351,12 @@
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger-plugins-audit</artifactId>
         <version>0.7.1</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.ranger</groupId>

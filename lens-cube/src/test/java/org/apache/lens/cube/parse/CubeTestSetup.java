@@ -638,7 +638,7 @@ public class CubeTestSetup {
       timeParts.put("ttd", temp);
       timeParts.put("ttd2", temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, c99, CubeTableType.FACT, "");
+      client.addPartition(sPartSpec, c99, CubeTableType.FACT);
       cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }
@@ -651,7 +651,7 @@ public class CubeTestSetup {
       timeParts.put("ttd", temp);
       timeParts.put("ttd2", temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact.getName(), timeParts, null, HOURLY);
-      client.addPartition(sPartSpec, c99, CubeTableType.FACT, "");
+      client.addPartition(sPartSpec, c99, CubeTableType.FACT);
       cal.add(HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }

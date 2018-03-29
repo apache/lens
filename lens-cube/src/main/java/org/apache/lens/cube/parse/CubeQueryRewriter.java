@@ -146,7 +146,7 @@ public class CubeQueryRewriter {
     // Rewrite base trees (groupby, having, orderby, limit) using aliases
     rewriters.add(new AliasReplacer());
     ExpressionResolver exprResolver = new ExpressionResolver();
-    QueryAuthorizationResolver queryAuthorizationResolver = new QueryAuthorizationResolver();
+    QueryAuthorizationResolver queryAuthorizationResolver = new QueryAuthorizationResolver(conf);
     DenormalizationResolver denormResolver = new DenormalizationResolver();
     CandidateTableResolver candidateTblResolver = new CandidateTableResolver(conf);
     StorageTableResolver storageTableResolver = new StorageTableResolver(conf);

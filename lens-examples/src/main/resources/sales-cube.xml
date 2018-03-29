@@ -185,8 +185,4 @@
     </join_chain>
   </join_chains>
 
-  <access_groups>
-    <access_group_name>role1</access_group_name>
-    <access_group_name>role2</access_group_name>
-  </access_groups>
 </x_base_cube>

@@ -37,11 +37,6 @@ import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
-import org.glassfish.grizzly.filterchain.Filter;
-import org.glassfish.grizzly.filterchain.FilterChainBuilder;
-import org.glassfish.grizzly.http.HttpCodecFilter;
-import org.glassfish.grizzly.http.HttpServerFilter;
-import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.servlet.ServletRegistration;
@@ -130,12 +125,6 @@ public class LensServer {
     app.register(GenericExceptionMapper.class);
     app.register(LensJAXBValidationExceptionMapper.class);
     app.register(LensJAXBContextResolver.class);
-//    app.se(
-//      "com.sun.jersey.spi.container.ContainerRequestFilters",
-//      "com.sun.jersey.api.container.filter.LoggingFilter;org.apache.lens.server.AuthorizationFilter"
-//    );
-
-    app.register(AuthorizationFilter.class, Priorities.AUTHORIZATION);
     app.setApplicationName("AllApps");
     return app;
   }

@@ -20,7 +20,7 @@
 
   <property>
     <name>ranger.plugin.LENS.service.name</name>
-    <value>lensacltest</value>
+    <value>lensservice</value>
     <description>
       Name of the Ranger service containing policies for this YARN instance
     </description>

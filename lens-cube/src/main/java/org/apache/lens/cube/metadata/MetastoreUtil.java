@@ -339,10 +339,6 @@ public class MetastoreUtil {
     return getCubePrefix(cubeName) + MEASURES_LIST_SFX;
   }
 
-  public static String getCubeAccessGroupListKey(String cubeName) {
-    return getCubePrefix(cubeName) + ACCESSGROUP_LIST_SFX;
-  }
-
   public static String getCubeDimensionListKey(String cubeName) {
     return getCubePrefix(cubeName) + DIMENSIONS_LIST_SFX;
   }
@@ -394,12 +390,12 @@ public class MetastoreUtil {
     return getFactKeyPrefix(name) + VALID_COLUMNS_SFX;
   }
 
-  public static String getCubeTableWeightKey(String name) {
-    return getCubeTableKeyPrefix(name) + WEIGHT_KEY_SFX;
+  public static String getSensitiveColumnsKey(String name) {
+    return getCubePrefix(name) + SENSITIVE_COLUMNS_SFX;
   }
 
-  public static String getCubeTableAccessGroupKey(String name) {
-    return getCubeTableKeyPrefix(name) + ACCESS_GROUP_PFX;
+  public static String getCubeTableWeightKey(String name) {
+    return getCubeTableKeyPrefix(name) + WEIGHT_KEY_SFX;
   }
 
   public static String getLatestPartTimestampKey(String partCol) {

@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.lens.cube.authorization;
 
 import java.util.Collection;
@@ -14,35 +32,31 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
-/**
- * Created by rajithar on 9/2/18.
- */
+import lombok.Getter;
+
 public class RangerLensAuthorizer implements IAuthorizer {
 
-  public static RangerBasePlugin rangerBasePlugin;
+  @Getter
+  private RangerBasePlugin rangerBasePlugin;
 
   RangerLensAuthorizer(){
     this.init();
   }
 
   public void init() {
-    if(rangerBasePlugin == null){
-      synchronized(RangerLensAuthorizer.class) {
-        rangerBasePlugin = new RangerBasePlugin("D1", "D1");
+        rangerBasePlugin = new RangerBasePlugin("LENS", "LENS");
         rangerBasePlugin.setResultProcessor(new RangerDefaultAuditHandler());
         rangerBasePlugin.init();
-      }
-    }
   }
 
   @Override
-  public boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, Collection<String> userGroups) {
+  public boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, Set<String> userGroups) {
 
     RangerLensResource rangerLensResource = getLensResource(lensPrivilegeObject);
 
-    RangerAccessRequest rangerAccessRequest = new RangerAccessRequestImpl(rangerLensResource, accessType.toString().toLowerCase() , null , userGroups == null ? null : new HashSet<String>(userGroups));
+    RangerAccessRequest rangerAccessRequest = new RangerAccessRequestImpl(rangerLensResource, accessType.toString().toLowerCase() , null , userGroups);
 
-    RangerAccessResult rangerAccessResult = rangerBasePlugin.isAccessAllowed(rangerAccessRequest);
+    RangerAccessResult rangerAccessResult = getRangerBasePlugin().isAccessAllowed(rangerAccessRequest);
 
     return rangerAccessResult !=null && rangerAccessResult.getIsAllowed();
   }
@@ -72,9 +86,4 @@ public class RangerLensAuthorizer implements IAuthorizer {
   }
 
   enum LensObjectType { NONE, TABLE, COLUMN };
-//
-//  public static void main(String[] args) {
-//    IAuthorizer authorizer = new RangerLensAuthorizer();
-//    authorizer.authorize(new LensPrivilegeObject(LensPrivilegeObject.LensPrivilegeObjectType.CUBE, "sample_cube"), ActionType.CREATE , null);
-//  }
 }

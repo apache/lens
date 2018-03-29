@@ -28,7 +28,7 @@
 
   <property>
     <name>lens.client.user.name</name>
-    <value>lens_user</value>
+    <value>anonymous</value>
     <description>Lens client user name</description>
   </property>
   <property>

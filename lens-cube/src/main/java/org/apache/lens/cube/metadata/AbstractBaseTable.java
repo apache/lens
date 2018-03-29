@@ -49,11 +49,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
 
   public AbstractBaseTable(String name, Set<ExprColumn> exprs, Set<JoinChain> joinChains, Map<String, String>
     properties, double weight) {
-    this(name, exprs, joinChains, properties, weight, null);
-  }
-  public AbstractBaseTable(String name, Set<ExprColumn> exprs, Set<JoinChain> joinChains, Map<String, String>
-    properties, double weight, Set<String> accessGroupNames) {
-    super(name, COLUMNS, properties, weight, accessGroupNames);
+    super(name, COLUMNS, properties, weight);
 
     exprMap = new HashMap<>();
     if (exprs == null) {
@@ -162,6 +158,30 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     return getExpressionByName(column);
   }
 
+
+
+  /**
+   * Return sensitive columns of the fact, which can be specified by property MetastoreUtil.getValidColumnsKey(getName())
+   *
+   * @return
+   */
+  public Set<String> getSensitiveColumns() {
+    String sensitiveColsStr =
+      MetastoreUtil.getNamedStringValue(getProperties(), MetastoreUtil.getSensitiveColumnsKey(getName()));
+    return sensitiveColsStr == null ? null : new HashSet<>(Arrays.asList(org.apache.commons.lang.StringUtils.split(sensitiveColsStr.toLowerCase(),
+      ',')));
+  }
+
+  public Set<String> getSensitiveColumnsFromQuery(Set<String> columns){
+    Set<String> sensitiveCols = getSensitiveColumns();
+    Set<String> sensitiveColsQueried = new HashSet<>();
+    for(String col : columns) {
+      if(sensitiveCols.contains(col)){
+        sensitiveColsQueried.add(col);
+      }
+    }
+    return sensitiveColsQueried;
+  }
   /**
    * Alters the expression if already existing or just adds if it is new expression.
    *

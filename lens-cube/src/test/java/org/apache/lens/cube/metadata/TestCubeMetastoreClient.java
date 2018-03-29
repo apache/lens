@@ -151,8 +151,8 @@ public class TestCubeMetastoreClient {
   @AfterClass
   public static void teardown() throws Exception {
     // Drop the cube
-    client.dropCube(CUBE_NAME,"");
-    client.dropCube(VIRTUAL_CUBE_NAME,"");
+    client.dropCube(CUBE_NAME);
+    client.dropCube(VIRTUAL_CUBE_NAME);
     client = CubeMetastoreClient.getInstance(conf);
     assertFalse(client.tableExists(CUBE_NAME));
 
@@ -413,7 +413,7 @@ public class TestCubeMetastoreClient {
         });
       }
     });
-    zipDim = new Dimension("zipdim", zipAttrs, null, joinChains, dimProps, 0L,null);
+    zipDim = new Dimension("zipdim", zipAttrs, null, joinChains, dimProps, 0L);
 
     // Define city table
     joinChains = new HashSet<>();
@@ -453,7 +453,7 @@ public class TestCubeMetastoreClient {
         });
       }
     });
-    cityDim = new Dimension("citydim", cityAttrs, dimExpressions, joinChains, dimProps, 0L,null);
+    cityDim = new Dimension("citydim", cityAttrs, dimExpressions, joinChains, dimProps, 0L);
 
     // Define state table
     joinChains = new HashSet<>();
@@ -488,19 +488,19 @@ public class TestCubeMetastoreClient {
   @Test(priority = 1)
   public void testStorage() throws Exception {
     Storage hdfsStorage = new HDFSStorage(c1);
-    client.createStorage(hdfsStorage,"");
+    client.createStorage(hdfsStorage);
     assertEquals(client.getAllStorages().size(), 1);
 
     Storage hdfsStorage2 = new HDFSStorage(c2);
-    client.createStorage(hdfsStorage2,"");
+    client.createStorage(hdfsStorage2);
     assertEquals(client.getAllStorages().size(), 2);
 
     Storage hdfsStorage3 = new HDFSStorage(c3);
-    client.createStorage(hdfsStorage3,"");
+    client.createStorage(hdfsStorage3);
     assertEquals(client.getAllStorages().size(), 3);
 
     Storage hdfsStorage4 = new HDFSStorage(c4);
-    client.createStorage(hdfsStorage4,"");
+    client.createStorage(hdfsStorage4);
     assertEquals(client.getAllStorages().size(), 4);
 
     assertEquals(hdfsStorage, client.getStorage(c1));
@@ -511,10 +511,10 @@ public class TestCubeMetastoreClient {
 
   @Test(priority = 1)
   public void testDimension() throws Exception {
-    client.createDimension(zipDim,"");
-    client.createDimension(cityDim,"");
-    client.createDimension(stateDim,"");
-    client.createDimension(countryDim,"");
+    client.createDimension(zipDim);
+    client.createDimension(cityDim);
+    client.createDimension(stateDim);
+    client.createDimension(countryDim);
 
     assertEquals(client.getAllDimensions().size(), 4);
     assertTrue(client.tableExists(cityDim.getName()));
@@ -999,7 +999,7 @@ public class TestCubeMetastoreClient {
       getHashMap(HOURLY, HOURLY + "_" + c1, DAILY, DAILY + "_" + c1), c2, getHashMap(HOURLY, c2, DAILY, c2));
 
     CubeFactTable cubeFact = new CubeFactTable(CUBE_NAME, factName, factColumns, updatePeriods, 0L, null,
-      storageUpdatePeriodMap, null);
+      storageUpdatePeriodMap);
     client.createCubeFactTable(CUBE_NAME, factName, factColumns, updatePeriods, 0L, null, storageTables,
       storageUpdatePeriodMap, null);
 
@@ -1205,7 +1205,7 @@ public class TestCubeMetastoreClient {
     StoragePartitionDesc partSpec2 = new StoragePartitionDesc(cubeFact.getName(), timeParts2, null, HOURLY);
     partSpec2.setInputFormat(SequenceFileInputFormat.class.getCanonicalName());
     partSpec2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
-    client.addPartition(partSpec2, c1, CubeTableType.FACT,"");
+    client.addPartition(partSpec2, c1, CubeTableType.FACT);
     assertEquals(client.getAllParts(storageTableName).size(), 1);
     assertTrue(client.factPartitionExists(cubeFact.getName(), c1, HOURLY, timeParts, emptyHashMap));
     assertFalse(client.factPartitionExists(cubeFact.getName(), c1, HOURLY, timeParts2, emptyHashMap));

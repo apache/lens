@@ -47,22 +47,12 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
 
   public Cube(String name, Set<CubeMeasure> measures, Set<CubeDimAttribute> dimensions, Map<String, String> properties,
     double weight) {
-    this(name, measures, dimensions, null, null, properties, weight, null);
-  }
-
-  public Cube(String name, Set<CubeMeasure> measures, Set<CubeDimAttribute> dimensions, Map<String, String> properties,
-    double weight, Set<String> accessGroups) {
-    this(name, measures, dimensions, null, null, properties, weight, accessGroups);
+    this(name, measures, dimensions, null, null, properties, weight);
   }
 
   public Cube(String name, Set<CubeMeasure> measures, Set<CubeDimAttribute> dimensions, Set<ExprColumn> expressions,
     Set<JoinChain> joinChains, Map<String, String> properties, double weight) {
-    this(name, measures, dimensions, expressions, joinChains, properties, weight, null);
-  }
-
-  public Cube(String name, Set<CubeMeasure> measures, Set<CubeDimAttribute> dimensions, Set<ExprColumn> expressions,
-    Set<JoinChain> joinChains, Map<String, String> properties, double weight, Set<String> accessGroups) {
-    super(name, expressions, joinChains, properties, weight, accessGroups);
+    super(name, expressions, joinChains, properties, weight);
     this.measures = measures;
     this.dimensions = dimensions;
 

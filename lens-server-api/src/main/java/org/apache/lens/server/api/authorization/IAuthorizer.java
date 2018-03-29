@@ -19,9 +19,14 @@
 
 package org.apache.lens.server.api.authorization;
 
-import java.util.Collection;
+import java.util.Set;
 
 public interface IAuthorizer {
-
-	boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, Collection<String> userGroups);
+  /**
+	 * @param lensPrivilegeObject the privilege object
+	 * @param accessType the access type
+	 * @param userGroups the user groups
+	 * @return if authorized or no
+	 */
+	boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, Set<String> userGroups);
 }

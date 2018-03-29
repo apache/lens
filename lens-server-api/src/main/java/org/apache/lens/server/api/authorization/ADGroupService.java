@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.lens.server.api.authorization;
 
 import java.io.*;
@@ -17,21 +35,27 @@ import org.json.JSONObject;
 
 public class ADGroupService {
 
-  public static Map<String, String> getAttributes(String serverUrl, String[] lookupFields, String userName, String pwd) throws IOException, JSONException {
+  private ADGroupService() {
 
-    Map<String , String> res = new HashMap<>();
-    JSONArray jsonObject = readJsonFromUrl(serverUrl ,userName, pwd);
+  }
 
-    for(int i = 0; i < lookupFields.length; i ++) {
-      if(lookupFields[i].equals("memberOf")) {
+  public static Map<String, String> getAttributes(String serverUrl, String[] lookupFields, String userName, String pwd)
+    throws IOException, JSONException {
+
+    Map<String, String> res = new HashMap<>();
+    JSONArray jsonObject = readJsonFromUrl(serverUrl, userName, pwd);
+
+    for(int i = 0; i < lookupFields.length; i++) {
+      if (lookupFields[i].equals("memberOf")) {
         List<String> adGroupList = new ArrayList<>();
         JSONArray jsonStringArray =  (JSONArray) ((JSONObject)jsonObject.get(0)).get("memberOf");
-        for(int j = 0 ; j < jsonStringArray.length() ; j++){
+        for(int j = 0; j < jsonStringArray.length(); j++){
           adGroupList.add(jsonStringArray.get(j).toString());
         }
-        res.put(lookupFields[i],adGroupList.toString());
-      }else
-        res.put(lookupFields[i],null);
+        res.put(lookupFields[i], adGroupList.toString().replace("[", "").replace("]", ""));
+      }else {
+        res.put(lookupFields[i],  null);
+      }
     }
     return res;
   }
@@ -54,11 +78,5 @@ public class ADGroupService {
       sb.append(charArray, 0, numCharsRead);
     }
     return new JSONArray(sb.toString());
-  }
-
-  public static void main(String[] args) throws IOException, JSONException {
-    //JSONObject json = readJsonFromUrl("http://whobot:Na9JrqpmC7gWMoacJr5Iv6AMIULZrQSU@who.corp.inmobi.com/api/v1/user/rajitha.r");
-   // System.out.println(json.toString());
-    //System.out.println(json.get("id"));
   }
 }
