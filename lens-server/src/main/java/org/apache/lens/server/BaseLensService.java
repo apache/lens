@@ -352,7 +352,8 @@ public abstract class BaseLensService extends CompositeService implements Extern
           SESSIONS_PER_USER.put(userName, --sessionCount);
         }
       }else {
-        log.info("Trying to decrement session count for non existing session {} for user {}: ",sessionHandle, userName);
+        log.info("Trying to decrement session count for non existing session {} for user {}: ",
+          sessionHandle, userName);
       }
     }
   }

@@ -1526,19 +1526,6 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
-  public void testTimeRangeIn() throws Exception {
-    //check whether time_range_in is resolving in cube rewrite
-    Configuration conf = getConf();
-    conf.set(CubeQueryConfUtil.PROCESS_TIME_PART_COL, "pt");
-    conf.set(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, "true");
-    conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS, AbridgedTimeRangeWriter.class, TimeRangeWriter.class);
-    CubeQueryContext ctx = rewriteCtx("select dim1, sum(msr23)" + " from testCube" + " where " + ONE_DAY_RANGE_IT,
-      conf);
-    String rewrittenQuery = ctx.toHQL();
-    assertTrue(!rewrittenQuery.contains("time_range_in"));
-  }
-
-  @Test
   public void testCubeQueryWithMultipleRanges() throws Exception {
     String hqlQuery =
       rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE + " OR "
