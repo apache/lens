@@ -374,6 +374,16 @@
         <role>Committer</role>
       </roles>
     </developer>
+
+    <developer>
+      <id>rajithar</id>
+      <email>rajithar@apache.org</email>
+      <name>Rajitha R</name>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>Committer</role>
+      </roles>
+    </developer>
   </developers>
   <scm>
     <connection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</connection>
