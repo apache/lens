@@ -2652,6 +2652,7 @@ public class CubeMetastoreClient {
    * @throws LensException
    */
   public void dropDimension(String dimName, Set<String> sessionUserGroups) throws LensException {
+    getTableWithTypeFailFast(dimName, CubeTableType.DIMENSION);
     if(isAuthorizationEnabled() && !getAuthorizer().authorize(new LensPrivilegeObject(LensPrivilegeObject.LensPrivilegeObjectType.DIMENSION, dimName), ActionType.DELETE , sessionUserGroups)) {
       throw new LensException(LensCubeErrorCode.NOT_AUTHORIZED_EXCEPTION.getLensErrorInfo());
     }
