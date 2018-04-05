@@ -172,7 +172,12 @@ public abstract class BaseLensService extends CompositeService implements Extern
     SessionHandle sessionHandle;
     username = UtilityMethods.removeDomain(username);
     if (auth) {
-      doPasswdAuth(username, password);
+      if (cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
+              .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())) {
+        log.warn("Kerberos is not yet implemented, skipping authentication....");
+      } else {
+        doPasswdAuth(username, password);
+      }
     }
     SessionUser sessionUser = SESSION_USER_INSTANCE_MAP.get(username);
     if (sessionUser == null) {
@@ -202,20 +207,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
         }
         String clusterUser = sessionConf.get(LensConfConstants.SESSION_CLUSTER_USER);
         password = "useless";
-        if (cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
-            .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())
-            && cliService.getHiveConf().getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
-          String delegationTokenStr = null;
-          try {
-            delegationTokenStr = cliService.getDelegationTokenFromMetaStore(username);
-          } catch (UnsupportedOperationException e) {
-            // The delegation token is not applicable in the given deployment mode
-          }
-          sessionHandle = cliService.openSessionWithImpersonation(clusterUser, password, sessionConf,
-              delegationTokenStr);
-        } else {
-          sessionHandle = cliService.openSession(clusterUser, password, sessionConf);
-        }
+        sessionHandle = cliService.openSession(clusterUser, password, sessionConf);
       } catch (Exception e) {
         throw new LensException(e);
       }

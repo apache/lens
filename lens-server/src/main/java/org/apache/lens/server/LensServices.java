@@ -30,10 +30,12 @@ import java.util.concurrent.*;
 
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.ErrorCollectionFactory;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.api.util.LensUtil;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
@@ -49,6 +51,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.Service;
+import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.cli.CLIService;
 
 import lombok.Getter;
@@ -104,6 +107,11 @@ public class LensServices extends CompositeService implements ServiceProvider {
    */
   public static final String SERVER_STATE_PERSISTENCE_ERRORS = "total-server-state-persistence-errors";
 
+  /**
+   * The Constant SERVER_STATE_PERSISTENCE_ERRORS.
+   */
+  public static final String KDC_LOGIN_ERRORS = "total-kdc-login-errors";
+
   /** The service mode. */
   @Getter
   @Setter
@@ -111,6 +119,9 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   /** Scheduled Executor which persists the server state periodically*/
   private ScheduledExecutorService serverSnapshotScheduler;
+
+  /** Scheduled Executor to refresh kerberos tgt*/
+  private ScheduledExecutorService kerberosTgtScheduler;
 
   /* Lock for synchronizing persistence of LensServices state */
   private final Object statePersistenceLock = new Object();
@@ -122,6 +133,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   private long serverStatePersistenceInterval;
 
+  private long serverKdcLoginInterval;
 
   @Getter
   private final LogSegregationContext logSegregationContext;
@@ -277,12 +289,58 @@ public class LensServices extends CompositeService implements ServiceProvider {
     }
   }
 
+  /**
+   * Setup KDC logint thread.
+   *
+   */
+  private void enableKDCLoginThread() {
+
+    try {
+      LensUtil.refreshLensTGT(conf);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
+    serverKdcLoginInterval = conf.getInt(LensConfConstants.KDC_LOGIN_SERVICE_INTERVAL_IN_MINUTES,
+            LensConfConstants.DEFAULT_KDC_LOGIN_SERVICE_INTERVAL_IN_MINUTES);
+
+    ThreadFactory factory = new BasicThreadFactory.Builder()
+            .namingPattern("Lens-server-refresh-tgt-Thread-%d")
+            .daemon(true)
+            .priority(Thread.NORM_PRIORITY)
+            .build();
+    kerberosTgtScheduler = Executors.newSingleThreadScheduledExecutor(factory);
+    kerberosTgtScheduler.scheduleWithFixedDelay(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          final String runId = UUID.randomUUID().toString();
+          logSegregationContext.setLogSegregationId(runId);
+          LensUtil.refreshLensTGT(conf);
+          log.info("KDC login successful for lens.");
+        } catch (Exception e) {
+          incrCounter(SERVER_STATE_PERSISTENCE_ERRORS);
+          log.error("Unable to login to KDC...", e);
+        }
+      }
+    }, 0, serverKdcLoginInterval, TimeUnit.MINUTES);
+  }
+
+
   /*
    * (non-Javadoc)
    *
    * @see org.apache.hive.service.CompositeService#start()
    */
   public synchronized void start() {
+
+    if (cliService.getHiveConf().getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION)
+            .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())) {
+
+      enableKDCLoginThread();
+      log.info("Enabled kerberos tgt login at {} minutes interval", serverKdcLoginInterval);
+    }
+
     if (getServiceState() != STATE.STARTED) {
       super.start();
     }
@@ -310,9 +368,12 @@ public class LensServices extends CompositeService implements ServiceProvider {
           }
         }
       }, serverStatePersistenceInterval, serverStatePersistenceInterval, TimeUnit.MILLISECONDS);
+
       log.info("Enabled periodic persistence of lens server state at {} millis interval",
-        serverStatePersistenceInterval);
+              serverStatePersistenceInterval);
+
     }
+
   }
 
   /**

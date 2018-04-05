@@ -155,7 +155,8 @@ start() {
   pushd ${BASEDIR} > /dev/null
     TIME=`date +%Y%m%d%H%M%s`
 
-    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.LensServer $* > "${LENS_LOG_DIR}/lensserver.out.$TIME" 2>&1 < /dev/null &
+    JAVA_OPTS="-Djavax.security.auth.useSubjectCredsOnly=false"
+    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} ${JAVA_OPTS} -cp ${LENSCPPATH} org.apache.lens.server.LensServer $* > "${LENS_LOG_DIR}/lensserver.out.$TIME" 2>&1 < /dev/null &
     echo $! > $LENS_PID_FILE
     popd > /dev/null
 
@@ -354,4 +355,3 @@ else
   run $args
 fi
 exit 0
-

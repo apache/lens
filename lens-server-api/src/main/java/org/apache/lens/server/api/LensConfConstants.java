@@ -718,7 +718,22 @@ public final class LensConfConstants {
   public static final String SESSION_EXPIRY_SERVICE_INTERVAL_IN_SECS = SERVER_PFX
     + "session.expiry.service.interval.secs";
 
+  /**
+   * Interval at which KDC login runs
+   */
+  public static final String KDC_LOGIN_SERVICE_INTERVAL_IN_MINUTES = SERVER_PFX
+          + "kdc.login.service.interval.minutes";
+
   public static final int DEFAULT_SESSION_EXPIRY_SERVICE_INTERVAL_IN_SECS = 3600;
+
+  public static final int DEFAULT_KDC_LOGIN_SERVICE_INTERVAL_IN_MINUTES = 360;
+
+
+  /**
+   * Lens principal for kerberos authentication
+   */
+  public static final String LENS_PRINCIPAL = SERVER_PFX
+          + "principal";
 
   // Statistics Store configuration keys
   /**

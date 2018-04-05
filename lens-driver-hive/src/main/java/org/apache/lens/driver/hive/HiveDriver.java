@@ -57,6 +57,8 @@ import org.apache.hadoop.hive.ql.QueryDisplay.TaskDisplay;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.cli.*;
 import org.apache.hive.service.rpc.thrift.TOperationHandle;
 import org.apache.hive.service.rpc.thrift.TProtocolVersion;
@@ -934,7 +936,13 @@ public class HiveDriver extends AbstractLensDriver {
       SessionHandle hiveSession;
       if (!lensToHiveSession.containsKey(sessionDbKey)) {
         try {
-          hiveSession = getClient().openSession(ctx.getClusterUser(), "", SESSION_CONF);
+          if (ctx.getHiveConf().getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION)
+                  .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())) {
+            String user = UserGroupInformation.getLoginUser().getUserName();
+            hiveSession = getClient().openSession(user, "", SESSION_CONF);
+          } else {
+            hiveSession = getClient().openSession(ctx.getClusterUser(), "", SESSION_CONF);
+          }
           lensToHiveSession.put(sessionDbKey, hiveSession);
           log.info("New hive session for user: {} , lens session: {} , hive session handle: {} , driver : {}",
             ctx.getClusterUser(), sessionDbKey, hiveSession.getHandleIdentifier(), getFullyQualifiedName());
