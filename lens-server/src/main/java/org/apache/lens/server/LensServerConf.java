@@ -34,6 +34,7 @@ public final class LensServerConf {
   }
 
   private static final class ConfHolder {
+
     public static final HiveConf HIVE_CONF = new HiveConf();
     // configuration object which does not load defaults and loads only lens*.xml files.
     // and removes any server specific configuration, that should not be passed to drivers

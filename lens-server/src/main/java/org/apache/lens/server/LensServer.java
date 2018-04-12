@@ -190,6 +190,14 @@ public class LensServer {
     new MappedDiagnosticLogSegregationContext().setLogSegregationId(runId);
 
     printStartupMessage();
+    try{
+      Thread.sleep(10000);
+
+    }
+    catch(InterruptedException e){
+
+        e.printStackTrace();
+    }
     try {
       final LensServer thisServer = LensServer.createLensServer(LensServerConf.getHiveConf());
 

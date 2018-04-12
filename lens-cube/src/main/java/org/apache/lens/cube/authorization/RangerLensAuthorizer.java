@@ -44,7 +44,7 @@ public class RangerLensAuthorizer implements IAuthorizer {
   }
 
   public void init() {
-        rangerBasePlugin = new RangerBasePlugin("LENS", "LENS");
+        rangerBasePlugin = new RangerBasePlugin("lens", "lens");
         rangerBasePlugin.setResultProcessor(new RangerDefaultAuditHandler());
         rangerBasePlugin.init();
   }
