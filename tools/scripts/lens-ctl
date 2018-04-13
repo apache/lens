@@ -113,7 +113,7 @@ start() {
     HDFS_JARS=$HDFS_JARS:`ls ${HADOOP_HOME}/share/hadoop/hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
     MAPRED_JARS=`ls ${HADOOP_HOME}/../hadoop-mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    MAPRED_JARS=$MAPRED_JARS:`ls ${HADOOP_HOME}/../hadoop-mapreduce/aws-java-sdk-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    MAPRED_JARS=$MAPRED_JARS:`ls ${HADOOP_HOME}/lib/aws-java-sdk-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     MAPRED_JARS=$MAPRED_JARS:`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
     YARN_JARS=`ls ${HADOOP_HOME}/share/hadoop/yarn/hadoop-yarn*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
