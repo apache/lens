@@ -1295,61 +1295,59 @@
           </exclusion>
         </exclusions>
       </dependency>
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-bundle</artifactId>
-        <scope>provided</scope>
-        <version>1.17.1</version>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>com.sun.jersey</groupId>
-        <artifactId>jersey-core</artifactId>
-        <version>1.17.1</version>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-bundle</artifactId>-->
+        <!--<scope>provided</scope>-->
+        <!--<version>1.17.1</version>-->
+        <!--<exclusions>-->
+          <!--<exclusion>-->
+            <!--<groupId>javax.ws.rs</groupId>-->
+            <!--<artifactId>javax.ws.rs-api</artifactId>-->
+          <!--</exclusion>-->
+          <!--<exclusion>-->
+            <!--<groupId>javax.ws.rs</groupId>-->
+            <!--<artifactId>jsr311-api</artifactId>-->
+          <!--</exclusion>-->
+        <!--</exclusions>-->
+      <!--</dependency>-->
+      <!--<dependency>-->
+        <!--<groupId>com.sun.jersey</groupId>-->
+        <!--<artifactId>jersey-core</artifactId>-->
+        <!--<version>1.17.1</version>-->
+        <!--<exclusions>-->
+          <!--<exclusion>-->
+            <!--<groupId>javax.ws.rs</groupId>-->
+            <!--<artifactId>javax.ws.rs-api</artifactId>-->
+          <!--</exclusion>-->
+          <!--<exclusion>-->
+            <!--<groupId>javax.ws.rs</groupId>-->
+            <!--<artifactId>jsr311-api</artifactId>-->
+          <!--</exclusion>-->
+        <!--</exclusions>-->
+      <!--</dependency>-->
 
       <dependency>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger-plugins-common</artifactId>
         <version>${ranger.version}</version>
         <exclusions>
+          <!--<exclusion>-->
+            <!--<groupId>javax.ws.rs</groupId>-->
+            <!--<artifactId>javax.ws.rs-api</artifactId>-->
+          <!--</exclusion>-->
+          <!--<exclusion>-->
+            <!--<groupId>javax.ws.rs</groupId>-->
+            <!--<artifactId>jsr311-api</artifactId>-->
+          <!--</exclusion>-->
           <exclusion>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-plugins-audit</artifactId>
           </exclusion>
           <exclusion>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-core</artifactId>
-          </exclusion>
-          <exclusion>
-
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-bundle</artifactId>
           </exclusion>
-
         </exclusions>
 
       </dependency>
@@ -1367,10 +1365,21 @@
             <artifactId>jersey-core</artifactId>
           </exclusion>
           <exclusion>
-
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-bundle</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>javax.persistence</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+          </exclusion>
+          <!--<exclusion>-->
+            <!--<groupId>org.apache.solr</groupId>-->
+            <!--<artifactId>solr-solrj</artifactId>-->
+          <!--</exclusion>-->
         </exclusions>
       </dependency>
       <dependency>
@@ -1383,7 +1392,6 @@
             <artifactId>jersey-core</artifactId>
           </exclusion>
           <exclusion>
-
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-bundle</artifactId>
           </exclusion>
