@@ -28,8 +28,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.naming.NamingException;
-
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.authorization.ADGroupService;
 import org.apache.lens.server.api.user.UserGroupConfigLoader;
@@ -83,6 +81,7 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
 
   /** The ldap fields. */
   private final String[] lookupFields;
+
   /**
    * Instantiates a new LDAP backed database user config loader.
    *
@@ -102,7 +101,8 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
     env = new Hashtable<String, Object>() {
       {
         put(LensConfConstants.AD_SERVER_ENDPOINT, conf.get(LensConfConstants.AD_SERVER_ENDPOINT_VALUE));
-        put(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME, conf.get(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME_VALUE));
+        put(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME,
+          conf.get(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME_VALUE));
         put(LensConfConstants.AD_SERVER_ENDPOINT_PWD, conf.get(LensConfConstants.AD_SERVER_ENDPOINT_PWD_VALUE));
 
       }
@@ -114,12 +114,12 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
    *
    * @param user the user
    * @return the attributes
-   * @throws NamingException the naming exception
    */
   public String[] getAttributes(String user) throws IOException, JSONException {
 
-    Map<String, String> res = ADGroupService.getAttributes(formServerUrl(user), lookupFields, (String)env.get(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME),
-      (String)env.get(LensConfConstants.AD_SERVER_ENDPOINT_PWD));
+    Map<String, String> res = ADGroupService.getAttributes(formServerUrl(user), lookupFields,
+      (String) env.get(LensConfConstants.AD_SERVER_ENDPOINT_USER_NAME),
+      (String) env.get(LensConfConstants.AD_SERVER_ENDPOINT_PWD));
     String[] attributes = new String[lookupFields.length];
 
     for (int i = 0; i < attributes.length; i++) {
@@ -129,7 +129,7 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
   }
 
   private String formServerUrl(String user) {
-    return env.get(LensConfConstants.AD_SERVER_ENDPOINT)+ user;
+    return env.get(LensConfConstants.AD_SERVER_ENDPOINT) + user;
   }
 
   /*
@@ -140,9 +140,9 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
   @Override
   public Map<String, String> getUserConfig(final String loggedInUser) throws UserGroupLoaderException {
     try {
-       Map<String, String> userConfigMap = cache.get(loggedInUser, new Callable<Map<String, String>>() {
+      Map<String, String> userConfigMap = cache.get(loggedInUser, new Callable<Map<String, String>>() {
         @Override
-        public Map<String,String> call() throws Exception {
+        public Map<String, String> call() throws Exception {
 
           try {
             String[] config = queryDatabase(querySql, true, loggedInUser,
@@ -180,18 +180,18 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
               };
             }
 
-          }
-          catch (SQLException e) {
+          } catch (SQLException e) {
             throw new UserGroupLoaderException(e);
           }
         }
       });
-      return  userConfigMap;
+      return userConfigMap;
 
     } catch (ExecutionException e) {
       throw new UserGroupLoaderException(e);
     }
   }
+
   private BasicDataSource refreshDataSource() {
     if (ds == null || ds.isClosed()) {
       ds = UtilityMethods.getDataSourceFromConf(hiveConf);

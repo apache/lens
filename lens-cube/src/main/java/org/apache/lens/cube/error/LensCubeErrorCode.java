@@ -68,7 +68,7 @@ public enum LensCubeErrorCode {
   NO_PARTITION_FILTER(3105, 1500),
   ENTITY_TYPE_NOT_AS_EXPECTED(3106, 1500),
   // Authorization exceptions
-  NOT_AUTHORIZED_EXCEPTION(3037,0);
+  NOT_AUTHORIZED_EXCEPTION(3037, 0);
 
   public LensErrorInfo getLensErrorInfo() {
     return this.errorInfo;

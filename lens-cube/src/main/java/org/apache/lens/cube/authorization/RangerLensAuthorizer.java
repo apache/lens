@@ -18,8 +18,6 @@
  */
 package org.apache.lens.cube.authorization;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.lens.server.api.authorization.ActionType;
@@ -39,14 +37,14 @@ public class RangerLensAuthorizer implements IAuthorizer {
   @Getter
   private RangerBasePlugin rangerBasePlugin;
 
-  RangerLensAuthorizer(){
+  RangerLensAuthorizer() {
     this.init();
   }
 
   public void init() {
-        rangerBasePlugin = new RangerBasePlugin("lens", "lens");
-        rangerBasePlugin.setResultProcessor(new RangerDefaultAuditHandler());
-        rangerBasePlugin.init();
+    rangerBasePlugin = new RangerBasePlugin("lens", "lens");
+    rangerBasePlugin.setResultProcessor(new RangerDefaultAuditHandler());
+    rangerBasePlugin.init();
   }
 
   @Override
@@ -54,19 +52,21 @@ public class RangerLensAuthorizer implements IAuthorizer {
 
     RangerLensResource rangerLensResource = getLensResource(lensPrivilegeObject);
 
-    RangerAccessRequest rangerAccessRequest = new RangerAccessRequestImpl(rangerLensResource, accessType.toString().toLowerCase() , null , userGroups);
+    RangerAccessRequest rangerAccessRequest = new RangerAccessRequestImpl(rangerLensResource,
+      accessType.toString().toLowerCase(), null, userGroups);
 
     RangerAccessResult rangerAccessResult = getRangerBasePlugin().isAccessAllowed(rangerAccessRequest);
 
-    return rangerAccessResult !=null && rangerAccessResult.getIsAllowed();
+    return rangerAccessResult != null && rangerAccessResult.getIsAllowed();
   }
 
   private RangerLensResource getLensResource(LensPrivilegeObject lensPrivilegeObject) {
 
     RangerLensResource lensResource = null;
-    switch(lensPrivilegeObject.getObjectType()) {
+    switch (lensPrivilegeObject.getObjectType()) {
     case COLUMN:
-      lensResource = new RangerLensResource(LensObjectType.COLUMN, lensPrivilegeObject.getCubeOrFactOrDim(), lensPrivilegeObject.getColumn());
+      lensResource = new RangerLensResource(LensObjectType.COLUMN, lensPrivilegeObject.getCubeOrFactOrDim(),
+        lensPrivilegeObject.getColumn());
       break;
 
     case DIMENSION:
@@ -85,5 +85,7 @@ public class RangerLensAuthorizer implements IAuthorizer {
     return lensResource;
   }
 
-  enum LensObjectType { NONE, TABLE, COLUMN };
+  enum LensObjectType {NONE, TABLE, COLUMN}
+
+  ;
 }

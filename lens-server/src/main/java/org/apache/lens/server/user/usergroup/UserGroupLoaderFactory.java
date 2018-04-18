@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.user.UserConfigLoaderException;
 import org.apache.lens.server.api.user.UserGroupConfigLoader;
 import org.apache.lens.server.api.user.UserGroupLoaderException;
 

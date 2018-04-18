@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.logging.Logger;
 
-import javax.ws.rs.Priorities;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.lens.api.jaxb.LensJAXBContextResolver;

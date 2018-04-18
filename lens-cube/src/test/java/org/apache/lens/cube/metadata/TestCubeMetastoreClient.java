@@ -1001,7 +1001,7 @@ public class TestCubeMetastoreClient {
     CubeFactTable cubeFact = new CubeFactTable(CUBE_NAME, factName, factColumns, updatePeriods, 0L, null,
       storageUpdatePeriodMap);
     client.createCubeFactTable(CUBE_NAME, factName, factColumns, updatePeriods, 0L, null, storageTables,
-      storageUpdatePeriodMap,null);
+      storageUpdatePeriodMap);
 
     assertTrue(client.tableExists(factName));
     Table cubeTbl = client.getHiveTable(factName);
@@ -1117,7 +1117,7 @@ public class TestCubeMetastoreClient {
     assertNotNull(toAlter.getDimAttributeByName("dim2"));
     assertNull(toAlter.getDimAttributeByName("dim1"));
 
-    client.alterCube(name, toAlter,null);
+    client.alterCube(name, toAlter);
 
     DerivedCube altered = (DerivedCube) client.getCube(name);
 

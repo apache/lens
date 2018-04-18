@@ -36,7 +36,6 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
-import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -278,7 +277,8 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
         period = UpdatePeriod.valueOf(storageTable.getUpdatePeriods().getUpdatePeriod().get(0).name());
       }
       msClient.addStorage(dimTable, storageTable.getStorageName(), period,
-        JAXBUtils.storageTableDescFromXStorageTableDesc(storageTable.getTableDesc()), getSession(sessionid).getLoggedInUserGroups());
+        JAXBUtils.storageTableDescFromXStorageTableDesc(storageTable.getTableDesc()),
+        getSession(sessionid).getLoggedInUserGroups());
       log.info("Added storage " + storageTable.getStorageName() + " for dimension table " + dimTblName
         + " with update period " + period);
     }
@@ -522,7 +522,8 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
       tables.getStorageTable().add(storageTable);
       msClient.addStorage(msClient.getCubeFactTable(fact), storageTable.getStorageName(), updatePeriods,
         JAXBUtils.tableDescPrefixMapFromXStorageTables(tables),
-        JAXBUtils.storageTablePrefixMapOfStorage(tables).get(storageTable.getStorageName()), getSession(sessionid).getLoggedInUserGroups());
+        JAXBUtils.storageTablePrefixMapOfStorage(tables).get(storageTable.getStorageName()),
+        getSession(sessionid).getLoggedInUserGroups());
       log.info("Added storage " + storageTable.getStorageName() + ":" + updatePeriods + " for fact " + fact);
     }
   }
@@ -598,8 +599,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
     try (SessionContext ignored = new SessionContext(sessionid)) {
       checkFactStorage(sessionid, fact, storageName);
       return getClient(sessionid)
-        .addPartitions(storagePartSpecListFromXPartitionList(partitions), storageName, CubeTableType.FACT,
-          getSession(sessionid).getLoggedInUserGroups()).size();
+        .addPartitions(storagePartSpecListFromXPartitionList(partitions), storageName, CubeTableType.FACT).size();
     } catch (HiveException exc) {
       throw new LensException(exc);
     }
@@ -691,7 +691,7 @@ public class CubeMetastoreServiceImpl extends BaseLensService implements CubeMet
     try (SessionContext ignored = new SessionContext(sessionid)){
       checkDimTableStorage(sessionid, dimTblName, storageName);
       return getClient(sessionid).addPartitions(storagePartSpecListFromXPartitionList(partitions), storageName,
-        CubeTableType.DIM_TABLE, getSession(sessionid).getLoggedInUserGroups()).size();
+        CubeTableType.DIM_TABLE).size();
     } catch (HiveException exc) {
       throw new LensException(exc);
     }

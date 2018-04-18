@@ -42,14 +42,15 @@ public class QueryAuthorizationResolver implements ContextRewriter {
 
   QueryAuthorizationResolver(Configuration conf) {
     authorizer = ReflectionUtils.newInstance(
-      conf.getClass(MetastoreConstants.AUTHORIZER_CLASS, LensConfConstants.DEFAULT_AUTHORIZER, IAuthorizer.class), conf);
+      conf.getClass(MetastoreConstants.AUTHORIZER_CLASS, LensConfConstants.DEFAULT_AUTHORIZER, IAuthorizer.class),
+      conf);
     isAuthorizationCheckEnabled = conf.getBoolean(LensConfConstants.ENABLE_AUTHORIZATION_CHECK,
       LensConfConstants.DEFAULT_ENABLE_AUTHORIZATION_CHECK);
   }
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
 
-    if(isAuthorizationCheckEnabled) {
+    if (isAuthorizationCheckEnabled) {
       for (Map.Entry<String, Set<String>> entry : cubeql.getTblAliasToColumns().entrySet()) {
         String alias = entry.getKey();
         // skip default alias
@@ -61,7 +62,8 @@ public class QueryAuthorizationResolver implements ContextRewriter {
 
         Set<String> sensitiveFields = ((AbstractBaseTable) tbl).getSensitiveColumnsFromQuery(columns);
         for (String col : sensitiveFields) {
-          if (!getAuthorizer().authorize(new LensPrivilegeObject(LensPrivilegeObject.LensPrivilegeObjectType.COLUMN, tbl.getName(), col), ActionType.SELECT,
+          if (!getAuthorizer().authorize(new LensPrivilegeObject(LensPrivilegeObject.LensPrivilegeObjectType.COLUMN,
+              tbl.getName(), col), ActionType.SELECT,
             new HashSet<>(Arrays.asList(cubeql.getConf().get(LensConfConstants.SESSION_USER_GROUPS).split(","))))) {
             throw new LensException(LensCubeErrorCode.NOT_AUTHORIZED_EXCEPTION.getLensErrorInfo());
           }
