@@ -73,22 +73,6 @@ public class MetastoreUtil {
     return STORAGE_ENTITY_PFX + storageName.toLowerCase();
   }
 
-  public static String getAccessGroupClassKey(String name) {
-    return getAccessGroupEntityPrefix(name) + CLASS_SFX;
-  }
-
-  public static String getAccessGroupEntityPrefix(String name) {
-    return ACCESS_GROUP_ENTITY_PFX + name.toLowerCase();
-  }
-
-  public static String getAccessGroupUserPrefix(String name) {
-    return ACCESS_GROUP_USER_PFX + name.toLowerCase();
-  }
-
-  public static String getAccessGroupUserEmailIdPrefix(String name) {
-    return ACCESS_GROUP_USER_EMAILID_PFX + name.toLowerCase();
-  }
-
   // //////////////////////////
   // Dimension properties ///
   // /////////////////////////

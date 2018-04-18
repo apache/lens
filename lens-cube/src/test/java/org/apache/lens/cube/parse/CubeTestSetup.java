@@ -815,7 +815,7 @@ public class CubeTestSetup {
         BufferedReader br = new BufferedReader(new FileReader(file));
         String replaced = br.lines().map(f.andThen(g)).collect(Collectors.joining("\n"));
         StringReader sr = new StringReader(replaced);
-        client.createEntity(LensJAXBContext.unmarshall(sr),null);
+        client.createEntity(LensJAXBContext.unmarshall(sr));
       } catch (LensException | JAXBException | IOException e) {
         throw new RuntimeException(e);
       }

@@ -327,11 +327,21 @@ public class CubeMetastoreClient {
 
   public void createCubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods, double weight, Map<String, String> properties,
-    Map<String, StorageTableDesc> storageTableDescs, Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap, Set<String> sessionUserGroups)
+    Map<String, StorageTableDesc> storageTableDescs, Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap)
+    throws LensException {
+    createCubeFactTable(cubeName, factName, columns, storageAggregatePeriods, weight, properties, storageTableDescs,
+      storageUpdatePeriodMap, null);
+  }
+
+  public void createCubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
+    Map<String, Set<UpdatePeriod>> storageAggregatePeriods, double weight, Map<String, String> properties,
+    Map<String, StorageTableDesc> storageTableDescs, Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap,
+    Set<String> sessionUserGroups)
     throws LensException {
     CubeFactTable factTable = new CubeFactTable(cubeName, factName, columns, storageAggregatePeriods, weight,
       properties, storageUpdatePeriodMap);
-    if(isAuthorizationEnabled() && !getAuthorizer().authorize(new LensPrivilegeObject(LensPrivilegeObject.LensPrivilegeObjectType.FACT, factName), ActionType.CREATE , sessionUserGroups)) {
+    if(isAuthorizationEnabled() && !getAuthorizer().authorize(new LensPrivilegeObject(
+      LensPrivilegeObject.LensPrivilegeObjectType.FACT, factName), ActionType.CREATE , sessionUserGroups)) {
       throw new LensException(LensCubeErrorCode.NOT_AUTHORIZED_EXCEPTION.getLensErrorInfo());
     }
     createCubeTable(factTable, storageTableDescs);
@@ -339,7 +349,9 @@ public class CubeMetastoreClient {
     getFactTable(factName);
 
   }
-  public <T extends Equals & HashCode & ToString> void createEntity(T entity, Set<String> sessionUserGroups) throws LensException {
+
+  public <T extends Equals & HashCode & ToString> void createEntity(T entity, Set<String> sessionUserGroups)
+    throws LensException {
     if (entity instanceof XStorage) {
       createStorage((XStorage) entity, sessionUserGroups);
     } else if  (entity instanceof XCube) {
@@ -357,7 +369,8 @@ public class CubeMetastoreClient {
     }
   }
 
-  public <T extends Equals & HashCode & ToString> void updateEntity(String name, T entity, Set<String> sessionUserGroups)
+  public <T extends Equals & HashCode & ToString> void updateEntity(String name, T entity,
+    Set<String> sessionUserGroups)
     throws LensException, HiveException {
     if (entity instanceof XStorage) {
       alterStorage((XStorage) entity, sessionUserGroups);
@@ -910,12 +923,23 @@ public class CubeMetastoreClient {
    */
   public void createCubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods, double weight, Map<String, String> properties,
-    Map<String, StorageTableDesc> storageTableDescs) throws LensException {
+    Map<String, StorageTableDesc> storageTableDescs, Set<String> sessionUserGroups) throws LensException {
     CubeFactTable factTable =
       new CubeFactTable(cubeName, factName, columns, storageAggregatePeriods, weight, properties);
+    if(isAuthorizationEnabled() && !getAuthorizer().authorize(new LensPrivilegeObject(
+      LensPrivilegeObject.LensPrivilegeObjectType.FACT, factName), ActionType.CREATE , sessionUserGroups)) {
+      throw new LensException(LensCubeErrorCode.NOT_AUTHORIZED_EXCEPTION.getLensErrorInfo());
+    }
     createCubeTable(factTable, storageTableDescs);
     // do a get to update cache
     getFactTable(factName);
+  }
+
+  public void createCubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
+    Map<String, Set<UpdatePeriod>> storageAggregatePeriods, double weight, Map<String, String> properties,
+    Map<String, StorageTableDesc> storageTableDescs) throws LensException {
+    createCubeFactTable(cubeName, factName, columns, storageAggregatePeriods, weight, properties, storageTableDescs,
+      new HashSet<String>());
   }
 
   public void createSegmentation(String baseCubeName, String segmentationName, Set<Segment> segments,

@@ -26,7 +26,6 @@ public final class MetastoreConstants {
   public static final String TABLE_TYPE_KEY = "cube.table.type";
   public static final String CUBE_TABLE_PFX = "cube.table.";
   public static final String WEIGHT_KEY_SFX = ".weight";
-  public static final String ACCESS_GROUP_ACTION_KEY = "cube.accessgroup.action";
   public static final String AUTHORIZER_CLASS = "authorizer.class";
 
   public static final String BASE_KEY_PFX = "base.";
@@ -124,10 +123,6 @@ public final class MetastoreConstants {
   // storage constants
   public static final String STORAGE_ENTITY_PFX = "storage.";
   public static final String STORAGE_PFX = "cube.storagetable.";
-  public static final String ACCESS_GROUP_ENTITY_PFX = "accessgroup.";
-  public static final String ACCESS_GROUP_USER_PFX = "accessgroup.user.";
-  public static final String ACCESS_GROUP_USER_EMAILID_PFX = "accessgroup.user.emailid.";
-  public static final String ACCESS_GROUP_PFX = "cube.accessgroup.";
 
   public static final String PARTITION_TIMELINE_CACHE = "partition.timeline.cache.";
   public static final String STORAGE_CLASS = "storage.class";

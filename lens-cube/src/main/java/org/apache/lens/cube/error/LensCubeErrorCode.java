@@ -23,7 +23,6 @@ import org.apache.lens.server.api.LensErrorInfo;
 public enum LensCubeErrorCode {
   // Error codes less than 3100 are errors encountered while submitting a query
   // Error codes same for drivers
-  NOT_AUTHORIZED_EXCEPTION(3000,0),
   SYNTAX_ERROR(3001, 0),
   FIELDS_CANNOT_BE_QUERIED_TOGETHER(3002, 0),
   MORE_THAN_ONE_CUBE(3003, 0),
@@ -67,7 +66,9 @@ public enum LensCubeErrorCode {
   EXPRESSION_NOT_PARSABLE(3103, 1500),
   ENTITY_NOT_FOUND(3104, 1500),
   NO_PARTITION_FILTER(3105, 1500),
-  ENTITY_TYPE_NOT_AS_EXPECTED(3106, 1500);
+  ENTITY_TYPE_NOT_AS_EXPECTED(3106, 1500),
+  // Authorization exceptions
+  NOT_AUTHORIZED_EXCEPTION(3037,0);
 
   public LensErrorInfo getLensErrorInfo() {
     return this.errorInfo;

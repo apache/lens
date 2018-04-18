@@ -1018,8 +1018,7 @@ public class HiveDriver extends AbstractLensDriver {
      * @see java.lang.Runnable#run()
      */
     @Override
-    public void run
-    () {
+    public void run() {
       // till query is complete or timeout has reached
       long timeSpent = 0;
       String error;

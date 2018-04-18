@@ -161,7 +161,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
 
 
   /**
-   * Return sensitive columns of the fact, which can be specified by property MetastoreUtil.getValidColumnsKey(getName())
+   * Return sensitive columns of the fact, which can be specified by property MetastoreUtil.getSensitiveColumnsKey(getName())
    *
    * @return
    */

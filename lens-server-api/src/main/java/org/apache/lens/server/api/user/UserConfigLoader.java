@@ -29,10 +29,10 @@ import java.util.Map;
 public interface UserConfigLoader {
 
   /**
-   * Gets the user group config.
+   * Gets the user config.
    *
    * @param loggedInUser the logged in user
-   * @return the user group config
+   * @return the user config
    * @throws UserConfigLoaderException the user config loader exception
    */
   Map<String, String> getUserConfig(String loggedInUser) throws UserConfigLoaderException;

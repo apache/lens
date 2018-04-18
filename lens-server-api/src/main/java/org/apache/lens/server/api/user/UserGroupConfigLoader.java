@@ -26,7 +26,7 @@ public interface UserGroupConfigLoader {
    * Gets the user groups config.
    *
    * @param loggedInUser the logged in user
-   * @return the user config
+   * @return the user group config
    * @throws UserGroupLoaderException the user group loader exception
    */
   Map<String, String> getUserConfig(String loggedInUser) throws UserGroupLoaderException;

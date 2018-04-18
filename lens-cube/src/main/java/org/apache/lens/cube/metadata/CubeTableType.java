@@ -20,5 +20,5 @@
 package org.apache.lens.cube.metadata;
 
 public enum CubeTableType {
-  CUBE, DIMENSION, FACT, DIM_TABLE, STORAGE, SEGMENTATION, ACCESS_GROUP
+  CUBE, DIMENSION, FACT, DIM_TABLE, STORAGE, SEGMENTATION
 }

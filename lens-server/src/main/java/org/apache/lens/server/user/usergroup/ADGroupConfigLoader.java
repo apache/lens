@@ -48,9 +48,6 @@ import org.json.JSONException;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-/**
- * Created by rajithar on 14/3/18.
- */
 public class ADGroupConfigLoader implements UserGroupConfigLoader {
 
   /** The cache. */
@@ -202,7 +199,7 @@ public class ADGroupConfigLoader implements UserGroupConfigLoader {
     return ds;
   }
 
-  String[] queryDatabase(String querySql, boolean allowNull, Object... args) throws SQLException {
+  private String[] queryDatabase(String querySql, boolean allowNull, Object... args) throws SQLException {
     return UtilityMethods.queryDatabase(refreshDataSource(), querySql, allowNull, args);
   }
 }
