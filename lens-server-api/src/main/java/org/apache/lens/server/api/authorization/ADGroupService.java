@@ -20,14 +20,10 @@ package org.apache.lens.server.api.authorization;
 
 import java.io.*;
 
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.codec.binary.Base64;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,16 +41,18 @@ public class ADGroupService {
     Map<String, String> res = new HashMap<>();
     JSONArray jsonObject = readJsonFromUrl(serverUrl, userName, pwd);
 
-    for(int i = 0; i < lookupFields.length; i++) {
-      if (lookupFields[i].equals("memberOf")) {
-        List<String> adGroupList = new ArrayList<>();
-        JSONArray jsonStringArray =  (JSONArray) ((JSONObject)jsonObject.get(0)).get("memberOf");
-        for(int j = 0; j < jsonStringArray.length(); j++){
-          adGroupList.add(jsonStringArray.get(j).toString());
+    if (jsonObject != null) {
+      for (String lookupField : lookupFields) {
+        if (lookupField.equals("memberOf")) {
+          List<String> adGroupList = new ArrayList<>();
+          JSONArray jsonStringArray = (JSONArray) ((JSONObject) jsonObject.get(0)).get("memberOf");
+          for (int j = 0; j < jsonStringArray.length(); j++) {
+            adGroupList.add(jsonStringArray.get(j).toString());
+          }
+          res.put(lookupField, adGroupList.toString().replace("[", "").replace("]", ""));
+        } else {
+          res.put(lookupField, null);
         }
-        res.put(lookupFields[i], adGroupList.toString().replace("[", "").replace("]", ""));
-      }else {
-        res.put(lookupFields[i],  null);
       }
     }
     return res;
@@ -62,21 +60,24 @@ public class ADGroupService {
 
   private static JSONArray readJsonFromUrl(String url, String username, String pwd) throws IOException, JSONException {
     String authString = username + ":" + pwd;
-    byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
-    String authStringEnc = new String(authEncBytes);
-    URLConnection urlConnection = new URL(url).openConnection();
+    String authStringEnc = Base64.getEncoder().encodeToString(authString.getBytes(StandardCharsets.UTF_8));
+
+    HttpURLConnection urlConnection = (HttpURLConnection) new URL(url).openConnection();
     urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
     urlConnection.setRequestProperty("Content-Type", "application/json");
     urlConnection.setRequestProperty("Accept", "application/json");
-    InputStream is = urlConnection.getInputStream();
-    InputStreamReader isr = new InputStreamReader(is);
-
-    int numCharsRead;
-    char[] charArray = new char[1024];
-    StringBuilder sb = new StringBuilder();
-    while ((numCharsRead = isr.read(charArray)) > 0) {
-      sb.append(charArray, 0, numCharsRead);
+    if (urlConnection.getResponseCode() == 200) {
+      InputStream is = urlConnection.getInputStream();
+      InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
+      int numCharsRead;
+      char[] charArray = new char[2048];
+      StringBuilder sb = new StringBuilder();
+      while ((numCharsRead = isr.read(charArray)) > 0) {
+        sb.append(charArray, 0, numCharsRead);
+      }
+      return new JSONArray(sb.toString());
     }
-    return new JSONArray(sb.toString());
+
+    return null;
   }
 }

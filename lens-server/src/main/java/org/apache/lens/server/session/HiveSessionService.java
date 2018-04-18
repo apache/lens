@@ -335,6 +335,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
     this.databaseResourceService = new DatabaseResourceService(DatabaseResourceService.NAME);
     addService(this.databaseResourceService);
     this.conf = hiveConf;
+
     super.init(hiveConf);
   }
 

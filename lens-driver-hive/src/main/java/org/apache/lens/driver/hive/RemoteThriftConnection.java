@@ -18,14 +18,16 @@
  */
 package org.apache.lens.driver.hive;
 
+
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.cli.CLIServiceClient;
-import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.thrift.RetryingThriftCLIServiceClient;
 
 import lombok.extern.slf4j.Slf4j;
+
 
 /**
  * Connect to a remote Hive Server 2 service to run driver queries.
@@ -66,12 +68,18 @@ public class RemoteThriftConnection implements ThriftConnection {
         log.info("HiveDriver connecting to HiveServer @ {}:{}",
           conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST),
           conf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
-        hs2Client = RetryingThriftCLIServiceClient.newRetryingCLIServiceClient(conf);
+
+        if (conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION)
+                .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())) {
+          hs2Client = RetryingThriftCLIServiceClientSasl.newRetryingCLIServiceClient(conf);
+        } else {
+          hs2Client = RetryingThriftCLIServiceClient.newRetryingCLIServiceClient(conf);
+        }
         log.info("HiveDriver connected to HiveServer @ {}:{}",
           conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST),
           conf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
 
-      } catch (HiveSQLException e) {
+      } catch (Exception e) {
         throw new LensException(e);
       }
       connected = true;

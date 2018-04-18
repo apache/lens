@@ -18,25 +18,35 @@
  */
 package org.apache.lens.server.api.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Set;
 
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory;
 
+import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Utility methods for Lens
  */
+@Slf4j
 public final class LensUtil {
 
   private LensUtil() {
@@ -112,5 +122,49 @@ public final class LensUtil {
       map.put((K) args[i], (V) args[i + 1]);
     }
     return map;
+  }
+
+  private static void checkIsReadable(String keytabFilePath) {
+    File keytabFile = new File(keytabFilePath);
+    if (!keytabFile.exists()) {
+      throw new IllegalArgumentException("The keytab file does not exist! " + keytabFilePath);
+    }
+
+    if (!keytabFile.isFile()) {
+      throw new IllegalArgumentException("The keytab file cannot be a directory! " + keytabFilePath);
+    }
+
+    if (!keytabFile.canRead()) {
+      throw new IllegalArgumentException("The keytab file is not readable! " + keytabFilePath);
+    }
+  }
+
+  public static void refreshLensTGT(HiveConf conf) throws IOException, IllegalArgumentException {
+
+    String principalString = conf.get(LensConfConstants.LENS_PRINCIPAL);
+
+    Validate.notEmpty(principalString,
+            "Missing required configuration property: " + LensConfConstants.LENS_PRINCIPAL);
+
+    String principal = SecurityUtil.getServerPrincipal(
+            principalString,
+            InetAddress.getLocalHost().getCanonicalHostName());
+
+    String keytabFilePath = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB);
+
+    Validate.notEmpty(keytabFilePath, "Missing required configuration property: "
+                    + HiveConf.ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB.toString());
+    checkIsReadable(keytabFilePath);
+
+    Configuration hadoopConf = new Configuration();
+    hadoopConf.set("hadoop.security.authentication", "kerberos");
+
+    UserGroupInformation.setConfiguration(hadoopConf);
+
+    UserGroupInformation.loginUserFromKeytab(principal, keytabFilePath);
+
+    log.info("RetryingThriftCLIServiceClientSasl : Got Kerberos ticket, keytab: {}, Lens principal: {}",
+            keytabFilePath, principal);
+
   }
 }

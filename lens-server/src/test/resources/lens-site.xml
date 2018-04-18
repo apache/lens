@@ -207,4 +207,16 @@
     <value>3</value>
   </property>
 
+  <property>
+    <name>lens.server.kdc.login.service.interval.minutes</name>
+    <value>360</value>
+    <description>interval in minutes to refresh auth token when kerberos is enabled on hdfs and/or hive, metastore</description>
+  </property>
+
+  <property>
+    <name>lens.server.principal</name>
+    <value>lens/_HOST@APACHE.COM</value>
+    <description>lens server principal name, must be in format lens/_HOST@KDC_REALM</description>
+  </property>
+
 </configuration>
