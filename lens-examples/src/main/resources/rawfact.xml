@@ -32,7 +32,6 @@
   </columns>
   <properties>
     <property name="cube.fact.is.aggregated" value="false"/>
-    <property name="accessgroup.names" value="admin"/>
   </properties>
   <storage_tables>
     <storage_table>

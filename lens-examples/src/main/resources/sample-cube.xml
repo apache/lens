@@ -23,8 +23,6 @@
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <properties>
     <property name="cube.sample_cube.timed.dimensions.list" value="dt"/>
-    <property name="cube.sample_cube.sensitive.columns" value="dim1,dim2"/>
-    <property name="accessgroup.names" value="admin"/>
   </properties>
   <measures>
     <measure name="measure1" _type="BIGINT"/>
