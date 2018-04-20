@@ -22,6 +22,12 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
 <configuration>
+
+  <property>
+    <name>lens.driver.hive.kerberos.principal</name>
+    <value>hive/_HOST@APACHE.COM</value>
+  </property>
+
 <property>
   <name>hive.metastore.warehouse.dir</name>
   <value>/tmp/hive/warehouse</value>

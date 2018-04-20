@@ -23,6 +23,14 @@
 
 <configuration>
 
+
+  <property>
+    <name>lens.driver.hive.kerberos.principal</name>
+    <value>hive/_HOST@APACHE.COM</value>
+    <description>Set principal name to be used for hive server.
+  </description>
+  </property>
+
   <property>
     <name>lens.driver.hive.connection.class</name>
     <value>org.apache.lens.driver.hive.EmbeddedThriftConnection</value>

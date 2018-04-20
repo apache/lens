@@ -735,6 +735,13 @@ public final class LensConfConstants {
   public static final String LENS_PRINCIPAL = SERVER_PFX
           + "principal";
 
+
+  /**
+   * Hive principal for kerberos authentication
+   */
+  public static final String LENS_DRIVER_HIVE_PRINCIPAL = DRIVER_PFX
+          + "hive.kerberos.principal";
+
   // Statistics Store configuration keys
   /**
    * The Constant STATS_STORE_CLASS.

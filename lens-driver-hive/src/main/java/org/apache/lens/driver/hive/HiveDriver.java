@@ -327,10 +327,21 @@ public class HiveDriver extends AbstractLensDriver {
    */
   @Override
   public void configure(Configuration conf, String driverType, String driverName) throws LensException {
+
     super.configure(conf, driverType, driverName);
 
     this.hiveConf = new HiveConf(conf, HiveDriver.class);
     this.hiveConf.addResource(getConf());
+
+    if (hiveConf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION)
+            .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())) {
+
+      log.info("set hive's server principal for hive driver as {}",
+              getConf().get(LensConfConstants.LENS_DRIVER_HIVE_PRINCIPAL));
+
+      hiveConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL,
+              getConf().get(LensConfConstants.LENS_DRIVER_HIVE_PRINCIPAL));
+    }
 
     connectionClass = getConf().getClass(HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class,
       ThriftConnection.class);
