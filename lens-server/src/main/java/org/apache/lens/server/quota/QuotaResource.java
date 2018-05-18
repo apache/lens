@@ -18,13 +18,12 @@
  */
 package org.apache.lens.server.quota;
 
-import org.apache.lens.server.auth.Authenticate;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.lens.server.auth.Authenticate;
 /**
  * The Class QuotaResource.
  */

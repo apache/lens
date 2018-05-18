@@ -36,13 +36,13 @@ import org.apache.lens.api.metastore.*;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
+import org.apache.lens.server.auth.Authenticate;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.lens.server.auth.Authenticate;
 
   /**
  * metastore resource api
