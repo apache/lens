@@ -30,6 +30,7 @@ import org.apache.lens.api.scheduler.*;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.scheduler.SchedulerService;
+import org.apache.lens.server.auth.Authenticate;
 import org.apache.lens.server.error.UnSupportedOpException;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.util.UtilityMethods;
@@ -37,6 +38,7 @@ import org.apache.lens.server.util.UtilityMethods;
 /**
  * REST end point for all scheduler operations.
  */
+@Authenticate
 @Path("scheduler")
 @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 public class ScheduleResource {

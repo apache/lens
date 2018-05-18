@@ -90,6 +90,12 @@ public class LensClientConfig extends Configuration {
 
   public static final int DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000; //60 secs
 
+  public static final String KERBEROS_PRINCIPAL = CLIENT_PFX + "authentication.kerberos.principal";
+
+  public static final String KERBEROS_REALM = CLIENT_PFX + "authentication.kerberos.realm";
+
+  public static final String KERBEROS_KEYTAB = CLIENT_PFX + "authentication.kerberos.keytab";
+
   /**
    * Get the username from config
    *
@@ -167,4 +173,5 @@ public class LensClientConfig extends Configuration {
   public static String getWSFilterImplConfKey(String filterName) {
     return CLIENT_PFX + filterName + WS_FILTER_IMPL_SFX;
   }
+
 }

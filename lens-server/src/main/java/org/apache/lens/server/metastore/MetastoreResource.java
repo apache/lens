@@ -42,12 +42,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lens.server.auth.Authenticate;
 
-/**
+  /**
  * metastore resource api
  * <p> </p>
  * This provides api for all things metastore.
  */
+@Authenticate
 @Path("metastore")
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 @Slf4j

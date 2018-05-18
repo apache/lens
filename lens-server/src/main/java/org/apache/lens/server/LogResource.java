@@ -32,11 +32,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.lens.server.auth.Authenticate;
 import org.apache.lens.server.util.UtilityMethods;
 
 /**
  * The logs resource
  */
+@Authenticate
 @Path("/logs")
 public class LogResource {
 

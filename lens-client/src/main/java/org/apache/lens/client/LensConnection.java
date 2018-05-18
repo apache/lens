@@ -185,6 +185,7 @@ public class LensConnection implements AutoCloseable {
       if (e.getCause() != null && e.getCause() instanceof ConnectException) {
         throw new LensClientServerConnectionException(e.getCause().getMessage(), e);
       }
+      throw e;
     }
 
     log.debug("Successfully switched to database {}", params.getDbName());

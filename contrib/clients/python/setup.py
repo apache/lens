@@ -57,7 +57,7 @@ setup(
     license='Apache Software License',
     author='Apache',
     tests_require=['tox'],
-    install_requires=['requests>=2.9.1', 'six>=1.10.0'],
+    install_requires=['requests>=2.9.1', 'six>=1.10.0', 'pykerberos=1.2.1'],
     cmdclass={'test': Tox},
     author_email='dev@lens.apache.org',
     description='Python Lens Client',

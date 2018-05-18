@@ -277,6 +277,11 @@ public final class LensConfConstants {
    */
   public static final String SESSION_LOGGEDIN_USER = SESSION_PFX + "loggedin.user";
 
+  /**
+   * constant for session proxy user
+   */
+  public static final String SESSION_PROXY_USER = SESSION_PFX + "proxy.user";
+
   // ldap user to cluster/hdfs accessing user resolver related configs
   /**
    * The Constant USER_RESOLVER_TYPE.
@@ -1297,4 +1302,16 @@ public final class LensConfConstants {
   public static final double DEFAULT_DRIVER_QUERY_COST = 0.0;
 
   public static final String DRIVER_COST_QUERY_DECIDER = DRIVER_PFX + "cost.query.decider.class";
+
+  public static final String AUTH_SCHEME = SERVER_PFX  + "authentication.scheme";
+
+  public static final String KERBEROS_PRINCIPAL = SERVER_PFX + "authentication.kerberos.principal";
+
+  public static final String KERBEROS_REALM = SERVER_PFX + "authentication.kerberos.realm";
+
+  public static final String KERBEROS_KEYTAB = SERVER_PFX + "authentication.kerberos.keytab";
+
+  public static final String ALLOWED_PROXY_USERS = SERVER_PFX + "authentication.allowed.proxy.users";
+
+
 }

@@ -26,6 +26,7 @@ import javax.ws.rs.core.Application;
 
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.error.GenericExceptionMapper;
+import org.apache.lens.server.error.NotAuthorizedExceptionMapper;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -67,6 +68,7 @@ public class LensApplication extends Application {
       classes.add(wsListenerClass);
       log.info("Added listener {}", wsListenerClass);
     }
+
     for (String filterName : filterNames) {
       Class wsFilterClass = CONF.getClass(LensConfConstants.getWSFilterImplConfKey(filterName), null);
       classes.add(wsFilterClass);
@@ -74,6 +76,7 @@ public class LensApplication extends Application {
     }
 
     classes.add(GenericExceptionMapper.class);
+    classes.add(NotAuthorizedExceptionMapper.class);
     return classes;
   }
 

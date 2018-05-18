@@ -18,23 +18,46 @@
  */
 package org.apache.lens.server.session;
 
+import java.security.Principal;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import javax.ws.rs.*;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
+import org.apache.lens.api.auth.AuthScheme;
 import org.apache.lens.api.session.UserSessionInfo;
+import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.auth.Authenticate;
 import org.apache.lens.server.util.ScannedPaths;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
@@ -45,12 +68,19 @@ import lombok.extern.slf4j.Slf4j;
  * <p></p>
  * This provides api for all things in session.
  */
+@Authenticate
 @Path("session")
 @Slf4j
 public class SessionResource {
+  public static final Configuration CONF = LensServerConf.getHiveConf();
+  public static final Optional<AuthScheme> AUTH_SCHEME =
+          AuthScheme.getFromString(CONF.get(LensConfConstants.AUTH_SCHEME));
 
   /** The session service. */
   private SessionService sessionService;
+
+  @Context
+  private SecurityContext securityContext;
 
   /**
    * API to know if session service is up and running
@@ -94,7 +124,24 @@ public class SessionResource {
     } else {
       conf = new HashMap();
     }
-    return sessionService.openSession(username, password, database,   conf);
+
+    if (AUTH_SCHEME.isPresent()) {
+      Principal userPrincipal = securityContext.getUserPrincipal();
+      String userPrincipalName = userPrincipal.getName();
+      Collection<String> allowedProxyUsers = CONF.getTrimmedStringCollection(LensConfConstants.ALLOWED_PROXY_USERS);
+      if (allowedProxyUsers.contains(userPrincipalName)) {
+        String loggedInUser = conf.get(LensConfConstants.SESSION_LOGGEDIN_USER);
+        if (StringUtils.isBlank(loggedInUser)) {
+          throw new BadRequestException(LensConfConstants.SESSION_LOGGEDIN_USER + " is required in sessionconf");
+        }
+        username = loggedInUser;
+        conf.put(LensConfConstants.SESSION_PROXY_USER, userPrincipalName);
+      } else {
+        username = userPrincipalName;
+      }
+      password = "";
+    }
+    return sessionService.openSession(username, password, database, conf);
   }
 
   /**

@@ -45,6 +45,7 @@ import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.save.*;
 import org.apache.lens.server.api.query.save.param.ParameterParser;
 import org.apache.lens.server.api.query.save.param.ParameterResolver;
+import org.apache.lens.server.auth.Authenticate;
 import org.apache.lens.server.model.LogSegregationContext;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -53,6 +54,7 @@ import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 
+@Authenticate
 @Path("/queryapi")
 /**
  * Saved query resource

@@ -115,6 +115,7 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
     persistInfo.setPassword(getPassword());
     persistInfo.setLastAccessTime(System.currentTimeMillis());
     persistInfo.setSessionConf(sessionConf);
+    persistInfo.setProxyUser(sessionConf.get(LensConfConstants.SESSION_PROXY_USER));
     if (sessionConf != null) {
       for (Map.Entry<String, String> entry : sessionConf.entrySet()) {
         conf.set(entry.getKey(), entry.getValue());
@@ -637,6 +638,9 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
     /** Whether it's marked for close */
     private boolean markedForClose;
 
+    /** The proxy user which is initiating the request. This could be null */
+    private String proxyUser;
+
     public void setSessionConf(Map<String, String> sessionConf) {
       UtilityMethods.mergeMaps(config, sessionConf, true);
     }
@@ -666,6 +670,7 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
       }
       out.writeLong(lastAccessTime);
       out.writeBoolean(markedForClose);
+      out.writeUTF(proxyUser == null ? "" : proxyUser);
     }
 
     /*
@@ -697,6 +702,7 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
       }
       lastAccessTime = in.readLong();
       markedForClose = in.readBoolean();
+      proxyUser = in.readUTF();
     }
   }
 

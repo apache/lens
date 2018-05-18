@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.BadRequestException;
@@ -36,6 +37,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.auth.AuthScheme;
 import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.server.api.LensConfConstants;
@@ -73,6 +75,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class BaseLensService extends CompositeService implements Externalizable, LensService,
   SessionValidator {
+  public static final Configuration CONF = LensServerConf.getHiveConf();
+  public static final Optional<AuthScheme> AUTH_SCHEME =
+          AuthScheme.getFromString(CONF.get(LensConfConstants.AUTH_SCHEME));
 
   /** The cli service. */
   private final CLIService cliService;
@@ -161,7 +166,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
    */
   public LensSessionHandle openSession(String username, String password, Map<String, String> configuration)
     throws LensException {
-    return openSession(username, password, configuration, true);
+    return openSession(username, password, configuration, !AUTH_SCHEME.isPresent());
   }
 
   public LensSessionHandle openSession(String username, String password, Map<String, String> configuration,
@@ -343,9 +348,9 @@ public abstract class BaseLensService extends CompositeService implements Extern
         } else {
           SESSIONS_PER_USER.put(userName, --sessionCount);
         }
-      }else {
+      } else {
         log.info("Trying to decrement session count for non existing session {} for user {}: ",
-          sessionHandle, userName);
+                sessionHandle, userName);
       }
     }
   }

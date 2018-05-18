@@ -39,6 +39,7 @@ import org.apache.lens.server.api.annotations.MultiPurposeResource;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.cost.QueryCostTOBuilder;
+import org.apache.lens.server.auth.Authenticate;
 import org.apache.lens.server.error.UnSupportedOpException;
 import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.util.UtilityMethods;
@@ -54,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p></p>
  * This provides api for all things query.
  */
+@Authenticate
 @Slf4j
 @Path("/queryapi")
 public class QueryServiceResource {
