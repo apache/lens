@@ -1313,5 +1313,6 @@ public final class LensConfConstants {
 
   public static final String ALLOWED_PROXY_USERS = SERVER_PFX + "authentication.allowed.proxy.users";
 
-
+  public static final String DELEGATION_TOKEN_AUTH_HDFS_PATH_TO_CHECK = SERVER_PFX
+    + "delegation.token.auth.hdfs.path.to.check";
 }

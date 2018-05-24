@@ -41,8 +41,8 @@ class LensClient(object):
         username = username or conf.get('lens.client.user.name', "anonymous")
         database = database or conf.get('lens.client.dbname')
         self.session = LensSessionClient(self.base_url, username, password, database, conf)
-        self.queries = LensQueryClient(self.base_url, self.session)
-        self.logs = LensLogClient(self.base_url)
+        self.queries = LensQueryClient(self.base_url, self.session, conf)
+        self.logs = LensLogClient(self.base_url, conf)
 
     def __enter__(self):
         return self

@@ -20,6 +20,7 @@
 package org.apache.lens.server.auth;
 
 import java.io.File;
+import java.security.Principal;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
@@ -33,7 +34,6 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -73,9 +73,8 @@ import lombok.extern.slf4j.Slf4j;
  * {@code lens.server.authentication.kerberos.keytab} : Keytab of lens SPN
  * </pre>
  */
-
+@Priority(20)
 @Slf4j
-@Priority(Priorities.AUTHENTICATION)
 public class SpnegoAuthenticationFilter implements ContainerRequestFilter {
   private static final String SPNEGO_OID = "1.3.6.1.5.5.2";
   private static final String KERBEROS_LOGIN_MODULE_NAME =
@@ -119,6 +118,11 @@ public class SpnegoAuthenticationFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext context) {
+    Principal userPrincipal = context.getSecurityContext().getUserPrincipal();
+    if (userPrincipal != null) {
+      log.info("Authentication already done for principal {}, skipping this filter...", userPrincipal.getName());
+      return;
+    }
     // only authenticate when @Authenticate is present on resource
     if (resourceInfo.getResourceClass() == null || resourceInfo.getResourceMethod() == null) {
       return;

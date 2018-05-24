@@ -24,6 +24,7 @@ import requests
 from requests.exceptions import HTTPError
 from six import string_types, BytesIO, PY2, PY3
 
+from .auth import SpnegoAuth
 from .models import WrappedJson
 from .utils import conf_to_xml
 
@@ -148,7 +149,7 @@ class LensPersistentResult(LensQueryResult):
 
 
 class LensQueryClient(object):
-    def __init__(self, base_url, session):
+    def __init__(self, base_url, session, conf):
         self._session = session
         self.base_url = base_url + "queryapi/"
         self.launched_queries = []
@@ -156,10 +157,15 @@ class LensQueryClient(object):
         self.query_confs = {}
         self.is_header_present_in_result = self._session['lens.query.output.write.header'].lower() \
                                            in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup']
+        self.keytab = conf.get('lens.client.authentication.kerberos.keytab')
+        self.principal = conf.get('lens.client.authentication.kerberos.principal')
 
     def __call__(self, **filters):
         filters['sessionid'] = self._session._sessionid
-        resp = requests.get(self.base_url + "queries/", params=filters, headers={'accept': 'application/json'})
+        resp = requests.get(self.base_url + "queries/",
+                            params=filters,
+                            headers={'accept': 'application/json'},
+                            auth=SpnegoAuth(self.keytab, self.principal))
         return self.sanitize_response(resp)
 
     def __getitem__(self, item):
@@ -167,7 +173,8 @@ class LensQueryClient(object):
             if item in self.finished_queries:
                 return self.finished_queries[item]
             resp = requests.get(self.base_url + "queries/" + item, params={'sessionid': self._session._sessionid},
-                                headers={'accept': 'application/json'})
+                                headers={'accept': 'application/json'},
+                                auth=SpnegoAuth(self.keytab, self.principal))
             resp.raise_for_status()
             query = LensQuery(self, resp.json(object_hook=WrappedJson))
             if query.finished:
@@ -194,7 +201,8 @@ class LensQueryClient(object):
             operation = "execute_with_timeout" if timeout else "execute"
         payload.append(('operation', operation))
         payload.append(('conf', conf_to_xml(conf)))
-        resp = requests.post(self.base_url + "queries/", files=payload, headers={'accept': 'application/json'})
+        resp = requests.post(self.base_url + "queries/", files=payload, headers={'accept': 'application/json'},
+                             auth=SpnegoAuth(self.keytab, self.principal))
         query = self.sanitize_response(resp)
         logger.info("Submitted query %s", query)
         if conf:
@@ -218,11 +226,13 @@ class LensQueryClient(object):
         handle = str(query.query_handle)
         if query.status.status == 'SUCCESSFUL' and query.status.is_result_set_available:
             resp = requests.get(self.base_url + "queries/" + handle + "/resultsetmetadata",
-                                params={'sessionid': self._session._sessionid}, headers={'accept': 'application/json'})
+                                params={'sessionid': self._session._sessionid}, headers={'accept': 'application/json'},
+                                auth=SpnegoAuth(self.keytab, self.principal))
             metadata = self.sanitize_response(resp)
             # Try getting the result through http result
             resp = requests.get(self.base_url + "queries/" + handle + "/httpresultset",
-                                params={'sessionid': self._session._sessionid}, stream=True)
+                                params={'sessionid': self._session._sessionid}, stream=True,
+                                auth=SpnegoAuth(self.keytab, self.principal))
             if resp.ok:
                 is_header_present = self.is_header_present_in_result
                 if handle in self.query_confs and 'lens.query.output.write.header' in self.query_confs[handle]:
@@ -231,7 +241,8 @@ class LensQueryClient(object):
             else:
                 response = requests.get(self.base_url + "queries/" + handle + "/resultset",
                                         params={'sessionid': self._session._sessionid},
-                                        headers={'accept': 'application/json'})
+                                        headers={'accept': 'application/json'},
+                                        auth=SpnegoAuth(self.keytab, self.principal))
                 resp = self.sanitize_response(response)
                 # If it has in memory result, return inmemory result iterator
                 if resp._is_wrapper and resp._wrapped_key == u'inMemoryQueryResult':

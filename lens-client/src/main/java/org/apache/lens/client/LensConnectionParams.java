@@ -53,6 +53,7 @@ public class LensConnectionParams {
   private Set<Class<?>> requestFilters = new HashSet<Class<?>>();
 
   private void setupRequestFilters() {
+    requestFilters.add(DelegationTokenClientFilter.class);
     requestFilters.add(SpnegoClientFilter.class); // add default filter
     if (this.conf.get(LensClientConfig.SESSION_FILTER_NAMES) != null) {
       String[] filterNames = this.conf.getStrings(LensClientConfig.SESSION_FILTER_NAMES);
