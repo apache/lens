@@ -35,6 +35,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -62,7 +63,8 @@ import lombok.extern.slf4j.Slf4j;
 public class DelegationTokenAuthenticationFilter implements ContainerRequestFilter {
   private static final String AUTH_SCHEME = "Digest-MD5";
   private static final org.apache.hadoop.conf.Configuration CONF = LensServerConf.getHiveConf();
-  private static final Path PATH_TO_CHECK = new Path(CONF.get("DELEGATION_TOKEN_AUTH_HDFS_PATH_TO_CHECK"));
+  private static final Path PATH_TO_CHECK = new Path(
+          CONF.get(LensConfConstants.DELEGATION_TOKEN_AUTH_HDFS_PATH_TO_CHECK));
 
   private ResourceInfo resourceInfo;;
 

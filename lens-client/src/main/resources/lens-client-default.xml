@@ -82,4 +82,14 @@
       value specified while submitting the query for execution.
     </description>
   </property>
+  <property>
+    <name>lens.client.ssl.enabled</name>
+    <value>false</value>
+    <description>Specifies whether https is enabled for lens server or not.</description>
+  </property>
+  <property>
+    <name>lens.client.ssl.ignore.server.cert</name>
+    <value>true</value>
+    <description>Specifies whether https is enabled for lens server or not.</description>
+  </property>
 </configuration>

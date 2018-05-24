@@ -219,4 +219,22 @@
     <description>lens server principal name, must be in format lens/_HOST@KDC_REALM</description>
   </property>
 
+  <property>
+    <name>lens.server.ssl.enabled</name>
+    <value>false</value>
+    <description>flag to enable https communication between lens server and client.</description>
+  </property>
+
+  <property>
+    <name>lens.server.ssl.file.path</name>
+    <value>/tmp/certs</value>
+    <description>local path for cert file if ssl ie enabled.</description>
+  </property>
+
+  <property>
+    <name>lens.server.ssl.password</name>
+    <value>password</value>
+    <description>password for cert file</description>
+  </property>
+
 </configuration>

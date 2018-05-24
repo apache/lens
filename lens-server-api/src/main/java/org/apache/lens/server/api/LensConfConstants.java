@@ -1315,4 +1315,17 @@ public final class LensConfConstants {
 
   public static final String DELEGATION_TOKEN_AUTH_HDFS_PATH_TO_CHECK = SERVER_PFX
     + "delegation.token.auth.hdfs.path.to.check";
+
+  /**
+   *  SSL config to enable https communication between lens server
+   *  and clients.
+   */
+  public static final String SSL_ENABLED = SERVER_PFX + "ssl.enabled";
+
+  public static final boolean DEFAULT_SSL_ENABLED_VALUE = false;
+
+  public static final String SSL_KEYSTORE_FILE_PATH = SERVER_PFX + "ssl.file.path";
+
+  public static final String SSL_KEYSTORE_PASSWORD = SERVER_PFX + "ssl.password";
+
 }

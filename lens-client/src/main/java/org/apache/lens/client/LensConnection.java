@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -118,8 +121,7 @@ public class LensConnection implements AutoCloseable {
   }
 
   public Client buildClient() {
-    ClientBuilder cb = ClientBuilder.newBuilder().register(MultiPartFeature.class).register(MoxyJsonFeature.class)
-      .register(MoxyJsonConfigurationContextResolver.class);
+    ClientBuilder cb = getClientBuilder(params.getConf());
     for (Class<?> aClass : params.getRequestFilters()) {
       cb.register(aClass);
     }
@@ -132,6 +134,40 @@ public class LensConnection implements AutoCloseable {
     client.property(ClientProperties.READ_TIMEOUT, config.getInt(READ_TIMEOUT_MILLIS, DEFAULT_READ_TIMEOUT_MILLIS));
 
     return client;
+  }
+
+  /**
+   * getClientBuilder : initializes client builder
+   * specific to transfer protocol (TLS or SSL)
+   *
+   * @param config : client side config.
+   * @return Client builder.
+   */
+  private ClientBuilder getClientBuilder(LensClientConfig config) {
+
+    if (Boolean.valueOf(config.get(LensClientConfig.SSL_ENABLED,
+            String.valueOf(LensClientConfig.DEFAULT_SSL_ENABLED_VALUE)))) {
+      try {
+        log.info("SSL is enabled, Creating https client.");
+
+        SSLContext sc = SSLContext.getInstance("TLSv1");
+        System.setProperty("https.protocols", "TLSv1");
+
+        TrustManager[] trustedCerts = {new LensTrustManager(config)};
+        sc.init(null, trustedCerts, new java.security.SecureRandom());
+        HostnameVerifier trustedHosts = new LensHostnameVerifier(config);
+
+        return ClientBuilder.newBuilder().sslContext(sc).hostnameVerifier(trustedHosts)
+                .register(MultiPartFeature.class).register(MoxyJsonFeature.class)
+                .register(MoxyJsonConfigurationContextResolver.class);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    } else {
+      log.info("SSL is disabled, Creating http client.");
+      return ClientBuilder.newBuilder().register(MultiPartFeature.class).register(MoxyJsonFeature.class)
+              .register(MoxyJsonConfigurationContextResolver.class);
+    }
   }
 
   private WebTarget getSessionWebTarget() {

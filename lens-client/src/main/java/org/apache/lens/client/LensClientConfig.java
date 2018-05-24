@@ -174,4 +174,19 @@ public class LensClientConfig extends Configuration {
     return CLIENT_PFX + filterName + WS_FILTER_IMPL_SFX;
   }
 
+  /**
+   *  client side SSL config to enable https communication between lens server
+   *  and clients.
+   */
+  public static final String SSL_ENABLED = CLIENT_PFX + "ssl.enabled";
+
+  public static final boolean DEFAULT_SSL_ENABLED_VALUE = false;
+
+  /**
+   *  will skip server cert verification.
+   */
+  public static final String SSL_IGNORE_SERVER_CERT = CLIENT_PFX + "ssl.ignore.server.cert";
+
+  public static final boolean DEFAULT_SSL_IGNORE_SERVER_CERT_VALUE = true;
+
 }

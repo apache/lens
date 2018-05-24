@@ -52,9 +52,9 @@ Hive driver configuration
 *--+--+---+--+
 |14|lens.driver.hive.cost.calculator.class|org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator|Cost calculator class. By default calculating cost through fact partitions.|
 *--+--+---+--+
-|15|lens.driver.hive.driver.kerberos.principal|hive/_HOST@APACHE.COM|Set principal name to be used for hive server.|
+|15|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
 *--+--+---+--+
-|16|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
+|16|lens.driver.hive.kerberos.principal|hive/_HOST@APACHE.COM|Set principal name to be used for hive server.|
 *--+--+---+--+
 |17|lens.driver.hive.priority.ranges|VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW|Priority Ranges. The numbers are the costs of the query.                                                                                                                                                    \ |
 |  |                                |                                     |The cost is calculated based on partition weights and fact weights. The interpretation of the default config is:                                                                                            \ |
@@ -77,7 +77,5 @@ Hive driver configuration
 |19|lens.driver.hive.query.launching.constraint.factories| |Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
 *--+--+---+--+
 |20|lens.driver.hive.waiting.queries.selection.policy.factories| |Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
-*--+--+---+--+
-|21|lens.driver.hive.kerberos.principal| |Set principal name to be used for hive server.|
 *--+--+---+--+
 The configuration parameters and their default values

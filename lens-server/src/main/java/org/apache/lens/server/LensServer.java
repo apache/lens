@@ -39,6 +39,8 @@ import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.servlet.ServletRegistration;
 import org.glassfish.grizzly.servlet.WebappContext;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -85,10 +87,10 @@ public class LensServer {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   private LensServer(HiveConf conf) throws IOException {
+
     startServices(conf);
-    String baseURI = conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL);
-    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(), getApp(),
-      false);
+
+    HttpServer server = getHttpServer(conf);
 
     int corePoolSize = conf.getInt(LensConfConstants.GRIZZLY_CORE_POOL_SIZE,
             LensConfConstants.DEFAULT_GRIZZLY_CORE_POOL_SIZE);
@@ -268,5 +270,38 @@ public class LensServer {
         log.error("Uncaught exception in Thread " + t, e);
       }
     });
+  }
+
+  private HttpServer getHttpServer(HiveConf conf) throws IOException {
+
+    String baseURI = conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL);
+
+    if (Boolean.valueOf(conf.get(LensConfConstants.SSL_ENABLED,
+            String.valueOf(LensConfConstants.DEFAULT_SSL_ENABLED_VALUE)))) {
+
+      log.info("SSL is enabled, starting lens server in https mode.");
+
+      SSLContextConfigurator sslCon = new SSLContextConfigurator();
+      String keyStoreFile = conf.get(LensConfConstants.SSL_KEYSTORE_FILE_PATH);
+      String sslPassword = conf.get(LensConfConstants.SSL_KEYSTORE_PASSWORD);
+
+      if (keyStoreFile == null || keyStoreFile.isEmpty()) {
+        throw new IOException(
+                String.format("SSL is enabled but cert file is missing, "
+                                + "%s should be initialize with valid cert file path.",
+                        LensConfConstants.SSL_KEYSTORE_FILE_PATH));
+      }
+
+      sslCon.setKeyStoreFile(keyStoreFile);
+      sslCon.setKeyStorePass(sslPassword);
+
+      return GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(), getApp(),
+              true, new SSLEngineConfigurator(sslCon).setClientMode(false).setNeedClientAuth(false));
+
+    } else {
+      log.info("SSL is not enabled, starting lens server in http mode.");
+      return GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(), getApp(), false);
+    }
+
   }
 }
