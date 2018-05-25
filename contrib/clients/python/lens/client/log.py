@@ -23,6 +23,10 @@ class LensLogClient(object):
         self.base_url = base_url + "logs/"
         self.keytab = conf.get('lens.client.authentication.kerberos.keytab')
         self.principal = conf.get('lens.client.authentication.kerberos.principal')
+        self.ignoreCert = conf.get('lens.client.ssl.ignore.server.cert')
 
     def __getitem__(self, item):
-        return requests.get(self.base_url + str(item), auth=SpnegoAuth(self.keytab, self.principal)).text
+        if self.ignoreCert == 'true':
+            return requests.get(self.base_url + str(item), auth=SpnegoAuth(self.keytab, self.principal), verify=False).text
+        else:
+            return requests.get(self.base_url + str(item), auth=SpnegoAuth(self.keytab, self.principal)).text
