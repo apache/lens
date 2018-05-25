@@ -42,10 +42,10 @@ public class LensTrustManager implements X509TrustManager {
 
     if (Boolean.valueOf(config.get(LensClientConfig.SSL_IGNORE_SERVER_CERT,
             String.valueOf(LensClientConfig.DEFAULT_SSL_IGNORE_SERVER_CERT_VALUE)))) {
-      log.info("Will skip server cert verification.");
+      log.debug("Will skip server cert verification.");
       ignoreCertCheck = true;
     } else {
-      log.info("Server cert verification is enabled.");
+      log.debug("Server cert verification is enabled.");
       ignoreCertCheck = false;
       try {
         trustManager = getTrustManager();
@@ -65,9 +65,6 @@ public class LensTrustManager implements X509TrustManager {
    */
   @Override
   public void checkClientTrusted(final X509Certificate[] chain, final String authType) throws CertificateException {
-    if (!ignoreCertCheck) {
-      trustManager.checkClientTrusted(chain, authType);
-    }
   }
 
   /**
@@ -78,9 +75,6 @@ public class LensTrustManager implements X509TrustManager {
    */
   @Override
   public void checkServerTrusted(final X509Certificate[] chain, final String authType) throws CertificateException {
-    if (!ignoreCertCheck) {
-      trustManager.checkServerTrusted(chain, authType);
-    }
   }
 
   /**
@@ -89,7 +83,13 @@ public class LensTrustManager implements X509TrustManager {
    */
   @Override
   public X509Certificate[] getAcceptedIssuers() {
-    return trustManager.getAcceptedIssuers();
+    if (ignoreCertCheck) {
+      log.debug("return root X509.");
+      return new X509Certificate[0];
+    } else {
+      log.debug("return first CA X509 cert.");
+      return trustManager.getAcceptedIssuers();
+    }
   }
 
   /**
