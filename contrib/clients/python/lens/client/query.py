@@ -164,7 +164,7 @@ class LensQueryClient(object):
     def __call__(self, **filters):
         filters['sessionid'] = self._session._sessionid
 
-        if ignoreCert == 'true':
+        if self.ignoreCert == 'true':
             resp = requests.get(self.base_url + "queries/",
                             params=filters,
                             headers={'accept': 'application/json'},
@@ -182,7 +182,7 @@ class LensQueryClient(object):
             if item in self.finished_queries:
                 return self.finished_queries[item]
 
-            if ignoreCert == 'true':
+            if self.ignoreCert == 'true':
                 resp = requests.get(self.base_url + "queries/" + item, params={'sessionid': self._session._sessionid},
                                 headers={'accept': 'application/json'},
                                 auth=SpnegoAuth(self.keytab, self.principal), verify=False)

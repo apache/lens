@@ -14,12 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from future.standard_library import install_aliases
+install_aliases()
+
 import kerberos
 from requests.auth import AuthBase
 import subprocess
 import threading
-from urlparse import urlparse
-
+from urllib.parse import urlparse
 
 class SpnegoAuth(AuthBase):
     def __init__(self, keytab=None, user=None):
