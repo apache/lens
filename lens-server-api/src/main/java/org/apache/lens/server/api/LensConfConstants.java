@@ -23,6 +23,8 @@ import javax.ws.rs.core.MediaType;
 import org.apache.lens.api.parse.Parser;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.*;
+import org.apache.lens.server.api.query.DefaultDownloadResultUrlProvider;
+import org.apache.lens.server.api.query.DownloadResultUrlProvider;
 import org.apache.lens.server.api.query.cost.FactPartitionBasedQueryCost;
 import org.apache.lens.server.api.query.cost.QueryCost;
 
@@ -733,7 +735,6 @@ public final class LensConfConstants {
 
   public static final int DEFAULT_KDC_LOGIN_SERVICE_INTERVAL_IN_MINUTES = 360;
 
-
   /**
    * Lens principal for kerberos authentication
    */
@@ -1264,6 +1265,18 @@ public final class LensConfConstants {
    * "lens.cube.metastore.enable.datacompleteness.check" is set.
    */
   public static final String COMPLETENESS_CHECKER_CLASS = "lens.cube.metastore.completeness.checker.class";
+
+  /*The class that implements the result download url provider interface */
+  public static final String RESULT_DOWNLOAD_URL_PROVIDER_CLASS = SERVER_PFX + "result.download.url.provider.class";
+
+  /*The  default result download url provider class */
+  public static final Class<? extends DownloadResultUrlProvider> DEFAULT_RESULT_DOWNLOAD_URL_PROVIDER =
+    DefaultDownloadResultUrlProvider.class.asSubclass(DownloadResultUrlProvider.class);
+
+  /**
+   * The download url content config
+   */
+  public static final String QUERY_EMAIL_DOWNLOAD_URL = QUERY_PFX + "email.download.url";
 
   /**
    * The default implementation of DataCompletenessChecker

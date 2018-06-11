@@ -238,7 +238,7 @@ User CLI Commands
 *--+--+
 |fact drop all storages [--fact_name] \<fact_name\>|drop all storages associated to fact <<<fact_name>>>\ |
 *--+--+
-|fact drop partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [[--filter] \<partition-filter\>]|drop all partitions associated with fact <<<fact_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>\ |
+|fact drop partitions [--fact_name] \<fact_name\> [--storage_name] \<storage_name\> [--update_period] \<update_period\> [[--filter] \<partition-filter\>]|drop all partitions associated with fact <<<fact_name>>>, storage <<<storage_name>>> filtered by <<<partition-filter>>>\ |
 *--+--+
 |fact drop storage [--fact_name] \<fact_name\> [--storage_name] \<storage_name\>|drop storage <<<storage_name>>> from fact <<<fact_name>>>\ |
 *--+--+

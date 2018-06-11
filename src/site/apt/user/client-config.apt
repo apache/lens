@@ -38,12 +38,16 @@ Lens client configuration
 *--+--+---+--+
 |7|lens.client.requestfilter.ws.filter.impl|org.apache.lens.client.RequestFilter|Implementation class for Request Filter|
 *--+--+---+--+
-|8|lens.client.user.name|anonymous|Lens client user name|
+|8|lens.client.ssl.enabled|false|Specifies whether https is enabled for lens server or not.|
 *--+--+---+--+
-|9|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+|9|lens.client.ssl.ignore.server.cert|true|Specifies whether https is enabled for lens server or not.|
 *--+--+---+--+
-|10|lens.query.cancel.on.timeout|false|Specifies whether to attempt cancellation of a query whose execution takes longer than the timeout value specified while submitting the query for execution.|
+|10|lens.client.user.name|anonymous|Lens client user name|
 *--+--+---+--+
-|11|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
+|11|lens.client.ws.request.filternames|requestfilter|These JAX-RS filters would be started in the specified order when lens-client starts|
+*--+--+---+--+
+|12|lens.query.cancel.on.timeout|false|Specifies whether to attempt cancellation of a query whose execution takes longer than the timeout value specified while submitting the query for execution.|
+*--+--+---+--+
+|13|lens.server.base.url|http://0.0.0.0:9999/lensapi|The base url for the lens server|
 *--+--+---+--+
 The configuration parameters and their default values

@@ -1932,11 +1932,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   private LensPersistentResult getResultsetFromDAO(QueryHandle queryHandle) throws LensException {
     FinishedLensQuery query = lensServerDao.getQuery(queryHandle.toString());
+    QueryContext ctx = allQueries.get(queryHandle);
     if (query != null) {
       if (query.getResult() == null) {
         throw new NotFoundException("InMemory Query result purged " + queryHandle);
       }
       try {
+        conf.addResource(ctx.getConf());
         return new LensPersistentResult(query, conf);
       } catch (Exception e) {
         throw new LensException(e);
@@ -1966,6 +1968,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           LensResultSet resultSet = resultSets.get(queryHandle);
           if (resultSet == null) {
             if (ctx.isPersistent() && ctx.getQueryOutputFormatter() != null) {
+              conf.addResource(ctx.getConf());
               resultSets.put(queryHandle, new LensPersistentResult(ctx, conf));
             } else if (ctx.isResultAvailableInDriver() && !ctx.isQueryClosedOnDriver()) {
               //InMemory result can not be returned for a closed query
