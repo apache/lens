@@ -75,11 +75,12 @@ public class LensPersistentResult extends PersistentResultSet {
     this.fileSize = fileSize;
     this.conf = conf;
     if (isHttpResultAvailable()) {
-      resultUrlSetter = ReflectionUtils.newInstance(this.conf.getClass(LensConfConstants.RESULT_DOWNLOAD_URL_PROVIDER_CLASS,
+      resultUrlSetter = ReflectionUtils.newInstance(this.conf.getClass(
+        LensConfConstants.RESULT_DOWNLOAD_URL_PROVIDER_CLASS,
         LensConfConstants.DEFAULT_RESULT_DOWNLOAD_URL_PROVIDER, DownloadResultUrlProvider.class));
       this.httpResultUrl = resultUrlSetter.getResultUrl(this.conf, queryHandle.toString());
-      log.info("Config : " + this.conf.get(LensConfConstants.RESULT_DOWNLOAD_URL_PROVIDER_CLASS) + " Result url set as : "
-        + this.httpResultUrl);
+      log.info("Config : " + this.conf.get(LensConfConstants.RESULT_DOWNLOAD_URL_PROVIDER_CLASS)
+        + " Result url set as : " + this.httpResultUrl);
     }
   }
 

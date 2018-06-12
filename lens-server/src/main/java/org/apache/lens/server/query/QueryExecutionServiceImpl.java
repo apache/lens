@@ -1938,7 +1938,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         throw new NotFoundException("InMemory Query result purged " + queryHandle);
       }
       try {
-        conf.addResource(ctx.getConf());
+        if (ctx != null && ctx.getConf() != null) {
+          conf.addResource(ctx.getConf());
+        }
         return new LensPersistentResult(query, conf);
       } catch (Exception e) {
         throw new LensException(e);

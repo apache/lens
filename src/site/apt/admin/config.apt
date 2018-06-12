@@ -235,9 +235,9 @@ Lens server configuration
 *--+--+---+--+
 |103|lens.server.session.ws.resource.impl|org.apache.lens.server.session.SessionResource|Implementation class for Session Resource|
 *--+--+---+--+
-|104|lens.server.ssl.enabled|false|flag to enable https communication between lens server|
+|104|lens.server.ssl.enabled|false|flag to enable https communication between lens server and client.|
 *--+--+---+--+
-|105|lens.server.ssl.file.path|/usr/local/lens/server/certs|local path for cert file if ssl ie enabled.|
+|105|lens.server.ssl.file.path|/tmp/certs|local path for cert file if ssl ie enabled.|
 *--+--+---+--+
 |106|lens.server.ssl.password|password|password for cert file|
 *--+--+---+--+
