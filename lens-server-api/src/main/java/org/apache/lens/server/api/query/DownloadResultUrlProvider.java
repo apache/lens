@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.api.query;
 
+import org.apache.lens.api.LensConf;
+
 import org.apache.hadoop.conf.Configuration;
 
 /*
@@ -25,5 +27,11 @@ import org.apache.hadoop.conf.Configuration;
 * */
 public interface DownloadResultUrlProvider {
 
-  String getResultUrl(Configuration conf, String queryHandle);
+  /*
+  @param : conf : server conf
+  @param : qconf : query conf
+  @param : queryHandle : the query handle
+  @return : download url sent to user via email
+  * */
+  String getResultUrl(Configuration conf, LensConf qconf, String queryHandle);
 }

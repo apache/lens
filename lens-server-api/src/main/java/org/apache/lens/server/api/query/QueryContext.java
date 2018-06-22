@@ -280,7 +280,6 @@ public class QueryContext extends AbstractQueryContext implements FailureContext
     if (selectedDriver != null) {
       this.setSelectedDriver(selectedDriver);
     }
-    this.lensConf = qconf;
     this.driverStatus = new DriverQueryStatus();
   }
 

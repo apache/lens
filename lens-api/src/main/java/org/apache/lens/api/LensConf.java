@@ -79,4 +79,8 @@ public class LensConf extends ToYAMLString implements Serializable {
   public String getProperty(Object key) {
     return properties.get(key);
   }
+
+  public String getProperty(Object key, String defaultValue) {
+    return properties.getOrDefault(key, defaultValue);
+  }
 }

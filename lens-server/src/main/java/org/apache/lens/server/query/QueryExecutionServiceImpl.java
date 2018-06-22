@@ -1938,11 +1938,11 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
         throw new NotFoundException("InMemory Query result purged " + queryHandle);
       }
       try {
-        Configuration queryConf = conf;
-        if (ctx != null && ctx.getConf() != null) {
-          queryConf.addResource(ctx.getConf());
+        LensConf qConf = null;
+        if (ctx != null && ctx.getLensConf() != null) {
+          qConf = ctx.getLensConf();
         }
-        return new LensPersistentResult(query, queryConf);
+        return new LensPersistentResult(query, conf, qConf);
       } catch (Exception e) {
         throw new LensException(e);
       }
@@ -1971,9 +1971,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           LensResultSet resultSet = resultSets.get(queryHandle);
           if (resultSet == null) {
             if (ctx.isPersistent() && ctx.getQueryOutputFormatter() != null) {
-              Configuration queryConf = conf;
-              queryConf.addResource(ctx.getConf());
-              resultSets.put(queryHandle, new LensPersistentResult(ctx, queryConf));
+              resultSets.put(queryHandle, new LensPersistentResult(ctx, conf, ctx.getLensConf()));
             } else if (ctx.isResultAvailableInDriver() && !ctx.isQueryClosedOnDriver()) {
               //InMemory result can not be returned for a closed query
               resultSet = getDriverResultset(queryHandle);

@@ -20,6 +20,7 @@ package org.apache.lens.server.query;
 
 import java.io.IOException;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
@@ -32,7 +33,7 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.util.ReflectionUtils;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,7 @@ public class LensPersistentResult extends PersistentResultSet {
   /** The file size. */
   private final Long fileSize;
   private final Configuration conf;
+  private final LensConf queryConf;
   @Getter
   private String httpResultUrl = null;
 
@@ -68,35 +70,36 @@ public class LensPersistentResult extends PersistentResultSet {
    */
   public LensPersistentResult(QueryHandle queryHandle, LensResultSetMetadata metadata, String outputPath, Integer
     numRows, Long fileSize,
-    Configuration conf) {
+    Configuration conf, LensConf qconf) {
     this.metadata = metadata;
     this.outputPath = outputPath;
     this.numRows = numRows;
     this.fileSize = fileSize;
     this.conf = conf;
+    this.queryConf = qconf;
     if (isHttpResultAvailable()) {
       resultUrlSetter = ReflectionUtils.newInstance(this.conf.getClass(
         LensConfConstants.RESULT_DOWNLOAD_URL_PROVIDER_CLASS,
-        LensConfConstants.DEFAULT_RESULT_DOWNLOAD_URL_PROVIDER, DownloadResultUrlProvider.class));
-      this.httpResultUrl = resultUrlSetter.getResultUrl(this.conf, queryHandle.toString());
+        LensConfConstants.DEFAULT_RESULT_DOWNLOAD_URL_PROVIDER, DownloadResultUrlProvider.class), this.conf);
+      this.httpResultUrl = resultUrlSetter.getResultUrl(this.conf, this.queryConf, queryHandle.toString());
       log.info("Config : " + this.conf.get(LensConfConstants.RESULT_DOWNLOAD_URL_PROVIDER_CLASS)
         + " Result url set as : " + this.httpResultUrl);
     }
   }
 
-  public LensPersistentResult(QueryContext ctx, Configuration conf) {
+  LensPersistentResult(QueryContext ctx, Configuration conf, LensConf qconf) {
     this(ctx.getQueryHandle(),
       ctx.getQueryOutputFormatter().getMetadata(),
       ctx.getQueryOutputFormatter().getFinalOutputPath(),
       ctx.getQueryOutputFormatter().getNumRows(),
-      ctx.getQueryOutputFormatter().getFileSize(), conf);
+      ctx.getQueryOutputFormatter().getFileSize(), conf, qconf);
   }
 
-  public LensPersistentResult(FinishedLensQuery query, Configuration conf) throws
+  LensPersistentResult(FinishedLensQuery query, Configuration conf, LensConf qconf) throws
     ClassNotFoundException, IOException {
     this(QueryHandle.fromString(query.getHandle()),
       LensResultSetMetadata.fromJson(query.getMetadata()),
-      query.getResult(), query.getRows(), query.getFileSize(), conf);
+      query.getResult(), query.getRows(), query.getFileSize(), conf, qconf);
   }
 
   @Override

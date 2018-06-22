@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.api.query;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.hadoop.conf.Configuration;
@@ -28,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 public class DefaultDownloadResultUrlProvider implements DownloadResultUrlProvider {
 
   @Override
-  public String getResultUrl(Configuration conf, String queryHandle) {
-    log.debug("Returning Default result set url ");
+  public String getResultUrl(Configuration conf, LensConf qconf, String queryHandle) {
+    log.debug("Returning Default result set url " + conf.get(LensConfConstants.SERVER_BASE_URL));
     return conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL)
       + "queryapi/queries/" + queryHandle + "/httpresultset";
   }
