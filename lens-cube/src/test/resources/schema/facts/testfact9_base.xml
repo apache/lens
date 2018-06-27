@@ -21,7 +21,8 @@
 -->
 <x_fact_table name="testfact9_base" cube_name="testcube2" weight="5.0" xmlns="uri:lens:cube:0.1">
   <columns>
-
+    <column name="dim1" _type="string" comment="first dim" start_time="2099-01-01"/>
+    <column name="dim2" _type="string" comment="second dim" end_time="2017-01-01"/>
     <column name="msr1" _type="float" comment="first measure"/>
     <column name="msr4" _type="float" comment="fourth measure"/>
   </columns>

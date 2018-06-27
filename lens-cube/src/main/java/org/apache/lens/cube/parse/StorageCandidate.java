@@ -315,11 +315,12 @@ public class StorageCandidate implements Candidate, CandidateTable {
 
   public Optional<Date> getColumnStartTime(String column) {
     Date startTime = null;
-    for (String key : this.getFact().getSourceFactProperties().keySet()) {
+    Map<String, String> propertiesMap = this.getFact().getSourceFactProperties();
+    for (String key : propertiesMap.keySet()) {
       if (key.contains(MetastoreConstants.FACT_COL_START_TIME_PFX)) {
         String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_START_TIME_PFX);
         if (column.equals(propCol)) {
-          startTime = MetastoreUtil.getDateFromProperty(getTable().getProperties().get(key), false, true);
+          startTime = MetastoreUtil.getDateFromProperty(propertiesMap.get(key), false, true);
         }
       }
     }
@@ -329,11 +330,12 @@ public class StorageCandidate implements Candidate, CandidateTable {
   @Override
   public Optional<Date> getColumnEndTime(String column) {
     Date endTime = null;
-    for (String key : this.getFact().getSourceFactProperties().keySet()) {
+    Map<String, String> propertiesMap = this.getFact().getSourceFactProperties();
+    for (String key : propertiesMap.keySet()) {
       if (key.contains(MetastoreConstants.FACT_COL_END_TIME_PFX)) {
         String propCol = StringUtils.substringAfter(key, MetastoreConstants.FACT_COL_END_TIME_PFX);
         if (column.equals(propCol)) {
-          endTime = MetastoreUtil.getDateFromProperty(getTable().getProperties().get(key), false, true);
+          endTime = MetastoreUtil.getDateFromProperty(propertiesMap.get(key), false, true);
         }
       }
     }

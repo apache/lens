@@ -35,6 +35,7 @@
   </measures>
   <dim_attributes>
     <dim_attribute _type="string" name="dim1" description="basedim"/>
+    <dim_attribute _type="string" name="dim2" description="basedim"/>
     <dim_attribute _type="int" name="cityid" description="basedim"/>
     <dim_attribute name="stateid" _type="int" description="state id"/>
   </dim_attributes>

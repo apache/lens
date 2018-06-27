@@ -33,6 +33,7 @@ import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 
+import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -65,6 +66,36 @@ public class TestVirtualFactQueries extends TestQueryRewrite {
     String hql = rewrittenQuery.toHQL();
     compareQueries(hql, expected);
   }
+
+
+  @Test
+  public void testVirtualFactColStartTimeQuery() {
+    try {
+        rewriteCtx("select dim1,SUM(msr1) from virtualcube where " + TWO_DAYS_RANGE, getConfWithStorages("C1"));
+        Assert.fail("Should not come here..Column Start time feature is failing..");
+    }catch (LensException e) {
+      if(e.getErrorCode() == 3024) {
+        System.out.println("Expected flow :" + e.getMessage());
+      }else {
+        Assert.fail("Exception not as expected");
+      }
+    }
+  }
+
+  @Test
+  public void testVirtualFactColEndTimeQuery() {
+    try {
+      rewriteCtx("select dim2,SUM(msr1) from virtualcube where " + TWO_DAYS_RANGE, getConfWithStorages("C1"));
+      Assert.fail("Should not come here..Column End time feature is failing..");
+    }catch (LensException e) {
+      if(e.getErrorCode() == 3024) {
+        System.out.println("Expected flow :" + e.getMessage());
+      }else {
+        Assert.fail("Exception not as expected");
+      }
+    }
+  }
+
 
   @Test
   public void testVirtualFactMonthQuery() throws Exception {

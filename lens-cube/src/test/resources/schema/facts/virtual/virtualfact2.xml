@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
   Licensed to the Apache Software Foundation (ASF) under one
@@ -19,20 +19,10 @@
   under the License.
 
 -->
-<x_base_cube name="testcube2" xmlns="uri:lens:cube:0.1">
+<x_virtual_fact_table source_fact_name="testfact9_base" cube_name="virtualcube" name="virtualfact2" xmlns="uri:lens:cube:0.1"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <properties>
-    <property name="cube.timedim.partition.d_time" value="dt"/>
-    <property name="cube.testcube2.timed.dimensions.list" value="d_time"/>
+    <property name="cube.fact.virtualfact1.valid.columns"
+              value="dim1,dim2,msr1"/>
   </properties>
-  <measures>
-    <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr1" display_string="Measure1"
-             description="first measure"/>
-    <measure _type="FLOAT" default_aggr="SUM" unit="RS" name="msr4" display_string="Measure4"
-             description="fourth measure"/>
-  </measures>
-  <dim_attributes>
-    <dim_attribute name="dim1" _type="string" />
-    <dim_attribute name="dim2" _type="string" />
-  </dim_attributes>
-
-</x_base_cube>
+</x_virtual_fact_table>
