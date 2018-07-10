@@ -78,4 +78,8 @@ Hive driver configuration
 *--+--+---+--+
 |20|lens.driver.hive.waiting.queries.selection.policy.factories| |Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
 *--+--+---+--+
+|21|query.retry.policy.classes|org.apache.lens.server.api.retry.SubstringMessagePolicyDecider|List of policy decider classes|
+*--+--+---+--+
+|22|retry.messages.contains.map|Session handle not found=org.apache.lens.server.api.retry.ImmediateRetryHandler(2)|Comma separated error messages and retry policy|
+*--+--+---+--+
 The configuration parameters and their default values

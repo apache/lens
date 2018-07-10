@@ -32,4 +32,9 @@ public class NoRetryHandler<FC extends FailureContext> extends ImmediateRetryHan
   public long getOperationNextTime(FC failContext) {
     return Long.MAX_VALUE;
   }
+
+  @Override
+  public boolean hasExhaustedRetries(FC failContext) {
+    return true;
+  }
 }

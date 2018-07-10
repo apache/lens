@@ -41,7 +41,10 @@ import java.io.Serializable;
  *    }
  *  }
  *
- *  Note that this is only one of the possible use cases, other complex use cases are in retry framework.
+ *   *  Note
+ *  1. This is only one of the possible use cases, other complex use cases are in retry framework.
+ *  2. Every implementation needs an all String arguments constructor which can be used in
+ *  {@link SubstringMessagePolicyDecider}
  */
 public interface BackOffRetryHandler<FC extends FailureContext> extends Serializable {
 

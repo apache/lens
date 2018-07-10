@@ -101,4 +101,8 @@ Jdbc driver configuration
 *--+--+---+--+
 |38|lens.query.timeout.millis|3600000|The runtime(millis) of the query after which query will be timedout and cancelled. Default is 1 hour for jdbc queries.|
 *--+--+---+--+
+|39|query.retry.policy.classes|org.apache.lens.server.api.retry.SubstringMessagePolicyDecider|List of classes to decide policies|
+*--+--+---+--+
+|40|retry.messages.contains.map|Query not found=org.apache.lens.server.api.retry.ImmediateRetryHandler(2)|Comma separated error messages and retry policy|
+*--+--+---+--+
 The configuration parameters and their default values

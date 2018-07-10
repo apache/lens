@@ -47,6 +47,7 @@ import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.cube.metadata.DateUtil;
 import org.apache.lens.driver.hive.HiveDriver;
+import org.apache.lens.driver.jdbc.JDBCDriver;
 import org.apache.lens.server.BaseLensService;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
@@ -913,7 +914,11 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       if (removeFromLaunchedQueries(ctx)) {
         processWaitingQueriesAsync(ctx);
       }
-      if (ctx.getDriverStatus().failed() && !getDriverRetryPolicy(ctx).hasExhaustedRetries(ctx)) {
+
+      /*Upon server restarts, the driver status isn't reliable in case of jdbc due to query not found error,
+      hence we fall back to the context status and retry */
+      if ((ctx.getDriverStatus().failed() || (ctx.getStatus().failing()
+        && ctx.getSelectedDriver() instanceof JDBCDriver)) && !getDriverRetryPolicy(ctx).hasExhaustedRetries(ctx)) {
         log.info("query {} will be retried on the same driver {}",
           ctx.getQueryHandle(), ctx.getSelectedDriver().getFullyQualifiedName());
         ctx.extractFailedAttempt();
@@ -975,8 +980,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
 
   private BackOffRetryHandler<QueryContext> getDriverRetryPolicy(QueryContext ctx) {
     if (ctx.getDriverRetryPolicy() == null) {
+      String errorMessage = ctx.getDriverStatus().getErrorMessage() != null ? ctx.getDriverStatus().getErrorMessage()
+        : ctx.getStatus().getErrorMessage();
       ctx.setDriverRetryPolicy(ctx.getSelectedDriver().getRetryPolicyDecider()
-        .decidePolicy(ctx.getDriverStatus().getErrorMessage()));
+        .decidePolicy(errorMessage));
     }
     return ctx.getDriverRetryPolicy();
   }

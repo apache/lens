@@ -33,6 +33,10 @@ public class FibonacciExponentialBackOffRetryHandler<FC extends FailureContext> 
   final long maxDelay;
   final long waitMillis;
 
+  public FibonacciExponentialBackOffRetryHandler(String numRetries, String maxDelay, String waitMillis) {
+    this(Integer.parseInt(numRetries), Long.parseLong(maxDelay), Long.parseLong(waitMillis));
+  }
+
   public FibonacciExponentialBackOffRetryHandler(int numRetries, long maxDelay, long waitMillis) {
     checkArgument(numRetries > 2);
     fibonacci = new int[numRetries];

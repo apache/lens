@@ -278,6 +278,7 @@ public class JDBCDriver extends AbstractLensDriver {
           try {
             stmt = createStatement(conn);
             result.stmt = stmt;
+
             Boolean isResultAvailable = stmt.execute(queryContext.getRewrittenQuery());
             if (queryContext.getLensContext().getDriverStatus().isCanceled()) {
               return result;
@@ -992,8 +993,12 @@ public class JDBCDriver extends AbstractLensDriver {
     checkConfigured();
     try {
       JdbcQueryContext ctx = getQueryContext(handle);
-      ctx.getResultFuture().cancel(true);
-      ctx.closeResult();
+      if (ctx != null) {
+        ctx.getResultFuture().cancel(true);
+        ctx.closeResult();
+      }
+    } catch (LensException exc) {
+      log.error("{} Failed to close query {}", getFullyQualifiedName(), handle.getHandleId());
     } finally {
       queryContextMap.remove(handle);
     }

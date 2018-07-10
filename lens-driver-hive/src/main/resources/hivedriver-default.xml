@@ -185,4 +185,16 @@
     <description>Cost based Query type mapping</description>
   </property>
 
+  <property>
+    <name>retry.messages.contains.map</name>
+    <value>Session handle not found=org.apache.lens.server.api.retry.ImmediateRetryHandler(2)</value>
+    <description>Comma separated error messages and retry policy</description>
+  </property>
+
+  <property>
+    <name>query.retry.policy.classes</name>
+    <value>org.apache.lens.server.api.retry.SubstringMessagePolicyDecider</value>
+    <description>List of policy decider classes</description>
+  </property>
+
 </configuration>

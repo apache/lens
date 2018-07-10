@@ -29,6 +29,10 @@ public class ImmediateRetryHandler<FC extends FailureContext> implements BackOff
     this(1);
   }
 
+  public ImmediateRetryHandler(String retries) {
+    this(Integer.parseInt(retries));
+  }
+
   @Override
   public boolean canTryOpNow(FC failContext) {
     return true;
@@ -41,6 +45,6 @@ public class ImmediateRetryHandler<FC extends FailureContext> implements BackOff
 
   @Override
   public boolean hasExhaustedRetries(FC failContext) {
-    return ++retriesDone > retries;
+    return failContext.getFailCount() > retries;
   }
 }

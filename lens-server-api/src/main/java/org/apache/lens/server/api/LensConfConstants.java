@@ -1341,4 +1341,9 @@ public final class LensConfConstants {
 
   public static final String SSL_KEYSTORE_PASSWORD = SERVER_PFX + "ssl.password";
 
+  /**
+   * Message map for configured policy
+   */
+  public static final String RETRY_MESSAGE_MAP = "retry.messages.contains.map";
+
 }

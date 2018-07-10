@@ -768,14 +768,6 @@ public class TestJdbcDriver {
       }
 
       driver.closeQuery(handle);
-      // Close again, should get not found
-      try {
-        driver.closeQuery(handle);
-        fail("Close again should have thrown exception");
-      } catch (LensException ex) {
-        assertTrue(ex.getMessage().contains("not found") && ex.getMessage().contains(handle.getHandleId().toString()));
-        System.out.println("Matched exception");
-      }
     } else {
       fail("Only in memory result set is supported as of now");
     }

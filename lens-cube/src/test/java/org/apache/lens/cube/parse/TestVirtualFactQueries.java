@@ -71,10 +71,10 @@ public class TestVirtualFactQueries extends TestQueryRewrite {
   @Test
   public void testVirtualFactColStartTimeQuery() {
     try {
-        rewriteCtx("select dim1,SUM(msr1) from virtualcube where " + TWO_DAYS_RANGE, getConfWithStorages("C1"));
-        Assert.fail("Should not come here..Column Start time feature is failing..");
+      rewriteCtx("select dim1,SUM(msr1) from virtualcube where " + TWO_DAYS_RANGE, getConfWithStorages("C1"));
+      Assert.fail("Should not come here..Column Start time feature is failing..");
     }catch (LensException e) {
-      if(e.getErrorCode() == 3024) {
+      if (e.getErrorCode() == 3024) {
         System.out.println("Expected flow :" + e.getMessage());
       }else {
         Assert.fail("Exception not as expected");
@@ -88,7 +88,7 @@ public class TestVirtualFactQueries extends TestQueryRewrite {
       rewriteCtx("select dim2,SUM(msr1) from virtualcube where " + TWO_DAYS_RANGE, getConfWithStorages("C1"));
       Assert.fail("Should not come here..Column End time feature is failing..");
     }catch (LensException e) {
-      if(e.getErrorCode() == 3024) {
+      if (e.getErrorCode() == 3024) {
         System.out.println("Expected flow :" + e.getMessage());
       }else {
         Assert.fail("Exception not as expected");
