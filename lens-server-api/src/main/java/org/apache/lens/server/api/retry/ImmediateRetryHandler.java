@@ -22,8 +22,14 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ImmediateRetryHandler<FC extends FailureContext> implements BackOffRetryHandler<FC> {
+
+  /**
+   * The Constant serialVersionUID.
+   */
+  private static final long serialVersionUID = 1L;
+
   private final int retries;
-  private int retriesDone = 0;
+
   // default 1 retry
   public ImmediateRetryHandler() {
     this(1);
