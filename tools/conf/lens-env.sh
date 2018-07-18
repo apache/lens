@@ -33,8 +33,11 @@
 # java heap size we want to set for the client. Default is 1024MB
 #export LENS_CLIENT_HEAP=
 
+# jmx port for monitoring the threads, cpu and memory
+JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8045 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+
 # any additional opts you want to set for lens server.
-export LENS_SERVER_OPTS="-XX:PermSize=256m -XX:MaxPermSize=256m"
+export LENS_SERVER_OPTS="-XX:PermSize=256m -XX:MaxPermSize=256m $JMX_OPTS"
 
 # java heap size we want to set for the lens server. Default is 1024MB
 #export LENS_SERVER_HEAP=
