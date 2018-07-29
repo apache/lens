@@ -206,7 +206,7 @@ public class LensSessionImpl extends HiveSessionImpl implements AutoCloseable {
     synchronized (sessionDbClassLoaders) {
       for (Map.Entry<String, SessionClassLoader> entry : sessionDbClassLoaders.entrySet()) {
         try {
-          // Closing session level classloaders up untill the db class loader if present, or null.
+          // Closing session level classloaders up until the db class loader if present, or null.
           // When db class loader is null, the class loader in the session is a single class loader
           // which stays as it is on database switch -- provided the new db doesn't have db jars.
           // The following line will close class loaders made on top of db class loaders and will close
