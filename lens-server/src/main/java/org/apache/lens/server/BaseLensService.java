@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.auth.AuthScheme;
+import org.apache.lens.api.session.SessionPerUserInfo;
 import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.api.util.PathValidator;
 import org.apache.lens.server.api.LensConfConstants;
@@ -591,6 +592,19 @@ public abstract class BaseLensService extends CompositeService implements Extern
       userSessionInfoList.add(sessionInfo);
     }
     return userSessionInfoList;
+  }
+
+  public List<SessionPerUserInfo> getSessionPerUser() {
+
+    List<SessionPerUserInfo> sessionsPerUserInfoList = new ArrayList<>();
+    for (Map.Entry<String, Integer> sessionsPerUser : SESSIONS_PER_USER.entrySet()) {
+      SessionPerUserInfo sessionPerUserInfo = new SessionPerUserInfo();
+      sessionPerUserInfo.setUser(sessionsPerUser.getKey());
+      sessionPerUserInfo.setSessionCount(sessionsPerUser.getValue());
+      sessionsPerUserInfoList.add(sessionPerUserInfo);
+    }
+
+    return sessionsPerUserInfoList;
   }
 }
 

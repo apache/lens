@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.session.SessionPerUserInfo;
 import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.server.api.error.LensException;
 
@@ -135,4 +136,10 @@ public interface SessionService {
    * @return a list of all sessions
    */
   List<UserSessionInfo> getSessionInfo();
+
+  /**
+   *
+   * @return a map of all session per loggedin user
+   */
+  List<SessionPerUserInfo> getSessionPerUser();
 }
