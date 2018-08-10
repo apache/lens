@@ -184,7 +184,7 @@
   </property>
   <property>
     <name>lens.server.max.sessions.per.user</name>
-    <value>20</value>
+    <value>100</value>
     <description>Number of sessions can be allowed for each user.</description>
   </property>
     <property>

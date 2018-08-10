@@ -56,7 +56,8 @@ public interface SessionService {
    * @throws LensException the lens exception
    */
 
-  void restoreSession(LensSessionHandle sessionHandle, String userName, String password) throws LensException;
+  void restoreSession(LensSessionHandle sessionHandle, String userName, String password,
+                      Map<String, String> configuration) throws LensException;
 
   /**
    * Close session.
