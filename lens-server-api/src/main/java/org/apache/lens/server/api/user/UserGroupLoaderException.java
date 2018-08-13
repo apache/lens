@@ -16,47 +16,42 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.server.api.user;
 
-package org.apache.lens.server.api;
+public class UserGroupLoaderException extends RuntimeException {
 
-import lombok.*;
-
-@AllArgsConstructor
-public class LensErrorInfo {
-
-  @Getter
-  private int errorCode;
-  @Getter
-  private int errorWeight;
-  @Getter
-  private String errorName;
-
-  @Override
-  public boolean equals(final Object o) {
-
-    if (this == o) {
-      return true;
-    }
-
-    if (!(o instanceof LensErrorInfo)) {
-      return false;
-    }
-
-    LensErrorInfo e = (LensErrorInfo) o;
-    return errorCode == e.errorCode && errorWeight == e.errorWeight && errorName.equals(e.errorName);
+  /**
+   * Instantiates a new user group loader exception.
+   */
+  public UserGroupLoaderException() {
+    super();
   }
 
-
-  @Override
-  public int hashCode() {
-
-    final int PRIME = 59;
-    int result = 1;
-
-    result = result * PRIME + errorCode;
-    result = result * PRIME + errorWeight;
-    result = result * PRIME + errorName.hashCode();
-    return result;
+  /**
+   * Instantiates a new user group loader exception.
+   *
+   * @param s the s
+   */
+  public UserGroupLoaderException(String s) {
+    super(s);
   }
 
+  /**
+   * Instantiates a new user group loader exception.
+   *
+   * @param e the e
+   */
+  public UserGroupLoaderException(Throwable e) {
+    super(e);
+  }
+
+  /**
+   * Instantiates a new user grouploader exception.
+   *
+   * @param message the message
+   * @param cause   the cause
+   */
+  public UserGroupLoaderException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

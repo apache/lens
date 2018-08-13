@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,13 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api;
 
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.server.api.error.LensException;
+package org.apache.lens.server.api.authorization;
 
-public interface SessionValidator {
-  void validateSession(LensSessionHandle handle) throws LensException;
+import java.util.Set;
 
-  void validateAndAuthorizeSession(LensSessionHandle handle, String userPrincipalName) throws  LensException;
+public interface Authorizer {
+ /**
+ * @param lensPrivilegeObject the privilege object
+ * @param accessType the access type
+ * @param userGroups the user groups
+ * @return if authorized or no
+ */
+  boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, String user,
+    Set<String> userGroups);
 }

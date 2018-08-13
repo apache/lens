@@ -197,4 +197,16 @@
     <description>List of policy decider classes</description>
   </property>
 
+  <property>
+    <name>lens.cube.query.user.groups.authorization.enable</name>
+    <value>false</value>
+    <description>true if authorization is based on User Groups, false otherwise</description>
+  </property>
+
+  <property>
+    <name>lens.cube.query.user.name.authorization.enable</name>
+    <value>false</value>
+    <description>true if authorization is based on User Name, false otherwise</description>
+  </property>
+
 </configuration>

@@ -20,6 +20,7 @@ package org.apache.lens.server;
 
 import static org.apache.lens.server.error.LensServerErrorCode.SESSION_CLOSED;
 import static org.apache.lens.server.error.LensServerErrorCode.SESSION_ID_NOT_PROVIDED;
+import static org.apache.lens.server.error.LensServerErrorCode.SESSION_UNAUTHORIZED;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ import org.apache.lens.server.error.LensServerErrorCode;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
+import org.apache.lens.server.user.usergroup.UserGroupLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.lang3.StringUtils;
@@ -207,6 +209,9 @@ public abstract class BaseLensService extends CompositeService implements Extern
         log.info("Got user config: {}", userConfig);
         UtilityMethods.mergeMaps(sessionConf, userConfig, false);
         sessionConf.put(LensConfConstants.SESSION_LOGGEDIN_USER, username);
+
+        Map<String, String> userGroupConfig = UserGroupLoaderFactory.getUserGroupConfig(username);
+        UtilityMethods.mergeMaps(sessionConf, userGroupConfig, false);
         if (sessionConf.get(LensConfConstants.SESSION_CLUSTER_USER) == null) {
           log.info("Didn't get cluster user from user config loader. Setting same as logged in user: {}", username);
           sessionConf.put(LensConfConstants.SESSION_CLUSTER_USER, username);
@@ -226,11 +231,18 @@ public abstract class BaseLensService extends CompositeService implements Extern
   }
 
   private void updateSessionsPerUser(String userName) {
-    Integer numOfSessions = SESSIONS_PER_USER.get(userName);
-    if (null == numOfSessions) {
-      SESSIONS_PER_USER.put(userName, 1);
-    } else {
-      SESSIONS_PER_USER.put(userName, ++numOfSessions);
+    SessionUser sessionUser = SESSION_USER_INSTANCE_MAP.get(userName);
+    if (sessionUser == null) {
+      log.info("Trying to update invalid session {} for user {}", userName);
+      return;
+    }
+    synchronized (sessionUser) {
+      Integer numOfSessions = SESSIONS_PER_USER.get(userName);
+      if (null == numOfSessions) {
+        SESSIONS_PER_USER.put(userName, 1);
+      } else {
+        SESSIONS_PER_USER.put(userName, ++numOfSessions);
+      }
     }
   }
 
@@ -569,6 +581,16 @@ public abstract class BaseLensService extends CompositeService implements Extern
     }
     if (!session.isActive() || session.isMarkedForClose()) {
       throw new LensException(SESSION_CLOSED.getLensErrorInfo(), handle);
+    }
+  }
+
+
+  @Override
+  public void validateAndAuthorizeSession(LensSessionHandle handle, String userPrincipalName) throws LensException {
+    validateSession(handle);
+    LensSessionImpl session = getSession(handle);
+    if (!session.getLoggedInUser().equals(userPrincipalName)) {
+      throw new LensException(SESSION_UNAUTHORIZED.getLensErrorInfo(), handle);
     }
   }
 

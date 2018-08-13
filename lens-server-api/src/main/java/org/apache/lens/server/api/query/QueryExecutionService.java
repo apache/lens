@@ -204,6 +204,21 @@ public interface QueryExecutionService extends LensService, SessionValidator {
    */
   Response getHttpResultSet(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException;
 
+
+  /**
+   * Get the secure http end point for the result set.
+   *
+   * @param sessionHandle The lens session handle
+   * @param queryHandle   The query handle
+   * @param userPrincipalName the principal name
+   * @return returns javax.ws.rs.core.Response object
+   * @throws LensException the lens exception
+   */
+  Response getAuthorizedHttpResultSet(LensSessionHandle sessionHandle, QueryHandle queryHandle,
+    String userPrincipalName)
+    throws LensException;
+
+
   /**
    * Closes result set by releasing any resources used in serving the resultset.
    *

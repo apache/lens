@@ -42,21 +42,25 @@ Hive driver configuration
 *--+--+---+--+
 |9|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|10|lens.driver.cost.query.decider.class|org.apache.lens.server.api.query.cost.RangeBasedQueryCostTypeDecider|Decider class which looks at ranges passed in config and decides the querycosttype|
+|10|lens.cube.query.user.groups.authorization.enable|false|true if authorization is based on User Groups, false otherwise|
 *--+--+---+--+
-|11|lens.driver.cost.type.ranges|LOW,0.0,HIGH|Cost based Query type mapping|
+|11|lens.cube.query.user.name.authorization.enable|false|true if authorization is based on User Name, false otherwise|
 *--+--+---+--+
-|12|lens.driver.hive.calculate.priority|true|Whether priority should be calculated for hive mr jobs or not|
+|12|lens.driver.cost.query.decider.class|org.apache.lens.server.api.query.cost.RangeBasedQueryCostTypeDecider|Decider class which looks at ranges passed in config and decides the querycosttype|
 *--+--+---+--+
-|13|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is an embedded connection which does not require a remote hive server. For connecting to a hiveserver end point, remote connection should be used. The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection and org.apache.lens.driver.hive.RemoteThriftConnection.|
+|13|lens.driver.cost.type.ranges|LOW,0.0,HIGH|Cost based Query type mapping|
 *--+--+---+--+
-|14|lens.driver.hive.cost.calculator.class|org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator|Cost calculator class. By default calculating cost through fact partitions.|
+|14|lens.driver.hive.calculate.priority|true|Whether priority should be calculated for hive mr jobs or not|
 *--+--+---+--+
-|15|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
+|15|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is an embedded connection which does not require a remote hive server. For connecting to a hiveserver end point, remote connection should be used. The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection and org.apache.lens.driver.hive.RemoteThriftConnection.|
 *--+--+---+--+
-|16|lens.driver.hive.kerberos.principal|hive/_HOST@APACHE.COM|Set principal name to be used for hive server.|
+|16|lens.driver.hive.cost.calculator.class|org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator|Cost calculator class. By default calculating cost through fact partitions.|
 *--+--+---+--+
-|17|lens.driver.hive.priority.ranges|VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW|Priority Ranges. The numbers are the costs of the query.                                                                                                                                                    \ |
+|17|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
+*--+--+---+--+
+|18|lens.driver.hive.kerberos.principal|hive/_HOST@APACHE.COM|Set principal name to be used for hive server.|
+*--+--+---+--+
+|19|lens.driver.hive.priority.ranges|VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW|Priority Ranges. The numbers are the costs of the query.                                                                                                                                                    \ |
 |  |                                |                                     |The cost is calculated based on partition weights and fact weights. The interpretation of the default config is:                                                                                            \ |
 |  |                                |                                     |                                                                                                                                                                                                            \ |
 |  |                                |                                     |cost \<= 7\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \ Priority = VERY_HIGH                                                                                                                                             \ |
@@ -72,14 +76,14 @@ Hive driver configuration
 |  |                                |                                     |One use case in range tuning can be that you never want queries to run with VERY_HIGH, assuming no other changes, you'll modify the value of this param in hivedriver-site.xml to be HIGH,30.0,NORMAL,90,LOW\ |
 |  |                                |                                     |via the configs, you can tune both the ranges and partition weights. this would give the end user more control.                                                                                               |
 *--+--+---+--+
-|18|lens.driver.hive.query.hook.classes| |The query hook classes for hive driver. By default there are no hooks. To add a hook, you should look at the default implementation and from there it'll be easy to derive what value can be added through a new hook. Multiple hooks can be provided by providing comma seperated name of classes.|
+|20|lens.driver.hive.query.hook.classes| |The query hook classes for hive driver. By default there are no hooks. To add a hook, you should look at the default implementation and from there it'll be easy to derive what value can be added through a new hook. Multiple hooks can be provided by providing comma seperated name of classes.|
 *--+--+---+--+
-|19|lens.driver.hive.query.launching.constraint.factories| |Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
+|21|lens.driver.hive.query.launching.constraint.factories| |Factories used to instantiate constraints enforced on queries by driver. A query will be launched only if all constraints pass. Every Factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.constraint.QueryLaunchingConstraint.|
 *--+--+---+--+
-|20|lens.driver.hive.waiting.queries.selection.policy.factories| |Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
+|22|lens.driver.hive.waiting.queries.selection.policy.factories| |Factories used to instantiate driver specific waiting queries selection policies. Every factory should be an implementation of org.apache.lens.server.api.common.ConfigBasedObjectCreationFactory and create an implementation of org.apache.lens.server.api.query.collect.WaitingQueriesSelectionPolicy.|
 *--+--+---+--+
-|21|query.retry.policy.classes|org.apache.lens.server.api.retry.SubstringMessagePolicyDecider|List of policy decider classes|
+|23|query.retry.policy.classes|org.apache.lens.server.api.retry.SubstringMessagePolicyDecider|List of policy decider classes|
 *--+--+---+--+
-|22|retry.messages.contains.map|Session handle not found=org.apache.lens.server.api.retry.ImmediateRetryHandler(2)|Comma separated error messages and retry policy|
+|24|retry.messages.contains.map|Session handle not found=org.apache.lens.server.api.retry.ImmediateRetryHandler(2)|Comma separated error messages and retry policy|
 *--+--+---+--+
 The configuration parameters and their default values

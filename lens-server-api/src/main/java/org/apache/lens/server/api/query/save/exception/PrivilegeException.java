@@ -23,12 +23,16 @@ import static org.apache.lens.api.error.LensCommonErrorCode.NOT_AUTHORIZED;
 import org.apache.lens.server.api.LensErrorInfo;
 import org.apache.lens.server.api.error.LensException;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * The class PrivilegeException. Thrown when the user is
  * not having the required privileges to complete the action.
  */
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public class PrivilegeException extends LensException {
 
   @Getter

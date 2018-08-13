@@ -23,6 +23,8 @@ import java.io.OutputStreamWriter;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.lens.server.api.LensConfConstants;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -107,8 +109,12 @@ public class ZipFileFormatter extends AbstractFileFormatter {
     finalPath = new Path(pathStr, finalPathStr + ctx.getQueryHandle().toString() + ".zip");
     tmpPath = new Path(pathStr, ctx.getQueryHandle().toString() + ".tmp.zip");
 
-    fs = finalPath.getFileSystem(ctx.getConf());
-
+    if (ctx.getConf().getBoolean(LensConfConstants.READ_RESULT_FROM_HDFS,
+      LensConfConstants.DEFAULT_READ_RESULT_FROM_HDFS)) {
+      fs = FileSystemUtil.createFileSystem(ctx.getSubmittedUser(), new Path(pathStr));
+    } else {
+      fs = finalPath.getFileSystem(ctx.getConf());
+    }
     zipOut = new ZipOutputStream((fs.create(tmpPath)));
     ZipEntry zipEntry = new ZipEntry(getQueryResultFileName());
     zipOut.putNextEntry(zipEntry);

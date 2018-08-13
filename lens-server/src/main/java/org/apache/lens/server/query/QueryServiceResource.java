@@ -19,22 +19,30 @@
 package org.apache.lens.server.query;
 
 import static org.apache.lens.api.query.SubmitOp.*;
+import static org.apache.lens.server.api.LensConfConstants.ENABLE_RESULT_DOWNLOAD_AUTHORIZATION_CHECK;
 import static org.apache.lens.server.error.LensServerErrorCode.INVALID_HANDLE;
 import static org.apache.lens.server.error.LensServerErrorCode.NULL_OR_EMPTY_OR_BLANK_QUERY;
 
+import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.auth.AuthScheme;
 import org.apache.lens.api.query.*;
 import org.apache.lens.api.result.LensAPIResult;
+import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.annotations.MultiPurposeResource;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
@@ -45,6 +53,7 @@ import org.apache.lens.server.model.LogSegregationContext;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
@@ -64,6 +73,15 @@ public class QueryServiceResource {
   private QueryExecutionService queryServer;
 
   private final LogSegregationContext logSegregationContext;
+
+  @Context
+  private SecurityContext securityContext;
+
+
+  public static final Configuration CONF = LensServerConf.getHiveConf();
+  public static final Optional<AuthScheme> AUTH_SCHEME =
+    AuthScheme.getFromString(CONF.get(LensConfConstants.AUTH_SCHEME));
+
 
   private void validateSessionId(final LensSessionHandle sessionHandle) throws LensException {
     queryServer.validateSession(sessionHandle);
@@ -633,7 +651,17 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_OCTET_STREAM})
   public Response getHttpResultSet(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle) throws LensException {
+
+    if (AUTH_SCHEME.isPresent()) {
+      Principal userPrincipal = securityContext.getUserPrincipal();
+      String userPrincipalName = userPrincipal.getName();
+      if (CONF.getBoolean(ENABLE_RESULT_DOWNLOAD_AUTHORIZATION_CHECK,
+        LensConfConstants.DEFAULT_ENABLE_RESULT_DOWNLOAD_AUTHORIZATION_CHECK)) {
+        return queryServer.getAuthorizedHttpResultSet(sessionid, getQueryHandle(queryHandle), userPrincipalName);
+      }
+    }
     return queryServer.getHttpResultSet(sessionid, getQueryHandle(queryHandle));
+
   }
 
   /**

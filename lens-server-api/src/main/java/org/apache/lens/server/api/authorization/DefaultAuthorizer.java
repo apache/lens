@@ -16,47 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.server.api.authorization;
 
-package org.apache.lens.server.api;
+import java.util.Set;
 
-import lombok.*;
-
-@AllArgsConstructor
-public class LensErrorInfo {
-
-  @Getter
-  private int errorCode;
-  @Getter
-  private int errorWeight;
-  @Getter
-  private String errorName;
+public class DefaultAuthorizer implements Authorizer {
 
   @Override
-  public boolean equals(final Object o) {
-
-    if (this == o) {
-      return true;
-    }
-
-    if (!(o instanceof LensErrorInfo)) {
-      return false;
-    }
-
-    LensErrorInfo e = (LensErrorInfo) o;
-    return errorCode == e.errorCode && errorWeight == e.errorWeight && errorName.equals(e.errorName);
+  public boolean authorize(LensPrivilegeObject lensPrivilegeObject, ActionType accessType, String user,
+    Set<String> userGroups) {
+    return true;
   }
-
-
-  @Override
-  public int hashCode() {
-
-    final int PRIME = 59;
-    int result = 1;
-
-    result = result * PRIME + errorCode;
-    result = result * PRIME + errorWeight;
-    result = result * PRIME + errorName.hashCode();
-    return result;
-  }
-
 }

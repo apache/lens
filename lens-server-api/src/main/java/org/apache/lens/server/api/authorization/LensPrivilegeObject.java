@@ -16,47 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.server.api.authorization;
 
-package org.apache.lens.server.api;
+import lombok.Data;
 
-import lombok.*;
+@Data
+public class LensPrivilegeObject {
 
-@AllArgsConstructor
-public class LensErrorInfo {
+  private final LensPrivilegeObjectType objectType;
+  private final String table;
+  private final String column;
 
-  @Getter
-  private int errorCode;
-  @Getter
-  private int errorWeight;
-  @Getter
-  private String errorName;
-
-  @Override
-  public boolean equals(final Object o) {
-
-    if (this == o) {
-      return true;
-    }
-
-    if (!(o instanceof LensErrorInfo)) {
-      return false;
-    }
-
-    LensErrorInfo e = (LensErrorInfo) o;
-    return errorCode == e.errorCode && errorWeight == e.errorWeight && errorName.equals(e.errorName);
+  public LensPrivilegeObject(LensPrivilegeObjectType objectType, String table) {
+    this(objectType, table, null);
   }
 
-
-  @Override
-  public int hashCode() {
-
-    final int PRIME = 59;
-    int result = 1;
-
-    result = result * PRIME + errorCode;
-    result = result * PRIME + errorWeight;
-    result = result * PRIME + errorName.hashCode();
-    return result;
+  public LensPrivilegeObject(LensPrivilegeObjectType objectType, String table, String column) {
+    this.objectType = objectType;
+    this.table = table;
+    this.column = column;
   }
+
+  public enum LensPrivilegeObjectType {
+    DATABASE, COLUMN, NONE
+  };
 
 }
+
+

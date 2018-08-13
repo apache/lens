@@ -69,8 +69,7 @@ public class LensPersistentResult extends PersistentResultSet {
    * @param conf        the lens server conf
    */
   public LensPersistentResult(QueryHandle queryHandle, LensResultSetMetadata metadata, String outputPath, Integer
-    numRows, Long fileSize,
-    Configuration conf, LensConf qconf) {
+    numRows, Long fileSize, Configuration conf, LensConf qconf) {
     this.metadata = metadata;
     this.outputPath = outputPath;
     this.numRows = numRows;
