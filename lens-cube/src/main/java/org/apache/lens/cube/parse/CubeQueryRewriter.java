@@ -146,6 +146,7 @@ public class CubeQueryRewriter {
     // Rewrite base trees (groupby, having, orderby, limit) using aliases
     rewriters.add(new AliasReplacer());
     ExpressionResolver exprResolver = new ExpressionResolver();
+    QueryAuthorizationResolver queryAuthorizationResolver = new QueryAuthorizationResolver(conf);
     DenormalizationResolver denormResolver = new DenormalizationResolver();
     CandidateTableResolver candidateTblResolver = new CandidateTableResolver(conf);
     StorageTableResolver storageTableResolver = new StorageTableResolver(conf);
@@ -155,6 +156,8 @@ public class CubeQueryRewriter {
     rewriters.add(exprResolver);
     // Phase 1 of denormResolver: De-normalized columns resolved
     rewriters.add(denormResolver);
+    // authorization check
+    rewriters.add(queryAuthorizationResolver);
     // Resolve time ranges
     rewriters.add(new TimerangeResolver());
     // Phase 1 of candidateTblResolver: Resolve candidate storages and dimension tables for columns queried

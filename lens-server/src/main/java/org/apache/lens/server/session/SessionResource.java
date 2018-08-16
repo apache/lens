@@ -47,6 +47,7 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.auth.AuthScheme;
+import org.apache.lens.api.session.SessionPerUserInfo;
 import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
@@ -316,6 +317,16 @@ public class SessionResource {
   @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
   public List<UserSessionInfo> getSessionInfo() {
     return sessionService.getSessionInfo();
+  }
+
+  /**
+   * Returns a list of all session per loggedin user
+   */
+  @GET
+  @Path("sessionsperuser")
+  @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
+  public List<SessionPerUserInfo> getSessionsperUser() {
+    return sessionService.getSessionPerUser();
   }
 
   /**

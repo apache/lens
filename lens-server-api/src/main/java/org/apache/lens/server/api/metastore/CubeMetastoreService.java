@@ -622,5 +622,4 @@ public interface CubeMetastoreService extends LensService, SessionValidator {
    */
   List<String> getAllSegmentations(LensSessionHandle sessionid, String cubeName) throws LensException;
 
-
 }

@@ -16,47 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.cube.authorization;
 
-package org.apache.lens.server.api;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
-import lombok.*;
+// Ranger equivalent for a lens resource
 
-@AllArgsConstructor
-public class LensErrorInfo {
+class RangerLensResource extends RangerAccessResourceImpl {
 
-  @Getter
-  private int errorCode;
-  @Getter
-  private int errorWeight;
-  @Getter
-  private String errorName;
+  private static final String KEY_TABLE = "table";
+  private static final String KEY_COLUMN = "column";
 
-  @Override
-  public boolean equals(final Object o) {
+  RangerLensResource(RangerLensAuthorizer.LensObjectType objectType, String table, String column) {
 
-    if (this == o) {
-      return true;
+    switch(objectType) {
+
+    case COLUMN:
+      setValue(KEY_TABLE, table);
+      setValue(KEY_COLUMN, column);
+      break;
+
+    case TABLE:
+      setValue(KEY_TABLE, table);
+      break;
+
+    case NONE:
+    default:
+      break;
     }
-
-    if (!(o instanceof LensErrorInfo)) {
-      return false;
-    }
-
-    LensErrorInfo e = (LensErrorInfo) o;
-    return errorCode == e.errorCode && errorWeight == e.errorWeight && errorName.equals(e.errorName);
   }
-
-
-  @Override
-  public int hashCode() {
-
-    final int PRIME = 59;
-    int result = 1;
-
-    result = result * PRIME + errorCode;
-    result = result * PRIME + errorWeight;
-    result = result * PRIME + errorName.hashCode();
-    return result;
-  }
-
 }

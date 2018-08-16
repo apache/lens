@@ -42,6 +42,7 @@ import org.apache.lens.server.model.MappedDiagnosticLogSegregationContext;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
+import org.apache.lens.server.user.usergroup.UserGroupLoaderFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
@@ -212,6 +213,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
         ServiceMode.valueOf(DEFAULT_SERVER_MODE));
       cliService = new CLIService(null);
       UserConfigLoaderFactory.init(conf);
+      UserGroupLoaderFactory.init(conf);
       // Add default services
       addService(cliService);
       addService(new EventServiceImpl(LensEventService.NAME));

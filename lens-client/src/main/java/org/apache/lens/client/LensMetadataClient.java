@@ -297,7 +297,6 @@ public class LensMetadataClient {
     return storages.getElements();
   }
 
-
   public APIResult createNewStorage(XStorage storage) {
     WebTarget target = getMetastoreWebTarget();
     return translate(target.path("storages")

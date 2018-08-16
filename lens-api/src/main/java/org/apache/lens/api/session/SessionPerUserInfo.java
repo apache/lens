@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,13 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api;
 
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.server.api.error.LensException;
+package org.apache.lens.api.session;
 
-public interface SessionValidator {
-  void validateSession(LensSessionHandle handle) throws LensException;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
-  void validateAndAuthorizeSession(LensSessionHandle handle, String userPrincipalName) throws  LensException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@XmlRootElement
+@AllArgsConstructor
+@NoArgsConstructor
+@XmlAccessorType(XmlAccessType.FIELD)
+public class SessionPerUserInfo {
+  @XmlElement
+  private String user;
+  @XmlElement
+  private Integer sessionCount;
+
+  @Override
+  public String toString() {
+    return user + ":" + sessionCount;
+  }
 }

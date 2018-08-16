@@ -21,6 +21,8 @@ package org.apache.lens.server.api;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.parse.Parser;
+import org.apache.lens.server.api.authorization.Authorizer;
+import org.apache.lens.server.api.authorization.DefaultAuthorizer;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.*;
 import org.apache.lens.server.api.query.DefaultDownloadResultUrlProvider;
@@ -270,6 +272,11 @@ public final class LensConfConstants {
   public static final String SESSION_CLUSTER_USER = SESSION_PFX + "cluster.user";
 
   /**
+   * The Constant SESSION_USER_GROUPS.
+   */
+  public static final String SESSION_USER_GROUPS = SESSION_PFX + "user.groups";
+
+  /**
    * The Constant MAPRED_JOB_QUEUE_NAME.
    */
   public static final String MAPRED_JOB_QUEUE_NAME = "mapred.job.queue.name";
@@ -290,10 +297,21 @@ public final class LensConfConstants {
    */
   public static final String USER_RESOLVER_TYPE = SERVER_PFX + "user.resolver.type";
 
+  // ldap user to user group for authorization checks
+  /**
+   * The Constant USER_GROUP_TYPE.
+   */
+  public static final String USER_GROUP_TYPE = SERVER_PFX + "user.group.type";
+
   /**
    * The Constant USER_RESOLVER_FIXED_VALUE.
    */
   public static final String USER_RESOLVER_FIXED_VALUE = SERVER_PFX + "user.resolver.fixed.value";
+
+  /**
+   * The Constant USER_GROUP_FIXED_VALUE.
+   */
+  public static final String USER_GROUP_FIXED_VALUE = SERVER_PFX + "user.group.fixed.value";
 
   /**
    * The Constant USER_RESOLVER_PROPERTYBASED_FILENAME.
@@ -314,6 +332,11 @@ public final class LensConfConstants {
    * The Constant USER_RESOLVER_CUSTOM_CLASS.
    */
   public static final String USER_RESOLVER_CUSTOM_CLASS = SERVER_PFX + "user.resolver.custom.class";
+
+  /**
+   * The Constant USER_GROUP_CUSTOM_CLASS.
+   */
+  public static final String USER_GROUP_CUSTOM_CLASS = SERVER_PFX + "user.group.custom.class";
 
   /**
    * The Constant USER_RESOLVER_CACHE_EXPIRY.
@@ -372,6 +395,26 @@ public final class LensConfConstants {
    * The Constant USER_RESOLVER_LDAP_SEARCH_FILTER.
    */
   public static final String USER_RESOLVER_LDAP_SEARCH_FILTER = SERVER_PFX + "user.resolver.ldap.search.filter";
+
+  /**
+   * The Constant USER_AUTHORIZATION.
+   */
+  public static final String USER_NAME_BASED_AUTHORIZATION =  "lens.cube.query.user.name.authorization.enable";
+
+  /**
+   * The Constant USER_GROUPS_BASED_AUTHORIZATION.
+   */
+  public static final String USER_GROUPS_BASED_AUTHORIZATION = "lens.cube.query.user.groups.authorization.enable";
+
+  /**
+   * The default USER_AUTHORIZATION.
+   */
+  public static final Boolean DEFAULT_USER_NAME_AUTHORIZATION = false;
+
+  /**
+   * The default USER_GROUPS_BASED_AUTHORIZATION.
+   */
+  public static final Boolean DEFAULT_USER_GROUPS_AUTHORIZATION = false;
 
   /**
    * The Constant STORAGE_COST.
@@ -439,7 +482,7 @@ public final class LensConfConstants {
     return SERVER_PFX + featureName + WS_FEATURE_IMPL_SFX;
   }
 
-  /**
+    /**
    * Gets the WS listener impl conf key.
    *
    * @param listenerName the listener name
@@ -713,6 +756,16 @@ public final class LensConfConstants {
    * The Constant RESULT_FS_READ_URL.
    */
   public static final String RESULT_FS_READ_URL = QUERY_PFX + "result.fs.read.url";
+
+  /**
+   * The Constant READ_RESULT_FROM_HDFS.
+   */
+  public static final String READ_RESULT_FROM_HDFS = QUERY_PFX + "read.result.hdfs";
+
+  /**
+   * The Constant DEFAULT_READ_RESULT_FROM_HDFS.
+   */
+  public static final Boolean DEFAULT_READ_RESULT_FROM_HDFS = false;
 
   /**
    * The Constant AUX_JARS.
@@ -1284,6 +1337,10 @@ public final class LensConfConstants {
   public static final Class<? extends DataCompletenessChecker> DEFAULT_COMPLETENESS_CHECKER =
           DefaultChecker.class.asSubclass(DataCompletenessChecker.class);
 
+
+  public static final Class<? extends Authorizer> DEFAULT_AUTHORIZER =
+    DefaultAuthorizer.class.asSubclass(Authorizer.class);
+
   /**
    * This property is to enable Data Completeness Checks while resolving partitions.
    */
@@ -1293,6 +1350,38 @@ public final class LensConfConstants {
    * Default Value of the config "lens.cube.metastore.enable.datacompleteness.check"
    */
   public static final boolean DEFAULT_ENABLE_DATACOMPLETENESS_CHECK = false;
+
+  /**
+   * This property is to enable authorization checks while query planning.
+   */
+  public static final String ENABLE_QUERY_AUTHORIZATION_CHECK = "lens.cube.metastore.enable.query.authorization.check";
+
+  /**
+   * Default Value of the config "lens.cube.metastore.enable.query.authorization.check"
+   */
+  public static final boolean DEFAULT_ENABLE_QUERY_AUTHORIZATION_CHECK = false;
+
+  /**
+   * This property is to enable authorization checks while downloading result.
+   */
+  public static final String ENABLE_RESULT_DOWNLOAD_AUTHORIZATION_CHECK =
+    "lens.enable.result.download.authorization.check";
+
+  /**
+   * Default Value of the config "lens.enable.result.download.authorization.check"
+   */
+  public static final boolean DEFAULT_ENABLE_RESULT_DOWNLOAD_AUTHORIZATION_CHECK = false;
+
+  /**
+   * This property is to enable authorization checks for schema changes.
+   */
+  public static final String ENABLE_METASTORE_SCHEMA_AUTHORIZATION_CHECK =
+    "lens.cube.metastore.enable.metastore.authorization.check";
+
+  /**
+   * Default Value of the config "lens.cube.metastore.enable.schema.authorization.check"
+   */
+  public static final boolean DEFAULT_ENABLE_METASTORE_SCHEMA_AUTHORIZATION_CHECK = false;
 
   /**
    * This property is for setting static cost to driver

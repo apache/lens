@@ -158,6 +158,22 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     return getExpressionByName(column);
   }
 
+
+
+  /**
+   * Return restricted columns of the table, which can be specified by property
+   * MetastoreUtil.getRestrictedColumnsKey(getName())
+   *
+   * @return set of restricted columns
+   */
+  public Set<String> getRestrictedColumns() {
+    String restrictedColsStr =
+      MetastoreUtil.getNamedStringValue(getProperties(), MetastoreUtil.getRestrictedColumnsKey(getName()));
+    log.info("Restricted cols : "+ restrictedColsStr + " for table : "+ this.getName());
+    return restrictedColsStr == null ? new HashSet<>() : new HashSet<>(Arrays.asList(StringUtils.split(restrictedColsStr
+        .toLowerCase(), ',')));
+  }
+
   /**
    * Alters the expression if already existing or just adds if it is new expression.
    *

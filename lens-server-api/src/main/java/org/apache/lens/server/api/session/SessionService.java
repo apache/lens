@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.session.SessionPerUserInfo;
 import org.apache.lens.api.session.UserSessionInfo;
 import org.apache.lens.server.api.error.LensException;
 
@@ -55,7 +56,8 @@ public interface SessionService {
    * @throws LensException the lens exception
    */
 
-  void restoreSession(LensSessionHandle sessionHandle, String userName, String password) throws LensException;
+  void restoreSession(LensSessionHandle sessionHandle, String userName, String password,
+                      Map<String, String> configuration) throws LensException;
 
   /**
    * Close session.
@@ -135,4 +137,10 @@ public interface SessionService {
    * @return a list of all sessions
    */
   List<UserSessionInfo> getSessionInfo();
+
+  /**
+   *
+   * @return a map of all session per loggedin user
+   */
+  List<SessionPerUserInfo> getSessionPerUser();
 }

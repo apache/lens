@@ -16,47 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.lens.server.api.user;
 
-package org.apache.lens.server.api;
+import java.util.Map;
 
-import lombok.*;
+public interface UserGroupConfigLoader {
 
-@AllArgsConstructor
-public class LensErrorInfo {
-
-  @Getter
-  private int errorCode;
-  @Getter
-  private int errorWeight;
-  @Getter
-  private String errorName;
-
-  @Override
-  public boolean equals(final Object o) {
-
-    if (this == o) {
-      return true;
-    }
-
-    if (!(o instanceof LensErrorInfo)) {
-      return false;
-    }
-
-    LensErrorInfo e = (LensErrorInfo) o;
-    return errorCode == e.errorCode && errorWeight == e.errorWeight && errorName.equals(e.errorName);
-  }
-
-
-  @Override
-  public int hashCode() {
-
-    final int PRIME = 59;
-    int result = 1;
-
-    result = result * PRIME + errorCode;
-    result = result * PRIME + errorWeight;
-    result = result * PRIME + errorName.hashCode();
-    return result;
-  }
-
+  /**
+   * Gets the user groups config.
+   *
+   * @param loggedInUser the logged in user
+   * @return the user group config
+   * @throws UserGroupLoaderException the user group loader exception
+   */
+  Map<String, String> getUserConfig(String loggedInUser) throws UserGroupLoaderException;
 }

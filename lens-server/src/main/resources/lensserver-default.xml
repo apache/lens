@@ -593,10 +593,26 @@
   </property>
 
   <property>
+    <name>lens.server.user.group.type</name>
+    <value>FIXED</value>
+    <description>Type of user group config resolver. allowed values are FIXED, CUSTOM.
+    </description>
+  </property>
+
+  <property>
     <name>lens.server.user.resolver.fixed.value</name>
     <value></value>
     <description>Required for FIXED user resolver.
       when lens.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.
+    </description>
+  </property>
+
+
+  <property>
+    <name>lens.server.user.group.fixed.value</name>
+    <value>test</value>
+    <description>Required for FIXED user group resolver.
+      when lens.server.user.group.type=FIXED, This will be the value user groups will resolve to.
     </description>
   </property>
 
