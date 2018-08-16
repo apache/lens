@@ -39,6 +39,10 @@ public final class MetastoreConstants {
   public static final String TIMED_DIMENSIONS_LIST_SFX = ".timed.dimensions.list";
   public static final String PARENT_CUBE_SFX = ".parent.cube";
   public static final String CUBE_ALL_FIELDS_QUERIABLE = "cube.allfields.queriable";
+  public static final String CUBE_ABSOLUTE_START_TIME = "cube.absolute.start.time";
+  public static final String CUBE_RELATIVE_START_TIME = "cube.relative.start.time";
+  public static final String CUBE_ABSOLUTE_END_TIME = "cube.absolute.end.time";
+  public static final String CUBE_RELATIVE_END_TIME = "cube.relative.end.time";
 
   // Uber dimension constants
   public static final String DIMENSION_PFX = "dimension.";

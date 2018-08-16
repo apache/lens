@@ -21,6 +21,8 @@
 -->
 <x_base_cube name="testcube" xmlns="uri:lens:cube:0.1">
   <properties>
+    <property name="cube.relative.start.time" value="now.year - 2 years"/>
+    <property name="cube.relative.end.time" value="now.day + 2 years"/>
     <property name="cube.timedim.partition.et" value="et"/>
     <property name="cube.timedim.partition.it" value="it"/>
     <property name="cube.timedim.partition.d_time" value="dt"/>

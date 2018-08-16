@@ -173,6 +173,7 @@ public class DateFactory {
   public static final String ONE_DAY_RANGE_IT;
   public static final String THIS_YEAR_RANGE;
   public static final String LAST_YEAR_RANGE;
+  public static final String PREV_FIVE_TO_NEXT_FIVE_YEAR_RANGE;
   public static final String TWO_MONTHS_RANGE_UPTO_MONTH;
   public static final String TWO_MONTHS_RANGE_UPTO_DAYS;
   public static final String TWO_MONTHS_RANGE_UPTO_HOURS;
@@ -224,6 +225,7 @@ public class DateFactory {
     ONE_DAY_RANGE_IT = getTimeRangeString("it", DAILY, -1, 0, DAILY);
     THIS_YEAR_RANGE = getTimeRangeString(YEARLY, 0, 1);
     LAST_YEAR_RANGE = getTimeRangeString(YEARLY, -1, 0);
+    PREV_FIVE_TO_NEXT_FIVE_YEAR_RANGE = getTimeRangeString(YEARLY, -5, 5);
     TWO_MONTHS_RANGE_UPTO_MONTH = getTimeRangeString(MONTHLY, -2, 0);
     TWO_MONTHS_RANGE_UPTO_DAYS = getTimeRangeString(MONTHLY, -2, 0, DAILY);
     TWO_MONTHS_RANGE_UPTO_HOURS = getTimeRangeString(MONTHLY, -2, 0, HOURLY);
