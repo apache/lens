@@ -42,7 +42,7 @@ public final class LensServerConf {
     static {
       HIVE_CONF.addResource("lensserver-default.xml");
       HIVE_CONF.addResource("lens-site.xml");
-      Configuration conf = new Configuration(false);
+      Configuration conf = new Configuration(true);
       conf.addResource("lens-site.xml");
       for (Map.Entry<String, String> prop : conf) {
         if (!prop.getKey().startsWith(LensConfConstants.SERVER_PFX)) {
