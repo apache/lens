@@ -1,28 +1,30 @@
-Apache Lens
-=====
+# Apache Lens
 
 Apache Lens is a unified Analytics Platform. Lens aims to cut the Data Analytics silos by providing a single view of data
 across multiple tiered data stores and optimal execution environment for the analytical query.
 
-Prerequisites :
+## Prerequisites :
 Apache Lens requires JDK(>=1.8) and Apache Maven(3.x) to be installed for the build.
 
-JAVA_HOME is required for running tests.
+`JAVA_HOME` is required for running tests.
 
-Confirm versions :
-  # java -version
-  # mvn --version
-  # echo ${JAVA_HOME}
+## Confirm versions :
 
-Additionally MAVEN_OPTS can be configured as :
-  # export MAVEN_OPTS="-Xmx1024m"
+    java -version
+    mvn --version
+    echo ${JAVA_HOME}
 
-Build the project :
-  # mvn clean package
+Additionally `MAVEN_OPTS` can be configured as :
+
+    export MAVEN_OPTS="-Xmx1024m"
+
+## Build the project :
+  
+    mvn clean package
 
 
-See [Development Environment Setup] (http://lens.apache.org/developer/contribute.html#Development_Environment_Setup)
-and [Building from source] (http://lens.apache.org/developer/contribute.html#Building_from_source) docs for
+See [Development Environment Setup](http://lens.apache.org/developer/contribute.html#Development_Environment_Setup)
+and [Building from source](http://lens.apache.org/developer/contribute.html#Building_from_source) docs for
 more details.
 
-[Detailed documentation for the project is available here](https://lens.apache.org)
+Detailed [documentation](https://lens.apache.org) for the project is available here.
