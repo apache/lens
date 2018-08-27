@@ -20,15 +20,44 @@ package org.apache.lens.cube.parse;
 
 import static java.util.Comparator.naturalOrder;
 
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
-import static org.apache.lens.cube.parse.StorageUtil.*;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipUpdatePeriodCode;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.timeDimNotSupported;
+import static org.apache.lens.cube.parse.StorageUtil.getFallbackRange;
+import static org.apache.lens.cube.parse.StorageUtil.processCubeColForDataCompleteness;
+import static org.apache.lens.cube.parse.StorageUtil.processExpressionsForCompleteness;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 
-import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.AbstractCubeTable;
+import org.apache.lens.cube.metadata.CubeFactTable;
+import org.apache.lens.cube.metadata.CubeInterface;
+import org.apache.lens.cube.metadata.DateUtil;
+import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.cube.metadata.FactTable;
+import org.apache.lens.cube.metadata.MetastoreConstants;
+import org.apache.lens.cube.metadata.MetastoreUtil;
+import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.DataCompletenessChecker;
 
