@@ -20,31 +20,12 @@ package org.apache.lens.cube.parse;
 
 import static java.util.Comparator.naturalOrder;
 
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.SkipUpdatePeriodCode;
-import static org.apache.lens.cube.parse.CandidateTablePruneCause.timeDimNotSupported;
-import static org.apache.lens.cube.parse.StorageUtil.getFallbackRange;
-import static org.apache.lens.cube.parse.StorageUtil.processCubeColForDataCompleteness;
-import static org.apache.lens.cube.parse.StorageUtil.processExpressionsForCompleteness;
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.*;
+import static org.apache.lens.cube.parse.StorageUtil.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalDouble;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Stream;
 
 import org.apache.lens.cube.metadata.*;
@@ -348,6 +329,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
       factColumns = fact.getValidColumns();
       if (factColumns == null) {
         factColumns = fact.getAllFieldNames();
+        factColumns.addAll(fact.getPartitionColumns(storageName));
       }
     }
     return factColumns;

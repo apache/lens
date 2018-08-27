@@ -40,12 +40,14 @@ public class CubeFactTable extends AbstractCubeTable implements FactTable {
   private final Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap;
   private String cubeName;
   private final Map<String, Set<UpdatePeriod>> storageUpdatePeriods;
+  private Map<String, Set<String>> storageTablePartitionColumns;
 
   public CubeFactTable(Table hiveTable) {
     super(hiveTable);
     this.storageUpdatePeriods = getUpdatePeriods(getName(), getProperties());
     this.cubeName = this.getProperties().get(MetastoreUtil.getFactCubeNameKey(getName()));
     this.storagePrefixUpdatePeriodMap = getUpdatePeriodMap(getName(), getProperties());
+    this.storageTablePartitionColumns = getStorageTablePartitionColumns(getName(), getProperties());
   }
 
   public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
@@ -61,17 +63,20 @@ public class CubeFactTable extends AbstractCubeTable implements FactTable {
   public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight, Map<String, String> properties) {
     this(cubeName, factName, columns, storageUpdatePeriods, weight, properties,
-      new HashMap<String, Map<UpdatePeriod, String>>());
+      new HashMap<String, Map<UpdatePeriod, String>>(), new HashMap<String, Set<String>>());
 
   }
 
   public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
-    Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight, Map<String, String> properties,
-    Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap) {
+                       Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight,
+                       Map<String, String> properties,
+                       Map<String, Map<UpdatePeriod, String>> storagePrefixUpdatePeriodMap,
+                       Map<String, Set<String>> storageTablePartitionColumns) {
     super(factName, columns, properties, weight);
     this.cubeName = cubeName;
     this.storageUpdatePeriods = storageUpdatePeriods;
     this.storagePrefixUpdatePeriodMap = storagePrefixUpdatePeriodMap;
+    this.storageTablePartitionColumns = storageTablePartitionColumns;
     addProperties();
   }
 
@@ -90,10 +95,20 @@ public class CubeFactTable extends AbstractCubeTable implements FactTable {
     this.getProperties().put(MetastoreUtil.getFactCubeNameKey(getName()), cubeName);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
     addStorageTableProperties(getName(), getProperties(), storagePrefixUpdatePeriodMap);
+    addStorageTableParititionColumns(getName(), getProperties(), storageTablePartitionColumns);
   }
 
-  private void addStorageTableProperties(String name, Map<String, String> properties,
-    Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap) {
+  private void addStorageTableParititionColumns(String name, Map<String, String> properties,
+                                                Map<String, Set<String>> storageTablePartitionColumns) {
+    for (String storage : storageTablePartitionColumns.keySet()) {
+      String partitionColumnKey = MetastoreUtil.getPartitionColumnKey(name, storage);
+      String partitionColumnValues = StringUtils.join(storageTablePartitionColumns.get(storage), ',');
+      properties.put(partitionColumnKey, partitionColumnValues);
+    }
+  }
+
+  private void addStorageTableProperties(String name, Map<String, String> properties, Map<String, Map<UpdatePeriod,
+          String>> storageUpdatePeriodMap) {
     for (String storageName : storageUpdatePeriodMap.keySet()) {
       String prefix = MetastoreUtil.getFactKeyPrefix(name) + "." + storageName;
       for (Map.Entry updatePeriodEntry : storageUpdatePeriodMap.get(storageName).entrySet()) {
@@ -104,12 +119,12 @@ public class CubeFactTable extends AbstractCubeTable implements FactTable {
   }
 
   private static void addUpdatePeriodProperies(String name, Map<String, String> props,
-    Map<String, Set<UpdatePeriod>> updatePeriods) {
+                                               Map<String, Set<UpdatePeriod>> updatePeriods) {
     if (updatePeriods != null) {
       props.put(MetastoreUtil.getFactStorageListKey(name), MetastoreUtil.getStr(updatePeriods.keySet()));
       for (Map.Entry<String, Set<UpdatePeriod>> entry : updatePeriods.entrySet()) {
         props.put(MetastoreUtil.getFactUpdatePeriodKey(name, entry.getKey()),
-          MetastoreUtil.getNamedStr(entry.getValue()));
+                MetastoreUtil.getNamedStr(entry.getValue()));
       }
     }
   }
@@ -151,8 +166,34 @@ public class CubeFactTable extends AbstractCubeTable implements FactTable {
     return storageUpdatePeriods;
   }
 
+  private Map<String, Set<String>> getStorageTablePartitionColumns(String name, Map<String, String> props) {
+    Map<String, Set<String>> storageTablePartitionColumns = new HashMap<>();
+    String storagesStr = props.get(MetastoreUtil.getFactStorageListKey(name));
+    if (!StringUtils.isBlank(storagesStr)) {
+      String[] storages = storagesStr.split(",");
+      for (String storage : storages) {
+        String partitionColumnKey = MetastoreUtil.getPartitionColumnKey(name, storage);
+        String partitionColumnValues = props.get(partitionColumnKey);
+        if (StringUtils.isNotEmpty(partitionColumnValues)) {
+          storageTablePartitionColumns.put(partitionColumnKey,
+                  new HashSet<String>(Arrays.asList(partitionColumnValues.split(","))));
+        }
+
+      }
+    }
+    return storageTablePartitionColumns;
+  }
+
   public Map<String, Set<UpdatePeriod>> getUpdatePeriods() {
     return storageUpdatePeriods;
+  }
+
+  public Set<String> getPartitionColumns(String storageName) {
+    String partitionColumnKey = MetastoreUtil.getPartitionColumnKey(getName(), storageName);
+    if (storageTablePartitionColumns.containsKey(partitionColumnKey)) {
+      return storageTablePartitionColumns.get(partitionColumnKey);
+    }
+    return new HashSet<String>();
   }
 
   @Override
