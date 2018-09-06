@@ -129,7 +129,7 @@ public class CubeMetastoreClient {
     return completenessChecker;
   }
 
-  public Authorizer getAuthorizer() {
+  private Authorizer getAuthorizer() {
     if (authorizer == null) {
       authorizer = ReflectionUtils.newInstance(config.getClass(MetastoreConstants.AUTHORIZER_CLASS,
         LensConfConstants.DEFAULT_AUTHORIZER, Authorizer.class), this.config);
@@ -157,7 +157,8 @@ public class CubeMetastoreClient {
     if (isAuthorizationEnabled()) {
       String currentdb = SessionState.get().getCurrentDatabase();
       AuthorizationUtil.isAuthorized(getAuthorizer(), currentdb,
-        LensPrivilegeObject.LensPrivilegeObjectType.DATABASE, ActionType.UPDATE, getConf());
+        LensPrivilegeObject.LensPrivilegeObjectType.DATABASE, ActionType.UPDATE, getConf(),
+        SessionState.getSessionConf());
     }
   }
 

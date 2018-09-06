@@ -21,6 +21,7 @@
 -->
 <x_base_cube name="basecube" xmlns="uri:lens:cube:0.1">
   <properties>
+    <property name="cube.basecube.restricted.columns" value="dim11"/>
     <property name="cube.timedim.partition.et" value="et"/>
     <property name="cube.timedim.partition.it" value="it"/>
     <property name="cube.timedim.partition.d_time" value="dt"/>

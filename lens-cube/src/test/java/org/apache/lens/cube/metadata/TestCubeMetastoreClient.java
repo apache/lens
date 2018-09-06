@@ -38,7 +38,9 @@ import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.TestPartitionTimelines;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.query.save.exception.PrivilegeException;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -63,6 +65,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 public class TestCubeMetastoreClient {
 
   private static CubeMetastoreClient client;
@@ -143,6 +146,10 @@ public class TestCubeMetastoreClient {
     Hive.get(conf).createDatabase(database);
     SessionState.get().setCurrentDatabase(TestCubeMetastoreClient.class.getSimpleName());
     client = CubeMetastoreClient.getInstance(conf);
+    client.getConf().setBoolean(LensConfConstants.ENABLE_METASTORE_SCHEMA_AUTHORIZATION_CHECK, true);
+    client.getConf().setBoolean(LensConfConstants.USER_GROUPS_BASED_AUTHORIZATION, true);
+    client.getConf().set(MetastoreConstants.AUTHORIZER_CLASS, "org.apache.lens.cube.parse.MockAuthorizer");
+    SessionState.getSessionConf().set(LensConfConstants.SESSION_USER_GROUPS, "lens-auth-test1");
     defineCube(CUBE_NAME, CUBE_NAME_WITH_PROPS, DERIVED_CUBE_NAME, DERIVED_CUBE_NAME_WITH_PROPS);
     defineUberDims();
   }
@@ -154,8 +161,8 @@ public class TestCubeMetastoreClient {
     client.dropCube(VIRTUAL_CUBE_NAME);
     client = CubeMetastoreClient.getInstance(conf);
     assertFalse(client.tableExists(CUBE_NAME));
-
     Hive.get().dropDatabase(TestCubeMetastoreClient.class.getSimpleName(), true, true, true);
+
     CubeMetastoreClient.close();
   }
 
@@ -350,12 +357,12 @@ public class TestCubeMetastoreClient {
     cube = new Cube(cubeName, cubeMeasures, cubeDimensions, cubeExpressions, joinChains, emptyHashMap, 0.0);
     measures = Sets.newHashSet("msr1", "msr2", "msr3");
     moreMeasures.addAll(measures);
-    for(CubeMeasure measure: dummyMeasure) {
+    for (CubeMeasure measure : dummyMeasure) {
       moreMeasures.add(measure.getName());
     }
     dimensions = Sets.newHashSet("dim1", "dim2", "dim3");
     moreDimensions.addAll(dimensions);
-    for(CubeDimAttribute dimAttribute: dummyDimAttributes) {
+    for (CubeDimAttribute dimAttribute : dummyDimAttributes) {
       moreDimensions.add(dimAttribute.getName());
     }
     derivedCube = new DerivedCube(derivedCubeName, measures, dimensions, cube);
@@ -854,25 +861,25 @@ public class TestCubeMetastoreClient {
     tag2.put("is_ui_visible", "true");
     Set<CubeMeasure> cubeMeasures = new HashSet<>();
     cubeMeasures.add(new ColumnMeasure(
-        new FieldSchema("msr1", "int", "measure1 with tag"), null, null, null, null, null, null, null, 0.0,
-        9999.0, tag1));
+      new FieldSchema("msr1", "int", "measure1 with tag"), null, null, null, null, null, null, null, 0.0,
+      9999.0, tag1));
     cubeMeasures.add(new ColumnMeasure(
-        new FieldSchema("msr2", "int", "measure2 with tag"),
-        "measure2 with tag", null, null, null, NOW, null, null, 0.0, 999999.0, tag2));
+      new FieldSchema("msr2", "int", "measure2 with tag"),
+      "measure2 with tag", null, null, null, NOW, null, null, 0.0, 999999.0, tag2));
 
     Set<CubeDimAttribute> cubeDimensions = new HashSet<>();
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("dim1", "id", "ref dim"), "dim with tag",
-        null, null, null, null, null, tag1));
+      null, null, null, null, null, tag1));
 
     ExprSpec expr1 = new ExprSpec("avg(msr1 + msr2)", null, null);
     ExprSpec expr2 = new ExprSpec("avg(msr2 + msr1)", null, null);
 
     Set<ExprColumn> cubeExpressions = new HashSet<>();
     cubeExpressions.add(new ExprColumn(new FieldSchema("expr_measure", "double", "expression measure"),
-        "expr with tag", tag2, expr1, expr2));
+      "expr with tag", tag2, expr1, expr2));
 
     client.createCube(cubename,
-        cubeMeasures, cubeDimensions, cubeExpressions, null, null);
+      cubeMeasures, cubeDimensions, cubeExpressions, null, null);
     Table cubeTbl = client.getHiveTable(cubename);
     assertTrue(client.isCube(cubeTbl));
     Cube cube2 = new Cube(cubeTbl);
@@ -983,7 +990,7 @@ public class TestCubeMetastoreClient {
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     FieldSchema itPart = new FieldSchema("it", "string", "date part");
     FieldSchema etPart = new FieldSchema("et", "string", "date part");
-    String[] partColNames = new String[] { getDatePartitionKey(), itPart.getName(), etPart.getName() };
+    String[] partColNames = new String[]{getDatePartitionKey(), itPart.getName(), etPart.getName()};
 
     StorageTableDesc s1 = new StorageTableDesc(TextInputFormat.class, HiveIgnoreKeyTextOutputFormat.class,
       Lists.newArrayList(getDatePartition(), itPart, etPart),
@@ -1034,7 +1041,7 @@ public class TestCubeMetastoreClient {
       EndsAndHolesPartitionTimeline.class.getCanonicalName());
     client.pushHiveTable(c2TableHourly);
 
-    assertSameTimelines(factName, new String[] { c1, c2 }, HOURLY, partColNames);
+    assertSameTimelines(factName, new String[]{c1, c2}, HOURLY, partColNames);
 
     StoreAllPartitionTimeline timelineDtC1 = ((StoreAllPartitionTimeline) client.partitionTimelineCache
       .get(factName, c1, HOURLY, getDatePartitionKey()));
@@ -1076,7 +1083,7 @@ public class TestCubeMetastoreClient {
     assertEquals(client.getAllParts(c1TableNameHourly).size(), 3);
     assertEquals(client.getAllParts(c2TableNameHourly).size(), 3);
 
-    assertSameTimelines(factName, new String[] { c1, c2 }, HOURLY, partColNames);
+    assertSameTimelines(factName, new String[]{c1, c2}, HOURLY, partColNames);
 
     assertTimeline(timelineDt, timelineDtC1, HOURLY, 0, 0);
     assertTimeline(timelineEt, timelineEtC1, HOURLY, 0, 1);
@@ -1361,7 +1368,7 @@ public class TestCubeMetastoreClient {
   }
 
   private void assertRangeValidityForStorageTable(String storageTable) throws HiveException, LensException {
-    Object[][] testCases = new Object[][] {
+    Object[][] testCases = new Object[][]{
       {"now - 15 days", "now - 11 days", false},
       {"now - 15 days", "now.day - 10 days", false},
       {"now - 15 days", "now - 1 hour", true},
@@ -1868,7 +1875,7 @@ public class TestCubeMetastoreClient {
     StoreAllPartitionTimeline storeAllPartitionTimeline, UpdatePeriod updatePeriod,
     int firstOffset, int latestOffset, int... holeOffsets) throws LensException {
     Date[] holeDates = new Date[holeOffsets.length];
-    for(int i = 0; i < holeOffsets.length; i++) {
+    for (int i = 0; i < holeOffsets.length; i++) {
       holeDates[i] = getDateWithOffset(HOURLY, holeOffsets[i]);
     }
     assertTimeline(endsAndHolesPartitionTimeline, storeAllPartitionTimeline, updatePeriod,
@@ -2191,9 +2198,9 @@ public class TestCubeMetastoreClient {
     // test partition
     List<StoragePartitionDesc> storageDescs = new ArrayList<>();
     StoragePartitionDesc sPartSpecNow =
-            new StoragePartitionDesc(cubeFactWithParts.getName(), timePartsNow, partSpec, HOURLY);
+      new StoragePartitionDesc(cubeFactWithParts.getName(), timePartsNow, partSpec, HOURLY);
     StoragePartitionDesc sPartSpecTwoMonthsBack =
-            new StoragePartitionDesc(cubeFactWithParts.getName(), timePartsBeforeTwoMonths, partSpec, HOURLY);
+      new StoragePartitionDesc(cubeFactWithParts.getName(), timePartsBeforeTwoMonths, partSpec, HOURLY);
     storageDescs.add(sPartSpecNow);
     storageDescs.add(sPartSpecTwoMonthsBack);
 
@@ -2981,4 +2988,23 @@ public class TestCubeMetastoreClient {
     conf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, true);
     client = CubeMetastoreClient.getInstance(conf);
   }
+
+  @Test(priority = 4)
+  public void testMetastoreAuthorization() throws HiveException, LensException {
+
+    client = CubeMetastoreClient.getInstance(new HiveConf(TestCubeMetastoreClient.class));
+    SessionState.getSessionConf().set(LensConfConstants.SESSION_USER_GROUPS, "lens-auth-test2");
+    try {
+      client.createCube("testcache5", cubeMeasures, cubeDimensions);
+      fail("Privilege exception supposed to be thrown for updating TestCubeMetastoreClient"
+        + " database, however not seeing expected behaviour");
+    } catch (PrivilegeException actualException) {
+      PrivilegeException expectedException =
+        new PrivilegeException("DATABASE", "TestCubeMetastoreClient", "UPDATE");
+      assertEquals(expectedException, actualException);
+    }
+    SessionState.getSessionConf().set(LensConfConstants.SESSION_USER_GROUPS, "lens-auth-test1");
+    client.createCube("testcache5", cubeMeasures, cubeDimensions);
+  }
+
 }

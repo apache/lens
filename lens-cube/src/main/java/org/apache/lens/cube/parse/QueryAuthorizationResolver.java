@@ -29,6 +29,7 @@ import org.apache.lens.server.api.authorization.LensPrivilegeObject;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import lombok.Getter;
@@ -69,7 +70,8 @@ public class QueryAuthorizationResolver implements ContextRewriter {
         if (restrictedFieldsQueried != null && !restrictedFieldsQueried.isEmpty()) {
           for (String col : restrictedFieldsQueried) {
             AuthorizationUtil.isAuthorized(getAuthorizer(), tbl.getName(), col,
-              LensPrivilegeObject.LensPrivilegeObjectType.COLUMN, ActionType.SELECT, cubeql.getConf());
+              LensPrivilegeObject.LensPrivilegeObjectType.COLUMN, ActionType.SELECT, cubeql.getConf(),
+              SessionState.getSessionConf());
           }
         }
       }

@@ -38,24 +38,26 @@ public class AuthorizationUtil {
   private AuthorizationUtil(){}
 
   public static boolean isAuthorized(Authorizer authorizer, String tableName,
-    LensPrivilegeObject.LensPrivilegeObjectType privilegeObjectType, ActionType actionType, Configuration configuration)
+    LensPrivilegeObject.LensPrivilegeObjectType privilegeObjectType, ActionType actionType, Configuration hconf,
+    Configuration sessionConf)
     throws LensException {
-    return isAuthorized(authorizer, tableName, null, privilegeObjectType, actionType, configuration);
+    return isAuthorized(authorizer, tableName, null, privilegeObjectType, actionType, hconf, sessionConf);
   }
 
   public static boolean isAuthorized(Authorizer authorizer, String tableName, String colName,
-    LensPrivilegeObject.LensPrivilegeObjectType privilegeObjectType, ActionType actionType, Configuration configuration)
+    LensPrivilegeObject.LensPrivilegeObjectType privilegeObjectType, ActionType actionType, Configuration hconf,
+    Configuration sessionConf)
     throws LensException {
     String user = null;
     Set<String> userGroups = new HashSet<>();
-    if (configuration.getBoolean(LensConfConstants.USER_NAME_BASED_AUTHORIZATION,
+    if (hconf.getBoolean(LensConfConstants.USER_NAME_BASED_AUTHORIZATION,
       LensConfConstants.DEFAULT_USER_NAME_AUTHORIZATION)){
-      user = configuration.get(LensConfConstants.SESSION_LOGGEDIN_USER);
+      user = sessionConf.get(LensConfConstants.SESSION_LOGGEDIN_USER);
     }
-    if (configuration.getBoolean(LensConfConstants.USER_GROUPS_BASED_AUTHORIZATION,
+    if (hconf.getBoolean(LensConfConstants.USER_GROUPS_BASED_AUTHORIZATION,
       LensConfConstants.DEFAULT_USER_GROUPS_AUTHORIZATION)) {
       userGroups = (Set<String>)
-        configuration.getTrimmedStringCollection(LensConfConstants.SESSION_USER_GROUPS);
+        sessionConf.getTrimmedStringCollection(LensConfConstants.SESSION_USER_GROUPS);
     }
     LensPrivilegeObject lp = new LensPrivilegeObject(privilegeObjectType, tableName, colName);
     if (!authorizer.authorize(lp, actionType, user, userGroups)) {
