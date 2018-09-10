@@ -60,7 +60,7 @@ public class AuthorizationUtil {
         sessionConf.getTrimmedStringCollection(LensConfConstants.SESSION_USER_GROUPS);
     }
     LensPrivilegeObject lp = new LensPrivilegeObject(privilegeObjectType, tableName, colName);
-    if (!authorizer.authorize(lp, actionType, user, userGroups)) {
+    if ((authorizer != null) && !authorizer.authorize(lp, actionType, user, userGroups)) {
       throw new PrivilegeException(privilegeObjectType.toString(), tableName, actionType.toString());
     }
     return true;

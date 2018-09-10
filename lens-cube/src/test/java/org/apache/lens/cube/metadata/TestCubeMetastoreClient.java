@@ -39,6 +39,7 @@ import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.TestPartitionTimelines;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.authorization.LensAuthorizer;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.save.exception.PrivilegeException;
 import org.apache.lens.server.api.util.LensUtil;
@@ -141,6 +142,9 @@ public class TestCubeMetastoreClient {
   public static void setup() throws HiveException, AlreadyExistsException, LensException {
     SessionState.start(conf);
 
+    conf.set(LensConfConstants.AUTHORIZER_CLASS, "org.apache.lens.cube.parse.MockAuthorizer");
+    LensAuthorizer.get().init(conf);
+
     Database database = new Database();
     database.setName(TestCubeMetastoreClient.class.getSimpleName());
     Hive.get(conf).createDatabase(database);
@@ -148,7 +152,6 @@ public class TestCubeMetastoreClient {
     client = CubeMetastoreClient.getInstance(conf);
     client.getConf().setBoolean(LensConfConstants.ENABLE_METASTORE_SCHEMA_AUTHORIZATION_CHECK, true);
     client.getConf().setBoolean(LensConfConstants.USER_GROUPS_BASED_AUTHORIZATION, true);
-    client.getConf().set(MetastoreConstants.AUTHORIZER_CLASS, "org.apache.lens.cube.parse.MockAuthorizer");
     SessionState.getSessionConf().set(LensConfConstants.SESSION_USER_GROUPS, "lens-auth-test1");
     defineCube(CUBE_NAME, CUBE_NAME_WITH_PROPS, DERIVED_CUBE_NAME, DERIVED_CUBE_NAME_WITH_PROPS);
     defineUberDims();

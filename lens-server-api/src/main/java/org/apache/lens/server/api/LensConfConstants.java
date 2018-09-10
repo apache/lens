@@ -1337,10 +1337,6 @@ public final class LensConfConstants {
   public static final Class<? extends DataCompletenessChecker> DEFAULT_COMPLETENESS_CHECKER =
           DefaultChecker.class.asSubclass(DataCompletenessChecker.class);
 
-
-  public static final Class<? extends Authorizer> DEFAULT_AUTHORIZER =
-    DefaultAuthorizer.class.asSubclass(Authorizer.class);
-
   /**
    * This property is to enable Data Completeness Checks while resolving partitions.
    */
@@ -1434,5 +1430,12 @@ public final class LensConfConstants {
    * Message map for configured policy
    */
   public static final String RETRY_MESSAGE_MAP = "retry.messages.contains.map";
+
+  public static final String AUTHORIZER_CLASS = SERVER_PFX + "authorizer.class";
+
+  public static final Class<? extends Authorizer> DEFAULT_AUTHORIZER =
+    DefaultAuthorizer.class.asSubclass(Authorizer.class);
+
+
 
 }

@@ -24,31 +24,24 @@ import org.apache.lens.cube.authorization.AuthorizationUtil;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.authorization.ActionType;
-import org.apache.lens.server.api.authorization.Authorizer;
+import org.apache.lens.server.api.authorization.LensAuthorizer;
 import org.apache.lens.server.api.authorization.LensPrivilegeObject;
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.util.ReflectionUtils;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class QueryAuthorizationResolver implements ContextRewriter {
-
-  @Getter
-  private Authorizer authorizer;
   @Getter
   private Boolean isAuthorizationCheckEnabled;
 
   QueryAuthorizationResolver(Configuration conf) {
     isAuthorizationCheckEnabled = conf.getBoolean(LensConfConstants.ENABLE_QUERY_AUTHORIZATION_CHECK,
       LensConfConstants.DEFAULT_ENABLE_QUERY_AUTHORIZATION_CHECK);
-    authorizer = ReflectionUtils.newInstance(
-      conf.getClass(MetastoreConstants.AUTHORIZER_CLASS, LensConfConstants.DEFAULT_AUTHORIZER, Authorizer.class),
-      conf);
   }
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws LensException {
@@ -69,7 +62,7 @@ public class QueryAuthorizationResolver implements ContextRewriter {
         log.info("Restricted queriedColumns queried : "+ restrictedFieldsQueried);
         if (restrictedFieldsQueried != null && !restrictedFieldsQueried.isEmpty()) {
           for (String col : restrictedFieldsQueried) {
-            AuthorizationUtil.isAuthorized(getAuthorizer(), tbl.getName(), col,
+            AuthorizationUtil.isAuthorized(LensAuthorizer.get().getAuthorizer(), tbl.getName(), col,
               LensPrivilegeObject.LensPrivilegeObjectType.COLUMN, ActionType.SELECT, cubeql.getConf(),
               SessionState.getSessionConf());
           }

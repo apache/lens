@@ -1012,4 +1012,11 @@
     <description>password for cert file</description>
   </property>
 
+  <property>
+    <name>lens.server.authorizer.class</name>
+    <value>org.apache.lens.server.api.authorization.DefaultAuthorizer</value>
+    <description>The class that implements the Authorizer Interface. It will be used wherever authorization check
+    is enabled</description>
+  </property>
+
 </configuration>

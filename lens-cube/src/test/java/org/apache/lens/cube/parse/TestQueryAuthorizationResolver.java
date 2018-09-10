@@ -23,8 +23,8 @@ import static org.apache.lens.cube.metadata.DateFactory.TWO_DAYS_RANGE;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-import org.apache.lens.cube.metadata.MetastoreConstants;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.authorization.LensAuthorizer;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.save.exception.PrivilegeException;
 
@@ -39,9 +39,10 @@ public class TestQueryAuthorizationResolver extends TestQueryRewrite {
 
   @BeforeClass
   public void beforeClassTestQueryAuthorizationResolver() {
+    conf.set(LensConfConstants.AUTHORIZER_CLASS, "org.apache.lens.cube.parse.MockAuthorizer");
+    LensAuthorizer.get().init(conf);
     conf.setBoolean(LensConfConstants.ENABLE_QUERY_AUTHORIZATION_CHECK, true);
     conf.setBoolean(LensConfConstants.USER_GROUPS_BASED_AUTHORIZATION, true);
-    conf.set(MetastoreConstants.AUTHORIZER_CLASS, "org.apache.lens.cube.parse.MockAuthorizer");
   }
 
   @Test

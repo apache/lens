@@ -26,7 +26,6 @@ public final class MetastoreConstants {
   public static final String TABLE_TYPE_KEY = "cube.table.type";
   public static final String CUBE_TABLE_PFX = "cube.table.";
   public static final String WEIGHT_KEY_SFX = ".weight";
-  public static final String AUTHORIZER_CLASS = "authorizer.class";
 
   public static final String BASE_KEY_PFX = "base.";
   public static final String EXPRESSIONS_LIST_SFX = ".expressions.list";
