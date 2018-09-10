@@ -167,6 +167,7 @@ public class SampleMetastore {
   private void createFacts() throws JAXBException, IOException {
     createFact("fact1.xml");
     createFact("fact2.xml");
+    createFact("fact3.xml");
     createFact("rawfact.xml");
     createFact("sales-raw-fact.xml");
     createFact("sales-aggr-fact1.xml");

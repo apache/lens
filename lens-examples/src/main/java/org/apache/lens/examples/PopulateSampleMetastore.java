@@ -190,6 +190,7 @@ public class PopulateSampleMetastore {
     createFactPartition("fact2-local-part1.xml", "fact2", "local");
     createFactPartition("fact2-local-part2.xml", "fact2", "local");
     createFactPartition("fact2-local-part3.xml", "fact2", "local");
+    createFactPartitions("fact3-local-part.xml", "fact3", "local");
     createFactPartition("raw-local-part1.xml", "rawfact", "local");
     createFactPartition("raw-local-part2.xml", "rawfact", "local");
     createFactPartition("raw-local-part3.xml", "rawfact", "local");

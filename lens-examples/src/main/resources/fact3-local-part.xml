@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x_partition_list xmlns="uri:lens:cube:0.1">
+    <partition fact_or_dimension_table_name="fact3" location="examples/data/fact3-local1" update_period="DAILY">
+        <non_time_partition_spec>
+            <part_spec_element key="nontimedim" value="nonTimeDimValue1"/>
+        </non_time_partition_spec>
+        <time_partition_spec>
+            <part_spec_element key="dt" value="2014-06-25T00:00:00"/>
+        </time_partition_spec>
+    </partition>
+    <partition fact_or_dimension_table_name="fact3" location="examples/data/fact3-local2" update_period="DAILY">
+        <non_time_partition_spec>
+            <part_spec_element key="nontimedim" value="nonTimeDimValue2"/>
+        </non_time_partition_spec>
+        <time_partition_spec>
+            <part_spec_element key="dt" value="2014-06-25T00:00:00"/>
+        </time_partition_spec>
+    </partition>
+</x_partition_list>
