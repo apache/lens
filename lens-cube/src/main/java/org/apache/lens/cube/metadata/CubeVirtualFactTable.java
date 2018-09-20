@@ -25,8 +25,8 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.base.Optional;
-
 import com.google.common.collect.Lists;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -194,5 +194,10 @@ public class CubeVirtualFactTable extends AbstractCubeTable implements FactTable
   @Override
   public Map<String, String> getSourceFactProperties() {
     return getSourceCubeFactTable().getProperties();
+  }
+
+  @Override
+  public Set<String> getPartitionColumns(String storage) {
+    return new HashSet<String>();
   }
 }

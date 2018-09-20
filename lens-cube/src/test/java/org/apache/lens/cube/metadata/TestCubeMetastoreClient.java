@@ -28,7 +28,6 @@ import static org.apache.lens.server.api.util.LensUtil.getHashMap;
 import static org.testng.Assert.*;
 
 import java.text.SimpleDateFormat;
-
 import java.util.*;
 
 import org.apache.lens.cube.error.LensCubeErrorCode;
@@ -1007,10 +1006,12 @@ public class TestCubeMetastoreClient {
     Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap = getHashMap(c1,
       getHashMap(HOURLY, HOURLY + "_" + c1, DAILY, DAILY + "_" + c1), c2, getHashMap(HOURLY, c2, DAILY, c2));
 
+    Map<String, Set<String>> storageTablePartitionColumns = getHashMap("pl_pi", new HashSet<String>(Arrays.asList("pt"
+            , "it")), "pl_p3", new HashSet<String>(Arrays.asList("pt", "et")));
     CubeFactTable cubeFact = new CubeFactTable(CUBE_NAME, factName, factColumns, updatePeriods, 0L, null,
-      storageUpdatePeriodMap);
+            storageUpdatePeriodMap, storageTablePartitionColumns);
     client.createCubeFactTable(CUBE_NAME, factName, factColumns, updatePeriods, 0L, null, storageTables,
-      storageUpdatePeriodMap);
+            storageUpdatePeriodMap, storageTablePartitionColumns);
 
     assertTrue(client.tableExists(factName));
     Table cubeTbl = client.getHiveTable(factName);

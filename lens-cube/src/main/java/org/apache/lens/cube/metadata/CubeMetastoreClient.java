@@ -29,19 +29,16 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.lens.api.metastore.*;
-
 import org.apache.lens.cube.authorization.AuthorizationUtil;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.Storage.LatestInfo;
 import org.apache.lens.cube.metadata.Storage.LatestPartColumnInfo;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimelineFactory;
-
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.authorization.ActionType;
 import org.apache.lens.server.api.authorization.LensAuthorizer;
 import org.apache.lens.server.api.authorization.LensPrivilegeObject;
-
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.DataCompletenessChecker;
 import org.apache.lens.server.api.util.LensUtil;
@@ -68,7 +65,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -330,11 +326,12 @@ public class CubeMetastoreClient {
 
   public void createCubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods, double weight, Map<String, String> properties,
-    Map<String, StorageTableDesc> storageTableDescs, Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap)
+    Map<String, StorageTableDesc> storageTableDescs, Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap,
+    Map<String, Set<String>> storageTablePartitionColumns)
     throws LensException {
     checkIfAuthorized();
     CubeFactTable factTable = new CubeFactTable(cubeName, factName, columns, storageAggregatePeriods, weight,
-      properties, storageUpdatePeriodMap);
+      properties, storageUpdatePeriodMap, storageTablePartitionColumns);
     createCubeTable(factTable, storageTableDescs);
     // do a get to update cache
     getFactTable(factName);
@@ -401,7 +398,8 @@ public class CubeMetastoreClient {
         xf.getWeight(),
         addFactColStartTimePropertyToFactProperties(xf),
         JAXBUtils.tableDescPrefixMapFromXStorageTables(xf.getStorageTables()),
-        JAXBUtils.storageTablePrefixMapOfStorage(xf.getStorageTables()));
+        JAXBUtils.storageTablePrefixMapOfStorage(xf.getStorageTables()),
+        JAXBUtils.getStorageTablePartitionColumnsFromTableDescs(xf.getStorageTables()));
     }
   }
 

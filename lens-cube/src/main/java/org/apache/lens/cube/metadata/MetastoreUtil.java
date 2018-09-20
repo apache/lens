@@ -374,6 +374,10 @@ public class MetastoreUtil {
     return getFactKeyPrefix(name) + VALID_COLUMNS_SFX;
   }
 
+  public static String getPartitionColumnKey(String name, String storage) {
+    return getFactKeyPrefix(name) + "." + storage + PARTCOLS_SFX;
+  }
+
   public static String getRestrictedColumnsKey(String name) {
     return getCubePrefix(name) + RESTRICTED_COLUMNS_SFX;
   }

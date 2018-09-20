@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_fact_table cube_name="sample_cube" name="fact3" weight="100.0" xmlns="uri:lens:cube:0.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
+  <columns>
+    <column comment="" name="dim1" _type="INT"/>
+    <column comment="" name="measure2" _type="BIGINT"/>
+    <column comment="" name="measure3" _type="INT"/>
+    <column comment="" name="measure4" _type="FLOAT"/>
+    <column comment="" name="measure5" _type="FLOAT" start_time="2015-01-01"/>
+    <column comment="" name="measure6" _type="FLOAT" end_time="2015-01-01"/>
+  </columns>
+  <properties>
+    <property name="cube.fact.is.aggregated" value="true"/>
+  </properties>
+  <storage_tables>
+    <storage_table>
+      <update_periods>
+        <update_period>HOURLY</update_period>
+        <update_period>DAILY</update_period>
+      </update_periods>
+      <storage_name>local</storage_name>
+      <table_desc external="true" field_delimiter="," table_location="/tmp/examples/fact3_local">
+        <part_cols>
+          <column comment="Time column" name="dt" _type="STRING"/>
+          <column comment="Non Time column" name="nontimedim" _type="STRING"/>
+        </part_cols>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
+  </storage_tables>
+</x_fact_table>

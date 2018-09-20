@@ -87,6 +87,13 @@ public interface FactTable extends Named {
   Set<String> getAllFieldNames();
 
   /**
+   *  Set of all partition columns for the fact
+   * @param storage Name of the stroage
+   * @return Set of all partition columns
+   */
+  Set<String> getPartitionColumns(String storage);
+
+  /**
    *tag for checking data completeness
    *
    * @return Tag String

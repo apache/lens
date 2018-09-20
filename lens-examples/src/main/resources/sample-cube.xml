@@ -53,6 +53,7 @@
         <property name="is_ui_visible" value="true"/>
       </tags>
     </dim_attribute>
+    <dim_attribute name="nonTimeDim" _type="STRING"/>
   </dim_attributes>
   <expressions>
     <expression name="expr_msr5" _type="DOUBLE">

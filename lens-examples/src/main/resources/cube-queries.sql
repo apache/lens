@@ -16,7 +16,7 @@
 -- specific language governing permissions and limitations
 -- under the License.
 --
-
+cube select dim1, measure2 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') and nontimedim = 'nonTimeDimValue2'
 cube select measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
 cube select measure2 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00')
 cube select measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')

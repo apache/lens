@@ -710,12 +710,14 @@ public final class JAXBUtils {
   public static CubeFactTable cubeFactFromFactTable(XFactTable fact) throws LensException {
     List<FieldSchema> columns = fieldSchemaListFromColumns(fact.getColumns());
 
-    Map<String, Set<UpdatePeriod>> storageUpdatePeriods = getFactUpdatePeriodsFromStorageTables(
-      fact.getStorageTables());
-    Map<String, Map<UpdatePeriod, String>> storageTablePrefixMap = storageTablePrefixMapOfStorage(
-      fact.getStorageTables());
+    Map<String, Set<UpdatePeriod>> storageUpdatePeriods =
+            getFactUpdatePeriodsFromStorageTables(fact.getStorageTables());
+    Map<String, Map<UpdatePeriod, String>> storageTablePrefixMap =
+            storageTablePrefixMapOfStorage(fact.getStorageTables());
+    Map<String, Set<String>> storageTablePartitionColumns =
+            getStorageTablePartitionColumnsFromTableDescs(fact.getStorageTables());
     return new CubeFactTable(fact.getCubeName(), fact.getName(), columns, storageUpdatePeriods, fact.getWeight(),
-      mapFromXProperties(fact.getProperties()), storageTablePrefixMap);
+            mapFromXProperties(fact.getProperties()), storageTablePrefixMap, storageTablePartitionColumns);
   }
 
   public static CubeVirtualFactTable cubeVirtualFactFromFactTable(XVirtualFactTable fact, FactTable sourceFactTable)
@@ -891,6 +893,22 @@ public final class JAXBUtils {
       }
     }
     return storageTablePrefixToDescMap;
+  }
+
+  public static Map<String, Set<String>> getStorageTablePartitionColumnsFromTableDescs(XStorageTables storageTables) {
+    Map<String, Set<String>> storageTablePartitionColumns = new HashMap<>();
+    if (storageTables != null && !storageTables.getStorageTable().isEmpty()) {
+      for (XStorageTableElement xStorageTableElement : storageTables.getStorageTable()) {
+        Set<String> partitionColumns = new HashSet<>();
+        if (xStorageTableElement.getTableDesc() != null && xStorageTableElement.getTableDesc().getPartCols() != null) {
+          for (XColumn xColumn : xStorageTableElement.getTableDesc().getPartCols().getColumn()) {
+            partitionColumns.add(xColumn.getName());
+          }
+        }
+        storageTablePartitionColumns.put(xStorageTableElement.getStorageName(), partitionColumns);
+      }
+    }
+    return storageTablePartitionColumns;
   }
 
   public static Map<String, Map<UpdatePeriod, String>> storageTablePrefixMapOfStorage(XStorageTables storageTables) {

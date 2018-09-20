@@ -47,7 +47,17 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
-import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.AbstractCubeTable;
+import org.apache.lens.cube.metadata.CubeFactTable;
+import org.apache.lens.cube.metadata.CubeInterface;
+import org.apache.lens.cube.metadata.DateUtil;
+import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.cube.metadata.FactTable;
+import org.apache.lens.cube.metadata.MetastoreConstants;
+import org.apache.lens.cube.metadata.MetastoreUtil;
+import org.apache.lens.cube.metadata.TimeRange;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.DataCompletenessChecker;
 
@@ -348,6 +358,7 @@ public class StorageCandidate implements Candidate, CandidateTable {
       factColumns = fact.getValidColumns();
       if (factColumns == null) {
         factColumns = fact.getAllFieldNames();
+        factColumns.addAll(fact.getPartitionColumns(storageName));
       }
     }
     return factColumns;
