@@ -102,6 +102,21 @@
             corresponding partition column different in the underlying storage tables. This base cube's property gets
             propagated to its derived cubes.
 
+            3. cube.absolute.start.time: start time of the cube. For queries that ask for time before this,
+            this cube throws an exception. Time format can be as you would specify in the time_range_in clause.
+            i.e. yyyy[-mm[-dd[-hh[:MM[:ss[,SSS]]]]]]
+
+            4. cube.relative.start.time: Here you can specify cube's relative validity relative to current time.
+            Useful if you want to specify e.g. this cube is valid for today - 90 days. Can be specified as just
+            a time difference e.g. "-90 days". Or can be specified in relative syntax.
+            e.g. now.year or now.day - 6 hour etc.
+
+            5. cube.absolute.end.time: This is to restrict the end date users can query on this cube.
+            Format same as absolute start time.
+
+            6. cube.relative.end.time: You can specify the end date for cube
+            relative to current date. This can be specified as just a time difference e.g. "+90 days"
+
             The properties that are over-ridable are
 
             1. cube.allfields.queriable - (defaults to true) - If set to true, all the fields (measures, attributes) are

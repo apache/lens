@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.metadata;
 
+import java.util.Date;
 import java.util.Set;
 
 /**
@@ -155,4 +156,47 @@ public interface CubeInterface extends Named {
    * @return true or false
    */
   boolean allFieldsQueriable();
+
+  /**
+   * Absolute start time of the cube
+   *
+   * @return Absolute Start time of the cube {@link Date}
+   */
+  Date getAbsoluteStartTime();
+
+  /**
+   * Relative start time of the cube
+   *
+   * @return Relative Start time of the cube {@link Date}
+   */
+  Date getRelativeStartTime();
+
+  /**
+   * Start time of the cube
+   *
+   * @return Start time of the cube {@link Date}
+   */
+  Date getStartTime();
+
+  /**
+   * Absolute end time of the cube
+   *
+   * @return Absolute End time of the cube {@link Date}
+   */
+  Date getAbsoluteEndTime();
+
+  /**
+   * Relative End time of the cube
+   *
+   * @return Relative end time of the cube {@link Date}
+   */
+  Date getRelativeEndTime();
+
+  /**
+   * End time of the cube
+   *
+   * @return End time of the cube {@link Date}
+   */
+  Date getEndTime();
+
 }

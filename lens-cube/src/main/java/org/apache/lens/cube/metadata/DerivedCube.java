@@ -338,4 +338,35 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
     // TODO Auto-generated method stub
     return null;
   }
+
+  @Override
+  public Date getAbsoluteStartTime() {
+    return parent.getAbsoluteStartTime();
+  }
+
+  @Override
+  public Date getRelativeStartTime() {
+    return parent.getRelativeStartTime();
+  }
+
+  @Override
+  public Date getStartTime() {
+    return parent.getStartTime();
+  }
+
+  @Override
+  public Date getAbsoluteEndTime() {
+    return parent.getAbsoluteEndTime();
+  }
+
+  @Override
+  public Date getRelativeEndTime() {
+    return parent.getRelativeEndTime();
+  }
+
+  @Override
+  public Date getEndTime() {
+    return parent.getEndTime();
+  }
+
 }

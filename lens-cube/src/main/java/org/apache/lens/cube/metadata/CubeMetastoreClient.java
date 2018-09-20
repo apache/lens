@@ -37,7 +37,7 @@ import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimelineFactory;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.authorization.ActionType;
-import org.apache.lens.server.api.authorization.Authorizer;
+import org.apache.lens.server.api.authorization.LensAuthorizer;
 import org.apache.lens.server.api.authorization.LensPrivilegeObject;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.DataCompletenessChecker;
@@ -115,22 +115,12 @@ public class CubeMetastoreClient {
 
   private Boolean isAuthorizationCheckEnabled;
 
-  private Authorizer authorizer;
-
   public DataCompletenessChecker getCompletenessChecker() {
     if (completenessChecker == null) {
       completenessChecker = ReflectionUtils.newInstance(config.getClass(LensConfConstants.COMPLETENESS_CHECKER_CLASS,
         LensConfConstants.DEFAULT_COMPLETENESS_CHECKER, DataCompletenessChecker.class), this.config);
     }
     return completenessChecker;
-  }
-
-  public Authorizer getAuthorizer() {
-    if (authorizer == null) {
-      authorizer = ReflectionUtils.newInstance(config.getClass(MetastoreConstants.AUTHORIZER_CLASS,
-        LensConfConstants.DEFAULT_AUTHORIZER, Authorizer.class), this.config);
-    }
-    return authorizer;
   }
 
   public boolean isDataCompletenessCheckEnabled() {
@@ -152,8 +142,9 @@ public class CubeMetastoreClient {
   private void checkIfAuthorized() throws LensException {
     if (isAuthorizationEnabled()) {
       String currentdb = SessionState.get().getCurrentDatabase();
-      AuthorizationUtil.isAuthorized(getAuthorizer(), currentdb,
-        LensPrivilegeObject.LensPrivilegeObjectType.DATABASE, ActionType.UPDATE, getConf());
+      AuthorizationUtil.isAuthorized(LensAuthorizer.get().getAuthorizer(), currentdb,
+        LensPrivilegeObject.LensPrivilegeObjectType.DATABASE, ActionType.UPDATE, getConf(),
+        SessionState.getSessionConf());
     }
   }
 

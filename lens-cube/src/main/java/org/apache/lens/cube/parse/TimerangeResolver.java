@@ -45,8 +45,13 @@ class TimerangeResolver implements ContextRewriter {
       return;
     }
     extractTimeRange(cubeql);
+    CubeInterface cube = cubeql.getCube();
+    for(TimeRange timeRange : cubeql.getTimeRanges()) {
+      if (!(timeRange.getFromDate().after(cube.getStartTime()) && timeRange.getToDate().before(cube.getEndTime()))) {
+        throw new LensException(LensCubeErrorCode.QUERY_OUT_OF_ALLOWED_RANGE.getLensErrorInfo());
+      }
+    }
   }
-
 
   private void extractTimeRange(CubeQueryContext cubeql) throws LensException {
     // get time range -

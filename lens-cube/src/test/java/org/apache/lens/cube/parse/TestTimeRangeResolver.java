@@ -42,6 +42,7 @@ import org.testng.annotations.Test;
 public class TestTimeRangeResolver extends TestQueryRewrite {
 
   private Configuration conf;
+  Date now = new Date();
 
   @BeforeTest
   public void setupDriver() throws Exception {
@@ -102,6 +103,14 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     assertEquals(e.getMessage(), "NO_CANDIDATE_FACT_AVAILABLE[Range not answerable]");
   }
 
+  @Test
+  public void testQueryTimeRange() throws LensException {
+    String query = "select msr2 from " + CubeTestSetup.TEST_CUBE_NAME + " where "  + PREV_FIVE_TO_NEXT_FIVE_YEAR_RANGE;
+
+    LensException e = getLensExceptionInRewrite(query, getConf());
+    assertEquals(e.getErrorInfo().getErrorName(), "QUERY_OUT_OF_ALLOWED_RANGE");
+  }
+
   /**
    *
    * @param stoargeName  storageName_factName
@@ -119,4 +128,6 @@ public class TestTimeRangeResolver extends TestQueryRewrite {
     }
     return new ArrayList<>();
   }
+
+
 }

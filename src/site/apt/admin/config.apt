@@ -307,4 +307,6 @@ Lens server configuration
 *--+--+---+--+
 |139|lens.server.ws.resourcenames|session,metastore,query,savedquery,quota,scheduler,index,log|These JAX-RS resources would be started in the specified order when lens-server starts up|
 *--+--+---+--+
+|140|lens.server.authorizer.class|org.apache.lens.server.api.authorization.DefaultAuthorizer|The class that implements the Authorizer Interface. It will be used wherever authorization check is enabled|
+*--+--+---+--+
 The configuration parameters and their default values

@@ -26,7 +26,6 @@ public final class MetastoreConstants {
   public static final String TABLE_TYPE_KEY = "cube.table.type";
   public static final String CUBE_TABLE_PFX = "cube.table.";
   public static final String WEIGHT_KEY_SFX = ".weight";
-  public static final String AUTHORIZER_CLASS = "authorizer.class";
 
   public static final String BASE_KEY_PFX = "base.";
   public static final String EXPRESSIONS_LIST_SFX = ".expressions.list";
@@ -39,6 +38,10 @@ public final class MetastoreConstants {
   public static final String TIMED_DIMENSIONS_LIST_SFX = ".timed.dimensions.list";
   public static final String PARENT_CUBE_SFX = ".parent.cube";
   public static final String CUBE_ALL_FIELDS_QUERIABLE = "cube.allfields.queriable";
+  public static final String CUBE_ABSOLUTE_START_TIME = "cube.absolute.start.time";
+  public static final String CUBE_RELATIVE_START_TIME = "cube.relative.start.time";
+  public static final String CUBE_ABSOLUTE_END_TIME = "cube.absolute.end.time";
+  public static final String CUBE_RELATIVE_END_TIME = "cube.relative.end.time";
 
   // Uber dimension constants
   public static final String DIMENSION_PFX = "dimension.";
