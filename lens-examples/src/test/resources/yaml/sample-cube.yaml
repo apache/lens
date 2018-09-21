@@ -33,6 +33,7 @@ dimAttributes:
     startTime: 2013-12-01T00:00:00
   dim3: type: INT
   dim4: tags:, category: primary, is_ui_visible: true, type: BIGINT
+  nonTimeDim: type: STRING
 expressions:
   expr_msr5:
     exprSpec:
