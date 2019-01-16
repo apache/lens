@@ -22,7 +22,7 @@
 <enunciate slug="lens" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:noNamespaceSchemaLocation="http://enunciate.webcohesion.com/schemas/enunciate-2.0.0-M.4.xsd">
   <namespaces>
-    <namespace uri="https://git-wip-us.apache.org/repos/asf/lens.git" id="lens"/>
+    <namespace uri="https://gitbox.apache.org/repos/asf/lens.git" id="lens"/>
   </namespaces>
   <modules>
   <api-classes>

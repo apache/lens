@@ -80,7 +80,7 @@ Committer Guide
 * Commit
 
   The commit repo is at
-  {{{https://git-wip-us.apache.org/repos/asf/lens.git} https://git-wip-us.apache.org/repos/asf/lens.git}}
+  {{{https://gitbox.apache.org/repos/asf/lens.git} https://gitbox.apache.org/repos/asf/lens.git}}
   When you commit a patch, please:
 
   * Ensure that all tests pass with patch applied.

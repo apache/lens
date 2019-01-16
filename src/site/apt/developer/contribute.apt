@@ -58,7 +58,7 @@ Developer Documentation : How to contribute to Apache Lens?
 ** Source Repository
 
   Lens uses {{{http://git-scm.com/} git}} for its code repository. The repository is available at
-  {{{https://git-wip-us.apache.org/repos/asf/lens.git} https://git-wip-us.apache.org/repos/asf/lens.git}}.
+  {{{https://gitbox.apache.org/repos/asf/lens.git} https://gitbox.apache.org/repos/asf/lens.git}}.
 
   If you are comfortable working in github environment by forking a github repo, sothat you can push changes to your
   repository before they are accepted in apache, we have a mirror of source at
@@ -105,10 +105,10 @@ Developer Documentation : How to contribute to Apache Lens?
 +---+
 
    OR
-   Clone Apache Lens source code from {{{https://git-wip-us.apache.org/repos/asf/lens.git} https://git-wip-us.apache.org/repos/asf/lens.git}}
+   Clone Apache Lens source code from {{{https://gitbox.apache.org/repos/asf/lens.git} https://gitbox.apache.org/repos/asf/lens.git}}
 
 +---+
-   git clone https://git-wip-us.apache.org/repos/asf/lens.git
+   git clone https://gitbox.apache.org/repos/asf/lens.git
    cd lens
    mvn clean package -DskipTests
 +---+
