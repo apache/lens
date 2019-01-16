@@ -18,7 +18,7 @@ Additionally MAVEN_OPTS can be configured as :
   # export MAVEN_OPTS="-Xmx1024m"
 
 Build the project :
-  # mvn clean package
+ # mvn clean package
 
 
 See [Development Environment Setup] (http://lens.apache.org/developer/contribute.html#Development_Environment_Setup)
