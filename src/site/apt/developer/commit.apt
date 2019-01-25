@@ -63,8 +63,9 @@ Committer Guide
 
   The list of submitted patches should be ordered by Updated timestamp -
   {{{https://issues.apache.org/jira/issues/?jql=project%20%3D%20LENS%20AND%20status%20%3D%20%22Patch%20Available%22%20ORDER%20BY%20updated%20DESC%2C%20priority%20DESC} Lens patch available issues}}
-  and {{{https://reviews.apache.org/dashboard/?group=lens&view=to-group}Review board}}. Committers should scan the list
-  from one which was updated earliest, looking for patches that they feel qualified to review and possibly commit.
+  and {{{https://github.com/apache/lens/pulls?q=is%3Aopen+is%3Apr}Github open pull requests}}. Committers should scan
+  the list from one which was updated earliest, looking for the requests that they feel qualified to review and possibly
+  commit.
 
   Review guidelines are put up at {{{./contribute.html#Review}review guidelines in contributer guide}}
 
@@ -90,38 +91,7 @@ Committer Guide
   * Ensure that 24 hours have elapsed since the jira is made patch available or the review request is up. As a practice
    we should observe this, but it should be possible to consciously override and commit with a shorter turnaround time.
 
-  * Cross check if your git user.name and user.email are properly configured. Set username and email with commands
-
-+---+
-
-git config user.name "Amareshwari Sriramadasu"
-git config user.email "amareshwari@apache.org"
-
-+---+
-
-  * Apply the patch attached on jira. The patch should be licensed under apache license.
-
-+---+
-
-  git apply --check lens_patch.patch
-  git apply lens_patch.patch
-
-+---+
-
-  * Don't forget to do 'git add' on any new files, and 'git rm' on any files that have been 'deleted' by the patch.
-
-  * Include the Jira issue id in the commit message, along with a short description of the change and the name of the
-    contributor. Be sure to get the issue id right, as this causes Jira to link to the change in git.
-
-  * Keep yourself as committer and the contributor as the author of the commit.
-
-+---+
-
-  git commit -a --author "Amareshwari Sriramadasu <amareshwari@apache.org>" -m "LENS-123 : Adds awesome feature to lens."
-
-+---+
-
-  * Push the commit to master branch
+  * Merge the review/pull request changes to master branch
 
   * Resolve the issue as fixed, thanking the contributor. Always set the "Fix Version" at this point.
 
