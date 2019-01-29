@@ -48,7 +48,7 @@ public class MockQueryExecutionServiceImpl extends QueryExecutionServiceImpl {
   }
 
   @Override
-  public LensQuery getQuery(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException {
+  public LensQuery getQueryInfo(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException {
 
     if (getSession(sessionHandle).getSessionConf().get(ENABLE_SLEEP_FOR_GET_QUERY_OP) != null) {
       //Introduce wait time for requests on this session. The wait time decreases with each new request to

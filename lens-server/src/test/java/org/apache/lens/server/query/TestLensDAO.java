@@ -39,6 +39,7 @@ import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.*;
 
 import org.apache.hadoop.conf.Configuration;
@@ -180,6 +181,36 @@ public class TestLensDAO extends LensJerseyTest {
       queryContext.getSelectedDriver().getFullyQualifiedName(), "daotestquery1", -1L, Long.MAX_VALUE);
     Assert.assertEquals(daoTestQueryHandles.size(), 1);
     Assert.assertEquals(daoTestQueryHandles.get(0).getHandleId().toString(), finishedHandle);
+
+    service.lensServerDao.insertActiveQuery(queryContext);
+    QueryContext actualQueryContext = service.lensServerDao.findActiveQueryDetails(queryContext.getQueryHandle());
+    Assert.assertEquals(actualQueryContext.getQueryHandle().toString(), queryContext.getQueryHandle().toString());
+
+    QueryContext invalidQueryContext = service.createContext("SELECT ID FROM testTable1",
+            "foo@localhost", new LensConf(),
+            new Configuration(), 0);
+
+    try {
+      QueryContext actualInvalidQueryContext =
+              service.lensServerDao.findActiveQueryDetails(invalidQueryContext.getQueryHandle());
+    } catch (LensException le) {
+      // expected to throw LensException
+    }
+
+    boolean actualInvalidDeleteQuery = service.lensServerDao.deleteActiveQuery(invalidQueryContext);
+    Assert.assertNotEquals(actualInvalidDeleteQuery, true);
+
+    service.lensServerDao.insertActiveSession(service.getSession(session).getLensSessionPersistInfo());
+
+    LensSessionHandle invalidSession = service.openSession("foo@localhost", "bar",
+            new HashMap<String, String>());
+
+    boolean actualActiveSessionDeleted = service.lensServerDao.deleteActiveSession(session);
+    Assert.assertEquals(actualActiveSessionDeleted, false);
+
+    boolean invalidActualActiveSessionDeleted = service.lensServerDao.deleteActiveSession(invalidSession);
+    Assert.assertEquals(invalidActualActiveSessionDeleted, false);
+
     service.closeSession(session);
   }
 }

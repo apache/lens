@@ -20,6 +20,7 @@ package org.apache.lens.server.query;
 
 import java.nio.charset.Charset;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -28,16 +29,20 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.FailedAttempt;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.FinishedLensQuery;
+import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.dbutils.*;
 import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
@@ -386,5 +391,434 @@ public class LensServerDAO {
     } catch (SQLException e) {
       return "Error : " + e.getMessage();
     }
+  }
+
+
+  /**
+   * Drop active session table.
+   */
+  public void dropActiveSessionsTable() {
+    QueryRunner runner = new QueryRunner(ds);
+    try {
+      runner.update("drop table active_sessions");
+    } catch (SQLException e) {
+      log.error("SQL exception while dropping active sessions table.", e);
+    }
+  }
+
+  /**
+   * Drop active queries table.
+   */
+  public void dropActiveQueries() {
+    QueryRunner runner = new QueryRunner(ds);
+    try {
+      runner.update("drop table active_queries");
+    } catch (SQLException e) {
+      log.error("SQL exception while dropping active queries table.", e);
+    }
+  }
+
+  /**
+   * Method to create active queries table, this is required for embedded lens server. For production server we will
+   * not be creating tables as it would be created upfront.
+   *
+   */
+  public void createActiveQueriesTable() {
+    String sql = "CREATE TABLE if not exists active_queries ("
+            + "queryid varchar(200) not null,"
+            + "querycontext BLOB,"
+            + "primary key (queryid)"
+            + ")";
+    try {
+      QueryRunner runner = new QueryRunner(ds);
+      runner.update(sql);
+      log.info("Created active queries table");
+    } catch (SQLException e) {
+      log.warn("Unable to create active queries table", e);
+    }
+  }
+
+  /**
+   * Method to create active session table, this is required for embedded lens server. For production server we will
+   * not be creating tables as it would be created upfront.
+   *
+   */
+  public void createActiveSessionsTable() throws Exception {
+    String sql = "CREATE TABLE if not exists active_sessions ("
+            + "sessionid varchar(200) not null,"
+            + "sessionobject BLOB,"
+            + "primary key (sessionid)"
+            + ")";
+    try {
+      QueryRunner runner = new QueryRunner(ds);
+      runner.update(sql);
+      log.info("Created active sessions table");
+    } catch (SQLException e) {
+      log.warn("Unable to create active sessions table", e);
+    }
+  }
+
+  /**
+   * Method to insert a new active query into Table.
+   *
+   * @param ctx query context
+   *
+   * @throws SQLException the exception
+   *
+   */
+  public void insertActiveQuery(QueryContext ctx) throws LensException {
+
+    String sql = "insert into active_queries (queryid, querycontext)"
+            + " values (?,?)";
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    try {
+      conn = getConnection();
+      pstmt = conn.prepareStatement(sql);
+
+      // set input parameters
+      pstmt.setString(1, ctx.getQueryHandleString());
+      pstmt.setObject(2, SerializationUtils.serialize(ctx));
+      pstmt.execute();
+
+      log.info("Inserted query with query " + ctx.getQueryHandleString() + " in database.");
+    } catch (SQLException e) {
+      log.error("Failed to insert query " + ctx.getQueryHandleString() + " in database with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+  }
+
+  /**
+   * Method to insert a new active session into Table.
+   *
+   * @param session LensSessionPersistInfo object that has to be serialized.
+   *
+   * @throws SQLException the exception
+   *
+   */
+  public void insertActiveSession(LensSessionImpl.LensSessionPersistInfo session) throws LensException {
+    String sql = "insert into active_sessions (sessionid, sessionobject)"
+            + " values (?,?)";
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    try {
+      conn = getConnection();
+      pstmt = conn.prepareStatement(sql);
+
+      // set input parameters
+      pstmt.setString(1, session.getSessionHandle().getPublicId().toString());
+      pstmt.setObject(2, SerializationUtils.serialize(session));
+      pstmt.execute();
+
+      log.info("Inserted seesion " + session.getSessionHandle().getPublicId() + " in database.");
+    } catch (SQLException e) {
+      log.error("Failed to insert session " + session.getSessionHandle().getPublicId()
+              + " in database with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+  }
+
+  /**
+   * Method to update a new active query into Table.
+   *
+   * @param ctx query context
+   *
+   * @throws LensException the exception
+   *
+   */
+  public void updateActiveQuery(QueryContext ctx) throws LensException {
+
+    String sql = "UPDATE active_queries SET querycontext=? where queryid=?";
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    try {
+      conn = getConnection();
+      pstmt = conn.prepareStatement(sql);
+
+      pstmt.setObject(1, SerializationUtils.serialize(ctx));
+      pstmt.setString(2, ctx.getQueryHandleString());
+      pstmt.execute();
+
+      log.info("Updated query with query " + ctx.getQueryHandleString() + " with query status as "
+              + ctx.getStatus().getStatus() + " in database.");
+    } catch (SQLException e) {
+      log.error("Failed to update query " + ctx.getQueryHandleString()
+              + " in database with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+  }
+
+  /**
+   * Method to update a active session into Table.
+   *
+   * @param session query context object
+   *
+   * @throws LensException the exception
+   *
+   */
+  public void updateActiveSession(LensSessionImpl.LensSessionPersistInfo session) throws LensException {
+    String sql = "UPDATE active_sessions SET sessionobject=? where sessionid=?";
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    try {
+      conn = getConnection();
+      pstmt = conn.prepareStatement(sql);
+
+      // set input parameters
+      pstmt.setObject(1, SerializationUtils.serialize(session));
+      pstmt.setString(2, session.getSessionHandle().getPublicId().toString());
+      pstmt.execute();
+
+      log.info("Updated session " + session.getSessionHandle().getPublicId() + " in database.");
+    } catch (SQLException e) {
+      log.error("Failed to update session " + session.getSessionHandle().getPublicId()
+              + " in database with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+  }
+
+  /**
+   * Finds Active query.
+   *
+   * @param queryHandle     the state
+   *
+   * @return the QueryContext object
+   *
+   * @throws LensException the lens exception
+   *
+   */
+  public QueryContext findActiveQueryDetails(QueryHandle queryHandle) throws LensException {
+    QueryContext ctx = null;
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
+    try {
+
+      String sql = "SELECT querycontext FROM active_queries WHERE queryid = ?";
+
+      conn = getConnection();
+      pstmt = conn.prepareStatement(sql);
+      pstmt.setString(1, queryHandle.toString());
+
+      rs = pstmt.executeQuery();
+
+      if (rs != null) {
+        rs.next();
+        ctx = (QueryContext) SerializationUtils.deserialize(rs.getBytes(1));
+      }
+    } catch (SQLException e) {
+      log.error("Failed to find active query " + queryHandle.getHandleIdString()
+              + " in database with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(rs);
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+    return ctx;
+  }
+
+  /**
+   * Gets all active query.
+   *
+   * @return the list of QueryContext objects
+   *
+   * @throws LensException the lens exception
+   *
+   */
+  public List<QueryContext> getAllActiveQueries() throws LensException {
+    List<QueryContext> ctxs = new ArrayList<>();
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
+    try {
+      String sql = "SELECT querycontext FROM active_queries";
+      conn = getConnection();
+      pstmt = conn.prepareStatement(sql);
+
+      rs = pstmt.executeQuery();
+
+      while (rs.next()) {
+        ctxs.add((QueryContext) SerializationUtils.deserialize(rs.getBytes(1)));
+      }
+    } catch (SQLException e) {
+      log.error("Unable to find all active queries in database, Failed with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(rs);
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+    return ctxs;
+  }
+
+  /**
+   * Finds active session.
+   *
+   * @param sessionId     the state
+   *
+   * @return session object
+   *
+   * @throws LensException the lens exception
+   *
+   */
+  public LensSessionImpl.LensSessionPersistInfo findActiveSessionDetails(LensSessionHandle sessionId)
+          throws LensException {
+    LensSessionImpl.LensSessionPersistInfo session = null;
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
+    try {
+      String sql = "SELECT sessionobject FROM active_sessions WHERE sessionid = '"
+              + sessionId.getPublicId() + "'";
+      conn = getConnection();
+      pstmt = conn.prepareStatement(sql);
+
+      rs = pstmt.executeQuery();
+
+      if (rs != null) {
+        rs.next();
+        session =
+                (LensSessionImpl.LensSessionPersistInfo) SerializationUtils.deserialize(rs.getBytes(1));
+      }
+    } catch (SQLException e) {
+      log.error("Failed to find active session " + sessionId.getPublicId()
+              + " in database with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(rs);
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+    return session;
+  }
+
+  /**
+   * Gets all active session.
+   *
+   * @return the list of LensSessionImpl.LensSessionPersistInfo objects
+   *
+   * @throws LensException the lens exception
+   *
+   */
+  public List<LensSessionImpl.LensSessionPersistInfo> getAllActiveSessions() throws LensException {
+    List<LensSessionImpl.LensSessionPersistInfo> ctxs = new ArrayList<>();
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
+    try {
+
+      String sql = "SELECT sessionobject FROM active_queries";
+
+      conn = getConnection();
+      pstmt = conn.prepareStatement(sql);
+      rs = pstmt.executeQuery();
+
+      while (rs.next()) {
+        ctxs.add((LensSessionImpl.LensSessionPersistInfo) SerializationUtils.deserialize(rs.getBytes(1)));
+      }
+    } catch (SQLException e) {
+      log.error("Unable to find all active queries in database, Failed with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(rs);
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+    return ctxs;
+  }
+
+  /**
+   * Delete active query.
+   *
+   * @param ctx QueryContext object for query
+   *
+   * @return true on success, false otherwise.
+   *
+   * @throws LensException the lens exception
+   *
+   */
+  public boolean deleteActiveQuery(QueryContext ctx) throws LensException {
+
+    String sql = "DELETE FROM active_queries where queryid=?";
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    boolean result = false;
+    try {
+      conn = getConnection();
+
+      pstmt = conn.prepareStatement(sql);
+
+      // set input parameters
+      pstmt.setString(1, ctx.getQueryHandleString());
+      result = pstmt.execute();
+
+      log.info("deleted active query " + ctx.getQueryHandleString() + " with final status " + ctx.getStatus()
+              + " from database.");
+    } catch (SQLException e) {
+      log.error("Failed to delete active query " + ctx.getQueryHandleString()
+              + " in database with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+
+    return result;
+  }
+
+  /**
+   * Delete active session.
+   *
+   * @param sessionId session id to be deleted
+   *
+   * @return true on success, false otherwise.
+   *
+   * @throws LensException the lens exception
+   *
+   */
+  public boolean deleteActiveSession(LensSessionHandle sessionId) throws LensException {
+
+    String sql = "DELETE FROM active_sessions where sessionid=?";
+    Connection conn = null;
+    PreparedStatement pstmt = null;
+    boolean result;
+
+    try {
+      conn = getConnection();
+
+      pstmt = conn.prepareStatement(sql);
+
+      // set input parameters
+      pstmt.setString(1, sessionId.getPublicId().toString());
+      result = pstmt.execute();
+
+      log.info("deleted active session " + sessionId.getPublicId().toString() + " from database.");
+    } catch (SQLException e) {
+      log.error("Failed to delete active session " + sessionId.getPublicId().toString()
+              + " in database with error, " + e);
+      throw new LensException(e);
+    } finally {
+      DbUtils.closeQuietly(pstmt);
+      DbUtils.closeQuietly(conn);
+    }
+
+    return result;
   }
 }

@@ -50,6 +50,7 @@ import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.error.LensServerErrorCode;
+import org.apache.lens.server.query.LensServerDAO;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
@@ -90,6 +91,11 @@ public abstract class BaseLensService extends CompositeService implements Extern
 
   /** Utility to validate and get valid paths for input paths **/
   private PathValidator pathValidator;
+
+  /**
+   * The lens server dao.
+   */
+  protected static final LensServerDAO LENS_SERVER_DAO = new LensServerDAO();
 
   // Static session map which is used by query submission thread to get the
   // lens session before submitting a query to hive server
@@ -568,8 +574,7 @@ public abstract class BaseLensService extends CompositeService implements Extern
     return pathValidator.removePrefixBeforeURI(path);
   }
 
-  @Override
-  public void validateSession(LensSessionHandle handle) throws LensException {
+  public void verifySessionInMemory(LensSessionHandle handle) throws LensException {
     if (handle == null) {
       throw new LensException(SESSION_ID_NOT_PROVIDED.getLensErrorInfo());
     }
@@ -584,6 +589,48 @@ public abstract class BaseLensService extends CompositeService implements Extern
     }
   }
 
+  private void restoreFromDb(final LensSessionHandle sessionHandle) throws LensException {
+    try {
+      LensSessionImpl.LensSessionPersistInfo persistInfo = LENS_SERVER_DAO.findActiveSessionDetails(sessionHandle);
+
+      if (persistInfo == null) {
+        throw new LensException("Unable to find session in mysql with session id : " + sessionHandle.getPublicId());
+      }
+
+      restoreSession(sessionHandle, persistInfo.getUsername(), persistInfo.getPassword(), persistInfo.getConfig());
+    } catch (Exception daoE) {
+      log.error("sql query failed with " + daoE.toString());
+      throw new LensException(SESSION_CLOSED.getLensErrorInfo(), sessionHandle);
+    }
+    throw new LensException("session not found");
+  }
+
+  @Override
+  public void validateSession(final LensSessionHandle sessionHandle) throws LensException {
+    try {
+      verifySessionInMemory(sessionHandle);
+    } catch (LensException e) {
+      if (e.getErrorCode() == LensServerErrorCode.SESSION_CLOSED.getLensErrorInfo().getErrorCode()) {
+        restoreFromDb(sessionHandle);
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  protected void resotreSessionIfRequired(final LensSessionHandle sessionHandle) {
+    try {
+      verifySessionInMemory(sessionHandle);
+    } catch (LensException e) {
+      try {
+        restoreFromDb(sessionHandle);
+      } catch (LensException le) {
+        // we need to restore lens session if not present in memory,
+        // if its not in mysql then just swallow exception here
+        log.warn("Session  " + sessionHandle.getPublicId() + " is invalid.");
+      }
+    }
+  }
 
   @Override
   public void validateAndAuthorizeSession(LensSessionHandle handle, String userPrincipalName) throws LensException {

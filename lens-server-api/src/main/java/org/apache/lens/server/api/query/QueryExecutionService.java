@@ -170,6 +170,8 @@ public interface QueryExecutionService extends LensService, SessionValidator {
    */
   LensQuery getQuery(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException;
 
+  LensQuery getQueryInfo(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException;
+
   /**
    * Get the result set metadata - list of columns(names and types) and result size.
    *

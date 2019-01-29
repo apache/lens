@@ -136,6 +136,15 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   public static final String TOTAL_QUERIES_EXPIRED = "total-expired-queries";
 
   /**
+   * Constants for active query in database.
+   */
+  public static final String ACTIVE_QUERY_INSERT_ERROR_COUNTER = "db-query-insert-errors";
+
+  public static final String ACTIVE_QUERY_DELETE_ERROR_COUNTER = "db-query-delete-errors";
+
+  public static final String ACTIVE_QUERY_UPDATE_ERROR_COUNTER = "db-query-update-errors";
+
+  /**
    * The Constant PREPARED_QUERY_PURGER_COUNTER.
    */
   public static final String PREPARED_QUERY_PURGER_COUNTER = "prepared-query-purger-errors";
@@ -1161,6 +1170,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     }
 
     StatusChange event = newStatusChangeEvent(ctx, prevState, currentStatus);
+    try {
+      ctx.setStatus(current);
+      lensServerDao.updateActiveQuery(ctx);
+    } catch (Exception e) {
+      log.warn("Failed to update status of query " + ctx.getQueryHandleString() + " in database.");
+      incrCounter(ACTIVE_QUERY_UPDATE_ERROR_COUNTER);
+    }
     if (event != null) {
       try {
         getEventService().notifyEvent(event);
@@ -1218,6 +1234,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
               fireStatusChangeEvent(finished.getCtx(),
                 new QueryStatus(1f, null, CLOSED, "Query purged", false, null, null, null), finished.getCtx()
                   .getStatus());
+
+              try {
+                lensServerDao.deleteActiveQuery(finished.getCtx());
+              } catch (LensException e) {
+                incrCounter(ACTIVE_QUERY_DELETE_ERROR_COUNTER);
+              }
+
               log.info("Query purged: {}", finished.getQueryHandle());
             }
           }
@@ -1390,6 +1413,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     try {
       this.lensServerDao.createFinishedQueriesTable();
       this.lensServerDao.createFailedAttemptsTable();
+      this.lensServerDao.createActiveSessionsTable();
+      this.lensServerDao.createActiveQueriesTable();
     } catch (Exception e) {
       log.warn("Unable to create finished query tables, query purger will not purge queries", e);
     }
@@ -1536,6 +1561,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             getSession(SESSION_MAP.get(ctx.getLensSessionIdentifier())).removeFromActiveQueries(ctx.getQueryHandle());
           }
           log.info("Removed closed query from all Queries:" + ctx.getQueryHandle());
+        }
+
+        try {
+          lensServerDao.updateActiveQuery(ctx);
+        } catch (Exception e) {
+          log.warn("Failed to update status of query " + ctx.getQueryHandleString() + " in database.");
+          incrCounter(ACTIVE_QUERY_UPDATE_ERROR_COUNTER);
         }
       }
       queuedQueries.addAll(allRestoredQueuedQueries);
@@ -2177,6 +2209,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       // Should be set only once
       ctx.setQueryConfHash(UtilityMethods.generateHashOfWritable(qconf));
       ctx.setQueryName(queryName);
+
+      try {
+        lensServerDao.insertActiveQuery(ctx);
+      } catch (Exception e) {
+        incrCounter(ACTIVE_QUERY_INSERT_ERROR_COUNTER);
+      }
+
       return executeAsyncInternal(sessionHandle, ctx);
     } finally {
       release(sessionHandle);
@@ -2385,6 +2424,21 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   @Override
   public LensQuery getQuery(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException {
     return getUpdatedQueryContext(sessionHandle, queryHandle).toLensQuery();
+  }
+
+  @Override
+  public LensQuery getQueryInfo(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException {
+    LensQuery query = getUpdatedQueryContext(sessionHandle, queryHandle).toLensQuery();
+
+
+    if (query == null) {
+      try {
+        return lensServerDao.findActiveQueryDetails(queryHandle).toLensQuery();
+      } catch (LensException e) {
+        log.info("Query " + queryHandle.getHandleIdString() + " not found in active queries table in db.");
+      }
+    }
+    return query;
   }
 
   /**
