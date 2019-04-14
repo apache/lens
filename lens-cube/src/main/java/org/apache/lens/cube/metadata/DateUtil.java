@@ -182,8 +182,8 @@ public final class DateUtil {
     Matcher relativeMatcher = P_RELATIVE.matcher(str);
     if (relativeMatcher.find()) {
       String nowWithGranularity = relativeMatcher.group();
-      nowWithGranularity = nowWithGranularity.replaceAll("now", "");
-      nowWithGranularity = nowWithGranularity.replaceAll("\\.", "");
+      nowWithGranularity = nowWithGranularity.replace("now", "");
+      nowWithGranularity = nowWithGranularity.replace(".", "");
 
       Matcher granularityMatcher = P_UNIT.matcher(nowWithGranularity);
       if (granularityMatcher.find()) {
