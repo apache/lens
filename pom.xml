@@ -389,9 +389,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</connection>
-    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/lens.git</developerConnection>
-    <url>https://git-wip-us.apache.org/repos/asf/lens.git</url>
+    <connection>scm:git:https://gitbox.apache.org/repos/asf/lens.git</connection>
+    <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/lens.git</developerConnection>
+    <url>https://gitbox.apache.org/repos/asf/lens.git</url>
     <tag>HEAD</tag>
   </scm>
 

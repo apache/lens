@@ -489,7 +489,7 @@ public class QueryServiceResource {
   public LensQuery getStatus(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("queryHandle") String queryHandle) throws LensException {
     validateSessionId(sessionid);
-    return queryServer.getQuery(sessionid, getQueryHandle(queryHandle));
+    return queryServer.getQueryInfo(sessionid, getQueryHandle(queryHandle));
   }
 
   /**

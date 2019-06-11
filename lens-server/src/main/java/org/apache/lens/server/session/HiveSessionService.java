@@ -31,9 +31,11 @@ import javax.ws.rs.WebApplicationException;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.BaseLensService;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.health.HealthStatus;
+import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.session.*;
 import org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 
@@ -73,9 +75,24 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   private DatabaseResourceService databaseResourceService;
 
   /**
+   * The metrics service.
+   */
+  private MetricsService metricsService;
+
+  /**
    * The conf.
    */
   private Configuration conf;
+
+  /**
+   * The Constant SESSION_CLOSE_COUNTER.
+   */
+  public static final String SESSION_CLOSE_COUNTER = "db-session-close-errors";
+
+  /**
+   * The Constant SESSION_OPEN_COUNTER.
+   */
+  public static final String SESSION_OPEN_COUNTER = "db-session-open-errors";
 
   /**
    * Instantiates a new hive session service.
@@ -90,6 +107,13 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   public List<String> listAllResources(LensSessionHandle sessionHandle, String type) {
     if (!isValidResouceType(type)) {
       throw new BadRequestException("Bad resource type is passed. Please pass jar or file as source type");
+    }
+
+    try {
+      validateSession(sessionHandle);
+    } catch (LensException e) {
+      log.error("Failed to list resources in session", e);
+      throw new WebApplicationException(e);
     }
     List<ResourceEntry> resources = getSession(sessionHandle).getResources();
     List<String> allResources = new ArrayList<String>();
@@ -111,10 +135,16 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   @Override
   public void addResource(LensSessionHandle sessionid, String type, String path) {
     try {
+      resotreSessionIfRequired(sessionid);
       acquire(sessionid);
       SessionState ss = getSession(sessionid).getSessionState();
       String finalLocation = ss.add_resource(SessionState.ResourceType.valueOf(type.toUpperCase()), path);
       getSession(sessionid).addResource(type, path, finalLocation);
+      try {
+        LENS_SERVER_DAO.updateActiveSession(getSession(sessionid).getLensSessionPersistInfo());
+      } catch (LensException e) {
+        log.warn("Failed to update active session table with error," + e.toString());
+      }
     } catch (RuntimeException e) {
       log.error("Failed to add resource type:" + type + " path:" + path + " in session", e);
       throw new WebApplicationException(e);
@@ -146,6 +176,11 @@ public class HiveSessionService extends BaseLensService implements SessionServic
       acquire(sessionid);
       closeCliServiceOp(getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null));
       getSession(sessionid).removeResource(type, path);
+      try {
+        LENS_SERVER_DAO.updateActiveSession(getSession(sessionid).getLensSessionPersistInfo());
+      } catch (LensException e) {
+        log.warn("Failed to update active session table with error," + e.toString());
+      }
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } finally {
@@ -231,6 +266,13 @@ public class HiveSessionService extends BaseLensService implements SessionServic
         addResource(sessionid, "jar", jar);
       }
     }
+
+    try {
+      LENS_SERVER_DAO.insertActiveSession(getSession(sessionid).getLensSessionPersistInfo());
+    } catch (LensException e) {
+      getMetrics().incrCounter(HiveSessionService.class, SESSION_OPEN_COUNTER);
+    }
+
     return sessionid;
   }
 
@@ -245,6 +287,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
   @Override
   public List<String> getAllSessionParameters(LensSessionHandle sessionid, boolean verbose, String key)
     throws LensException {
+    resotreSessionIfRequired(sessionid);
     List<String> result = new ArrayList<String>();
     acquire(sessionid);
     try {
@@ -279,6 +322,12 @@ public class HiveSessionService extends BaseLensService implements SessionServic
     HashMap<String, String> config = Maps.newHashMap();
     config.put(key, value);
     setSessionParameters(sessionid, config);
+
+    try {
+      LENS_SERVER_DAO.updateActiveSession(getSession(sessionid).getLensSessionPersistInfo());
+    } catch (LensException e) {
+      log.warn("Failed to update active session table with error," + e.toString());
+    }
   }
 
   /**
@@ -337,6 +386,7 @@ public class HiveSessionService extends BaseLensService implements SessionServic
     this.conf = hiveConf;
 
     super.init(hiveConf);
+    this.LENS_SERVER_DAO.init(conf);
   }
 
   /*
@@ -362,39 +412,44 @@ public class HiveSessionService extends BaseLensService implements SessionServic
     }
 
     for (LensSessionImpl.LensSessionPersistInfo persistInfo : restorableSessions) {
-      try {
-        LensSessionHandle sessionHandle = persistInfo.getSessionHandle();
-        restoreSession(sessionHandle, persistInfo.getUsername(), persistInfo.getPassword(), persistInfo.getConfig());
-        LensSessionImpl session = getSession(sessionHandle);
-        session.getLensSessionPersistInfo().setLastAccessTime(persistInfo.getLastAccessTime());
-        session.getLensSessionPersistInfo().setConfig(persistInfo.getConfig());
-        session.getLensSessionPersistInfo().setResources(persistInfo.getResources());
-        session.setCurrentDatabase(persistInfo.getDatabase());
-        session.getLensSessionPersistInfo().setMarkedForClose(persistInfo.isMarkedForClose());
-
-        // Add resources for restored sessions
-        for (LensSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
-          try {
-            addResourceUponRestart(sessionHandle, resourceEntry);
-          } catch (Exception e) {
-            log.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry, e);
-          }
-        }
-
-        // Add config for restored sessions
-        try{
-          setSessionParametersOnRestore(sessionHandle, session.getConfig());
-        } catch (Exception e) {
-          log.error("Error setting parameters " + session.getConfig()
-            + " for session: " + session, e);
-        }
-        log.info("Restored session " + persistInfo.getSessionHandle().getPublicId());
-        notifyEvent(new SessionRestored(System.currentTimeMillis(), sessionHandle));
-      } catch (LensException e) {
-        throw new RuntimeException(e);
-      }
+      restoreSession(persistInfo);
     }
     log.info("Session service restored " + restorableSessions.size() + " sessions");
+  }
+
+  private void restoreSession(LensSessionImpl.LensSessionPersistInfo persistInfo) {
+    try {
+      LensSessionHandle sessionHandle = persistInfo.getSessionHandle();
+      restoreSession(sessionHandle, persistInfo.getUsername(), persistInfo.getPassword(), persistInfo.getConfig());
+      LensSessionImpl session = getSession(sessionHandle);
+      session.getLensSessionPersistInfo().setLastAccessTime(persistInfo.getLastAccessTime());
+      session.getLensSessionPersistInfo().setConfig(persistInfo.getConfig());
+      session.getLensSessionPersistInfo().setResources(persistInfo.getResources());
+      session.setCurrentDatabase(persistInfo.getDatabase());
+      session.getLensSessionPersistInfo().setMarkedForClose(persistInfo.isMarkedForClose());
+
+      // Add resources for restored sessions
+      for (LensSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
+        try {
+          addResourceUponRestart(sessionHandle, resourceEntry);
+        } catch (Exception e) {
+          log.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry, e);
+        }
+      }
+
+      // Add config for restored sessions
+      try{
+        setSessionParametersOnRestore(sessionHandle, session.getConfig());
+      } catch (Exception e) {
+        log.error("Error setting parameters " + session.getConfig()
+                + " for session: " + session, e);
+      }
+      log.info("Restored session " + persistInfo.getSessionHandle().getPublicId());
+      notifyEvent(new SessionRestored(System.currentTimeMillis(), sessionHandle));
+      log.info("Restored session " + persistInfo.getSessionHandle().getPublicId() + " from db.");
+    } catch (LensException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private int getSessionExpiryInterval() {
@@ -471,12 +526,28 @@ public class HiveSessionService extends BaseLensService implements SessionServic
     log.info("Session service recovered " + SESSION_MAP.size() + " sessions");
   }
 
+  private MetricsService getMetrics() {
+    if (metricsService == null) {
+      metricsService = LensServices.get().getService(MetricsService.NAME);
+      if (metricsService == null) {
+        throw new NullPointerException("Could not get metrics service");
+      }
+    }
+    return metricsService;
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     closeInternal(sessionHandle);
+
+    try {
+      LENS_SERVER_DAO.deleteActiveSession(sessionHandle);
+    } catch (LensException e) {
+      getMetrics().incrCounter(HiveSessionService.class, SESSION_CLOSE_COUNTER);
+    }
     notifyEvent(new SessionClosed(System.currentTimeMillis(), sessionHandle));
   }
 
@@ -551,6 +622,13 @@ public class HiveSessionService extends BaseLensService implements SessionServic
           log.info("Closed inactive session " + sessionHandle.getPublicId() + " last accessed at "
             + new Date(lastAccessTime));
           notifyEvent(new SessionExpired(System.currentTimeMillis(), sessionHandle));
+
+          try {
+            LENS_SERVER_DAO.deleteActiveSession(sessionHandle);
+          } catch (LensException e) {
+            getMetrics().incrCounter(HiveSessionService.class, SESSION_CLOSE_COUNTER);
+          }
+
         } catch (ClientErrorException nfe) {
           log.error("Error getting session " + sessionHandle.getPublicId(), nfe);
           // Do nothing
