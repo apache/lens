@@ -35,6 +35,7 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.FinishedLensQuery;
+import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.util.UtilityMethods;
@@ -47,6 +48,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.Lists;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -820,5 +822,33 @@ public class LensServerDAO {
     }
 
     return result;
+  }
+
+  /**
+   * DAO method to insert a new Prepared query into Table.
+   *
+   * @param preparedQueryContext to be inserted
+   * @throws SQLException the exception
+   */
+  public void insertPreparedQuery(PreparedQueryContext preparedQueryContext) throws SQLException {
+    String sql = "insert into prepared_queries (handle, userquery, submitter, timetaken, queryname, drivername, "
+        + "driverquery, starttime)" + " values (?,?,?,?,?,?,?)";
+    Connection conn = null;
+    try {
+      conn = getConnection();
+      conn.setAutoCommit(false);
+      QueryRunner runner = new QueryRunner();
+
+      long timeTaken =
+          preparedQueryContext.getPrepareEndTime().getTime() - preparedQueryContext.getPrepareStartTime().getTime();
+
+      runner.update(conn, sql, preparedQueryContext.getPrepareHandle().getQueryHandleString(),
+          preparedQueryContext.getUserQuery(), preparedQueryContext.getSubmittedUser(), timeTaken,
+          preparedQueryContext.getQueryName(), preparedQueryContext.getDriverContext().getSelectedDriver(),
+          preparedQueryContext.getSelectedDriverQuery(), preparedQueryContext.getPrepareStartTime());
+      conn.commit();
+    } finally {
+      DbUtils.closeQuietly(conn);
+    }
   }
 }

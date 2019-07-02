@@ -149,6 +149,8 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    */
   public static final String PREPARED_QUERY_PURGER_COUNTER = "prepared-query-purger-errors";
 
+  public static final String PREPARED_QUERY_INSERT_COUNTER = "prepared-query-insert-errors";
+
   /**
    * The millis in week.
    */
@@ -2055,6 +2057,12 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.PREPARE);
       prepared.setQueryName(queryName);
       prepared.getSelectedDriver().prepare(prepared);
+      try {
+        lensServerDao.insertPreparedQuery(prepared);
+      } catch (Exception e) {
+        incrCounter(PREPARED_QUERY_INSERT_COUNTER);
+      }
+
       return prepared.getPrepareHandle();
     } catch (LensException e) {
       if (prepared != null) {
@@ -2087,6 +2095,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     preparedQueries.put(prepared.getPrepareHandle(), prepared);
     preparedQueryQueue.add(prepared);
     incrCounter(PREPARED_QUERIES_COUNTER);
+    prepared.setPrepareEndTime(new Date());
     return prepared;
   }
 
@@ -3031,7 +3040,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             continue;
           }
         }
-        long queryPrepTime = preparedQueryContext.getPreparedTime().getTime();
+        long queryPrepTime = preparedQueryContext.getPrepareStartTime().getTime();
         if (fromTime <= queryPrepTime && queryPrepTime < toTime) {
           continue;
         }
@@ -3080,9 +3089,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * @throws LensException the lens exception
    */
   private void destroyPreparedQuery(PreparedQueryContext ctx) throws LensException {
-    if (ctx.getSelectedDriver() != null) {
-      ctx.getSelectedDriver().closePreparedQuery(ctx.getPrepareHandle());
-    }
     preparedQueries.remove(ctx.getPrepareHandle());
     preparedQueryQueue.remove(ctx);
     decrCounter(PREPARED_QUERIES_COUNTER);

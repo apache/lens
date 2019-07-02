@@ -28,7 +28,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.driver.es.client.ESClient;
@@ -117,13 +116,6 @@ public class ESDriver extends AbstractLensDriver {
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException {
     prepare(pContext);
     return explain(pContext);
-  }
-
-  @Override
-  public void closePreparedQuery(QueryPrepareHandle handle) {
-    /**
-     * Elastic search does not have a concept of prepared query.
-     */
   }
 
   @Override

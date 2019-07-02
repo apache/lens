@@ -34,7 +34,6 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.cube.query.cost.FactPartitionBasedQueryCostCalculator;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
@@ -465,17 +464,6 @@ public class HiveDriver extends AbstractLensDriver {
   @Override
   public void prepare(PreparedQueryContext pContext) throws LensException {
     // NO OP
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.api.driver.LensDriver#closePreparedQuery(org.apache.lens.api.query.QueryPrepareHandle)
-   */
-  @Override
-  public void closePreparedQuery(QueryPrepareHandle handle) throws LensException {
-    // NO OP
-
   }
 
   /*
