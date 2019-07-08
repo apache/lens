@@ -757,6 +757,7 @@ public class TestHiveDriver {
     validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, true, false);
 
     driver.closeQuery(qctx.getQueryHandle());
+    driver.closePreparedQuery(pctx.getPrepareHandle());
     assertHandleSize(handleSize);
   }
 

@@ -22,6 +22,7 @@ import java.io.Externalizable;
 
 import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.driver.hooks.DriverQueryHook;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventListener;
@@ -95,6 +96,14 @@ public interface LensDriver extends Externalizable {
    * @throws LensException the lens exception
    */
   DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException;
+
+  /**
+   * Close the prepare query specified by the prepared handle, releases all the resources held by the prepared query.
+   *
+   * @param handle The query handle
+   * @throws LensException the lens exception
+   */
+  void closePreparedQuery(QueryPrepareHandle handle) throws LensException;
 
   /**
    * Blocking execute of the query

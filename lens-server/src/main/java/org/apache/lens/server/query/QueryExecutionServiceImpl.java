@@ -148,7 +148,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * The Constant PREPARED_QUERY_PURGER_COUNTER.
    */
   public static final String PREPARED_QUERY_PURGER_COUNTER = "prepared-query-purger-errors";
-
+  
   public static final String PREPARED_QUERY_INSERT_COUNTER = "prepared-query-insert-errors";
 
   /**
@@ -2058,12 +2058,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       prepared.setQueryName(queryName);
       prepared.getSelectedDriver().prepare(prepared);
       try {
-        lensServerDao.insertPreparedQuery(prepared);
-      } catch (Exception e) {
-        incrCounter(PREPARED_QUERY_INSERT_COUNTER);
-      }
-
+          lensServerDao.insertPreparedQuery(prepared);
+        } catch (Exception e) {
+          incrCounter(PREPARED_QUERY_INSERT_COUNTER);
+        }
+      
       return prepared.getPrepareHandle();
+      
     } catch (LensException e) {
       if (prepared != null) {
         destroyPreparedQuery(prepared);

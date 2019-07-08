@@ -274,6 +274,17 @@ public class MockDriver extends AbstractLensDriver {
   /*
    * (non-Javadoc)
    *
+   * @see org.apache.lens.server.api.driver.LensDriver#closePreparedQuery(org.apache.lens.api.query.QueryPrepareHandle)
+   */
+  @Override
+  public void closePreparedQuery(QueryPrepareHandle handle) throws LensException {
+    // TODO Auto-generated method stub
+
+  }
+
+  /*
+   * (non-Javadoc)
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#execute(org.apache.lens.server.api.query.QueryContext)
    */
   @Override
