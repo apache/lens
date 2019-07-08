@@ -31,11 +31,14 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.cube.query.cost.StaticCostCalculator;
 import org.apache.lens.server.api.driver.*;
@@ -551,6 +554,9 @@ public class JDBCDriver extends AbstractLensDriver {
 
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
+    String rewrittenQuery = rewriteQuery(qctx);
+    qctx.setSelectedDriverQuery(rewrittenQuery);
+
     MethodMetricsContext validateGauge = MethodMetricsFactory.createMethodGauge(qctx.getDriverConf(this), true,
       VALIDATE_GAUGE);
     validate(qctx);
@@ -621,9 +627,17 @@ public class JDBCDriver extends AbstractLensDriver {
     boolean validateThroughPrepare = pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_THROUGH_PREPARE,
       DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE);
     if (validateThroughPrepare) {
+      PreparedStatement stmt;
       // Estimate queries need to get connection from estimate pool to make sure
       // we are not blocked by data queries.
-      prepareInternal(pContext, true, true, "validate-");
+      stmt = prepareInternal(pContext, true, true, "validate-");
+      if (stmt != null) {
+        try {
+          stmt.close();
+        } catch (SQLException e) {
+          throw new LensException();
+        }
+      }
     }
   }
 
@@ -681,6 +695,8 @@ public class JDBCDriver extends AbstractLensDriver {
     return connectionProvider;
   }
 
+  private final Map<QueryPrepareHandle, PreparedStatement> preparedQueries = new HashMap<>();
+
   /**
    * Internally prepare the query
    *
@@ -688,12 +704,12 @@ public class JDBCDriver extends AbstractLensDriver {
    * @return prepared statement of the query
    * @throws LensException
    */
-  private void prepareInternal(AbstractQueryContext pContext) throws LensException {
+  private PreparedStatement prepareInternal(AbstractQueryContext pContext) throws LensException {
     if (pContext.getDriverQuery(this) == null) {
       throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
     }
     checkConfigured();
-    prepareInternal(pContext, false, false, "prepare-");
+    return prepareInternal(pContext, false, false, "prepare-");
   }
 
 
@@ -706,7 +722,7 @@ public class JDBCDriver extends AbstractLensDriver {
    * @return prepared statement
    * @throws LensException
    */
-  private void prepareInternal(AbstractQueryContext pContext,
+  private PreparedStatement prepareInternal(AbstractQueryContext pContext,
     boolean calledForEstimate,
     boolean checkConfigured,
     String metricCallStack) throws LensException {
@@ -722,11 +738,34 @@ public class JDBCDriver extends AbstractLensDriver {
     // Only create a prepared statement and then close it
     MethodMetricsContext sqlRewriteGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       metricCallStack + COLUMNAR_SQL_REWRITE_GAUGE);
-    String rewrittenQuery = rewriteQuery(pContext);
-    pContext.setSelectedDriverQuery(rewrittenQuery);
+    String rewrittenQuery = pContext.getSelectedDriverQuery();
     sqlRewriteGauge.markSuccess();
     MethodMetricsContext jdbcPrepareGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       metricCallStack + JDBC_PREPARE_GAUGE);
+
+    PreparedStatement stmt = null;
+    Connection conn = null;
+    try {
+      conn = calledForEstimate ? getEstimateConnection() : getConnection();
+      stmt = conn.prepareStatement(rewrittenQuery);
+      if (!pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_SKIP_WARNINGS,
+        DEFAULT_JDBC_VALIDATE_SKIP_WARNINGS) && stmt.getWarnings() != null) {
+        throw new LensException(stmt.getWarnings());
+      }
+    } catch (SQLException sql) {
+      handleJDBCSQLException(sql);
+    } finally {
+      if (conn != null) {
+        try {
+          conn.close();
+        } catch (SQLException e) {
+          log.error("Error closing connection: {}", rewrittenQuery, e);
+        }
+      }
+      jdbcPrepareGauge.markSuccess();
+    }
+    log.info("Prepared: {}", rewrittenQuery);
+    return stmt;
   }
 
   /**
@@ -761,7 +800,14 @@ public class JDBCDriver extends AbstractLensDriver {
    */
   @Override
   public void prepare(PreparedQueryContext pContext) throws LensException {
-    prepareInternal(pContext);
+    if (preparedQueries.containsKey(pContext.getPrepareHandle())) {
+      // already prepared
+      return;
+    }
+    PreparedStatement stmt = prepareInternal(pContext);
+    if (stmt != null) {
+      preparedQueries.put(pContext.getPrepareHandle(), stmt);
+    }
   }
 
   /**
@@ -776,6 +822,24 @@ public class JDBCDriver extends AbstractLensDriver {
     checkConfigured();
     prepare(pContext);
     return new JDBCQueryPlan(calculateQueryCost(pContext));
+  }
+
+  /**
+   * Close the prepare query specified by the prepared handle, releases all the resources held by the prepared query.
+   *
+   * @param handle The query handle
+   * @throws LensException the lens exception
+   */
+  @Override
+  public void closePreparedQuery(QueryPrepareHandle handle) throws LensException {
+    checkConfigured();
+    try {
+      if (preparedQueries.get(handle) != null) {
+        preparedQueries.get(handle).close();
+      }
+    } catch (SQLException e) {
+      throw new LensException(e);
+    }
   }
 
   /**
@@ -826,7 +890,6 @@ public class JDBCDriver extends AbstractLensDriver {
     String rewrittenQuery = rewriteQuery(context);
     JdbcQueryContext jdbcCtx = new JdbcQueryContext(context);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
-    context.setSelectedDriverQuery(rewrittenQuery);
     try {
       Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx, logSegregationContext));
       jdbcCtx.setResultFuture(future);
@@ -959,6 +1022,17 @@ public class JDBCDriver extends AbstractLensDriver {
           closeQuery(query);
         } catch (LensException e) {
           log.warn("{} Error closing query : {}", getFullyQualifiedName(), query.getHandleId(), e);
+        }
+      }
+      for (QueryPrepareHandle query : preparedQueries.keySet()) {
+        try {
+          try {
+            preparedQueries.get(query).close();
+          } catch (SQLException e) {
+            throw new LensException();
+          }
+        } catch (LensException e) {
+          log.warn("{} Error closing prapared query : {}", getFullyQualifiedName(), query, e);
         }
       }
     } finally {
