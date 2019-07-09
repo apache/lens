@@ -2056,7 +2056,6 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       acquire(sessionHandle);
       prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.PREPARE);
       prepared.setQueryName(queryName);
-      prepared.getSelectedDriver().prepare(prepared);
       try {
           lensServerDao.insertPreparedQuery(prepared);
         } catch (Exception e) {
@@ -3090,6 +3089,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
    * @throws LensException the lens exception
    */
   private void destroyPreparedQuery(PreparedQueryContext ctx) throws LensException {
+    if (ctx.getSelectedDriver() != null) {
+      ctx.getSelectedDriver().closePreparedQuery(ctx.getPrepareHandle());
+    }
     preparedQueries.remove(ctx.getPrepareHandle());
     preparedQueryQueue.remove(ctx);
     decrCounter(PREPARED_QUERIES_COUNTER);
