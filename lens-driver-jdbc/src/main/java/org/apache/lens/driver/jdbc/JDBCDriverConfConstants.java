@@ -94,11 +94,12 @@ public final class JDBCDriverConfConstants {
   /** The Constant DEFAULT_JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT. */
   public static final boolean DEFAULT_JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT = true;
 
-  /** The Constant JDBC_VALIDATE_THROUGH_PREPARE. */
-  public static final String JDBC_VALIDATE_THROUGH_PREPARE = JDBC_DRIVER_PFX + "validate.through.prepare";
+  /** The Constant JDBC_VALIDATE_THROUGH_PREPARE_OR_EXPLAIN. */
+  public static final String JDBC_VALIDATE_THROUGH_PREPARE_OR_EXPLAIN =
+    JDBC_DRIVER_PFX + "validate.through.prepare.or.explain";
 
   /** The Constant DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE. */
-  public static final boolean DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE = true;
+  public static final boolean DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE_OR_EXPLAIN = true;
 
   /** The Constant JDBC_VALIDATE_SKIP_WARNINGS */
   public static final String JDBC_VALIDATE_SKIP_WARNINGS = JDBC_DRIVER_PFX + "validate.skip.warnings";
