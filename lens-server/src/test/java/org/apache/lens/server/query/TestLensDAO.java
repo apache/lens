@@ -18,7 +18,6 @@
  */
 package org.apache.lens.server.query;
 
-import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -51,14 +50,9 @@ import org.apache.lens.server.api.driver.hooks.DriverQueryHook;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.*;
 import org.apache.lens.server.api.user.MockDriverQueryHook;
-import org.apache.lens.server.util.UtilityMethods;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.dbutils.BasicRowProcessor;
-import org.apache.commons.dbutils.BeanProcessor;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.dbutils.handlers.BeanHandler;
+
 import org.apache.hadoop.conf.Configuration;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -289,3 +283,4 @@ public class TestLensDAO extends LensJerseyTest {
     return drivers;
   }
 }
+

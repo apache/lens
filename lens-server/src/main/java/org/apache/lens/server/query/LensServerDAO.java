@@ -109,9 +109,9 @@ public class LensServerDAO {
   }
 
   public void createPreparedQueriesTable() throws Exception {
-    String sql = "CREATE TABLE if not exists prepared_queries (handle varchar(255) NOT NULL unique,  userquery " +
-        "varchar(20000),  submitter varchar(255) NOT NULL,  timetaken bigint,  queryname varchar(255) DEFAULT NULL,  " +
-        "drivername varchar(10000) DEFAULT NULL,  driverquery varchar(1000000),  starttime bigint)";
+    String sql = "CREATE TABLE if not exists prepared_queries (handle varchar(255) NOT NULL unique,  userquery "
+      + "varchar(20000),  submitter varchar(255) NOT NULL,  timetaken bigint,  queryname varchar(255) DEFAULT NULL, "
+      + "drivername varchar(10000) DEFAULT NULL,  driverquery varchar(1000000),  starttime bigint)";
     try {
       QueryRunner runner = new QueryRunner(ds);
       runner.update(sql);
@@ -120,8 +120,7 @@ public class LensServerDAO {
       log.warn("Unable to create prepared_queries queries table", e);
     }
   }
-    
-    
+
   public void createFailedAttemptsTable() throws Exception {
     String sql = "CREATE TABLE if not exists failed_attempts (handle varchar(255) not null,"
       + "attempt_number int, drivername varchar(10000), progress float, progressmessage varchar(10000), "
