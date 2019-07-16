@@ -1417,6 +1417,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       this.lensServerDao.createFailedAttemptsTable();
       this.lensServerDao.createActiveSessionsTable();
       this.lensServerDao.createActiveQueriesTable();
+      this.lensServerDao.createPreparedQueriesTable();
     } catch (Exception e) {
       log.warn("Unable to create finished query tables, query purger will not purge queries", e);
     }

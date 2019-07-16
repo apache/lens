@@ -18,10 +18,13 @@
  */
 package org.apache.lens.server.query;
 
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,21 +37,34 @@ import org.apache.lens.api.query.FailedAttempt;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.driver.hive.EmbeddedThriftConnection;
+import org.apache.lens.driver.hive.HiveDriver;
+import org.apache.lens.driver.hive.ThriftConnection;
+import org.apache.lens.driver.jdbc.JDBCDriver;
 import org.apache.lens.driver.jdbc.JDBCResultSet;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
+import org.apache.lens.server.api.driver.hooks.DriverQueryHook;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.*;
-
+import org.apache.lens.server.api.user.MockDriverQueryHook;
+import org.apache.lens.server.util.UtilityMethods;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.dbutils.BasicRowProcessor;
+import org.apache.commons.dbutils.BeanProcessor;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.hadoop.conf.Configuration;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -212,5 +228,64 @@ public class TestLensDAO extends LensJerseyTest {
     Assert.assertEquals(invalidActualActiveSessionDeleted, false);
 
     service.closeSession(session);
+  }
+
+  public void testPreparedQueryDAO() throws Exception {
+    QueryExecutionServiceImpl service = LensServices.get().getService(QueryExecutionService.NAME);
+    Connection conn = null;
+    Statement stmt = null;
+    final ObjectMapper MAPPER = new ObjectMapper();
+
+    try {
+      conn = service.lensServerDao.getConnection();
+      stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      ResultSet rs = stmt.executeQuery("SELECT handle FROM finished_queries");
+
+      JDBCResultSet jdbcResultSet = new JDBCResultSet(null, rs, false);
+      JDBCResultSet.JDBCResultSetMetadata jdbcRsMeta =
+          (JDBCResultSet.JDBCResultSetMetadata) jdbcResultSet.getMetadata();
+
+      String jsonMetadata = MAPPER.writeValueAsString(jdbcRsMeta);
+
+      log.info("@@@JSON {}" + jsonMetadata);
+
+    } catch (SQLException ex) {
+      log.error("Error creating result set ", ex);
+    } finally {
+      if (stmt != null) {
+        stmt.close();
+      }
+      if (conn != null) {
+        conn.close();
+      }
+    }
+
+    service.lensServerDao.createPreparedQueriesTable();
+    Configuration driverConf = new Configuration();
+    try {
+      PreparedQueryContext preparedQueryContext = new PreparedQueryContext("query", "user1", driverConf,
+          createDriver(driverConf));
+      preparedQueryContext.setPrepareEndTime(new Date());
+      service.lensServerDao.insertPreparedQuery(preparedQueryContext);
+    } catch (Exception e) {
+      Assert.fail("it shouldn't be coming in this catch block");
+    }
+
+
+  }
+
+  protected Collection<LensDriver> createDriver(Configuration driverConf) throws LensException {
+
+    driverConf.addResource("drivers/jdbc/jdbc1/jdbcdriver-site.xml");
+    driverConf.setClass(HiveDriver.HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, ThriftConnection.class);
+    driverConf.setClass(LensConfConstants.DRIVER_HOOK_CLASSES_SFX, MockDriverQueryHook.class, DriverQueryHook.class);
+    driverConf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
+    driverConf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
+    JDBCDriver driver = new JDBCDriver();
+    driver.configure(driverConf, "jdbc", "jdbc1");
+    Collection<LensDriver> drivers = Lists.<LensDriver>newArrayList(driver);
+
+    System.out.println("TestJDBCDriver created");
+    return drivers;
   }
 }
