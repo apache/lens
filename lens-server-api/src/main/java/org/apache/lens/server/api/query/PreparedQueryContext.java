@@ -49,10 +49,17 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
   private final QueryPrepareHandle prepareHandle;
 
   /**
-   * The prepared time.
+   * The prepare start time.
    */
   @Getter
-  private final Date preparedTime;
+  private final Date prepareStartTime;
+
+  /**
+   * The prepare end time.
+   */
+  @Getter
+  @Setter
+  private Date prepareEndTime = null;
 
   /**
    * The prepared user.
@@ -94,7 +101,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
   public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf, Collection<LensDriver>
     drivers) {
     super(query, user, qconf, conf, drivers, true);
-    this.preparedTime = new Date();
+    this.prepareStartTime = new Date();
     this.preparedUser = user;
     this.prepareHandle = new QueryPrepareHandle(UUID.randomUUID());
     this.conf = conf;
@@ -119,9 +126,9 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
   @Override
   public long getDelay(TimeUnit units) {
     long delayMillis;
-    if (this.preparedTime != null) {
+    if (this.prepareStartTime != null) {
       Date now = new Date();
-      long elapsedMills = now.getTime() - this.preparedTime.getTime();
+      long elapsedMills = now.getTime() - this.prepareStartTime.getTime();
       delayMillis = millisInWeek - elapsedMills;
       return units.convert(delayMillis, TimeUnit.MILLISECONDS);
     } else {
@@ -147,7 +154,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    * @return the lens prepared query
    */
   public LensPreparedQuery toPreparedQuery() {
-    return new LensPreparedQuery(prepareHandle, userQuery, preparedTime, preparedUser, getDriverContext()
+    return new LensPreparedQuery(prepareHandle, userQuery, prepareStartTime, preparedUser, getDriverContext()
         .getSelectedDriver() != null ? getDriverContext().getSelectedDriver().getFullyQualifiedName() : null,
         getDriverContext().getSelectedDriverQuery(), lensConf);
   }

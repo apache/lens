@@ -103,7 +103,7 @@
     <war.plugin.version>2.1.1</war.plugin.version>
     <license.plugin.version>2.6</license.plugin.version>
     <buildnumber.plugin.version>1.0</buildnumber.plugin.version>
-    <findbugs.plugin.version>3.0.1</findbugs.plugin.version>
+    <findbugs.plugin.version>3.0.4</findbugs.plugin.version>
     <antrun.plugin.version>1.8</antrun.plugin.version>
     <cobertura.plugin.version>2.7</cobertura.plugin.version>
 
