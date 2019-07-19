@@ -120,7 +120,7 @@ public class LensServerDAO {
       log.warn("Unable to create prepared_queries queries table", e);
     }
   }
-
+  
   public void createFailedAttemptsTable() throws Exception {
     String sql = "CREATE TABLE if not exists failed_attempts (handle varchar(255) not null,"
       + "attempt_number int, drivername varchar(10000), progress float, progressmessage varchar(10000), "
@@ -844,7 +844,7 @@ public class LensServerDAO {
    * @param preparedQueryContext to be inserted
    * @throws SQLException the exception
    */
-  public void insertPreparedQuery(PreparedQueryContext preparedQueryContext) throws SQLException {
+  public void insertPreparedQuery(PreparedQueryContext preparedQueryContext) throws LensException {
     String sql = "insert into prepared_queries (handle, userquery, submitter, timetaken, queryname, drivername, "
         + "driverquery, starttime)" + " values (?,?,?,?,?,?,?,?)";
     Connection conn = null;
@@ -861,7 +861,10 @@ public class LensServerDAO {
           preparedQueryContext.getQueryName(), preparedQueryContext.getDriverContext().getSelectedDriver().toString(),
           preparedQueryContext.getSelectedDriverQuery(), preparedQueryContext.getPrepareStartTime().getTime());
       conn.commit();
-    } finally {
+    } catch (SQLException e) {
+      log.error("Failed to insert prepared query into database with error, " + e);
+      throw new LensException(e);
+  } finally {
       DbUtils.closeQuietly(conn);
     }
   }
