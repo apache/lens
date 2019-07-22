@@ -144,15 +144,14 @@ public class TestCubeMetastoreClient {
     conf.set(LensConfConstants.AUTHORIZER_CLASS, "org.apache.lens.cube.parse.MockAuthorizer");
     LensAuthorizer.get().init(conf);
 
-    Database database = new Database();
-    database.setName(TestCubeMetastoreClient.class.getSimpleName());
     try {
         Hive.get().dropDatabase(TestCubeMetastoreClient.class.getSimpleName(), true, true, true);
     } catch (NoSuchObjectException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
+        fail();
     }
-
+    Database database = new Database();
+    database.setName(TestCubeMetastoreClient.class.getSimpleName());
     Hive.get(conf).createDatabase(database);
     SessionState.get().setCurrentDatabase(TestCubeMetastoreClient.class.getSimpleName());
     client = CubeMetastoreClient.getInstance(conf);
@@ -168,7 +167,6 @@ public class TestCubeMetastoreClient {
     // Drop the cube
     client.dropCube(CUBE_NAME);
     client.dropCube(VIRTUAL_CUBE_NAME);
-    client.dropCube(X_FACT_NAME);
     client = CubeMetastoreClient.getInstance(conf);
     assertFalse(client.tableExists(CUBE_NAME));
     Hive.get().dropDatabase(TestCubeMetastoreClient.class.getSimpleName(), true, true, true);
