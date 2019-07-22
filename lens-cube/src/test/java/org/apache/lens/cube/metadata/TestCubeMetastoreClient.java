@@ -24,12 +24,12 @@ import static org.apache.lens.cube.metadata.DateUtil.resolveDate;
 import static org.apache.lens.cube.metadata.MetastoreUtil.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 import static org.apache.lens.server.api.util.LensUtil.getHashMap;
-
 import static org.testng.Assert.*;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import org.apache.lens.api.metastore.XFact;
 import org.apache.lens.cube.error.LensCubeErrorCode;
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.cube.metadata.ReferencedDimAttribute.ChainRefCol;
@@ -42,11 +42,11 @@ import org.apache.lens.server.api.authorization.LensAuthorizer;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.save.exception.PrivilegeException;
 import org.apache.lens.server.api.util.LensUtil;
-
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -56,7 +56,6 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
-
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -89,6 +88,7 @@ public class TestCubeMetastoreClient {
   private static final String CUBE_NAME_WITH_PROPS = "testMetastoreCubeWithProps";
   private static final String DERIVED_CUBE_NAME = "derivedTestMetastoreCube";
   private static final String DERIVED_CUBE_NAME_WITH_PROPS = "derivedTestMetastoreCubeWithProps";
+  private static final String X_FACT_NAME = "testMetastoreXFact";
   private static final Map<String, String> CUBE_PROPERTIES = new HashMap<>();
   private static HiveConf conf = new HiveConf(TestCubeMetastoreClient.class);
   private static FieldSchema dtPart = new FieldSchema(getDatePartitionKey(), serdeConstants.STRING_TYPE_NAME,
@@ -146,6 +146,13 @@ public class TestCubeMetastoreClient {
 
     Database database = new Database();
     database.setName(TestCubeMetastoreClient.class.getSimpleName());
+    try {
+        Hive.get().dropDatabase(TestCubeMetastoreClient.class.getSimpleName(), true, true, true);
+    } catch (NoSuchObjectException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }
+
     Hive.get(conf).createDatabase(database);
     SessionState.get().setCurrentDatabase(TestCubeMetastoreClient.class.getSimpleName());
     client = CubeMetastoreClient.getInstance(conf);
@@ -161,6 +168,7 @@ public class TestCubeMetastoreClient {
     // Drop the cube
     client.dropCube(CUBE_NAME);
     client.dropCube(VIRTUAL_CUBE_NAME);
+    client.dropCube(X_FACT_NAME);
     client = CubeMetastoreClient.getInstance(conf);
     assertFalse(client.tableExists(CUBE_NAME));
     Hive.get().dropDatabase(TestCubeMetastoreClient.class.getSimpleName(), true, true, true);
@@ -1589,6 +1597,48 @@ public class TestCubeMetastoreClient {
     assertFalse(client.factPartitionExists(cubeFact.getName(), c1, HOURLY, timeParts, emptyHashMap));
     assertFalse(client.latestPartitionExists(cubeFact.getName(), c1, getDatePartitionKey()));
     assertFalse(client.latestPartitionExists(cubeFact.getName(), c1, testDtPart.getName()));
+  }
+
+  @Test(priority = 2)
+  public void testGetXFactTable() throws Exception {
+    List<FieldSchema> factColumns = new ArrayList<>(cubeMeasures.size());
+    for (CubeMeasure measure : cubeMeasures) {
+      factColumns.add(measure.getColumn());
+    }
+
+    // add one dimension of the cube
+    factColumns.add(new FieldSchema("zipcode", "int", "zip"));
+    FieldSchema itPart = new FieldSchema("it", "string", "date part");
+    FieldSchema etPart = new FieldSchema("et", "string", "date part");
+    StorageTableDesc s1 = new StorageTableDesc(TextInputFormat.class, HiveIgnoreKeyTextOutputFormat.class,
+        Lists.newArrayList(getDatePartition(), itPart, etPart), Lists.newArrayList(getDatePartitionKey(),
+        itPart.getName(), etPart.getName()));
+
+    Set<UpdatePeriod> c1Storage = new HashSet<UpdatePeriod>();
+    c1Storage.add(HOURLY);
+    Map<String, Set<UpdatePeriod>> updatePeriods = new HashMap<String, Set<UpdatePeriod>>();
+    updatePeriods.put(c1, c1Storage);
+
+    Map<String, StorageTableDesc> storageTableDescs = getHashMap("HOURLY_c1", s1);
+
+    Map<UpdatePeriod, String> updatePeriodMap = new HashMap<>();
+    updatePeriodMap.put(HOURLY, HOURLY.toString() + "_" + c1);
+
+    Map<String, Set<String>> storageTablePartitionColumns = new HashMap<String, Set<String>>();
+    storageTablePartitionColumns.put(c1, new HashSet<>());
+
+    Map<String, Map<UpdatePeriod, String>> storageUpdatePeriodMap = new HashMap<String, Map<UpdatePeriod, String>>();
+
+    storageUpdatePeriodMap.put(c1, updatePeriodMap);
+
+    client.createCubeFactTable(CUBE_NAME_WITH_PROPS, X_FACT_NAME, factColumns, updatePeriods, 0.0d, new HashMap<String,
+        String>(), storageTableDescs, storageUpdatePeriodMap, storageTablePartitionColumns);
+
+    CubeFactTable cubeFact = new CubeFactTable(CUBE_NAME_WITH_PROPS, X_FACT_NAME, factColumns, updatePeriods, 0.0d,
+        new HashMap<String, String>(), storageUpdatePeriodMap, new HashMap<String, Set<String>>());
+    XFact xfact = client.getXFactTable(cubeFact);
+    assertEquals(xfact.getCubeName(), CUBE_NAME_WITH_PROPS);
+    assertEquals(xfact.getName(), X_FACT_NAME.toLowerCase());
   }
 
   @Test(priority = 2)
