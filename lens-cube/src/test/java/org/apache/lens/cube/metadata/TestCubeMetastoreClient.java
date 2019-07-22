@@ -24,7 +24,8 @@ import static org.apache.lens.cube.metadata.DateUtil.resolveDate;
 import static org.apache.lens.cube.metadata.MetastoreUtil.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 import static org.apache.lens.server.api.util.LensUtil.getHashMap;
-import static org.testng.Assert.*;
+
+import static org.testng.Assert.fail;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -42,6 +43,7 @@ import org.apache.lens.server.api.authorization.LensAuthorizer;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.save.exception.PrivilegeException;
 import org.apache.lens.server.api.util.LensUtil;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -56,6 +58,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
+
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -145,10 +148,10 @@ public class TestCubeMetastoreClient {
     LensAuthorizer.get().init(conf);
 
     try {
-        Hive.get().dropDatabase(TestCubeMetastoreClient.class.getSimpleName(), true, true, true);
+      Hive.get().dropDatabase(TestCubeMetastoreClient.class.getSimpleName(), true, true, true);
     } catch (NoSuchObjectException e) {
-        e.printStackTrace();
-        fail();
+      e.printStackTrace();
+      fail();
     }
     Database database = new Database();
     database.setName(TestCubeMetastoreClient.class.getSimpleName());
