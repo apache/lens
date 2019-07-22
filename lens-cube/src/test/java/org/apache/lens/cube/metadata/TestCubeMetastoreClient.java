@@ -25,7 +25,7 @@ import static org.apache.lens.cube.metadata.MetastoreUtil.*;
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 import static org.apache.lens.server.api.util.LensUtil.getHashMap;
 
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -150,7 +150,6 @@ public class TestCubeMetastoreClient {
     try {
       Hive.get().dropDatabase(TestCubeMetastoreClient.class.getSimpleName(), true, true, true);
     } catch (NoSuchObjectException e) {
-      e.printStackTrace();
       fail();
     }
     Database database = new Database();
