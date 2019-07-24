@@ -593,19 +593,25 @@ public class JDBCDriver extends AbstractLensDriver {
         + explainKeyword + " ");
     }
     log.info("{} Explain Query : {}", getFullyQualifiedName(), explainQuery);
-    QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery, null,
-      new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier(), false);
-    QueryResult result = null;
-    try {
-      result = executeInternal(explainQueryCtx, explainQuery);
-      if (result.error != null) {
-        throw new LensException("Query explain failed!", result.error);
-      }
-    } finally {
-      if (result != null) {
-        result.close();
+
+    boolean validateThroughPrepare = explainCtx.getDriverConf(this).getBoolean(JDBC_VALIDATE_THROUGH_PREPARE_OR_EXPLAIN,
+        DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE_OR_EXPLAIN);
+    if (validateThroughPrepare) {
+      QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery, null, new LensConf(),
+          explainConf, this, explainCtx.getLensSessionIdentifier(), false);
+      QueryResult result = null;
+      try {
+        result = executeInternal(explainQueryCtx, explainQuery);
+        if (result.error != null) {
+          throw new LensException("Query explain failed!", result.error);
+        }
+      } finally {
+        if (result != null) {
+          result.close();
+        }
       }
     }
+
     JDBCQueryPlan jqp = new JDBCQueryPlan(calculateQueryCost(explainCtx));
     explainCtx.getDriverContext().setDriverQueryPlan(this, jqp);
     return jqp;
@@ -621,8 +627,8 @@ public class JDBCDriver extends AbstractLensDriver {
     if (pContext.getDriverQuery(this) == null) {
       throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
     }
-    boolean validateThroughPrepare = pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_THROUGH_PREPARE,
-      DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE);
+    boolean validateThroughPrepare = pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_THROUGH_PREPARE_OR_EXPLAIN,
+      DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE_OR_EXPLAIN);
     if (validateThroughPrepare) {
       PreparedStatement stmt;
       // Estimate queries need to get connection from estimate pool to make sure

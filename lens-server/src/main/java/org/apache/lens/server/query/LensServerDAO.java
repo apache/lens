@@ -35,6 +35,7 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.FinishedLensQuery;
+import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.util.UtilityMethods;
@@ -47,6 +48,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.collect.Lists;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -105,6 +107,20 @@ public class LensServerDAO {
       log.warn("Unable to create finished queries table", e);
     }
   }
+
+  public void createPreparedQueriesTable() throws Exception {
+    String sql = "CREATE TABLE if not exists prepared_queries (handle varchar(255) NOT NULL unique,  userquery "
+      + "varchar(20000),  submitter varchar(255) NOT NULL,  timetaken bigint,  queryname varchar(255) DEFAULT NULL, "
+      + "drivername varchar(10000) DEFAULT NULL,  driverquery varchar(1000000),  starttime bigint)";
+    try {
+      QueryRunner runner = new QueryRunner(ds);
+      runner.update(sql);
+      log.info("Created prepared_queries queries table");
+    } catch (SQLException e) {
+      log.warn("Unable to create prepared_queries queries table", e);
+    }
+  }
+  
   public void createFailedAttemptsTable() throws Exception {
     String sql = "CREATE TABLE if not exists failed_attempts (handle varchar(255) not null,"
       + "attempt_number int, drivername varchar(10000), progress float, progressmessage varchar(10000), "
@@ -820,5 +836,36 @@ public class LensServerDAO {
     }
 
     return result;
+  }
+
+  /**
+   * DAO method to insert a new Prepared query into Table.
+   *
+   * @param preparedQueryContext to be inserted
+   * @throws SQLException the exception
+   */
+  public void insertPreparedQuery(PreparedQueryContext preparedQueryContext) throws LensException {
+    String sql = "insert into prepared_queries (handle, userquery, submitter, timetaken, queryname, drivername, "
+        + "driverquery, starttime)" + " values (?,?,?,?,?,?,?,?)";
+    Connection conn = null;
+    try {
+      conn = getConnection();
+      conn.setAutoCommit(false);
+      QueryRunner runner = new QueryRunner();
+
+      long timeTaken =
+          preparedQueryContext.getPrepareEndTime().getTime() - preparedQueryContext.getPrepareStartTime().getTime();
+
+      runner.update(conn, sql, preparedQueryContext.getPrepareHandle().getQueryHandleString(),
+          preparedQueryContext.getUserQuery(), preparedQueryContext.getSubmittedUser(), timeTaken,
+          preparedQueryContext.getQueryName(), preparedQueryContext.getDriverContext().getSelectedDriver().toString(),
+          preparedQueryContext.getSelectedDriverQuery(), preparedQueryContext.getPrepareStartTime().getTime());
+      conn.commit();
+    } catch (SQLException e) {
+      log.error("Failed to insert prepared query into database with error, " + e);
+      throw new LensException(e);
+  } finally {
+      DbUtils.closeQuietly(conn);
+    }
   }
 }

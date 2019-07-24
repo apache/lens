@@ -1830,30 +1830,19 @@ public class CubeMetastoreClient {
         for (UpdatePeriod updatePeriod : updatePeriods) {
           tableNames.add(updatePeriodToTableMap.get(updatePeriod));
         }
-        if (tableNames.size() <= 1) {
-          XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
-            getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(), storageName)));
-          tblElement.setStorageName(storageName);
-          for (UpdatePeriod p : updatePeriods) {
-            tblElement.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p.name()));
-          }
-          factTable.getStorageTables().getStorageTable().add(tblElement);
-        } else {
-          // Multiple storage tables.
-          XStorageTableElement tblElement = new XStorageTableElement();
-          tblElement.setStorageName(storageName);
-          XUpdatePeriods xUpdatePeriods = new XUpdatePeriods();
-          tblElement.setUpdatePeriods(xUpdatePeriods);
-          for (Map.Entry entry : updatePeriodToTableMap.entrySet()) {
-            XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
-            updatePeriodTableDescriptor.setTableDesc(getStorageTableDescFromHiveTable(
+        XStorageTableElement tblElement = new XStorageTableElement();
+        tblElement.setStorageName(storageName);
+        XUpdatePeriods xUpdatePeriods = new XUpdatePeriods();
+        tblElement.setUpdatePeriods(xUpdatePeriods);
+        for (Map.Entry entry : updatePeriodToTableMap.entrySet()) {
+          XUpdatePeriodTableDescriptor updatePeriodTableDescriptor = new XUpdatePeriodTableDescriptor();
+          updatePeriodTableDescriptor.setTableDesc(getStorageTableDescFromHiveTable(
               this.getHiveTable(MetastoreUtil.getFactOrDimtableStorageTableName(cft.getName(),
-                (String) entry.getValue()))));
-            updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(((UpdatePeriod) entry.getKey()).name()));
-            xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
-          }
-          factTable.getStorageTables().getStorageTable().add(tblElement);
+                  (String) entry.getValue()))));
+          updatePeriodTableDescriptor.setUpdatePeriod(XUpdatePeriod.valueOf(((UpdatePeriod) entry.getKey()).name()));
+          xUpdatePeriods.getUpdatePeriodTableDescriptor().add(updatePeriodTableDescriptor);
         }
+        factTable.getStorageTables().getStorageTable().add(tblElement);
       }
       fact = factTable;
     }

@@ -147,7 +147,9 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
   /**
    * The Constant PREPARED_QUERY_PURGER_COUNTER.
    */
-  public static final String PREPARED_QUERY_PURGER_COUNTER = "prepared-query-purger-errors";
+  public static final String PREPARED_QUERY_PURGER_ERROR_COUNTER = "prepared-query-purger-errors";
+
+  public static final String PREPARED_QUERY_INSERT_ERROR_COUNTER = "prepared-query-insert-errors";
 
   /**
    * The millis in week.
@@ -1302,13 +1304,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
           destroyPreparedQuery(prepared);
           log.info("Purged prepared query: {}", prepared.getPrepareHandle());
         } catch (LensException e) {
-          incrCounter(PREPARED_QUERY_PURGER_COUNTER);
+          incrCounter(PREPARED_QUERY_PURGER_ERROR_COUNTER);
           log.error("Error closing prepared query ", e);
         } catch (InterruptedException e) {
           log.info("PreparedQueryPurger has been interrupted, exiting");
           return;
         } catch (Exception e) {
-          incrCounter(PREPARED_QUERY_PURGER_COUNTER);
+          incrCounter(PREPARED_QUERY_PURGER_ERROR_COUNTER);
           log.error("Error in prepared query purger", e);
         }
       }
@@ -1415,6 +1417,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       this.lensServerDao.createFailedAttemptsTable();
       this.lensServerDao.createActiveSessionsTable();
       this.lensServerDao.createActiveQueriesTable();
+      this.lensServerDao.createPreparedQueriesTable();
     } catch (Exception e) {
       log.warn("Unable to create finished query tables, query purger will not purge queries", e);
     }
@@ -2054,9 +2057,10 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       acquire(sessionHandle);
       prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.PREPARE);
       prepared.setQueryName(queryName);
-      prepared.getSelectedDriver().prepare(prepared);
+      lensServerDao.insertPreparedQuery(prepared);
       return prepared.getPrepareHandle();
     } catch (LensException e) {
+      incrCounter(PREPARED_QUERY_INSERT_ERROR_COUNTER);
       if (prepared != null) {
         destroyPreparedQuery(prepared);
       }
@@ -2087,6 +2091,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
     preparedQueries.put(prepared.getPrepareHandle(), prepared);
     preparedQueryQueue.add(prepared);
     incrCounter(PREPARED_QUERIES_COUNTER);
+    prepared.setPrepareEndTime(new Date());
     return prepared;
   }
 
@@ -3031,7 +3036,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
             continue;
           }
         }
-        long queryPrepTime = preparedQueryContext.getPreparedTime().getTime();
+        long queryPrepTime = preparedQueryContext.getPrepareStartTime().getTime();
         if (fromTime <= queryPrepTime && queryPrepTime < toTime) {
           continue;
         }
