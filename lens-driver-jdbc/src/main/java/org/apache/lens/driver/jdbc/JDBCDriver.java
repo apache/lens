@@ -556,6 +556,8 @@ public class JDBCDriver extends AbstractLensDriver {
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
     MethodMetricsContext validateGauge = MethodMetricsFactory.createMethodGauge(qctx.getDriverConf(this), true,
       VALIDATE_GAUGE);
+    String rewrittenQuery = rewriteQuery(qctx);
+    qctx.setSelectedDriverQuery(rewrittenQuery);
     validate(qctx);
     validateGauge.markSuccess();
     return calculateQueryCost(qctx);
