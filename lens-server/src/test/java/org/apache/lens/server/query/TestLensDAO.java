@@ -260,7 +260,10 @@ public class TestLensDAO extends LensJerseyTest {
       PreparedQueryContext preparedQueryContext = new PreparedQueryContext("query", "user1", driverConf,
           createDriver(driverConf));
       preparedQueryContext.setPrepareEndTime(new Date());
-      service.lensServerDao.insertPreparedQuery(preparedQueryContext);
+      service.lensServerDao.insertPreparedQuery(preparedQueryContext);  
+      PreparedLensQuery preparedLensQuery = service.lensServerDao.getPreparedQuery(preparedQueryContext.getQueryHandleString());
+      Assert.assertEquals(preparedLensQuery.getHandle(), preparedQueryContext.getQueryHandleString());
+      Assert.assertEquals(preparedLensQuery.getSubmitter(), "user1");
     } catch (Exception e) {
       Assert.fail("it shouldn't be coming in this catch block");
     }

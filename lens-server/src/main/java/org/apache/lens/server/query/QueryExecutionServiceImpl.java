@@ -2461,7 +2461,13 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       acquire(sessionHandle);
       PreparedQueryContext ctx = preparedQueries.get(prepareHandle);
       if (ctx == null) {
-        throw new NotFoundException("Prepared query not found " + prepareHandle);
+        PreparedLensQuery preparedLensQuery = lensServerDao.getPreparedQuery(prepareHandle.getQueryHandleString());
+        if (preparedLensQuery == null) {
+          throw new NotFoundException("Prepared query not found " + prepareHandle);
+        }
+        ctx = new PreparedQueryContext(preparedLensQuery.getUserquery(), preparedLensQuery.getSubmitter(), conf,
+            drivers.values());
+        ctx.setSelectedDriverQuery(preparedLensQuery.getDriverquery());
       }
       return ctx;
     } finally {
