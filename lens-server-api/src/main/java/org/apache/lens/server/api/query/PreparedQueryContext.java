@@ -77,7 +77,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
   /**
    * The millis in week.
    */
-  private static long millisInTenMinutes = 10 * 60 * 1000;
+  private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
   /**
    * Instantiates a new prepared query context.
@@ -129,7 +129,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
     if (this.prepareStartTime != null) {
       Date now = new Date();
       long elapsedMills = now.getTime() - this.prepareStartTime.getTime();
-      delayMillis = millisInTenMinutes - elapsedMills;
+      delayMillis = millisInWeek - elapsedMills;
       return units.convert(delayMillis, TimeUnit.MILLISECONDS);
     } else {
       return Integer.MAX_VALUE;
