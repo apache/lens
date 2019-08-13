@@ -869,9 +869,9 @@ public class LensServerDAO {
     }
   }
 
-  public PreparedLensQuery getPreparedQuery(String handle) throws LensException {
+  public PreparedLensQuery getPreparedQuery(String handle) {
     ResultSetHandler<PreparedLensQuery> rsh = new BeanHandler<>(PreparedLensQuery.class,
-        new BasicRowProcessor(new BeanProcessor()));
+        new BasicRowProcessor(new FinishedLensQueryBeanProcessor()));
     String sql = "select * from prepared_queries where handle=?";
     QueryRunner runner = new QueryRunner(ds);
     try {
@@ -879,7 +879,7 @@ public class LensServerDAO {
       return preparedLensQuery;
     } catch (SQLException e) {
       log.error("SQL exception while executing query.", e);
-      throw new LensException(e);
     }
+    return null;
   }
 }
