@@ -35,11 +35,11 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.FinishedLensQuery;
-import org.apache.lens.server.api.query.PreparedLensQuery;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.util.UtilityMethods;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.dbutils.*;
 import org.apache.commons.dbutils.handlers.BeanHandler;
@@ -867,19 +867,5 @@ public class LensServerDAO {
   } finally {
       DbUtils.closeQuietly(conn);
     }
-  }
-
-  public PreparedLensQuery getPreparedQuery(String handle) {
-    ResultSetHandler<PreparedLensQuery> rsh = new BeanHandler<>(PreparedLensQuery.class,
-        new BasicRowProcessor(new FinishedLensQueryBeanProcessor()));
-    String sql = "select * from prepared_queries where handle=?";
-    QueryRunner runner = new QueryRunner(ds);
-    try {
-      PreparedLensQuery preparedLensQuery = runner.query(sql, rsh, handle);
-      return preparedLensQuery;
-    } catch (SQLException e) {
-      log.error("SQL exception while executing query.", e);
-    }
-    return null;
   }
 }
