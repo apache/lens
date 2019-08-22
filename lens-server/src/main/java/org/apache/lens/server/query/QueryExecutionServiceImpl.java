@@ -2057,6 +2057,7 @@ public class QueryExecutionServiceImpl extends BaseLensService implements QueryE
       acquire(sessionHandle);
       prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.PREPARE);
       prepared.setQueryName(queryName);
+      prepared.getSelectedDriver().prepare(prepared);
       lensServerDao.insertPreparedQuery(prepared);
       return prepared.getPrepareHandle();
     } catch (LensException e) {
