@@ -44,7 +44,6 @@ import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.cost.StaticQueryCost;
-import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -342,7 +341,7 @@ public class TestJdbcDriver {
     cost = driver.estimate(pContext2);
     Assert.assertEquals(cost, JDBC_COST);
     driver.prepare(pContext2);
-    
+
     PreparedQueryContext pContext3 = new PreparedQueryContext(query1, "SA", metricConf, drivers);
     cost = driver.estimate(pContext3);
     Assert.assertEquals(cost, JDBC_COST);
