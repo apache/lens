@@ -78,7 +78,7 @@
     <!--Apache Ranger version-->
     <ranger.version>1.0.0</ranger.version>
 
-    <c3p0.version>0.9.5</c3p0.version>
+    <c3p0.version>0.9.5.4</c3p0.version>
     <hsqldb.version>2.2.9</hsqldb.version>
     <dbcp.version>1.4</dbcp.version>
     <dbutils.version>1.5</dbutils.version>
