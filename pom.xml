@@ -43,7 +43,7 @@
 
     <!-- hadoop stack -->
     <hadoop.version>2.7.1</hadoop.version>
-    <spark.version>1.3.0</spark.version>
+    <spark.version>99.9.9</spark.version>
     <hive.version>2.1.0</hive.version>
 
     <!-- jest client for elasticsearch -->
