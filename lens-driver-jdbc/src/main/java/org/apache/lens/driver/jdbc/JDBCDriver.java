@@ -633,14 +633,7 @@ public class JDBCDriver extends AbstractLensDriver {
       PreparedStatement stmt;
       // Estimate queries need to get connection from estimate pool to make sure
       // we are not blocked by data queries.
-      stmt = prepareInternal(pContext, true, true, "validate-");
-      if (stmt != null) {
-        try {
-          stmt.close();
-        } catch (SQLException e) {
-          throw new LensException();
-        }
-      }
+      prepareInternal(pContext, true, true, "validate-");
     }
   }
 
@@ -707,12 +700,12 @@ public class JDBCDriver extends AbstractLensDriver {
    * @return prepared statement of the query
    * @throws LensException
    */
-  private PreparedStatement prepareInternal(AbstractQueryContext pContext) throws LensException {
+  private void prepareInternal(AbstractQueryContext pContext) throws LensException {
     if (pContext.getDriverQuery(this) == null) {
       throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
     }
     checkConfigured();
-    return prepareInternal(pContext, false, false, "prepare-");
+    prepareInternal(pContext, false, false, "prepare-");
   }
 
 
@@ -725,7 +718,7 @@ public class JDBCDriver extends AbstractLensDriver {
    * @return prepared statement
    * @throws LensException
    */
-  private PreparedStatement prepareInternal(AbstractQueryContext pContext,
+  private void prepareInternal(AbstractQueryContext pContext,
     boolean calledForEstimate,
     boolean checkConfigured,
     String metricCallStack) throws LensException {
@@ -742,33 +735,8 @@ public class JDBCDriver extends AbstractLensDriver {
     MethodMetricsContext sqlRewriteGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       metricCallStack + COLUMNAR_SQL_REWRITE_GAUGE);
     String rewrittenQuery = rewriteQuery(pContext);
+    pContext.setSelectedDriverQuery(rewrittenQuery);
     sqlRewriteGauge.markSuccess();
-    MethodMetricsContext jdbcPrepareGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
-      metricCallStack + JDBC_PREPARE_GAUGE);
-
-    PreparedStatement stmt = null;
-    Connection conn = null;
-    try {
-      conn = calledForEstimate ? getEstimateConnection() : getConnection();
-      stmt = conn.prepareStatement(rewrittenQuery);
-      if (!pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_SKIP_WARNINGS,
-        DEFAULT_JDBC_VALIDATE_SKIP_WARNINGS) && stmt.getWarnings() != null) {
-        throw new LensException(stmt.getWarnings());
-      }
-    } catch (SQLException sql) {
-      handleJDBCSQLException(sql);
-    } finally {
-      if (conn != null) {
-        try {
-          conn.close();
-        } catch (SQLException e) {
-          log.error("Error closing connection: {}", rewrittenQuery, e);
-        }
-      }
-      jdbcPrepareGauge.markSuccess();
-    }
-    log.info("Prepared: {}", rewrittenQuery);
-    return stmt;
   }
 
   /**
@@ -807,10 +775,7 @@ public class JDBCDriver extends AbstractLensDriver {
       // already prepared
       return;
     }
-    PreparedStatement stmt = prepareInternal(pContext);
-    if (stmt != null) {
-      preparedQueries.put(pContext.getPrepareHandle(), stmt);
-    }
+    prepareInternal(pContext);
   }
 
   /**

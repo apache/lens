@@ -44,7 +44,6 @@ import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.cost.QueryCost;
 import org.apache.lens.server.api.query.cost.StaticQueryCost;
-import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -294,23 +293,7 @@ public class TestJdbcDriver {
   }
 
   /**
-   * Test estimate failing
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testEstimateFailing() throws Exception {
-    String query2 = "SELECT * FROM estimate_test2"; // Select query against non existing table
-    try {
-      driver.estimate(createExplainContext(query2, baseConf));
-      Assert.fail("Running estimate on a non existing table.");
-    } catch (LensException ex) {
-      Assert.assertEquals(LensUtil.getCauseMessage(ex), "user lacks privilege or object not found: ESTIMATE_TEST2");
-    }
-  }
-
-  /**
-   * Test estimate failing
+   * Test estimate guages
    *
    * @throws Exception the exception
    */
@@ -326,7 +309,6 @@ public class TestJdbcDriver {
     String driverQualifiledName = driver.getFullyQualifiedName();
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
       "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-columnar-sql-rewrite",
-      "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-jdbc-prepare-statement",
       "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-validate-thru-prepare",
       "lens.MethodMetricGauge.TestJdbcDriver-"+driverQualifiledName+"-jdbc-check-allowed-query")));
   }
@@ -359,7 +341,11 @@ public class TestJdbcDriver {
     cost = driver.estimate(pContext2);
     Assert.assertEquals(cost, JDBC_COST);
     driver.prepare(pContext2);
-    driver.explainAndPrepare(pContext2);
+
+    PreparedQueryContext pContext3 = new PreparedQueryContext(query1, "SA", metricConf, drivers);
+    cost = driver.estimate(pContext3);
+    Assert.assertEquals(cost, JDBC_COST);
+    driver.explainAndPrepare(pContext3);
   }
 
   /**
@@ -651,23 +637,6 @@ public class TestJdbcDriver {
     driver.validate(pContext);
     //run prepare
     driver.prepare(pContext);
-  }
-
-  /**
-   * Test prepare failing
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testPrepareFailing() throws Exception {
-    String query = "SELECT * FROM prepare_test2"; // Select query against non existing table
-    try {
-      PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
-      driver.prepare(pContext);
-      Assert.fail("Running prepare on a non existing table.");
-    } catch (LensException ex) {
-      Assert.assertEquals(LensUtil.getCauseMessage(ex), "user lacks privilege or object not found: PREPARE_TEST2");
-    }
   }
 
   /**
